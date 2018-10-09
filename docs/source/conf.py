@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Documentation config file
+"""
 #
 # Configuration file for the Sphinx documentation builder.
 #

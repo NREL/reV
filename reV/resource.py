@@ -1,7 +1,7 @@
 """
 Classes to handle resource data
 """
-import h5py
+#  import h5py
 
 
 class Resource(object):
