@@ -38,14 +38,14 @@ class Wind(SAM_Gen):
     pass
 
 
-class Land_Based_Wind(Wind):
+class LandBasedWind(Wind):
     """
     Onshore wind generation
     """
     pass
 
 
-class Offshore_Wind(Wind):
+class OffshoreWind(Wind):
     """
     Offshore wind generation
     """
