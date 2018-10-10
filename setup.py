@@ -67,7 +67,7 @@ setup(
     zip_safe=False,
     keywords="rev",
     classifiers=[
-        "Development Status :: Beta",  # TODO: Change development status
+        "Development Status :: Beta",
         "Intended Audience :: Modelers",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
@@ -76,11 +76,10 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     test_suite="tests",
-    install_requires=["click", "future", "networkx", "six", "traitlets",
-                      "json_tricks"],
+    install_requires=["click", "future"],
     extras_require={
         "test": test_requires,
-        "dev": test_requires + ["pypandoc", "black", "pre-commit"],
+        "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )
