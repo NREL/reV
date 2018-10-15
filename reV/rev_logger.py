@@ -40,6 +40,7 @@ def setup_logger(logger_name, log_level="INFO", log_file=None,
     logger = logging.getLogger(logger_name)
 
     logger.setLevel(LOG_LEVEL[log_level])
+
     if log_file:
         handler = logging.FileHandler(log_file, mode='a')
     else:
