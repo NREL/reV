@@ -63,7 +63,7 @@ class Resource(object):
         """
         Extract and convert meta to a pandas DataFrame
         """
-        meta = self._h5['meta'][[slice[0]]]
+        meta = self._h5['meta'][slice[0]]
         meta = pd.DataFrame(meta)
         if len(slice) == 2:
             meta = meta[slice[1]]

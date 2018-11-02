@@ -1,0 +1,9 @@
+{
+  "reV/test/test.py::test_SAM_NSRDB[pvwatts-./data/nsrdb-ri_100_nsrdb_2012.h5-./data/SAM-i_pvwatts_res.json-o_pvwatts_res.json]": true,
+  "reV/test/test.py::test_SAM_NSRDB[pvwatts_lcoe-./data/nsrdb-ri_100_nsrdb_2012.h5-./data/SAM-i_pvwatts_lcoe_res.json-o_pvwatts_lcoe_res.json]": true,
+  "reV/test/test.py::test_SAM_NSRDB[tcsmolten_salt-./data/nsrdb-ri_100_nsrdb_2012.h5-./data/SAM-i_csp_tcsmolten_salt_res.json-o_csp_tcsmolten_salt_res.json]": true,
+  "reV/test/test.py::test_SAM_WTK[landbasedwind-./data/wtk-ri_100_wtk_2012.h5-./data/SAM-i_windpower_res.json-o_windpower_res.json]": true,
+  "reV/test/test.py::test_SAM_reV[pvwatts-./data/nsrdb-ri_100_nsrdb_2012.h5-./data/SAM-i_pvwatts_reV.json-o_pvwatts_reV.json]": true,
+  "reV/test/test.py::test_SAM_reV[tcsmolten_salt-./data/nsrdb-ri_100_nsrdb_2012.h5-./data/SAM-i_csp_tcsmolten_salt_reV.json-o_csp_tcsmolten_salt_reV.json]": true,
+  "reV/test/test.py::test_SAM_reV[windpower-./data/wtk-ri_100_wtk_2012.h5-./data/SAM-i_windpower_reV.json-o_windpower_reV.json]": true
+}

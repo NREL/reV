@@ -14,29 +14,49 @@ from reV.rev_logger import setup_logger
 
 def jsonify(outputs):
     """Convert outputs dictionary to JSON compatitble format."""
-    for key in outputs.keys():
+    orig_key_list = list(outputs.keys())
+    for key in orig_key_list:
         if isinstance(outputs[key], np.ndarray):
             outputs[key] = outputs[key].tolist()
+        if isinstance(key, (int, float)):
+            outputs[str(key)] = outputs[key]
+            del outputs[key]
     return outputs
+
+
+def get_shared_items(x, y):
+    """Get a dict of shared values between the two input dicts."""
+    shared_items = {}
+    for k, v in x.items():
+        if k in y:
+            if isinstance(v, dict) and isinstance(y[k], dict):
+                # recursion! go one level deeper.
+                shared_items_2 = get_shared_items(v, y[k])
+                if shared_items_2:
+                    shared_items[k] = v
+            elif x[k] == y[k]:
+                shared_items[k] = v
+    return shared_items
 
 
 def dicts_match(x, y):
     """Check whether two dictionaries match."""
     if len(list(x.keys())) == len(list(y.keys())):
-        shared_items = {k: x[k] for k in x if k in y and x[k] == y[k]}
+        # dicts have the same number of keys (good sign)
+        shared_items = get_shared_items(x, y)
         if len(shared_items) == len(list(x.keys())):
             # everything matches
-            return True
+            return True, list(shared_items.keys())
         else:
             # values in keys do not match
             bad_items = {k: x[k] for k in x if k in y and x[k] != y[k]}
-            return list(bad_items.keys())
+            return False, list(bad_items.keys())
 
     else:
         # keys are missing
         x = set(x.keys())
         y = set(y.keys())
-        return list(x.symmetric_difference(y))
+        return False, list(x.symmetric_difference(y))
 
 
 class SAM_Test_Manager():
@@ -94,6 +114,23 @@ class SAM_Test_Manager():
                           output_request=['cf_mean', 'cf_profile',
                                           'annual_energy', 'energy_yield',
                                           'gen_profile', 'ppa_price'])
+        elif module == 'landbasedwind':
+            # test SAM windpower module
+            sim = SAM.LandBasedWind(resource=None, meta=None,
+                                    parameters=inputs,
+                                    output_request=['cf_mean', 'cf_profile',
+                                                    'annual_energy',
+                                                    'energy_yield',
+                                                    'gen_profile'])
+        elif module == 'landbasedwind_lcoe':
+            # test SAM windpower module
+            sim = SAM.LandBasedWind(resource=None, meta=None,
+                                    parameters=inputs,
+                                    output_request=['cf_mean', 'cf_profile',
+                                                    'annual_energy',
+                                                    'energy_yield',
+                                                    'gen_profile',
+                                                    'lcoe_fcr'])
 
         sim.execute()
         test = self.check_test_results(sim.outputs, o_fname,
@@ -102,54 +139,11 @@ class SAM_Test_Manager():
         self.logger.debug('{} results: {}'.format(module, sim.outputs))
         return test
 
-    def execute_nsrdb(self, module='pvwatts', site=0, res_dir='./data/nsrdb',
-                      res='ri_100_nsrdb_2012.h5', io_dir='./data/SAM',
-                      i_fname='i_pvwatts_res.json',
-                      o_fname='o_pvwatts_res.json'):
-        """Execute a test case with SAM using NSRDB resource inputs."""
-
-        res_f = os.path.join(res_dir, res)
-        i_fname = os.path.join(io_dir, str(i_fname))
-        o_fname = os.path.join(io_dir, o_fname)
-
-        if os.path.exists(i_fname):
-            with open(i_fname, 'r') as f:
-                # get unit test inputs
-                inputs = json.load(f)
-        else:
-            self.logger.warning('Inputs file does not exist: {}'
-                                ''.format(i_fname))
-
-        res, meta = SAM.SAM.setup_resource_df(res_f, site, ['dni', 'dhi',
-                                                            'wind_speed',
-                                                            'air_temperature'])
-        if module == 'pvwatts':
-            sim = SAM.PV(resource=res, meta=meta,
-                         parameters=inputs,
-                         output_request=['cf_mean', 'cf_profile',
-                                         'annual_energy', 'energy_yield',
-                                         'gen_profile'])
-        if module == 'pvwatts_lcoe':
-            sim = SAM.PV(resource=res, meta=meta,
-                         parameters=inputs,
-                         output_request=['cf_mean', 'cf_profile',
-                                         'annual_energy', 'energy_yield',
-                                         'gen_profile', 'lcoe_fcr'])
-        elif module == 'tcsmolten_salt':
-            sim = SAM.CSP(resource=res, meta=meta,
-                          parameters=inputs,
-                          output_request=['cf_mean', 'cf_profile',
-                                          'annual_energy', 'energy_yield',
-                                          'gen_profile', 'ppa_price'])
-
-        sim.execute()
-        test = self.check_test_results(sim.outputs, o_fname, module)
-
-        self.logger.debug('{} results: {}'.format(module, sim.outputs))
-        return test
-
-    def execute_reV(self, module='pvwatts', site=0, res_dir='./data/nsrdb',
-                    res='ri_100_nsrdb_2012.h5', io_dir='./data/SAM',
+    def execute_reV(self, module='pvwatts',
+                    sites=range(0, 2),
+                    res_dir='./data/nsrdb',
+                    res='ri_100_nsrdb_2012.h5',
+                    io_dir='./data/SAM',
                     i_fname='i_pvwatts_reV.json',
                     o_fname='o_pvwatts_reV.json'):
         """Execute a test case with SAM using reV defaults."""
@@ -167,9 +161,13 @@ class SAM_Test_Manager():
                                 ''.format(i_fname))
 
         if module == 'pvwatts':
-            outputs = SAM.PV.reV_run(site, res_f, inputs)
+            outputs = SAM.PV.reV_run(res_f, sites, inputs)
         elif module == 'tcsmolten_salt':
-            outputs = SAM.CSP.reV_run(site, res_f, inputs)
+            outputs = SAM.CSP.reV_run(res_f, sites, inputs)
+        elif module == 'windpower':
+            outputs = SAM.LandBasedWind.reV_run(res_f, sites, inputs)
+        elif module == 'offshore':
+            outputs = SAM.OffshoreWind.reV_run(res_f, sites, inputs)
 
         test = self.check_test_results(outputs, o_fname, module)
 
@@ -200,14 +198,14 @@ class SAM_Test_Manager():
                 baseline = json.load(f)
 
             # check new outputs against the baseline
-            match = dicts_match(new_o_json, baseline)
+            match, items = dicts_match(new_o_json, baseline)
             if match is True:
                 self.logger.info('Unit test for {} was successful.'
                                  ''.format(module))
             else:
                 self.logger.error('Unit test for {} failed with errors in '
                                   'the following variables: '
-                                  '"{}"'.format(module, match))
+                                  '"{}"'.format(module, items))
             return match
 
         else:
@@ -234,7 +232,9 @@ def init_SAM():
     ('pvwatts_lcoe', 'i_pvwatts_lcoe.json', 'o_pvwatts_lcoe.json'),
     ('pvwatts_def', None, 'o_pvwatts_def.json'),
     ('tcsmolten_salt', 'i_csp_tcsmolten_salt.json',
-     'o_csp_tcsmolten_salt.json')])
+     'o_csp_tcsmolten_salt.json'),
+    ('landbasedwind', 'i_windpower.json', 'o_windpower.json'),
+    ('landbasedwind_lcoe', 'i_windpower_lcoe.json', 'o_windpower_lcoe.json')])
 def test_SAM_defaults(init_SAM, module, i_fname, o_fname):
     """Test the SAM simulation module."""
     result = init_SAM.execute_defaults(module=module, i_fname=i_fname,
@@ -242,41 +242,39 @@ def test_SAM_defaults(init_SAM, module, i_fname, o_fname):
     assert result is True
 
 
-@pytest.mark.parametrize('module, res_dir, res, io_dir, i_fname, o_fname', [
-    ('pvwatts', './data/nsrdb', 'ri_100_nsrdb_2012.h5', './data/SAM',
-     'i_pvwatts_res.json', 'o_pvwatts_res.json'),
-    ('pvwatts_lcoe', './data/nsrdb', 'ri_100_nsrdb_2012.h5', './data/SAM',
-     'i_pvwatts_lcoe_res.json', 'o_pvwatts_lcoe_res.json'),
-    ('tcsmolten_salt', './data/nsrdb', 'ri_100_nsrdb_2012.h5', './data/SAM',
-     'i_csp_tcsmolten_salt_res.json', 'o_csp_tcsmolten_salt_res.json')])
-def test_SAM_NSRDB(init_SAM, module, res_dir, res, io_dir, i_fname, o_fname):
-    """Simple SAM pytest for NSRDB."""
-    result = init_SAM.execute_nsrdb(module=module, res_dir=res_dir, res=res,
-                                    io_dir=io_dir, i_fname=i_fname,
-                                    o_fname=o_fname)
-    assert result is True
-
-
-@pytest.mark.parametrize('module, res_dir, res, io_dir, i_fname, o_fname', [
-    ('pvwatts', './data/nsrdb', 'ri_100_nsrdb_2012.h5', './data/SAM',
-     'i_pvwatts_reV.json', 'o_pvwatts_reV.json'),
-    ('tcsmolten_salt', './data/nsrdb', 'ri_100_nsrdb_2012.h5', './data/SAM',
-     'i_csp_tcsmolten_salt_reV.json', 'o_csp_tcsmolten_salt_reV.json')])
-def test_SAM_reV(init_SAM, module, res_dir, res, io_dir, i_fname, o_fname):
+@pytest.mark.parametrize(('module, sites, res_dir, res, io_dir, i_fname, '
+                         'o_fname'), [
+    ('pvwatts', slice(0, 10), './data/nsrdb', 'ri_100_nsrdb_2012.h5',
+     './data/SAM', 'i_pvwatts_reV.json', 'o_pvwatts_reV.json'),
+    ('tcsmolten_salt', 0, './data/nsrdb', 'ri_100_nsrdb_2012.h5', './data/SAM',
+     'i_csp_tcsmolten_salt_reV.json', 'o_csp_tcsmolten_salt_reV.json'),
+    ('windpower', range(0, 10, 2), './data/wtk', 'ri_100_wtk_2012.h5',
+     './data/SAM', 'i_windpower_reV.json', 'o_windpower_reV.json'),
+    ('offshore', [150, 170, 192], './data/wtk', 'ri_100_wtk_2012.h5',
+     './data/SAM', 'i_offshore_reV.json', 'o_offshore_reV.json')])
+def test_SAM_reV(init_SAM, module, sites, res_dir, res, io_dir, i_fname,
+                 o_fname):
     """Simple SAM pytest for reV default runs."""
-    result = init_SAM.execute_reV(module=module, res_dir=res_dir, res=res,
-                                  io_dir=io_dir, i_fname=i_fname,
+    result = init_SAM.execute_reV(module=module, sites=sites, res_dir=res_dir,
+                                  res=res, io_dir=io_dir, i_fname=i_fname,
                                   o_fname=o_fname)
     assert result is True
 
 
-if __name__ == '__main__':
+def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
-    Options
-    -------
-    --show-capture=
-        log (only logger)
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
         all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
     """
-    pytest.main(['-q', '--show-capture=log', 'test.py', '-rapP'])
+
+    pytest.main(['-q', '--show-capture={}'.format(capture), 'test.py', flags])
+
+
+if __name__ == '__main__':
+    execute_pytest()
