@@ -1,0 +1,30 @@
+[
+  [
+    "capital_cost",
+    [
+      "int",
+      "float"
+    ]
+  ],
+  [
+    "fixed_operating_cost",
+    [
+      "int",
+      "float"
+    ]
+  ],
+  [
+    "variable_operating_cost",
+    [
+      "int",
+      "float"
+    ]
+  ],
+  [
+    "fixed_charge_rate",
+    [
+      "int",
+      "float"
+    ]
+  ]
+]
