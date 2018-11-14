@@ -1,0 +1,181 @@
+{
+  "cached_results": {
+    "wind": {}
+  },
+  "database": {
+    "db_host": "gispgdb.nrel.gov",
+    "db_name": "rev",
+    "db_pass": "gmaclaur",
+    "db_user": "gmaclaur"
+  },
+  "directories": {
+    "data_directory": "/projects/rev/data/",
+    "reV_directory": "/projects/rev/projects/",
+    "sdk_directory": "/projects/rev/sam/sam-sdk-2017-9-5-181-1"
+  },
+  "project_control": {
+    "analysis_extent": "ri",
+    "analysis_years": [
+      2012,
+      2013
+    ],
+    "model_run_logging_level": "DEBUG",
+    "multiyear_generation": true,
+    "project_handle": "subset",
+    "project_tasks": {},
+    "technologies": "wind",
+    "terminal_task": "WriteCEM"
+  },
+  "project_points": {
+    "wind": {
+      "bins": [
+        0,
+        8,
+        9,
+        "inf"
+      ],
+      "gen_labels": "/projects/rev/sam/default_configs/sam_gen_wind_standard_losses.csv",
+      "lcoe_labels": [
+        0,
+        1,
+        2
+      ],
+      "resource_gid": 14
+    }
+  },
+  "resource": {
+    "wind": {
+      "nominal_resource_resolution": 2000,
+      "read_chunk_size": 100,
+      "resource_file": "/projects/rev/data/resource/ri_wind/ri_wtk_{}_chunked.h5",
+      "resource_means": "/projects/rev/data/resource/ri_wind/ri_wtk_means.h5",
+      "resource_means_dataset": "windspeed_80m",
+      "resource_prj": "EPSG:4326"
+    }
+  },
+  "sam_generation": {
+    "leap_year_day_exclusion": "12-31",
+    "wind": {
+      "meta_variables": {
+        "elev": "elevation",
+        "lat": "latitude",
+        "lon": "longitude",
+        "tz": "timezone"
+      },
+      "resource_variables": {
+        "pres": {
+          "dtype_multiplier": 10.0,
+          "unit_conversion": "/ 101325.0",
+          "variable_name": "pressure_{hubheight}m"
+        },
+        "tdry": {
+          "dtype_multiplier": 0.01,
+          "unit_conversion": "",
+          "variable_name": "temperature_{hubheight}m"
+        },
+        "wdir": {
+          "dtype_multiplier": 1.0,
+          "unit_conversion": "",
+          "variable_name": "winddirection_{hubheight}m"
+        },
+        "wspd": {
+          "dtype_multiplier": 0.01,
+          "unit_conversion": "",
+          "variable_name": "windspeed_{hubheight}m"
+        }
+      }
+    },
+    "write_profiles": true
+  },
+  "sam_lcoe": {
+    "wind": {
+      "regional_capital_cost_multipliers": null
+    }
+  },
+  "supply_curve_parameters": {
+    "aggregation_factor": 64,
+    "cached_trans_lines": "ri_agg_points_cache_064_sj_infsink",
+    "database": {
+      "db_host": "gispgdb.nrel.gov",
+      "db_name": "tech_potential",
+      "db_pass": "gmaclaur",
+      "db_user": "gmaclaur"
+    },
+    "overwrite_tables": true,
+    "profiles_year": 2012,
+    "run_representative_profiles": true,
+    "run_sc_profiles": false,
+    "trans_lines": "rev_ri_subset_trans_lines",
+    "wind": {
+      "fcr": 0.098,
+      "power_density": 3.0,
+      "regional_substation_cost_mult": null,
+      "regional_transmission_line_mult": null,
+      "resource_classes": [
+        0,
+        8,
+        9,
+        "inf"
+      ],
+      "substation_tie_in_cost": 0,
+      "transmission_line_cost": 3667,
+      "transmission_tie_in_cost": 14000
+    }
+  },
+  "tech_exclusion_potential": {
+    "apply_contiguous_area_filter": false,
+    "arguments": {
+      "demreg": {
+        "values": [
+          "nodata"
+        ]
+      },
+      "generation": {
+        "values": [
+          0,
+          1
+        ]
+      },
+      "pct_slope": {
+        "values": [
+          0,
+          5
+        ]
+      },
+      "protected": {
+        "values": [
+          1
+        ]
+      },
+      "resource": {
+        "values": [
+          0,
+          100
+        ]
+      },
+      "urban": {
+        "values": [
+          2,
+          3
+        ]
+      }
+    },
+    "characterize": {
+      "demreg": "mode",
+      "interconnect": "mode",
+      "transreg": "mode"
+    },
+    "exclusion_layers": {
+      "demreg": "/projects/rev/data/ri/ri_reeds_regions.tif",
+      "interconnect": "/projects/rev/data/ri/ri_reeds_regions.tif",
+      "landmass": "/projects/rev/data/ri/ri_reeds_regions.tif",
+      "pct_slope": "/projects/rev/data/ri/ri_srtm_slope.tif",
+      "protected": "/projects/rev/data/ri/ri_padus.tif",
+      "transreg": "/projects/rev/data/ri/ri_reeds_regions.tif",
+      "urban": "/projects/rev/data/ri/ri_smod.tif"
+    },
+    "minimum_area_required": 1.0,
+    "pct_exclusion_logic": "max",
+    "template_file": "/projects/rev/data/ri/ri_reeds_regions.tif"
+  }
+}

@@ -27,8 +27,8 @@ class SAMTestManager:
                 # get unit test inputs
                 inputs = json.load(f)
         else:
-            self.logger.warning('Inputs file does not exist: {}'
-                                ''.format(i_fname))
+            self._logger.warning('Inputs file does not exist: {}'
+                                 .format(i_fname))
 
         if module == 'pvwatts':
             # test SAM pvwatts module
@@ -70,7 +70,7 @@ class SAMTestManager:
         test = self.check_test_results(sim.outputs, o_fname,
                                        module)
 
-        self.logger.debug('{} results: {}'.format(module, sim.outputs))
+        self._logger.debug('{} results: {}'.format(module, sim.outputs))
         return test
 
     def execute_reV(self, module='pvwatts',
@@ -91,8 +91,8 @@ class SAMTestManager:
                 # get unit test inputs
                 inputs = json.load(f)
         else:
-            self.logger.warning('Inputs file does not exist: {}'
-                                ''.format(i_fname))
+            self._logger.warning('Inputs file does not exist: {}'
+                                 .format(i_fname))
 
         if module == 'pvwatts':
             outputs = SAM.PV.reV_run(res_f, sites, inputs)
@@ -105,7 +105,7 @@ class SAMTestManager:
 
         test = self.check_test_results(outputs, o_fname, module)
 
-        self.logger.debug('{} results: {}'.format(module, outputs))
+        self._logger.debug('{} results: {}'.format(module, outputs))
 
         return test
 
@@ -134,21 +134,21 @@ class SAMTestManager:
             # check new outputs against the baseline
             match, items = ut.dicts_match(new_o_json, baseline)
             if match is True:
-                self.logger.info('Unit test for {} was successful.'
-                                 ''.format(module))
+                self._logger.info('Unit test for {} was successful.'
+                                  .format(module))
             else:
-                self.logger.error('Unit test for {} failed with errors in '
-                                  'the following variables: '
-                                  '"{}"'.format(module, items))
+                self._logger.error('Unit test for {} failed with errors in '
+                                   'the following variables: "{}"'
+                                   .format(module, items))
             return match
 
         else:
-            self.logger.warning('(STRONG!!!) '
-                                'Previous baseline outputs for {} do not'
-                                ' exist. Looked for outputs in the following '
-                                'file: {}'.format(module, baseline_fname))
-            self.logger.warning('Writing new baseline output file: {}'
-                                ''.format(baseline_fname))
+            self._logger.warning('(STRONG!!!) '
+                                 'Previous baseline outputs for {} do not'
+                                 ' exist. Looked for outputs in the following '
+                                 'file: {}'.format(module, baseline_fname))
+            self._logger.warning('Writing new baseline output file: {}'
+                                 .format(baseline_fname))
             with open(baseline_fname, 'w+') as f:
                 json.dump(new_o_json, f, sort_keys=True,
                           indent=4, separators=(',', ': '))

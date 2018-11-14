@@ -11,7 +11,6 @@ import os
 import pandas as pd
 
 from reV.SAM.PySSC import PySSC
-from reV.handlers import resource
 
 
 def is_num(n):
@@ -54,43 +53,37 @@ def is_2D_list(a):
 class ResourceManager:
     """Class to manage SAM input resource data."""
 
-    def __init__(self, res, sites, h=None):
+    def __init__(self, res, project_points, var_list=None):
         """Initialize a resource data iterator object for one or more sites.
 
         Parameters
         ----------
         res : reV.handlers.resource
             reV resource handler instance.
-        sites : list | iter | slice | int
-            Resource site indices to retrieve.
-        h : int, float, or None
-            Hub height for WTK data, None for NSRDB.
+        project_points : config.ProjectPoints
+            ProjectPoints instance with sites and configs.
         """
 
         log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
         self._logger = logging.getLogger(log_name)
 
-        self.index = sites
-        self._N = len(self.index)
+        self._var_list = var_list
+        sites = project_points.sites
 
-        if h is None:
-            # no hub height specified, get NSRDB solar data
-            self.res_type = 'solar'
-            var_list = ['dni', 'dhi', 'wind_speed', 'air_temperature']
-            self.retrieve(res, sites, var_list)
-        elif isinstance(h, (int, float)):
-            # hub height specified, get WTK wind data.
+        if 'wind' in project_points.tech.lower():
+            # get WTK wind data.
             self.res_type = 'wind'
-            var_list = ['pressure', 'temperature', 'winddirection',
-                        'windspeed']
-            self.retrieve(res, sites, var_list, h=h)
+            self.wind(res, project_points)
 
             # wind sometimes needs pressure to be converted to ATM
             self.convert_pressure()
+
         else:
-            raise TypeError('Hub height arg "h" specified but of wrong type: '
-                            '{}. Could not retrieve WTK or NSRDB resource '
-                            'data.'.format(type(h)))
+            # get NSRDB solar data
+            self.res_type = 'solar'
+            self.retrieve(res, sites)
+
+        self._N = None
 
     def __iter__(self):
         """Iterator initialization dunder."""
@@ -118,32 +111,132 @@ class ResourceManager:
             df = pd.DataFrame({key: value[:, self._i]
                               for key, value in self.mult_res.items()})
             df['time_index'] = self.time_index
-            return self.index[self._i], df, self.meta.iloc[self._i]
+            return self.meta.iloc[self._i].name, df, self.meta.iloc[self._i]
         else:
             # iter attribute equal or greater than iter limit
             raise StopIteration
 
     @property
-    def N(self):
-        """Get the iterator limit."""
-        return self._N
+    def var_list(self):
+        """Get the resource variable list."""
+        if self._var_list is None and self.res_type == 'wind':
+            self._var_list = ('pressure', 'temperature', 'winddirection',
+                              'windspeed')
+        elif self._var_list is None and self.res_type == 'solar':
+            self._var_list = ('dni', 'dhi', 'wind_speed', 'air_temperature')
+
+        return self._var_list
 
     @property
-    def index(self):
-        """Get the resource-native site index (requested site indices)."""
-        return self._index
+    def N(self):
+        """Get the iterator limit."""
+        if self._N is None:
+            self._N = len(self.meta)
+        return self._N
 
-    @index.setter
-    def index(self, sites):
-        """Set the resource-native site index (requested site indices)."""
-        if isinstance(sites, slice):
-            self._index = list(range(*sites.indices(sites.stop)))
-        elif isinstance(sites, int):
-            self._index = [sites]
+    def wind(self, res, project_points, h_var='wind_turbine_hub_ht'):
+        """Setup wind resource with consideration for multi-hub-height interp.
+
+        Parameters
+        ----------
+        res : reV.handlers.resource
+            reV resource handler instance.
+        project_points : config.ProjectPoints
+            ProjectPoints instance with sites and their corresponding configs.
+        h_var : str
+            Name of the hub height variable in the SAM input configs.
+        """
+
+        # get the config dict of format: config_dict[config_id] = SAM_config
+        config_dict = project_points.sam_configs
+        # get list of config ID's
+        config_keys = list(config_dict.keys())
+
+        if len(config_keys) == 1:
+            # only one set of SAM inputs, no problem!
+            h = config_dict[config_keys[0]][h_var]
+            self.retrieve(res, project_points.sites, h=h)
         else:
-            self._index = list(sites)
+            self.wind_mult_hh(res, project_points, config_dict, config_keys,
+                              h_var)
 
-    def retrieve(self, res, sites, var_list, h=None):
+    def wind_mult_hh(self, res, project_points, config_dict, config_keys,
+                     h_var):
+        """Set wind resource for multi-hub-height project points.
+
+        Parameters
+        ----------
+        res : reV.handlers.resource
+            reV resource handler instance.
+        project_points : config.ProjectPoints
+            ProjectPoints instance with sites and configs.
+        config_dict : dict
+            Multi-config dictionary from ProjectPoints. Keys are config ID's
+            and values are SAM input parameter dictionaries.
+        config_keys : list
+            List of config ID's.
+        h_var : str
+            Name of the hub height variable in the SAM input configs.
+        """
+
+        h_to_config = {}
+        for i, con in enumerate(config_keys):
+            # make a dict (h_to_config) of lists of unique hub heights
+            # (dict keys) corresponding to the list of implementing
+            # config ID's (dict values)
+            h = config_dict[con][h_var]
+            if h in h_to_config:
+                h_to_config[h] += [con]
+            else:
+                h_to_config[h] = [con]
+        self._logger.debug('Hub height to config dict: {}'
+                           .format(h_to_config))
+
+        # There are multiple configs, potentially multiple hub heights
+        # init list that will save correct order of sites as they are added
+        all_sites = []
+        for i, (h, configs) in enumerate(h_to_config.items()):
+            # iter thru unique hub heights with potentially multiple configs
+            new_sites = []
+
+            for con in configs:
+                # add new sites corresponding to configs at a single hub h
+                con_sites = project_points.get_sites_from_config(con)
+                new_sites += con_sites
+                new_sites = sorted(new_sites, key=float)
+
+            all_sites += new_sites
+            all_sites = sorted(all_sites, key=float)
+
+            # retrieve data from the sites corresponding to the config(s) and
+            # hub height. only do as many sites as necessary per hub height
+            # to minimize redundant interpolations.
+            self._logger.info('Retriving sites {} at hub height: {}m'
+                              .format(new_sites, h))
+            meta, time_index, mult_res = self.retrieve(res,
+                                                       new_sites,
+                                                       h=h,
+                                                       option='return')
+            if i == 0:
+                # first resource import, initialize object attributes
+                self.meta = meta
+                self.time_index = time_index
+                self.mult_res = mult_res
+            else:
+                # sort and append new data to attributes
+                self.meta = self.meta.append(meta).sort_index()
+                for j, site in enumerate(new_sites):
+                    # find location of new site in the sorted site list
+                    loc = all_sites.index(site)
+                    for var in self.var_list:
+                        # insert new site data into object attribute for
+                        # all variable and all sites.
+                        self.mult_res[var] = np.insert(self.mult_res[var],
+                                                       loc,
+                                                       mult_res[var][:, j],
+                                                       axis=1)
+
+    def retrieve(self, res, sites, h=None, option='attribute'):
         """Setup a multi-site resource dictionary from a reV handler instance.
 
         Parameters
@@ -152,38 +245,49 @@ class ResourceManager:
             reV resource handler instance.
         sites : list | iter | slice | int
             Site list to retrieve.
-        var_list : list
-            List of strings of variables names to pull from the resource file.
+        h : int | float
+            Hub height for wind. If set, interpolation may be performed.
+        option : str
+            Can be either 'attribute' to set results as object attributes or
+            'return' to return values outside this method for additional
+            processing.
 
-        Attributes
-        ----------
-        self.mult_res : dict
+        Returns
+        -------
+        meta : pd.DataFrame
+            Multiple-site meta data, each index is a requested site.
+        time_index : pd.DataFrame
+            Single year time_index (same for all sites).
+        mult_res : dict
             Multiple-site resource. Keys are variables in var_list. Each
             item contains a dataframe with columns for each requested site.
-        self.meta : pd.DataFrame
-            Multiple-site meta data, each index is a requested site.
-        self.time_index : pd.DataFrame
-            Single year time_index (same for all sites).
         """
 
-        self.mult_res = {}
+        mult_res = {}
 
-        self.meta = res['meta', sites]
-        self.time_index = res['time_index', :]
+        meta = res['meta', sites]
+        time_index = res['time_index', :]
 
-        for var in var_list:
+        for var in self.var_list:
             if self.res_type == 'wind' and h is not None:
                 # request special ds names for wind hub heights
                 var_hm = var + '_{}m'.format(h)
-                self.mult_res[var] = res[var_hm, :, sites]
+                mult_res[var] = res[var_hm, :, sites]
             else:
                 # non-wind needs no special dataset name formatting
-                self.mult_res[var] = res[var, :, sites]
+                mult_res[var] = res[var, :, sites]
 
-            if len(self.mult_res[var].shape) < 2:
+            if len(mult_res[var].shape) < 2:
                 # ensure that the array is 2D to ease downstream indexing
-                self.mult_res[var] = self.mult_res[var].reshape(
-                    (self.mult_res[var].shape[0], 1))
+                mult_res[var] = mult_res[var].reshape(
+                    (mult_res[var].shape[0], 1))
+
+        if option == 'attribute':
+            self.meta = meta
+            self.time_index = time_index
+            self.mult_res = mult_res
+        elif option == 'return':
+            return meta, time_index, mult_res
 
     def convert_pressure(self):
         """If pressure is in resource vars, convert to ATM if in Pa."""
@@ -679,33 +783,35 @@ class SAM:
             Zipped list of output requests (self.output_request) and SAM
             numerical results from the respective result functions.
         """
+        results = {}
+        for request in self.output_request:
+            if request == 'cf_mean':
+                results[request] = self.cf_mean
+            elif request == 'cf_profile':
+                results[request] = self.cf_profile
+            elif request == 'annual_energy':
+                results[request] = self.annual_energy
+            elif request == 'energy_yield':
+                results[request] = self.energy_yield
+            elif request == 'gen_profile':
+                results[request] = self.gen_profile
+            elif request == 'ppa_price':
+                results[request] = self.ppa_price
+            elif request == 'lcoe_fcr':
+                results[request] = self.lcoe_fcr
 
-        _kw_out = {'cf_mean': self.cf_mean,
-                   'cf_profile': self.cf_profile,
-                   'annual_energy': self.annual_energy,
-                   'energy_yield': self.energy_yield,
-                   'gen_profile': self.gen_profile,
-                   'ppa_price': self.ppa_price,
-                   'lcoe_fcr': self.lcoe_fcr,
-                   }
-
-        results = [_kw_out[request.lower()]
-                   for request in self.output_request]
-
-        return dict(zip(self.output_request, results))
+        return results
 
     @classmethod
-    def reV_run(cls, res_file, sites, inputs, output_request=('cf_mean',)):
+    def reV_run(cls, resources, project_points, output_request=('cf_mean',)):
         """Execute a SAM simulation for a single site with default reV outputs.
 
         Parameters
         ----------
-        res_file : str
-            H5 file containing resource data.
-        sites : list | iter | slice | int
-            Site indices from the resource file (res_file) to run for SAM.
-        inputs : dict
-            Required SAM simulation input parameters.
+        resources : ResourceManager
+            ResourceManager instance that emulates an iterator.
+        project_points : config.ProjectPoints
+            ProjectPoints instance containing site and SAM config info.
         output_request : list | tuple
             Outputs to retrieve from SAM.
 
@@ -719,24 +825,17 @@ class SAM:
 
         out = {}
 
-        if 'wind_turbine_hub_ht' in inputs.keys():
-            # get wind resource.
-            h = inputs['wind_turbine_hub_ht']
-            res = resource.WTK(res_file)
-        else:
-            # Wind hub height not specified, NSRDB will be retrieved.
-            h = None
-            res = resource.NSRDB(res_file)
-
-        resources = ResourceManager(res, sites, h=h)
-
         for site, res_df, meta in resources:
+            # get SAM inputs from project_points based on the current site
+            config, inputs = project_points[site]
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
                       output_request=output_request)
             sim.execute(cls.MODULE)
             out[site] = sim.outputs
-            sim._logger.debug('Site {}, outputs: {}'.format(site, out[site]))
+
+            sim._logger.info('Site {} with config "{}", \n\toutputs: {}...'
+                             .format(site, config, str(out[site])[:20]))
 
         return out
 
@@ -776,17 +875,13 @@ class Solar(SAM):
             self._logger.debug('Setting resource and meta data for Solar.')
             self.set_nsrdb(resource)
 
-    def set_nsrdb(self, resource, var_list=('dni', 'dhi', 'wind_speed',
-                                            'air_temperature')):
+    def set_nsrdb(self, resource):
         """Set SSC NSRDB resource data arrays.
 
         Parameters
         ----------
         resource : pd.DataFrame
             2D table with resource data. Available columns must have var_list.
-        var_list : list | tuple
-            List of resource variable names to set. Must correspond with
-            column names in resource.
         """
 
         # call generic set resource method from the base class
@@ -795,17 +890,19 @@ class Solar(SAM):
         # map resource data names to SAM required data names
         var_map = {'dni': 'dn',
                    'dhi': 'df',
+                   'ghi': 'gh',
                    'wind_speed': 'wspd',
                    'air_temperature': 'tdry',
                    }
 
         # set resource variables
-        for var in var_list:
-            self._logger.debug('Setting {} resource data.'.format(var))
-            self.ssc.data_set_array(self.res_data, var_map[var],
-                                    np.roll(resource[var],
-                                            int(self.meta['timezone'] *
-                                                self.time_interval)))
+        for var in resource.columns.values:
+            if var != 'time_index':
+                self._logger.debug('Setting {} resource data.'.format(var))
+                self.ssc.data_set_array(self.res_data, var_map[var],
+                                        np.roll(resource[var],
+                                                int(self.meta['timezone'] *
+                                                    self.time_interval)))
 
         # add resource data to self.data and clear
         self.ssc.data_set_table(self.data, 'solar_resource_data',

@@ -6,6 +6,9 @@ Created on Mon Nov 19 11:23:03 2018
 """
 from copy import deepcopy
 import numpy as np
+import os
+
+TESTDIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def jsonify_key(key):
