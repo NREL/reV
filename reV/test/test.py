@@ -59,7 +59,7 @@ def dicts_match(x, y):
         return False, list(x.symmetric_difference(y))
 
 
-class SAM_Test_Manager():
+class SAM_Test_Manager:
     """SAM unit test manager."""
     def __init__(self):
         """Initialize a SAM unit test manager."""
@@ -132,7 +132,7 @@ class SAM_Test_Manager():
                                                     'gen_profile',
                                                     'lcoe_fcr'])
 
-        sim.execute()
+        sim.execute(sim.MODULE)
         test = self.check_test_results(sim.outputs, o_fname,
                                        module)
 
