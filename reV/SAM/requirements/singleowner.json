@@ -1039,20 +1039,6 @@
     ]
   ],
   [
-    "number_compute_modules",
-    [
-      "int",
-      "float"
-    ]
-  ],
-  [
-    "number_metrics",
-    [
-      "int",
-      "float"
-    ]
-  ],
-  [
     "om_capacity",
     [
       "list",
