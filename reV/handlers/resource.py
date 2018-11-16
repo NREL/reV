@@ -8,13 +8,12 @@ from reV.exceptions import (ResourceKeyError, ResourceRuntimeError,
                             ResourceValueError, ExtrapolationWarning)
 import warnings
 
-logger = logging.getLogger(__name__)
 
 class SAMResource:
     """
     Resource Manager for SAM
     """
-    def __init__(self, project_points, time_index):
+    def __init__(self, project_points, time_index, require_wind_dir=False):
         """
         Parameters
         ----------
@@ -26,7 +25,7 @@ class SAMResource:
         self._project_points = project_points
         self._time_index = time_index
         self._shape = (len(time_index), len(project_points.sites))
-        self._n = self._shape[0]
+        self._n = self._shape[1]
         self._meta = None
         self._runnable = False
         self._res_arrays = {}
@@ -41,9 +40,9 @@ class SAMResource:
                 if len(h) != self._n:
                     msg = 'Must have a unique height for each site'
                     raise ResourceValueError(msg)
-
-            self._res_arrays['winddirection'] = np.zeros(self._shape,
-                                                         dtype='float32')
+            if not require_wind_dir:
+                self._res_arrays['winddirection'] = np.zeros(self._shape,
+                                                             dtype='float32')
 
         self._h = h
 
@@ -56,8 +55,13 @@ class SAMResource:
         return self._n
 
     def __getitem__(self, keys):
-        var = keys[0]
-        var_slice = keys[1:]
+        if isinstance(keys, tuple):
+            var = keys[0]
+            var_slice = keys[1:]
+        else:
+            var = keys
+            var_slice = (slice(None, None, None),)
+
         if var == 'time_index':
             out = self.time_index
             out = out[var_slice[0]]
@@ -74,9 +78,14 @@ class SAMResource:
 
         return out
 
-    def __setitem__(self, key, arr):
-        var = key[0]
-        var_slice = key[1:]
+    def __setitem__(self, keys, arr):
+        if isinstance(keys, tuple):
+            var = keys[0]
+            var_slice = keys[1:]
+        else:
+            var = keys
+            var_slice = (slice(None, None, None),)
+
         if var == 'meta':
             self.meta = arr
         else:
@@ -327,7 +336,7 @@ class SAMResource:
         except ValueError:
             raise ResourceValueError('{} is not in available sites'
                                      .format(site))
-        site_meta = self.meta.loc(site)
+        site_meta = self.meta.loc[site].copy()
         if self._h is not None:
             try:
                 h = self._h[idx]
@@ -348,37 +357,35 @@ class SAMResource:
 class Resource:
     """
     Base class to handle resource .h5 files
-
-    Parameters
-    ----------
-    h5_file : 'str'
-        Path to .h5 resource file
-    unscale : 'boole'
-        Boolean flag to automatically unscale variables on extraction
     """
     SCALE_ATTR = 'scale_factor'
 
     def __init__(self, h5_file, unscale=True):
+        """
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        """
         self._h5_file = h5_file
         self._h5 = h5py.File(self._h5_file, 'r')
         self._datasets = list(self._h5)
         self._unscale = unscale
         self._dsets = list(self._h5)
 
+        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
+        self._logger = logging.getLogger(log_name)
+
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
         return msg
 
     def __enter__(self):
-        """
-        Enter method to allow use of with
-        """
         return self
 
     def __exit__(self, type, value, traceback):
-        """
-        Closes dataset on exiting with
-        """
         self.close()
 
         if type is not None:
@@ -388,9 +395,9 @@ class Resource:
         ds = keys[0]
         ds_slice = keys[1:]
         if ds == 'time_index':
-            out = self.time_index(*ds_slice)
+            out = self._time_index(*ds_slice)
         elif ds == 'meta':
-            out = self.meta(*ds_slice)
+            out = self._meta(*ds_slice)
         elif 'SAM' in ds:
             site = ds_slice[0]
             if isinstance(site, int):
@@ -399,17 +406,17 @@ class Resource:
                 msg = "Can only extract SAM DataFrame for a single site"
                 raise ResourceRuntimeError(msg)
         else:
-            out = self.get_ds(ds, *ds_slice)
+            out = self._get_ds(ds, *ds_slice)
 
         return out
 
-    def time_index(self, *ds_slice):
+    def _time_index(self, *ds_slice):
         """
         Extract and convert time_index to pandas Datetime Index
 
         Examples
         --------
-        self['time_index, 1]
+        self['time_index', 1]
             - Get a single timestep This returns a Timestamp
         self['time_index', :10]
             - Get the first 10 timesteps
@@ -418,19 +425,19 @@ class Resource:
 
         Parameters
         ----------
-        ds_slice : 'tuple'
-            tuple describing list ds_slice to extract
+        ds_slice : tuple of int | list | slice
+            tuple describing slice of time_index to extract
 
         Returns
         -------
-        time_index : 'Pandas.DatetimeIndex'
+        time_index : pandas.DatetimeIndex
             Vector of datetime stamps
         """
         time_index = self._h5['time_index'][ds_slice[0]]
         time_index: np.array
         return pd.to_datetime(time_index.astype(str))
 
-    def meta(self, *ds_slice):
+    def _meta(self, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
 
@@ -449,12 +456,12 @@ class Resource:
 
         Parameters
         ----------
-        ds_slice : 'tuple'
+        ds_slice : tuple of int | list | slice
             Pandas slicing describing which sites and columns to extract
 
         Returns
         -------
-        meta : 'Pandas.Dataframe'
+        meta : pandas.Dataframe
             Dataframe of location meta data
         """
         sites = ds_slice[0]
@@ -488,7 +495,7 @@ class Resource:
         """
         pass
 
-    def get_ds(self, ds_name, *ds_slice):
+    def _get_ds(self, ds_name, *ds_slice):
         """
         Extract data from given dataset
 
@@ -504,14 +511,14 @@ class Resource:
 
         Parameters
         ----------
-        ds_name : 'str'
+        ds_name : str
             Variable dataset to be extracted
-        ds_slice : 'tuple'
-            tuple describing list ds_slice to extract
+        ds_slice : tuple of int | list | slice
+            tuple describing slice of dataset array to extract
 
         Returns
         -------
-        ds : 'ndarray'
+        ds : ndarray
             ndarray of variable timeseries data
             If unscale, returned in native units else in scaled units
         """
@@ -532,6 +539,20 @@ class Resource:
         Close h5 instance
         """
         self._h5.close()
+
+    @classmethod
+    def preload_SAM(cls, h5_file, project_points, **kwargs):
+        """
+        Placeholder for classmethod that will pre-load project_points for SAM
+
+        Parameters
+        ----------
+        h5_file : str
+            h5_file to extract resource from
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+        """
+        pass
 
 
 class SolarResource(Resource):
@@ -565,6 +586,33 @@ class SolarResource(Resource):
         else:
             raise ResourceValueError("SAM requires unscaled values")
 
+    @classmethod
+    def preload_SAM(cls, h5_file, project_points):
+        """
+        Placeholder for classmethod that will pre-load project_points for SAM
+
+        Parameters
+        ----------
+        h5_file : str
+            h5_file to extract resource from
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+
+        Returns
+        -------
+        SAM_res : SAMResource
+            Instance of SAMResource pre-loaded with Solar resource for sites
+            in project_points
+        """
+        with cls(h5_file) as res:
+            SAM_res = SAMResource(project_points, res['time_index'])
+            sites_slice = project_points.sites_as_slice
+            SAM_res['meta'] = res['meta', sites_slice]
+            for ds in SAM_res.var_list:
+                SAM_res[ds] = res[ds, :, sites_slice]
+
+        return SAM_res
+
 
 class NSRDB(SolarResource):
     """
@@ -588,20 +636,20 @@ class WindResource(Resource):
         self._heights = None
 
     @staticmethod
-    def parse_name(ds_name):
+    def _parse_name(ds_name):
         """
         Extract dataset name and height from dataset name
 
         Parameters
         ----------
-        ds_name : 'str'
+        ds_name : str
             Dataset name
 
         Returns
         -------
-        name : 'str'
+        name : str
             Variable name
-        h : 'int'
+        h : int | float
             Height of variable
         """
         try:
@@ -622,6 +670,12 @@ class WindResource(Resource):
         """
         Extract available heights for pressure, temperature, windspeed
         and winddirection variables. Used for interpolation/extrapolation.
+
+        Returns
+        -------
+        self._heights : list
+            List of available heights for:
+            windspeed, winddirection, temperature, and pressure
         """
         if self._heights is None:
             dsets = list(self._h5)
@@ -630,7 +684,7 @@ class WindResource(Resource):
                        'windspeed': [],
                        'winddirection': []}
             for ds in dsets:
-                ds_name, h = self.parse_name(ds)
+                ds_name, h = self._parse_name(ds)
                 if ds_name in heights.keys():
                     heights[ds_name].append(h)
 
@@ -647,16 +701,16 @@ class WindResource(Resource):
 
         Parameters
         ----------
-        h : 'int'|'float'
+        h : int | float
             Height value of interest
-        heights : 'list'
+        heights : list
             List of available heights
 
         Returns
         -------
-        nearest_h : 'list'
+        nearest_h : list
             list of 1st and 2nd nearest height in heights
-        extrapolate : 'boole'
+        extrapolate : bool
             Flag as to whether h is inside or outside heights range
         """
         if isinstance(heights, (list, tuple)):
@@ -682,22 +736,22 @@ class WindResource(Resource):
 
         Parameters
         ----------
-        ts_1 : 'ndarray'
+        ts_1 : ndarray
             Time-series array at height h_1
-        h_1 : 'int'
+        h_1 : int | float
             Height corresponding to time-seris ts_1
-        ts_2 : 'ndarray'
+        ts_2 : ndarray
             Time-series array at height h_2
-        h_2 : 'int'
+        h_2 : int | float
             Height corresponding to time-seris ts_2
-        h : 'float'
+        h : int | float
             Height of desired time-series
-        mean : 'bool'
+        mean : bool
             Calculate average alpha versus point by point alpha
 
         Returns
         -------
-        out : 'ndarray'
+        out : ndarray
             Time-series array at height h
         """
         if h == h_1:
@@ -714,9 +768,9 @@ class WindResource(Resource):
                          np.log(h_2 / h_1))
 
                 if alpha < 0.06:
-                    logger.warnings('Alpha is < 0.06', RuntimeWarning)
+                    warnings.warn('Alpha is < 0.06', RuntimeWarning)
                 elif alpha > 0.6:
-                    logger.warnings('Alpha is > 0.6', RuntimeWarning)
+                    warnings.warn('Alpha is > 0.6', RuntimeWarning)
             else:
                 # Replace zero values for alpha calculation
                 ts_1[ts_1 == 0] = 0.001
@@ -738,20 +792,20 @@ class WindResource(Resource):
 
         Parameters
         ----------
-        ts_1 : 'ndarray'
+        ts_1 : ndarray
             Time-series array at height h_1
-        h_1 : 'int'
+        h_1 : int | float
             Height corresponding to time-seris ts_1
-        ts_2 : 'ndarray'
+        ts_2 : ndarray
             Time-series array at height h_2
-        h_2 : 'int'
+        h_2 : int | float
             Height corresponding to time-seris ts_2
-        h : 'float'
+        h : int | float
             Height of desired time-series
 
         Returns
         -------
-        out : 'ndarray'
+        out : ndarray
             Time-series array at height h
         """
         if h == h_1:
@@ -778,14 +832,14 @@ class WindResource(Resource):
 
         Parameters
         ----------
-        a0 : 'object'
+        a0 : int | float
             angle 0 in degrees
-        a1 : 'object'
+        a1 : int | float
             angle 1 in degrees
 
         Returns
         -------
-        da : 'object'
+        da : int | float
             shortest angle distance between a0 and a1
         """
         da = (a1 - a0) % 360
@@ -798,20 +852,20 @@ class WindResource(Resource):
 
         Parameters
         ----------
-        ts_1 : 'ndarray'
+        ts_1 : ndarray
             Time-series array at height h_1
-        h_1 : 'int'
+        h_1 : int | float
             Height corresponding to time-seris ts_1
-        ts_2 : 'ndarray'
+        ts_2 : ndarray
             Time-series array at height h_2
-        h_2 : 'int'
+        h_2 : int | float
             Height corresponding to time-seris ts_2
-        h : 'float'
+        h : int | float
             Height of desired time-series
 
         Returns
         -------
-        out : 'ndarray'
+        out : ndarray
             Time-series array at height h
         """
         if h == h_1:
@@ -828,31 +882,31 @@ class WindResource(Resource):
 
         return out
 
-    def get_ds(self, ds_name, *ds_slice):
+    def _get_ds(self, ds_name, *ds_slice):
         """
         Extract data from given dataset
 
         Parameters
         ----------
-        ds_name : 'str'
+        ds_name : str
             Variable dataset to be extracted
-        ds_slice : 'tuple'
+        ds_slice : tuple of int | list | slice
             tuple describing list ds_slice to extract
 
         Returns
         -------
-        out : 'ndarray'
+        out : ndarray
             ndarray of variable timeseries data
             If unscale, returned in native units else in scaled units
         """
-        var_name, h = self.parse_name(ds_name)
+        var_name, h = self._parse_name(ds_name)
         heights = self.heights[var_name]
         if h in heights:
-            out = super().get_ds(ds_name, *ds_slice)
+            out = super()._get_ds(ds_name, *ds_slice)
         else:
             (h1, h2), extrapolate = self.get_nearest_h(h, heights)
-            ts1 = super().get_ds('{}_{}m'.format(var_name, h1), *ds_slice)
-            ts2 = super().get_ds('{}_{}m'.format(var_name, h2), *ds_slice)
+            ts1 = super()._get_ds('{}_{}m'.format(var_name, h1), *ds_slice)
+            ts2 = super()._get_ds('{}_{}m'.format(var_name, h2), *ds_slice)
 
             if (var_name == 'windspeed') and extrapolate:
                 out = self.power_law_interp(ts1, h1, ts2, h2, h)
@@ -894,6 +948,55 @@ class WindResource(Resource):
             return res_df
         else:
             raise ResourceValueError("SAM requires unscaled values")
+
+    @classmethod
+    def preload_SAM(cls, h5_file, project_points, require_wind_dir=False):
+        """
+        Placeholder for classmethod that will pre-load project_points for SAM
+
+        Parameters
+        ----------
+        h5_file : str
+            h5_file to extract resource from
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+
+        Returns
+        -------
+        SAM_res : SAMResource
+            Instance of SAMResource pre-loaded with Solar resource for sites
+            in project_points
+        """
+        with cls(h5_file) as res:
+            SAM_res = SAMResource(project_points, res['time_index'],
+                                  require_wind_dir=require_wind_dir)
+            sites_slice = project_points.sites_as_slice
+            SAM_res['meta'] = res['meta', sites_slice]
+            var_list = SAM_res.var_list
+            if not require_wind_dir:
+                var_list.remove('winddirection')
+
+            h = project_points.h
+            if isinstance(h, (int, float)):
+                for var in var_list:
+                    ds_name = "{}_{}m".format(var, h)
+                    SAM_res[var] = res[var, :, sites_slice]
+            else:
+                _, unq_idx = np.unique(h, return_inverse=True)
+                unq_h = sorted(list(set(h)))
+
+                site_list = np.array(project_points.sites)
+                height_slices = {}
+                for i, h_i in enumerate(unq_h):
+                    pos = np.where(unq_idx == i)[0]
+                    height_slices[h_i] = (site_list[pos], pos)
+
+                for var in var_list:
+                    for h_i, (h_pos, sam_pos) in height_slices.items():
+                        ds_name = '{}_{}m'.format(var, h_i)
+                        SAM_res[var, :, sam_pos] = res[ds_name, :, h_pos]
+
+        return SAM_res
 
 
 class WTK(WindResource):
