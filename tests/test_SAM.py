@@ -273,7 +273,8 @@ def execute_pytest(capture='all', flags='-rapP'):
         Which tests to show logs and results for.
     """
 
-    pytest.main(['-q', '--show-capture={}'.format(capture), 'test.py', flags])
+    pytest.main(['-q', '--show-capture={}'.format(capture), 'test_SAM.py',
+                 flags])
 
 
 if __name__ == '__main__':
