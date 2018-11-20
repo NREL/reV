@@ -13,6 +13,9 @@ import pandas as pd
 from reV.SAM.PySSC import PySSC
 
 
+logger = logging.getLogger(__name__)
+
+
 def is_num(n):
     """Check if input is a number (returns True/False)"""
     try:
@@ -63,9 +66,6 @@ class ResourceManager:
         project_points : config.ProjectPoints
             ProjectPoints instance with sites and configs.
         """
-
-        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
-        self._logger = logging.getLogger(log_name)
 
         self._var_list = var_list
         sites = project_points.sites
@@ -189,8 +189,7 @@ class ResourceManager:
                 h_to_config[h] += [con]
             else:
                 h_to_config[h] = [con]
-        self._logger.debug('Hub height to config dict: {}'
-                           .format(h_to_config))
+        logger.debug('Hub height to config dict: {}'.format(h_to_config))
 
         # There are multiple configs, potentially multiple hub heights
         # init list that will save correct order of sites as they are added
@@ -211,8 +210,8 @@ class ResourceManager:
             # retrieve data from the sites corresponding to the config(s) and
             # hub height. only do as many sites as necessary per hub height
             # to minimize redundant interpolations.
-            self._logger.info('Retriving sites {} at hub height: {}m'
-                              .format(new_sites, h))
+            logger.info('Retriving sites {} at hub height: {}m'
+                        .format(new_sites, h))
             meta, time_index, mult_res = self.retrieve(res,
                                                        new_sites,
                                                        h=h,
@@ -311,9 +310,6 @@ class ParametersManager:
             SAM module ('pvwatts', 'tcsmolten_salt', etc...)
         """
 
-        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
-        self._logger = logging.getLogger(log_name)
-
         # set the parameters and module properties
         self._module = module
         self.parameters = parameters
@@ -350,12 +346,12 @@ class ParametersManager:
         if isinstance(p, dict):
             self._parameters = p
         else:
-            self._logger.warning('Input parameters for {} SAM module need to '
-                                 'be input as a dictionary but were input as '
-                                 'a {}'.format(self.module, type(p)))
-            self._logger.warning('No input parameters specified for '
-                                 '{} SAM module, defaults will be set'
-                                 .format(self.module))
+            logger.warning('Input parameters for {} SAM module need to '
+                           'be input as a dictionary but were input as '
+                           'a {}'.format(self.module, type(p)))
+            logger.warning('No input parameters specified for '
+                           '{} SAM module, defaults will be set'
+                           .format(self.module))
             self._parameters = {}
 
     @property
@@ -427,8 +423,7 @@ class ParametersManager:
         for new, _ in self.requirements:
             if new not in self.parameters.keys():
                 self.__setitem__(new, defaults[new])
-                self._logger.warning('Setting default value for "{}"'
-                                     ''.format(new))
+                logger.warning('Setting default value for "{}"'.format(new))
 
     def require_resource_file(self, res_type):
         """Enforce requirement of a resource file if res data is not input"""
@@ -450,18 +445,18 @@ class ParametersManager:
         """
         missing_inputs = False
         for name, dtypes in self.requirements:
-            self._logger.debug('Verifying input parameter: "{}" '
-                               'of viable types: {}'.format(name, dtypes))
+            logger.debug('Verifying input parameter: "{}" '
+                         'of viable types: {}'.format(name, dtypes))
             if name not in self.parameters.keys():
-                self._logger.warning('SAM input parameters must contain "{}"'
-                                     ''.format(name))
+                logger.warning('SAM input parameters must contain "{}"'
+                               .format(name))
                 missing_inputs = True
             else:
                 p = self.parameters[name]
                 if not any([isinstance(p, d) for d in dtypes]):
-                    self._logger.warning('SAM input parameter "{}" must be of '
-                                         'type {} but is of type {}'
-                                         ''.format(name, dtypes, type(p)))
+                    logger.warning('SAM input parameter "{}" must be of '
+                                   'type {} but is of type {}'
+                                   .format(name, dtypes, type(p)))
         if missing_inputs:
             self.set_defaults()
 
@@ -488,9 +483,7 @@ class SAM:
             'lcoe_fcr').
         """
 
-        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
-        self._logger = logging.getLogger(log_name)
-        self._logger.debug('SAM base class initializing...')
+        logger.debug('SAM base class initializing...')
 
         # set attribute to store site number
         self.site = None
@@ -570,16 +563,16 @@ class SAM:
             dictionary self.parameters. Otherwise, only parameter keys in
             keys_to_set will be set.
         """
-        self._logger.debug('Setting SAM input parameters.')
+        logger.debug('Setting SAM input parameters.')
         if keys_to_set == 'all':
-            self._logger.debug(self.parameters.keys())
+            logger.debug(self.parameters.keys())
             keys_to_set = self.parameters.keys()
 
         for key in keys_to_set:
-            self._logger.debug('Setting parameter: {} = {}...'
-                               .format(key, str(self.parameters[key])[:20]))
-            self._logger.debug('Parameter {} has type: {}'
-                               .format(key, type(self.parameters[key])))
+            logger.debug('Setting parameter: {} = {}...'
+                         .format(key, str(self.parameters[key])[:20]))
+            logger.debug('Parameter {} has type: {}'
+                         .format(key, type(self.parameters[key])))
 
             # Set data to SSC using appropriate logic
             if is_num(self.parameters[key]) is True:
@@ -615,7 +608,7 @@ class SAM:
                    'elevation': 'elev'}
 
         for var in meta_vars:
-            self._logger.debug('Setting {} meta data.'.format(var))
+            logger.debug('Setting {} meta data.'.format(var))
             self.ssc.data_set_number(self.res_data, var_map[var],
                                      self.meta[var])
 
@@ -634,7 +627,7 @@ class SAM:
             List of time variable names to set.
         """
         for var in time_vars:
-            self._logger.debug('Setting {} time index data.'.format(var))
+            logger.debug('Setting {} time index data.'.format(var))
             self.ssc.data_set_array(self.res_data, var,
                                     getattr(time_index.dt, var).values)
 
@@ -753,18 +746,18 @@ class SAM:
             modules_to_run = [modules_to_run]
 
         for m in modules_to_run:
-            self._logger.info('Running SAM module "{}" for site #{}'
-                              .format(m, self.site))
+            logger.info('Running SAM module "{}" for site #{}'
+                        .format(m, self.site))
             module = self.ssc.module_create(m.encode())
             self.ssc.module_exec_set_print(0)
             if self.ssc.module_exec(module, self.data) == 0:
                 msg = ('SAM Simulation Error in "{}" for site #{}'
                        .format(m, self.site))
-                self._logger.error(msg)
+                logger.error(msg)
                 idx = 1
                 msg = self.ssc.module_log(module, 0)
                 while msg is not None:
-                    self._logger.error('{}'.format(msg.decode('utf-8')))
+                    logger.error('{}'.format(msg.decode('utf-8')))
                     msg = self.ssc.module_log(module, idx)
                     idx = idx + 1
                 raise Exception(msg)
@@ -834,8 +827,8 @@ class SAM:
             sim.execute(cls.MODULE)
             out[site] = sim.outputs
 
-            sim._logger.info('Site {} with config "{}", \n\toutputs: {}...'
-                             .format(site, config, str(out[site])[:20]))
+            logger.info('Site {} with config "{}", \n\toutputs: {}...'
+                        .format(site, config, str(out[site])[:20]))
 
         return out
 
@@ -865,14 +858,14 @@ class Solar(SAM):
         # don't pass resource to base class, set in set_nsrdb instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,
                          output_request=output_request)
-        self._logger.debug('SAM Solar class initializing...')
+        logger.debug('SAM Solar class initializing...')
 
         if resource is None or meta is None:
             # if no resource input data is specified, you need a resource file
             self.parameters.require_resource_file(res_type='solar')
 
         elif resource is not None and meta is not None:
-            self._logger.debug('Setting resource and meta data for Solar.')
+            logger.debug('Setting resource and meta data for Solar.')
             self.set_nsrdb(resource)
 
     def set_nsrdb(self, resource):
@@ -898,7 +891,7 @@ class Solar(SAM):
         # set resource variables
         for var in resource.columns.values:
             if var != 'time_index':
-                self._logger.debug('Setting {} resource data.'.format(var))
+                logger.debug('Setting {} resource data.'.format(var))
                 self.ssc.data_set_array(self.res_data, var_map[var],
                                         np.roll(resource[var],
                                                 int(self.meta['timezone'] *
@@ -934,7 +927,7 @@ class PV(Solar):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        self._logger.debug('SAM PV class initializing...')
+        logger.debug('SAM PV class initializing...')
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM PV solar simulation.
@@ -963,7 +956,7 @@ class CSP(Solar):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        self._logger.debug('SAM CSP class initializing...')
+        logger.debug('SAM CSP class initializing...')
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM CSP solar simulation.
@@ -1006,14 +999,14 @@ class Wind(SAM):
         # don't pass resource to base class, set in set_wtk instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,
                          output_request=output_request)
-        self._logger.debug('SAM Wind class initializing...')
+        logger.debug('SAM Wind class initializing...')
 
         if resource is None or meta is None:
             # if no resource input data is specified, you need a resource file
             self.parameters.require_resource_file(res_type='wind')
 
         elif resource is not None and meta is not None:
-            self._logger.debug('Setting resource and meta data for Wind.')
+            logger.debug('Setting resource and meta data for Wind.')
             self.set_wtk(resource)
 
     def set_wtk(self, resource):
@@ -1054,7 +1047,7 @@ class LandBasedWind(Wind):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        self._logger.debug('SAM land-based wind class initializing...')
+        logger.debug('SAM land-based wind class initializing...')
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM land based wind simulation.
@@ -1083,7 +1076,7 @@ class OffshoreWind(LandBasedWind):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        self._logger.debug('SAM offshore wind class initializing...')
+        logger.debug('SAM offshore wind class initializing...')
 
 
 class Economic(SAM):
@@ -1111,10 +1104,7 @@ class Economic(SAM):
             'lcoe_fcr').
         """
 
-        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
-        self._logger = logging.getLogger(log_name)
-
-        self._logger.debug('SAM Economomic class initializing...')
+        logger.debug('SAM Economomic class initializing...')
 
         # set attribute to store site number
         self.site = None
@@ -1145,7 +1135,7 @@ class LCOE(Economic):
         """Initialize a SAM LCOE economic model object.
         """
         super().__init__(ssc, data, parameters, output_request)
-        self._logger.debug('SAM LCOE class initializing...')
+        logger.debug('SAM LCOE class initializing...')
 
 
 class SingleOwner(Economic):
@@ -1157,4 +1147,4 @@ class SingleOwner(Economic):
         """Initialize a SAM single owner economic model object.
         """
         super().__init__(ssc, data, parameters, output_request)
-        self._logger.debug('SAM LCOE class initializing...')
+        logger.debug('SAM LCOE class initializing...')

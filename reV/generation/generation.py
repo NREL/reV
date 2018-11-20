@@ -1,38 +1,26 @@
 """
 Generation
 """
+from dask.distributed import LocalCluster, Client
 import logging
 import os
-
 import reV.SAM.SAM as SAM
 from reV.config.config import Config
 from reV import __dir__ as REVDIR
-from reV.rev_logger import setup_logger
+from reV.rev_logger import init_logger, REV_LOGGERS
 from reV.handlers import resource
+
+
+logger = logging.getLogger(__name__)
 
 
 class Gen:
     """Base class for generation"""
     def __init__(self, config_file):
         """Initialize a generation instance."""
-        self._logger = logging.getLogger(self.__class__.__name__)
-
-        _, handler = setup_logger(__name__)
 
         self._output_request = None
         self._config = Config(config_file)
-
-        logger_list = ["reV.config", "reV.SAM", "reV.handlers"]
-        loggers = {}
-        for log in logger_list:
-            loggers[log] = logging.getLogger(log)
-            if not loggers[log].handlers:
-                loggers[log].addHandler(handler)
-            loggers[log].setLevel(self.config.logging_level)
-
-        if not self._logger.handlers:
-            self._logger.addHandler(handler)
-        self._logger.setLevel(self.config.logging_level)
 
     @property
     def config(self):
@@ -53,53 +41,125 @@ class Gen:
         """Get config project points"""
         return self._config.project_points
 
-    def execute(self):
-        """Execute the generation tech."""
-        for file in self.config.res_files:
+    @property
+    def execution_control(self):
+        """Get config project points"""
+        return self._config.execution_control
 
-            if 'nsrdb' in file:
-                res_iter = SAM.ResourceManager(resource.NSRDB(file),
-                                               self.project_points,
-                                               var_list=('dni', 'dhi',
-                                                         'wind_speed',
-                                                         'air_temperature'))
-            elif 'wtk' in file:
-                res_iter = SAM.ResourceManager(resource.WTK(file),
-                                               self.project_points)
+    def execute_parallel(self, execution_control=None, res_files=None):
+        """Execute a parallel generation compute."""
+        if execution_control is None:
+            execution_control = self.execution_control
+        if res_files is None:
+            res_files = self.config.res_files
+
+        for res_file in res_files:
+
+            # set the current level. split level will be one level down.
+            execution_control.level = 'node'
+
+            cluster = LocalCluster(n_workers=execution_control.N)
+            with Client(cluster) as client:
+                client.run(REV_LOGGERS.init_logger, __name__)
+                client.run(REV_LOGGERS.init_logger, 'reV.SAM')
+                futures = []
+
+                for exec_slice in execution_control:
+                    print(exec_slice.project_points.sites)
+                    futures.append(
+                        client.submit(self.execute_serial,
+                                      execution_control=exec_slice,
+                                      res_files=[res_file]))
+
+                results = client.gather(futures)
+
+        return results
+
+    @staticmethod
+    def test_dd(execution_control=None, res_files=None):
+        """Simple test dask distributed."""
+        project_points = execution_control.project_points
+
+        for res_file in res_files:
+
+            if 'nsrdb' in res_file:
+                res_iter = SAM.ResourceManager(resource.NSRDB(res_file),
+                                               project_points)
+            elif 'wtk' in res_file:
+                res_iter = SAM.ResourceManager(resource.WTK(res_file),
+                                               project_points)
+
+        return res_iter
+
+    def execute_serial(self, execution_control=None, res_files=None,
+                       output_request=None):
+        """Exec generation sim for a single file and instance of project points
+        """
+        if execution_control is None:
+            execution_control = self.execution_control
+        if res_files is None:
+            res_files = self.config.res_files
+        if output_request is None:
+            output_request = self.output_request
+
+        project_points = execution_control.project_points
+
+        logger.info('Running Gen serial for sites: {}'
+                    .format(project_points.sites))
+
+        for res_file in res_files:
+
+            res_iter = self.get_sam_res(res_file, project_points)
 
             if self.config.tech == 'pv':
-                outputs = SAM.PV.reV_run(res_iter,
-                                         self.project_points,
-                                         output_request=self.output_request)
+                out = SAM.PV.reV_run(res_iter, project_points,
+                                     output_request=output_request)
 
             elif self.config.tech == 'csp':
-                outputs = SAM.CSP.reV_run(res_iter,
-                                          self.project_points,
-                                          output_request=self.output_request)
+                out = SAM.CSP.reV_run(res_iter, project_points,
+                                      output_request=output_request)
 
             elif self.config.tech == 'landbasedwind':
-                outputs = SAM.LandBasedWind.reV_run(
-                    res_iter, self.project_points,
-                    output_request=self.output_request)
+                out = SAM.LandBasedWind.reV_run(
+                    res_iter, project_points,
+                    output_request=output_request)
 
             elif self.config.tech == 'offshorewind':
-                outputs = SAM.OffshoreWind.reV_run(
-                    res_iter, self.project_points,
-                    output_request=self.output_request)
+                out = SAM.OffshoreWind.reV_run(
+                    res_iter, project_points,
+                    output_request=output_request)
 
-            self._logger.debug('Outputs for {}: \n{}\n'
-                               .format(file, outputs))
+        return out
 
-        return outputs
+    @staticmethod
+    def get_sam_res(res_file, project_points):
+        """Get the SAM resource iterator object."""
+        if 'nsrdb' in res_file:
+            res_iter = SAM.ResourceManager(resource.NSRDB(res_file),
+                                           project_points)
+        elif 'wtk' in res_file:
+            res_iter = SAM.ResourceManager(resource.WTK(res_file),
+                                           project_points)
+        return res_iter
 
 
 if __name__ == '__main__':
     # temporary script based test will be merged into test.py later
+
     cfile = os.path.join(REVDIR, 'config/ini/ri_subset_pv_gentest.ini')
     gen = Gen(cfile)
+
+    logger_list = [__name__, "reV.config", "reV.SAM", "reV.handlers"]
+    loggers = {}
+    handlers = {}
+    for log in logger_list:
+        loggers[log], handlers[log] = init_logger(log, log_level="INFO",
+                                                  log_file='gen.log')
+
     config = gen.config
-    gen._logger.setLevel(logging.DEBUG)
-    outs = gen.execute()
+#    outs = gen.execute_serial()
+    outs = gen.execute_parallel()
     config = gen.config
     exec_control = gen.config.execution_control
     pp = gen.project_points
+    print(outs)

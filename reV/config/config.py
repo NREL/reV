@@ -5,11 +5,15 @@ from copy import deepcopy
 from configobj import ConfigObj
 import json
 import logging
+from math import ceil
 import os
 import pandas as pd
 
 from reV import __dir__ as REVDIR
 from reV import __testdata__ as TESTDATA
+
+
+logger = logging.getLogger(__name__)
 
 
 class BaseConfig(dict):
@@ -83,8 +87,6 @@ class Config(BaseConfig):
 
     def __init__(self, fname):
         """Initialize a config object."""
-        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
-        self._logger = logging.getLogger(log_name)
 
         # Get file, Perform string replacement, save config to self instance
         config = self.get_file(fname)
@@ -100,12 +102,17 @@ class Config(BaseConfig):
         self._logging_level = None
         self._execution_control = None
 
+        self.check_conflicts()
+
     @property
     def execution_control(self):
         """Get the execution control property."""
         if self._execution_control is None:
+
             self._execution_control = ExecutionControl(
-                self.__getitem__('execution_control'), self.project_points)
+                self.__getitem__('execution_control'),
+                self.project_points, self.years)
+
         return self._execution_control
 
     @property
@@ -176,11 +183,27 @@ class Config(BaseConfig):
                 if isinstance(self._years, list) is False:
                     self._years = [self._years]
             except KeyError as e:
-                self._logger.warning('Analysis years may not have been '
-                                     'specified, may default to year '
-                                     'specification in resource_file input. '
-                                     '\n\nKey Error: {}'.format(e))
+                logger.warning('Analysis years may not have been '
+                               'specified, may default to year '
+                               'specification in resource_file input. '
+                               '\n\nKey Error: {}'.format(e))
         return self._years
+
+    def check_conflicts(self):
+        """Check to find conflicts in input specification"""
+        if ('nodes' in self['execution_control'] and
+                'sites_per_node' in self['execution_control'] and
+                isinstance(self.project_points.sites, (list, tuple))):
+            ec = self['execution_control']
+            if ec['nodes'] is None and ec['sites_per_node'] is None:
+                n_sites = ec['nodes'] * ec['sites_per_node']
+                if n_sites < len(self.project_points.sites):
+                    raise ValueError('Conflict in site specification and node '
+                                     'allocation. There are {} sites to run, '
+                                     'but only {} nodes and {} sites per node'
+                                     .format(len(self.project_points.sites),
+                                             ec['nodes'],
+                                             ec['sites_per_node']))
 
     def get_file(self, fname):
         """Read the config file.
@@ -195,7 +218,7 @@ class Config(BaseConfig):
         config : dict
             Config data.
         """
-        self._logger.info('Getting "{}"'.format(fname))
+        logger.info('Getting "{}"'.format(fname))
         if os.path.exists(fname) and fname.endswith('.json'):
             config = self.load_json(fname)
         elif os.path.exists(fname) and fname.endswith('.ini'):
@@ -209,9 +232,9 @@ class Config(BaseConfig):
         return config
 
 
-class ExecutionControl(BaseConfig):
+class ExecutionControl:
     """Class to manage execution control parameters and split ProjectPoints."""
-    def __init__(self, config_exec, project_points):
+    def __init__(self, config_exec, project_points, years, level='supervisor'):
         """Initialize execution control object.
 
         Parameters
@@ -220,18 +243,102 @@ class ExecutionControl(BaseConfig):
             execution_control section of the configuration input file.
         project_points : config.ProjectPoints
             ProjectPoints instance to be split between execution workers.
+        years : list
+            List of years to run. (interpreted as duplicates of ProjectPoints)
+        level : str
+            CURRENT execution level, will control how this instance of
+            ExecutionControl is being split and iterated upon.
+            Options: supervisor, node, core
         """
+
         self._nodes = None
         self._ppn = None
+        self._n_sites = None
+        self._N = None
+        self._split_level = None
+        self._years = years
+        self._raw = config_exec
+        self.level = level
         self._project_points = project_points
-        self.set_self_dict(config_exec)
+
+    def __iter__(self):
+        """Iterator initialization dunder."""
+        self._i = 0
+        self._last_site_ind = 0
+        logger.info('Starting execution control iterator with limit: {}'
+                    .format(self.N))
+        return self
+
+    def __next__(self):
+        """Iterate through and return next site resource data.
+
+        Returns
+        -------
+        new_exec : config.ExecutionControl
+            Split instance of this class with a subset of project points based
+            on the number of sites per node (or per core) depending on the
+            execution control level.
+        """
+
+        if self._i < self.N:
+            i0 = self._last_site_ind
+            i1 = i0 + self.split_increment
+            logger.info('Iterating from site index {} to {} on {} #{}'
+                        .format(i0, i1, self.split_level, self._i))
+            self._i += 1
+            self._last_site_ind = i1
+
+            new_exec = ExecutionControl.split(self.raw, self.years, i0, i1,
+                                              self.project_points.raw,
+                                              self.project_points.sam_configs,
+                                              self.project_points.config_map,
+                                              self.project_points.tech,
+                                              split_level=self.split_level)
+            return new_exec
+        else:
+            # iter attribute equal or greater than iter limit
+            raise StopIteration
+
+    @property
+    def split_level(self):
+        """Get the level of the split of this object (one level down)."""
+
+        if self._split_level is None:
+            split_levels = {'supervisor': 'node',
+                            'node': 'core'}
+            try:
+                self._split_level = split_levels[self.level]
+            except KeyError:
+                raise KeyError('Current execution level cannot be split: {}'
+                               .format(self.level))
+
+        return self._split_level
+
+    @property
+    def split_increment(self):
+        """Get the iterator increment property (number of sites per iter)."""
+        if self.split_level == 'node':
+            self._increment = self.sites_per_node
+        elif self.split_level == 'core':
+            self._increment = self.sites_per_core
+        return self._increment
+
+    @property
+    def N(self):
+        """Get the iterator limit (number of splits)."""
+        if self._N is None:
+            if self.split_level == 'node':
+                self._N = self.nodes
+            elif self.split_level == 'core':
+                self._N = self.p_tot
+        return self._N
 
     @property
     def nodes(self):
-        """Get the nodes property."""
+        """Get the number of nodes property."""
         if self._nodes is None:
-            if 'nodes' in self:
-                self._nodes = self.__getitem__('nodes')
+            if 'nodes' in self.raw:
+                self._nodes = self.raw['nodes']
             else:
                 self._nodes = 1
         return self._nodes
@@ -240,8 +347,8 @@ class ExecutionControl(BaseConfig):
     def ppn(self):
         """Get the process per node (ppn) property."""
         if self._ppn is None:
-            if 'ppn' in self:
-                self._ppn = self.__getitem__('ppn')
+            if 'ppn' in self.raw:
+                self._ppn = self.raw['ppn']
             else:
                 self._ppn = 1
         return self._ppn
@@ -257,52 +364,114 @@ class ExecutionControl(BaseConfig):
         return self._project_points
 
     @property
+    def raw(self):
+        """Get the raw configuration input dict before any mods/mutations."""
+        return self._raw
+
+    @property
     def sites_per_node(self):
         """Get the number of sites to be computed per node."""
         if 'sites_per_node' in self:
-            self._sites_per_node = self.__getitem__('sites_per_node')
+            self._sites_per_node = self.raw['sites_per_node']
         else:
-            if isinstance(self.project_points.sites, slice):
-                site_slice = self.project_points.sites
-                if site_slice.stop is None:
-                    raise ValueError('User needs to input either project '
-                                     'points slice "stop" value or '
-                                     '"sites_per_node", otherwise '
-                                     '"sites_per_node" cannot be computed.')
-                else:
-                    self._sites_per_node = (len(
-                        list(range(*site_slice.indices(site_slice.stop)))) /
-                        self.nodes)
+            if self.n_sites == 'inf':
+                raise ValueError('User needs to input either project '
+                                 'points slice "stop" value or '
+                                 '"sites_per_node", otherwise '
+                                 '"sites_per_node" cannot be computed.')
             else:
-                self._sites_per_node = (len(self.project_points.sites) /
-                                        self.nodes)
+                self._sites_per_node = ceil(self.n_sites / self.nodes)
         return self._sites_per_node
 
     @property
     def sites_per_core(self):
         """Get the number of sites to be computed per core."""
-        if 'sites_per_core' in self:
-            self._sites_per_core = self.__getitem__('sites_per_core')
+        if 'sites_per_core' in self.raw:
+            self._sites_per_core = self.raw['sites_per_core']
         else:
+            if self.n_sites == 'inf':
+                raise ValueError('User needs to input either project '
+                                 'points slice "stop" value or '
+                                 '"sites_per_core", otherwise '
+                                 '"sites_per_core" cannot be computed.')
+            else:
+                self._sites_per_core = ceil(self.n_sites / self.p_tot)
+        return self._sites_per_core
+
+    @property
+    def n_sites(self):
+        """Get the total number of sites."""
+        if self._n_sites is None:
             if isinstance(self.project_points.sites, slice):
                 site_slice = self.project_points.sites
                 if site_slice.stop is None:
-                    raise ValueError('User needs to input either project '
-                                     'points slice "stop" value or '
-                                     '"sites_per_core", otherwise '
-                                     '"sites_per_core" cannot be computed.')
+                    self._n_sites = 'inf'
                 else:
-                    self._sites_per_core = (len(
-                        list(range(*site_slice.indices(site_slice.stop)))) /
-                        self.p_tot)
+                    self._n_sites = (len(
+                        list(range(*site_slice.indices(site_slice.stop)))) *
+                        self.years)
             else:
-                self._sites_per_core = (len(self.project_points.sites) /
-                                        self.p_tot)
-        return self._sites_per_core
+                self._n_sites = len(self.project_points.sites) * self.years
+        return self._n_sites
+
+    @property
+    def years(self):
+        """Get the year list."""
+        return self._years
+
+    @classmethod
+    def split(cls, config_exec, years, i0, i1, config_project_points,
+              sam_configs, config_map, tech, split_level='core'):
+        """Split this execution by splitting the project points attribute.
+
+        Parameters
+        ----------
+        config_exec : dict
+            The raw execution control configuration input dict before any
+            mods/mutations.
+        years : list
+            List of years to execute
+        i0/i1 : int
+            Beginning/end (inclusive/exclusive, respetively) index split
+            parameters for ProjectPoints.split.
+        config_project_points : dict
+            The raw project points configuration input dict before any
+            mods/mutations.
+        sam_configs : dict
+            Multi-level dictionary containing multiple SAM input
+            configurations.
+        config_map : dict
+            Sites (keys) to SAM configuration dictionaries (values) mapping.
+        tech : str
+            Generation technology.
+        split_level : str
+            Level (core or node) of the split execution control instance.
+
+        Returns
+        -------
+        sub : ExecutionControl
+            New instance of execution control with a subset of the original
+            project points.
+        """
+
+        new_points = ProjectPoints.split(i0, i1, config_project_points,
+                                         sam_configs, config_map, tech)
+        sub = cls(config_exec, new_points, years, level=split_level)
+        return sub
 
 
 class ProjectPoints(BaseConfig):
-    """Class to manage site and SAM input configuration requests."""
+    """Class to manage site and SAM input configuration requests.
+
+    Use Cases
+    ---------
+    config_id@site0, SAM_config_dict@site0 = ProjectPoints[0]
+    site_list_or_slice = ProjectPoints.sites
+    site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
+    ProjectPoints_sub = ProjectPoints.split(0, 10)
+    h_list_int_float = ProjectPoints.h
+    """
+
     def __init__(self, config_pp, sam_configs, tech):
         """Init project points containing sites and corresponding SAM configs.
 
@@ -320,16 +489,16 @@ class ProjectPoints(BaseConfig):
             reV technology being executed.
         """
 
-        self.add_logger()
-
+        self._h = None
         self._raw = config_pp
         self._sam_configs = sam_configs
         self._tech = tech
+        self._sites_as_slice = None
         self.default_config = None
         self.parse_project_points(config_pp)
 
     def __getitem__(self, site):
-        """Get the SAM config dictionary for the requested site."""
+        """Get the SAM config ID and dictionary for the requested site."""
         if self.default_config is None:
             # was set w/ JSON w/ one config for each site, return mapped value
             config_id = self.config_map[site]
@@ -337,6 +506,18 @@ class ProjectPoints(BaseConfig):
         else:
             # was set w/ slice w/ only default config
             return self.default_config_id, self.default_config
+
+    @property
+    def h(self, h_var='wind_turbine_hub_ht'):
+        """Get the hub heights corresponding to the site list or None for solar
+        """
+        if self._h is None and 'wind' in self.tech:
+            if self.default_config is None:
+                self._h = [self[site][1][h_var] for site in self.sites]
+            else:
+                self._h = self.default_config[h_var]
+
+        return self._h
 
     @property
     def raw(self):
@@ -354,8 +535,27 @@ class ProjectPoints(BaseConfig):
 
     @property
     def sites(self):
-        """Get sites list property."""
+        """Get sites property, type is list if possible
+        (if slice stop is None, this will be a slice)."""
         return self._sites
+
+    @property
+    def sites_as_slice(self):
+        """Get sites property, type is slice if possible
+        (if sites is a non-sequential list, this will return a list)."""
+
+        if self._sites_as_slice is None:
+            # try_slice is what the sites list would be if it is sequential
+            try_slice = slice(self.sites[0], self.sites[-1] + 1)
+
+            if self.sites == list(range(*try_slice.indices(try_slice.stop))):
+                # try_slice is equivelant to the site list
+                self._sites_as_slice = try_slice
+            else:
+                # cannot be converted to a sequential slice, return the list
+                self._sites_as_slice = self.sites
+
+        return self._sites_as_slice
 
     @property
     def tech(self):
@@ -369,8 +569,11 @@ class ProjectPoints(BaseConfig):
             sites = self.df.loc[(self.df['configs'] == config), 'sites'].values
             return list(sites)
         else:
-            # was set w/ slice w/ only default config, return all sites
-            return self.sites
+            if config == self.default_config_id:
+                # was set w/ slice w/ only default config, return all sites
+                return self.sites
+            else:
+                return []
 
     def json_project_points(self, fname):
         """Set the project points using the target json."""
@@ -395,7 +598,7 @@ class ProjectPoints(BaseConfig):
                            'method has been requested. Defaulting '
                            'to json input. Site selection '
                            'preference is json then slice')
-                    self._logger.warning(msg)
+                    logger.warning(msg)
         elif 'stop' in config_pp:
             self.slice_project_points(config_pp)
 
@@ -410,31 +613,32 @@ class ProjectPoints(BaseConfig):
         """Set the project points using slice parameters"""
         if config_pp['stop'] == 'inf':
             config_pp['stop'] = None
-            self._logger.info('Site selection is set to run to the '
-                              'last site in the resource file.')
+            logger.info('Site selection is set to run to the '
+                        'last site in the resource file.')
 
         if config_pp['stop']:
             # try to always store the sites as a list
-            self._sites = list(range(config_pp['start'],
-                                     config_pp['stop'],
-                                     config_pp['step']))
+            site_slice = slice(config_pp['start'],
+                               config_pp['stop'],
+                               config_pp['step'])
+            self._sites = list(range(*site_slice.indices(site_slice.stop)))
         else:
             # if stop is None, a list cannot be made, so store as a slice
-            if config_pp['step'] == 1:
+            if config_pp['step'] == 1 or config_pp['step'] is None:
                 self._sites = slice(config_pp['start'],
                                     config_pp['stop'],
                                     config_pp['step'])
             else:
                 raise ValueError('If no Project Points slice stop is '
-                                 'specified, step must equal 1.')
+                                 'specified, step must equal 1 or None.')
 
         avail_configs = sorted(list(self.sam_configs.keys()))
         n_configs = len(avail_configs)
         self.default_config_id = avail_configs[0]
         if n_configs > 1:
-            self._logger.warning('Multiple SAM input configurations detected '
-                                 'for a slice-based site project points. '
-                                 'Defaulting to: {}'.format(avail_configs[0]))
+            logger.warning('Multiple SAM input configurations detected '
+                           'for a slice-based site project points. '
+                           'Defaulting to: {}'.format(avail_configs[0]))
         if config_pp['stop'] is None:
             # No stop, set default config that will be returned for any site
             self.default_config = self.sam_configs[self.default_config_id]
@@ -446,40 +650,45 @@ class ProjectPoints(BaseConfig):
                                             for s in self.sites]}
             self.set_config_map(site_config_dict)
 
-    def add_logger(self):
-        """Add a logger attribute."""
-        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
-        self._logger = logging.getLogger(log_name)
-
-    def del_logger(self):
-        """Del the logger attr so a ProjectPoints instance can be deepcopied"""
-        del self._logger
-
-    def split(self, i0, i1):
-        """Return a deepcopy split subset instance of this ProjectPoints.
+    @classmethod
+    def split(cls, i0, i1, config_pp, sam_configs, config_map, tech):
+        """Return split instance of this ProjectPoints w/ site subset.
 
         Parameters
         ----------
         i0 : int
-            Starting index (inclusive) of the site property attribute to
-            include in the split instance.
+            Starting INDEX (not site number) (inclusive) of the site property
+            attribute to include in the split instance. This is not necessarily
+            the same as the starting site number, for instance if ProjectPoints
+            is sites 20:100, i0=0 i1=10 will result in sites 20:30.
         i1 : int
-            Ending index (exclusive) of the site property attribute to
-            include in the split instance.
+            Ending INDEX (not site number) (exclusive) of the site property
+            attribute to include in the split instance. This is not necessarily
+            the same as the final site number, for instance if ProjectPoints is
+            sites 20:100, i0=0 i1=10 will result in sites 20:30.
+        config_pp : dict
+            Single-level dictionary containing the project points configuration
+            inputs for the SAM tech to be used.
+        sam_configs : dict
+            Multi-level dictionary containing multiple SAM input
+            configurations. The top level key is the SAM config ID, top level
+            value is the SAM config. Each SAM config is a dictionary with keys
+            equal to input names, values equal to the actual inputs.
+        config_map : dict
+            Sites (keys) to SAM configuration dictionaries (values) mapping.
+        tech : str
+            reV technology being executed.
 
         Returns
         -------
-        sub : config.ProjectPoints
-            Deepcopy instance of self (ProjectPoints instance) with a subset
+        sub : ProjectPoints
+            New instance of ProjectPoints with a subset
             of the following attributes: sites, config_map, and the self
             dictionary data struct.
         """
 
-        # make a deep-copied instance of the ProjectPoints instance
-        self.del_logger()
-        sub = deepcopy(self)
-        self.add_logger()
-        sub.add_logger()
+        # make a new instance of ProjectPoints
+        sub = cls(config_pp, sam_configs, tech)
 
         if isinstance(sub.sites, (list, tuple)):
             # Reset the site attribute using a subset of the original
@@ -490,18 +699,21 @@ class ProjectPoints(BaseConfig):
             sub.clear()
 
             # re-build the dictionary attributes for items in the new site list
-            for key, val in self.config_map.items():
+            for key, val in config_map.items():
                 if key in sub.sites:
                     sub[key] = val
                     sub.config_map[key] = val
 
         elif isinstance(sub.sites, slice):
-            if sub.sites.stop is None and sub.sites.step != 1:
+            # this is only the case if stop=None, in which case config_map and
+            # the self dict are empty and default config is used.
+            if (sub.sites.stop is None and sub.sites.step != 1 and
+                    sub.sites.step is not None):
                 raise ValueError('Cannot perform a project points split on a '
                                  'non-sequential slice with no stop. Project '
                                  'point site slice: {}'.format(sub.sites))
             else:
-                sub._sites = list(range(sub.sites.start,
+                sub._sites = list(range(sub.sites.start + i0,
                                         sub.sites.start + (i1 - i0)))
 
         return sub
@@ -522,9 +734,6 @@ class SAM_Gen(BaseConfig):
             Generation technology specification. Should correspond to one of
             the keys in the SAM_config input.
         """
-
-        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
-        self._logger = logging.getLogger(log_name)
 
         self._write_profiles = None
         self._inputs = None
