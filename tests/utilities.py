@@ -19,7 +19,12 @@ def jsonify_data(data):
     """Make a dataset json compatible."""
     new = deepcopy(data)
     if isinstance(new, np.ndarray):
-        new = np.around(new.tolist(), decimals=4).tolist()
+        if np.max(new) > 1e4:
+            new = np.around(new.tolist(), decimals=1).tolist()
+        elif np.max(new) > 1e3:
+            new = np.around(new.tolist(), decimals=2).tolist()
+        else:
+            new = np.around(new.tolist(), decimals=4).tolist()
     elif isinstance(new, (float)):
         new = round(new, 4)
     return new
@@ -42,6 +47,10 @@ def get_shared_items(x, y):
                 # recursion! go one level deeper.
                 shared_items_2 = get_shared_items(v, y[k])
                 if shared_items_2:
+                    shared_items[k] = v
+            elif (isinstance(v, (np.ndarray, list)) and
+                    isinstance(y[k], (np.ndarray, list))):
+                if compare_arrays(v, y[k]) < 0.001 * len(v):
                     shared_items[k] = v
             elif x[k] == y[k]:
                 shared_items[k] = v
@@ -66,3 +75,10 @@ def dicts_match(x, y):
         x = set(x.keys())
         y = set(y.keys())
         return False, list(x.symmetric_difference(y))
+
+
+def compare_arrays(a0, a1, threshold=0.001):
+    """Get the number of array entries with fractional diff > threshold."""
+    diff_frac = np.abs(1 - np.abs(np.divide(a0, a1)))
+    count = np.sum(diff_frac > threshold)
+    return count
