@@ -4,19 +4,33 @@ Created on Mon Nov 19 11:23:03 2018
 
 @author: gbuster
 """
+from copy import deepcopy
 import numpy as np
+
+
+def jsonify_key(key):
+    """Make a dict key json compatible."""
+    if isinstance(key, (int, float)):
+        key = str(key)
+    return key
+
+
+def jsonify_data(data):
+    """Make a dataset json compatible."""
+    new = deepcopy(data)
+    if isinstance(new, np.ndarray):
+        new = np.around(new.tolist(), decimals=4).tolist()
+    elif isinstance(new, (float)):
+        new = round(new, 4)
+    return new
 
 
 def jsonify(outputs):
     """Convert outputs dictionary to JSON compatitble format."""
-    orig_key_list = list(outputs.keys())
-    for key in orig_key_list:
-        if isinstance(outputs[key], np.ndarray):
-            outputs[key] = outputs[key].tolist()
-        if isinstance(key, (int, float)):
-            outputs[str(key)] = outputs[key]
-            del outputs[key]
-    return outputs
+    new = {}
+    for key, data in outputs.items():
+        new[jsonify_key(key)] = jsonify_data(data)
+    return new
 
 
 def get_shared_items(x, y):

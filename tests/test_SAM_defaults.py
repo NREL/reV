@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """reV unit test module
 """
-from copy import deepcopy
 import json
 import logging
 import os
@@ -46,12 +45,6 @@ class SAM_Test_Manager:
         if module == 'pvwatts':
             # test SAM pvwatts module
             sim = SAM.PV(resource=None, meta=None, parameters=inputs,
-                         output_request=['cf_mean', 'cf_profile',
-                                         'annual_energy', 'energy_yield',
-                                         'gen_profile'])
-        if module == 'pvwatts_def':
-            # test SAM pvwatts module with all defaults
-            sim = SAM.PV(resource=None, meta=None, parameters=None,
                          output_request=['cf_mean', 'cf_profile',
                                          'annual_energy', 'energy_yield',
                                          'gen_profile'])
@@ -144,7 +137,7 @@ class SAM_Test_Manager:
                 - Output dictionary does not match (returns False, notes which
                   dictionary keys have issues)
         """
-        new_o_json = ut.jsonify(deepcopy(new_outputs))
+        new_o_json = ut.jsonify(new_outputs)
         if os.path.exists(baseline_fname):
             with open(baseline_fname) as f:
                 # get previous baseline outputs for checking
@@ -183,7 +176,7 @@ def init_SAM():
 @pytest.mark.parametrize('module, i_fname, o_fname', [
     ('pvwatts', 'i_pvwatts.json', 'o_pvwatts.json'),
     ('pvwatts_lcoe', 'i_pvwatts_lcoe.json', 'o_pvwatts_lcoe.json'),
-    ('pvwatts_def', None, 'o_pvwatts_def.json'),
+    ('pvwatts', 'i_pvwatts_def.json', 'o_pvwatts_def.json'),
     ('tcsmolten_salt', 'i_csp_tcsmolten_salt.json',
      'o_csp_tcsmolten_salt.json'),
     ('landbasedwind', 'i_windpower.json', 'o_windpower.json'),
