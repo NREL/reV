@@ -359,6 +359,7 @@ class Resource:
     Base class to handle resource .h5 files
     """
     SCALE_ATTR = 'scale_factor'
+    UNIT_ATTR = 'units'
 
     def __init__(self, h5_file, unscale=True):
         """
@@ -392,8 +393,13 @@ class Resource:
             raise
 
     def __getitem__(self, keys):
-        ds = keys[0]
-        ds_slice = keys[1:]
+        if isinstance(keys, tuple):
+            ds = keys[0]
+            ds_slice = keys[1:]
+        else:
+            ds = keys
+            ds_slice = (slice(None, None, None),)
+
         if ds == 'time_index':
             out = self._time_index(*ds_slice)
         elif ds == 'meta':
@@ -409,6 +415,59 @@ class Resource:
             out = self._get_ds(ds, *ds_slice)
 
         return out
+
+    def get_attrs(self, dset=None):
+        """
+        Get h5 attributes either from file or dataset
+
+        Parameters
+        ----------
+        dset : str
+            Dataset to get attributes for, if None get file (global) attributes
+
+        Returns
+        -------
+        attrs : dict
+            Dataset or file attributes
+        """
+        if dset is None:
+            attrs = {k: v for k, v in self._h5.attrs.items()}
+        else:
+            attrs = {k: v for k, v in self._h5[dset].attrs.items()}
+
+        return attrs
+
+    def get_scale(self, dset):
+        """
+        Get dataset scale factor
+
+        Parameters
+        ----------
+        dset : str
+            Dataset to get scale factor for
+
+        Returns
+        -------
+        float
+            Dataset scale factor, used to unscale int values to floats
+        """
+        return self._h5[dset].attrs.get(self.SCALE_ATTR, 1)
+
+    def get_units(self, dset):
+        """
+        Get dataset units
+
+        Parameters
+        ----------
+        dset : str
+            Dataset to get units for
+
+        Returns
+        -------
+        str
+            Dataset units, None if not defined
+        """
+        return self._h5[dset].attrs.get(self.UNIT_ATTR, None)
 
     def _time_index(self, *ds_slice):
         """
@@ -619,6 +678,7 @@ class NSRDB(SolarResource):
     Class to handle NSRDB .h5 files
     """
     SCALE_ATTR = 'psm_scale_factor'
+    UNIT_ATTRS = 'psm_units'
 
 
 class SolarFCST(SolarResource):
