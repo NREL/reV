@@ -4,11 +4,12 @@ Generation
 from dask.distributed import LocalCluster, Client
 import logging
 import os
-import reV.SAM.SAM as SAM
+
+from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.config import Config
 from reV import __dir__ as REVDIR
 from reV.rev_logger import init_logger, REV_LOGGERS
-from reV.handlers import resource
+from reV.handlers.resource import NSRDB, WTK
 
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ class Gen:
         """Get the list of output variables requested from generation."""
         if self._output_request is None:
             self._output_request = ['cf_mean']
-            if self.config.SAM_gen.write_profiles:
+            if self.config.sam_gen.write_profiles:
                 self._output_request += ['cf_profile']
         return self._output_request
 
@@ -65,7 +66,6 @@ class Gen:
                 futures = []
 
                 for exec_slice in execution_control:
-                    print(exec_slice.project_points.sites)
                     futures.append(
                         client.submit(self.execute_serial,
                                       execution_control=exec_slice,
@@ -74,22 +74,6 @@ class Gen:
                 results = client.gather(futures)
 
         return results
-
-    @staticmethod
-    def test_dd(execution_control=None, res_files=None):
-        """Simple test dask distributed."""
-        project_points = execution_control.project_points
-
-        for res_file in res_files:
-
-            if 'nsrdb' in res_file:
-                res_iter = SAM.ResourceManager(resource.NSRDB(res_file),
-                                               project_points)
-            elif 'wtk' in res_file:
-                res_iter = SAM.ResourceManager(resource.WTK(res_file),
-                                               project_points)
-
-        return res_iter
 
     def execute_serial(self, execution_control=None, res_files=None,
                        output_request=None):
@@ -112,22 +96,20 @@ class Gen:
             res_iter = self.get_sam_res(res_file, project_points)
 
             if self.config.tech == 'pv':
-                out = SAM.PV.reV_run(res_iter, project_points,
-                                     output_request=output_request)
+                out = PV.reV_run(res_iter, project_points,
+                                 output_request=output_request)
 
             elif self.config.tech == 'csp':
-                out = SAM.CSP.reV_run(res_iter, project_points,
-                                      output_request=output_request)
+                out = CSP.reV_run(res_iter, project_points,
+                                  output_request=output_request)
 
             elif self.config.tech == 'landbasedwind':
-                out = SAM.LandBasedWind.reV_run(
-                    res_iter, project_points,
-                    output_request=output_request)
+                out = LandBasedWind.reV_run(res_iter, project_points,
+                                            output_request=output_request)
 
             elif self.config.tech == 'offshorewind':
-                out = SAM.OffshoreWind.reV_run(
-                    res_iter, project_points,
-                    output_request=output_request)
+                out = OffshoreWind.reV_run(res_iter, project_points,
+                                           output_request=output_request)
 
         return out
 
@@ -135,11 +117,9 @@ class Gen:
     def get_sam_res(res_file, project_points):
         """Get the SAM resource iterator object."""
         if 'nsrdb' in res_file:
-            res_iter = SAM.ResourceManager(resource.NSRDB(res_file),
-                                           project_points)
+            res_iter = NSRDB.preload_SAM(res_file, project_points)
         elif 'wtk' in res_file:
-            res_iter = SAM.ResourceManager(resource.WTK(res_file),
-                                           project_points)
+            res_iter = WTK.preload_SAM(res_file, project_points)
         return res_iter
 
 
@@ -157,9 +137,8 @@ if __name__ == '__main__':
                                                   log_file='gen.log')
 
     config = gen.config
-#    outs = gen.execute_serial()
-    outs = gen.execute_parallel()
-    config = gen.config
     exec_control = gen.config.execution_control
     pp = gen.project_points
+#    outs = gen.execute_serial()
+    outs = gen.execute_parallel()
     print(outs)

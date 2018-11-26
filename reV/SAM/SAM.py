@@ -53,249 +53,6 @@ def is_2D_list(a):
     return False
 
 
-class ResourceManager:
-    """Class to manage SAM input resource data."""
-
-    def __init__(self, res, project_points, var_list=None):
-        """Initialize a resource data iterator object for one or more sites.
-
-        Parameters
-        ----------
-        res : reV.handlers.resource
-            reV resource handler instance.
-        project_points : config.ProjectPoints
-            ProjectPoints instance with sites and configs.
-        """
-
-        self._var_list = var_list
-        sites = project_points.sites
-
-        if 'wind' in project_points.tech.lower():
-            # get WTK wind data.
-            self.res_type = 'wind'
-            self.wind(res, project_points)
-
-            # wind sometimes needs pressure to be converted to ATM
-            self.convert_pressure()
-
-        else:
-            # get NSRDB solar data
-            self.res_type = 'solar'
-            self.retrieve(res, sites)
-
-        self._N = None
-
-    def __iter__(self):
-        """Iterator initialization dunder."""
-        self._i = -1
-        return self
-
-    def __next__(self):
-        """Iterate through and return next site resource data.
-
-        Returns
-        -------
-        ind : int
-            Requested site index - matches the sites init argument.
-        df : pd.DataFrame
-            Single-site resource dataframe with columns from the var_list plus
-            time_index.
-        meta : pd.DataFrame
-            Single-site meta data.
-        """
-
-        self._i += 1
-
-        if self._i < self.N:
-            # setup single site dataframe by indexing and slicing mult_res
-            df = pd.DataFrame({key: value[:, self._i]
-                              for key, value in self.mult_res.items()})
-            df['time_index'] = self.time_index
-            return self.meta.iloc[self._i].name, df, self.meta.iloc[self._i]
-        else:
-            # iter attribute equal or greater than iter limit
-            raise StopIteration
-
-    @property
-    def var_list(self):
-        """Get the resource variable list."""
-        if self._var_list is None and self.res_type == 'wind':
-            self._var_list = ('pressure', 'temperature', 'winddirection',
-                              'windspeed')
-        elif self._var_list is None and self.res_type == 'solar':
-            self._var_list = ('dni', 'dhi', 'wind_speed', 'air_temperature')
-
-        return self._var_list
-
-    @property
-    def N(self):
-        """Get the iterator limit."""
-        if self._N is None:
-            self._N = len(self.meta)
-        return self._N
-
-    def wind(self, res, project_points, h_var='wind_turbine_hub_ht'):
-        """Setup wind resource with consideration for multi-hub-height interp.
-
-        Parameters
-        ----------
-        res : reV.handlers.resource
-            reV resource handler instance.
-        project_points : config.ProjectPoints
-            ProjectPoints instance with sites and their corresponding configs.
-        h_var : str
-            Name of the hub height variable in the SAM input configs.
-        """
-
-        # get the config dict of format: config_dict[config_id] = SAM_config
-        config_dict = project_points.sam_configs
-        # get list of config ID's
-        config_keys = list(config_dict.keys())
-
-        if len(config_keys) == 1:
-            # only one set of SAM inputs, no problem!
-            h = config_dict[config_keys[0]][h_var]
-            self.retrieve(res, project_points.sites, h=h)
-        else:
-            self.wind_mult_hh(res, project_points, config_dict, config_keys,
-                              h_var)
-
-    def wind_mult_hh(self, res, project_points, config_dict, config_keys,
-                     h_var):
-        """Set wind resource for multi-hub-height project points.
-
-        Parameters
-        ----------
-        res : reV.handlers.resource
-            reV resource handler instance.
-        project_points : config.ProjectPoints
-            ProjectPoints instance with sites and configs.
-        config_dict : dict
-            Multi-config dictionary from ProjectPoints. Keys are config ID's
-            and values are SAM input parameter dictionaries.
-        config_keys : list
-            List of config ID's.
-        h_var : str
-            Name of the hub height variable in the SAM input configs.
-        """
-
-        h_to_config = {}
-        for i, con in enumerate(config_keys):
-            # make a dict (h_to_config) of lists of unique hub heights
-            # (dict keys) corresponding to the list of implementing
-            # config ID's (dict values)
-            h = config_dict[con][h_var]
-            if h in h_to_config:
-                h_to_config[h] += [con]
-            else:
-                h_to_config[h] = [con]
-        logger.debug('Hub height to config dict: {}'.format(h_to_config))
-
-        # There are multiple configs, potentially multiple hub heights
-        # init list that will save correct order of sites as they are added
-        all_sites = []
-        for i, (h, configs) in enumerate(h_to_config.items()):
-            # iter thru unique hub heights with potentially multiple configs
-            new_sites = []
-
-            for con in configs:
-                # add new sites corresponding to configs at a single hub h
-                con_sites = project_points.get_sites_from_config(con)
-                new_sites += con_sites
-                new_sites = sorted(new_sites, key=float)
-
-            all_sites += new_sites
-            all_sites = sorted(all_sites, key=float)
-
-            # retrieve data from the sites corresponding to the config(s) and
-            # hub height. only do as many sites as necessary per hub height
-            # to minimize redundant interpolations.
-            logger.info('Retriving sites {} at hub height: {}m'
-                        .format(new_sites, h))
-            meta, time_index, mult_res = self.retrieve(res,
-                                                       new_sites,
-                                                       h=h,
-                                                       option='return')
-            if i == 0:
-                # first resource import, initialize object attributes
-                self.meta = meta
-                self.time_index = time_index
-                self.mult_res = mult_res
-            else:
-                # sort and append new data to attributes
-                self.meta = self.meta.append(meta).sort_index()
-                for j, site in enumerate(new_sites):
-                    # find location of new site in the sorted site list
-                    loc = all_sites.index(site)
-                    for var in self.var_list:
-                        # insert new site data into object attribute for
-                        # all variable and all sites.
-                        self.mult_res[var] = np.insert(self.mult_res[var],
-                                                       loc,
-                                                       mult_res[var][:, j],
-                                                       axis=1)
-
-    def retrieve(self, res, sites, h=None, option='attribute'):
-        """Setup a multi-site resource dictionary from a reV handler instance.
-
-        Parameters
-        ----------
-        res : reV.handlers.resource
-            reV resource handler instance.
-        sites : list | iter | slice | int
-            Site list to retrieve.
-        h : int | float
-            Hub height for wind. If set, interpolation may be performed.
-        option : str
-            Can be either 'attribute' to set results as object attributes or
-            'return' to return values outside this method for additional
-            processing.
-
-        Returns
-        -------
-        meta : pd.DataFrame
-            Multiple-site meta data, each index is a requested site.
-        time_index : pd.DataFrame
-            Single year time_index (same for all sites).
-        mult_res : dict
-            Multiple-site resource. Keys are variables in var_list. Each
-            item contains a dataframe with columns for each requested site.
-        """
-
-        mult_res = {}
-
-        meta = res['meta', sites]
-        time_index = res['time_index', :]
-
-        for var in self.var_list:
-            if self.res_type == 'wind' and h is not None:
-                # request special ds names for wind hub heights
-                var_hm = var + '_{}m'.format(h)
-                mult_res[var] = res[var_hm, :, sites]
-            else:
-                # non-wind needs no special dataset name formatting
-                mult_res[var] = res[var, :, sites]
-
-            if len(mult_res[var].shape) < 2:
-                # ensure that the array is 2D to ease downstream indexing
-                mult_res[var] = mult_res[var].reshape(
-                    (mult_res[var].shape[0], 1))
-
-        if option == 'attribute':
-            self.meta = meta
-            self.time_index = time_index
-            self.mult_res = mult_res
-        elif option == 'return':
-            return meta, time_index, mult_res
-
-    def convert_pressure(self):
-        """If pressure is in resource vars, convert to ATM if in Pa."""
-        if 'pressure' in self.mult_res.keys():
-            if np.min(self.mult_res['pressure']) > 1e3:
-                # convert pressure from Pa to ATM
-                self.mult_res['pressure'] *= 9.86923e-6
-
-
 class ParametersManager:
     """Class to manage SAM input parameters, requirements, and defaults."""
 
@@ -550,8 +307,8 @@ class SAM:
             # set meta data
             self.set_meta()
             # set time variables
-            self.time_interval = self.get_time_interval(resource['time_index'])
-            self.set_time_index(resource['time_index'])
+            self.time_interval = self.get_time_interval(resource.index)
+            self.set_time_index(resource.index)
 
     def set_parameters(self, keys_to_set='all'):
         """Set SAM inputs using either a subset of keys or all parameter keys.
@@ -612,7 +369,7 @@ class SAM:
             self.ssc.data_set_number(self.res_data, var_map[var],
                                      self.meta[var])
 
-        self.site = self.meta.name
+        self.site = self.meta.index.values
 
     def set_time_index(self, time_index, time_vars=('year', 'month', 'day',
                                                     'hour', 'minute')):
@@ -622,18 +379,33 @@ class SAM:
         ----------
         time_index : pd.series
             Datetime series. Must have a dt attribute to access datetime
-            properties.
+            properties (added using make_datetime method).
         time_vars : list | tuple
             List of time variable names to set.
         """
+
+        time_index = self.make_datetime(time_index)
         for var in time_vars:
             logger.debug('Setting {} time index data.'.format(var))
             self.ssc.data_set_array(self.res_data, var,
                                     getattr(time_index.dt, var).values)
 
     @staticmethod
+    def make_datetime(series):
+        """Ensure that pd series is a datetime series with dt accessor"""
+        if not hasattr(series, 'dt'):
+            series = pd.to_datetime(pd.Series(series))
+        return series
+
+    @staticmethod
     def get_time_interval(time_index):
         """Get the time interval.
+
+        Parameters
+        ----------
+        time_index : pd.series
+            Datetime series. Must have a dt attribute to access datetime
+            properties (added using make_datetime method).
 
         Returns
         -------
@@ -642,6 +414,7 @@ class SAM:
             So if the timestep is 0.5 hours, time_interval is 2.
         """
 
+        time_index = SAM.make_datetime(time_index)
         x = time_index.dt.hour.diff()
         time_interval = 0
 
@@ -801,8 +574,8 @@ class SAM:
 
         Parameters
         ----------
-        resources : ResourceManager
-            ResourceManager instance that emulates an iterator.
+        resources : reV.handlers.resource.SAMResource
+            SAMResource instance that emulates an iterator.
         project_points : config.ProjectPoints
             ProjectPoints instance containing site and SAM config info.
         output_request : list | tuple
@@ -818,8 +591,9 @@ class SAM:
 
         out = {}
 
-        for site, res_df, meta in resources:
+        for res_df, meta in resources:
             # get SAM inputs from project_points based on the current site
+            site = res_df.name
             config, inputs = project_points[site]
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,

@@ -92,22 +92,12 @@ class Config(BaseConfig):
         config = self.get_file(fname)
         config = self.str_replace(config, self.STRREP)
         self.set_self_dict(config)
-
-        # initialize protected property attributes as None
-        self._tech = None
-        self._res_files = None
-        self._SAM_gen = None
-        self._project_points = None
-        self._years = None
-        self._logging_level = None
-        self._execution_control = None
-
         self.check_conflicts()
 
     @property
     def execution_control(self):
         """Get the execution control property."""
-        if self._execution_control is None:
+        if not hasattr(self, '_execution_control'):
 
             self._execution_control = ExecutionControl(
                 self.__getitem__('execution_control'),
@@ -118,7 +108,7 @@ class Config(BaseConfig):
     @property
     def logging_level(self):
         """Get the user-specified logging level."""
-        if self._logging_level is None:
+        if not hasattr(self, '_logging_level'):
             levels = {'DEBUG': logging.DEBUG,
                       'INFO': logging.INFO,
                       'WARNING': logging.WARNING,
@@ -132,9 +122,9 @@ class Config(BaseConfig):
     @property
     def project_points(self):
         """Set project points property with instance of ProjectPoints."""
-        if self._project_points is None:
+        if not hasattr(self, '_project_points'):
             pp_dict = deepcopy(self['project_points'][self.tech])
-            sam_inputs_dict = deepcopy(self.SAM_gen.inputs)
+            sam_inputs_dict = deepcopy(self.sam_gen.inputs)
 
             self._project_points = ProjectPoints(pp_dict,
                                                  sam_inputs_dict,
@@ -144,7 +134,7 @@ class Config(BaseConfig):
     @property
     def res_files(self):
         """Get a list of the resource files with years filled in."""
-        if self._res_files is None:
+        if not hasattr(self, '_res_files'):
             # get base filename, may have {} for year format
             fname = self['resource'][self.tech]['resource_file']
             if '{}' in fname:
@@ -157,16 +147,16 @@ class Config(BaseConfig):
         return self._res_files
 
     @property
-    def SAM_gen(self):
+    def sam_gen(self):
         """Get the SAM generation configuration object."""
-        if self._SAM_gen is None:
-            self._SAM_gen = SAM_Gen(self['sam_generation'], self.tech)
-        return self._SAM_gen
+        if not hasattr(self, '_sam_gen'):
+            self._sam_gen = SAMGenConfig(self['sam_generation'], self.tech)
+        return self._sam_gen
 
     @property
     def tech(self):
         """Get the tech property from the config."""
-        if self._tech is None:
+        if not hasattr(self, '_tech'):
             self._tech = self['project_control']['technologies']
             if isinstance(self._tech, list) and len(self._tech) == 1:
                 self._tech = self._tech[0]
@@ -177,7 +167,7 @@ class Config(BaseConfig):
     @property
     def years(self):
         """Get the analysis years."""
-        if self._years is None:
+        if not hasattr(self, '_years'):
             try:
                 self._years = self['project_control']['analysis_years']
                 if isinstance(self._years, list) is False:
@@ -251,11 +241,6 @@ class ExecutionControl:
             Options: supervisor, node, core
         """
 
-        self._nodes = None
-        self._ppn = None
-        self._n_sites = None
-        self._N = None
-        self._split_level = None
         self._years = years
         self._raw = config_exec
         self.level = level
@@ -291,7 +276,7 @@ class ExecutionControl:
             new_exec = ExecutionControl.split(self.raw, self.years, i0, i1,
                                               self.project_points.raw,
                                               self.project_points.sam_configs,
-                                              self.project_points.config_map,
+                                              self.project_points.df,
                                               self.project_points.tech,
                                               split_level=self.split_level)
             return new_exec
@@ -303,7 +288,7 @@ class ExecutionControl:
     def split_level(self):
         """Get the level of the split of this object (one level down)."""
 
-        if self._split_level is None:
+        if not hasattr(self, '_split_level'):
             split_levels = {'supervisor': 'node',
                             'node': 'core'}
             try:
@@ -326,17 +311,17 @@ class ExecutionControl:
     @property
     def N(self):
         """Get the iterator limit (number of splits)."""
-        if self._N is None:
+        if not hasattr(self, '_N'):
             if self.split_level == 'node':
                 self._N = self.nodes
             elif self.split_level == 'core':
-                self._N = self.p_tot
+                self._N = self.ppn
         return self._N
 
     @property
     def nodes(self):
         """Get the number of nodes property."""
-        if self._nodes is None:
+        if not hasattr(self, '_nodes'):
             if 'nodes' in self.raw:
                 self._nodes = self.raw['nodes']
             else:
@@ -346,7 +331,7 @@ class ExecutionControl:
     @property
     def ppn(self):
         """Get the process per node (ppn) property."""
-        if self._ppn is None:
+        if not hasattr(self, '_ppn'):
             if 'ppn' in self.raw:
                 self._ppn = self.raw['ppn']
             else:
@@ -371,14 +356,21 @@ class ExecutionControl:
     @property
     def sites_per_node(self):
         """Get the number of sites to be computed per node."""
+
+        msg = ('User needs to input either project points slice "stop" value '
+               'or "sites_per_node", otherwise "sites_per_node" cannot be '
+               'computed.')
+
         if 'sites_per_node' in self:
-            self._sites_per_node = self.raw['sites_per_node']
+            if self.raw['sites_per_node']:
+                self._sites_per_node = self.raw['sites_per_node']
+            elif self.raw['sites_per_node'] is None and self.n_sites == 'inf':
+                raise ValueError(msg)
+            else:
+                self._sites_per_node = ceil(self.n_sites / self.nodes)
         else:
             if self.n_sites == 'inf':
-                raise ValueError('User needs to input either project '
-                                 'points slice "stop" value or '
-                                 '"sites_per_node", otherwise '
-                                 '"sites_per_node" cannot be computed.')
+                raise ValueError(msg)
             else:
                 self._sites_per_node = ceil(self.n_sites / self.nodes)
         return self._sites_per_node
@@ -386,14 +378,21 @@ class ExecutionControl:
     @property
     def sites_per_core(self):
         """Get the number of sites to be computed per core."""
+
+        msg = ('User needs to input either project points slice "stop" value '
+               'or "sites_per_core", otherwise "sites_per_core" cannot be '
+               'computed.')
+
         if 'sites_per_core' in self.raw:
-            self._sites_per_core = self.raw['sites_per_core']
+            if self.raw['sites_per_core']:
+                self._sites_per_core = self.raw['sites_per_core']
+            elif self.raw['sites_per_core'] is None and self.n_sites == 'inf':
+                raise ValueError(msg)
+            else:
+                self._sites_per_core = ceil(self.n_sites / self.p_tot)
         else:
             if self.n_sites == 'inf':
-                raise ValueError('User needs to input either project '
-                                 'points slice "stop" value or '
-                                 '"sites_per_core", otherwise '
-                                 '"sites_per_core" cannot be computed.')
+                raise ValueError(msg)
             else:
                 self._sites_per_core = ceil(self.n_sites / self.p_tot)
         return self._sites_per_core
@@ -401,7 +400,7 @@ class ExecutionControl:
     @property
     def n_sites(self):
         """Get the total number of sites."""
-        if self._n_sites is None:
+        if not hasattr(self, '_n_sites'):
             if isinstance(self.project_points.sites, slice):
                 site_slice = self.project_points.sites
                 if site_slice.stop is None:
@@ -409,9 +408,10 @@ class ExecutionControl:
                 else:
                     self._n_sites = (len(
                         list(range(*site_slice.indices(site_slice.stop)))) *
-                        self.years)
+                        len(self.years))
             else:
-                self._n_sites = len(self.project_points.sites) * self.years
+                self._n_sites = (len(self.project_points.sites) *
+                                 len(self.years))
         return self._n_sites
 
     @property
@@ -421,7 +421,7 @@ class ExecutionControl:
 
     @classmethod
     def split(cls, config_exec, years, i0, i1, config_project_points,
-              sam_configs, config_map, tech, split_level='core'):
+              sam_configs, config_df, tech, split_level='core'):
         """Split this execution by splitting the project points attribute.
 
         Parameters
@@ -440,8 +440,8 @@ class ExecutionControl:
         sam_configs : dict
             Multi-level dictionary containing multiple SAM input
             configurations.
-        config_map : dict
-            Sites (keys) to SAM configuration dictionaries (values) mapping.
+        config_df : pd.DataFrame
+            Sites to SAM configuration dictionary IDs mapping dataframe.
         tech : str
             Generation technology.
         split_level : str
@@ -455,7 +455,7 @@ class ExecutionControl:
         """
 
         new_points = ProjectPoints.split(i0, i1, config_project_points,
-                                         sam_configs, config_map, tech)
+                                         sam_configs, config_df, tech)
         sub = cls(config_exec, new_points, years, level=split_level)
         return sub
 
@@ -489,33 +489,96 @@ class ProjectPoints(BaseConfig):
             reV technology being executed.
         """
 
-        self._h = None
         self._raw = config_pp
         self._sam_configs = sam_configs
         self._tech = tech
-        self._sites_as_slice = None
-        self.default_config = None
         self.parse_project_points(config_pp)
 
     def __getitem__(self, site):
-        """Get the SAM config ID and dictionary for the requested site."""
-        if self.default_config is None:
+        """Get the SAM config ID and dictionary for the requested site.
+
+        Parameters
+        ----------
+        site : int | str
+            Site number of interest.
+
+        Returns
+        -------
+        config_id : str
+            Configuration ID (variable name) specified in the sam_generation
+            config section.
+        config : dict
+            Actual SAM input values in a single level dictionary with variable
+            names (keys) and values.
+        """
+
+        if not hasattr(self, 'default_config'):
             # was set w/ JSON w/ one config for each site, return mapped value
-            config_id = self.config_map[site]
+            site_bool = (self.df['sites'] == site)
+            config_id = self.df.loc[site_bool, 'configs'].values[0]
             return config_id, self.sam_configs[config_id]
         else:
             # was set w/ slice w/ only default config
             return self.default_config_id, self.default_config
 
     @property
+    def df(self):
+        """Get the project points dataframe property.
+
+        Returns
+        -------
+        self._df : pd.DataFrame
+            Table of sites and SAM configuration IDs.
+            Has columns 'sites' and 'configs'.
+        """
+
+        return self._df
+
+    @df.setter
+    def df(self, data):
+        """Set the project points dataframe property
+
+        Parameters
+        ----------
+        data : str | dict | pd.DataFrame
+            Either a csv filename, dict with sites and configs keys, or full
+            dataframe.
+        """
+
+        if isinstance(data, str):
+            if data.endswith('.csv'):
+                self._df = pd.read_csv(data)
+            else:
+                raise TypeError('Project points file must be csv but received:'
+                                ' {}'.format(data))
+        elif isinstance(data, dict):
+            if 'sites' in data.keys() and 'configs' in data.keys():
+                self._df = pd.DataFrame(data)
+            else:
+                raise KeyError('Project points data must contain sites and '
+                               'configs column headers.')
+        elif isinstance(data, pd.DataFrame):
+            if ('sites' in data.columns.values and
+                    'configs' in data.columns.values):
+                self._df = data
+            else:
+                raise KeyError('Project points data must contain sites and '
+                               'configs column headers.')
+        else:
+            raise TypeError('Project points data must be csv filename or '
+                            'dictionary but received: {}'.format(type(data)))
+
+    @property
     def h(self, h_var='wind_turbine_hub_ht'):
         """Get the hub heights corresponding to the site list or None for solar
         """
-        if self._h is None and 'wind' in self.tech:
-            if self.default_config is None:
+        if not hasattr(self, '_h') and 'wind' in self.tech:
+            if not hasattr(self, 'default_config'):
                 self._h = [self[site][1][h_var] for site in self.sites]
             else:
                 self._h = self.default_config[h_var]
+        elif not hasattr(self, '_h') and 'wind' not in self.tech:
+            self._h = None
 
         return self._h
 
@@ -526,10 +589,15 @@ class ProjectPoints(BaseConfig):
 
     @property
     def sam_configs(self):
-        """Multi-level dictionary containing multiple SAM input
-        configurations. The top level key is the SAM config ID, top level
-        value is the SAM config. Each SAM config is a dictionary with keys
-        equal to input names, values equal to the actual inputs.
+        """Get the SAM configs dictionary property.
+
+        Returns
+        -------
+        _sam_configs : dict
+            Multi-level dictionary containing multiple SAM input
+            configurations. The top level key is the SAM config ID, top level
+            value is the SAM config. Each SAM config is a dictionary with keys
+            equal to input names, values equal to the actual inputs.
         """
         return self._sam_configs
 
@@ -544,7 +612,7 @@ class ProjectPoints(BaseConfig):
         """Get sites property, type is slice if possible
         (if sites is a non-sequential list, this will return a list)."""
 
-        if self._sites_as_slice is None:
+        if not hasattr(self, '_sites_as_slice'):
             # try_slice is what the sites list would be if it is sequential
             try_slice = slice(self.sites[0], self.sites[-1] + 1)
 
@@ -564,7 +632,7 @@ class ProjectPoints(BaseConfig):
 
     def get_sites_from_config(self, config):
         """Get a site list that corresponds to a config key."""
-        if self.default_config is None:
+        if not hasattr(self, 'default_config'):
             # was set w/ JSON w/ one config for each site, return mapped values
             sites = self.df.loc[(self.df['configs'] == config), 'sites'].values
             return list(sites)
@@ -575,39 +643,29 @@ class ProjectPoints(BaseConfig):
             else:
                 return []
 
-    def json_project_points(self, fname):
-        """Set the project points using the target json."""
-        if fname.endswith('.json'):
-            js = self.load_json(fname)
-            self._sites = js['sites']
-            self.df = pd.DataFrame(js)
-            self.set_config_map(js)
-
-        else:
-            raise ValueError('Config site selection file must be '
-                             '.json, but received: {}'
-                             .format(fname))
-
     def parse_project_points(self, config_pp):
         """Parse and set the project points using either a file or slice."""
         if 'file' in config_pp:
             if config_pp['file'] is not None:
-                self.json_project_points(config_pp['file'])
+                self.csv_project_points(config_pp['file'])
                 if 'stop' in config_pp:
                     msg = ('More than one project points selection '
                            'method has been requested. Defaulting '
-                           'to json input. Site selection '
-                           'preference is json then slice')
+                           'to file input. Site selection '
+                           'preference is file then slice')
                     logger.warning(msg)
         elif 'stop' in config_pp:
             self.slice_project_points(config_pp)
 
-    def set_config_map(self, site_config_json):
-        """Save a dict-like variable to the self dictionary and config map."""
-        self.config_map = {}
-        for i, site in enumerate(site_config_json['sites']):
-            self.config_map[site] = site_config_json['configs'][i]
-            self.__setitem__(site, site_config_json['configs'][i])
+    def csv_project_points(self, fname):
+        """Set the project points using the target csv."""
+        if fname.endswith('.csv'):
+            self.df = fname
+            self._sites = list(self.df['sites'].values)
+        else:
+            raise ValueError('Config project points file must be '
+                             '.csv, but received: {}'
+                             .format(fname))
 
     def slice_project_points(self, config_pp):
         """Set the project points using slice parameters"""
@@ -648,10 +706,10 @@ class ProjectPoints(BaseConfig):
             site_config_dict = {'sites': self.sites,
                                 'configs': [avail_configs[0]
                                             for s in self.sites]}
-            self.set_config_map(site_config_dict)
+            self.df = site_config_dict
 
     @classmethod
-    def split(cls, i0, i1, config_pp, sam_configs, config_map, tech):
+    def split(cls, i0, i1, config_pp, sam_configs, config_df, tech):
         """Return split instance of this ProjectPoints w/ site subset.
 
         Parameters
@@ -674,17 +732,17 @@ class ProjectPoints(BaseConfig):
             configurations. The top level key is the SAM config ID, top level
             value is the SAM config. Each SAM config is a dictionary with keys
             equal to input names, values equal to the actual inputs.
-        config_map : dict
-            Sites (keys) to SAM configuration dictionaries (values) mapping.
+        config_df : pd.DataFrame
+            Sites to SAM configuration dictionary IDs mapping dataframe.
         tech : str
             reV technology being executed.
 
         Returns
         -------
         sub : ProjectPoints
-            New instance of ProjectPoints with a subset
-            of the following attributes: sites, config_map, and the self
-            dictionary data struct.
+            New instance of ProjectPoints with a subset of the following
+            attributes: sites, project points df, and the self dictionary data
+            struct.
         """
 
         # make a new instance of ProjectPoints
@@ -695,18 +753,14 @@ class ProjectPoints(BaseConfig):
             sub._sites = sub.sites[i0:i1]
 
             # clear the dictionary attributes
-            sub.config_map = {}
             sub.clear()
 
-            # re-build the dictionary attributes for items in the new site list
-            for key, val in config_map.items():
-                if key in sub.sites:
-                    sub[key] = val
-                    sub.config_map[key] = val
+            # set the new config map dataframe
+            sub.df = config_df[config_df['sites'].isin(sub.sites)]
 
         elif isinstance(sub.sites, slice):
-            # this is only the case if stop=None, in which case config_map and
-            # the self dict are empty and default config is used.
+            # this is only the case if stop=None,
+            # in which case default config is used.
             if (sub.sites.stop is None and sub.sites.step != 1 and
                     sub.sites.step is not None):
                 raise ValueError('Cannot perform a project points split on a '
@@ -719,7 +773,7 @@ class ProjectPoints(BaseConfig):
         return sub
 
 
-class SAM_Gen(BaseConfig):
+class SAMGenConfig(BaseConfig):
     """Class to handle the SAM generation section of config input."""
     def __init__(self, SAM_config, tech):
         """Initialize the SAM generation section of config as an object.
@@ -735,8 +789,6 @@ class SAM_Gen(BaseConfig):
             the keys in the SAM_config input.
         """
 
-        self._write_profiles = None
-        self._inputs = None
         self._tech = tech
 
         # Initialize the SAM generation config section as a dictionary.
@@ -746,12 +798,15 @@ class SAM_Gen(BaseConfig):
     def inputs(self):
         """Get the SAM input file(s) (JSON) and return as a dictionary.
 
-        They keys of this dictionary are variable names in the config input
-        file. They are basically "configuration ID's". The values are the
-        imported json SAM input dictionaries.
+        Parameters
+        ----------
+        _inputs : dict
+            They keys of this dictionary are variable names in the config input
+            file. They are basically "configuration ID's". The values are the
+            imported json SAM input dictionaries.
         """
 
-        if self._inputs is None:
+        if not hasattr(self, '_inputs'):
             self._inputs = {}
             for key, fname in self.__getitem__(self.tech).items():
                 # key is ID (i.e. sam_param_0) that matches project points json
@@ -778,6 +833,6 @@ class SAM_Gen(BaseConfig):
     @property
     def write_profiles(self):
         """Get the boolean write profiles option."""
-        if self._write_profiles is None:
+        if not hasattr(self, '_write_profiles'):
             self._write_profiles = self.__getitem__('write_profiles')
         return self._write_profiles
