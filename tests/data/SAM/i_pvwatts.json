@@ -7,7 +7,7 @@
   "inv_eff": 96,
   "losses": 14.075660705566406,
   "module_type": 0,
-  "solar_resource_file": "C:/SAM/2017.9.5/solar_resource/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv",
+  "solar_resource_file": "./data/SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv",
   "system_capacity": 4,
   "tilt": 20
 }
