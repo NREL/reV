@@ -2,23 +2,368 @@
 Classes to handle resource data
 """
 import h5py
-import logging
 import numpy as np
 import pandas as pd
+from reV.exceptions import (ResourceKeyError, ResourceRuntimeError,
+                            ResourceValueError, ExtrapolationWarning)
+import warnings
 
 logger = logging.getLogger(__name__)
 
+class SAMResource:
+    """
+    Resource Manager for SAM
+    """
+    def __init__(self, project_points, time_index):
+        """
+        Parameters
+        ----------
+        project_points : reV.config.ProjectPoints
+            Instance of ProjectPoints
+        time_index : pandas.DatetimeIndex
+            Time-series datetime index
+        """
+        self._project_points = project_points
+        self._time_index = time_index
+        self._shape = (len(time_index), len(project_points.sites))
+        self._n = self._shape[0]
+        self._meta = None
+        self._runnable = False
+        self._res_arrays = {}
+        h = project_points.h
+        if h is None:
+            # no hub height specified, get NSRDB solar data
+            self._res_type = 'solar'
+        else:
+            # hub height specified, get WTK wind data.
+            self._res_type = 'wind'
+            if isinstance(h, (list, np.ndarray)):
+                if len(h) != self._n:
+                    msg = 'Must have a unique height for each site'
+                    raise ResourceValueError(msg)
 
-class Resource(object):
+            self._res_arrays['winddirection'] = np.zeros(self._shape,
+                                                         dtype='float32')
+
+        self._h = h
+
+    def __repr__(self):
+        msg = "{} with {} {} sites".format(self.__class__.__name__,
+                                           self._n, self._res_type)
+        return msg
+
+    def __len__(self):
+        return self._n
+
+    def __getitem__(self, keys):
+        var = keys[0]
+        var_slice = keys[1:]
+        if var == 'time_index':
+            out = self.time_index
+            out = out[var_slice[0]]
+        elif var == 'meta':
+            out = self.meta
+            out = out.loc[var_slice[0]]
+        elif isinstance(var, str):
+            out = self._get_var_ts(var, *var_slice)
+        elif isinstance(var, int):
+            site = var
+            out, _ = self._get_res_df(site)
+        else:
+            raise ResourceKeyError('Cannot interpret {}'.format(var))
+
+        return out
+
+    def __setitem__(self, key, arr):
+        var = key[0]
+        var_slice = key[1:]
+        if var == 'meta':
+            self.meta = arr
+        else:
+            self._set_var_array(var, arr, *var_slice)
+
+    def __iter__(self):
+        self._i = 0
+        return self
+
+    def __next__(self):
+        if self._i < self._n:
+            site = self.sites[self._i]
+            res_df, site_meta = self._get_res_df(site)
+            self._i += 1
+            return res_df, site_meta
+        else:
+            raise StopIteration
+
+    @property
+    def sites(self):
+        """
+        Sites being pre-loaded for SAM
+
+        Returns
+        -------
+        sites : list
+            List of sites to be provided to SAM, defined by project_points
+        """
+        sites = self._project_points.sites
+        return list(sites)
+
+    @property
+    def shape(self):
+        """
+        Shape of variable arrays
+
+        Returns
+        -------
+        self._shape : tuple
+            Shape (time_index, sites) of variable arrays
+        """
+        return self._shape
+
+    @property
+    def var_list(self):
+        """
+        Return variable list associated with SAMResource type
+
+        Returns
+        -------
+        var_list : list
+            List of resource variables associated with resource type
+            ('solar' or 'wind')
+        """
+        if self._res_type == 'solar':
+            var_list = ['dni', 'dhi', 'wind_speed', 'air_temperature']
+        elif self._res_type == 'wind':
+            var_list = ['pressure', 'temperature', 'winddirection',
+                        'windspeed']
+        else:
+            raise ResourceValueError("Resource type is invalid!")
+
+        return var_list
+
+    @property
+    def time_index(self):
+        """
+        Return time_index
+
+        Returns
+        -------
+        self._time_index : pandas.DatetimeIndex
+            Time-series datetime index
+        """
+        return self._time_index
+
+    @property
+    def meta(self):
+        """
+        Return sites meta
+
+        Returns
+        -------
+        self._meta : pandas.DataFrame
+            DataFrame of sites meta data
+        """
+        return self._meta
+
+    @meta.setter
+    def meta(self, meta):
+        """
+        Set sites meta
+
+        Parameters
+        ----------
+        meta : recarray | pandas.DataFrame
+            Sites meta as records array or DataFrame
+        """
+        if len(meta) != self._n:
+            raise ResourceValueError('Meta does not contain {} sites'
+                                     .format(self._n))
+
+        if not isinstance(meta, pd.DataFrame):
+            meta = pd.DataFrame(meta, index=self.sites)
+        else:
+            if not np.array_equal(meta.index, self.sites):
+                raise ResourceValueError('Meta does not match sites!')
+
+        self._meta = meta
+
+    @property
+    def h(self):
+        """
+        Get heights for wind sites
+
+        Returns
+        -------
+        self._h : int | float | list
+            Hub height or height(s) for wind resource, None for solar resource
+        """
+        return self._h
+
+    @staticmethod
+    def check_units(var_name, var_array):
+        """
+        Check units of variable array and convert to SAM units if needed
+
+        Parameters
+        ----------
+        var_name : str
+            Variable name
+        var_array : ndarray
+            Variable data
+
+        Returns
+        -------
+        var_array : ndarray
+            Variable data with updated units if needed
+        """
+        if 'pressure' in var_name:
+            # Check if pressure is in Pa, if so convert to atm
+            if np.min(var_array) > 1e3:
+                # convert pressure from Pa to ATM
+                var_array *= 9.86923e-6
+        elif 'temperature' in var_name:
+            # Check if tempearture is in K, if so convert to C
+            if np.min(var_array) > 273.15:
+                var_array += -273.15
+
+        return var_array
+
+    def runnable(self):
+        """
+        Check to see if SAMResource iterator is runnable:
+        - Meta must be loaded
+        - Variables in var_list must be loaded
+
+        Returns
+        ------
+        bool
+            Returns True if runnable check passes
+        """
+        if self._meta is None:
+            raise ResourceRuntimeError('meta has not been set!')
+        else:
+            for var in self.var_list:
+                if var not in self._res_arrays.keys():
+                    raise ResourceRuntimeError('{} has not been set!'
+                                               .format(var))
+
+        return True
+
+    def _set_var_array(self, var, arr, *var_slice):
+        """
+        Set variable array
+
+        Parameters
+        ----------
+        var : str
+            Resource variable name
+        arr : ndarray
+            Time series data of given variable for sites
+        var_slice : tuple of int | list | slice
+            Slice of variable array that corresponds to arr
+        """
+        if var in self.var_list:
+            var_arr = self._res_arrays.get(var, np.zeros(self._shape,
+                                                         dtype='float32'))
+            if var_arr[var_slice].shape == arr.shape:
+                var_arr[var_slice] = arr
+                self._res_arrays[var] = var_arr
+            else:
+                raise ResourceValueError('{} does not have proper shape: {}'
+                                         .format(var, self._shape))
+        else:
+            raise ResourceKeyError('{} not in {}'
+                                   .format(var, self.var_list))
+
+    def _get_var_ts(self, var, *var_slice):
+        """
+        Get variable time-series
+
+        Parameters
+        ----------
+        var : str
+            Resource variable name
+        var_slice : tuple of int | list | slice
+            Slice of variable array to extract
+
+        Returns
+        -------
+        ts : pandas.DataFrame
+            Time-series for desired sites of variable var
+        """
+        if var in self.var_list:
+            try:
+                var_array = self._res_arrays[var]
+            except KeyError:
+                raise ResourceKeyError('{} has yet to be set!')
+
+            sites = np.array(self.sites)
+            ts = pd.DataFrame(var_array[var_slice],
+                              index=self.time_index[var_slice[0]],
+                              columns=sites[var_slice[1]])
+        else:
+            raise ResourceKeyError('{} not in {}'
+                                   .format(var, self.var_list))
+
+        return ts
+
+    def _get_res_df(self, site):
+        """
+        Get resource time-series
+
+        Parameters
+        ----------
+        site : int
+            Site to extract
+
+        Returns
+        -------
+        res_df : pandas.DataFrame
+            Time-series of SAM resource variables for given site
+        """
+        self.runnable()
+        try:
+            idx = self.sites.index(site)
+        except ValueError:
+            raise ResourceValueError('{} is not in available sites'
+                                     .format(site))
+        site_meta = self.meta.loc(site)
+        if self._h is not None:
+            try:
+                h = self._h[idx]
+            except TypeError:
+                h = self._h
+
+            site_meta['height'] = h
+
+        res_df = pd.DataFrame(index=self.time_index)
+        res_df.name = site
+        for var_name, var_array in self._res_arrays.items():
+            res_df[var_name] = self.check_units(var_name,
+                                                var_array[:, idx])
+
+        return res_df, site_meta
+
+
+class Resource:
     """
     Base class to handle resource .h5 files
+
+    Parameters
+    ----------
+    h5_file : 'str'
+        Path to .h5 resource file
+    unscale : 'boole'
+        Boolean flag to automatically unscale variables on extraction
     """
     SCALE_ATTR = 'scale_factor'
 
     def __init__(self, h5_file, unscale=True):
         self._h5_file = h5_file
         self._h5 = h5py.File(self._h5_file, 'r')
+        self._datasets = list(self._h5)
         self._unscale = unscale
+        self._dsets = list(self._h5)
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
@@ -46,41 +391,141 @@ class Resource(object):
             out = self.time_index(*ds_slice)
         elif ds == 'meta':
             out = self.meta(*ds_slice)
+        elif 'SAM' in ds:
+            site = ds_slice[0]
+            if isinstance(site, int):
+                out = self._get_SAM_df(ds, site)
+            else:
+                msg = "Can only extract SAM DataFrame for a single site"
+                raise ResourceRuntimeError(msg)
         else:
             out = self.get_ds(ds, *ds_slice)
 
         return out
 
-    def time_index(self, *slice):
+    def time_index(self, *ds_slice):
         """
         Extract and convert time_index to pandas Datetime Index
+
+        Examples
+        --------
+        self['time_index, 1]
+            - Get a single timestep This returns a Timestamp
+        self['time_index', :10]
+            - Get the first 10 timesteps
+        self['time_index', [1, 3, 5, 7, 9]]
+            - Get a list of timesteps
+
+        Parameters
+        ----------
+        ds_slice : 'tuple'
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        time_index : 'Pandas.DatetimeIndex'
+            Vector of datetime stamps
         """
-        time_index = self._h5['time_index'][slice]
+        time_index = self._h5['time_index'][ds_slice[0]]
         time_index: np.array
         return pd.to_datetime(time_index.astype(str))
 
-    def meta(self, *slice):
+    def meta(self, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
+
+        Examples
+        --------
+        self['meta', 1]
+            - Get site 1
+        self['meta', :10]
+            - Get the first 10 sites
+        self['meta', [1, 3, 5, 7, 9]]
+            - Get the first 5 odd numbered sites
+        self['meta', :, 'timezone']
+            - Get timezone for all sites
+        self['meta', :, ['latitude', 'longitdue']]
+            - Get ('latitude', 'longitude') for all sites
+
+        Parameters
+        ----------
+        ds_slice : 'tuple'
+            Pandas slicing describing which sites and columns to extract
+
+        Returns
+        -------
+        meta : 'Pandas.Dataframe'
+            Dataframe of location meta data
         """
-        meta = self._h5['meta'][slice[0]]
-        meta = pd.DataFrame(meta)
-        if len(slice) == 2:
-            meta = meta[slice[1]]
+        sites = ds_slice[0]
+        if isinstance(sites, int):
+            sites = slice(sites, sites + 1)
+
+        meta = self._h5['meta'][sites]
+
+        if isinstance(sites, slice):
+            if sites.stop:
+                sites = list(range(*sites.indices(sites.stop)))
+            else:
+                sites = list(range(len(meta)))
+
+        meta = pd.DataFrame(meta, index=sites)
+        if len(ds_slice) == 2:
+            meta = meta[ds_slice[1]]
 
         return meta
 
-    def get_ds(self, ds_name, *slice):
+    def _get_SAM_df(self, ds_name, site):
+        """
+        Placeholder for get_SAM_df method that it resource specific
+
+        Parameters
+        ----------
+        ds_name : str
+            'Dataset' name == SAM
+        site : int
+            Site to extract SAM DataFrame for
+        """
+        pass
+
+    def get_ds(self, ds_name, *ds_slice):
         """
         Extract data from given dataset
-        """
-        ds = self._h5[ds_name]
-        if self._unscale:
-            scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
-        else:
-            scale_factor = 1
 
-        return ds[slice] / scale_factor
+        Examples
+        --------
+        self['dni', :, 1]
+            - Get 'dni'timeseries for site 1
+        self['dni', ::2, :]
+            - Get hourly 'dni' timeseries for all sites (NSRDB)
+        self['windspeed_100m', :, [1, 3, 5, 7, 9]]
+            - Get 'windspeed_100m' timeseries for select sites
+
+
+        Parameters
+        ----------
+        ds_name : 'str'
+            Variable dataset to be extracted
+        ds_slice : 'tuple'
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        ds : 'ndarray'
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        if ds_name in self._dsets:
+            ds = self._h5[ds_name]
+            if self._unscale:
+                scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
+            else:
+                scale_factor = 1
+
+            return ds[ds_slice] / scale_factor
+        else:
+            raise ResourceKeyError('{} not in {}'
+                                   .format(ds_name, self._dsets))
 
     def close(self):
         """
@@ -93,6 +538,32 @@ class SolarResource(Resource):
     """
     Class to handle Solar Resource .h5 files
     """
+    def _get_SAM_df(self, ds_name, site):
+        """
+        Get SAM wind resource DataFrame for given site
+
+        Parameters
+        ----------
+        ds_name : str
+            'Dataset' name == SAM
+        site : int
+            Site to extract SAM DataFrame for
+
+        Returns
+        -------
+        res_df : pandas.DataFrame
+            time-series DataFrame of resource variables needed to run SAM
+        """
+        if self._unscale:
+            res_df = pd.DataFrame(index=self._time_index)
+            res_df.name = "{}-{}".format(ds_name, site)
+            for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
+                var_array = self._get_ds(var, slice(None, None, None), site)
+                res_df[var] = SAMResource.check_units(var, var_array)
+
+            return res_df
+        else:
+            raise ResourceValueError("SAM requires unscaled values")
 
 
 class NSRDB(SolarResource):
@@ -102,10 +573,107 @@ class NSRDB(SolarResource):
     SCALE_ATTR = 'psm_scale_factor'
 
 
+class SolarFCST(SolarResource):
+    """
+    Class to handle ECMWF weather forecast .h5 files
+    """
+
+
 class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
+    def __init__(self, h5_file, unscale=True):
+        super().__init__(h5_file, unscale=unscale)
+        self._heights = None
+
+    @staticmethod
+    def parse_name(ds_name):
+        """
+        Extract dataset name and height from dataset name
+
+        Parameters
+        ----------
+        ds_name : 'str'
+            Dataset name
+
+        Returns
+        -------
+        name : 'str'
+            Variable name
+        h : 'int'
+            Height of variable
+        """
+        try:
+            name, h = ds_name.split('_')
+            h = h.strip('m')
+            try:
+                h = int(h)
+            except ValueError:
+                h = float(h)
+        except Exception:
+            name = ds_name
+            h = None
+
+        return name, h
+
+    @property
+    def heights(self):
+        """
+        Extract available heights for pressure, temperature, windspeed
+        and winddirection variables. Used for interpolation/extrapolation.
+        """
+        if self._heights is None:
+            dsets = list(self._h5)
+            heights = {'pressure': [],
+                       'temperature': [],
+                       'windspeed': [],
+                       'winddirection': []}
+            for ds in dsets:
+                ds_name, h = self.parse_name(ds)
+                if ds_name in heights.keys():
+                    heights[ds_name].append(h)
+
+            self._heights = heights
+
+        return self._heights
+
+    @staticmethod
+    def get_nearest_h(h, heights):
+        """
+        Get two nearest h values in heights.
+        Determine if h is inside or outside the range of heights
+        (requiring extrapolation instead of interpolation)
+
+        Parameters
+        ----------
+        h : 'int'|'float'
+            Height value of interest
+        heights : 'list'
+            List of available heights
+
+        Returns
+        -------
+        nearest_h : 'list'
+            list of 1st and 2nd nearest height in heights
+        extrapolate : 'boole'
+            Flag as to whether h is inside or outside heights range
+        """
+        if isinstance(heights, (list, tuple)):
+            heights = np.array(heights)
+
+        dist = np.abs(heights - h)
+        pos = dist.argsort()[:2]
+        nearest_h = np.sort(heights[pos])
+        extrapolate = np.all(h < heights) or np.all(h > heights)
+        if extrapolate:
+            h_min, h_max = np.sort(heights)[[0, -1]]
+            msg = ('{} is outside the height range'.format(h),
+                   '({}, {}).'.format(h_min, h_max),
+                   'Extrapolation to be used.')
+            warnings.warn(' '.join(msg), ExtrapolationWarning)
+
+        return nearest_h, extrapolate
 
     @staticmethod
     def power_law_interp(ts_1, h_1, ts_2, h_2, h, mean=True):
@@ -129,7 +697,7 @@ class WindResource(Resource):
 
         Returns
         -------
-        'ndarray'
+        out : 'ndarray'
             Time-series array at height h
         """
         if h == h_1:
@@ -137,7 +705,10 @@ class WindResource(Resource):
         elif h == h_2:
             out = ts_2
         else:
-            assert h_1 < h_2, 'Args not passed in ascending order!'
+            if h_1 > h_2:
+                h_1, h_2 = h_2, h_1
+                ts_1, ts_2 = ts_2, ts_1
+
             if mean:
                 alpha = (np.log(ts_2.mean() / ts_1.mean()) /
                          np.log(h_2 / h_1))
@@ -180,7 +751,7 @@ class WindResource(Resource):
 
         Returns
         -------
-        'ndarray'
+        out : 'ndarray'
             Time-series array at height h
         """
         if h == h_1:
@@ -188,7 +759,9 @@ class WindResource(Resource):
         elif h == h_2:
             out = ts_2
         else:
-            assert h_1 < h_2, 'Args not passed in ascending order!'
+            if h_1 > h_2:
+                h_1, h_2 = h_2, h_1
+                ts_1, ts_2 = ts_2, ts_1
             # Calculate slope for every posiiton in variable arrays
             m = (ts_2 - ts_1) / (h_2 - h_1)
             # Calculate intercept for every position in variable arrays
@@ -212,7 +785,7 @@ class WindResource(Resource):
 
         Returns
         -------
-        'object'
+        da : 'object'
             shortest angle distance between a0 and a1
         """
         da = (a1 - a0) % 360
@@ -238,7 +811,7 @@ class WindResource(Resource):
 
         Returns
         -------
-        'ndarray'
+        out : 'ndarray'
             Time-series array at height h
         """
         if h == h_1:
@@ -255,6 +828,73 @@ class WindResource(Resource):
 
         return out
 
+    def get_ds(self, ds_name, *ds_slice):
+        """
+        Extract data from given dataset
+
+        Parameters
+        ----------
+        ds_name : 'str'
+            Variable dataset to be extracted
+        ds_slice : 'tuple'
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : 'ndarray'
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        var_name, h = self.parse_name(ds_name)
+        heights = self.heights[var_name]
+        if h in heights:
+            out = super().get_ds(ds_name, *ds_slice)
+        else:
+            (h1, h2), extrapolate = self.get_nearest_h(h, heights)
+            ts1 = super().get_ds('{}_{}m'.format(var_name, h1), *ds_slice)
+            ts2 = super().get_ds('{}_{}m'.format(var_name, h2), *ds_slice)
+
+            if (var_name == 'windspeed') and extrapolate:
+                out = self.power_law_interp(ts1, h1, ts2, h2, h)
+            elif var_name == 'winddirection':
+                out = self.circular_interp(ts1, h1, ts2, h2, h)
+            else:
+                out = self.linear_interp(ts1, h1, ts2, h2, h)
+
+        return out
+
+    def _get_SAM_df(self, ds_name, site):
+        """
+        Get SAM wind resource DataFrame for given site
+
+        Parameters
+        ----------
+        ds_name : str
+            'Dataset' name == SAM
+        site : int
+            Site to extract SAM DataFrame for
+
+        Returns
+        -------
+        res_df : pandas.DataFrame
+            time-series DataFrame of resource variables needed to run SAM
+        """
+        if self._unscale:
+            _, h = self._parse_name(ds_name)
+            res_df = pd.DataFrame(index=self._time_index)
+            res_df.name = site
+            variables = ['pressure', 'temperature', 'winddirection',
+                         'windspeed']
+            for var in variables:
+                var_name = "{}_{}m".format(var, h)
+                var_array = self._get_ds(var_name, slice(None, None, None),
+                                         site)
+                res_df[var_name] = SAMResource.check_units(var_name, var_array)
+
+            return res_df
+        else:
+            raise ResourceValueError("SAM requires unscaled values")
+
 
 class WTK(WindResource):
     """
@@ -262,10 +902,9 @@ class WTK(WindResource):
     """
 
 
-class ECMWF(Resource):
+class WindFCST(WindResource):
     """
     Class to handle ECMWF weather forecast .h5 files
-    TODO: How to Handle Wind Forecasts vs Solar Forecasts?
     """
 
 
