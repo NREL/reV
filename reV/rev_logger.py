@@ -20,21 +20,21 @@ def setup_logger(logger_name, log_level="INFO", log_file=None,
 
     Parameters
     ----------
-    logger_name : 'str'
+    logger_name : str
         Name of logger to get and setup
-    log_level : 'str'
+    log_level : str
         Level of logging to use. kwarg is mapped to logging level attribute
         of the same name.
-    log_file : 'str'
+    log_file : str
         Path to log file to use with FileHandler, if none use StreamHandler
-    log_format : 'str'
+    log_format : str
         Format to use during logging, if None using logging default
 
     Returns
     -------
-    logger : 'logging.logger'
+    logger : logging.logger
         logging instance that was initialized
-    handler : 'logging.Handler'
+    handler : logging.Handler
         Handler for logger (FileHandler or StreamHandler)
     """
     logger = logging.getLogger(logger_name)
@@ -71,7 +71,7 @@ class LoggingAttributes:
 
         Parameters
         ----------
-        logger_name : 'str'
+        logger_name : str
             Name of logger to initialize
         """
         try:
@@ -90,16 +90,16 @@ def init_logger(logger_name, **kwargs):
 
     Parameters
     ----------
-    logger_name : 'str'
+    logger_name : str
         Name of logger to initialize
     **kwargs
         Logging attributes used to setup_logger
 
     Returns
     -------
-    logger : 'logging.logger'
+    logger : logging.logger
         logging instance that was initialized
-    handler : 'logging.Handler'
+    handler : logging.Handler
         Handler for logger (FileHandler or StreamHandler)
     """
     logger, handler = setup_logger(logger_name, **kwargs)
