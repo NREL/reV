@@ -202,8 +202,6 @@ class ParametersManager:
         """
         missing_inputs = False
         for name, dtypes in self.requirements:
-            logger.debug('Verifying input parameter: "{}" '
-                         'of viable types: {}'.format(name, dtypes))
             if name not in self.parameters.keys():
                 logger.warning('SAM input parameters must contain "{}"'
                                .format(name))
@@ -309,6 +307,7 @@ class SAM:
             # set time variables
             self.time_interval = self.get_time_interval(resource.index)
             self.set_time_index(resource.index)
+            self.site = resource.name
 
     def set_parameters(self, keys_to_set='all'):
         """Set SAM inputs using either a subset of keys or all parameter keys.
@@ -322,14 +321,11 @@ class SAM:
         """
         logger.debug('Setting SAM input parameters.')
         if keys_to_set == 'all':
-            logger.debug(self.parameters.keys())
             keys_to_set = self.parameters.keys()
 
         for key in keys_to_set:
             logger.debug('Setting parameter: {} = {}...'
                          .format(key, str(self.parameters[key])[:20]))
-            logger.debug('Parameter {} has type: {}'
-                         .format(key, type(self.parameters[key])))
 
             # Set data to SSC using appropriate logic
             if is_num(self.parameters[key]) is True:
@@ -369,8 +365,6 @@ class SAM:
             self.ssc.data_set_number(self.res_data, var_map[var],
                                      self.meta[var])
 
-        self.site = self.meta.index.values
-
     def set_time_index(self, time_index, time_vars=('year', 'month', 'day',
                                                     'hour', 'minute')):
         """Set the SAM time index variables.
@@ -386,7 +380,6 @@ class SAM:
 
         time_index = self.make_datetime(time_index)
         for var in time_vars:
-            logger.debug('Setting {} time index data.'.format(var))
             self.ssc.data_set_array(self.res_data, var,
                                     getattr(time_index.dt, var).values)
 

@@ -99,11 +99,21 @@ class Config(BaseConfig):
         """Get the execution control property."""
         if not hasattr(self, '_execution_control'):
 
+            pp_dict = deepcopy(self['project_points'][self.tech])
+            sam_inputs_dict = deepcopy(self.sam_gen.inputs)
+
+            _project_points = ProjectPoints(pp_dict, sam_inputs_dict,
+                                            self.tech)
+
             self._execution_control = ExecutionControl(
-                self.__getitem__('execution_control'),
-                self.project_points, self.years)
+                self['execution_control'], _project_points, self.years)
 
         return self._execution_control
+
+    @property
+    def project_points(self):
+        """Get the project points attribute from execution control."""
+        return self.execution_control.project_points
 
     @property
     def logging_level(self):
@@ -120,16 +130,19 @@ class Config(BaseConfig):
         return self._logging_level
 
     @property
-    def project_points(self):
-        """Set project points property with instance of ProjectPoints."""
-        if not hasattr(self, '_project_points'):
-            pp_dict = deepcopy(self['project_points'][self.tech])
-            sam_inputs_dict = deepcopy(self.sam_gen.inputs)
+    def name(self):
+        """Get the project name."""
+        default = 'rev2'
+        if not hasattr(self, '_name'):
+            if 'name' in self.__getitem__('project_control'):
+                if self.__getitem__('project_control')['name']:
+                    self._name = self.__getitem__('project_control')['name']
+                else:
+                    self._name = default
+            else:
+                self._name = default
 
-            self._project_points = ProjectPoints(pp_dict,
-                                                 sam_inputs_dict,
-                                                 self.tech)
-        return self._project_points
+        return self._name
 
     @property
     def res_files(self):
@@ -238,7 +251,7 @@ class ExecutionControl:
         level : str
             CURRENT execution level, will control how this instance of
             ExecutionControl is being split and iterated upon.
-            Options: supervisor, node, core
+            Options: 'supervisor' or 'core'
         """
 
         self._years = years
@@ -250,8 +263,9 @@ class ExecutionControl:
         """Iterator initialization dunder."""
         self._i = 0
         self._last_site_ind = 0
-        logger.info('Starting execution control iterator with limit: {}'
-                    .format(self.N))
+        logger.info('Starting ExecutionControl at level "{}" '
+                    'and split level "{}" with iter limit: {}'
+                    .format(self.level, self.split_level, self.N))
         return self
 
     def __next__(self):
@@ -268,8 +282,9 @@ class ExecutionControl:
         if self._i < self.N:
             i0 = self._last_site_ind
             i1 = i0 + self.split_increment
-            logger.info('Iterating from site index {} to {} on {} #{}'
-                        .format(i0, i1, self.split_level, self._i))
+            logger.info('ExecutionControl iterating from site index '
+                        '{} to {} on worker #{}'
+                        .format(i0, i1, self._i))
             self._i += 1
             self._last_site_ind = i1
 
@@ -289,8 +304,7 @@ class ExecutionControl:
         """Get the level of the split of this object (one level down)."""
 
         if not hasattr(self, '_split_level'):
-            split_levels = {'supervisor': 'node',
-                            'node': 'core'}
+            split_levels = {'supervisor': 'core'}
             try:
                 self._split_level = split_levels[self.level]
             except KeyError:
@@ -302,20 +316,13 @@ class ExecutionControl:
     @property
     def split_increment(self):
         """Get the iterator increment property (number of sites per iter)."""
-        if self.split_level == 'node':
-            self._increment = self.sites_per_node
-        elif self.split_level == 'core':
-            self._increment = self.sites_per_core
-        return self._increment
+        return self.sites_per_core
 
     @property
     def N(self):
         """Get the iterator limit (number of splits)."""
         if not hasattr(self, '_N'):
-            if self.split_level == 'node':
-                self._N = self.nodes
-            elif self.split_level == 'core':
-                self._N = self.ppn
+            self._N = self.p_tot
         return self._N
 
     @property
@@ -344,6 +351,74 @@ class ExecutionControl:
         return self.nodes * self.ppn
 
     @property
+    def option(self):
+        """Get the HPC vs. local vs. serial option."""
+        default = 'serial'
+        if not hasattr(self, '_option'):
+            if 'option' in self.raw:
+                if self.raw['option']:
+                    self._option = self.raw['option'].lower()
+                else:
+                    # default option if not specified is serial
+                    self._option = default
+            else:
+                # default option if not specified is serial
+                self._option = default
+
+        return self._option
+
+    @property
+    def hpc_queue(self):
+        """Get the HPC queue property."""
+        default = 'short'
+        if not hasattr(self, '_hpc_queue'):
+            if 'queue' in self.raw:
+                if self.raw['queue']:
+                    self._hpc_queue = self.raw['queue'].lower()
+                else:
+                    # default option if not specified is serial
+                    self._hpc_queue = default
+            else:
+                # default option if not specified is serial
+                self._hpc_queue = default
+
+        return self._hpc_queue
+
+    @property
+    def hpc_alloc(self):
+        """Get the HPC allocation property."""
+        default = 'rev'
+        if not hasattr(self, '_hpc_alloc'):
+            if 'allocation' in self.raw:
+                if self.raw['allocation']:
+                    self._hpc_alloc = self.raw['allocation'].lower()
+                else:
+                    # default option if not specified is serial
+                    self._hpc_alloc = default
+            else:
+                # default option if not specified is serial
+                self._hpc_alloc = default
+
+        return self._hpc_alloc
+
+    @property
+    def hpc_node_mem(self):
+        """Get the HPC node memory property."""
+        default = '32GB'
+        if not hasattr(self, '_hpc_node_mem'):
+            if 'memory' in self.raw:
+                if self.raw['memory']:
+                    self._hpc_node_mem = self.raw['memory']
+                else:
+                    # default option if not specified is serial
+                    self._hpc_node_mem = default
+            else:
+                # default option if not specified is serial
+                self._hpc_node_mem = default
+
+        return self._hpc_node_mem
+
+    @property
     def project_points(self):
         """Get the project points property"""
         return self._project_points
@@ -361,7 +436,7 @@ class ExecutionControl:
                'or "sites_per_node", otherwise "sites_per_node" cannot be '
                'computed.')
 
-        if 'sites_per_node' in self:
+        if 'sites_per_node' in self.raw:
             if self.raw['sites_per_node']:
                 self._sites_per_node = self.raw['sites_per_node']
             elif self.raw['sites_per_node'] is None and self.n_sites == 'inf':
@@ -696,7 +771,7 @@ class ProjectPoints(BaseConfig):
         if n_configs > 1:
             logger.warning('Multiple SAM input configurations detected '
                            'for a slice-based site project points. '
-                           'Defaulting to: {}'.format(avail_configs[0]))
+                           'Defaulting to: "{}"'.format(avail_configs[0]))
         if config_pp['stop'] is None:
             # No stop, set default config that will be returned for any site
             self.default_config = self.sam_configs[self.default_config_id]
