@@ -690,7 +690,6 @@ class WindResource(Resource):
     """
     def __init__(self, h5_file, unscale=True):
         super().__init__(h5_file, unscale=unscale)
-        self._heights = None
 
     @staticmethod
     def _parse_name(ds_name):
@@ -734,7 +733,7 @@ class WindResource(Resource):
             List of available heights for:
             windspeed, winddirection, temperature, and pressure
         """
-        if self._heights is None:
+        if not hasattr(self, '_heights'):
             dsets = list(self._h5)
             heights = {'pressure': [],
                        'temperature': [],
