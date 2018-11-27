@@ -376,9 +376,6 @@ class Resource:
         self._unscale = unscale
         self._dsets = list(self._h5)
 
-        log_name = '{}.{}'.format(self.__module__, self.__class__.__name__)
-        self._logger = logging.getLogger(log_name)
-
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
         return msg
