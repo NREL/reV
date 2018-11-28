@@ -11,7 +11,7 @@ import functools
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.config import Config
-from reV import __dir__ as REVDIR
+from reV import __testdata__ as TESTDATA
 from reV.rev_logger import init_logger, REV_LOGGERS
 from reV.handlers.resource import NSRDB, WTK
 
@@ -46,6 +46,11 @@ class Gen:
         return self._config
 
     @property
+    def execution_control(self):
+        """Get config project points"""
+        return self._config.execution_control
+
+    @property
     def output_request(self):
         """Get the list of output variables requested from generation."""
         if self._output_request is None:
@@ -60,9 +65,9 @@ class Gen:
         return self._config.execution_control.project_points
 
     @property
-    def execution_control(self):
-        """Get config project points"""
-        return self._config.execution_control
+    def res_files(self):
+        """Get the source resource filenames from config."""
+        return self._config.res_files
 
     @timer
     def execute_hpc(self, execution_control=None, res_files=None):
@@ -70,7 +75,7 @@ class Gen:
         if execution_control is None:
             execution_control = self.execution_control
         if res_files is None:
-            res_files = self.config.res_files
+            res_files = self.res_files
 
         for res_file in res_files:
 
@@ -80,6 +85,7 @@ class Gen:
                                  name=self.config.name,
                                  cores=execution_control.ppn,
                                  memory=execution_control.hpc_node_mem,
+                                 walltime=execution_control.hpc_walltime,
                                  )
 
             cluster.scale(execution_control.nodes)
@@ -96,7 +102,7 @@ class Gen:
         if execution_control is None:
             execution_control = self.execution_control
         if res_files is None:
-            res_files = self.config.res_files
+            res_files = self.res_files
 
         for res_file in res_files:
 
@@ -157,14 +163,14 @@ class Gen:
         if execution_control is None:
             execution_control = self.execution_control
         if res_files is None:
-            res_files = self.config.res_files
+            res_files = self.res_files
         if output_request is None:
             output_request = self.output_request
 
         project_points = execution_control.project_points
 
-        logger.debug('Running Gen serial for sites: {} '
-                     'on worker #{}'.format(project_points.sites, worker))
+        logger.debug('Running Gen serial on worker #{} for sites: {} '
+                     .format(worker, project_points.sites))
 
         for res_file in res_files:
 
@@ -190,7 +196,7 @@ class Gen:
 
     @staticmethod
     def get_sam_res(res_file, project_points):
-        """Get the SAM resource iterator object."""
+        """Get the SAM resource iterator object (single year, single file)."""
         if 'nsrdb' in res_file:
             res_iter = NSRDB.preload_SAM(res_file, project_points)
         elif 'wtk' in res_file:
@@ -201,18 +207,16 @@ class Gen:
 if __name__ == '__main__':
     # temporary script based test will be merged into test.py later
 
-    cfile = os.path.join(REVDIR, 'config/ini/ri_subset_pv_gentest.ini')
+    cfile = os.path.join(TESTDATA, 'config_ini/ri_test.ini')
     gen = Gen(cfile)
 
     logger_list = [__name__, "reV.config", "reV.SAM", "reV.handlers"]
-    loggers = {}
-    handlers = {}
     for log in logger_list:
-        loggers[log], handlers[log] = init_logger(log, log_level="DEBUG",
-                                                  log_file='gen.log')
+        init_logger(log, log_level="DEBUG", log_file='gen.log')
 
+    # extract for debugging
     config = gen.config
-    exec_control = gen.config.execution_control
+    ec = gen.config.execution_control
     pp = gen.project_points
 
     if gen.execution_control.option == 'serial':

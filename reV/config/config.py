@@ -8,9 +8,12 @@ import logging
 from math import ceil
 import os
 import pandas as pd
+from warnings import warn
 
 from reV import __dir__ as REVDIR
 from reV import __testdata__ as TESTDATA
+from reV.exceptions import ConfigWarning
+from reV.handlers.resource import Resource
 
 
 logger = logging.getLogger(__name__)
@@ -103,10 +106,10 @@ class Config(BaseConfig):
             sam_inputs_dict = deepcopy(self.sam_gen.inputs)
 
             _project_points = ProjectPoints(pp_dict, sam_inputs_dict,
-                                            self.tech)
+                                            self.res_files, self.tech)
 
             self._execution_control = ExecutionControl(
-                self['execution_control'], _project_points, self.years)
+                self['execution_control'], _project_points, self.res_files)
 
         return self._execution_control
 
@@ -186,27 +189,15 @@ class Config(BaseConfig):
                 if isinstance(self._years, list) is False:
                     self._years = [self._years]
             except KeyError as e:
-                logger.warning('Analysis years may not have been '
-                               'specified, may default to year '
-                               'specification in resource_file input. '
-                               '\n\nKey Error: {}'.format(e))
+                warn('Analysis years may not have been '
+                     'specified, may default to year '
+                     'specification in resource_file input. '
+                     '\n\nKey Error: {}'.format(e), ConfigWarning)
         return self._years
 
     def check_conflicts(self):
         """Check to find conflicts in input specification"""
-        if ('nodes' in self['execution_control'] and
-                'sites_per_node' in self['execution_control'] and
-                isinstance(self.project_points.sites, (list, tuple))):
-            ec = self['execution_control']
-            if ec['nodes'] is None and ec['sites_per_node'] is None:
-                n_sites = ec['nodes'] * ec['sites_per_node']
-                if n_sites < len(self.project_points.sites):
-                    raise ValueError('Conflict in site specification and node '
-                                     'allocation. There are {} sites to run, '
-                                     'but only {} nodes and {} sites per node'
-                                     .format(len(self.project_points.sites),
-                                             ec['nodes'],
-                                             ec['sites_per_node']))
+        pass
 
     def get_file(self, fname):
         """Read the config file.
@@ -221,7 +212,7 @@ class Config(BaseConfig):
         config : dict
             Config data.
         """
-        logger.info('Getting "{}"'.format(fname))
+        logger.debug('Getting "{}"'.format(fname))
         if os.path.exists(fname) and fname.endswith('.json'):
             config = self.load_json(fname)
         elif os.path.exists(fname) and fname.endswith('.ini'):
@@ -237,7 +228,8 @@ class Config(BaseConfig):
 
 class ExecutionControl:
     """Class to manage execution control parameters and split ProjectPoints."""
-    def __init__(self, config_exec, project_points, years, level='supervisor'):
+    def __init__(self, config_exec, project_points, res_files,
+                 level='supervisor'):
         """Initialize execution control object.
 
         Parameters
@@ -246,15 +238,16 @@ class ExecutionControl:
             execution_control section of the configuration input file.
         project_points : config.ProjectPoints
             ProjectPoints instance to be split between execution workers.
-        years : list
-            List of years to run. (interpreted as duplicates of ProjectPoints)
+        res_files : list
+            List of resource files to analyze. (interpreted as duplicates of
+            ProjectPoints)
         level : str
             CURRENT execution level, will control how this instance of
             ExecutionControl is being split and iterated upon.
             Options: 'supervisor' or 'core'
         """
 
-        self._years = years
+        self._res_files = res_files
         self._raw = config_exec
         self.level = level
         self._project_points = project_points
@@ -263,9 +256,9 @@ class ExecutionControl:
         """Iterator initialization dunder."""
         self._i = 0
         self._last_site_ind = 0
-        logger.info('Starting ExecutionControl at level "{}" '
-                    'and split level "{}" with iter limit: {}'
-                    .format(self.level, self.split_level, self.N))
+        logger.debug('Starting ExecutionControl at level "{}" '
+                     'and split level "{}" with iter limit: {}'
+                     .format(self.level, self.split_level, self.N))
         return self
 
     def __next__(self):
@@ -282,18 +275,18 @@ class ExecutionControl:
         if self._i < self.N:
             i0 = self._last_site_ind
             i1 = i0 + self.split_increment
-            logger.info('ExecutionControl iterating from site index '
-                        '{} to {} on worker #{}'
-                        .format(i0, i1, self._i))
+            logger.debug('ExecutionControl iterating from site index '
+                         '{} to {} on worker #{}'
+                         .format(i0, i1, self._i))
             self._i += 1
             self._last_site_ind = i1
 
-            new_exec = ExecutionControl.split(self.raw, self.years, i0, i1,
-                                              self.project_points.raw,
-                                              self.project_points.sam_configs,
-                                              self.project_points.df,
-                                              self.project_points.tech,
+            new_exec = ExecutionControl.split(self.raw, self.res_files, i0, i1,
+                                              self.project_points,
                                               split_level=self.split_level)
+            if not new_exec.project_points.sites:
+                # sites is empty, reached end of iter.
+                raise StopIteration
             return new_exec
         else:
             # iter attribute equal or greater than iter limit
@@ -322,7 +315,7 @@ class ExecutionControl:
     def N(self):
         """Get the iterator limit (number of splits)."""
         if not hasattr(self, '_N'):
-            self._N = self.p_tot
+            self._N = ceil(self.n_sites / self.p_tot)
         return self._N
 
     @property
@@ -374,7 +367,7 @@ class ExecutionControl:
         if not hasattr(self, '_hpc_queue'):
             if 'queue' in self.raw:
                 if self.raw['queue']:
-                    self._hpc_queue = self.raw['queue'].lower()
+                    self._hpc_queue = self.raw['queue']
                 else:
                     # default option if not specified is serial
                     self._hpc_queue = default
@@ -391,12 +384,12 @@ class ExecutionControl:
         if not hasattr(self, '_hpc_alloc'):
             if 'allocation' in self.raw:
                 if self.raw['allocation']:
-                    self._hpc_alloc = self.raw['allocation'].lower()
+                    self._hpc_alloc = self.raw['allocation']
                 else:
-                    # default option if not specified is serial
+                    # default option if not specified
                     self._hpc_alloc = default
             else:
-                # default option if not specified is serial
+                # default option if not specified
                 self._hpc_alloc = default
 
         return self._hpc_alloc
@@ -410,13 +403,37 @@ class ExecutionControl:
                 if self.raw['memory']:
                     self._hpc_node_mem = self.raw['memory']
                 else:
-                    # default option if not specified is serial
+                    # default option if not specified
                     self._hpc_node_mem = default
             else:
-                # default option if not specified is serial
+                # default option if not specified
                 self._hpc_node_mem = default
 
         return self._hpc_node_mem
+
+    @property
+    def hpc_walltime(self):
+        """Get the HPC node walltime property."""
+        defaults = {'short': '04:00:00',
+                    'debug': '01:00:00',
+                    'batch': '48:00:00',
+                    'batch-h': '48:00:00',
+                    'long': '240:00:00',
+                    'bigmem': '240:00:00',
+                    'data-transfer': '120:00:00',
+                    }
+        if not hasattr(self, '_hpc_walltime'):
+            if 'walltime' in self.raw:
+                if self.raw['walltime']:
+                    self._hpc_walltime = self.raw['walltime']
+                else:
+                    # default option if not specified
+                    self._hpc_walltime = defaults[self.hpc_queue]
+            else:
+                # default option if not specified
+                self._hpc_walltime = defaults[self.hpc_queue]
+
+        return self._hpc_walltime
 
     @property
     def project_points(self):
@@ -429,45 +446,25 @@ class ExecutionControl:
         return self._raw
 
     @property
-    def sites_per_node(self):
-        """Get the number of sites to be computed per node."""
-
-        msg = ('User needs to input either project points slice "stop" value '
-               'or "sites_per_node", otherwise "sites_per_node" cannot be '
-               'computed.')
-
-        if 'sites_per_node' in self.raw:
-            if self.raw['sites_per_node']:
-                self._sites_per_node = self.raw['sites_per_node']
-            elif self.raw['sites_per_node'] is None and self.n_sites == 'inf':
-                raise ValueError(msg)
-            else:
-                self._sites_per_node = ceil(self.n_sites / self.nodes)
-        else:
-            if self.n_sites == 'inf':
-                raise ValueError(msg)
-            else:
-                self._sites_per_node = ceil(self.n_sites / self.nodes)
-        return self._sites_per_node
-
-    @property
     def sites_per_core(self):
         """Get the number of sites to be computed per core."""
 
-        msg = ('User needs to input either project points slice "stop" value '
-               'or "sites_per_core", otherwise "sites_per_core" cannot be '
-               'computed.')
+        default = 100
+        msg = ('Sites per core not specified, defaulting to {}.'
+               .format(default))
 
         if 'sites_per_core' in self.raw:
             if self.raw['sites_per_core']:
                 self._sites_per_core = self.raw['sites_per_core']
             elif self.raw['sites_per_core'] is None and self.n_sites == 'inf':
-                raise ValueError(msg)
+                self._sites_per_core = default
+                warn(msg, ConfigWarning)
             else:
                 self._sites_per_core = ceil(self.n_sites / self.p_tot)
         else:
             if self.n_sites == 'inf':
-                raise ValueError(msg)
+                self._sites_per_core = default
+                warn(msg, ConfigWarning)
             else:
                 self._sites_per_core = ceil(self.n_sites / self.p_tot)
         return self._sites_per_core
@@ -483,20 +480,20 @@ class ExecutionControl:
                 else:
                     self._n_sites = (len(
                         list(range(*site_slice.indices(site_slice.stop)))) *
-                        len(self.years))
+                        len(self.res_files))
             else:
                 self._n_sites = (len(self.project_points.sites) *
-                                 len(self.years))
+                                 len(self.res_files))
         return self._n_sites
 
     @property
-    def years(self):
-        """Get the year list."""
-        return self._years
+    def res_files(self):
+        """Get the resource file list."""
+        return self._res_files
 
     @classmethod
-    def split(cls, config_exec, years, i0, i1, config_project_points,
-              sam_configs, config_df, tech, split_level='core'):
+    def split(cls, config_exec, res_files, i0, i1, project_points,
+              split_level='core'):
         """Split this execution by splitting the project points attribute.
 
         Parameters
@@ -504,21 +501,13 @@ class ExecutionControl:
         config_exec : dict
             The raw execution control configuration input dict before any
             mods/mutations.
-        years : list
-            List of years to execute
+        res_files : list
+            List of resource files to analyze.
         i0/i1 : int
             Beginning/end (inclusive/exclusive, respetively) index split
             parameters for ProjectPoints.split.
-        config_project_points : dict
-            The raw project points configuration input dict before any
-            mods/mutations.
-        sam_configs : dict
-            Multi-level dictionary containing multiple SAM input
-            configurations.
-        config_df : pd.DataFrame
-            Sites to SAM configuration dictionary IDs mapping dataframe.
-        tech : str
-            Generation technology.
+        project_points : config.ProjectPoints
+            Project points instance that will be split.
         split_level : str
             Level (core or node) of the split execution control instance.
 
@@ -529,9 +518,12 @@ class ExecutionControl:
             project points.
         """
 
-        new_points = ProjectPoints.split(i0, i1, config_project_points,
-                                         sam_configs, config_df, tech)
-        sub = cls(config_exec, new_points, years, level=split_level)
+        new_points = ProjectPoints.split(i0, i1, project_points.raw,
+                                         project_points.sam_configs,
+                                         project_points.df,
+                                         project_points.res_files,
+                                         project_points.tech)
+        sub = cls(config_exec, new_points, res_files, level=split_level)
         return sub
 
 
@@ -543,11 +535,11 @@ class ProjectPoints(BaseConfig):
     config_id@site0, SAM_config_dict@site0 = ProjectPoints[0]
     site_list_or_slice = ProjectPoints.sites
     site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
-    ProjectPoints_sub = ProjectPoints.split(0, 10)
+    ProjectPoints_sub = ProjectPoints.split(0, 10, ...)
     h_list_int_float = ProjectPoints.h
     """
 
-    def __init__(self, config_pp, sam_configs, tech):
+    def __init__(self, config_pp, sam_configs, res_files, tech):
         """Init project points containing sites and corresponding SAM configs.
 
         Parameters
@@ -560,12 +552,17 @@ class ProjectPoints(BaseConfig):
             configurations. The top level key is the SAM config ID, top level
             value is the SAM config. Each SAM config is a dictionary with keys
             equal to input names, values equal to the actual inputs.
+        res_files : list
+            List of resource files to analyze. Used to find maximum length of
+            project points.
         tech : str
             reV technology being executed.
         """
 
+        self._df = None
         self._raw = config_pp
         self._sam_configs = sam_configs
+        self._res_files = res_files
         self._tech = tech
         self.parse_project_points(config_pp)
 
@@ -587,14 +584,9 @@ class ProjectPoints(BaseConfig):
             names (keys) and values.
         """
 
-        if not hasattr(self, 'default_config'):
-            # was set w/ JSON w/ one config for each site, return mapped value
-            site_bool = (self.df['sites'] == site)
-            config_id = self.df.loc[site_bool, 'configs'].values[0]
-            return config_id, self.sam_configs[config_id]
-        else:
-            # was set w/ slice w/ only default config
-            return self.default_config_id, self.default_config
+        site_bool = (self.df['sites'] == site)
+        config_id = self.df.loc[site_bool, 'configs'].values[0]
+        return config_id, self.sam_configs[config_id]
 
     @property
     def df(self):
@@ -648,11 +640,11 @@ class ProjectPoints(BaseConfig):
         """Get the hub heights corresponding to the site list or None for solar
         """
         if not hasattr(self, '_h') and 'wind' in self.tech:
-            if not hasattr(self, 'default_config'):
-                self._h = [self[site][1][h_var] for site in self.sites]
-            else:
-                self._h = self.default_config[h_var]
+            # wind technology, get a list of h values
+            self._h = [self[site][1][h_var] for site in self.sites]
+
         elif not hasattr(self, '_h') and 'wind' not in self.tech:
+            # not a wind tech, return None
             self._h = None
 
         return self._h
@@ -682,23 +674,63 @@ class ProjectPoints(BaseConfig):
         (if slice stop is None, this will be a slice)."""
         return self._sites
 
+    @sites.setter
+    def sites(self, sites):
+        """Set the sites property.
+
+        Parameters
+        ----------
+        sites : list | tuple | slice
+            Data to be interpreted as the site list. Can be an explicit site
+            list (list or tuple) or a slice that will be converted to a list.
+            If slice stop is None, the length of the first resource meta
+            dataset is taken as the stop value.
+        """
+
+        if isinstance(sites, (list, tuple)):
+            # explicit site list, set directly
+            self._sites = sites
+        elif isinstance(sites, slice):
+            if sites.stop:
+                # there is an end point, can store as list
+                self._sites = list(range(*sites.indices(sites.stop)))
+            else:
+                # no end point, find one from the length of the meta data
+                res = Resource(self.res_files[0])
+                stop = res._h5['meta'].shape[0]
+                self._sites = list(range(*sites.indices(stop)))
+        else:
+            raise TypeError('Project Points sites needs to be set as a list, '
+                            'tuple, or slice, but was set as: {}'
+                            .format(type(sites)))
+
     @property
     def sites_as_slice(self):
         """Get sites property, type is slice if possible
         (if sites is a non-sequential list, this will return a list)."""
 
         if not hasattr(self, '_sites_as_slice'):
-            # try_slice is what the sites list would be if it is sequential
-            try_slice = slice(self.sites[0], self.sites[-1] + 1)
-
-            if self.sites == list(range(*try_slice.indices(try_slice.stop))):
-                # try_slice is equivelant to the site list
-                self._sites_as_slice = try_slice
-            else:
-                # cannot be converted to a sequential slice, return the list
+            if isinstance(self.sites, slice):
                 self._sites_as_slice = self.sites
+            else:
+                # try_slice is what the sites list would be if it is sequential
+                try_step = self.sites[1] - self.sites[0]
+                try_slice = slice(self.sites[0], self.sites[-1] + 1, try_step)
+                try_list = list(range(*try_slice.indices(try_slice.stop)))
+
+                if self.sites == try_list:
+                    # try_slice is equivelant to the site list
+                    self._sites_as_slice = try_slice
+                else:
+                    # cannot be converted to a sequential slice, return list
+                    self._sites_as_slice = self.sites
 
         return self._sites_as_slice
+
+    @property
+    def res_files(self):
+        """Get the resource file list."""
+        return self._res_files
 
     @property
     def tech(self):
@@ -706,17 +738,22 @@ class ProjectPoints(BaseConfig):
         return self._tech
 
     def get_sites_from_config(self, config):
-        """Get a site list that corresponds to a config key."""
-        if not hasattr(self, 'default_config'):
-            # was set w/ JSON w/ one config for each site, return mapped values
-            sites = self.df.loc[(self.df['configs'] == config), 'sites'].values
-            return list(sites)
-        else:
-            if config == self.default_config_id:
-                # was set w/ slice w/ only default config, return all sites
-                return self.sites
-            else:
-                return []
+        """Get a site list that corresponds to a config key.
+
+        Parameters
+        ----------
+        config : str
+            SAM configuration ID associated with sites.
+
+        Returns
+        -------
+        sites : list
+            List of sites associated with the requested configuration ID. If
+            the configuration ID is not recognized, an empty list is returned.
+        """
+
+        sites = self.df.loc[(self.df['configs'] == config), 'sites'].values
+        return list(sites)
 
     def parse_project_points(self, config_pp):
         """Parse and set the project points using either a file or slice."""
@@ -728,7 +765,7 @@ class ProjectPoints(BaseConfig):
                            'method has been requested. Defaulting '
                            'to file input. Site selection '
                            'preference is file then slice')
-                    logger.warning(msg)
+                    warn(msg, ConfigWarning)
         elif 'stop' in config_pp:
             self.slice_project_points(config_pp)
 
@@ -736,55 +773,47 @@ class ProjectPoints(BaseConfig):
         """Set the project points using the target csv."""
         if fname.endswith('.csv'):
             self.df = fname
-            self._sites = list(self.df['sites'].values)
+            self.sites = list(self.df['sites'].values)
         else:
             raise ValueError('Config project points file must be '
                              '.csv, but received: {}'
                              .format(fname))
 
     def slice_project_points(self, config_pp):
-        """Set the project points using slice parameters"""
+        """Set the project points using slice parameters.
+
+        Parameters
+        ----------
+        config_pp : dict
+            Project points user input configuration dictionary.
+            Must contain keys: start, stop, step.
+        """
+
         if config_pp['stop'] == 'inf':
             config_pp['stop'] = None
-            logger.info('Site selection is set to run to the '
-                        'last site in the resource file.')
 
-        if config_pp['stop']:
-            # try to always store the sites as a list
-            site_slice = slice(config_pp['start'],
-                               config_pp['stop'],
-                               config_pp['step'])
-            self._sites = list(range(*site_slice.indices(site_slice.stop)))
-        else:
-            # if stop is None, a list cannot be made, so store as a slice
-            if config_pp['step'] == 1 or config_pp['step'] is None:
-                self._sites = slice(config_pp['start'],
-                                    config_pp['stop'],
-                                    config_pp['step'])
-            else:
-                raise ValueError('If no Project Points slice stop is '
-                                 'specified, step must equal 1 or None.')
+        # use sites property setter with slice
+        self.sites = slice(config_pp['start'], config_pp['stop'],
+                           config_pp['step'])
 
+        # get the sorted list of available SAM configurations and use the first
         avail_configs = sorted(list(self.sam_configs.keys()))
-        n_configs = len(avail_configs)
         self.default_config_id = avail_configs[0]
-        if n_configs > 1:
-            logger.warning('Multiple SAM input configurations detected '
-                           'for a slice-based site project points. '
-                           'Defaulting to: "{}"'.format(avail_configs[0]))
-        if config_pp['stop'] is None:
-            # No stop, set default config that will be returned for any site
-            self.default_config = self.sam_configs[self.default_config_id]
-        else:
-            # if the end of the slice is known, you can make a list of the
-            # indices and set the config map with the site-to-sam_config map
-            site_config_dict = {'sites': self.sites,
-                                'configs': [avail_configs[0]
-                                            for s in self.sites]}
-            self.df = site_config_dict
+
+        if len(avail_configs) > 1:
+            warn('Multiple SAM input configurations detected '
+                 'for a slice-based site project points. '
+                 'Defaulting to: "{}"'
+                 .format(avail_configs[0]), ConfigWarning)
+
+        # Make a site-to-config dataframe using the default config
+        site_config_dict = {'sites': self.sites,
+                            'configs': [self.default_config_id
+                                        for s in self.sites]}
+        self.df = site_config_dict
 
     @classmethod
-    def split(cls, i0, i1, config_pp, sam_configs, config_df, tech):
+    def split(cls, i0, i1, config_pp, sam_configs, config_df, res_files, tech):
         """Return split instance of this ProjectPoints w/ site subset.
 
         Parameters
@@ -809,6 +838,9 @@ class ProjectPoints(BaseConfig):
             equal to input names, values equal to the actual inputs.
         config_df : pd.DataFrame
             Sites to SAM configuration dictionary IDs mapping dataframe.
+        res_files : list
+            List of resource files to analyze. Used to find maximum length of
+            project points.
         tech : str
             reV technology being executed.
 
@@ -821,7 +853,7 @@ class ProjectPoints(BaseConfig):
         """
 
         # make a new instance of ProjectPoints
-        sub = cls(config_pp, sam_configs, tech)
+        sub = cls(config_pp, sam_configs, res_files, tech)
 
         if isinstance(sub.sites, (list, tuple)):
             # Reset the site attribute using a subset of the original

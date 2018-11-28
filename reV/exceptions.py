@@ -31,8 +31,29 @@ class ResourceValueError(Exception):
     pass
 
 
+class SAMExecutionError(Exception):
+    """
+    Execution error for SAM simulations
+    """
+    pass
+
+
 class ExtrapolationWarning(Warning):
     """
     Warning for when value will be extrapolated
+    """
+    pass
+
+
+class ConfigWarning(Warning):
+    """
+    Warning for unclear or default configuration inputs
+    """
+    pass
+
+
+class SAMInputWarning(Warning):
+    """
+    Warning for bad SAM inputs
     """
     pass

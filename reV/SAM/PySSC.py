@@ -29,7 +29,7 @@ class PySSC():
             # instead of relative path, require user to have on LD_LIBRARY_PATH
             self.pdll = CDLL(os.path.join(pyssc_dir, 'ssc.so'))
         else:
-            print('Platform not supported ', sys.platform)
+            raise Exception('Platform not supported ', sys.platform)
 
         self.INVALID = 0
         self.STRING = 1
@@ -282,7 +282,6 @@ class PySSC():
         """module_exec """
         self.pdll.ssc_module_exec.restype = c_int
         return self.pdll.ssc_module_exec(c_void_p(p_mod), c_void_p(p_data))
-#        ssc_module_exec_simple_nothread
 
     def module_exec_simple_no_thread(self, modname, data):
         """module_exec_simple_no_thread """
