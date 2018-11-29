@@ -2,31 +2,19 @@
 """reV unit test module
 """
 import json
-import logging
 import os
 import pytest
 
 import utilities as ut
 from reV.SAM import SAM
-from reV.rev_logger import setup_logger
+from reV.rev_logger import init_logger
 
 
-class SAM_Test_Manager:
+class SAMTestManager:
     """SAM unit test manager."""
     def __init__(self):
         """Initialize a SAM unit test manager."""
-        logger = logging.getLogger("reV.SAM")
-        self.logger = logging.getLogger(self.__class__.__name__)
-
-        _, handler = setup_logger(__name__)
-
-        if not logger.handlers:
-            logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
-
-        if not self.logger.handlers:
-            self.logger.addHandler(handler)
-        self.logger.setLevel(logging.INFO)
+        self.logger = init_logger("reV.SAM")
 
     def execute_defaults(self, io_dir='./data/SAM', module='pvwatts',
                          i_fname='i_pvwatts.json', o_fname='o_pvwatts.json'):
@@ -170,7 +158,7 @@ class SAM_Test_Manager:
 @pytest.fixture
 def init_SAM():
     """Return a SAM test manager instance."""
-    return SAM_Test_Manager()
+    return SAMTestManager()
 
 
 @pytest.mark.parametrize('module, i_fname, o_fname', [

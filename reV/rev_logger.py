@@ -95,7 +95,7 @@ class LoggingAttributes:
         log_attrs = self[logger_name]
         for attr, value in attributes.items():
             if attr == 'log_file':
-                handlers = list(log_attrs['log_file'])
+                handlers = list(log_attrs.get('log_file', []))
                 if value not in handlers:
                     handlers.append(value)
                     log_attrs[attr] = handlers
