@@ -17,30 +17,10 @@ def setup_logger(logger_name, log_level="INFO", log_file=None,
                  log_format=FORMAT):
     """
     Setup logging instance with given name and attributes
-
-    Parameters
-    ----------
-    logger_name : str
-        Name of logger to get and setup
-    log_level : str
-        Level of logging to use. kwarg is mapped to logging level attribute
-        of the same name.
-    log_file : str
-        Path to log file to use with FileHandler, if none use StreamHandler
-    log_format : str
-        Format to use during logging, if None using logging default
-
-    Returns
-    -------
-    logger : logging.logger
-        logging instance that was initialized
-    handler : logging.Handler
-        Handler for logger (FileHandler or StreamHandler)
     """
     logger = logging.getLogger(logger_name)
 
     logger.setLevel(LOG_LEVEL[log_level])
-
     if log_file:
         handler = logging.FileHandler(log_file, mode='a')
     else:
@@ -50,7 +30,9 @@ def setup_logger(logger_name, log_level="INFO", log_file=None,
         logformat = logging.Formatter(log_format)
         handler.setFormatter(logformat)
 
-    logger.addHandler(handler)
+    handlers = [str(h) for h in logger.handlers]
+    if str(handler) not in handlers:
+        logger.addHandler(handler)
 
     return logger, handler
 
@@ -65,17 +47,15 @@ class LoggingAttributes:
     def __setitem__(self, logger_name, attributes):
         self._loggers[logger_name] = attributes
 
+    def __getitem__(self, logger_name):
+        return self._loggers[logger_name]
+
     def init_logger(self, logger_name):
         """
-        Extract logger attributes and initialize logger of given name
-
-        Parameters
-        ----------
-        logger_name : str
-            Name of logger to initialize
+        Extract logger attributes and initialize logger
         """
         try:
-            attrs = self._loggers[logger_name]
+            attrs = self[logger_name]
             setup_logger(logger_name, **attrs)
         except KeyError:
             pass
