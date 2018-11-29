@@ -207,7 +207,7 @@ class Gen:
 if __name__ == '__main__':
     # temporary script based test will be merged into test.py later
 
-    cfile = os.path.join(TESTDATA, 'config_ini/ri_test.ini')
+    cfile = os.path.join(TESTDATA, 'config_ini/ri_rev2_test.ini')
     gen = Gen(cfile)
 
     logger_list = [__name__, "reV.config", "reV.SAM", "reV.handlers"]
