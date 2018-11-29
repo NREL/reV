@@ -24,6 +24,18 @@ def WTK_res():
     return WTK('./data/wtk/ri_100_wtk_2012.h5')
 
 
+def check_res(res_cls):
+    """
+    Run test on len and shape methods
+    """
+    time_index = res_cls['time_index']
+    meta = res_cls['meta']
+    res_shape = (len(time_index), len(meta))
+
+    assert len(res_cls) == len(time_index)
+    assert res_cls.shape == res_shape
+
+
 def check_meta(res_cls):
     """
     Run tests on meta data
@@ -152,6 +164,14 @@ class TestNSRDB:
     NSRDB Resource handler tests
     """
     @staticmethod
+    def test_res(NSRDB_res):
+        """
+        test NSRDB class calls
+        """
+        check_res(NSRDB_res)
+        NSRDB_res.close()
+
+    @staticmethod
     def test_meta(NSRDB_res):
         """
         test extraction of NSRDB meta data
@@ -196,6 +216,14 @@ class TestWTK:
     """
     WTK Resource handler tests
     """
+    @staticmethod
+    def test_res(WTK_res):
+        """
+        test WTK class calls
+        """
+        check_res(WTK_res)
+        WTK_res.close()
+
     @staticmethod
     def test_meta(WTK_res):
         """

@@ -389,6 +389,9 @@ class Resource:
         if type is not None:
             raise
 
+    def __len__(self):
+        return self._h5['time_index'].shape[0]
+
     def __getitem__(self, keys):
         if isinstance(keys, tuple):
             ds = keys[0]
@@ -412,6 +415,20 @@ class Resource:
             out = self._get_ds(ds, *ds_slice)
 
         return out
+
+    @property
+    def shape(self):
+        """
+        Return resource shape (timesteps, sites)
+        shape = (len(time_index), len(meta))
+
+        Returns
+        -------
+        shape : tuple
+            Shape of resource variable arrays (timesteps, sites)
+        """
+        shape = (self._h5['time_index'].shape[0], self._h5['meta'].shape[0])
+        return shape
 
     def get_attrs(self, dset=None):
         """
