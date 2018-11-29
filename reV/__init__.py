@@ -8,4 +8,4 @@ __author__ = """Galen Maclaurin"""
 __email__ = "galen.maclaruin@nrel.gov"
 __version__ = "2.0.0"
 __dir__ = os.path.dirname(os.path.realpath(__file__))
-__testdata__ = os.path.join(os.path.dirname(__dir__), 'tests', 'data')
+__testdatadir__ = os.path.join(os.path.dirname(__dir__), 'tests', 'data')

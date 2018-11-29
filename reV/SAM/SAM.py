@@ -296,6 +296,18 @@ class SAM:
         """Get the site number for this SAM simulation."""
         return self._site
 
+    @site.setter
+    def site(self, resource):
+        """Set the site number based on the resource name attribute."""
+        if not hasattr(self, '_site'):
+            if hasattr(resource, 'name'):
+                # Set the protected property with the site number from resource
+                self._site = resource.name
+            else:
+                # resource site number not found, set as N/A
+                self._site = 'N/A'
+        return self._site
+
     @staticmethod
     def get_sam_res(res_file, project_points):
         """Get the SAM resource iterator object (single year, single file).
@@ -330,8 +342,6 @@ class SAM:
         """
 
         if resource is not None:
-            # Set the protected property with the site number from resource.
-            self._site = resource.name
             # set meta data
             self.set_meta()
             # set time variables
@@ -594,15 +604,16 @@ class SAM:
         return results
 
     @classmethod
-    def reV_run(cls, res_file, project_points, output_request=('cf_mean',)):
+    def reV_run(cls, points_control, res_file, output_request=('cf_mean',)):
         """Execute a SAM simulation for a single site with default reV outputs.
 
         Parameters
         ----------
+        points_control : config.PointsControl
+            PointsControl instance containing project points site and SAM
+            config info.
         res_file : str
             Resource file with full path.
-        project_points : config.ProjectPoints
-            ProjectPoints instance containing site and SAM config info.
         output_request : list | tuple
             Outputs to retrieve from SAM.
 
@@ -616,20 +627,20 @@ class SAM:
 
         out = {}
 
-        resources = SAM.get_sam_res(res_file, project_points)
+        resources = SAM.get_sam_res(res_file, points_control.project_points)
 
         for res_df, meta in resources:
             # get SAM inputs from project_points based on the current site
             site = res_df.name
-            config, inputs = project_points[site]
+            config, inputs = points_control.project_points[site]
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
                       output_request=output_request)
             sim.execute(cls.MODULE)
             out[site] = sim.outputs
 
-            logger.debug('Site {} with config "{}", \n\toutputs: {}...'
-                         .format(site, config, str(out[site])[:20]))
+            logger.debug('Outputs for site {} with config "{}", \n\t{}...'
+                         .format(site, config, str(out[site])[:100]))
 
         return out
 
@@ -655,10 +666,12 @@ class Solar(SAM):
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         """
-
         # don't pass resource to base class, set in set_nsrdb instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,
                          output_request=output_request)
+
+        # Set the site number using resource
+        self.site = resource
 
         if resource is None or meta is None:
             # if no resource input data is specified, you need a resource file
@@ -801,6 +814,9 @@ class Wind(SAM):
         # don't pass resource to base class, set in set_wtk instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,
                          output_request=output_request)
+
+        # Set the site number using resource
+        self.site = resource
 
         if resource is None or meta is None:
             # if no resource input data is specified, you need a resource file

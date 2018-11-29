@@ -14,7 +14,7 @@ class SAMTestManager:
     """SAM unit test manager."""
     def __init__(self):
         """Initialize a SAM unit test manager."""
-        self.logger = init_logger("reV.SAM")
+        self._logger = init_logger("reV.SAM")
 
     def execute_defaults(self, io_dir='./data/SAM', module='pvwatts',
                          i_fname='i_pvwatts.json', o_fname='o_pvwatts.json'):

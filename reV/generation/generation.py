@@ -1,222 +1,122 @@
 """
 Generation
 """
-from dask.distributed import Client, LocalCluster
-from dask_jobqueue import PBSCluster
 import logging
-import time
-import timeit
-import functools
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
-from reV.config.config import Config
-from reV.rev_logger import REV_LOGGERS
+from reV.config.config import ProjectPoints, PointsControl
+from reV.execution.execution import execute_parallel, execute_single
 
 
 logger = logging.getLogger(__name__)
 
 
-def timer(fun):
-    """Function timer decorator."""
-    @functools.wraps(fun)
-    def wrapper(*args, **kwargs):
-        start_time = timeit.default_timer()
-        fout = fun(*args, **kwargs)
-        elapsed = timeit.default_timer() - start_time
-        logger.debug('{0} took {1:.3f} seconds to execute.'
-                     .format(fun, elapsed))
-        return fout
-    return wrapper
-
-
 class Gen:
     """Base class for generation"""
-    def __init__(self, config_file):
+    def __init__(self, points_control, res_file, output_request=('cf_mean',)):
         """Initialize a generation instance.
 
         Parameters
         ----------
-        config_file : str
-            reV 2.0 user input configuration file (with full file path).
+        points_control : reV.config.PointsControl
+            Project points control instance for site and SAM config spec.
+        res_file : str
+            Resource file with path.
+        output_request : list | tuple
+            Output variables requested from SAM.
         """
 
-        self._config = Config(config_file)
-
-    @property
-    def config(self):
-        """Get the config object."""
-        return self._config
-
-    @property
-    def execution_control(self):
-        """Get config project points"""
-        return self._config.execution_control
+        self._points_control = points_control
+        self._res_file = res_file
+        self._output_request = output_request
 
     @property
     def output_request(self):
         """Get the list of output variables requested from generation."""
-        if not hasattr(self, '_output_request'):
-            self._output_request = ['cf_mean']
-            if self.config.sam_gen.write_profiles:
-                self._output_request += ['cf_profile']
         return self._output_request
 
     @property
-    def project_points(self):
-        """Get config project points"""
-        return self._config.execution_control.project_points
+    def points_control(self):
+        """Get project points controller."""
+        return self._points_control
 
     @property
-    def res_files(self):
-        """Get the source resource filenames from config."""
-        return self._config.res_files
+    def project_points(self):
+        """Get project points"""
+        return self._points_control.project_points
 
-    @timer
-    def execute_hpc(self, execution_control=None, res_files=None):
-        """Execute a multi-node multi-core job on an HPC cluster.
+    @property
+    def res_file(self):
+        """Get the resource filename and path."""
+        return self._res_file
+
+    @staticmethod
+    def organize_futures(futures):
+        """Combine list of futures results into their native dict format/type.
 
         Parameters
         ----------
-        execution_control : reV.config.ExecutionControl
-            reV 2.0 ExecutionControl instance.
-        res_files : list
-            Resource file list (with full paths) to analyze.
+        futures : list
+            List of dictionary futures results.
 
         Returns
         -------
-        results : list
-            List of generation futures results.
+        out : dict
+            Compiled results of the native future results type (dict).
         """
 
-        if execution_control is None:
-            execution_control = self.execution_control
-        if res_files is None:
-            res_files = self.res_files
+        out = {}
+        for result in futures:
+            for key, val in result.items():
+                out[key] = val
+        return out
 
-        for res_file in res_files:
+    @staticmethod
+    def run(points_control, res_file=None, output_request=None, tech=None):
+        """Run a generation compute."""
 
-            # start a PBS cluster and request nodes using scale
-            cluster = PBSCluster(queue=execution_control.hpc_queue,
-                                 project=execution_control.hpc_alloc,
-                                 name=self.config.name,
-                                 cores=execution_control.ppn,
-                                 memory=execution_control.hpc_node_mem,
-                                 walltime=execution_control.hpc_walltime,
-                                 )
+        if tech == 'pv':
+            out = PV.reV_run(points_control, res_file,
+                             output_request=output_request)
+        elif tech == 'csp':
+            out = CSP.reV_run(points_control, res_file,
+                              output_request=output_request)
+        elif tech == 'landbasedwind':
+            out = LandBasedWind.reV_run(points_control, res_file,
+                                        output_request=output_request)
+        elif tech == 'offshorewind':
+            out = OffshoreWind.reV_run(points_control, res_file,
+                                       output_request=output_request)
+        else:
+            raise ValueError('Technology not recognized: {}'.format(tech))
 
-            cluster.scale(execution_control.nodes)
-            logger.debug('Scaling PBS cluster to {} workers.'
-                         .format(execution_control.nodes))
+        return out
 
-            results = self.execute_futures(cluster, execution_control,
-                                           res_file)
-        return results
-
-    @timer
-    def execute_parallel(self, execution_control=None, res_files=None):
-        """Execute a parallel generation compute on a single node.
+    @staticmethod
+    def direct(tech, points, sam_files, res_file, output_request=('cf_mean',),
+               cores=1, sites_per_split=100):
+        """Execute a generation run directly from source files without config.
 
         Parameters
         ----------
-        execution_control : reV.config.ExecutionControl
-            reV 2.0 ExecutionControl instance.
-        res_files : list
-            Resource file list (with full paths) to analyze.
-
-        Returns
-        -------
-        results : list
-            List of generation futures results.
-        """
-
-        if execution_control is None:
-            execution_control = self.execution_control
-        if res_files is None:
-            res_files = self.res_files
-
-        for res_file in res_files:
-
-            # start a local cluster on a personal comp or HPC single node
-            cluster = LocalCluster(n_workers=execution_control.ppn)
-
-            results = self.execute_futures(cluster, execution_control,
-                                           res_file)
-        return results
-
-    @timer
-    def execute_futures(self, cluster, execution_control, res_file):
-        """Execute concurrent futures with an established cluster.
-
-        Parameters
-        ----------
-        cluster : LocalCluster | PBSCluster
-            Dask cluster object generated from either the LocalCluster or
-            PBSCluster classes.
-        execution_control : reV.config.ExecutionControl
-            reV 2.0 ExecutionControl instance.
+        tech : str
+            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+        points : slice | str
+            Slice specifying project points or string pointing to a project
+            points csv.
+        sam_files : dict | str | list
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv.
         res_file : str
-            Single resource file (with full paths) to analyze.
-
-        Returns
-        -------
-        results : list
-            List of generation futures results.
-        """
-
-        futures = []
-
-        # initialize a client based on the input cluster.
-        with Client(cluster) as client:
-
-            # initialize loggers on workers
-            client.run(REV_LOGGERS.init_logger, __name__)
-            client.run(REV_LOGGERS.init_logger, 'reV.SAM')
-
-            # iterate through split executions, submitting each to worker
-            for i, exec_slice in enumerate(execution_control):
-
-                logger.debug('Kicking off serial worker #{} for sites: {}'
-                             .format(i, exec_slice.project_points.sites))
-
-                # submit executions and append to futures list
-                futures.append(
-                    client.submit(self.execute_serial,
-                                  execution_control=exec_slice,
-                                  res_files=[res_file], worker=i))
-
-            if hasattr(cluster, 'pending_jobs'):
-                # HPC cluster, make sure loggers are init as they get qsub'd
-                pending = list(cluster.pending_jobs.keys())
-                running = list(cluster.running_jobs.keys())
-                last_running = list(cluster.running_jobs.keys())
-                while True:
-                    if not pending:
-                        # no more pending jobs, all loggers should be init'd
-                        break
-                    else:
-                        if last_running != running:
-                            # new jobs are running, init logger
-                            last_running = running
-                            client.run(REV_LOGGERS.init_logger, __name__)
-                            client.run(REV_LOGGERS.init_logger, 'reV.SAM')
-                    time.sleep(0.5)
-
-            # gather results
-            results = client.gather(futures)
-
-        return results
-
-    @timer
-    def execute_serial(self, project_points=None, res_files=None,
-                       output_request=None, worker=0):
-        """Execute a serial generation compute on a single core.
-
-        Parameters
-        ----------
-        project_points : reV.config.ProjectPoints
-            reV 2.0 ProjectPoints instance.
-        res_files : list
-            Resource file list (with full paths) to analyze.
+            Single resource file with path.
+        output_request : list | tuple
+            Output variables requested from SAM.
+        cores : int
+            Number of local cores to run on.
+        sites_per_split : int
+            Number of sites to run in series on a core.
 
         Returns
         -------
@@ -226,32 +126,19 @@ class Gen:
             the output variable value.
         """
 
-        if project_points is None:
-            project_points = self.project_points
-        if res_files is None:
-            res_files = self.res_files
-        if output_request is None:
-            output_request = self.output_request
+        pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
+        pc = PointsControl(pp, sites_per_split=sites_per_split)
 
-        logger.debug('Running Gen serial on worker #{} for sites: {} '
-                     .format(worker, project_points.sites))
-
-        for res_file in res_files:
-
-            if self.config.tech == 'pv':
-                out = PV.reV_run(res_file, project_points,
+        if cores == 1:
+            logger.debug('Running serial generation for: {}'.format(pc))
+            out = execute_single(Gen.run, pc, res_file=res_file, tech=tech,
                                  output_request=output_request)
-
-            elif self.config.tech == 'csp':
-                out = CSP.reV_run(res_file, project_points,
-                                  output_request=output_request)
-
-            elif self.config.tech == 'landbasedwind':
-                out = LandBasedWind.reV_run(res_file, project_points,
-                                            output_request=output_request)
-
-            elif self.config.tech == 'offshorewind':
-                out = OffshoreWind.reV_run(res_file, project_points,
-                                           output_request=output_request)
+        elif cores > 1:
+            logger.debug('Running parallel generation for: {}'.format(pc))
+            out = execute_parallel(Gen.run, pc, n_workers=cores,
+                                   loggers=[__name__, 'reV.SAM'],
+                                   res_file=res_file, tech=tech,
+                                   output_request=output_request)
+            out = Gen.organize_futures(out)
 
         return out
