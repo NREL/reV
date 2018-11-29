@@ -83,10 +83,12 @@ def run_gen(gen, res_files, option='serial'):
 
 
 @pytest.mark.parametrize('f_rev1_out, f_rev2_config, year, option', [
-    ('project_outputs.h5', 'ri_rev2_pv_gen.ini', '2012', 'serial'),
-    ('project_outputs.h5', 'ri_rev2_pv_gen.ini', '2013', 'serial'),
-    ('project_outputs.h5', 'ri_rev2_pv_gen.ini', '2012', 'parallel'),
-    ('project_outputs.h5', 'ri_rev2_pv_gen.ini', '2013', 'parallel')])
+    ('project_outputs.h5', 'ri_rev2_pv_gen1.ini', '2012', 'serial'),
+    ('project_outputs.h5', 'ri_rev2_pv_gen1.ini', '2013', 'serial'),
+    ('project_outputs.h5', 'ri_rev2_pv_gen1.ini', '2012', 'parallel'),
+    ('project_outputs.h5', 'ri_rev2_pv_gen1.ini', '2013', 'parallel'),
+    ('project_outputs.h5', 'ri_rev2_pv_gen2.ini', '2012', 'parallel'),
+    ('project_outputs.h5', 'ri_rev2_pv_gen2.ini', '2013', 'parallel')])
 def test_pv_gen(f_rev1_out, f_rev2_config, year, option):
     """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
     # get full file paths.
@@ -106,8 +108,8 @@ def test_pv_gen(f_rev1_out, f_rev2_config, year, option):
         gen_outs = run_gen(gen, res_files, option=option)
 
         # get reV 1.0 results
-        N = len(gen_outs)
-        cf_mean_list = pv.get_cf_mean(slice(0, N), year)
+        sites = gen.project_points.sites_as_slice
+        cf_mean_list = pv.get_cf_mean(sites, year)
 
         # benchmark the results and count the number of bad results
         count = ut.compare_arrays(gen_outs, cf_mean_list)

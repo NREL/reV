@@ -11,6 +11,7 @@ import os
 import pandas as pd
 from warnings import warn
 
+from reV.handlers.resource import WTK, NSRDB
 from reV.SAM.PySSC import PySSC
 from reV.exceptions import SAMInputWarning, SAMExecutionError
 
@@ -295,6 +296,30 @@ class SAM:
         """Get the site number for this SAM simulation."""
         return self._site
 
+    @staticmethod
+    def get_sam_res(res_file, project_points):
+        """Get the SAM resource iterator object (single year, single file).
+
+        Parameters
+        ----------
+        res_file : str
+            Single resource file (with full path) to retrieve.
+        project_points : reV.config.ProjectPoints
+            reV 2.0 Project Points instance used to retrieve resource data at a
+            specific set of sites.
+
+        Returns
+        -------
+        res : reV.resource.SAMResource
+            Resource iterator object to pass to SAM.
+        """
+
+        if 'nsrdb' in res_file:
+            res = NSRDB.preload_SAM(res_file, project_points)
+        elif 'wtk' in res_file:
+            res = WTK.preload_SAM(res_file, project_points)
+        return res
+
     def set_resource(self, resource=None):
         """Generic resource setting utility.
 
@@ -569,13 +594,13 @@ class SAM:
         return results
 
     @classmethod
-    def reV_run(cls, resources, project_points, output_request=('cf_mean',)):
+    def reV_run(cls, res_file, project_points, output_request=('cf_mean',)):
         """Execute a SAM simulation for a single site with default reV outputs.
 
         Parameters
         ----------
-        resources : reV.handlers.resource.SAMResource
-            SAMResource instance that emulates an iterator.
+        res_file : str
+            Resource file with full path.
         project_points : config.ProjectPoints
             ProjectPoints instance containing site and SAM config info.
         output_request : list | tuple
@@ -590,6 +615,8 @@ class SAM:
         """
 
         out = {}
+
+        resources = SAM.get_sam_res(res_file, project_points)
 
         for res_df, meta in resources:
             # get SAM inputs from project_points based on the current site

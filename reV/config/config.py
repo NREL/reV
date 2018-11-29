@@ -92,16 +92,15 @@ class Config(BaseConfig):
         """Initialize a config object."""
 
         # Get file, Perform string replacement, save config to self instance
-        config = self.get_file(fname)
-        config = self.str_replace(config, self.STRREP)
+        config = self.str_replace(self.get_file(fname), self.STRREP)
         self.set_self_dict(config)
-        self.check_conflicts()
 
     @property
     def execution_control(self):
         """Get the execution control property."""
         if not hasattr(self, '_execution_control'):
 
+            # deep copy to avoid dependencies.
             pp_dict = deepcopy(self['project_points'][self.tech])
             sam_inputs_dict = deepcopy(self.sam_gen.inputs)
 
@@ -195,10 +194,6 @@ class Config(BaseConfig):
                      '\n\nKey Error: {}'.format(e), ConfigWarning)
         return self._years
 
-    def check_conflicts(self):
-        """Check to find conflicts in input specification"""
-        pass
-
     def get_file(self, fname):
         """Read the config file.
 
@@ -212,6 +207,7 @@ class Config(BaseConfig):
         config : dict
             Config data.
         """
+
         logger.debug('Getting "{}"'.format(fname))
         if os.path.exists(fname) and fname.endswith('.json'):
             config = self.load_json(fname)
@@ -236,7 +232,7 @@ class ExecutionControl:
         ----------
         config_exec : dict
             execution_control section of the configuration input file.
-        project_points : config.ProjectPoints
+        project_points : reV.config.ProjectPoints
             ProjectPoints instance to be split between execution workers.
         res_files : list
             List of resource files to analyze. (interpreted as duplicates of
@@ -247,10 +243,10 @@ class ExecutionControl:
             Options: 'supervisor' or 'core'
         """
 
-        self._res_files = res_files
         self._raw = config_exec
-        self.level = level
         self._project_points = project_points
+        self._res_files = res_files
+        self.level = level
 
     def __iter__(self):
         """Iterator initialization dunder."""
@@ -285,7 +281,7 @@ class ExecutionControl:
                                               self.project_points,
                                               split_level=self.split_level)
             if not new_exec.project_points.sites:
-                # sites is empty, reached end of iter.
+                # no more sites left to analyze, reached end of iter.
                 raise StopIteration
             return new_exec
         else:
@@ -295,15 +291,13 @@ class ExecutionControl:
     @property
     def split_level(self):
         """Get the level of the split of this object (one level down)."""
-
+        split_levels = {'supervisor': 'core'}
         if not hasattr(self, '_split_level'):
-            split_levels = {'supervisor': 'core'}
             try:
                 self._split_level = split_levels[self.level]
             except KeyError:
                 raise KeyError('Current execution level cannot be split: {}'
                                .format(self.level))
-
         return self._split_level
 
     @property
@@ -313,7 +307,7 @@ class ExecutionControl:
 
     @property
     def N(self):
-        """Get the iterator limit (number of splits)."""
+        """Get the iterator limit (max number of splits)."""
         if not hasattr(self, '_N'):
             self._N = ceil(self.n_sites / self.p_tot)
         return self._N
@@ -345,7 +339,7 @@ class ExecutionControl:
 
     @property
     def option(self):
-        """Get the HPC vs. local vs. serial option."""
+        """Get the HPC vs. local parallel vs. serial option."""
         default = 'serial'
         if not hasattr(self, '_option'):
             if 'option' in self.raw:
@@ -369,10 +363,10 @@ class ExecutionControl:
                 if self.raw['queue']:
                     self._hpc_queue = self.raw['queue']
                 else:
-                    # default option if not specified is serial
+                    # default option if not specified
                     self._hpc_queue = default
             else:
-                # default option if not specified is serial
+                # default option if not specified
                 self._hpc_queue = default
 
         return self._hpc_queue
@@ -397,17 +391,24 @@ class ExecutionControl:
     @property
     def hpc_node_mem(self):
         """Get the HPC node memory property."""
-        default = '32GB'
+        defaults = {'short': '32GB',
+                    'debug': '32GB',
+                    'batch': '32GB',
+                    'batch-h': '64GB',
+                    'long': '32GB',
+                    'bigmem': '64GB',
+                    'data-transfer': '32GB',
+                    }
         if not hasattr(self, '_hpc_node_mem'):
             if 'memory' in self.raw:
                 if self.raw['memory']:
                     self._hpc_node_mem = self.raw['memory']
                 else:
                     # default option if not specified
-                    self._hpc_node_mem = default
+                    self._hpc_node_mem = defaults[self.hpc_queue]
             else:
                 # default option if not specified
-                self._hpc_node_mem = default
+                self._hpc_node_mem = defaults[self.hpc_queue]
 
         return self._hpc_node_mem
 
@@ -456,34 +457,23 @@ class ExecutionControl:
         if 'sites_per_core' in self.raw:
             if self.raw['sites_per_core']:
                 self._sites_per_core = self.raw['sites_per_core']
-            elif self.raw['sites_per_core'] is None and self.n_sites == 'inf':
+            else:
                 self._sites_per_core = default
                 warn(msg, ConfigWarning)
-            else:
-                self._sites_per_core = ceil(self.n_sites / self.p_tot)
         else:
-            if self.n_sites == 'inf':
-                self._sites_per_core = default
-                warn(msg, ConfigWarning)
-            else:
-                self._sites_per_core = ceil(self.n_sites / self.p_tot)
+            self._sites_per_core = default
+            warn(msg, ConfigWarning)
         return self._sites_per_core
 
     @property
     def n_sites(self):
         """Get the total number of sites."""
         if not hasattr(self, '_n_sites'):
-            if isinstance(self.project_points.sites, slice):
-                site_slice = self.project_points.sites
-                if site_slice.stop is None:
-                    self._n_sites = 'inf'
-                else:
-                    self._n_sites = (len(
-                        list(range(*site_slice.indices(site_slice.stop)))) *
-                        len(self.res_files))
-            else:
+            try:
                 self._n_sites = (len(self.project_points.sites) *
                                  len(self.res_files))
+            except Exception:
+                self._n_sites = 'inf'
         return self._n_sites
 
     @property
@@ -504,12 +494,12 @@ class ExecutionControl:
         res_files : list
             List of resource files to analyze.
         i0/i1 : int
-            Beginning/end (inclusive/exclusive, respetively) index split
+            Beginning/end (inclusive/exclusive, respectively) index split
             parameters for ProjectPoints.split.
-        project_points : config.ProjectPoints
+        project_points : reV.config.ProjectPoints
             Project points instance that will be split.
         split_level : str
-            Level (core or node) of the split execution control instance.
+            Level of the split execution control instance.
 
         Returns
         -------
@@ -536,7 +526,7 @@ class ProjectPoints(BaseConfig):
     site_list_or_slice = ProjectPoints.sites
     site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
     ProjectPoints_sub = ProjectPoints.split(0, 10, ...)
-    h_list_int_float = ProjectPoints.h
+    h_list = ProjectPoints.h
     """
 
     def __init__(self, config_pp, sam_configs, res_files, tech):
@@ -559,12 +549,14 @@ class ProjectPoints(BaseConfig):
             reV technology being executed.
         """
 
-        self._df = None
+        # set protected attributes
         self._raw = config_pp
         self._sam_configs = sam_configs
         self._res_files = res_files
         self._tech = tech
-        self.parse_project_points(config_pp)
+
+        # create the project points from the raw configuration dict
+        self.parse_project_points(self.raw)
 
     def __getitem__(self, site):
         """Get the SAM config ID and dictionary for the requested site.
@@ -595,7 +587,7 @@ class ProjectPoints(BaseConfig):
         Returns
         -------
         self._df : pd.DataFrame
-            Table of sites and SAM configuration IDs.
+            Table of sites and corresponding SAM configuration IDs.
             Has columns 'sites' and 'configs'.
         """
 
@@ -855,27 +847,14 @@ class ProjectPoints(BaseConfig):
         # make a new instance of ProjectPoints
         sub = cls(config_pp, sam_configs, res_files, tech)
 
-        if isinstance(sub.sites, (list, tuple)):
-            # Reset the site attribute using a subset of the original
-            sub._sites = sub.sites[i0:i1]
+        # Reset the site attribute using a subset of the original
+        sub.sites = sub.sites[i0:i1]
 
-            # clear the dictionary attributes
-            sub.clear()
+        # clear the dictionary attributes
+        sub.clear()
 
-            # set the new config map dataframe
-            sub.df = config_df[config_df['sites'].isin(sub.sites)]
-
-        elif isinstance(sub.sites, slice):
-            # this is only the case if stop=None,
-            # in which case default config is used.
-            if (sub.sites.stop is None and sub.sites.step != 1 and
-                    sub.sites.step is not None):
-                raise ValueError('Cannot perform a project points split on a '
-                                 'non-sequential slice with no stop. Project '
-                                 'point site slice: {}'.format(sub.sites))
-            else:
-                sub._sites = list(range(sub.sites.start + i0,
-                                        sub.sites.start + (i1 - i0)))
+        # set the new config map dataframe
+        sub.df = config_df[config_df['sites'].isin(sub.sites)]
 
         return sub
 
