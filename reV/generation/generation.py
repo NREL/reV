@@ -94,7 +94,7 @@ class Gen:
 
     @staticmethod
     def direct(tech, points, sam_files, res_file, output_request=('cf_mean',),
-               cores=1, sites_per_split=100):
+               n_workers=1, sites_per_split=100):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -113,8 +113,8 @@ class Gen:
             Single resource file with path.
         output_request : list | tuple
             Output variables requested from SAM.
-        cores : int
-            Number of local cores to run on.
+        n_workers : int
+            Number of local workers to run on.
         sites_per_split : int
             Number of sites to run in series on a core.
 
@@ -129,13 +129,13 @@ class Gen:
         pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
         pc = PointsControl(pp, sites_per_split=sites_per_split)
 
-        if cores == 1:
+        if n_workers == 1:
             logger.debug('Running serial generation for: {}'.format(pc))
             out = execute_single(Gen.run, pc, res_file=res_file, tech=tech,
                                  output_request=output_request)
-        elif cores > 1:
+        elif n_workers > 1:
             logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(Gen.run, pc, n_workers=cores,
+            out = execute_parallel(Gen.run, pc, n_workers=n_workers,
                                    loggers=[__name__, 'reV.SAM'],
                                    res_file=res_file, tech=tech,
                                    output_request=output_request)

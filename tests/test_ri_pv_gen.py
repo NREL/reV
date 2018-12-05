@@ -66,12 +66,12 @@ def to_list(gen_out):
     return out
 
 
-@pytest.mark.parametrize('f_rev1_out, rev2_points, year, cores', [
+@pytest.mark.parametrize('f_rev1_out, rev2_points, year, n_workers', [
     ('project_outputs.h5', slice(0, 10), '2012', 1),
     ('project_outputs.h5', slice(0, None, 10), '2013', 1),
     ('project_outputs.h5', slice(3, 25, 2), '2012', 2),
     ('project_outputs.h5', slice(40, None, 10), '2013', 2)])
-def test_pv_gen_slice(f_rev1_out, rev2_points, year, cores):
+def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
     # get full file paths.
     rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
@@ -83,7 +83,7 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, cores):
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
     gen_outs = Gen.direct('pv', rev2_points, sam_files, res_file,
-                          cores=cores, sites_per_split=3)
+                          n_workers=n_workers, sites_per_split=3)
 
     gen_outs = to_list(gen_outs)
 

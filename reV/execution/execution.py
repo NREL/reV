@@ -15,7 +15,8 @@ def execute_sub():
     return {}
 
 
-def execute_parallel(fun, execution_iter, loggers=[], n_workers=2, **kwargs):
+def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,
+                     **kwargs):
     """Execute a parallel generation compute on a single node.
 
     Parameters
@@ -39,7 +40,10 @@ def execute_parallel(fun, execution_iter, loggers=[], n_workers=2, **kwargs):
     """
 
     # start a local cluster on a personal comp or HPC single node
-    cluster = LocalCluster(n_workers=n_workers)
+    if n_workers:
+        cluster = LocalCluster(n_workers=n_workers)
+    else:
+        cluster = None
 
     results = execute_futures(fun, execution_iter, cluster, loggers=loggers,
                               **kwargs)
