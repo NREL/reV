@@ -2,7 +2,10 @@
 Generation
 """
 from dask.distributed import Client, LocalCluster
+from subprocess import Popen, PIPE
 import logging
+import os
+import getpass
 
 from reV.rev_logger import REV_LOGGERS
 
@@ -10,9 +13,122 @@ from reV.rev_logger import REV_LOGGERS
 logger = logging.getLogger(__name__)
 
 
-def execute_sub():
-    """Execute a subprocess run on multiple nodes."""
-    return {}
+class SubprocessManager:
+    """Base class to handle subprocess execution."""
+
+    # get username as class attribute.
+    user = getpass.getuser()
+
+    @staticmethod
+    def make_path(d):
+        """Make a directory if it doesn't exist."""
+        if not os.path.exists(d):
+            os.mkdir(d)
+
+    @staticmethod
+    def make_sh(fname, script):
+        """Make a shell script to execute a subprocess."""
+        with open(fname, 'w+') as f:
+            logger.debug('The shell script "{}" contains the following:\n{}'
+                         .format(fname, script))
+            f.write(script)
+
+    @staticmethod
+    def rm(fname):
+        """Remove a file."""
+        os.remove(fname)
+
+    @staticmethod
+    def submit(cmd, shell=True):
+        """Open a subprocess and submit a shell command. Capture out/error."""
+        logger.debug('Submitting the following cmd as a subprocess:\n{}'
+                     .format(cmd))
+        process = Popen(cmd, shell=shell, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        stderr = stderr.decode('ascii').rstrip()
+        stdout = stdout.decode('ascii').rstrip()
+
+        if stderr:
+            raise Exception('Error occurred submitting job:\n{}'
+                            .format(stderr))
+
+        return stdout, stderr
+
+    @staticmethod
+    def s(s):
+        """Format an object as string for python -c command entry."""
+        if isinstance(s, str):
+            return """'{}'""".format(s)
+        else:
+            return '{}'.format(s)
+
+    @staticmethod
+    def node_loggers(module_list, level='DEBUG', log_dir='logs',
+                     file='reV.log'):
+        """Get a string python command to init loggers in a shell submission"""
+        SubprocessManager.make_path(log_dir)
+        log_args = ''
+        for module in module_list:
+            log_args += ("init_logger({n}, log_level={level}, log_file={f});"
+                         .format(n=PBS.s(module),
+                                 level=PBS.s(level),
+                                 f=PBS.s(os.path.join(log_dir, file))))
+        return log_args
+
+
+class PBS(SubprocessManager):
+    """Subclass for PBS subprocess jobs."""
+
+    def __init__(self, py=None, alloc='rev', queue='short', name='reV',
+                 feature=None, stdout_path='./stdout'):
+        """Initialize and submit a PBS job."""
+        self.make_path(stdout_path)
+        self.id, self.err = self.qsub(py=py,
+                                      alloc=alloc,
+                                      queue=queue,
+                                      name=name,
+                                      feature=feature,
+                                      stdout_path=stdout_path)
+
+    def check_status(self):
+        """Check the status of this PBS job."""
+        pass
+
+    @staticmethod
+    def qsub(py='print("hello world!")', alloc='rev', queue='short',
+             name='reV', feature=None, stdout_path='./stdout'):
+        """Submit a PBS job via qsub command and PBS shell script."""
+        fname = '{}.sh'.format(name)
+        script = ('#!/bin/bash\n'
+                  '#PBS -o {p}/{name}_$PBS_JOBID.o\n'
+                  '#PBS -e {p}/{name}_$PBS_JOBID.e\n'
+                  'python -c "{py}"'
+                  .format(p=stdout_path, name=name, py=py))
+
+        cmd = ('qsub -A {a} -q {q} -N {n} {f} {fname}'
+               .format(a=alloc,
+                       q=queue,
+                       n=name,
+                       f='-l feature=' + feature if feature else '',
+                       fname=fname))
+
+        PBS.make_sh(fname, script)
+        out, err = PBS.submit(cmd)
+
+        if not err:
+            logger.debug('PBS job "{}" with id #{} submitted successfully'
+                         .format(name, out))
+            PBS.rm(fname)
+
+        return out, err
+
+
+class SLURM(SubprocessManager):
+    """Subclass for SLURM subprocess jobs."""
+    def __init__(self, py=None, alloc=None, name='reV',
+                 feature=None, stdout_path='./stdout'):
+        """Initialize a SLURM job."""
+        pass
 
 
 def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,

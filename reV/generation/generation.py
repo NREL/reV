@@ -2,10 +2,11 @@
 Generation
 """
 import logging
+from math import ceil
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.config import ProjectPoints, PointsControl
-from reV.execution.execution import execute_parallel, execute_single
+from reV.execution.execution import execute_parallel, execute_single, PBS
 
 
 logger = logging.getLogger(__name__)
@@ -93,8 +94,9 @@ class Gen:
         return out
 
     @staticmethod
-    def direct(tech, points, sam_files, res_file, output_request=('cf_mean',),
-               n_workers=1, sites_per_split=100):
+    def direct(tech=None, points=None, sam_files=None, res_file=None,
+               output_request=('cf_mean',), n_workers=1, sites_per_split=100,
+               points_range=None):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -127,18 +129,95 @@ class Gen:
         """
 
         pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-        pc = PointsControl(pp, sites_per_split=sites_per_split)
+
+        if points_range is None:
+            pc = PointsControl(pp, sites_per_split=sites_per_split)
+        else:
+            pc = PointsControl.split(points_range[0], points_range[1], pp,
+                                     sites_per_split=sites_per_split)
 
         if n_workers == 1:
             logger.debug('Running serial generation for: {}'.format(pc))
             out = execute_single(Gen.run, pc, res_file=res_file, tech=tech,
                                  output_request=output_request)
-        elif n_workers > 1:
+        else:
             logger.debug('Running parallel generation for: {}'.format(pc))
             out = execute_parallel(Gen.run, pc, n_workers=n_workers,
                                    loggers=[__name__, 'reV.SAM'],
                                    res_file=res_file, tech=tech,
                                    output_request=output_request)
             out = Gen.organize_futures(out)
-
         return out
+
+    @staticmethod
+    def direct_PBS(tech, points, sam_files, res_file,
+                   output_request=('cf_mean',), nodes=1,
+                   sites_per_split=100):
+        """Execute a generation run on several nodes with PBS.
+
+        Parameters
+        ----------
+        tech : str
+            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+        points : slice | str
+            Slice specifying project points or string pointing to a project
+            points csv.
+        sam_files : dict | str | list
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv.
+        res_file : str
+            Single resource file with path.
+        output_request : list | tuple
+            Output variables requested from SAM.
+        nodes : int
+            Number of PBS nodes to distribute job to.
+        sites_per_split : int
+            Number of sites to run in series on each core.
+
+        Returns
+        -------
+        jobs : dict
+            Dictionary of PBS job objects.
+        """
+
+        pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
+        sites_per_node = ceil(len(pp.sites) / nodes)
+        pc = PointsControl(pp, sites_per_split=sites_per_node)
+
+        jobs = {}
+
+        log_list = [__name__, 'reV.SAM', 'reV.config', 'reV.execution']
+
+        for i, split in enumerate(pc):
+            logger_args = PBS.node_loggers(log_list, level='DEBUG',
+                                           log_dir='logs',
+                                           file='reV_{}.log'.format(i))
+            args = ('tech={tech}, '
+                    'points={points}, '
+                    'sam_files={sam_files}, '
+                    'res_file={res_file}, '
+                    'output_request={output_request}, '
+                    'n_workers={n_workers}, '
+                    'sites_per_split={sites_per_split}, '
+                    'points_range={points_range}'
+                    .format(tech=PBS.s(tech),
+                            points=PBS.s(points),
+                            sam_files=PBS.s(sam_files),
+                            res_file=PBS.s(res_file),
+                            output_request=PBS.s(output_request),
+                            n_workers=PBS.s(None),
+                            sites_per_split=PBS.s(sites_per_split),
+                            points_range=PBS.s(split.split_range)))
+
+            py = ('from reV.generation.generation import Gen;'
+                  'from reV.rev_logger import init_logger;'
+                  '{log}Gen.direct({args})'
+                  .format(log=logger_args, args=args))
+
+            pbs = PBS(py=py, name='reV_{}'.format(i))
+
+            jobs[i] = pbs
+
+        return jobs

@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import pandas as pd
+import numpy as np
 from warnings import warn
 
 from reV import __dir__ as REVDIR
@@ -220,11 +221,13 @@ class PointsControl:
         self._project_points = project_points
         self._sites_per_split = sites_per_split
         self.level = level
+        self._split_range = []
 
     def __iter__(self):
         """Iterator initialization dunder."""
         self._i = 0
-        self._last_site_ind = 0
+        self._last_site = self.master_project_points.sites.index(self.sites[0])
+        self._ilim = self.master_project_points.sites.index(self.sites[-1]) + 1
         return self
 
     def __next__(self):
@@ -237,19 +240,21 @@ class PointsControl:
             on the number of sites per split.
         """
 
-        i0 = self._last_site_ind
-        i1 = i0 + self.sites_per_split
-        logger.debug('PointsControl iterating from site index '
-                     '{} to {} on worker #{}'
-                     .format(i0, i1, self._i))
+        i0 = self._last_site
+        i1 = np.min([i0 + self.sites_per_split, self._ilim])
         self._i += 1
-        self._last_site_ind = i1
+        self._last_site = i1
 
         new_exec = PointsControl.split(i0, i1, self.project_points,
                                        sites_per_split=self.sites_per_split)
+        new_exec._split_range = [i0, i1]
         if not new_exec.project_points.sites:
             # no more sites left to analyze, reached end of iter.
             raise StopIteration
+
+        logger.debug('PointsControl iterating from site index '
+                     '{} to {} on worker #{}'
+                     .format(i0, i1, self._i))
         return new_exec
 
     def __repr__(self):
@@ -267,9 +272,24 @@ class PointsControl:
         return self._project_points
 
     @property
+    def master_project_points(self):
+        """Original project points at the highest execution level."""
+        if not hasattr(self, '_master_pp'):
+            self._mpp = ProjectPoints(self._project_points.points,
+                                      self._project_points.sam_files,
+                                      self._project_points.tech,
+                                      res_file=self._project_points.res_file)
+        return self._mpp
+
+    @property
     def sites(self):
         """Get the project points sites for this instance."""
         return self._project_points.sites
+
+    @property
+    def split_range(self):
+        """Get the current split range property."""
+        return self._split_range
 
     @classmethod
     def split(cls, i0, i1, project_points, sites_per_split=100):
