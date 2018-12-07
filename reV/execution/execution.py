@@ -56,9 +56,11 @@ class SubprocessManager:
 
     @staticmethod
     def s(s):
-        """Format an object as string for python -c command entry."""
-        if isinstance(s, str):
-            return """'{}'""".format(s)
+        """Format an object as string for python cli command entry."""
+        if isinstance(s, (list, tuple, dict)):
+            return '"{}"'.format(s)
+        elif not isinstance(s, (int, float, type(None))):
+            return "'{}'".format(s)
         else:
             return '{}'.format(s)
 
@@ -79,11 +81,11 @@ class SubprocessManager:
 class PBS(SubprocessManager):
     """Subclass for PBS subprocess jobs."""
 
-    def __init__(self, py=None, alloc='rev', queue='short', name='reV',
+    def __init__(self, cmd, alloc='rev', queue='short', name='reV',
                  feature=None, stdout_path='./stdout'):
         """Initialize and submit a PBS job."""
         self.make_path(stdout_path)
-        self.id, self.err = self.qsub(py=py,
+        self.id, self.err = self.qsub(cmd,
                                       alloc=alloc,
                                       queue=queue,
                                       name=name,
@@ -91,34 +93,56 @@ class PBS(SubprocessManager):
                                       stdout_path=stdout_path)
 
     def check_status(self):
-        """Check the status of this PBS job."""
-        pass
+        """Check the status of this PBS job using qstat."""
+        qstat_rows = self.qstat()
+
+        if qstat_rows is None:
+            return None
+
+        # update job status from qstat list
+        for row in qstat_rows:
+            row = row.split()
+            if len(row) > 1:
+                if row[0].strip() == self.id.strip():
+                    return row[-2]
+
+    def qstat(self):
+        """Run the PBS qstat command and return the stdout split to rows."""
+        cmd = 'qstat -u {user}'.format(user=self.user)
+        stdout, _ = self.submit(cmd)
+        if not stdout:
+            # No jobs are currently running.
+            return None
+        else:
+            qstat_rows = stdout.split('\n')
+            return qstat_rows
 
     @staticmethod
-    def qsub(py='print("hello world!")', alloc='rev', queue='short',
-             name='reV', feature=None, stdout_path='./stdout'):
+    def qsub(cmd, alloc='rev', queue='short', name='reV', feature=None,
+             stdout_path='./stdout', keep_sh=False):
         """Submit a PBS job via qsub command and PBS shell script."""
         fname = '{}.sh'.format(name)
         script = ('#!/bin/bash\n'
                   '#PBS -o {p}/{name}_$PBS_JOBID.o\n'
                   '#PBS -e {p}/{name}_$PBS_JOBID.e\n'
-                  'python -c "{py}"'
-                  .format(p=stdout_path, name=name, py=py))
+                  '{cmd}'
+                  .format(p=stdout_path, name=name, cmd=cmd))
 
-        cmd = ('qsub -A {a} -q {q} -N {n} {f} {fname}'
-               .format(a=alloc,
-                       q=queue,
-                       n=name,
-                       f='-l feature=' + feature if feature else '',
-                       fname=fname))
+        qsub = ('qsub -A {a} -q {q} -N {n} {f} {fname}'
+                .format(a=alloc,
+                        q=queue,
+                        n=name,
+                        f='-l feature=' + feature if feature else '',
+                        fname=fname))
 
         PBS.make_sh(fname, script)
-        out, err = PBS.submit(cmd)
+        out, err = PBS.submit(qsub)
 
         if not err:
             logger.debug('PBS job "{}" with id #{} submitted successfully'
                          .format(name, out))
-            PBS.rm(fname)
+            if not keep_sh:
+                PBS.rm(fname)
 
         return out, err
 
@@ -232,7 +256,7 @@ def execute_single(fun, input_obj, worker=0, **kwargs):
         Key word arguments passed to fun.
     """
 
-    logger.debug('Running single on worker #{} for: {}'
+    logger.debug('Running single serial execution on worker #{} for: {}'
                  .format(worker, input_obj))
 
     out = fun(input_obj, **kwargs)
