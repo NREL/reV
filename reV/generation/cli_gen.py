@@ -11,7 +11,7 @@ from reV.execution.execution import PBS
 from reV.generation.generation import Gen
 from reV.rev_logger import init_logger
 from reV import __testdatadir__
-from reV.cli.dtypes import INT, PROJECTPOINTS, INTLIST, STRLIST, SAMFILES
+from reV.cli import INT, PROJECTPOINTS, INTLIST, STRLIST, SAMFILES
 
 
 logger = logging.getLogger(__name__)
@@ -19,21 +19,25 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV', type=str,
-              help='Job name.')
+              help='Job name, defaults to "reV".')
 @click.option('--tech', '-t', default='pv', type=str,
-              help='reV tech to analyze.')
+              help='reV tech to analyze, defaults to "pv".')
 @click.option('--points', '-p', default=slice(0, 100), type=PROJECTPOINTS,
-              help='reV project points to analyze (slice or str).')
+              help=('reV project points to analyze (slice or str). '
+                    'Defaults to sites 0 through 100.'))
 @click.option('--sam_files', '-sf',
               default=__testdatadir__ + '/SAM/naris_pv_1axis_inv13.json',
-              type=SAMFILES, help='SAM config files (str, dict, or list).')
+              type=SAMFILES, help=('SAM config files (str, dict, or list). '
+                                   'Defaults to test SAM config.'))
 @click.option('--res_file', '-rf',
               default=__testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5',
-              help='Single resource file (str).')
+              help='Single resource file (str). Defaults to test NSRDB file.')
 @click.option('--output_request', '-or', default=['cf_mean'], type=STRLIST,
-              help='Output variable requests from SAM (list or tuple)')
+              help=('Output variable requests from SAM (list or tuple). '
+                    'Defaults to ["cf_mean"].'))
 @click.option('--sites_per_core', '-spc', default=100, type=INT,
-              help='Number of sites to run in series on a single core.')
+              help=('Number of sites to run in series on a single core. '
+                    'Defaults to 100.'))
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
@@ -52,8 +56,9 @@ def main(ctx, name, tech, points, sam_files, res_file, output_request,
 
 
 @main.command()
-@click.option('--n_workers', '-nw', default=1, type=INT,
-              help='Number of workers to use (default is serial compute).')
+@click.option('--n_workers', '-nw', type=INT,
+              help=('Required input: number of workers. '
+                    'Use 1 for serial, None for all cores.'))
 @click.option('--points_range', '-pr', default=None, type=INTLIST,
               help='Optional range list to run a subset of sites.')
 @click.option('-v', '--verbose', is_flag=True,
@@ -111,8 +116,8 @@ def local(ctx, n_workers, points_range, verbose):
 
 
 @main.command()
-@click.option('--nodes', '-no', default=3, type=INT,
-              help='Number of PBS nodes')
+@click.option('--nodes', '-no', default=1, type=INT,
+              help='Number of PBS nodes. Defaults to 1.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
@@ -174,7 +179,7 @@ def pbs(ctx, nodes, verbose):
                                 points_range=PBS.s(split.split_range),
                                 v='-v' if verbose else ''))
 
-        cmd = ('python -m reV.generation.generation {arg_main} local {arg_loc}'
+        cmd = ('python -m reV.generation.cli_gen {arg_main} local {arg_loc}'
                .format(arg_main=arg_main, arg_loc=arg_loc))
 
         pbs = PBS(cmd, name=node_name)
@@ -182,3 +187,7 @@ def pbs(ctx, nodes, verbose):
         jobs[i] = pbs
 
     return jobs
+
+
+if __name__ == '__main__':
+    main(obj={})

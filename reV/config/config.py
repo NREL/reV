@@ -252,9 +252,9 @@ class PointsControl:
             # no more sites left to analyze, reached end of iter.
             raise StopIteration
 
-        logger.debug('PointsControl iterating from site index '
-                     '{} to {} on worker #{}'
-                     .format(i0, i1, self._i))
+        logger.debug('PointsControl passing site project points to worker #{} '
+                     'with indices {} to {} '
+                     .format(self._i, i0, i1))
         return new_exec
 
     def __repr__(self):

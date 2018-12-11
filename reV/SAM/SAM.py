@@ -358,7 +358,7 @@ class SAM:
             dictionary self.parameters. Otherwise, only parameter keys in
             keys_to_set will be set.
         """
-        logger.debug('Setting SAM input parameters for site {}.'
+        logger.debug('On site {}, Setting SAM input parameters.'
                      .format(self.site))
         if keys_to_set == 'all':
             keys_to_set = self.parameters.keys()
@@ -703,8 +703,8 @@ class Solar(SAM):
         # set resource variables
         for var in resource.columns.values:
             if var != 'time_index':
-                logger.debug('Setting {} resource data on site {}.'
-                             .format(var, self.site))
+                logger.debug('On site {}, setting {} resource data.'
+                             .format(self.site, var))
                 self.ssc.data_set_array(self.res_data, var_map[var],
                                         np.roll(resource[var],
                                                 int(self.meta['timezone'] *

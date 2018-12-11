@@ -6,6 +6,8 @@ from subprocess import Popen, PIPE
 import logging
 import os
 import getpass
+import shlex
+from warnings import warn
 
 from reV.rev_logger import REV_LOGGERS
 
@@ -29,8 +31,11 @@ class SubprocessManager:
     def make_sh(fname, script):
         """Make a shell script to execute a subprocess."""
         with open(fname, 'w+') as f:
-            logger.debug('The shell script "{}" contains the following:\n{}'
-                         .format(fname, script))
+            logger.debug('The shell script "{n}" contains the following:\n'
+                         '~~~~~~~~~~ {n} ~~~~~~~~~~\n'
+                         '{s}\n'
+                         '~~~~~~~~~~ {n} ~~~~~~~~~~'
+                         .format(n=fname, s=script))
             f.write(script)
 
     @staticmethod
@@ -39,18 +44,21 @@ class SubprocessManager:
         os.remove(fname)
 
     @staticmethod
-    def submit(cmd, shell=True):
-        """Open a subprocess and submit a shell command. Capture out/error."""
-        logger.debug('Submitting the following cmd as a subprocess:\n{}'
+    def submit(cmd):
+        """Open a subprocess and submit a command. Capture out/error."""
+        cmd = shlex.split(cmd)
+        logger.debug('Submitting the following cmd as a subprocess:\n\t{}'
                      .format(cmd))
-        process = Popen(cmd, shell=shell, stdout=PIPE, stderr=PIPE)
+
+        # use subprocess to submit command and get piped o/e
+        process = Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
         stderr = stderr.decode('ascii').rstrip()
         stdout = stdout.decode('ascii').rstrip()
 
         if stderr:
             raise Exception('Error occurred submitting job:\n{}'
-                            .format(stderr))
+                            .format(process.stderr))
 
         return stdout, stderr
 
@@ -82,34 +90,54 @@ class PBS(SubprocessManager):
     """Subclass for PBS subprocess jobs."""
 
     def __init__(self, cmd, alloc='rev', queue='short', name='reV',
-                 feature=None, stdout_path='./stdout'):
+                 stdout_path='./stdout'):
         """Initialize and submit a PBS job."""
         self.make_path(stdout_path)
         self.id, self.err = self.qsub(cmd,
                                       alloc=alloc,
                                       queue=queue,
                                       name=name,
-                                      feature=feature,
                                       stdout_path=stdout_path)
 
-    def check_status(self):
-        """Check the status of this PBS job using qstat."""
-        qstat_rows = self.qstat()
+    @staticmethod
+    def check_status(job, var='id'):
+        """Check the status of this PBS job using qstat.
 
+        Parameters
+        ----------
+        job : str
+            Job name or ID number.
+        var : str
+            Identity/type of job identification input arg ('id' or 'name').
+
+        Returns
+        -------
+        out : str or NoneType
+            Qstat job status character or None if not found.
+        """
+
+        # column location of various job identifiers
+        col_loc = {'id': 0, 'name': 3}
+        qstat_rows = PBS.qstat()
         if qstat_rows is None:
             return None
+        else:
+            # reverse the list so most recent jobs are first
+            qstat_rows = reversed(qstat_rows)
 
         # update job status from qstat list
         for row in qstat_rows:
             row = row.split()
-            if len(row) > 1:
-                if row[0].strip() == self.id.strip():
+            if len(row) > 10:
+                if row[col_loc[var]].strip() == job.strip():
                     return row[-2]
+        return None
 
-    def qstat(self):
+    @staticmethod
+    def qstat():
         """Run the PBS qstat command and return the stdout split to rows."""
-        cmd = 'qstat -u {user}'.format(user=self.user)
-        stdout, _ = self.submit(cmd)
+        cmd = 'qstat -u {user}'.format(user=PBS.user)
+        stdout, _ = PBS.submit(cmd)
         if not stdout:
             # No jobs are currently running.
             return None
@@ -118,31 +146,38 @@ class PBS(SubprocessManager):
             return qstat_rows
 
     @staticmethod
-    def qsub(cmd, alloc='rev', queue='short', name='reV', feature=None,
+    def qsub(cmd, alloc='rev', queue='short', name='reV',
              stdout_path='./stdout', keep_sh=False):
         """Submit a PBS job via qsub command and PBS shell script."""
-        fname = '{}.sh'.format(name)
-        script = ('#!/bin/bash\n'
-                  '#PBS -o {p}/{name}_$PBS_JOBID.o\n'
-                  '#PBS -e {p}/{name}_$PBS_JOBID.e\n'
-                  '{cmd}'
-                  .format(p=stdout_path, name=name, cmd=cmd))
 
-        qsub = ('qsub -A {a} -q {q} -N {n} {f} {fname}'
-                .format(a=alloc,
-                        q=queue,
-                        n=name,
-                        f='-l feature=' + feature if feature else '',
-                        fname=fname))
+        status = PBS.check_status(name, var='name')
 
-        PBS.make_sh(fname, script)
-        out, err = PBS.submit(qsub)
+        if status == 'Q' or status == 'R':
+            warn('Not submitting job "{}" because it is already in '
+                 'qstat with status: "{}"'.format(name, status))
+            out = None
+            err = 'already_running'
+        else:
+            fname = '{}.sh'.format(name)
+            script = ('#!/bin/bash\n'
+                      '#PBS -N {n} # job name\n'
+                      '#PBS -A {a} # allocation account\n'
+                      '#PBS -q {q} # queue (debug, short, batch, or long)\n'
+                      '#PBS -o {p}/{n}_$PBS_JOBID.o\n'
+                      '#PBS -e {p}/{n}_$PBS_JOBID.e\n'
+                      '{cmd}'
+                      .format(n=name, a=alloc, q=queue, p=stdout_path,
+                              cmd=cmd))
 
-        if not err:
-            logger.debug('PBS job "{}" with id #{} submitted successfully'
-                         .format(name, out))
-            if not keep_sh:
-                PBS.rm(fname)
+            # write the shell script file and submit as qsub job
+            PBS.make_sh(fname, script)
+            out, err = PBS.submit('qsub {script}'.format(script=fname))
+
+            if not err:
+                logger.debug('PBS job "{}" with id #{} submitted successfully'
+                             .format(name, out))
+                if not keep_sh:
+                    PBS.rm(fname)
 
         return out, err
 

@@ -6,7 +6,6 @@ import logging
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.config import ProjectPoints, PointsControl
 from reV.execution.execution import execute_parallel, execute_single
-from reV.cli import cli_gen as cli
 
 
 logger = logging.getLogger(__name__)
@@ -148,7 +147,3 @@ class Gen:
                                    output_request=output_request)
             out = Gen.organize_futures(out)
         return out
-
-
-if __name__ == '__main__':
-    cli.main(obj={})
