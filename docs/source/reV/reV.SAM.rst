@@ -1,0 +1,30 @@
+reV.SAM package
+===============
+
+Submodules
+----------
+
+reV.SAM.PySSC module
+--------------------
+
+.. automodule:: reV.SAM.PySSC
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+reV.SAM.SAM module
+------------------
+
+.. automodule:: reV.SAM.SAM
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: reV.SAM
+    :members:
+    :undoc-members:
+    :show-inheritance:

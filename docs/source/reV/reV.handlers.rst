@@ -1,13 +1,13 @@
-reV.config package
-==================
+reV.handlers package
+====================
 
 Submodules
 ----------
 
-reV.config.config module
-------------------------
+reV.handlers.resource module
+----------------------------
 
-.. automodule:: reV.config.config
+.. automodule:: reV.handlers.resource
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ reV.config.config module
 Module contents
 ---------------
 
-.. automodule:: reV.config
+.. automodule:: reV.handlers
     :members:
     :undoc-members:
     :show-inheritance:
