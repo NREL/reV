@@ -9,6 +9,32 @@ from reV.exceptions import (ResourceKeyError, ResourceRuntimeError,
 import warnings
 
 
+def parse_keys(keys):
+    """
+    Parse keys for complex __getitem__ and __setitem__
+
+    Parameters
+    ----------
+    keys : string | tuple
+        key or key and slice to extract
+
+    Returns
+    -------
+    key : string
+        key to extract
+    key_slice : slice | tuple
+        Slice or tuple of slices of key to extract
+    """
+    if isinstance(keys, tuple):
+        key = keys[0]
+        key_slice = keys[1:]
+    else:
+        key = keys
+        key_slice = (slice(None, None, None),)
+
+    return key, key_slice
+
+
 class SAMResource:
     """
     Resource Manager for SAM
@@ -55,12 +81,7 @@ class SAMResource:
         return self._n
 
     def __getitem__(self, keys):
-        if isinstance(keys, tuple):
-            var = keys[0]
-            var_slice = keys[1:]
-        else:
-            var = keys
-            var_slice = (slice(None, None, None),)
+        var, var_slice = parse_keys(keys)
 
         if var == 'time_index':
             out = self.time_index
@@ -79,12 +100,7 @@ class SAMResource:
         return out
 
     def __setitem__(self, keys, arr):
-        if isinstance(keys, tuple):
-            var = keys[0]
-            var_slice = keys[1:]
-        else:
-            var = keys
-            var_slice = (slice(None, None, None),)
+        var, var_slice = parse_keys(keys)
 
         if var == 'meta':
             self.meta = arr
@@ -372,7 +388,6 @@ class Resource:
         """
         self._h5_file = h5_file
         self._h5 = h5py.File(self._h5_file, 'r')
-        self._datasets = list(self._h5)
         self._unscale = unscale
         self._dsets = list(self._h5)
 
@@ -393,12 +408,7 @@ class Resource:
         return self._h5['time_index'].shape[0]
 
     def __getitem__(self, keys):
-        if isinstance(keys, tuple):
-            ds = keys[0]
-            ds_slice = keys[1:]
-        else:
-            ds = keys
-            ds_slice = (slice(None, None, None),)
+        ds, ds_slice = parse_keys(keys)
 
         if ds == 'time_index':
             out = self._time_index(*ds_slice)
@@ -429,6 +439,32 @@ class Resource:
         """
         shape = (self._h5['time_index'].shape[0], self._h5['meta'].shape[0])
         return shape
+
+    @property
+    def meta(self):
+        """
+        Meta data DataFrame
+
+        Returns
+        -------
+        meta : pandas.DataFrame
+            Resource Meta Data
+        """
+        meta = pd.DataFrame(self._h5['meta'][...])
+        return meta
+
+    @property
+    def time_index(self):
+        """
+        DatetimeIndex
+
+        Returns
+        -------
+        time_index : pandas.DatetimeIndex
+            Resource datetime index
+        """
+        time_index = pd.to_datetime(self._h5['time_index'][...])
+        return time_index
 
     def get_attrs(self, dset=None):
         """
