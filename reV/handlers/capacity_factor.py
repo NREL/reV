@@ -40,19 +40,15 @@ class CapacityFactor(Resource):
         return len
 
     def __setitem__(self, keys, arr):
-        mode = ['a', 'w', 'w-', 'x']
-        if self._mode not in mode:
-            msg = 'mode must be writable: {}'.format(mode)
-            raise ResourceRuntimeError(msg)
-
-        ds, ds_slice = parse_keys(keys)
-        slice_test = ds_slice == (slice(None, None, None),)
-        if ds == 'meta' and slice_test:
-            self.meta = arr
-        elif ds == 'time_index' and slice_test:
-            self.time_index = arr
-        else:
-            self._set_ds_array(ds, arr, *ds_slice)
+        if self.writable:
+            ds, ds_slice = parse_keys(keys)
+            slice_test = ds_slice == (slice(None, None, None),)
+            if ds == 'meta' and slice_test:
+                self.meta = arr
+            elif ds == 'time_index' and slice_test:
+                self.time_index = arr
+            else:
+                self._set_ds_array(ds, arr, *ds_slice)
 
     @property
     def shape(self):
@@ -71,6 +67,23 @@ class CapacityFactor(Resource):
                          len(self._h5['meta'].shape[0]))
 
         return shape
+
+    @property
+    def writable(self):
+        """
+        Check to see if h5py.File instance is writable
+
+        Returns
+        -------
+        bool
+            Flag if mode is writable
+        """
+        mode = ['a', 'w', 'w-', 'x']
+        if self._mode not in mode:
+            msg = 'mode must be writable: {}'.format(mode)
+            raise ResourceRuntimeError(msg)
+
+        return True
 
     @meta.setter
     def meta(self, meta):
@@ -216,6 +229,38 @@ class CapacityFactor(Resource):
             ds_chunks = None
 
         return ds_chunks
+
+    def create_ds(self, ds_name, shape, dtype, chunks=None, attrs=None):
+        """
+        Initialize dataset
+
+        Parameters
+        ----------
+        ds_name : str
+            Dataset name
+        shape : tuple
+            Dataset shape
+        dtype : str
+            Dataset numpy dtype
+        chunks : tuple
+            Dataset chunk size
+        attrs : dict
+            Dataset attributes
+        """
+        if self.writable:
+            close = False
+            if not self.hasattr('_h5'):
+                close = True
+                self.open()
+
+            ds = self._h5.create_dataset(ds_name, shape=shape, dtype=dtype,
+                                         chunks=chunks)
+            if attrs is not None:
+                for key, value in attrs.items():
+                    ds.attrs[key] = value
+
+            if close:
+                self.close()
 
     def open(self):
         """
