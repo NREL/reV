@@ -389,7 +389,6 @@ class Resource:
         self._h5_file = h5_file
         self._h5 = h5py.File(self._h5_file, 'r')
         self._unscale = unscale
-        self._dsets = list(self._h5)
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
@@ -427,9 +426,21 @@ class Resource:
         return out
 
     @property
+    def dsets(self):
+        """
+        Datasets available in h5_file
+
+        Returns
+        -------
+        list
+            List of datasets in h5_file
+        """
+        return list(self._h5)
+
+    @property
     def shape(self):
         """
-        Return resource shape (timesteps, sites)
+        Resource shape (timesteps, sites)
         shape = (len(time_index), len(meta))
 
         Returns
@@ -631,7 +642,7 @@ class Resource:
             ndarray of variable timeseries data
             If unscale, returned in native units else in scaled units
         """
-        if ds_name in self._dsets:
+        if ds_name in self.dsets:
             ds = self._h5[ds_name]
             if self._unscale:
                 scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
@@ -641,7 +652,7 @@ class Resource:
             return ds[ds_slice] / scale_factor
         else:
             raise ResourceKeyError('{} not in {}'
-                                   .format(ds_name, self._dsets))
+                                   .format(ds_name, self.dsets))
 
     def close(self):
         """
