@@ -2,10 +2,14 @@
 Generation
 """
 import logging
+import numpy as np
+from warnings import warn
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.config import ProjectPoints, PointsControl
 from reV.execution.execution import execute_parallel, execute_single
+from reV.handlers.capacity_factor import CapacityFactor
+from reV.handlers.resource import Resource
 
 
 logger = logging.getLogger(__name__)
@@ -51,7 +55,16 @@ class Gen:
         return self._res_file
 
     @staticmethod
-    def organize_futures(futures):
+    def get_meta_vars(project_points):
+        """Unpack meta and other auxiliary data from project points."""
+        res = Resource(project_points.res_file)
+        meta = res.meta[res.meta.index.isin(project_points.sites)]
+        time_index = res.time_index
+        sam_configs = project_points.sam_configs
+        return meta, time_index, sam_configs
+
+    @staticmethod
+    def unpack_futures(futures):
         """Combine list of futures results into their native dict format/type.
 
         Parameters
@@ -70,6 +83,33 @@ class Gen:
             for key, val in result.items():
                 out[key] = val
         return out
+
+    @staticmethod
+    def unpack_cf_means(gen_out):
+        """Unpack a numpy means 1darray from a gen output dictionary."""
+        out = np.array([val['cf_mean'] for val in gen_out.values()])
+        return out
+
+    @staticmethod
+    def unpack_cf_profiles(gen_out):
+        """Unpack a numpy profiles 2darray from a gen output dictionary."""
+        out = np.array([val['cf_profile']for val in gen_out.values()])
+        return out.transpose()
+
+    @staticmethod
+    def means_to_disk(gen_out, meta, sam_configs, fout='gen_out.h5', mode='w'):
+        """Save capacity factor means to disk."""
+        cf_means = Gen.unpack_cf_means(gen_out)
+        CapacityFactor.write_means(fout, meta, cf_means, sam_configs,
+                                   **{'mode': mode})
+
+    @staticmethod
+    def profiles_to_disk(gen_out, meta, time_index, sam_configs,
+                         fout='gen_out.h5', mode='w'):
+        """Save capacity factor profiles to disk."""
+        cf_profiles = Gen.unpack_cf_profiles(gen_out)
+        CapacityFactor.write_profiles(fout, meta, time_index, cf_profiles,
+                                      sam_configs, **{'mode': mode})
 
     @staticmethod
     def run(points_control, res_file=None, output_request=None, tech=None):
@@ -95,7 +135,7 @@ class Gen:
     @staticmethod
     def direct(tech=None, points=None, sam_files=None, res_file=None,
                output_request=('cf_mean',), n_workers=1, sites_per_split=100,
-               points_range=None):
+               points_range=None, fout=None):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -145,5 +185,66 @@ class Gen:
                                    loggers=[__name__, 'reV.SAM'],
                                    res_file=res_file, tech=tech,
                                    output_request=output_request)
-            out = Gen.organize_futures(out)
+            out = Gen.unpack_futures(out)
+
+        if isinstance(fout, str):
+            if not fout.endswith('.h5'):
+                fout += '.h5'
+                warn('Generation output file request must be .h5, '
+                     'set to: {}'.format(fout))
+            meta, ti, sam_configs = Gen.get_meta_vars(pc.project_points)
+            if 'profile' in str(output_request):
+                Gen.profiles_to_disk(out, meta, ti, sam_configs, fout=fout)
+            else:
+                Gen.means_to_disk(out, meta, sam_configs, fout=fout)
+
         return out
+
+
+if __name__ == '__main__':
+    import h5py
+    from reV import __testdatadir__
+    from reV.rev_logger import init_logger
+    import os
+
+    name = 'reV'
+    tech = 'pv'
+    points = slice(0, 10)
+    sam_files = __testdatadir__ + '/SAM/naris_pv_1axis_inv13.json'
+    res_file = __testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5'
+    output_request = ('cf_mean', 'cf_profile')
+    sites_per_core = 100
+    n_workers = 1
+    verbose = True
+
+    if verbose:
+        log_level = 'DEBUG'
+    else:
+        log_level = 'INFO'
+
+    log_modules = [__name__, 'reV.SAM', 'reV.config', 'reV.generation',
+                   'reV.execution', 'reV.handlers']
+    log_dir = 'logs'
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+
+    for module in log_modules:
+        init_logger(module, log_level=log_level,
+                    log_file=os.path.join(log_dir, '{}.log'.format(name)))
+
+    out = Gen.direct(tech=tech,
+                     points=points,
+                     sam_files=sam_files,
+                     res_file=res_file,
+                     output_request=output_request,
+                     n_workers=n_workers,
+                     sites_per_split=sites_per_core,
+                     fout='test')
+
+    with h5py.File('test.h5', 'r') as f:
+        print(list(f.keys()))
+        print(f['cf_means'][...])
+        print(list(f['cf_means'].attrs))
+        print(f['cf_means'].attrs['scale_factor'])
+        print(f['meta'].attrs['0'])
+        print(f['meta'][...])

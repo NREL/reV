@@ -616,6 +616,9 @@ class SAM:
             Resource file with full path.
         output_request : list | tuple
             Outputs to retrieve from SAM.
+        return_meta : bool
+            Adds meta key/value pair to dictionary output. Additional reV
+            variables added to the meta series.
 
         Returns
         -------
