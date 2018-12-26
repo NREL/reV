@@ -2,9 +2,12 @@
 Classes to handle capacity factor profiles and annual averages
 """
 import h5py
+import json
 import numpy as np
+import os
 import pandas as pd
-from reV.exceptions import ResourceRuntimeError
+from reV.exceptions import (ResourceRuntimeError, ResourceKeyError,
+                            ResourceValueError)
 from reV.handler.resource import Resource, parse_keys
 
 
@@ -24,20 +27,31 @@ class CapacityFactor(Resource):
             Mode to instantiate h5py.File instance
         """
         self._h5_file = h5_file
+        self._h5 = h5py.File(h5_file, mode=mode)
         self._unscale = unscale
         self._mode = mode
 
-    def __enter__(self):
-        self.open_h5()
-        return self
-
     def __len__(self):
-        length = None
-        if self.hasattr('_h5'):
-            if 'time_index' in self._h5:
-                length = super(CapacityFactor).len(self)
+        _len = 0
+        if 'time_index' in self.dsets:
+            _len = super().__len__()
 
-        return length
+        return _len
+
+    def __getitem__(self, keys):
+        ds, ds_slice = parse_keys(keys)
+        if ds in self.dsets:
+            if ds == 'time_index':
+                out = self._time_index(*ds_slice)
+            elif ds == 'meta':
+                out = self._meta(*ds_slice)
+            else:
+                out = self._get_ds(ds, *ds_slice)
+        else:
+            msg = '{} is not a valid Dataset'
+            raise ResourceKeyError(msg)
+
+        return out
 
     def __setitem__(self, keys, arr):
         if self.writable:
@@ -60,13 +74,12 @@ class CapacityFactor(Resource):
         tuple
             shape of variables arrays == (time, locations)
         """
-        shape = None
-        if self.hasattr('_h5'):
-            if 'time_index' in self._h5 and 'meta' in self._h5:
-                shape = (len(self._h5['time_index'].shape[0]),
-                         len(self._h5['meta'].shape[0]))
+        _shape = None
+        dsets = self.dsets
+        if 'time_index' in dsets and 'meta' in dsets:
+            _shape = super().shape
 
-        return shape
+        return _shape
 
     @property
     def writable(self):
@@ -88,7 +101,7 @@ class CapacityFactor(Resource):
     @meta.setter
     def meta(self, meta):
         """
-        Write meta data to disc, convert type if neccessary
+        Write meta data to disk, convert type if neccessary
 
         Parameters
         ----------
@@ -98,8 +111,11 @@ class CapacityFactor(Resource):
         if isinstance(meta, pd.DataFrame):
             meta = self.to_records_array(meta)
 
-        ds_slice = slice(None, None, None)
-        self._set_ds_array('meta', meta, ds_slice)
+        if 'meta' in self.dsets:
+            ds_slice = slice(None, None, None)
+            self._set_ds_array('meta', meta, ds_slice)
+        else:
+            self.create_ds('meta', meta.shape, meta.dtype, data=meta)
 
     @time_index.setter
     def time_index(self, time_index):
@@ -114,8 +130,67 @@ class CapacityFactor(Resource):
         if isinstance(time_index, pd.DatetimeIndex):
             time_index = np.array(time_index.astype(str), dtype='S20')
 
-        ds_slice = slice(None, None, None)
-        self._set_ds_array('time_index', time_index, ds_slice)
+        if 'time_index' in self.dsets:
+            ds_slice = slice(None, None, None)
+            self._set_ds_array('time_index', time_index, ds_slice)
+        else:
+            self.create_ds('time_index', time_index.shape, time_index.dtype,
+                           data=time_index)
+
+    @property
+    def SAM_configs(self):
+        """
+        SAM configuration JSONs used to create CF profiles
+
+        Returns
+        -------
+        configs : dict
+            Dictionary of SAM configuration JSONs
+        """
+        if 'meta' in self.dsets:
+            configs = {k: json.loads(v)
+                       for k, v in self._h5['meta'].attrs.items()}
+        else:
+            configs = {}
+
+        return configs
+
+    def get_config(self, config_name):
+        """
+        Get SAM config
+
+        Parameters
+        ----------
+        config_name : str
+            Name of config
+
+        Returns
+        -------
+        config : dict
+            SAM config JSON as a dictionary
+        """
+        if 'meta' in self.dsets:
+            config = self._h5['meta'].attrs[config_name]
+        else:
+            config = None
+
+        return config
+
+    def set_configs(self, SAM_configs):
+        """
+        Set SAM configuration JSONs as attributes of 'meta'
+
+        Parameters
+        ----------
+        SAM_configs : dict
+            Dictionary of SAM configuration JSONs
+        """
+        if self.writable:
+            for key, config in SAM_configs.items():
+                if isinstance(config, dict):
+                    config = json.dumps(config)
+
+                self._h5['meta'].attr[key] = config
 
     @staticmethod
     def get_dtype(col):
@@ -181,21 +256,22 @@ class CapacityFactor(Resource):
 
     def _set_ds_array(self, ds_name, arr, *ds_slice):
         """
-        Write ds to disc
-        """
-        close = False
-        if not self.hasattr('_h5'):
-            close = True
-            self.open()
+        Write ds to disk
 
+        Parameters
+        ----------
+        ds_name : str
+            Dataset name
+        arr : ndarray
+            Dataset data array
+        ds_slice : tuple
+            Dataset slicing that corresponds to arr
+        """
         if ds_name not in self._h5:
             msg = '{} must be initialized!'.format(ds_name)
             raise ResourceRuntimeError(msg)
 
         self._h5[ds_name][ds_slice] = arr
-
-        if close:
-            self.close()
 
     def _chunks(self, chunks):
         """
@@ -230,7 +306,8 @@ class CapacityFactor(Resource):
 
         return ds_chunks
 
-    def create_ds(self, ds_name, shape, dtype, chunks=None, attrs=None):
+    def create_ds(self, ds_name, shape, dtype, chunks=None, attrs=None,
+                  data=None):
         """
         Initialize dataset
 
@@ -246,31 +323,96 @@ class CapacityFactor(Resource):
             Dataset chunk size
         attrs : dict
             Dataset attributes
+        data : ndarray
+            Dataset data array
         """
         if self.writable:
-            close = False
-            if not self.hasattr('_h5'):
-                close = True
-                self.open()
-
+            chunks = self._chunks(chunks)
             ds = self._h5.create_dataset(ds_name, shape=shape, dtype=dtype,
                                          chunks=chunks)
             if attrs is not None:
                 for key, value in attrs.items():
                     ds.attrs[key] = value
 
-            if close:
-                self.close()
+            if data is not None:
+                ds[...] = data
 
-    def open_h5(self):
+    @classmethod
+    def write_profiles(cls, h5_file, meta, time_index, cf_profiles,
+                       SAM_configs, **kwargs):
         """
-        Initialize h5py File instance
-        """
-        self._h5 = h5py.File(self._h5_path, mode=self._mode)
+        Write cf_profiles to disk
 
-    def close_h5(self):
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        meta : pandas.Dataframe
+            Locational meta data
+        time_index : pandas.DatetimeIndex
+            Temporal timesteps
+        cf_profiles : ndarray
+            Capacity factor profiles
+        SAM_configs : dict
+            Dictionary of SAM configuration JSONs used to compute cf profiles
         """
-        Close h5 instance
+        if cf_profiles.shape != (len(time_index), len(meta)):
+            msg = 'CF profile dimensions does not match time index and meta'
+            raise ResourceValueError(msg)
+
+        with cls(h5_file, mode=kwargs.get('mode', 'w-')) as cf:
+            # Save time index
+            cf['time_index'] = time_index
+            # Save meta
+            cf['meta'] = meta
+            # Add SAM configurations as attributes to meta
+            cf.set_configs(SAM_configs)
+            # Save CF
+            cf_attrs = {'scale_factor': 1000, 'units': 'unitless'}
+            if np.issubdtype(cf_profiles.dtype, np.floating):
+                cf_profiles = (cf_profiles * 1000).astype('uint16')
+
+            cf.create_ds('cf_profiles', cf_profiles.shape, cf_profiles.dtype,
+                         chunks=(None, 100), attrs=cf_attrs,
+                         data=cf_profiles)
+
+    @classmethod
+    def write_means(cls, h5_file, meta, cf_means, SAM_configs, year=None,
+                    **kwargs):
         """
-        if self.hasattr('_h5'):
-            self._h5.close()
+        Write cf_profiles to disk
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        meta : pandas.Dataframe
+            Locational meta data
+        cf_means : ndarray
+            Capacity factor means
+        SAM_configs : dict
+            Dictionary of SAM configuration JSONs used to compute cf means
+        year : int | str
+            Year for which cf means were computed
+            If None, inferred from h5_file name
+        """
+        if len(cf_means) != len(meta):
+            msg = 'Number of CF means do not match meta'
+            raise ResourceValueError(msg)
+
+        if year is None:
+            # Assumes file name is of type *_{year}.h5
+            year = os.path.basename(h5_file).slit('.')[0].split('_')[-1]
+
+        with cls(h5_file, mode=kwargs.get('mode', 'w-')) as cf:
+            # Save meta
+            cf['meta'] = meta
+            # Add SAM configurations as attributes to meta
+            cf.set_configs(SAM_configs)
+            # Save CF
+            cf_attrs = {'scale_factor': 1000, 'units': 'unitless'}
+            if np.issubdtype(cf_means.dtype, np.floating):
+                cf_means = (cf_means * 1000).astype('uint16')
+
+            cf.create_ds('cf_{}'.format(year), cf_means.shape, cf_means.dtype,
+                         attrs=cf_attrs, data=cf_means)

@@ -398,7 +398,7 @@ class Resource:
         return self
 
     def __exit__(self, type, value, traceback):
-        self.close_h5()
+        self.close()
 
         if type is not None:
             raise
@@ -492,9 +492,9 @@ class Resource:
             Dataset or file attributes
         """
         if dset is None:
-            attrs = {k: v for k, v in self._h5.attrs.items()}
+            attrs = dict(self._h5.attrs)
         else:
-            attrs = {k: v for k, v in self._h5[dset].attrs.items()}
+            attrs = dict(self._h5[dset].attrs)
 
         return attrs
 
@@ -654,7 +654,7 @@ class Resource:
             raise ResourceKeyError('{} not in {}'
                                    .format(ds_name, self.dsets))
 
-    def close_h5(self):
+    def close(self):
         """
         Close h5 instance
         """
