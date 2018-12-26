@@ -611,7 +611,7 @@ class SAM:
 
     @classmethod
     def reV_run(cls, points_control, res_file, output_request=('cf_mean',)):
-        """Execute a SAM simulation for a single site with default reV outputs.
+        """Execute SAM simulations based on a reV points control instance.
 
         Parameters
         ----------
@@ -914,6 +914,7 @@ class OffshoreWind(LandBasedWind):
 class Economic(SAM):
     """Base class for SAM economic models.
     """
+    MODULE = None
 
     def __init__(self, ssc, data, parameters, output_request):
         """Initialize a SAM economic model object.
@@ -939,8 +940,15 @@ class Economic(SAM):
         # set attribute to store site number
         self.site = None
 
-        self._ssc = ssc
-        self._data = data
+        if ssc is None and data is None:
+            # SAM generation simulation core not passed in. Create new SSC.
+            self._ssc = PySSC()
+            self._data = self._ssc.data_create()
+        else:
+            # Received SAM generation SSC.
+            self._ssc = ssc
+            self._data = data
+
         self.output_request = output_request
 
         # Use Parameters class to manage inputs, defaults, and requirements.
@@ -954,6 +962,42 @@ class Economic(SAM):
         """
         self.set_parameters()
         super().execute(modules_to_run, close=close)
+
+    @classmethod
+    def reV_run(cls, points_control, output_request=('lcoe_fcr',)):
+        """Execute SAM simulations based on a reV points control instance.
+
+        Parameters
+        ----------
+        points_control : config.PointsControl
+            PointsControl instance containing project points site and SAM
+            config info.
+        output_request : list | tuple
+            Outputs to retrieve from SAM.
+
+        Returns
+        -------
+        out : dict
+            Nested dictionaries where the top level key is the site index,
+            the second level key is the variable name, second level value is
+            the output variable value.
+        """
+
+        out = {}
+
+        for site in points_control.sites:
+            # get SAM inputs from project_points based on the current site
+            config, inputs = points_control.project_points[site]
+            # iterate through requested sites.
+            sim = cls(ssc=None, data=None, parameters=inputs,
+                      output_request=output_request)
+            sim.execute(cls.MODULE)
+            out[site] = sim.outputs
+
+            logger.debug('Outputs for site {} with config "{}", \n\t{}...'
+                         .format(site, config, str(out[site])[:100]))
+
+        return out
 
 
 class LCOE(Economic):
