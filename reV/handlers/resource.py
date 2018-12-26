@@ -398,7 +398,7 @@ class Resource:
         return self
 
     def __exit__(self, type, value, traceback):
-        self.close()
+        self.close_h5()
 
         if type is not None:
             raise
@@ -654,7 +654,7 @@ class Resource:
             raise ResourceKeyError('{} not in {}'
                                    .format(ds_name, self.dsets))
 
-    def close(self):
+    def close_h5(self):
         """
         Close h5 instance
         """

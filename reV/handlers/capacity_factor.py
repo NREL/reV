@@ -28,16 +28,16 @@ class CapacityFactor(Resource):
         self._mode = mode
 
     def __enter__(self):
-        self.open()
+        self.open_h5()
         return self
 
     def __len__(self):
-        len = None
+        length = None
         if self.hasattr('_h5'):
             if 'time_index' in self._h5:
-                len = super(CapacityFactor).len(self)
+                length = super(CapacityFactor).len(self)
 
-        return len
+        return length
 
     def __setitem__(self, keys, arr):
         if self.writable:
@@ -262,13 +262,13 @@ class CapacityFactor(Resource):
             if close:
                 self.close()
 
-    def open(self):
+    def open_h5(self):
         """
         Initialize h5py File instance
         """
         self._h5 = h5py.File(self._h5_path, mode=self._mode)
 
-    def close(self):
+    def close_h5(self):
         """
         Close h5 instance
         """
