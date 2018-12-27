@@ -6,6 +6,7 @@ import json
 import numpy as np
 import os
 import pandas as pd
+import re
 from reV.exceptions import (ResourceRuntimeError, ResourceKeyError,
                             ResourceValueError)
 from reV.handlers.resource import Resource, parse_keys
@@ -229,7 +230,8 @@ class CapacityFactor(Resource):
 
         return out
 
-    def to_records_array(self, df):
+    @staticmethod
+    def to_records_array(df):
         """
         Convert pandas DataFrame to numpy Records Array
 
@@ -246,7 +248,7 @@ class CapacityFactor(Resource):
         meta_arrays = []
         dtypes = []
         for c_name, c_data in df.iteritems():
-            dtype = self.get_dtype(c_data)
+            dtype = CapacityFactor.get_dtype(c_data)
             if np.issubdtype(dtype, np.bytes_):
                 data = c_data.str.encode('utf-8').values
             else:
@@ -405,8 +407,14 @@ class CapacityFactor(Resource):
             raise ResourceValueError(msg)
 
         if year is None:
-            # Assumes file name is of type *_{year}.h5
-            year = os.path.basename(h5_file).slit('.')[0].split('_')[-1]
+            # Attempt to parse year from file name
+            f_name = os.path.basename(h5_file)
+            match = re.match(r'.*([1-3][0-9]{3})', f_name)
+            if match:
+                year = int(match.group(1))
+            else:
+                msg = 'Cannot parse year from {}'.format(f_name)
+                raise ResourceValueError(msg)
 
         with cls(h5_file, mode=kwargs.get('mode', 'w-')) as cf:
             # Save meta
