@@ -407,6 +407,12 @@ class SAM:
             self.ssc.data_set_number(self.res_data, var_map[var],
                                      self.meta[var])
 
+    @staticmethod
+    def drop_leap(resource):
+        """Drop Feb 29th from all dataframes in resource dict."""
+        leap_day = ((resource.index.month == 2) & (resource.index.day == 29))
+        return resource.drop(resource.index[leap_day])
+
     def set_time_index(self, time_index, time_vars=('year', 'month', 'day',
                                                     'hour', 'minute')):
         """Set the SAM time index variables.
@@ -421,6 +427,7 @@ class SAM:
         """
 
         time_index = self.make_datetime(time_index)
+
         for var in time_vars:
             self.ssc.data_set_array(self.res_data, var,
                                     getattr(time_index.dt, var).values)
@@ -653,7 +660,7 @@ class Solar(SAM):
     """
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+                 output_request=None, drop_leap=True):
         """Initialize a SAM solar object.
 
         Parameters
@@ -668,7 +675,14 @@ class Solar(SAM):
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data.
         """
+
+        # drop the leap day
+        if drop_leap:
+            resource = self.drop_leap(resource)
+
         # don't pass resource to base class, set in set_nsrdb instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,
                          output_request=output_request)
@@ -797,7 +811,7 @@ class Wind(SAM):
     """
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+                 output_request=None, drop_leap=True):
         """Initialize a SAM wind object.
 
         Parameters
@@ -812,7 +826,13 @@ class Wind(SAM):
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data.
         """
+
+        # drop the leap day
+        if drop_leap:
+            resource = self.drop_leap(resource)
 
         # don't pass resource to base class, set in set_wtk instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,

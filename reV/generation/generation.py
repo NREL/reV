@@ -50,18 +50,51 @@ class Gen:
         return self._points_control.project_points
 
     @property
+    def sam_configs(self):
+        """Get the sam config dictionary."""
+        return self.project_points.sam_configs
+
+    @property
     def res_file(self):
         """Get the resource filename and path."""
         return self._res_file
 
-    @staticmethod
-    def get_meta_vars(project_points):
-        """Unpack meta and other auxiliary data from project points."""
-        res = Resource(project_points.res_file)
-        meta = res.meta[res.meta.index.isin(project_points.sites)]
-        time_index = res.time_index
-        sam_configs = project_points.sam_configs
-        return meta, time_index, sam_configs
+    @property
+    def meta(self):
+        """Get the generation resource meta data."""
+        if not hasattr(self, '_meta'):
+            with Resource(self.res_file) as res:
+                self._meta = res.meta[res.meta.index.isin(
+                    self.project_points.sites)]
+                self._meta['rid'] = self.project_points.sites
+                self._meta['reV_tech'] = self.project_points.tech
+                self._meta['sam_config'] = [self.project_points[site][0] for
+                                            site in self.project_points.sites]
+        return self._meta
+
+    @meta.setter
+    def meta(self, key_val):
+        """Add a (key, value) pair as a column in the meta dataframe."""
+        if not hasattr(self, '_meta'):
+            self._meta = self.meta
+        if len(key_val[1]) != len(self._meta):
+            raise ValueError('Data can only be added to meta if it is the '
+                             'same length. Meta length: {}, trying to add: '
+                             '\n{}'.format(len(self._meta), key_val[1]))
+        self._meta[key_val[0]] = key_val[1]
+
+    @property
+    def time_index(self, drop_leap=True):
+        """Get the generation resource time index data."""
+        if not hasattr(self, '_time_index'):
+            with Resource(self.res_file) as res:
+                self._time_index = res.time_index
+            if drop_leap:
+                leap_day = ((self._time_index.month == 2) &
+                            (self._time_index.day == 29))
+                self._time_index = self._time_index.drop(
+                    self._time_index[leap_day])
+        return self._time_index
 
     @staticmethod
     def unpack_futures(futures):
@@ -77,65 +110,57 @@ class Gen:
         out : dict
             Compiled results of the native future results type (dict).
         """
-
         out = {}
-        for result in futures:
-            for key, val in result.items():
-                out[key] = val
+        {out.update(x) for x in futures}
         return out
 
     @staticmethod
     def unpack_cf_means(gen_out):
         """Unpack a numpy means 1darray from a gen output dictionary."""
-        out = np.array([val['cf_mean'] for val in gen_out.values()])
+        sorted_keys = sorted(list(gen_out.keys()), key=float)
+        out = np.array([gen_out[k]['cf_mean'] for k in sorted_keys])
         return out
 
     @staticmethod
     def unpack_cf_profiles(gen_out):
         """Unpack a numpy profiles 2darray from a gen output dictionary."""
-        out = np.array([val['cf_profile']for val in gen_out.values()])
+        sorted_keys = sorted(list(gen_out.keys()), key=float)
+        out = np.array([gen_out[k]['cf_profile'] for k in sorted_keys])
         return out.transpose()
 
-    @staticmethod
-    def means_to_disk(gen_out, meta, sam_configs, fout='gen_out.h5', mode='w'):
+    def means_to_disk(self, gen_out, fout='gen_out.h5', mode='w'):
         """Save capacity factor means to disk."""
-        cf_means = Gen.unpack_cf_means(gen_out)
-        CapacityFactor.write_means(fout, meta, cf_means, sam_configs,
+        cf_means = self.unpack_cf_means(gen_out)
+        self.meta = ('cf_means', cf_means)
+        CapacityFactor.write_means(fout, self.meta, cf_means, self.sam_configs,
                                    **{'mode': mode})
 
-    @staticmethod
-    def profiles_to_disk(gen_out, meta, time_index, sam_configs,
-                         fout='gen_out.h5', mode='w'):
+    def profiles_to_disk(self, gen_out, fout='gen_out.h5', mode='w'):
         """Save capacity factor profiles to disk."""
-        cf_profiles = Gen.unpack_cf_profiles(gen_out)
-        CapacityFactor.write_profiles(fout, meta, time_index, cf_profiles,
-                                      sam_configs, **{'mode': mode})
+        cf_profiles = self.unpack_cf_profiles(gen_out)
+        self.meta = ('cf_means', self.unpack_cf_means(gen_out))
+        CapacityFactor.write_profiles(fout, self.meta, self.time_index,
+                                      cf_profiles, self.sam_configs,
+                                      **{'mode': mode})
 
     @staticmethod
     def run(points_control, res_file=None, output_request=None, tech=None):
-        """Run a generation compute."""
+        """Run a generation analysis."""
+        sam_funs = {'pv': PV.reV_run,
+                    'csp': CSP.reV_run,
+                    'landbasedwind': LandBasedWind.reV_run,
+                    'offshorewind': OffshoreWind.reV_run,
+                    }
 
-        if tech == 'pv':
-            out = PV.reV_run(points_control, res_file,
+        out = sam_funs[tech](points_control, res_file,
                              output_request=output_request)
-        elif tech == 'csp':
-            out = CSP.reV_run(points_control, res_file,
-                              output_request=output_request)
-        elif tech == 'landbasedwind':
-            out = LandBasedWind.reV_run(points_control, res_file,
-                                        output_request=output_request)
-        elif tech == 'offshorewind':
-            out = OffshoreWind.reV_run(points_control, res_file,
-                                       output_request=output_request)
-        else:
-            raise ValueError('Technology not recognized: {}'.format(tech))
 
         return out
 
-    @staticmethod
-    def direct(tech=None, points=None, sam_files=None, res_file=None,
-               output_request=('cf_mean',), n_workers=1, sites_per_split=100,
-               points_range=None, fout=None):
+    @classmethod
+    def direct(cls, tech=None, points=None, sam_files=None, res_file=None,
+               cf_profiles=True, n_workers=1, sites_per_split=100,
+               points_range=None, fout=None, return_obj=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -152,12 +177,21 @@ class Gen:
             of unique configs requested by points csv.
         res_file : str
             Single resource file with path.
-        output_request : list | tuple
-            Output variables requested from SAM.
+        cf_profiles : bool
+            Enables capacity factor annual profile output. Capacity factor
+            means output if this is False.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
             Number of sites to run in series on a core.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the
+            reV.config.PointsControl.split_range property.
+        fout : str | None
+            Optional .h5 output file specification.
+        return_obj : bool
+            Return the Gen object instance.
 
         Returns
         -------
@@ -167,45 +201,58 @@ class Gen:
             the output variable value.
         """
 
-        pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
+        # create the output request tuple
+        output_request = ('cf_mean',)
+        if cf_profiles:
+            output_request += ('cf_profile',)
 
+        # make Project Points and Points Control instances
+        pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
         if points_range is None:
             pc = PointsControl(pp, sites_per_split=sites_per_split)
         else:
             pc = PointsControl.split(points_range[0], points_range[1], pp,
                                      sites_per_split=sites_per_split)
 
+        # make a Gen class instance to operate with
+        gen = cls(pc, res_file, output_request=output_request)
+
+        # use serial or parallel execution control based on n_workers
         if n_workers == 1:
             logger.debug('Running serial generation for: {}'.format(pc))
-            out = execute_single(Gen.run, pc, res_file=res_file, tech=tech,
+            out = execute_single(gen.run, pc, res_file=res_file, tech=tech,
                                  output_request=output_request)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(Gen.run, pc, n_workers=n_workers,
+            out = execute_parallel(gen.run, pc, n_workers=n_workers,
                                    loggers=[__name__, 'reV.SAM'],
                                    res_file=res_file, tech=tech,
                                    output_request=output_request)
-            out = Gen.unpack_futures(out)
+            out = gen.unpack_futures(out)
 
+        # save output data to object attribute
+        gen.out = out
+
+        # handle output file request
         if isinstance(fout, str):
             if not fout.endswith('.h5'):
                 fout += '.h5'
                 warn('Generation output file request must be .h5, '
-                     'set to: {}'.format(fout))
-            meta, ti, sam_configs = Gen.get_meta_vars(pc.project_points)
+                     'set to: "{}"'.format(fout))
             if 'profile' in str(output_request):
-                Gen.profiles_to_disk(out, meta, ti, sam_configs, fout=fout)
+                gen.profiles_to_disk(gen.out, fout=fout)
             else:
-                Gen.means_to_disk(out, meta, sam_configs, fout=fout)
+                gen.means_to_disk(gen.out, fout=fout)
 
-        return out
+        # optionally return Gen object (useful for debugging)
+        if return_obj:
+            return gen
 
 
 if __name__ == '__main__':
     import h5py
     from reV import __testdatadir__
-    from reV.rev_logger import init_logger
-    import os
+    import pandas as pd
 
     name = 'reV'
     tech = 'pv'
@@ -217,34 +264,23 @@ if __name__ == '__main__':
     n_workers = 1
     verbose = True
 
-    if verbose:
-        log_level = 'DEBUG'
-    else:
-        log_level = 'INFO'
-
-    log_modules = [__name__, 'reV.SAM', 'reV.config', 'reV.generation',
-                   'reV.execution', 'reV.handlers']
-    log_dir = 'logs'
-    if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
-
-    for module in log_modules:
-        init_logger(module, log_level=log_level,
-                    log_file=os.path.join(log_dir, '{}.log'.format(name)))
-
-    out = Gen.direct(tech=tech,
+    gen = Gen.direct(tech=tech,
                      points=points,
                      sam_files=sam_files,
                      res_file=res_file,
-                     output_request=output_request,
                      n_workers=n_workers,
                      sites_per_split=sites_per_core,
-                     fout='test')
+                     fout='test.h5')
 
     with h5py.File('test.h5', 'r') as f:
+        var = 'cf_profiles'
+        data = f[var][...]
+        ti = pd.DataFrame(f['time_index'][...])
+        meta = pd.DataFrame(f['meta'][...])
         print(list(f.keys()))
-        print(f['cf_means'][...])
-        print(list(f['cf_means'].attrs))
-        print(f['cf_means'].attrs['scale_factor'])
+        print(data)
+        print(list(f[var].attrs))
+        print(f[var].attrs['scale_factor'])
+        print(list(f['meta'].attrs))
         print(f['meta'].attrs['0'])
-        print(f['meta'][...])
+        print(meta)

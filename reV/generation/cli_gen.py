@@ -11,7 +11,7 @@ from reV.execution.execution import PBS
 from reV.generation.generation import Gen
 from reV.rev_logger import init_logger
 from reV import __testdatadir__
-from reV.cli import INT, PROJECTPOINTS, INTLIST, STRLIST, SAMFILES
+from reV.cli import INT, PROJECTPOINTS, INTLIST, SAMFILES
 
 
 logger = logging.getLogger(__name__)
@@ -32,17 +32,16 @@ logger = logging.getLogger(__name__)
 @click.option('--res_file', '-rf',
               default=__testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5',
               help='Single resource file (str). Defaults to test NSRDB file.')
-@click.option('--output_request', '-or', default=['cf_mean'], type=STRLIST,
-              help=('Output variable requests from SAM (list or tuple). '
-                    'Defaults to ["cf_mean"].'))
 @click.option('--sites_per_core', '-spc', default=100, type=INT,
               help=('Number of sites to run in series on a single core. '
                     'Defaults to 100.'))
+@click.option('-cfp', '--cf_profiles', is_flag=True,
+              help='Flag to output/save capacity factor profiles.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def main(ctx, name, tech, points, sam_files, res_file, output_request,
-         sites_per_core, verbose):
+def main(ctx, name, tech, points, sam_files, res_file, sites_per_core,
+         cf_profiles, verbose):
     """reV 2.0 generation command line interface."""
     ctx.ensure_object(dict)
     ctx.obj['name'] = name
@@ -50,8 +49,8 @@ def main(ctx, name, tech, points, sam_files, res_file, output_request,
     ctx.obj['points'] = points
     ctx.obj['sam_files'] = sam_files
     ctx.obj['res_file'] = res_file
-    ctx.obj['output_request'] = output_request
     ctx.obj['sites_per_core'] = sites_per_core
+    ctx.obj['cf_profiles'] - cf_profiles
     ctx.obj['verbose'] = verbose
 
 
@@ -76,8 +75,8 @@ def local(ctx, n_workers, points_range, verbose):
     points = ctx.obj['points']
     sam_files = ctx.obj['sam_files']
     res_file = ctx.obj['res_file']
-    output_request = ctx.obj['output_request']
     sites_per_core = ctx.obj['sites_per_core']
+    cf_profiles = ctx.obj['cf_profiles']
     verbose = any([verbose, ctx.obj['verbose']])
 
     if verbose:
@@ -108,7 +107,7 @@ def local(ctx, n_workers, points_range, verbose):
                      points=points,
                      sam_files=sam_files,
                      res_file=res_file,
-                     output_request=output_request,
+                     cf_profiles=cf_profiles,
                      n_workers=n_workers,
                      sites_per_split=sites_per_core,
                      points_range=points_range)
@@ -129,8 +128,8 @@ def pbs(ctx, nodes, verbose):
     points = ctx.obj['points']
     sam_files = ctx.obj['sam_files']
     res_file = ctx.obj['res_file']
-    output_request = ctx.obj['output_request']
     sites_per_core = ctx.obj['sites_per_core']
+    cf_profiles = ctx.obj['cf_profiles']
     verbose = any([verbose, ctx.obj['verbose']])
 
     if verbose:
@@ -163,15 +162,16 @@ def pbs(ctx, nodes, verbose):
                     '-p={points} '
                     '-sf={sam_files} '
                     '-rf={res_file} '
-                    '-or={output_request} '
                     '-spc={sites_per_core} '
+                    '{cfp} '
                     .format(name=PBS.s(node_name),
                             tech=PBS.s(tech),
                             points=PBS.s(points),
                             sam_files=PBS.s(sam_files),
                             res_file=PBS.s(res_file),
-                            output_request=PBS.s(output_request),
-                            sites_per_core=PBS.s(sites_per_core)))
+                            sites_per_core=PBS.s(sites_per_core),
+                            cfp='-cfp' if cf_profiles else '',
+                            ))
 
         arg_loc = ('-nw={n_workers} '
                    '-pr={points_range} '
