@@ -474,7 +474,7 @@ class Resource:
         time_index : pandas.DatetimeIndex
             Resource datetime index
         """
-        time_index = pd.to_datetime(self._h5['time_index'][...])
+        time_index = pd.to_datetime(self._h5['time_index'][...].astype(str))
         return time_index
 
     def get_attrs(self, dset=None):

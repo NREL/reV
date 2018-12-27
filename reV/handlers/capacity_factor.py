@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from reV.exceptions import (ResourceRuntimeError, ResourceKeyError,
                             ResourceValueError)
-from reV.handler.resource import Resource, parse_keys
+from reV.handlers.resource import Resource, parse_keys
 
 
 class CapacityFactor(Resource):
@@ -98,7 +98,7 @@ class CapacityFactor(Resource):
 
         return True
 
-    @meta.setter
+    @Resource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
         """
         Write meta data to disk, convert type if neccessary
@@ -117,7 +117,7 @@ class CapacityFactor(Resource):
         else:
             self.create_ds('meta', meta.shape, meta.dtype, data=meta)
 
-    @time_index.setter
+    @Resource.time_index.setter  # pylint: disable-msg=E1101
     def time_index(self, time_index):
         """
         Write time_index to dics, convert type if neccessary
@@ -170,7 +170,7 @@ class CapacityFactor(Resource):
             SAM config JSON as a dictionary
         """
         if 'meta' in self.dsets:
-            config = self._h5['meta'].attrs[config_name]
+            config = json.loads(self._h5['meta'].attrs[config_name])
         else:
             config = None
 
@@ -189,6 +189,9 @@ class CapacityFactor(Resource):
             for key, config in SAM_configs.items():
                 if isinstance(config, dict):
                     config = json.dumps(config)
+
+                if not isinstance(key, str):
+                    key = str(key)
 
                 self._h5['meta'].attr[key] = config
 
@@ -211,9 +214,9 @@ class CapacityFactor(Resource):
             -  object/str = U* max length of strings in col
         """
         dtype = col.dtype
-        if np.issubdtype(dtype, np.float):
+        if np.issubdtype(dtype, np.floating):
             out = 'float32'
-        elif np.issubdtype(dtype, np.int):
+        elif np.issubdtype(dtype, np.integer):
             if col.max() < 32767:
                 out = 'int16'
             else:
@@ -248,6 +251,7 @@ class CapacityFactor(Resource):
                 data = c_data.str.encode('utf-8').values
             else:
                 data = c_data.values
+
             arr = np.array(data, dtype=dtype)
             meta_arrays.append(arr)
             dtypes.append((c_name, dtype))
