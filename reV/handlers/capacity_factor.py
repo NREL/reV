@@ -194,7 +194,7 @@ class CapacityFactor(Resource):
                 if not isinstance(key, str):
                     key = str(key)
 
-                self._h5['meta'].attr[key] = config
+                self._h5['meta'].attrs[key] = config
 
     @staticmethod
     def get_dtype(col):
@@ -299,12 +299,12 @@ class CapacityFactor(Resource):
             if chunks[0] is None:
                 chunk_0 = shape[0]
             else:
-                chunk_0 = chunks[0]
+                chunk_0 = np.min((shape[0], chunks[0]))
 
             if chunks[1] is None:
                 chunk_1 = shape[1]
             else:
-                chunk_1 = chunks[1]
+                chunk_1 = np.min((shape[1], chunks[1]))
 
             ds_chunks = (chunk_0, chunk_1)
         else:
@@ -345,7 +345,7 @@ class CapacityFactor(Resource):
 
     @classmethod
     def write_profiles(cls, h5_file, meta, time_index, cf_profiles,
-                       SAM_configs, **kwargs):
+                       SAM_configs, cf_chunks=(None, 100), **kwargs):
         """
         Write cf_profiles to disk
 
@@ -361,6 +361,8 @@ class CapacityFactor(Resource):
             Capacity factor profiles
         SAM_configs : dict
             Dictionary of SAM configuration JSONs used to compute cf profiles
+        cf_chunks : tuple
+            Chunk size for capacity factor profiles dataset
         """
         if cf_profiles.shape != (len(time_index), len(meta)):
             msg = 'CF profile dimensions does not match time index and meta'
@@ -379,12 +381,12 @@ class CapacityFactor(Resource):
                 cf_profiles = (cf_profiles * 1000).astype('uint16')
 
             cf.create_ds('cf_profiles', cf_profiles.shape, cf_profiles.dtype,
-                         chunks=(None, 100), attrs=cf_attrs,
+                         chunks=cf_chunks, attrs=cf_attrs,
                          data=cf_profiles)
 
     @classmethod
     def write_means(cls, h5_file, meta, cf_means, SAM_configs, year=None,
-                    **kwargs):
+                    cf_chunks=None, **kwargs):
         """
         Write cf_profiles to disk
 
@@ -401,6 +403,8 @@ class CapacityFactor(Resource):
         year : int | str
             Year for which cf means were computed
             If None, inferred from h5_file name
+        cf_chunks : tuple
+            Chunk size for capacity factor means dataset
         """
         if len(cf_means) != len(meta):
             msg = 'Number of CF means do not match meta'
@@ -427,4 +431,4 @@ class CapacityFactor(Resource):
                 cf_means = (cf_means * 1000).astype('uint16')
 
             cf.create_ds('cf_{}'.format(year), cf_means.shape, cf_means.dtype,
-                         attrs=cf_attrs, data=cf_means)
+                         chunks=cf_chunks, attrs=cf_attrs, data=cf_means)
