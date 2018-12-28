@@ -55,6 +55,11 @@ class Gen:
         return self.project_points.sam_configs
 
     @property
+    def tech(self):
+        """Get the reV technology string."""
+        return self.project_points.tech
+
+    @property
     def res_file(self):
         """Get the resource filename and path."""
         return self._res_file
@@ -143,17 +148,32 @@ class Gen:
                                       cf_profiles, self.sam_configs,
                                       **{'mode': mode})
 
-    @staticmethod
-    def run(points_control, res_file=None, output_request=None, tech=None):
-        """Run a generation analysis."""
+    def run(self, points_control):
+        """Run a SAM generation analysis based on the points_control iterator.
+
+        Parameters
+        ----------
+        points_control : reV.config.PointsControl
+            A PointsControl instance dictating what sites and configs are run.
+            This function uses an explicit points control input instance
+            instead of the Gen object property so that this function can be
+            passed alongside the iter object to execution control methods
+            downstream.
+
+        Returns
+        -------
+        out : dict
+            Output dictionary from the target SAM reV_run function.
+        """
+
         sam_funs = {'pv': PV.reV_run,
                     'csp': CSP.reV_run,
                     'landbasedwind': LandBasedWind.reV_run,
                     'offshorewind': OffshoreWind.reV_run,
                     }
 
-        out = sam_funs[tech](points_control, res_file,
-                             output_request=output_request)
+        out = sam_funs[self.tech](points_control, self.res_file,
+                                  output_request=self.output_request)
 
         return out
 
@@ -171,10 +191,10 @@ class Gen:
             Slice specifying project points or string pointing to a project
             points csv.
         sam_files : dict | str | list
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv.
+            Dict contains SAM input configuration ID(s) and file path(s).
+            Keys are the SAM config ID(s), top level value is the SAM path.
+            Can also be a single config file str. If it's a list, it is mapped
+            to the sorted list of unique configs requested by points csv.
         res_file : str
             Single resource file with path.
         cf_profiles : bool
@@ -186,19 +206,18 @@ class Gen:
             Number of sites to run in series on a core.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
-            analyze. To be taken from the
-            reV.config.PointsControl.split_range property.
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
         fout : str | None
             Optional .h5 output file specification.
         return_obj : bool
-            Return the Gen object instance.
+            Option to return the Gen object instance.
 
         Returns
         -------
-        out : dict
-            Nested dictionaries where the top level key is the site index,
-            the second level key is the variable name, second level value is
-            the output variable value.
+        gen : reV.generation.Gen
+            Generation object instance with outputs stored in .out attribute.
+            Only returned if return_obj is True.
         """
 
         # create the output request tuple
@@ -220,14 +239,11 @@ class Gen:
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
             logger.debug('Running serial generation for: {}'.format(pc))
-            out = execute_single(gen.run, pc, res_file=res_file, tech=tech,
-                                 output_request=output_request)
+            out = execute_single(gen.run, pc)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
             out = execute_parallel(gen.run, pc, n_workers=n_workers,
-                                   loggers=[__name__, 'reV.SAM'],
-                                   res_file=res_file, tech=tech,
-                                   output_request=output_request)
+                                   loggers=[__name__, 'reV.SAM'])
             out = gen.unpack_futures(out)
 
         # save output data to object attribute
