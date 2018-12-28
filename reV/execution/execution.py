@@ -25,7 +25,7 @@ class SubprocessManager:
     def make_path(d):
         """Make a directory if it doesn't exist."""
         if not os.path.exists(d):
-            os.mkdir(d)
+            os.makedirs(d)
 
     @staticmethod
     def make_sh(fname, script):
@@ -58,7 +58,7 @@ class SubprocessManager:
 
         if stderr:
             raise Exception('Error occurred submitting job:\n{}'
-                            .format(process.stderr))
+                            .format(stderr))
 
         return stdout, stderr
 

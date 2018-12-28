@@ -2,6 +2,7 @@
 Generation
 """
 import logging
+import os
 import numpy as np
 from warnings import warn
 
@@ -155,15 +156,14 @@ class Gen:
         ----------
         points_control : reV.config.PointsControl
             A PointsControl instance dictating what sites and configs are run.
-            This function uses an explicit points control input instance
-            instead of the Gen object property so that this function can be
-            passed alongside the iter object to execution control methods
-            downstream.
+            This function uses an explicit points_control input instance
+            instead of the Gen object property so that the execute_futures
+            can pass in a split instance of points_control.
 
         Returns
         -------
         out : dict
-            Output dictionary from the target SAM reV_run function.
+            Output dictionary from the SAM reV_run function.
         """
 
         sam_funs = {'pv': PV.reV_run,
@@ -180,7 +180,8 @@ class Gen:
     @classmethod
     def direct(cls, tech=None, points=None, sam_files=None, res_file=None,
                cf_profiles=True, n_workers=1, sites_per_split=100,
-               points_range=None, fout=None, return_obj=True):
+               points_range=None, fout=None, dirout='./gen_out',
+               return_obj=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -210,6 +211,9 @@ class Gen:
             property.
         fout : str | None
             Optional .h5 output file specification.
+        dirout : str | None
+            Optional output directory specification. The directory will be
+            created if it does not already exist.
         return_obj : bool
             Option to return the Gen object instance.
 
@@ -255,6 +259,13 @@ class Gen:
                 fout += '.h5'
                 warn('Generation output file request must be .h5, '
                      'set to: "{}"'.format(fout))
+            # create and use optional output dir
+            if dirout:
+                if not os.path.exists(dirout):
+                    os.makedirs(dirout)
+                # Add output dir to fout string
+                fout = os.path.join(dirout, fout)
+            # write means or profiles to disk
             if 'profile' in str(output_request):
                 gen.profiles_to_disk(gen.out, fout=fout)
             else:

@@ -93,6 +93,25 @@ class IntType(click.ParamType):
                             .format(value, type(value), param, ctx))
 
 
+class StrType(click.ParamType):
+    """String click input argument type."""
+    name = 'str'
+
+    @staticmethod
+    def convert(value, param, ctx):
+        """Convert to int or return as None."""
+        if isinstance(value, str):
+            if 'None' in value:
+                return None
+            else:
+                # Sometimes the equal sign gets passed through with click
+                # strings. Strip out of the arg.
+                return value.strip('=')
+        else:
+            raise TypeError('Cannot recognize int type: {} {} {} {}'
+                            .format(value, type(value), param, ctx))
+
+
 class ListType(click.ParamType):
     """Base list click input argument type."""
     name = 'list'
@@ -151,6 +170,7 @@ class StrListType(ListType):
 
 
 INT = IntType()
+STR = StrType()
 SAMFILES = SAMFilesType()
 PROJECTPOINTS = ProjectPointsType()
 FLOATLIST = FloatListType()
