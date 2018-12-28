@@ -271,43 +271,6 @@ class Gen:
             else:
                 gen.means_to_disk(gen.out, fout=fout)
 
-        # optionally return Gen object (useful for debugging)
+        # optionally return Gen object (useful for debugging and hacking)
         if return_obj:
             return gen
-
-
-if __name__ == '__main__':
-    import h5py
-    from reV import __testdatadir__
-    import pandas as pd
-
-    name = 'reV'
-    tech = 'pv'
-    points = slice(0, 10)
-    sam_files = __testdatadir__ + '/SAM/naris_pv_1axis_inv13.json'
-    res_file = __testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5'
-    output_request = ('cf_mean', 'cf_profile')
-    sites_per_core = 100
-    n_workers = 1
-    verbose = True
-
-    gen = Gen.direct(tech=tech,
-                     points=points,
-                     sam_files=sam_files,
-                     res_file=res_file,
-                     n_workers=n_workers,
-                     sites_per_split=sites_per_core,
-                     fout='test.h5')
-
-    with h5py.File('test.h5', 'r') as f:
-        var = 'cf_profiles'
-        data = f[var][...]
-        ti = pd.DataFrame(f['time_index'][...])
-        meta = pd.DataFrame(f['meta'][...])
-        print(list(f.keys()))
-        print(data)
-        print(list(f[var].attrs))
-        print(f[var].attrs['scale_factor'])
-        print(list(f['meta'].attrs))
-        print(f['meta'].attrs['0'])
-        print(meta)

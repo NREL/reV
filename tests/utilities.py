@@ -9,6 +9,7 @@ import numpy as np
 import os
 
 TESTDIR = os.path.dirname(os.path.realpath(__file__))
+TOLERANCE = 0.001
 
 
 def jsonify_key(key):
@@ -53,7 +54,7 @@ def get_shared_items(x, y):
                     shared_items[k] = v
             elif (isinstance(v, (np.ndarray, list)) and
                     isinstance(y[k], (np.ndarray, list))):
-                if compare_arrays(v, y[k]) < 0.001 * len(v):
+                if np.allclose(v, y[k], atol=TOLERANCE, rtol=TOLERANCE):
                     shared_items[k] = v
             elif x[k] == y[k]:
                 shared_items[k] = v
@@ -78,10 +79,3 @@ def dicts_match(x, y):
         x = set(x.keys())
         y = set(y.keys())
         return False, list(x.symmetric_difference(y))
-
-
-def compare_arrays(a0, a1, threshold=0.001):
-    """Get the number of array entries with fractional diff > threshold."""
-    diff_frac = np.abs(1 - np.abs(np.divide(a0, a1)))
-    count = np.sum(diff_frac > threshold)
-    return count

@@ -9,11 +9,15 @@ Created on Thu Nov 29 09:54:51 2018
 import os
 import h5py
 import pytest
+import numpy as np
 
-import utilities as ut
 from reV.generation.generation import Gen
 from reV.config.config import ProjectPoints
 from reV import __testdatadir__ as TESTDATA
+from reV.handlers.capacity_factor import CapacityFactor
+
+
+TOL = 0.001
 
 
 class pv_results:
@@ -78,78 +82,68 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     sam_files = TESTDATA + '/SAM/naris_pv_1axis_inv13.json'
     res_file = TESTDATA + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
 
-    # initialize the generation module
-    bad_data = 0
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
-    gen_outs = Gen.direct('pv', rev2_points, sam_files, res_file,
-                          n_workers=n_workers, sites_per_split=3)
+    gen = Gen.direct('pv', rev2_points, sam_files, res_file,
+                     n_workers=n_workers, sites_per_split=3, fout=None,
+                     return_obj=True)
 
-    gen_outs = to_list(gen_outs)
+    gen_outs = to_list(gen.out)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
         # get reV 1.0 results
         cf_mean_list = pv.get_cf_mean(pp.sites, year)
 
-        # benchmark the results and count the number of bad results
-        count = ut.compare_arrays(gen_outs, cf_mean_list)
-        bad_data += count
-
-    if bad_data == 0:
-        return True
+    # benchmark the results
+    result = np.allclose(gen_outs, cf_mean_list, rtol=TOL, atol=TOL)
+    return result
 
 
 def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
                      rev2_points=TESTDATA + '/project_points/ri.csv',
                      res_file=TESTDATA + '/nsrdb/ri_100_nsrdb_2012.h5'):
     """Test project points csv input with dictionary-based sam files."""
-    bad_data = 0
     rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
     sam_files = {'sam_param_0': TESTDATA + '/SAM/naris_pv_1axis_inv13.json',
                  'sam_param_1': TESTDATA + '/SAM/naris_pv_1axis_inv13.json'}
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
 
     # run reV 2.0 generation
-    gen_outs = Gen.direct('pv', rev2_points, sam_files, res_file)
-    gen_outs = to_list(gen_outs)
+    gen = Gen.direct('pv', rev2_points, sam_files, res_file, fout=None,
+                     return_obj=True)
+    gen_outs = to_list(gen.out)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
         # get reV 1.0 results
         cf_mean_list = pv.get_cf_mean(pp.sites, '2012')
 
-        # benchmark the results and count the number of bad results
-        count = ut.compare_arrays(gen_outs, cf_mean_list)
-        bad_data += count
-
-    if bad_data == 0:
-        return True
+    # benchmark the results
+    result = np.allclose(gen_outs, cf_mean_list, rtol=TOL, atol=TOL)
+    return result
 
 
 def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
                      rev2_points=TESTDATA + '/project_points/ri.csv',
                      res_file=TESTDATA + '/nsrdb/ri_100_nsrdb_2012.h5'):
     """Test project points csv input with list-based sam files."""
-    bad_data = 0
     rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
     sam_files = [TESTDATA + '/SAM/naris_pv_1axis_inv13.json',
                  TESTDATA + '/SAM/naris_pv_1axis_inv13.json']
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
-    gen_outs = Gen.direct('pv', rev2_points, sam_files, res_file)
-    gen_outs = to_list(gen_outs)
+    gen = Gen.direct('pv', rev2_points, sam_files, res_file, fout=None,
+                     return_obj=True)
+    gen_outs = to_list(gen.out)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
         # get reV 1.0 results
         cf_mean_list = pv.get_cf_mean(pp.sites, '2012')
 
-        # benchmark the results and count the number of bad results
-        count = ut.compare_arrays(gen_outs, cf_mean_list)
-        bad_data += count
-
-    if bad_data == 0:
-        return True
+    # benchmark the results
+    result = np.allclose(gen_outs, cf_mean_list, rtol=TOL, atol=TOL)
+    return result
 
 
 def execute_pytest(capture='all', flags='-rapP'):
@@ -166,6 +160,39 @@ def execute_pytest(capture='all', flags='-rapP'):
 
     pytest.main(['-q', '--show-capture={}'.format(capture),
                  'test_ri_pv_gen.py', flags])
+
+
+@pytest.mark.parametrize('year', [('2012'), ('2013')])
+def test_pv_gen_profiles(year):
+    """Gen PV CF profiles with write to disk and compare against rev1."""
+    res_file = TESTDATA + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATA + '/SAM/naris_pv_1axis_inv13.json'
+    rev2_out_dir = os.path.join(TESTDATA, 'ri_pv_reV2')
+    rev2_out = 'gen_ri_pv_{}.h5'.format(year)
+
+    # run reV 2.0 generation and write to disk
+    Gen.direct('pv', slice(0, 100), sam_files, res_file, fout=rev2_out,
+               n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
+               return_obj=False)
+
+    # get reV 2.0 generation profiles from disk
+    with CapacityFactor(os.path.join(rev2_out_dir, rev2_out), 'r') as cf:
+        rev2_profiles = cf['cf_profiles']
+
+    # get reV 1.0 generation profiles
+    rev1_profiles = get_r1_profiles(year=year)
+
+    result = np.allclose(rev1_profiles, rev2_profiles, rtol=TOL, atol=TOL)
+    return result
+
+
+def get_r1_profiles(year=2012):
+    """Get the first 100 reV 1.0 ri pv generation profiles."""
+    rev1 = os.path.join(TESTDATA, 'ri_pv', 'profile_outputs',
+                        'pv_{}_0.h5'.format(year))
+    with CapacityFactor(rev1) as cf:
+        data = cf['cf_profile'][...] / 10000
+    return data
 
 
 if __name__ == '__main__':

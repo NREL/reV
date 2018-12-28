@@ -410,8 +410,12 @@ class SAM:
     @staticmethod
     def drop_leap(resource):
         """Drop Feb 29th from all dataframes in resource dict."""
-        leap_day = ((resource.index.month == 2) & (resource.index.day == 29))
-        return resource.drop(resource.index[leap_day])
+        if hasattr(resource, 'index'):
+            if hasattr(resource.index, 'month') and hasattr(resource, 'day'):
+                leap_day = ((resource.index.month == 2) &
+                            (resource.index.day == 29))
+                resource = resource.drop(resource.index[leap_day])
+        return resource
 
     def set_time_index(self, time_index, time_vars=('year', 'month', 'day',
                                                     'hour', 'minute')):
@@ -482,18 +486,15 @@ class SAM:
 
     @property
     def cf_profile(self):
-        """Get hourly capacity factor (fractional) profile from SAM.
+        """Get hourly capacity factor (frac) profile in orig timezone.
 
         Returns
         -------
         cf_profile : np.ndarray
             1D numpy array of capacity factor profile.
-            Datatype is float32 and array length is 8760.
+            Datatype is float32 and array length is 8760*time_interval.
         """
-        gen_array = np.array(self.ssc.data_get_array(self.data, 'gen'),
-                             dtype=np.float32)
-        cf_profile = gen_array / self.parameters['system_capacity']
-        return cf_profile
+        return self.gen_profile / self.parameters['system_capacity']
 
     @property
     def annual_energy(self):
@@ -519,27 +520,32 @@ class SAM:
 
     @property
     def gen_profile(self):
-        """Get hourly (8760) AC inverter power generation profile in kW.
+        """Get AC inverter power generation profile (orig timezone) in kW.
 
         Returns
         -------
         output : np.ndarray
             1D array of hourly AC inverter power generation in kW.
-            Datatype is float32 and array length is 8760.
+            Datatype is float32 and array length is 8760*time_interval.
         """
-        return np.array(self.ssc.data_get_array(self.data, 'gen'),
-                        dtype=np.float32)
+        gen = np.array(self.ssc.data_get_array(self.data, 'gen'),
+                       dtype=np.float32)
+        # Roll back to native timezone if resource meta has a timezone
+        if hasattr(self, '_meta'):
+            if self._meta is not None:
+                if 'timezone' in self.meta:
+                    gen = np.roll(gen, -1 * int(self.meta['timezone'] *
+                                                self.time_interval))
+        return gen
 
     @property
     def ppa_price(self):
-        """Get PPA price (cents/kWh)
-        """
+        """Get PPA price (cents/kWh)."""
         return self.ssc.data_get_number(self.data, 'ppa')
 
     @property
     def lcoe_fcr(self):
-        """Get LCOE (cents/kWh).
-        """
+        """Get LCOE (cents/kWh)."""
         return 100 * self.ssc.data_get_number(self.data, 'lcoe_fcr')
 
     def execute(self, modules_to_run, close=True):
