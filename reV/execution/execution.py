@@ -5,6 +5,7 @@ from dask.distributed import Client, LocalCluster
 from subprocess import Popen, PIPE
 import logging
 import os
+import psutil
 import getpass
 import shlex
 from warnings import warn
@@ -13,6 +14,18 @@ from reV.rev_logger import REV_LOGGERS
 
 
 logger = logging.getLogger(__name__)
+
+
+def log_mem():
+    """Print memory status to logger."""
+    mem = psutil.virtual_memory()
+    logger.debug('{0:.3f} GB used of {1:.3f} total ({2:.1f}% used) '
+                 '({3:.2f} GB free) ({4:.2f} GB available).'
+                 ''.format(mem.used / 1e9,
+                           mem.total / 1e9,
+                           100 * mem.used / mem.total,
+                           mem.free / 1e9,
+                           mem.available / 1e9))
 
 
 class SubprocessManager:
@@ -293,6 +306,7 @@ def execute_single(fun, input_obj, worker=0, **kwargs):
 
     logger.debug('Running single serial execution on worker #{} for: {}'
                  .format(worker, input_obj))
+    log_mem()
 
     out = fun(input_obj, **kwargs)
 

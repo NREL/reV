@@ -7,7 +7,7 @@ import numpy as np
 from warnings import warn
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
-from reV.config.config import ProjectPoints, PointsControl
+from reV.config.project_points import ProjectPoints, PointsControl
 from reV.execution.execution import execute_parallel, execute_single
 from reV.handlers.capacity_factor import CapacityFactor
 from reV.handlers.resource import Resource
@@ -72,7 +72,7 @@ class Gen:
             with Resource(self.res_file) as res:
                 self._meta = res.meta[res.meta.index.isin(
                     self.project_points.sites)]
-                self._meta['rid'] = self.project_points.sites
+                self._meta['gid'] = self.project_points.sites
                 self._meta['reV_tech'] = self.project_points.tech
                 self._meta['sam_config'] = [self.project_points[site][0] for
                                             site in self.project_points.sites]
@@ -136,6 +136,8 @@ class Gen:
 
     def means_to_disk(self, gen_out, fout='gen_out.h5', mode='w'):
         """Save capacity factor means to disk."""
+        logger.debug('Flushing generation annual means to disk to file: {}'
+                     .format(fout))
         cf_means = self.unpack_cf_means(gen_out)
         self.meta = ('cf_means', cf_means)
         CapacityFactor.write_means(fout, self.meta, cf_means, self.sam_configs,
@@ -143,11 +145,47 @@ class Gen:
 
     def profiles_to_disk(self, gen_out, fout='gen_out.h5', mode='w'):
         """Save capacity factor profiles to disk."""
+        logger.debug('Flushing generation profiles to disk to file: {}'
+                     .format(fout))
         cf_profiles = self.unpack_cf_profiles(gen_out)
         self.meta = ('cf_means', self.unpack_cf_means(gen_out))
         CapacityFactor.write_profiles(fout, self.meta, self.time_index,
                                       cf_profiles, self.sam_configs,
                                       **{'mode': mode})
+
+    def flush(self, fout='gen_out.h5', dirout='./gen_out', mode='w'):
+        """Flush generation data in self.out attribute to disk in .h5 format.
+
+        Parameters
+        ----------
+        fout : str | None
+            .h5 output file specification. Data will not be written to disk if
+            this is None.
+        dirout : str
+            Output directory specification. The directory will be
+            created if it does not already exist.
+        mode : str
+            .h5 file write mode (e.g. 'w', 'a').
+        """
+
+        # handle output file request
+        if isinstance(fout, str):
+            if not fout.endswith('.h5'):
+                fout += '.h5'
+                warn('Generation output file request must be .h5, '
+                     'set to: "{}"'.format(fout))
+            # create and use optional output dir
+            if dirout:
+                if not os.path.exists(dirout):
+                    os.makedirs(dirout)
+                # Add output dir to fout string
+                fout = os.path.join(dirout, fout)
+            # write means or profiles to disk
+            if 'profile' in str(self.output_request):
+                self.profiles_to_disk(self.out, fout=fout, mode=mode)
+            else:
+                self.means_to_disk(self.out, fout=fout, mode=mode)
+            logger.debug('Flushed generation output successfully to disk.')
 
     def run(self, points_control):
         """Run a SAM generation analysis based on the points_control iterator.
@@ -178,19 +216,19 @@ class Gen:
         return out
 
     @classmethod
-    def direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-               cf_profiles=True, n_workers=1, sites_per_split=100,
-               points_range=None, fout=None, dirout='./gen_out',
-               return_obj=True):
+    def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
+                   cf_profiles=True, n_workers=1, sites_per_split=100,
+                   points_range=None, fout=None, dirout='./gen_out',
+                   return_obj=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
         ----------
         tech : str
             Technology to analyze (pv, csp, landbasedwind, offshorewind).
-        points : slice | str
-            Slice specifying project points or string pointing to a project
-            points csv.
+        points : slice | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
         sam_files : dict | str | list
             Dict contains SAM input configuration ID(s) and file path(s).
             Keys are the SAM config ID(s), top level value is the SAM path.
@@ -229,13 +267,19 @@ class Gen:
         if cf_profiles:
             output_request += ('cf_profile',)
 
-        # make Project Points and Points Control instances
-        pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-        if points_range is None:
-            pc = PointsControl(pp, sites_per_split=sites_per_split)
+        if isinstance(points, (slice, str)):
+            # make Project Points and Points Control instances
+            pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
+            if points_range is None:
+                pc = PointsControl(pp, sites_per_split=sites_per_split)
+            else:
+                pc = PointsControl.split(points_range[0], points_range[1], pp,
+                                         sites_per_split=sites_per_split)
+        elif isinstance(points, PointsControl):
+            pc = points
         else:
-            pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                     sites_per_split=sites_per_split)
+            raise TypeError('Generation Points input type is unrecognized: '
+                            '"{}"'.format(type(points)))
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request)
@@ -253,23 +297,8 @@ class Gen:
         # save output data to object attribute
         gen.out = out
 
-        # handle output file request
-        if isinstance(fout, str):
-            if not fout.endswith('.h5'):
-                fout += '.h5'
-                warn('Generation output file request must be .h5, '
-                     'set to: "{}"'.format(fout))
-            # create and use optional output dir
-            if dirout:
-                if not os.path.exists(dirout):
-                    os.makedirs(dirout)
-                # Add output dir to fout string
-                fout = os.path.join(dirout, fout)
-            # write means or profiles to disk
-            if 'profile' in str(output_request):
-                gen.profiles_to_disk(gen.out, fout=fout)
-            else:
-                gen.means_to_disk(gen.out, fout=fout)
+        # flush output data (will only write to disk if fout is a str)
+        gen.flush(fout=fout, dirout=dirout)
 
         # optionally return Gen object (useful for debugging and hacking)
         if return_obj:

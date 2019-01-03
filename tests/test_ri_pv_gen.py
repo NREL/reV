@@ -12,8 +12,8 @@ import pytest
 import numpy as np
 
 from reV.generation.generation import Gen
-from reV.config.config import ProjectPoints
-from reV import __testdatadir__ as TESTDATA
+from reV.config.project_points import ProjectPoints
+from reV import __testdatadir__ as TESTDATADIR
 from reV.handlers.capacity_factor import CapacityFactor
 
 
@@ -78,15 +78,16 @@ def to_list(gen_out):
 def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
     # get full file paths.
-    rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
-    sam_files = TESTDATA + '/SAM/naris_pv_1axis_inv13.json'
-    res_file = TESTDATA + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    rev1_outs = os.path.join(TESTDATADIR, 'ri_pv', 'scalar_outputs',
+                             f_rev1_out)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
-    gen = Gen.direct('pv', rev2_points, sam_files, res_file,
-                     n_workers=n_workers, sites_per_split=3, fout=None,
-                     return_obj=True)
+    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file,
+                         n_workers=n_workers, sites_per_split=3, fout=None,
+                         return_obj=True)
 
     gen_outs = to_list(gen.out)
 
@@ -101,17 +102,18 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
 
 
 def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
-                     rev2_points=TESTDATA + '/project_points/ri.csv',
-                     res_file=TESTDATA + '/nsrdb/ri_100_nsrdb_2012.h5'):
+                     rev2_points=TESTDATADIR + '/project_points/ri.csv',
+                     res_file=TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'):
     """Test project points csv input with dictionary-based sam files."""
-    rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
-    sam_files = {'sam_param_0': TESTDATA + '/SAM/naris_pv_1axis_inv13.json',
-                 'sam_param_1': TESTDATA + '/SAM/naris_pv_1axis_inv13.json'}
+    rev1_outs = os.path.join(TESTDATADIR, 'ri_pv', 'scalar_outputs',
+                             f_rev1_out)
+    sam_files = {'sam_param_0': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
+                 'sam_param_1': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'}
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
 
     # run reV 2.0 generation
-    gen = Gen.direct('pv', rev2_points, sam_files, res_file, fout=None,
-                     return_obj=True)
+    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
+                         return_obj=True)
     gen_outs = to_list(gen.out)
 
     # initialize the rev1 output hander
@@ -125,15 +127,16 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
 
 
 def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
-                     rev2_points=TESTDATA + '/project_points/ri.csv',
-                     res_file=TESTDATA + '/nsrdb/ri_100_nsrdb_2012.h5'):
+                     rev2_points=TESTDATADIR + '/project_points/ri.csv',
+                     res_file=TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'):
     """Test project points csv input with list-based sam files."""
-    rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
-    sam_files = [TESTDATA + '/SAM/naris_pv_1axis_inv13.json',
-                 TESTDATA + '/SAM/naris_pv_1axis_inv13.json']
+    rev1_outs = os.path.join(TESTDATADIR, 'ri_pv', 'scalar_outputs',
+                             f_rev1_out)
+    sam_files = [TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
+                 TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json']
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
-    gen = Gen.direct('pv', rev2_points, sam_files, res_file, fout=None,
-                     return_obj=True)
+    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
+                         return_obj=True)
     gen_outs = to_list(gen.out)
 
     # initialize the rev1 output hander
@@ -165,15 +168,15 @@ def execute_pytest(capture='all', flags='-rapP'):
 @pytest.mark.parametrize('year', [('2012'), ('2013')])
 def test_pv_gen_profiles(year):
     """Gen PV CF profiles with write to disk and compare against rev1."""
-    res_file = TESTDATA + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
-    sam_files = TESTDATA + '/SAM/naris_pv_1axis_inv13.json'
-    rev2_out_dir = os.path.join(TESTDATA, 'ri_pv_reV2')
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
     rev2_out = 'gen_ri_pv_{}.h5'.format(year)
 
     # run reV 2.0 generation and write to disk
-    Gen.direct('pv', slice(0, 100), sam_files, res_file, fout=rev2_out,
-               n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
-               return_obj=False)
+    Gen.run_direct('pv', slice(0, 100), sam_files, res_file, fout=rev2_out,
+                   n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
+                   return_obj=False)
 
     # get reV 2.0 generation profiles from disk
     with CapacityFactor(os.path.join(rev2_out_dir, rev2_out), 'r') as cf:
@@ -188,7 +191,7 @@ def test_pv_gen_profiles(year):
 
 def get_r1_profiles(year=2012):
     """Get the first 100 reV 1.0 ri pv generation profiles."""
-    rev1 = os.path.join(TESTDATA, 'ri_pv', 'profile_outputs',
+    rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
                         'pv_{}_0.h5'.format(year))
     with CapacityFactor(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
