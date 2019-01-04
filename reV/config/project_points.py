@@ -73,7 +73,8 @@ class PointsControl:
         return new_exec
 
     def __repr__(self):
-        msg = "{} for sites: {}".format(self.__class__.__name__, self.sites)
+        msg = ("{} for sites {} through {}"
+               .format(self.__class__.__name__, self.sites[0], self.sites[-1]))
         return msg
 
     def __len__(self):
@@ -217,7 +218,8 @@ class ProjectPoints:
         return config_id, self.sam_configs[config_id]
 
     def __repr__(self):
-        msg = "{} for sites: {}".format(self.__class__.__name__, self.sites)
+        msg = ("{} for sites {} through {}"
+               .format(self.__class__.__name__, self.sites[0], self.sites[-1]))
         return msg
 
     def __len__(self):

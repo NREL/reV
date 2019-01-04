@@ -10,9 +10,16 @@ class reVError(Exception):
     pass
 
 
-class ConfigError(Warning):
+class ConfigError(Exception):
     """
-    Warning for bad configuration inputs
+    Error for bad configuration inputs
+    """
+    pass
+
+
+class ExecutionError(Exception):
+    """
+    Error for execution failure
     """
     pass
 

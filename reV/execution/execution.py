@@ -4,6 +4,7 @@ Generation
 from dask.distributed import Client, LocalCluster
 from subprocess import Popen, PIPE
 import logging
+import gc
 import os
 import psutil
 import getpass
@@ -11,6 +12,7 @@ import shlex
 from warnings import warn
 
 from reV.rev_logger import REV_LOGGERS
+from reV.exceptions import ExecutionError
 
 
 logger = logging.getLogger(__name__)
@@ -205,7 +207,7 @@ class SLURM(SubprocessManager):
 
 def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,
                      **kwargs):
-    """Execute a parallel generation compute on a single node.
+    """Execute a parallel compute on a single node.
 
     Parameters
     ----------
@@ -228,10 +230,7 @@ def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,
     """
 
     # start a local cluster on a personal comp or HPC single node
-    if n_workers:
-        cluster = LocalCluster(n_workers=n_workers)
-    else:
-        cluster = None
+    cluster = LocalCluster(n_workers=n_workers)
 
     results = execute_futures(fun, execution_iter, cluster, loggers=loggers,
                               **kwargs)
@@ -311,3 +310,98 @@ def execute_single(fun, input_obj, worker=0, **kwargs):
     out = fun(input_obj, **kwargs)
 
     return out
+
+
+def execute_smart_parallel(obj, execution_iter, loggers=[], n_workers=1,
+                           mem_util_lim=0.0001):
+    """Execute a parallel compute on a single node with smart data flushing.
+
+    Parameters
+    ----------
+    obj : object
+        Python object that will be submitted to futures. Must have methods
+        run(arg) and flush(). run(arg) must take the iteration result of
+        execution_iter as the single positional argument. Additionally,
+        obj.out will be passed the results of obj.run(arg). obj.out will be
+        passed None when the memory is to be cleared.
+    execution_iter : iter
+        Python iterator that controls the futures submitted to dask.
+    loggers : list
+        List of logger names to initialize on the workers.
+    n_workers : int
+        Number of workers to scale the cluster to.
+    mem_util_lim : float
+        Memory utilization limit (fractional). If the used memory divided by
+        the total memory is greater than this value, the obj.out will
+        be flushed and the local node memory will be cleared.
+    """
+
+    if not hasattr(obj, 'run') or not hasattr(obj, 'flush'):
+        raise ExecutionError('Parallel execution with object: "{}" '
+                             'failed. The target object must have methods '
+                             'run() and flush()'.format(obj))
+
+    # start a local cluster on a personal comp or HPC single node
+    cluster = LocalCluster(n_workers=n_workers)
+    # Get the number of workers in case it was input as None
+    n_workers = len(cluster.workers)
+
+    mem = psutil.virtual_memory()
+    logger.debug('Executing parallel run on cluster with {0} workers. '
+                 'Initial memory usage is {1:.3f} GB out of {2:.3f} total '
+                 '({3:.1f}% used)'.format(n_workers, mem.used / 1e9,
+                                          mem.total / 1e9,
+                                          100 * mem.used / mem.total))
+
+    # initialize a client based on the input cluster.
+    with Client(cluster) as client:
+
+        # initialize loggers on workers
+        for logger_name in loggers:
+            client.run(REV_LOGGERS.init_logger, logger_name)
+
+        futures = []
+
+        # iterate through split executions, submitting each to worker
+        for i, exec_slice in enumerate(execution_iter):
+
+            logger.debug('Kicking off serial worker #{} for: {}'
+                         .format(i, exec_slice))
+
+            # submit executions and append to futures list
+            futures.append(client.submit(obj.run, exec_slice))
+
+            # Take a pause after one complete set of workers
+            if (i + 1) % n_workers == 0:
+                # gather results and update the object output attribute
+                obj.out = client.gather(futures)
+                futures = []
+                mem = psutil.virtual_memory()
+
+                logger.debug('Parallel run at iteration {0}. Currently, '
+                             'results are stored in memory for {1} sites '
+                             'and memory usage is {2:.3f} GB out of {3:.3f} '
+                             'total ({4:.1f}% used)'
+                             .format(i + 1, len(obj.out),
+                                     mem.used / 1e9,
+                                     mem.total / 1e9,
+                                     100 * mem.used / mem.total))
+
+                if (mem.used / mem.total) > mem_util_lim:
+                    # memory utilization limit exceeded, flush memory to disk
+                    obj.flush()
+                    mem_0 = psutil.virtual_memory()
+                    obj.out = None
+                    gc.collect()
+                    mem_1 = psutil.virtual_memory()
+                    logger.debug('Clearing generation output on criteria that '
+                                 'the memory utilization ({0:.2f}%) exceeds '
+                                 'the memory utilization limit ({1:.2f}%). '
+                                 'Used memory decreased '
+                                 'from {2:.2f} MB to {3:.2f} MB '
+                                 '({4:.2f} MB freed).'
+                                 .format(100 * (mem.used / mem.total),
+                                         100 * mem_util_lim,
+                                         mem_0.used / 1e6,
+                                         mem_1.used / 1e6,
+                                         (mem_0.used - mem_1.used) / 1e6))

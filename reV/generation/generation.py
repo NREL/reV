@@ -2,13 +2,15 @@
 Generation
 """
 import logging
-import os
 import numpy as np
+import os
+import re
 from warnings import warn
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.execution.execution import execute_parallel, execute_single
+from reV.execution.execution import (execute_parallel, execute_single,
+                                     execute_smart_parallel)
 from reV.handlers.capacity_factor import CapacityFactor
 from reV.handlers.resource import Resource
 
@@ -18,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 class Gen:
     """Base class for generation"""
-    def __init__(self, points_control, res_file, output_request=('cf_mean',)):
+    def __init__(self, points_control, res_file, output_request=('cf_mean',),
+                 fout=None, dirout='./gen_out'):
         """Initialize a generation instance.
 
         Parameters
@@ -29,11 +32,18 @@ class Gen:
             Resource file with path.
         output_request : list | tuple
             Output variables requested from SAM.
+        fout : str | None
+            Optional .h5 output file specification.
+        dirout : str | None
+            Optional output directory specification. The directory will be
+            created if it does not already exist.
         """
 
         self._points_control = points_control
         self._res_file = res_file
         self._output_request = output_request
+        self._fout = fout
+        self._dirout = dirout
 
     @property
     def output_request(self):
@@ -66,28 +76,49 @@ class Gen:
         return self._res_file
 
     @property
+    def fout(self):
+        """Get the target file output."""
+        return self._fout
+
+    @property
+    def dirout(self):
+        """Get the target output directory."""
+        return self._dirout
+
+    @property
     def meta(self):
         """Get the generation resource meta data."""
-        if not hasattr(self, '_meta'):
-            with Resource(self.res_file) as res:
-                self._meta = res.meta[res.meta.index.isin(
-                    self.project_points.sites)]
-                self._meta['gid'] = self.project_points.sites
-                self._meta['reV_tech'] = self.project_points.tech
-                self._meta['sam_config'] = [self.project_points[site][0] for
-                                            site in self.project_points.sites]
+        if hasattr(self, '_out'):
+            finished_sites = sorted(list(self._out.keys()))
+        with Resource(self.res_file) as res:
+            self._meta = res['meta', finished_sites]
+            self._meta.loc[:, 'gid'] = finished_sites
+            self._meta.loc[:, 'reV_tech'] = self.project_points.tech
         return self._meta
 
-    @meta.setter
-    def meta(self, key_val):
-        """Add a (key, value) pair as a column in the meta dataframe."""
-        if not hasattr(self, '_meta'):
-            self._meta = self.meta
-        if len(key_val[1]) != len(self._meta):
-            raise ValueError('Data can only be added to meta if it is the '
-                             'same length. Meta length: {}, trying to add: '
-                             '\n{}'.format(len(self._meta), key_val[1]))
-        self._meta[key_val[0]] = key_val[1]
+    @property
+    def out(self):
+        """Get the generation output results."""
+        if not hasattr(self, '_out'):
+            self._out = {}
+        return self._out
+
+    @out.setter
+    def out(self, result):
+        """Set the output attribute, unpack futures, clear output from mem.
+        """
+        if not hasattr(self, '_out'):
+            self._out = {}
+        if isinstance(result, list):
+            self._out.update(self.unpack_futures(result))
+        elif isinstance(result, dict):
+            self._out.update(result)
+        elif isinstance(result, type(None)):
+            del self._out
+        else:
+            raise TypeError('Did not recognize the type of generation output. '
+                            'Tried to set output type "{}", but requires '
+                            'list, dict or None.'.format(type(result)))
 
     @property
     def time_index(self, drop_leap=True):
@@ -136,51 +167,70 @@ class Gen:
 
     def means_to_disk(self, gen_out, fout='gen_out.h5', mode='w'):
         """Save capacity factor means to disk."""
-        logger.debug('Flushing generation annual means to disk to file: {}'
-                     .format(fout))
         cf_means = self.unpack_cf_means(gen_out)
-        self.meta = ('cf_means', cf_means)
-        CapacityFactor.write_means(fout, self.meta, cf_means, self.sam_configs,
+        meta = self.meta
+        meta.loc[:, 'cf_means'] = self.unpack_cf_means(gen_out)
+        CapacityFactor.write_means(fout, meta, cf_means, self.sam_configs,
                                    **{'mode': mode})
 
     def profiles_to_disk(self, gen_out, fout='gen_out.h5', mode='w'):
         """Save capacity factor profiles to disk."""
-        logger.debug('Flushing generation profiles to disk to file: {}'
-                     .format(fout))
         cf_profiles = self.unpack_cf_profiles(gen_out)
-        self.meta = ('cf_means', self.unpack_cf_means(gen_out))
-        CapacityFactor.write_profiles(fout, self.meta, self.time_index,
+        meta = self.meta
+        meta.loc[:, 'cf_means'] = self.unpack_cf_means(gen_out)
+        CapacityFactor.write_profiles(fout, meta, self.time_index,
                                       cf_profiles, self.sam_configs,
                                       **{'mode': mode})
 
-    def flush(self, fout='gen_out.h5', dirout='./gen_out', mode='w'):
+    @staticmethod
+    def get_unique_fout(fout):
+        """Ensure a unique tag of format _n000 on the fout file name."""
+        if os.path.exists(fout):
+            match = re.match(r'.*n([0-9]{3})', fout)
+            if match:
+                new_tag = str(int(match.group(1)) + 1).zfill(3)
+                fout = fout.replace(match.group(1), new_tag)
+                fout = Gen.get_unique_fout(fout)
+        return fout
+
+    @staticmethod
+    def handle_fout(fout, dirout):
+        """Ensure that the file+dir output exist and have unique names."""
+        if not fout.endswith('.h5'):
+            fout += '.h5'
+            warn('Generation output file request must be .h5, '
+                 'set to: "{}"'.format(fout))
+        # create and use optional output dir
+        if dirout:
+            if not os.path.exists(dirout):
+                os.makedirs(dirout)
+            # Add output dir to fout string
+            fout = os.path.join(dirout, fout)
+
+        # check to see if target already exists. If so, assign unique ID.
+        fout = fout.replace('.h5', '_n000.h5')
+        fout = Gen.get_unique_fout(fout)
+
+        return fout
+
+    def flush(self, mode='w'):
         """Flush generation data in self.out attribute to disk in .h5 format.
 
         Parameters
         ----------
-        fout : str | None
-            .h5 output file specification. Data will not be written to disk if
-            this is None.
-        dirout : str
-            Output directory specification. The directory will be
-            created if it does not already exist.
         mode : str
             .h5 file write mode (e.g. 'w', 'a').
         """
+        # use mutable copies of the properties
+        fout = self.fout
+        dirout = self.dirout
 
         # handle output file request
         if isinstance(fout, str):
-            if not fout.endswith('.h5'):
-                fout += '.h5'
-                warn('Generation output file request must be .h5, '
-                     'set to: "{}"'.format(fout))
-            # create and use optional output dir
-            if dirout:
-                if not os.path.exists(dirout):
-                    os.makedirs(dirout)
-                # Add output dir to fout string
-                fout = os.path.join(dirout, fout)
-            # write means or profiles to disk
+            fout = self.handle_fout(fout, dirout)
+
+            logger.debug('Flushing generation outputs to disk, target file: {}'
+                         .format(fout))
             if 'profile' in str(self.output_request):
                 self.profiles_to_disk(self.out, fout=fout, mode=mode)
             else:
@@ -282,7 +332,8 @@ class Gen:
                             '"{}"'.format(type(points)))
 
         # make a Gen class instance to operate with
-        gen = cls(pc, res_file, output_request=output_request)
+        gen = cls(pc, res_file, output_request=output_request, fout=fout,
+                  dirout=dirout)
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
@@ -292,14 +343,109 @@ class Gen:
             logger.debug('Running parallel generation for: {}'.format(pc))
             out = execute_parallel(gen.run, pc, n_workers=n_workers,
                                    loggers=[__name__, 'reV.SAM'])
-            out = gen.unpack_futures(out)
 
         # save output data to object attribute
         gen.out = out
 
         # flush output data (will only write to disk if fout is a str)
-        gen.flush(fout=fout, dirout=dirout)
+        gen.flush()
 
         # optionally return Gen object (useful for debugging and hacking)
         if return_obj:
             return gen
+
+    @classmethod
+    def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
+                  cf_profiles=True, n_workers=1, sites_per_split=100,
+                  points_range=None, fout=None, dirout='./gen_out'):
+        """Execute a generation run with smart data flushing.
+
+        Parameters
+        ----------
+        tech : str
+            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+        points : slice | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        sam_files : dict | str | list
+            Dict contains SAM input configuration ID(s) and file path(s).
+            Keys are the SAM config ID(s), top level value is the SAM path.
+            Can also be a single config file str. If it's a list, it is mapped
+            to the sorted list of unique configs requested by points csv.
+        res_file : str
+            Single resource file with path.
+        cf_profiles : bool
+            Enables capacity factor annual profile output. Capacity factor
+            means output if this is False.
+        n_workers : int
+            Number of local workers to run on.
+        sites_per_split : int
+            Number of sites to run in series on a core.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
+        fout : str | None
+            Optional .h5 output file specification.
+        dirout : str | None
+            Optional output directory specification. The directory will be
+            created if it does not already exist.
+        """
+
+        # create the output request tuple
+        output_request = ('cf_mean',)
+        if cf_profiles:
+            output_request += ('cf_profile',)
+
+        if isinstance(points, (slice, str)):
+            # make Project Points and Points Control instances
+            pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
+            if points_range is None:
+                pc = PointsControl(pp, sites_per_split=sites_per_split)
+            else:
+                pc = PointsControl.split(points_range[0], points_range[1], pp,
+                                         sites_per_split=sites_per_split)
+        elif isinstance(points, PointsControl):
+            pc = points
+        else:
+            raise TypeError('Generation Points input type is unrecognized: '
+                            '"{}"'.format(type(points)))
+
+        # make a Gen class instance to operate with
+        gen = cls(pc, res_file, output_request=output_request, fout=fout,
+                  dirout=dirout)
+
+        logger.debug('Running parallel generation with smart data flushing '
+                     'for: {}'.format(pc))
+        execute_smart_parallel(gen, pc, n_workers=n_workers,
+                               loggers=[__name__, 'reV.SAM'])
+
+
+if __name__ == '__main__':
+    # TEST case on local machine
+    import time
+    t0 = time.time()
+    tech = 'pv'
+    points = slice(0, 100)
+    sam_files = ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
+                 'naris_pv_1axis_inv13.json')
+    res_file = 'C:/sandbox/reV/git_reV2/tests/data/nsrdb/ri_100_nsrdb_2012.h5'
+    cf_profiles = True
+    n_workers = 2
+    sites_per_core = 1
+    points_range = None
+    fout = 'reV.h5'
+    dirout = 'C:/sandbox/reV/test_output'
+    Gen.run_smart(tech=tech,
+                  points=points,
+                  sam_files=sam_files,
+                  res_file=res_file,
+                  cf_profiles=cf_profiles,
+                  n_workers=n_workers,
+                  sites_per_split=sites_per_core,
+                  points_range=points_range,
+                  fout=fout,
+                  dirout=dirout)
+
+    print('reV generation local run complete. Total time elapsed: '
+          '{0:.2f} minutes.'.format((time.time() - t0) / 60))

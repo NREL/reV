@@ -4,6 +4,7 @@
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
 SAM software development kit (SDK).
 """
+import gc
 import json
 import logging
 import numpy as np
@@ -358,16 +359,10 @@ class SAM:
             dictionary self.parameters. Otherwise, only parameter keys in
             keys_to_set will be set.
         """
-        logger.debug('On site {}, Setting SAM input parameters.'
-                     .format(self.site))
         if keys_to_set == 'all':
             keys_to_set = self.parameters.keys()
 
         for key in keys_to_set:
-            logger.debug('On site {}, setting parameter: {} = {}...'
-                         .format(self.site, key,
-                                 str(self.parameters[key])[:20]))
-
             # Set data to SSC using appropriate logic
             if is_num(self.parameters[key]) is True:
                 self.ssc.data_set_number(self.data, key,
@@ -402,8 +397,6 @@ class SAM:
                    'elevation': 'elev'}
 
         for var in meta_vars:
-            logger.debug('On site {}, setting {} meta data.'
-                         .format(self.site, var))
             self.ssc.data_set_number(self.res_data, var_map[var],
                                      self.meta[var])
 
@@ -657,7 +650,9 @@ class SAM:
 
             logger.debug('Outputs for site {} with config "{}", \n\t{}...'
                          .format(site, config, str(out[site])[:100]))
-
+            del res_df, meta, sim
+        del resources
+        gc.collect()
         return out
 
 
@@ -726,8 +721,6 @@ class Solar(SAM):
         # set resource variables
         for var in resource.columns.values:
             if var != 'time_index':
-                logger.debug('On site {}, setting {} resource data.'
-                             .format(self.site, var))
                 self.ssc.data_set_array(self.res_data, var_map[var],
                                         np.roll(resource[var],
                                                 int(self.meta['timezone'] *
@@ -763,8 +756,6 @@ class PV(Solar):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        logger.debug('SAM PV class initializing for site {}.'
-                     .format(self.site))
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM PV solar simulation.
@@ -793,8 +784,6 @@ class CSP(Solar):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        logger.debug('SAM CSP class initializing for site {}'
-                     .format(self.site))
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM CSP solar simulation.
@@ -892,8 +881,6 @@ class LandBasedWind(Wind):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        logger.debug('SAM land-based wind class initializing for site {}.'
-                     .format(self.site))
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM land based wind simulation.
@@ -922,8 +909,6 @@ class OffshoreWind(LandBasedWind):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        logger.debug('SAM offshore wind class initializing for site {}.'
-                     .format(self.site))
 
 
 class Economic(SAM):
@@ -950,8 +935,6 @@ class Economic(SAM):
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         """
-
-        logger.debug('SAM Economomic class initializing...')
 
         # set attribute to store site number
         self.site = None
@@ -982,7 +965,6 @@ class LCOE(Economic):
         """Initialize a SAM LCOE economic model object.
         """
         super().__init__(ssc, data, parameters, output_request)
-        logger.debug('SAM LCOE class initializing...')
 
 
 class SingleOwner(Economic):
@@ -994,4 +976,3 @@ class SingleOwner(Economic):
         """Initialize a SAM single owner economic model object.
         """
         super().__init__(ssc, data, parameters, output_request)
-        logger.debug('SAM LCOE class initializing...')
