@@ -41,8 +41,16 @@ class PointsControl:
     def __iter__(self):
         """Iterator initialization dunder."""
         self._i = 0
+
+        # set the "last site" (previous site) and limit based on the "master"
+        # project points which is the original project points
+        # (before being split at the core level).
         self._last_site = self.master_project_points.sites.index(self.sites[0])
         self._ilim = self.master_project_points.sites.index(self.sites[-1]) + 1
+
+        logger.debug('PointsControl initialized with starting site {} and '
+                     'site index limit {}.'
+                     .format(self._last_site, self._ilim))
         return self
 
     def __next__(self):
@@ -57,14 +65,18 @@ class PointsControl:
 
         i0 = self._last_site
         i1 = np.min([i0 + self.sites_per_split, self._ilim])
+
         self._i += 1
         self._last_site = i1
 
         new_exec = PointsControl.split(i0, i1, self.project_points,
                                        sites_per_split=self.sites_per_split)
         new_exec._split_range = [i0, i1]
+
         if not new_exec.project_points.sites:
             # no more sites left to analyze, reached end of iter.
+            logger.debug('PointsControl stopping iteration at index {} to {}. '
+                         .format(i0, i1))
             raise StopIteration
 
         logger.debug('PointsControl passing site project points to worker #{} '
@@ -94,7 +106,7 @@ class PointsControl:
     @property
     def master_project_points(self):
         """Original project points at the highest execution level."""
-        if not hasattr(self, '_master_pp'):
+        if not hasattr(self, '_mpp'):
             self._mpp = ProjectPoints(self._project_points.points,
                                       self._project_points.sam_files,
                                       self._project_points.tech,
@@ -133,7 +145,8 @@ class PointsControl:
             project points.
         """
 
-        new_points = ProjectPoints.split(i0, i1, project_points.points,
+        new_points = ProjectPoints.split(i0, i1,
+                                         project_points.df,
                                          project_points.sam_files,
                                          project_points.df,
                                          project_points.tech,
@@ -159,9 +172,9 @@ class ProjectPoints:
 
         Parameters
         ----------
-        points : slice | str
-            Slice specifying project points or string pointing to a project
-            points csv.
+        points : slice | str | pd.DataFrame
+            Slice specifying project points, string pointing to a project
+            points csv, or a dataframe containing the effective csv contents.
         sam_files : dict | str | list
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s), top level value is the SAM path. Can also be a single
@@ -440,7 +453,10 @@ class ProjectPoints:
 
     def parse_project_points(self, points):
         """Parse and set the project points using either a file or slice."""
-        if isinstance(points, str):
+        if isinstance(points, pd.DataFrame):
+            self.df = points
+            self.sites = list(self.df['gid'].values)
+        elif isinstance(points, str):
             self.csv_project_points(points)
         elif isinstance(points, slice):
             if points.stop is None and self.res_file is None:
@@ -505,9 +521,10 @@ class ProjectPoints:
             attribute to include in the split instance. This is not necessarily
             the same as the final site number, for instance if ProjectPoints is
             sites 20:100, i0=0 i1=10 will result in sites 20:30.
-        points : slice | str
-            Slice specifying project points or string pointing to a project
-            points csv.
+        points : slice | str | pd.DataFrame
+            Slice specifying project points, string pointing to a project
+            points csv (takes a long time for bigger projects), or the upstream
+            project points dataframe (fastest for large projects).
         sam_files : dict | str
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s), top level value is the SAM path. Can also be a single
@@ -531,10 +548,10 @@ class ProjectPoints:
         # make a new instance of ProjectPoints
         sub = cls(points, sam_files, tech, res_file=res_file)
 
-        # Reset the site attribute using a subset of the original
-        sub.sites = sub.sites[i0:i1]
-
         # set the new config map dataframe
-        sub.df = config_df[config_df['gid'].isin(sub.sites)]
+        sub.df = config_df[config_df.index.isin(list(range(i0, i1)))]
+
+        # Reset the site attribute using a subset of the original
+        sub.sites = list(sub.df['gid'].values)
 
         return sub

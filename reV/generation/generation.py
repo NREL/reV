@@ -330,7 +330,6 @@ class Gen:
         else:
             raise TypeError('Generation Points input type is unrecognized: '
                             '"{}"'.format(type(points)))
-
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout)
@@ -426,13 +425,22 @@ if __name__ == '__main__':
     import time
     t0 = time.time()
     tech = 'pv'
+
+    points = ('C:/sandbox/reV/reV-docker/rev-utils/rev_config/'
+              'project_points_500k.csv')
+    points = ('C:/sandbox/reV/reV-docker/rev-utils/rev_config/'
+              'project_points_50.csv')
+    sam_files = {'sam_gen_pv_1': ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
+                                  'naris_pv_1axis_inv13.json')}
+
     points = slice(0, 100)
     sam_files = ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
                  'naris_pv_1axis_inv13.json')
+
     res_file = 'C:/sandbox/reV/git_reV2/tests/data/nsrdb/ri_100_nsrdb_2012.h5'
     cf_profiles = True
     n_workers = 2
-    sites_per_core = 1
+    sites_per_core = 10000
     points_range = None
     fout = 'reV.h5'
     dirout = 'C:/sandbox/reV/test_output'
