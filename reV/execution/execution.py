@@ -312,96 +312,164 @@ def execute_single(fun, input_obj, worker=0, **kwargs):
     return out
 
 
-def execute_smart_parallel(obj, execution_iter, loggers=[], n_workers=1,
-                           mem_util_lim=0.5):
-    """Execute a parallel compute on a single node with smart data flushing.
+class SmartParallelJob:
+    """Single node parallel compute manager with smart data flushing."""
 
-    Parameters
-    ----------
-    obj : object
-        Python object that will be submitted to futures. Must have methods
-        run(arg) and flush(). run(arg) must take the iteration result of
-        execution_iter as the single positional argument. Additionally,
-        obj.out will be passed the results of obj.run(arg). obj.out will be
-        passed None when the memory is to be cleared.
-    execution_iter : iter
-        Python iterator that controls the futures submitted to dask.
-    loggers : list
-        List of logger names to initialize on the workers.
-    n_workers : int
-        Number of workers to scale the cluster to.
-    mem_util_lim : float
-        Memory utilization limit (fractional). If the used memory divided by
-        the total memory is greater than this value, the obj.out will
-        be flushed and the local node memory will be cleared.
-    """
+    def __init__(self, obj, execution_iter, loggers=[], n_workers=None,
+                 mem_util_lim=0.5):
+        """Single node parallel compute manager with smart data flushing.
 
-    if not hasattr(obj, 'run') or not hasattr(obj, 'flush'):
-        raise ExecutionError('Parallel execution with object: "{}" '
-                             'failed. The target object must have methods '
-                             'run() and flush()'.format(obj))
+        Parameters
+        ----------
+        obj : object
+            Python object that will be submitted to futures. Must have methods
+            run(arg) and flush(). run(arg) must take the iteration result of
+            execution_iter as the single positional argument. Additionally,
+            obj.out will be passed the results of obj.run(arg). obj.out will be
+            passed None when the memory is to be cleared.
+        execution_iter : iter
+            Python iterator that controls the futures submitted to dask.
+        loggers : list
+            List of logger names to initialize on the workers.
+        n_workers : int
+            Number of workers to scale the cluster to. None will use all
+            available workers in a local cluster.
+        mem_util_lim : float
+            Memory utilization limit (fractional). If the used memory divided
+            by the total memory is greater than this value, the obj.out will
+            be flushed and the local node memory will be cleared.
+        """
+        self._obj = obj
+        self._execution_iter = execution_iter
+        self._loggers = loggers
+        self._n_workers = n_workers
+        self._mem_util_lim = mem_util_lim
 
-    # start a local cluster on a personal comp or HPC single node
-    cluster = LocalCluster(n_workers=n_workers)
-    # Get the number of workers in case it was input as None
-    n_workers = len(cluster.workers)
+    @property
+    def cluster(self):
+        """Get a Dask LocalCluster object."""
+        if not hasattr(self, '_cluster'):
+            # start a local cluster on a personal comp or HPC single node
+            if self._n_workers is None:
+                self._cluster = LocalCluster(n_workers=None)
+            elif isinstance(self._n_workers, int):
+                self._cluster = LocalCluster(n_workers=self._n_workers)
+            else:
+                raise ExecutionError('Bad number of workers: {}'
+                                     .format(self._n_workers))
+        return self._cluster
 
-    mem = psutil.virtual_memory()
-    logger.debug('Executing parallel run on cluster with {0} workers. '
-                 'Initial memory usage is {1:.3f} GB out of {2:.3f} total '
-                 '({3:.1f}% used)'.format(n_workers, mem.used / 1e9,
-                                          mem.total / 1e9,
-                                          100 * mem.used / mem.total))
+    @property
+    def execution_iter(self):
+        """Get the iterator object that controls the parallel execution."""
+        return self._execution_iter
 
-    # initialize a client based on the input cluster.
-    with Client(cluster) as client:
+    @property
+    def loggers(self):
+        """Get the list of logger names."""
+        return self._loggers
 
-        # initialize loggers on workers
-        for logger_name in loggers:
+    @property
+    def mem_util_lim(self):
+        """Get the memory utilization limit (fractional)."""
+        return self._mem_util_lim
+
+    @property
+    def n_workers(self):
+        """Get the number of workers in the local cluster."""
+        if hasattr(self, '_cluster') and self._n_workers is None:
+            self._n_workers = len(self.cluster.workers)
+        return self._n_workers
+
+    @property
+    def obj(self):
+        """Get the main python object that will be submitted to futures."""
+        return self._obj
+
+    @obj.setter
+    def obj(self, inp_obj):
+        """Verify the input object and set to protected property."""
+        if not hasattr(inp_obj, 'run') or not hasattr(inp_obj, 'flush'):
+            raise ExecutionError('Parallel execution with object: "{}" '
+                                 'failed. The target object must have methods '
+                                 'run() and flush()'.format(inp_obj))
+        else:
+            self._obj = inp_obj
+
+    def init_loggers(self, client):
+        """Initialize loggers on workers"""
+        for logger_name in self.loggers:
             client.run(REV_LOGGERS.init_logger, logger_name)
 
+    def flush(self):
+        """Flush obj.out to disk."""
+        # memory utilization limit exceeded, flush memory to disk
+        self.obj.flush()
+        self.obj.out = None
+        gc.collect()
+
+    def gather_and_flush(self, i, client, futures, force_flush=False):
+        """Gather futures, update object output, potentially flush to disk."""
+        self.obj.out = client.gather(futures)
         futures = []
+        mem = psutil.virtual_memory()
+        logger.debug('Parallel run at iteration {0}. Currently, '
+                     'results are stored in memory for {1} sites '
+                     'and memory usage is {2:.3f} GB out of {3:.3f} '
+                     'total ({4:.1f}% used)'
+                     .format(i, len(self.obj.out),
+                             mem.used / 1e9,
+                             mem.total / 1e9,
+                             100 * mem.used / mem.total))
 
-        # iterate through split executions, submitting each to worker
-        for i, exec_slice in enumerate(execution_iter):
+        if ((mem.used / mem.total) > self.mem_util_lim) or force_flush:
+            logger.debug('Flushing memory to disk. The memory utilization is '
+                         '{0:.2f}% and the memory utilization limit is '
+                         '{1:.2f}%.'.format(100 * (mem.used / mem.total),
+                                            100 * self.mem_util_lim))
+            self.flush()
 
-            logger.debug('Kicking off serial worker #{} for: {}'
-                         .format(i, exec_slice))
+        return futures
 
-            # submit executions and append to futures list
-            futures.append(client.submit(obj.run, exec_slice))
+    @classmethod
+    def execute(cls, obj, execution_iter, loggers=[], n_workers=None,
+                mem_util_lim=0.5):
+        """Execute the smart parallel run with data flushing."""
 
-            # Take a pause after one complete set of workers
-            if (i + 1) % n_workers == 0:
-                # gather results and update the object output attribute
-                obj.out = client.gather(futures)
-                futures = []
-                mem = psutil.virtual_memory()
+        manager = cls(obj, execution_iter, loggers=loggers,
+                      n_workers=n_workers, mem_util_lim=mem_util_lim)
 
-                logger.debug('Parallel run at iteration {0}. Currently, '
-                             'results are stored in memory for {1} sites '
-                             'and memory usage is {2:.3f} GB out of {3:.3f} '
-                             'total ({4:.1f}% used)'
-                             .format(i + 1, len(obj.out),
-                                     mem.used / 1e9,
-                                     mem.total / 1e9,
-                                     100 * mem.used / mem.total))
+        # start a local cluster on a personal comp or HPC single node
+        cluster = manager.cluster
+        # Get the number of workers in case it was input as None
+        n_workers = manager.n_workers
 
-                if (mem.used / mem.total) > mem_util_lim:
-                    # memory utilization limit exceeded, flush memory to disk
-                    obj.flush()
-                    mem_0 = psutil.virtual_memory()
-                    obj.out = None
-                    gc.collect()
-                    mem_1 = psutil.virtual_memory()
-                    logger.debug('Clearing generation output on criteria that '
-                                 'the memory utilization ({0:.2f}%) exceeds '
-                                 'the memory utilization limit ({1:.2f}%). '
-                                 'Used memory decreased '
-                                 'from {2:.2f} MB to {3:.2f} MB '
-                                 '({4:.2f} MB freed).'
-                                 .format(100 * (mem.used / mem.total),
-                                         100 * mem_util_lim,
-                                         mem_0.used / 1e6,
-                                         mem_1.used / 1e6,
-                                         (mem_0.used - mem_1.used) / 1e6))
+        mem = psutil.virtual_memory()
+        logger.debug('Executing parallel run on cluster with {0} workers. '
+                     'Initial memory usage is {1:.3f} GB out of {2:.3f} total '
+                     '({3:.1f}% used)'.format(n_workers, mem.used / 1e9,
+                                              mem.total / 1e9,
+                                              100 * mem.used / mem.total))
+
+        # initialize a client based on the input cluster.
+        with Client(cluster) as client:
+            futures = []
+            manager.init_loggers(client)
+
+            # iterate through split executions, submitting each to worker
+            for i, exec_slice in enumerate(manager.execution_iter):
+                logger.debug('Kicking off serial worker #{} for: {}'
+                             .format(i, exec_slice))
+
+                # submit executions and append to futures list
+                futures.append(client.submit(obj.run, exec_slice))
+
+                # Take a pause after one complete set of workers
+                if (i + 1) % n_workers == 0:
+                    futures = manager.gather_and_flush(i, client, futures)
+
+            # All futures complete
+            futures = manager.gather_and_flush('END', client, futures,
+                                               force_flush=True)
+            logger.debug('Smart parallel job complete. Returning execution '
+                         'control to higher level processes.')

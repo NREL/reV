@@ -96,7 +96,8 @@ def from_config(ctx, config_file, verbose):
         match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match:
             ctx.obj['fout'] = '{}_{}.h5'.format(name, year)
-            ctx.obj['name'] = '{}_{}'.format(name, year)
+            # 8 chars for pbs job name (lim is 16, -8 for "_year_2charID")
+            ctx.obj['name'] = '{}_{}'.format(name[:8], year)
 
         msg = ('Running reV generation for year: {} with resource file: {}'
                .format(year, config.res_files[i]))
@@ -283,7 +284,8 @@ def peregrine(ctx, nodes, alloc, queue, stdout_path, verbose):
     for i, split in enumerate(pc):
 
         # make a node name unique to the run name, year, and node number
-        node_name = '{}_{}'.format(name, i)
+        # 8 chars for pbs job name (lim is 16, -3 for "_2charID")
+        node_name = '{}_{}'.format(name[:13], i)
         if fout.endswith('.h5'):
             # remove file extension to add additional node and year strings
             fout = fout.strip('.h5')
