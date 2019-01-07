@@ -431,18 +431,27 @@ if __name__ == '__main__':
     sam_files = {'sam_gen_pv_1': ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
                                   'naris_pv_1axis_inv13.json')}
 
-    points = slice(0, 100)
-    sam_files = ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
-                 'naris_pv_1axis_inv13.json')
-
     res_file = 'C:/sandbox/reV/git_reV2/tests/data/nsrdb/ri_100_nsrdb_2012.h5'
     cf_profiles = True
     n_workers = 2
-    sites_per_core = 10000
+    sites_per_core = 100
     points_range = None
     fout = 'reV.h5'
     dirout = 'C:/sandbox/reV/test_output'
-    Gen.run_smart(tech=tech, points=points, sam_files=sam_files,
+
+    pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
+    sites_per_split = len(pp) / 2
+    points_range = [10, 1000]
+
+    if points_range is None:
+        pc = PointsControl(pp, sites_per_split=sites_per_split)
+    else:
+        pc = PointsControl.split(points_range[0], points_range[1], pp)
+
+    print(pc.project_points.df.head())
+    print(pc.project_points.df.tail())
+
+    Gen.run_smart(tech=tech, points=pc, sam_files=sam_files,
                   res_file=res_file, cf_profiles=cf_profiles,
                   n_workers=n_workers, sites_per_split=sites_per_core,
                   points_range=points_range, fout=fout, dirout=dirout)

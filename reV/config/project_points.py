@@ -42,14 +42,15 @@ class PointsControl:
         """Iterator initialization dunder."""
         self._i = 0
 
-        # set the "last site" (previous site) and limit based on the "master"
-        # project points which is the original project points
-        # (before being split at the core level).
-        self._last_site = self.master_project_points.sites.index(self.sites[0])
-        self._ilim = self.master_project_points.sites.index(self.sites[-1]) + 1
+        # _last_site attribute is the starting index of the next
+        # iteration. This is taken from the first index of the pp dataframe.
+        self._last_site = self.project_points.df.index[0]
+
+        # _ilim is the maximum index value
+        self._ilim = self.project_points.df.index[-1] + 1
 
         logger.debug('PointsControl initialized with starting site {} and '
-                     'site index limit {}.'
+                     'maximum site index value {}.'
                      .format(self._last_site, self._ilim))
         return self
 
@@ -102,16 +103,6 @@ class PointsControl:
     def project_points(self):
         """Get the project points property"""
         return self._project_points
-
-    @property
-    def master_project_points(self):
-        """Original project points at the highest execution level."""
-        if not hasattr(self, '_mpp'):
-            self._mpp = ProjectPoints(self._project_points.points,
-                                      self._project_points.sam_files,
-                                      self._project_points.tech,
-                                      res_file=self._project_points.res_file)
-        return self._mpp
 
     @property
     def sites(self):

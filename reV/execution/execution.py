@@ -313,7 +313,7 @@ def execute_single(fun, input_obj, worker=0, **kwargs):
 
 
 def execute_smart_parallel(obj, execution_iter, loggers=[], n_workers=1,
-                           mem_util_lim=0.0001):
+                           mem_util_lim=0.5):
     """Execute a parallel compute on a single node with smart data flushing.
 
     Parameters
