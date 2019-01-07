@@ -413,7 +413,7 @@ class SmartParallelJob:
         wait(futures)
         mem = psutil.virtual_memory()
         logger.debug('Parallel run at iteration {0}. Currently, '
-                     'results are stored in memory for {1} sites '
+                     'results are stored in memory for {1} futures '
                      'and memory usage is {2:.3f} GB out of {3:.3f} '
                      'total ({4:.1f}% used)'
                      .format(i, len(futures),

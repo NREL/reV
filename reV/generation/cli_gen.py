@@ -166,9 +166,9 @@ def from_config(ctx, config_file, verbose):
 @click.option('--res_file', '-rf',
               default=__testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5',
               help='Single resource file (str). Default is test NSRDB file.')
-@click.option('--sites_per_core', '-spc', default=100, type=INT,
+@click.option('--sites_per_core', '-spc', default=None, type=INT,
               help=('Number of sites to run in series on a single core. '
-                    'Default is 100.'))
+                    'Default is the resource column chunk size.'))
 @click.option('--fout', '-fo', default='gen_output.h5', type=STR,
               help=('Filename output specification (should be .h5). '
                     'Default is "gen_output.h5"'))
@@ -204,12 +204,10 @@ def direct(ctx, tech, points, sam_files, res_file, sites_per_core,
                     'Use 1 for serial, None for all cores.'))
 @click.option('--points_range', '-pr', default=None, type=INTLIST,
               help='Optional range list to run a subset of sites.')
-@click.option('--legacy', is_flag=True,
-              help='Flag to use legacy run_direct function.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def local(ctx, n_workers, points_range, legacy, verbose):
+def local(ctx, n_workers, points_range, verbose):
     """Run generation on local worker(s)."""
 
     name = ctx.obj['NAME']
@@ -232,31 +230,17 @@ def local(ctx, n_workers, points_range, legacy, verbose):
     click.echo('Kicking off reV generation local run "{}".'.format(name))
     t0 = time.time()
 
-    if legacy:
-        # Execute the Generation module directly.
-        Gen.run_direct(tech=tech,
-                       points=points,
-                       sam_files=sam_files,
-                       res_file=res_file,
-                       cf_profiles=cf_profiles,
-                       n_workers=n_workers,
-                       sites_per_split=sites_per_core,
-                       points_range=points_range,
-                       fout=fout,
-                       dirout=dirout,
-                       return_obj=False)
-    else:
-        # Execute the Generation module with smart data flushing.
-        Gen.run_smart(tech=tech,
-                      points=points,
-                      sam_files=sam_files,
-                      res_file=res_file,
-                      cf_profiles=cf_profiles,
-                      n_workers=n_workers,
-                      sites_per_split=sites_per_core,
-                      points_range=points_range,
-                      fout=fout,
-                      dirout=dirout)
+    # Execute the Generation module with smart data flushing.
+    Gen.run_smart(tech=tech,
+                  points=points,
+                  sam_files=sam_files,
+                  res_file=res_file,
+                  cf_profiles=cf_profiles,
+                  n_workers=n_workers,
+                  sites_per_split=sites_per_core,
+                  points_range=points_range,
+                  fout=fout,
+                  dirout=dirout)
 
     click.echo('reV generation local run complete. Total time elapsed: '
                '{0:.2f} minutes.'.format((time.time() - t0) / 60))

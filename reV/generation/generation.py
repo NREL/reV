@@ -134,6 +134,32 @@ class Gen:
         return self._time_index
 
     @staticmethod
+    def sites_per_core(res_file, default=100):
+        """Get the nominal sites per core (x-chunk size) for a given file."""
+        with Resource(res_file) as res:
+            if 'wtk' in res_file.lower():
+                for dset in res.dsets:
+                    if 'speed' in dset:
+                        # take nominal WTK chunks from windspeed
+                        nominal = res._h5[dset].chunks[1]
+                        break
+            elif 'nsrdb' in res_file.lower():
+                # take nominal NSRDB chunks from dni
+                nominal = res._h5['dni'].chunks[1]
+            else:
+                raise Exception('Expected "nsrdb" or "wtk" to be in resource '
+                                'filename: {}'.format(res_file))
+        if nominal is None:
+            # if chunks not set, go to default
+            nominal = default
+            logger.debug('Sites per core being set to {} (default) based on '
+                         'no set chunk size in {}.'.format(nominal, res_file))
+        else:
+            logger.debug('Sites per core being set to {} based on chunk size '
+                         'of {}.'.format(nominal, res_file))
+        return nominal
+
+    @staticmethod
     def unpack_futures(futures):
         """Combine list of futures results into their native dict format/type.
 
@@ -355,7 +381,7 @@ class Gen:
 
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  cf_profiles=True, n_workers=1, sites_per_split=100,
+                  cf_profiles=True, n_workers=1, sites_per_split=None,
                   points_range=None, fout=None, dirout='./gen_out'):
         """Execute a generation run with smart data flushing.
 
@@ -378,8 +404,9 @@ class Gen:
             means output if this is False.
         n_workers : int
             Number of local workers to run on.
-        sites_per_split : int
-            Number of sites to run in series on a core.
+        sites_per_split : int | None
+            Number of sites to run in series on a core. None defaults to the
+            resource file chunk size.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -395,6 +422,9 @@ class Gen:
         output_request = ('cf_mean',)
         if cf_profiles:
             output_request += ('cf_profile',)
+
+        if sites_per_split is None:
+            sites_per_split = Gen.sites_per_core(res_file)
 
         if isinstance(points, (slice, str)):
             # make Project Points and Points Control instances
