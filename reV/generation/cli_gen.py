@@ -2,7 +2,7 @@
 Generation CLI entry points.
 """
 import click
-from dask.distributed import Client, LocalCluster
+from dask.distributed import Client, LocalCluster, wait
 import logging
 from math import ceil
 import os
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def init_gen_loggers(verbose, name, logdir='./out/log',
                      modules=['reV.SAM', 'reV.config', 'reV.generation',
-                              'reV.execution']):
+                              'reV.utilities']):
     """Initialize multiple loggers to a single file for the gen compute."""
     if verbose:
         log_level = 'DEBUG'
@@ -34,10 +34,10 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
 
     if not os.path.exists(logdir):
         os.makedirs(logdir)
-
+    log_file = os.path.join(logdir, '{}.log'.format(name))
     for module in modules:
-        init_logger(module, log_level=log_level,
-                    log_file=os.path.join(logdir, '{}.log').format(name))
+        logger = init_logger(module, log_level=log_level, log_file=log_file)
+    return logger
 
 
 @click.group()
@@ -75,11 +75,6 @@ def submit_from_config(ctx, name, year, config, verbose, i):
         ctx.obj['FOUT'] = '{}_{}.h5'.format(name, year)
         # 8 chars for pbs job name (lim is 16, -8 for "_year_2charID")
         ctx.obj['NAME'] = '{}_{}'.format(name[:8], year)
-
-    msg = ('Running reV generation for year: {} with resource file: {}'
-           .format(year, config.res_files[i]))
-    logger.debug(msg)
-    click.echo(msg)
 
     # check to make sure that the year matches the resource file
     if str(year) not in config.res_files[i]:
@@ -144,11 +139,17 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
 
     # submit w Dask to segregate year logs initialized in Local(), Peregrine()
-    with Client(LocalCluster(n_workers=1)) as client:
+    cluster = LocalCluster(n_workers=None)
+    futures = []
+    with Client(cluster) as client:
         # iterate through the years in config (could be just one).
         for i, year in enumerate(config.years):
-            client.submit(submit_from_config, ctx, name, year, config,
-                          verbose, i)
+            logger.debug('Running reV generation for year: {} with resource '
+                         'file: {}'.format(year, config.res_files[i]))
+            futures.append(client.submit(submit_from_config, ctx, name, year,
+                                         config, verbose, i))
+        wait(futures)
+    cluster.close()
 
 
 @main.group()

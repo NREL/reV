@@ -409,14 +409,14 @@ class SmartParallelJob:
         gc.collect()
 
     def gather_and_flush(self, i, client, futures, force_flush=False):
-        """Gather futures, update object output, potentially flush to disk."""
+        """Wait on futures, potentially update obj.out, and flush to disk."""
         wait(futures)
         mem = psutil.virtual_memory()
         logger.debug('Parallel run at iteration {0}. Currently, '
                      'results are stored in memory for {1} sites '
                      'and memory usage is {2:.3f} GB out of {3:.3f} '
                      'total ({4:.1f}% used)'
-                     .format(i, len(self.obj.out),
+                     .format(i, len(futures),
                              mem.used / 1e9,
                              mem.total / 1e9,
                              100 * mem.used / mem.total))
@@ -424,13 +424,24 @@ class SmartParallelJob:
         if ((mem.used / mem.total) > self.mem_util_lim) or force_flush:
             logger.debug('Flushing memory to disk. The memory utilization is '
                          '{0:.2f}% and the memory utilization limit is '
-                         '{1:.2f}%.'.format(100 * (mem.used / mem.total),
-                                            100 * self.mem_util_lim))
+                         '{1:.2f}% (before gathering futures).'
+                         .format(100 * (mem.used / mem.total),
+                                 100 * self.mem_util_lim))
             # send gathered futures to object output
             # (obj.out should be a property setter that will append new data.)
             self.obj.out = client.gather(futures)
+            logger.debug('Flushing memory to disk. The memory utilization is '
+                         '{0:.2f}% and the memory utilization limit is '
+                         '{1:.2f}% (after gathering futures).'
+                         .format(100 * (mem.used / mem.total),
+                                 100 * self.mem_util_lim))
             futures = []
             self.flush()
+            logger.debug('Flushing memory to disk. The memory utilization is '
+                         '{0:.2f}% and the memory utilization limit is '
+                         '{1:.2f}% (after flushing and G.C.).'
+                         .format(100 * (mem.used / mem.total),
+                                 100 * self.mem_util_lim))
 
         return futures
 
@@ -476,3 +487,4 @@ class SmartParallelJob:
                                                force_flush=True)
             logger.debug('Smart parallel job complete. Returning execution '
                          'control to higher level processes.')
+        manager.cluster.close()
