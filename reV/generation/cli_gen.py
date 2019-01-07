@@ -288,20 +288,20 @@ def peregrine(ctx, nodes, alloc, queue, stdout_path, verbose):
             # remove file extension to add additional node and year strings
             fout = fout.strip('.h5')
         # add node number to file name.
-        fout_node = fout + '_node_{}.h5'.format(i)
+        fout_node = fout + '_node{}.h5'.format(i)
 
         # mark a cli arg string for main() in this module
-        arg_main = ('-n={name} '.format(name=PBS.s(node_name)))
+        arg_main = ('-n {name} '.format(name=PBS.s(node_name)))
 
         # make a cli arg string for direct() in this module
-        arg_direct = ('-t={tech} '
-                      '-p={points} '
-                      '-sf={sam_files} '
-                      '-rf={res_file} '
-                      '-spc={sites_per_core} '
-                      '-fo={fout} '
-                      '-do={dirout} '
-                      '-lo={logdir} '
+        arg_direct = ('-t {tech} '
+                      '-p {points} '
+                      '-sf {sam_files} '
+                      '-rf {res_file} '
+                      '-spc {sites_per_core} '
+                      '-fo {fout} '
+                      '-do {dirout} '
+                      '-lo {logdir} '
                       '{cfp} '
                       .format(tech=PBS.s(tech),
                               points=PBS.s(points),
@@ -315,8 +315,8 @@ def peregrine(ctx, nodes, alloc, queue, stdout_path, verbose):
                               ))
 
         # make a cli arg string for local() in this module
-        arg_loc = ('-nw={n_workers} '
-                   '-pr={points_range} '
+        arg_loc = ('-nw {n_workers} '
+                   '-pr {points_range} '
                    '{v}'.format(n_workers=PBS.s(None),
                                 points_range=PBS.s(split.split_range),
                                 v='-v' if verbose else ''))

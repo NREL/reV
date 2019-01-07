@@ -75,7 +75,7 @@ class ProjectPointsType(click.ParamType):
 
             elif '.csv' in value:
                 # project points is a csv file
-                return value.lstrip('=')
+                return value
 
             else:
                 raise TypeError('Cannot recognize points type: {} {} {} {}'
@@ -117,9 +117,7 @@ class StrType(click.ParamType):
             if 'None' in value:
                 return None
             else:
-                # Sometimes the equal sign gets passed through with click
-                # strings. Strip out of the arg.
-                return value.strip('=')
+                return value
         else:
             raise TypeError('Cannot recognize int type: {} {} {} {}'
                             .format(value, type(value), param, ctx))

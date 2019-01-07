@@ -148,7 +148,6 @@ class PointsControl:
         new_points = ProjectPoints.split(i0, i1,
                                          project_points.df,
                                          project_points.sam_files,
-                                         project_points.df,
                                          project_points.tech,
                                          project_points.res_file)
         sub = cls(new_points, sites_per_split=sites_per_split)
@@ -280,8 +279,8 @@ class ProjectPoints:
                     'config' in data.columns.values):
                 self._df = data
             else:
-                raise KeyError('Project points data must contain sites and '
-                               'configs column headers.')
+                raise KeyError('Project points data must contain "gid" and '
+                               '"config" column headers.')
         else:
             raise TypeError('Project points data must be csv filename or '
                             'dictionary but received: {}'.format(type(data)))
@@ -506,7 +505,7 @@ class ProjectPoints:
         self.df = site_config_dict
 
     @classmethod
-    def split(cls, i0, i1, points, sam_files, config_df, tech, res_file):
+    def split(cls, i0, i1, points_df, sam_files, tech, res_file):
         """Return split instance of this ProjectPoints w/ site subset.
 
         Parameters
@@ -521,16 +520,12 @@ class ProjectPoints:
             attribute to include in the split instance. This is not necessarily
             the same as the final site number, for instance if ProjectPoints is
             sites 20:100, i0=0 i1=10 will result in sites 20:30.
-        points : slice | str | pd.DataFrame
-            Slice specifying project points, string pointing to a project
-            points csv (takes a long time for bigger projects), or the upstream
-            project points dataframe (fastest for large projects).
+        points_df : pd.DataFrame
+            Upstream project points dataframe to be split.
         sam_files : dict | str
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s), top level value is the SAM path. Can also be a single
             config file str.
-        config_df : pd.DataFrame
-            Sites to SAM configuration dictionary IDs mapping dataframe.
         tech : str
             reV technology being executed.
         res_file : str
@@ -544,14 +539,10 @@ class ProjectPoints:
             attributes: sites, project points df, and the self dictionary data
             struct.
         """
+        # Extract DF subset with only index values between i0 and i1
+        points_df = points_df[points_df.index.isin(list(range(i0, i1)))]
 
-        # make a new instance of ProjectPoints
-        sub = cls(points, sam_files, tech, res_file=res_file)
-
-        # set the new config map dataframe
-        sub.df = config_df[config_df.index.isin(list(range(i0, i1)))]
-
-        # Reset the site attribute using a subset of the original
-        sub.sites = list(sub.df['gid'].values)
+        # make a new instance of ProjectPoints with subset DF
+        sub = cls(points_df, sam_files, tech, res_file=res_file)
 
         return sub

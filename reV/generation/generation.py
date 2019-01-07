@@ -184,12 +184,12 @@ class Gen:
 
     @staticmethod
     def get_unique_fout(fout):
-        """Ensure a unique tag of format _n000 on the fout file name."""
+        """Ensure a unique tag of format _x000 on the fout file name."""
         if os.path.exists(fout):
-            match = re.match(r'.*n([0-9]{3})', fout)
+            match = re.match(r'.*_x([0-9]{3})', fout)
             if match:
-                new_tag = str(int(match.group(1)) + 1).zfill(3)
-                fout = fout.replace(match.group(1), new_tag)
+                new_tag = '_x' + str(int(match.group(1)) + 1).zfill(3)
+                fout = fout.replace('_x' + match.group(1), new_tag)
                 fout = Gen.get_unique_fout(fout)
         return fout
 
@@ -208,7 +208,7 @@ class Gen:
             fout = os.path.join(dirout, fout)
 
         # check to see if target already exists. If so, assign unique ID.
-        fout = fout.replace('.h5', '_n000.h5')
+        fout = fout.replace('.h5', '_x000.h5')
         fout = Gen.get_unique_fout(fout)
 
         return fout
@@ -427,9 +427,7 @@ if __name__ == '__main__':
     tech = 'pv'
 
     points = ('C:/sandbox/reV/reV-docker/rev-utils/rev_config/'
-              'project_points_500k.csv')
-    points = ('C:/sandbox/reV/reV-docker/rev-utils/rev_config/'
-              'project_points_50.csv')
+              'project_points_1m.csv')
     sam_files = {'sam_gen_pv_1': ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
                                   'naris_pv_1axis_inv13.json')}
 
@@ -444,16 +442,10 @@ if __name__ == '__main__':
     points_range = None
     fout = 'reV.h5'
     dirout = 'C:/sandbox/reV/test_output'
-    Gen.run_smart(tech=tech,
-                  points=points,
-                  sam_files=sam_files,
-                  res_file=res_file,
-                  cf_profiles=cf_profiles,
-                  n_workers=n_workers,
-                  sites_per_split=sites_per_core,
-                  points_range=points_range,
-                  fout=fout,
-                  dirout=dirout)
+    Gen.run_smart(tech=tech, points=points, sam_files=sam_files,
+                  res_file=res_file, cf_profiles=cf_profiles,
+                  n_workers=n_workers, sites_per_split=sites_per_core,
+                  points_range=points_range, fout=fout, dirout=dirout)
 
     print('reV generation local run complete. Total time elapsed: '
           '{0:.2f} minutes.'.format((time.time() - t0) / 60))

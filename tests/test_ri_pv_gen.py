@@ -17,7 +17,8 @@ from reV import __testdatadir__ as TESTDATADIR
 from reV.handlers.capacity_factor import CapacityFactor
 
 
-TOL = 0.001
+RTOL = 0.0
+ATOL = 0.04
 
 
 class pv_results:
@@ -97,8 +98,8 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
         cf_mean_list = pv.get_cf_mean(pp.sites, year)
 
     # benchmark the results
-    result = np.allclose(gen_outs, cf_mean_list, rtol=TOL, atol=TOL)
-    return result
+    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
+    assert result is True
 
 
 def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
@@ -122,8 +123,8 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
         cf_mean_list = pv.get_cf_mean(pp.sites, '2012')
 
     # benchmark the results
-    result = np.allclose(gen_outs, cf_mean_list, rtol=TOL, atol=TOL)
-    return result
+    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
+    assert result is True
 
 
 def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
@@ -145,8 +146,8 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
         cf_mean_list = pv.get_cf_mean(pp.sites, '2012')
 
     # benchmark the results
-    result = np.allclose(gen_outs, cf_mean_list, rtol=TOL, atol=TOL)
-    return result
+    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
+    assert result is True
 
 
 def execute_pytest(capture='all', flags='-rapP'):
@@ -179,14 +180,24 @@ def test_pv_gen_profiles(year):
                    return_obj=False)
 
     # get reV 2.0 generation profiles from disk
-    with CapacityFactor(os.path.join(rev2_out_dir, rev2_out), 'r') as cf:
-        rev2_profiles = cf['cf_profiles']
+    flist = os.listdir(rev2_out_dir)
+    for fname in flist:
+        if rev2_out.strip('.h5') in fname:
+            with CapacityFactor(os.path.join(rev2_out_dir, fname), 'r') as cf:
+                rev2_profiles = cf['cf_profiles']
+            break
 
     # get reV 1.0 generation profiles
     rev1_profiles = get_r1_profiles(year=year)
 
-    result = np.allclose(rev1_profiles, rev2_profiles, rtol=TOL, atol=TOL)
-    return result
+    result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
+    if result:
+        # remove output files if test passes.
+        flist = os.listdir(rev2_out_dir)
+        for fname in flist:
+            os.remove(os.path.join(rev2_out_dir, fname))
+
+    assert result is True
 
 
 def get_r1_profiles(year=2012):
