@@ -5,7 +5,7 @@ import json
 import logging
 import os
 
-from reV.exceptions import ConfigError
+from reV.utilities.exceptions import ConfigError
 
 
 logger = logging.getLogger(__name__)

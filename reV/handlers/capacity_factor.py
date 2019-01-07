@@ -7,8 +7,8 @@ import numpy as np
 import os
 import pandas as pd
 import re
-from reV.exceptions import (ResourceRuntimeError, ResourceKeyError,
-                            ResourceValueError)
+from reV.utilities.exceptions import (ResourceRuntimeError, ResourceKeyError,
+                                      ResourceValueError)
 from reV.handlers.resource import Resource, parse_keys
 
 

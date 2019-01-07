@@ -2,13 +2,9 @@
 Generation
 """
 import click
-import logging
 
-from reV.cli_dtypes import STR
+from reV.utilities.cli_dtypes import STR
 from reV.generation.cli_gen import from_config as run_gen_from_config
-
-
-logger = logging.getLogger(__name__)
 
 
 @click.group()
@@ -22,9 +18,9 @@ logger = logging.getLogger(__name__)
 def main(ctx, name, config_file, verbose):
     """reV 2.0 config command line interface."""
     ctx.ensure_object(dict)
-    ctx.obj['name'] = name
-    ctx.obj['config_file'] = config_file
-    ctx.obj['verbose'] = verbose
+    ctx.obj['NAME'] = name
+    ctx.obj['CONFIG_FILE'] = config_file
+    ctx.obj['VERBOSE'] = verbose
 
 
 @main.command()
@@ -33,8 +29,8 @@ def main(ctx, name, config_file, verbose):
 @click.pass_context
 def generation(ctx, verbose):
     """Run reV 2.0 generation using the config file."""
-    config_file = ctx.obj['config_file']
-    verbose = any([verbose, ctx.obj['verbose']])
+    config_file = ctx.obj['CONFIG_FILE']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_gen_from_config, config_file=config_file, verbose=verbose)
 
 

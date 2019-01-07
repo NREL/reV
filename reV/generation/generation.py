@@ -9,7 +9,7 @@ from warnings import warn
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.execution.execution import (execute_parallel, execute_single,
+from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
 from reV.handlers.capacity_factor import CapacityFactor
 from reV.handlers.resource import Resource
@@ -417,7 +417,8 @@ class Gen:
         logger.debug('Running parallel generation with smart data flushing '
                      'for: {}'.format(pc))
         SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                 loggers=[__name__, 'reV.SAM'])
+                                 loggers=[__name__, 'reV.SAM',
+                                          'reV.utilities'])
 
 
 if __name__ == '__main__':

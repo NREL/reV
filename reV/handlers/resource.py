@@ -4,8 +4,8 @@ Classes to handle resource data
 import h5py
 import numpy as np
 import pandas as pd
-from reV.exceptions import (ResourceKeyError, ResourceRuntimeError,
-                            ResourceValueError, ExtrapolationWarning)
+from reV.utilities.exceptions import (ResourceKeyError, ResourceRuntimeError,
+                                      ResourceValueError, ExtrapolationWarning)
 import warnings
 
 

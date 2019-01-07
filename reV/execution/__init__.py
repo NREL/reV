@@ -1,3 +1,0 @@
-"""
-reV Execution Control Module.
-"""

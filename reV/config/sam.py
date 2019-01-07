@@ -2,13 +2,8 @@
 reV SAM Configuration
 """
 import json
-import logging
 import os
-
 from reV.config.base_config import BaseConfig
-
-
-logger = logging.getLogger(__name__)
 
 
 class SAMGenConfig(BaseConfig):

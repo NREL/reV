@@ -2,6 +2,7 @@
 Generation CLI entry points.
 """
 import click
+from dask.distributed import Client, LocalCluster
 import logging
 from math import ceil
 import os
@@ -9,15 +10,14 @@ import pprint
 import re
 import time
 
+from reV import __testdatadir__
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.gen_config import GenConfig
-
-from reV.execution.execution import PBS
 from reV.generation.generation import Gen
-from reV.rev_logger import init_logger
-from reV import __testdatadir__
-from reV.cli_dtypes import INT, STR, SAMFILES, PROJECTPOINTS, INTLIST
-from reV.exceptions import ConfigError
+from reV.utilities.cli_dtypes import INT, STR, SAMFILES, PROJECTPOINTS, INTLIST
+from reV.utilities.exceptions import ConfigError
+from reV.utilities.execution import PBS
+from reV.utilities.rev_logger import init_logger
 
 
 logger = logging.getLogger(__name__)
@@ -48,8 +48,64 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
 @click.pass_context
 def main(ctx, name, verbose):
     """Command line interface (CLI) for the reV 2.0 Generation Module."""
-    ctx.obj['name'] = name
-    ctx.obj['verbose'] = verbose
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+def submit_from_config(ctx, name, year, config, verbose, i):
+    """Function to submit one year from a config file.
+
+    Parameters
+    ----------
+    ctx : cli.ctx
+        Click context object. Use case: data = ctx.obj['key']
+    name : str
+        Job name.
+    year : int | str
+        4 digit year
+    config : reV.config.GenConfig
+        Generation config object.
+    """
+    # set the year-specific variables
+    ctx.obj['RES_FILE'] = config.res_files[i]
+
+    # if the year isn't in the name, add it before setting the file output
+    match = re.match(r'.*([1-3][0-9]{3})', name)
+    if not match:
+        ctx.obj['FOUT'] = '{}_{}.h5'.format(name, year)
+        # 8 chars for pbs job name (lim is 16, -8 for "_year_2charID")
+        ctx.obj['NAME'] = '{}_{}'.format(name[:8], year)
+
+    msg = ('Running reV generation for year: {} with resource file: {}'
+           .format(year, config.res_files[i]))
+    logger.debug(msg)
+    click.echo(msg)
+
+    # check to make sure that the year matches the resource file
+    if str(year) not in config.res_files[i]:
+        raise Exception('Resource file and year do not appear to match. '
+                        'Expected the string representation of the year '
+                        'to be in the resource file name. '
+                        'Year: {}, Resource file: {}'
+                        .format(year, config.res_files[i]))
+
+    # invoke direct methods based on the config execution option
+    if config.execution_control.option == 'local':
+        sites_per_core = ceil(len(config.points_control) /
+                              config.execution_control.ppn)
+        ctx.obj['SITES_PER_CORE'] = sites_per_core
+        ctx.invoke(local, n_workers=config.execution_control.ppn,
+                   points_range=None, verbose=verbose)
+
+    elif config.execution_control.option == 'peregrine':
+        ctx.invoke(peregrine, nodes=config.execution_control.nodes,
+                   alloc=config.execution_control.alloc,
+                   queue=config.execution_control.queue,
+                   stdout_path=os.path.join(config.dirout, 'stdout'),
+                   verbose=verbose)
+    else:
+        raise ConfigError('Execution option not recognized: "{}"'
+                          .format(config.execution_control.option))
 
 
 @main.command()
@@ -60,8 +116,8 @@ def main(ctx, name, verbose):
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV gen from a config file."""
-    name = ctx.obj['name']
-    verbose = any([verbose, ctx.obj['verbose']])
+    name = ctx.obj['NAME']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # Instantiate the config object
     config = GenConfig(config_file)
@@ -72,63 +128,27 @@ def from_config(ctx, config_file, verbose):
 
     # initialize loggers. Not SAM (will be logged in the invoked processes).
     init_gen_loggers(verbose, name, logdir=config.logdir,
-                     modules=['reV.config', 'reV.generation', 'reV.execution'])
+                     modules=['reV.config', 'reV.generation', 'reV.utilities'])
 
     # log the config
     logger.debug('Running reV 2.0 generation with the following config dict: '
                  '\n{}'.format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
-    ctx.obj['tech'] = config.tech
-    ctx.obj['points'] = config['project_points']
-    ctx.obj['sam_files'] = config.sam_gen
-    ctx.obj['dirout'] = config.dirout
-    ctx.obj['logdir'] = config.logdir
-    ctx.obj['cf_profiles'] = config.write_profiles
-    ctx.obj['sites_per_core'] = config.execution_control['sites_per_core']
+    ctx.obj['TECH'] = config.tech
+    ctx.obj['POINTS'] = config['project_points']
+    ctx.obj['SAM_FILES'] = config.sam_gen
+    ctx.obj['DIROUT'] = config.dirout
+    ctx.obj['LOGDIR'] = config.logdir
+    ctx.obj['CF_PROFILES'] = config.write_profiles
+    ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
 
-    # iterate through the years in config (could be just one).
-    for i, year in enumerate(config.years):
-        # set the year-specific variables
-        ctx.obj['res_file'] = config.res_files[i]
-
-        # if the year isn't in the name, add it before setting the file output
-        match = re.match(r'.*([1-3][0-9]{3})', name)
-        if not match:
-            ctx.obj['fout'] = '{}_{}.h5'.format(name, year)
-            # 8 chars for pbs job name (lim is 16, -8 for "_year_2charID")
-            ctx.obj['name'] = '{}_{}'.format(name[:8], year)
-
-        msg = ('Running reV generation for year: {} with resource file: {}'
-               .format(year, config.res_files[i]))
-        logger.debug(msg)
-        click.echo(msg)
-
-        # check to make sure that the year matches the resource file
-        if str(year) not in config.res_files[i]:
-            raise Exception('Resource file and year do not appear to match. '
-                            'Expected the string representation of the year '
-                            'to be in the resource file name. '
-                            'Year: {}, Resource file: {}'
-                            .format(year, config.res_files[i]))
-
-        # invoke direct methods based on the config execution option
-        if config.execution_control.option == 'local':
-            sites_per_core = ceil(len(config.points_control) /
-                                  config.execution_control.ppn)
-            ctx.obj['sites_per_core'] = sites_per_core
-            ctx.invoke(local, n_workers=config.execution_control.ppn,
-                       points_range=None, verbose=verbose)
-
-        elif config.execution_control.option == 'peregrine':
-            ctx.invoke(peregrine, nodes=config.execution_control.nodes,
-                       alloc=config.execution_control.alloc,
-                       queue=config.execution_control.queue,
-                       stdout_path=os.path.join(config.dirout, 'stdout'),
-                       verbose=verbose)
-        else:
-            raise ConfigError('Execution option not recognized: "{}"'
-                              .format(config.execution_control.option))
+    # submit w Dask to segregate year logs initialized in Local(), Peregrine()
+    with Client(LocalCluster(n_workers=1)) as client:
+        # iterate through the years in config (could be just one).
+        for i, year in enumerate(config.years):
+            client.submit(submit_from_config, ctx, name, year, config,
+                          verbose, i)
 
 
 @main.group()
@@ -165,16 +185,16 @@ def direct(ctx, tech, points, sam_files, res_file, sites_per_core,
            fout, dirout, logdir, cf_profiles, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
-    ctx.obj['tech'] = tech
-    ctx.obj['points'] = points
-    ctx.obj['sam_files'] = sam_files
-    ctx.obj['res_file'] = res_file
-    ctx.obj['sites_per_core'] = sites_per_core
-    ctx.obj['fout'] = fout
-    ctx.obj['dirout'] = dirout
-    ctx.obj['logdir'] = logdir
-    ctx.obj['cf_profiles'] = cf_profiles
-    verbose = any([verbose, ctx.obj['verbose']])
+    ctx.obj['TECH'] = tech
+    ctx.obj['POINTS'] = points
+    ctx.obj['SAM_FILES'] = sam_files
+    ctx.obj['RES_FILE'] = res_file
+    ctx.obj['SITES_PER_CORE'] = sites_per_core
+    ctx.obj['FOUT'] = fout
+    ctx.obj['DIROUT'] = dirout
+    ctx.obj['LOGDIR'] = logdir
+    ctx.obj['CF_PROFILES'] = cf_profiles
+    verbose = any([verbose, ctx.obj['VERBOSE']])
 
 
 @direct.command()
@@ -191,17 +211,17 @@ def direct(ctx, tech, points, sam_files, res_file, sites_per_core,
 def local(ctx, n_workers, points_range, legacy, verbose):
     """Run generation on local worker(s)."""
 
-    name = ctx.obj['name']
-    tech = ctx.obj['tech']
-    points = ctx.obj['points']
-    sam_files = ctx.obj['sam_files']
-    res_file = ctx.obj['res_file']
-    sites_per_core = ctx.obj['sites_per_core']
-    fout = ctx.obj['fout']
-    dirout = ctx.obj['dirout']
-    logdir = ctx.obj['logdir']
-    cf_profiles = ctx.obj['cf_profiles']
-    verbose = any([verbose, ctx.obj['verbose']])
+    name = ctx.obj['NAME']
+    tech = ctx.obj['TECH']
+    points = ctx.obj['POINTS']
+    sam_files = ctx.obj['SAM_FILES']
+    res_file = ctx.obj['RES_FILE']
+    sites_per_core = ctx.obj['SITES_PER_CORE']
+    fout = ctx.obj['FOUT']
+    dirout = ctx.obj['DIROUT']
+    logdir = ctx.obj['LOGDIR']
+    cf_profiles = ctx.obj['CF_PROFILES']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
 
     init_gen_loggers(verbose, name, logdir=logdir)
 
@@ -256,17 +276,17 @@ def local(ctx, n_workers, points_range, legacy, verbose):
 def peregrine(ctx, nodes, alloc, queue, stdout_path, verbose):
     """Run generation on Peregrine HPC via PBS job submission."""
 
-    name = ctx.obj['name']
-    tech = ctx.obj['tech']
-    points = ctx.obj['points']
-    sam_files = ctx.obj['sam_files']
-    res_file = ctx.obj['res_file']
-    sites_per_core = ctx.obj['sites_per_core']
-    fout = ctx.obj['fout']
-    dirout = ctx.obj['dirout']
-    logdir = ctx.obj['logdir']
-    cf_profiles = ctx.obj['cf_profiles']
-    verbose = any([verbose, ctx.obj['verbose']])
+    name = ctx.obj['NAME']
+    tech = ctx.obj['TECH']
+    points = ctx.obj['POINTS']
+    sam_files = ctx.obj['SAM_FILES']
+    res_file = ctx.obj['RES_FILE']
+    sites_per_core = ctx.obj['SITES_PER_CORE']
+    fout = ctx.obj['FOUT']
+    dirout = ctx.obj['DIROUT']
+    logdir = ctx.obj['LOGDIR']
+    cf_profiles = ctx.obj['CF_PROFILES']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
 
     init_gen_loggers(verbose, name, logdir=logdir)
 

@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from warnings import warn
 
-from reV.exceptions import ConfigWarning
+from reV.utilities.exceptions import ConfigWarning
 from reV.handlers.resource import Resource
 from reV.config.sam import SAMGenConfig
 

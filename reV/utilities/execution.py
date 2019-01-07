@@ -1,7 +1,7 @@
 """
 Generation
 """
-from dask.distributed import Client, LocalCluster
+from dask.distributed import Client, LocalCluster, wait
 from subprocess import Popen, PIPE
 import logging
 import gc
@@ -11,8 +11,8 @@ import getpass
 import shlex
 from warnings import warn
 
-from reV.rev_logger import REV_LOGGERS
-from reV.exceptions import ExecutionError
+from reV.utilities.rev_logger import REV_LOGGERS
+from reV.utilities.exceptions import ExecutionError
 
 
 logger = logging.getLogger(__name__)
@@ -410,8 +410,7 @@ class SmartParallelJob:
 
     def gather_and_flush(self, i, client, futures, force_flush=False):
         """Gather futures, update object output, potentially flush to disk."""
-        self.obj.out = client.gather(futures)
-        futures = []
+        wait(futures)
         mem = psutil.virtual_memory()
         logger.debug('Parallel run at iteration {0}. Currently, '
                      'results are stored in memory for {1} sites '
@@ -427,6 +426,10 @@ class SmartParallelJob:
                          '{0:.2f}% and the memory utilization limit is '
                          '{1:.2f}%.'.format(100 * (mem.used / mem.total),
                                             100 * self.mem_util_lim))
+            # send gathered futures to object output
+            # (obj.out should be a property setter that will append new data.)
+            self.obj.out = client.gather(futures)
+            futures = []
             self.flush()
 
         return futures

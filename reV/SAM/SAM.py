@@ -14,7 +14,7 @@ from warnings import warn
 
 from reV.handlers.resource import WTK, NSRDB
 from reV.SAM.PySSC import PySSC
-from reV.exceptions import SAMInputWarning, SAMExecutionError
+from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 
 
 logger = logging.getLogger(__name__)

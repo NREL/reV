@@ -8,12 +8,11 @@ from warnings import warn
 
 from reV import __dir__ as REVDIR
 from reV import __testdatadir__ as TESTDATADIR
-from reV.exceptions import ConfigWarning, ConfigError
-
 from reV.config.sam import SAMGenConfig
 from reV.config.base_config import BaseConfig
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.execution import BaseExecutionConfig, PeregrineConfig
+from reV.utilities.exceptions import ConfigWarning, ConfigError
 
 
 logger = logging.getLogger(__name__)
