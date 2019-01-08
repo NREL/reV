@@ -5,6 +5,7 @@ import logging
 import pandas as pd
 import numpy as np
 from warnings import warn
+from math import ceil
 
 from reV.utilities.exceptions import ConfigWarning
 from reV.handlers.resource import Resource
@@ -49,15 +50,13 @@ class PointsControl:
         # _ilim is the maximum index value
         self._ilim = self.project_points.df.index[-1] + 1
 
-        logger.info('PointsControl iterator initializing with starting site '
-                    '{} and maximum site index value {}. This could take up '
-                    'to a few minutes for larger projects.'
-                    .format(self._last_site, self._ilim))
+        logger.debug('PointsControl iterator initializing with site indices '
+                     '{} through {}'
+                     .format(self._last_site, self._ilim))
 
         # pre-initialize all iter objects
         self._iter_list = []
-        iter_bool = True
-        while iter_bool:
+        while True:
             i0 = self._last_site
             i1 = np.min([i0 + self.sites_per_split, self._ilim])
             self._last_site = i1
@@ -67,12 +66,15 @@ class PointsControl:
             new._split_range = [i0, i1]
 
             if not new.project_points.sites:
-                # no more sites left to analyze, reached end of iter.
-                logger.debug('PointsControl stopping iteration at attempted '
-                             'index range {} to {}. '.format(i0, i1))
-                iter_bool = False
+                # no sites in new project points. Stop iterator.
+                break
             else:
                 self._iter_list.append(new)
+        # pre-init iter limit as length of iter list
+        self._N = len(self._iter_list)
+        logger.debug('PointsControl stopped iteration at attempted '
+                     'index of {}. Length of iterator is: {}'
+                     .format(i1, len(self)))
         return self
 
     def __next__(self):
@@ -84,18 +86,18 @@ class PointsControl:
             Split instance of this class with a subset of project points based
             on the number of sites per split.
         """
-        try:
+        if self._i < self._N:
             # Get next PointsControl from the iter list
-            next_pc = self._iter_list.pop(0)
-        except IndexError:
+            next_pc = self._iter_list[self._i]
+        else:
             # No more points controllers left in initialized list
             raise StopIteration
 
+        logger.debug('PointsControl passing site project points '
+                     'with indices {} to {} on iteration #{} '
+                     .format(next_pc.split_range[0],
+                             next_pc.split_range[1], self._i))
         self._i += 1
-        logger.debug('PointsControl passing site project points to worker #{} '
-                     'with indices {} to {} '
-                     .format(self._i, next_pc.split_range[0],
-                             next_pc.split_range[1]))
         return next_pc
 
     def __repr__(self):
@@ -104,8 +106,8 @@ class PointsControl:
         return msg
 
     def __len__(self):
-        """Length of this object is the number of sites."""
-        return len(self.sites)
+        """Len is the number of possible iterations aka splits."""
+        return ceil(len(self.project_points) / self.sites_per_split)
 
     @property
     def sites_per_split(self):

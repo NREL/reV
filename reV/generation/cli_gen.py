@@ -2,7 +2,6 @@
 Generation CLI entry points.
 """
 import click
-from dask.distributed import Client, LocalCluster, wait
 import logging
 from math import ceil
 import os
@@ -17,14 +16,14 @@ from reV.generation.generation import Gen
 from reV.utilities.cli_dtypes import INT, STR, SAMFILES, PROJECTPOINTS, INTLIST
 from reV.utilities.exceptions import ConfigError
 from reV.utilities.execution import PBS
-from reV.utilities.rev_logger import init_logger
+from reV.utilities.rev_logger import init_logger, REV_LOGGERS
 
 
 logger = logging.getLogger(__name__)
 
 
 def init_gen_loggers(verbose, name, logdir='./out/log',
-                     modules=['reV.SAM', 'reV.config', 'reV.generation',
+                     modules=['reV.config', 'reV.generation',
                               'reV.utilities']):
     """Initialize multiple loggers to a single file for the gen compute."""
     if verbose:
@@ -34,9 +33,20 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
 
     if not os.path.exists(logdir):
         os.makedirs(logdir)
-    log_file = os.path.join(logdir, '{}.log'.format(name))
+
     for module in modules:
-        logger = init_logger(module, log_level=log_level, log_file=log_file)
+        log_file = os.path.join(logdir, '{}.log'.format(name))
+
+        if log_level == 'DEBUG':
+            # always attempt to initialize the logger if it's debug mode
+            logger = init_logger(module, log_level=log_level,
+                                 log_file=log_file)
+        else:
+            # if log level is not debug, do not initialize a redundant logger
+            logger = REV_LOGGERS[module]
+            if 'log_file' not in logger:
+                logger = init_logger(module, log_level=log_level,
+                                     log_file=log_file)
     return logger
 
 
@@ -96,6 +106,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
         ctx.invoke(peregrine, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    queue=config.execution_control.queue,
+                   feature=config.execution_control.feature,
                    stdout_path=os.path.join(config.dirout, 'stdout'),
                    verbose=verbose)
     else:
@@ -122,12 +133,18 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers. Not SAM (will be logged in the invoked processes).
-    init_gen_loggers(verbose, name, logdir=config.logdir,
-                     modules=['reV.config', 'reV.generation', 'reV.utilities'])
+    init_gen_loggers(verbose, name, logdir=config.logdir)
 
-    # log the config
-    logger.debug('Running reV 2.0 generation with the following config dict: '
-                 '\n{}'.format(pprint.pformat(config, indent=4)))
+    # Initial log statements
+    logger.info('Running reV 2.0 generation from config file: "{}"'
+                .format(config_file))
+    logger.info('The following project points were specified: "{}"'
+                .format(config.get('project_points', None)))
+    logger.info('The following SAM configs are available to this run:\n{}'
+                .format(pprint.pformat(config.get('sam_generation', None),
+                                       indent=4)))
+    logger.debug('The full configuration input is as follows:\n{}'
+                 .format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
     ctx.obj['TECH'] = config.tech
@@ -138,18 +155,8 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['CF_PROFILES'] = config.write_profiles
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
 
-    # submit w Dask to segregate year logs initialized in Local(), Peregrine()
-    cluster = LocalCluster(n_workers=None)
-    futures = []
-    with Client(cluster) as client:
-        # iterate through the years in config (could be just one).
-        for i, year in enumerate(config.years):
-            logger.debug('Running reV generation for year: {} with resource '
-                         'file: {}'.format(year, config.res_files[i]))
-            futures.append(client.submit(submit_from_config, ctx, name, year,
-                                         config, verbose, i))
-        wait(futures)
-    cluster.close()
+    for i, year in enumerate(config.years):
+        submit_from_config(ctx, name, year, config, verbose, i)
 
 
 @main.group()
@@ -225,9 +232,12 @@ def local(ctx, n_workers, points_range, verbose):
     init_gen_loggers(verbose, name, logdir=logdir)
 
     for key, val in ctx.obj.items():
-        logger.debug('ctx item: "{}" : "{}" with type "{}"'
-                     .format(key, val, type(val)))
+        logger.debug('ctx var passed to local method: "{}" : "{}" with type '
+                     '"{}"'.format(key, val, type(val)))
     click.echo('Kicking off reV generation local run "{}".'.format(name))
+    logger.info('Generation is being run with with job name "{}" and resource '
+                'file: {}. Target output path is: {}'
+                .format(name, res_file, os.path.join(dirout, fout)))
     t0 = time.time()
 
     # Execute the Generation module with smart data flushing.
@@ -242,8 +252,14 @@ def local(ctx, n_workers, points_range, verbose):
                   fout=fout,
                   dirout=dirout)
 
-    click.echo('reV generation local run complete. Total time elapsed: '
-               '{0:.2f} minutes.'.format((time.time() - t0) / 60))
+    click.echo('Gen local run complete. Time elapsed: '
+               '{0:.2f} min.'.format((time.time() - t0) / 60))
+
+    tmp_str = ' with points range {}'.format(points_range)
+    logger.info('Gen compute complete for project points "{0}"{1}. '
+                'Time elapsed: {2:.2f} min. Target output dir: {3}'
+                .format(points, tmp_str if points_range else '',
+                        (time.time() - t0) / 60), dirout)
 
 
 @direct.command()
@@ -253,12 +269,15 @@ def local(ctx, n_workers, points_range, verbose):
               help='Peregrine allocation account name. Default is "rev".')
 @click.option('--queue', '-q', default='short', type=STR,
               help='Peregrine target job queue. Default is "short".')
+@click.option('--feature', '-l', default=None, type=STR,
+              help=('Feature request. Format is "64GB" or "24core". '
+                    'Default is None.'))
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def peregrine(ctx, nodes, alloc, queue, stdout_path, verbose):
+def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     """Run generation on Peregrine HPC via PBS job submission."""
 
     name = ctx.obj['NAME']
@@ -278,7 +297,7 @@ def peregrine(ctx, nodes, alloc, queue, stdout_path, verbose):
     if isinstance(points, (str, slice, list, tuple)):
         # create points control via points
         pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-        sites_per_node = ceil(len(pp.sites) / nodes)
+        sites_per_node = ceil(len(pp) / nodes)
         pc = PointsControl(pp, sites_per_split=sites_per_node)
     else:
         raise TypeError('Generation Points input type is unrecognized: '
@@ -335,9 +354,13 @@ def peregrine(ctx, nodes, alloc, queue, stdout_path, verbose):
                        arg_direct=arg_direct,
                        arg_loc=arg_loc))
 
+        logger.info('Running reV generation on HPC with node name "{}" for {} '
+                    '(points range: {}) with target output directory: {}'
+                    .format(node_name, pc, split.split_range, dirout))
+
         # create and submit the PBS job
         pbs = PBS(cmd, alloc=alloc, queue=queue, name=node_name,
-                  stdout_path=stdout_path)
+                  feature=feature, stdout_path=stdout_path)
         if pbs.id:
             click.echo('Kicked off reV generation job "{}" ({}) on Peregrine.'
                        .format(node_name, pbs.id))

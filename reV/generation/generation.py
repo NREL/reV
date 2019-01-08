@@ -20,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 class Gen:
     """Base class for generation"""
+
+    # Mapping of available SAM generation functions
+    funs = {'pv': PV.reV_run,
+            'csp': CSP.reV_run,
+            'landbasedwind': LandBasedWind.reV_run,
+            'offshorewind': OffshoreWind.reV_run,
+            }
+
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out'):
         """Initialize a generation instance.
@@ -114,7 +122,7 @@ class Gen:
         elif isinstance(result, dict):
             self._out.update(result)
         elif isinstance(result, type(None)):
-            del self._out
+            self._out.clear()
         else:
             raise TypeError('Did not recognize the type of generation output. '
                             'Tried to set output type "{}", but requires '
@@ -141,23 +149,25 @@ class Gen:
                 for dset in res.dsets:
                     if 'speed' in dset:
                         # take nominal WTK chunks from windspeed
-                        nominal = res._h5[dset].chunks[1]
+                        chunks = res._h5[dset].chunks
                         break
             elif 'nsrdb' in res_file.lower():
                 # take nominal NSRDB chunks from dni
-                nominal = res._h5['dni'].chunks[1]
+                chunks = res._h5['dni'].chunks
             else:
                 raise Exception('Expected "nsrdb" or "wtk" to be in resource '
                                 'filename: {}'.format(res_file))
-        if nominal is None:
+        if chunks is None:
             # if chunks not set, go to default
-            nominal = default
+            sites_per_core = default
             logger.debug('Sites per core being set to {} (default) based on '
-                         'no set chunk size in {}.'.format(nominal, res_file))
+                         'no set chunk size in {}.'
+                         .format(sites_per_core, res_file))
         else:
+            sites_per_core = chunks[1]
             logger.debug('Sites per core being set to {} based on chunk size '
-                         'of {}.'.format(nominal, res_file))
-        return nominal
+                         'of {}.'.format(sites_per_core, res_file))
+        return sites_per_core
 
     @staticmethod
     def unpack_futures(futures):
@@ -191,19 +201,19 @@ class Gen:
         out = np.array([gen_out[k]['cf_profile'] for k in sorted_keys])
         return out.transpose()
 
-    def means_to_disk(self, gen_out, fout='gen_out.h5', mode='w'):
+    def means_to_disk(self, fout='gen_out.h5', mode='w'):
         """Save capacity factor means to disk."""
-        cf_means = self.unpack_cf_means(gen_out)
+        cf_means = self.unpack_cf_means(self.out)
         meta = self.meta
-        meta.loc[:, 'cf_means'] = self.unpack_cf_means(gen_out)
+        meta.loc[:, 'cf_means'] = cf_means
         CapacityFactor.write_means(fout, meta, cf_means, self.sam_configs,
                                    **{'mode': mode})
 
-    def profiles_to_disk(self, gen_out, fout='gen_out.h5', mode='w'):
+    def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
         """Save capacity factor profiles to disk."""
-        cf_profiles = self.unpack_cf_profiles(gen_out)
+        cf_profiles = self.unpack_cf_profiles(self.out)
         meta = self.meta
-        meta.loc[:, 'cf_means'] = self.unpack_cf_means(gen_out)
+        meta.loc[:, 'cf_means'] = self.unpack_cf_means(self.out)
         CapacityFactor.write_profiles(fout, meta, self.time_index,
                                       cf_profiles, self.sam_configs,
                                       **{'mode': mode})
@@ -251,19 +261,20 @@ class Gen:
         fout = self.fout
         dirout = self.dirout
 
-        # handle output file request
-        if isinstance(fout, str):
+        # handle output file request if file is specified and .out is not empty
+        if isinstance(fout, str) and self.out:
             fout = self.handle_fout(fout, dirout)
 
-            logger.debug('Flushing generation outputs to disk, target file: {}'
-                         .format(fout))
+            logger.info('Flushing generation outputs to disk, target file: {}'
+                        .format(fout))
             if 'profile' in str(self.output_request):
-                self.profiles_to_disk(self.out, fout=fout, mode=mode)
+                self.profiles_to_disk(fout=fout, mode=mode)
             else:
-                self.means_to_disk(self.out, fout=fout, mode=mode)
+                self.means_to_disk(fout=fout, mode=mode)
             logger.debug('Flushed generation output successfully to disk.')
 
-    def run(self, points_control):
+    @staticmethod
+    def run(points_control, tech=None, res_file=None, output_request=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -280,14 +291,12 @@ class Gen:
             Output dictionary from the SAM reV_run function.
         """
 
-        sam_funs = {'pv': PV.reV_run,
-                    'csp': CSP.reV_run,
-                    'landbasedwind': LandBasedWind.reV_run,
-                    'offshorewind': OffshoreWind.reV_run,
-                    }
-
-        out = sam_funs[self.tech](points_control, self.res_file,
-                                  output_request=self.output_request)
+        try:
+            out = Gen.funs[tech](points_control, res_file,
+                                 output_request=output_request)
+        except Exception:
+            out = {}
+            logger.exception('Worker failed for PC: {}'.format(points_control))
 
         return out
 
@@ -360,14 +369,17 @@ class Gen:
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout)
 
+        kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
+                  'output_request': gen.output_request}
+
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
             logger.debug('Running serial generation for: {}'.format(pc))
-            out = execute_single(gen.run, pc)
+            out = execute_single(gen.run, pc, **kwargs)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
             out = execute_parallel(gen.run, pc, n_workers=n_workers,
-                                   loggers=[__name__, 'reV.SAM'])
+                                   loggers=[__name__, 'reV.SAM'], **kwargs)
 
         # save output data to object attribute
         gen.out = out
@@ -382,7 +394,8 @@ class Gen:
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
                   cf_profiles=True, n_workers=1, sites_per_split=None,
-                  points_range=None, fout=None, dirout='./gen_out'):
+                  points_range=None, fout=None, dirout='./gen_out',
+                  mem_util_lim=0.7):
         """Execute a generation run with smart data flushing.
 
         Parameters
@@ -416,6 +429,10 @@ class Gen:
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
+        mem_util_lim : float
+            Memory utilization limit (fractional). If the used memory divided
+            by the total memory is greater than this value, the obj.out will
+            be flushed and the local node memory will be cleared.
         """
 
         # create the output request tuple
@@ -444,16 +461,23 @@ class Gen:
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout)
 
-        logger.debug('Running parallel generation with smart data flushing '
-                     'for: {}'.format(pc))
+        kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
+                  'output_request': gen.output_request}
+
+        logger.info('Running parallel generation with smart data flushing '
+                    'for: {}'.format(pc))
         SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                 loggers=[__name__, 'reV.SAM',
-                                          'reV.utilities'])
+                                 loggers=['reV.generation', 'reV.utilities'],
+                                 **kwargs, mem_util_lim=mem_util_lim)
 
 
 if __name__ == '__main__':
     # TEST case on local machine
     import time
+    from reV.utilities.rev_logger import init_logger
+    modules = [__name__, 'reV.config', 'reV.utilities']
+    for mod in modules:
+        init_logger(mod, log_level='DEBUG')
     t0 = time.time()
     tech = 'pv'
 
@@ -462,17 +486,21 @@ if __name__ == '__main__':
     sam_files = {'sam_gen_pv_1': ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
                                   'naris_pv_1axis_inv13.json')}
 
+    points = slice(0, 100)
+    sam_files = ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
+                 'naris_pv_1axis_inv13.json')
+
     res_file = 'C:/sandbox/reV/git_reV2/tests/data/nsrdb/ri_100_nsrdb_2012.h5'
     cf_profiles = True
     n_workers = 2
-    sites_per_core = 100
+    sites_per_core = 25
     points_range = None
     fout = 'reV.h5'
     dirout = 'C:/sandbox/reV/test_output'
 
     pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-    sites_per_split = len(pp) / 2
-    points_range = [10, 1000]
+    sites_per_split = sites_per_core
+    points_range = None
 
     if points_range is None:
         pc = PointsControl(pp, sites_per_split=sites_per_split)
@@ -489,3 +517,8 @@ if __name__ == '__main__':
 
     print('reV generation local run complete. Total time elapsed: '
           '{0:.2f} minutes.'.format((time.time() - t0) / 60))
+
+    fout = 'C:/sandbox/reV/test_output/reV_x001.h5'
+    with CapacityFactor(fout) as cf:
+        meta = cf.meta
+    print(meta)

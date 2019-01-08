@@ -105,13 +105,14 @@ class PBS(SubprocessManager):
     """Subclass for PBS subprocess jobs."""
 
     def __init__(self, cmd, alloc='rev', queue='short', name='reV',
-                 stdout_path='./stdout'):
+                 feature=None, stdout_path='./stdout'):
         """Initialize and submit a PBS job."""
         self.make_path(stdout_path)
         self.id, self.err = self.qsub(cmd,
                                       alloc=alloc,
                                       queue=queue,
                                       name=name,
+                                      feature=feature,
                                       stdout_path=stdout_path)
 
     @staticmethod
@@ -161,7 +162,7 @@ class PBS(SubprocessManager):
             return qstat_rows
 
     @staticmethod
-    def qsub(cmd, alloc='rev', queue='short', name='reV',
+    def qsub(cmd, alloc='rev', queue='short', name='reV', feature=None,
              stdout_path='./stdout', keep_sh=False):
         """Submit a PBS job via qsub command and PBS shell script."""
 
@@ -173,6 +174,7 @@ class PBS(SubprocessManager):
             out = None
             err = 'already_running'
         else:
+            feature_str = '#PBS -l feature={}\n'.format(feature)
             fname = '{}.sh'.format(name)
             script = ('#!/bin/bash\n'
                       '#PBS -N {n} # job name\n'
@@ -180,8 +182,10 @@ class PBS(SubprocessManager):
                       '#PBS -q {q} # queue (debug, short, batch, or long)\n'
                       '#PBS -o {p}/{n}_$PBS_JOBID.o\n'
                       '#PBS -e {p}/{n}_$PBS_JOBID.e\n'
+                      '{L}'
                       '{cmd}'
                       .format(n=name, a=alloc, q=queue, p=stdout_path,
+                              L=feature_str if feature else '',
                               cmd=cmd))
 
             # write the shell script file and submit as qsub job
@@ -316,7 +320,7 @@ class SmartParallelJob:
     """Single node parallel compute manager with smart data flushing."""
 
     def __init__(self, obj, execution_iter, loggers=[], n_workers=None,
-                 mem_util_lim=0.5):
+                 mem_util_lim=0.7):
         """Single node parallel compute manager with smart data flushing.
 
         Parameters
@@ -402,52 +406,42 @@ class SmartParallelJob:
             client.run(REV_LOGGERS.init_logger, logger_name)
 
     def flush(self):
-        """Flush obj.out to disk."""
+        """Flush obj.out to disk and garbage collect."""
         # memory utilization limit exceeded, flush memory to disk
         self.obj.flush()
         self.obj.out = None
         gc.collect()
 
     def gather_and_flush(self, i, client, futures, force_flush=False):
-        """Wait on futures, potentially update obj.out, and flush to disk."""
+        """Wait or gather futures, update obj.out, flush to disk."""
         wait(futures)
         mem = psutil.virtual_memory()
-        logger.debug('Parallel run at iteration {0}. Currently, '
-                     'results are stored in memory for {1} futures '
-                     'and memory usage is {2:.3f} GB out of {3:.3f} '
+        logger.debug('Parallel run at iteration {0}. '
+                     'Results are stored in memory for {1} futures '
+                     'and memory usage is {2:.3f} GB out of {3:.3f} GB '
                      'total ({4:.1f}% used)'
                      .format(i, len(futures),
                              mem.used / 1e9,
                              mem.total / 1e9,
                              100 * mem.used / mem.total))
 
-        if ((mem.used / mem.total) > self.mem_util_lim) or force_flush:
+        if ((mem.used / mem.total) >= self.mem_util_lim) or force_flush:
             logger.debug('Flushing memory to disk. The memory utilization is '
-                         '{0:.2f}% and the memory utilization limit is '
-                         '{1:.2f}% (before gathering futures).'
+                         '{0:.2f}% and the limit is {1:.2f}%.'
                          .format(100 * (mem.used / mem.total),
                                  100 * self.mem_util_lim))
             # send gathered futures to object output
             # (obj.out should be a property setter that will append new data.)
             self.obj.out = client.gather(futures)
-            logger.debug('Flushing memory to disk. The memory utilization is '
-                         '{0:.2f}% and the memory utilization limit is '
-                         '{1:.2f}% (after gathering futures).'
-                         .format(100 * (mem.used / mem.total),
-                                 100 * self.mem_util_lim))
-            futures = []
+            futures.clear()
+            client.restart()
+            logger.debug('Restarted Dask client.')
             self.flush()
-            logger.debug('Flushing memory to disk. The memory utilization is '
-                         '{0:.2f}% and the memory utilization limit is '
-                         '{1:.2f}% (after flushing and G.C.).'
-                         .format(100 * (mem.used / mem.total),
-                                 100 * self.mem_util_lim))
-
-        return futures
+        return futures, client
 
     @classmethod
     def execute(cls, obj, execution_iter, loggers=[], n_workers=None,
-                mem_util_lim=0.5):
+                mem_util_lim=0.7, **kwargs):
         """Execute the smart parallel run with data flushing."""
 
         manager = cls(obj, execution_iter, loggers=loggers,
@@ -459,11 +453,11 @@ class SmartParallelJob:
         n_workers = manager.n_workers
 
         mem = psutil.virtual_memory()
-        logger.debug('Executing parallel run on cluster with {0} workers. '
-                     'Initial memory usage is {1:.3f} GB out of {2:.3f} total '
-                     '({3:.1f}% used)'.format(n_workers, mem.used / 1e9,
-                                              mem.total / 1e9,
-                                              100 * mem.used / mem.total))
+        logger.info('Executing parallel run on cluster with {0} workers. '
+                    'Initial memory usage is {1:.3f} GB out of {2:.3f} total '
+                    '({3:.1f}% used)'.format(n_workers, mem.used / 1e9,
+                                             mem.total / 1e9,
+                                             100 * mem.used / mem.total))
 
         # initialize a client based on the input cluster.
         with Client(cluster) as client:
@@ -472,15 +466,22 @@ class SmartParallelJob:
 
             # iterate through split executions, submitting each to worker
             for i, exec_slice in enumerate(manager.execution_iter):
-                logger.debug('Kicking off serial worker #{} for: {}'
-                             .format(i, exec_slice))
+                mem = psutil.virtual_memory()
+                logger.debug('Kicking off serial worker #{0} for: {1}. '
+                             'Memory usage is {2:.3f} GB out of {3:.3f} GB '
+                             'total ({4:.1f}% used)'
+                             .format(i, exec_slice,
+                                     mem.used / 1e9,
+                                     mem.total / 1e9,
+                                     100 * mem.used / mem.total))
 
                 # submit executions and append to futures list
-                futures.append(client.submit(obj.run, exec_slice))
+                futures.append(client.submit(obj.run, exec_slice, **kwargs))
 
                 # Take a pause after one complete set of workers
                 if (i + 1) % n_workers == 0:
-                    futures = manager.gather_and_flush(i, client, futures)
+                    futures, client = manager.gather_and_flush(i, client,
+                                                               futures)
 
             # All futures complete
             futures = manager.gather_and_flush('END', client, futures,

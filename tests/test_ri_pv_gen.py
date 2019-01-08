@@ -1,3 +1,4 @@
+# pylint: skip-file
 """
 PyTest file for PV generation in Rhode Island.
 
@@ -150,22 +151,6 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
     assert result is True
 
 
-def execute_pytest(capture='all', flags='-rapP'):
-    """Execute module as pytest with detailed summary report.
-
-    Parameters
-    ----------
-    capture : str
-        Log or stdout/stderr capture option. ex: log (only logger),
-        all (includes stdout/stderr)
-    flags : str
-        Which tests to show logs and results for.
-    """
-
-    pytest.main(['-q', '--show-capture={}'.format(capture),
-                 'test_ri_pv_gen.py', flags])
-
-
 @pytest.mark.parametrize('year', [('2012'), ('2013')])
 def test_pv_gen_profiles(year):
     """Gen PV CF profiles with write to disk and compare against rev1."""
@@ -174,8 +159,10 @@ def test_pv_gen_profiles(year):
     rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
     rev2_out = 'gen_ri_pv_{}.h5'.format(year)
 
+    points = slice(0, 100)
+
     # run reV 2.0 generation and write to disk
-    Gen.run_direct('pv', slice(0, 100), sam_files, res_file, fout=rev2_out,
+    Gen.run_direct('pv', points, sam_files, res_file, fout=rev2_out,
                    n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
                    return_obj=False)
 
@@ -189,6 +176,43 @@ def test_pv_gen_profiles(year):
 
     # get reV 1.0 generation profiles
     rev1_profiles = get_r1_profiles(year=year)
+    rev1_profiles = rev1_profiles[:, points]
+
+    result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
+    if result:
+        # remove output files if test passes.
+        flist = os.listdir(rev2_out_dir)
+        for fname in flist:
+            os.remove(os.path.join(rev2_out_dir, fname))
+
+    assert result is True
+
+
+@pytest.mark.parametrize('year', [('2012'), ('2013')])
+def test_smart(year):
+    """Gen PV CF profiles with write to disk and compare against rev1."""
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
+    rev2_out = 'gen_ri_pv_smart_{}.h5'.format(year)
+
+    points = slice(0, 10)
+
+    # run reV 2.0 generation and write to disk
+    Gen.run_smart('pv', points, sam_files, res_file, fout=rev2_out,
+                  n_workers=2, sites_per_split=50, dirout=rev2_out_dir)
+
+    # get reV 2.0 generation profiles from disk
+    flist = os.listdir(rev2_out_dir)
+    for fname in flist:
+        if rev2_out.strip('.h5') in fname:
+            with CapacityFactor(os.path.join(rev2_out_dir, fname), 'r') as cf:
+                rev2_profiles = cf['cf_profiles']
+            break
+
+    # get reV 1.0 generation profiles
+    rev1_profiles = get_r1_profiles(year=year)
+    rev1_profiles = rev1_profiles[:, points]
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
     if result:
@@ -207,6 +231,22 @@ def get_r1_profiles(year=2012):
     with CapacityFactor(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
     return data
+
+
+def execute_pytest(capture='all', flags='-rapP'):
+    """Execute module as pytest with detailed summary report.
+
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
+        all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
+    """
+
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
 
 
 if __name__ == '__main__':

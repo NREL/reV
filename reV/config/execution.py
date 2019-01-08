@@ -153,3 +153,16 @@ class PeregrineConfig(HPCConfig):
                 self._hpc_queue = default
 
         return self._hpc_queue
+
+    @property
+    def feature(self):
+        """Get feature request str. Cores or memory. Mem is prioritized."""
+        if not hasattr(self, '_feature'):
+            self._feature = None
+            if 'memory' in self:
+                if self['memory']:
+                    self._feature = self['memory']
+            elif 'ppn' in self:
+                if self['ppn']:
+                    self._feature = '{}core'.format(self['ppn'])
+        return self._feature
