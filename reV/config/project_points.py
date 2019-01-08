@@ -39,7 +39,7 @@ class PointsControl:
         self._split_range = []
 
     def __iter__(self):
-        """Iterator initialization dunder."""
+        """Initialize the iterator by pre-splitting into a list attribute."""
         self._i = 0
 
         # _last_site attribute is the starting index of the next
@@ -49,9 +49,30 @@ class PointsControl:
         # _ilim is the maximum index value
         self._ilim = self.project_points.df.index[-1] + 1
 
-        logger.debug('PointsControl initialized with starting site {} and '
-                     'maximum site index value {}.'
-                     .format(self._last_site, self._ilim))
+        logger.info('PointsControl iterator initializing with starting site '
+                    '{} and maximum site index value {}. This could take up '
+                    'to a few minutes for larger projects.'
+                    .format(self._last_site, self._ilim))
+
+        # pre-initialize all iter objects
+        self._iter_list = []
+        iter_bool = True
+        while iter_bool:
+            i0 = self._last_site
+            i1 = np.min([i0 + self.sites_per_split, self._ilim])
+            self._last_site = i1
+
+            new = PointsControl.split(i0, i1, self.project_points,
+                                      sites_per_split=self.sites_per_split)
+            new._split_range = [i0, i1]
+
+            if not new.project_points.sites:
+                # no more sites left to analyze, reached end of iter.
+                logger.debug('PointsControl stopping iteration at attempted '
+                             'index range {} to {}. '.format(i0, i1))
+                iter_bool = False
+            else:
+                self._iter_list.append(new)
         return self
 
     def __next__(self):
@@ -59,31 +80,23 @@ class PointsControl:
 
         Returns
         -------
-        new_exec : config.PointsControl
+        next_pc : config.PointsControl
             Split instance of this class with a subset of project points based
             on the number of sites per split.
         """
-
-        i0 = self._last_site
-        i1 = np.min([i0 + self.sites_per_split, self._ilim])
-
-        self._i += 1
-        self._last_site = i1
-
-        new_exec = PointsControl.split(i0, i1, self.project_points,
-                                       sites_per_split=self.sites_per_split)
-        new_exec._split_range = [i0, i1]
-
-        if not new_exec.project_points.sites:
-            # no more sites left to analyze, reached end of iter.
-            logger.debug('PointsControl stopping iteration at index {} to {}. '
-                         .format(i0, i1))
+        try:
+            # Get next PointsControl from the iter list
+            next_pc = self._iter_list.pop(0)
+        except IndexError:
+            # No more points controllers left in initialized list
             raise StopIteration
 
+        self._i += 1
         logger.debug('PointsControl passing site project points to worker #{} '
                      'with indices {} to {} '
-                     .format(self._i, i0, i1))
-        return new_exec
+                     .format(self._i, next_pc.split_range[0],
+                             next_pc.split_range[1]))
+        return next_pc
 
     def __repr__(self):
         msg = ("{} for sites {} through {}"
@@ -135,7 +148,8 @@ class PointsControl:
             New instance of PointsControl with a subset of the original
             project points.
         """
-
+        i0 = int(i0)
+        i1 = int(i1)
         new_points = ProjectPoints.split(i0, i1,
                                          project_points.df,
                                          project_points.sam_files,
