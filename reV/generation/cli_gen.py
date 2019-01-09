@@ -16,7 +16,7 @@ from reV.generation.generation import Gen
 from reV.utilities.cli_dtypes import INT, STR, SAMFILES, PROJECTPOINTS, INTLIST
 from reV.utilities.exceptions import ConfigError
 from reV.utilities.execution import PBS
-from reV.utilities.rev_logger import init_logger, REV_LOGGERS
+from reV.utilities.loggers import init_logger, REV_LOGGERS
 
 
 logger = logging.getLogger(__name__)
@@ -37,16 +37,11 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
     for module in modules:
         log_file = os.path.join(logdir, '{}.log'.format(name))
 
-        if log_level == 'DEBUG':
-            # always attempt to initialize the logger if it's debug mode
+        # do not initialize a redundant logger
+        logger = REV_LOGGERS[module]
+        if 'log_file' not in logger:
             logger = init_logger(module, log_level=log_level,
                                  log_file=log_file)
-        else:
-            # if log level is not debug, do not initialize a redundant logger
-            logger = REV_LOGGERS[module]
-            if 'log_file' not in logger:
-                logger = init_logger(module, log_level=log_level,
-                                     log_file=log_file)
     return logger
 
 

@@ -19,7 +19,7 @@ import time
 from reV import __testdatadir__ as TESTDATADIR
 from reV.handlers.capacity_factor import CapacityFactor
 from reV.utilities.execution import PBS
-from reV.utilities.rev_logger import init_logger
+from reV.utilities.loggers import init_logger
 
 
 RTOL = 0.0

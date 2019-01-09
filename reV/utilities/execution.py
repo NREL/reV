@@ -11,7 +11,7 @@ import getpass
 import shlex
 from warnings import warn
 
-from reV.utilities.rev_logger import REV_LOGGERS
+from reV.utilities.loggers import REV_LOGGERS
 from reV.utilities.exceptions import ExecutionError
 
 
@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 
 
 def log_mem():
-    """Print memory status to logger."""
+    """Print memory status to debug logger."""
     mem = psutil.virtual_memory()
-    logger.debug('{0:.3f} GB used of {1:.3f} total ({2:.1f}% used) '
-                 '({3:.2f} GB free) ({4:.2f} GB available).'
+    logger.debug('{0:.3f} GB used of {1:.3f} GB total ({2:.1f}% used) '
+                 '({3:.3f} GB free) ({4:.3f} GB available).'
                  ''.format(mem.used / 1e9,
                            mem.total / 1e9,
                            100 * mem.used / mem.total,
@@ -34,7 +34,7 @@ class SubprocessManager:
     """Base class to handle subprocess execution."""
 
     # get username as class attribute.
-    user = getpass.getuser()
+    USER = getpass.getuser()
 
     @staticmethod
     def make_path(d):
@@ -44,13 +44,13 @@ class SubprocessManager:
 
     @staticmethod
     def make_sh(fname, script):
-        """Make a shell script to execute a subprocess."""
+        """Make a shell script (.sh file) to execute a subprocess."""
+        logger.debug('The shell script "{n}" contains the following:\n'
+                     '~~~~~~~~~~ {n} ~~~~~~~~~~\n'
+                     '{s}\n'
+                     '~~~~~~~~~~ {n} ~~~~~~~~~~'
+                     .format(n=fname, s=script))
         with open(fname, 'w+') as f:
-            logger.debug('The shell script "{n}" contains the following:\n'
-                         '~~~~~~~~~~ {n} ~~~~~~~~~~\n'
-                         '{s}\n'
-                         '~~~~~~~~~~ {n} ~~~~~~~~~~'
-                         .format(n=fname, s=script))
             f.write(script)
 
     @staticmethod
@@ -60,7 +60,24 @@ class SubprocessManager:
 
     @staticmethod
     def submit(cmd):
-        """Open a subprocess and submit a command. Capture out/error."""
+        """Open a subprocess and submit a command.
+
+        Parameters
+        ----------
+        cmd : str
+            Command to be submitted using python subprocess.
+
+        Returns
+        -------
+        stdout : str
+            Subprocess standard output. This is decoded from the subprocess
+            stdout with rstrip.
+        stderr : str
+            Subprocess standard error. This is decoded from the subprocess
+            stderr with rstrip. After decoding/rstrip, this will be empty if
+            the subprocess doesn't return an error.
+        """
+
         cmd = shlex.split(cmd)
         logger.debug('Submitting the following cmd as a subprocess:\n\t{}'
                      .format(cmd))
@@ -79,7 +96,16 @@ class SubprocessManager:
 
     @staticmethod
     def s(s):
-        """Format an object as string for python cli command entry."""
+        """Format input as str w/ appropriate quote types for python cli entry.
+
+        Examples
+        --------
+            list, tuple -> "['one', 'two']"
+            dict -> "{'key': 'val'}"
+            int, float, None -> '0'
+            str, other -> 'string'
+        """
+
         if isinstance(s, (list, tuple, dict)):
             return '"{}"'.format(s)
         elif not isinstance(s, (int, float, type(None))):
@@ -87,26 +113,31 @@ class SubprocessManager:
         else:
             return '{}'.format(s)
 
-    @staticmethod
-    def node_loggers(module_list, level='DEBUG', log_dir='logs',
-                     file='reV.log'):
-        """Get a string python command to init loggers in a shell submission"""
-        SubprocessManager.make_path(log_dir)
-        log_args = ''
-        for module in module_list:
-            log_args += ("init_logger({n}, log_level={level}, log_file={f});"
-                         .format(n=PBS.s(module),
-                                 level=PBS.s(level),
-                                 f=PBS.s(os.path.join(log_dir, file))))
-        return log_args
-
 
 class PBS(SubprocessManager):
     """Subclass for PBS subprocess jobs."""
 
-    def __init__(self, cmd, alloc='rev', queue='short', name='reV',
+    def __init__(self, cmd, alloc, queue, name='reV',
                  feature=None, stdout_path='./stdout'):
-        """Initialize and submit a PBS job."""
+        """Initialize and submit a PBS job.
+
+        Parameters
+        ----------
+        cmd : str
+            Command to be submitted in PBS shell script. Example:
+                'python -m reV.generation.cli_gen'
+        alloc : str
+            HPC allocation account. Example: 'rev'.
+        queue : str
+            HPC queue to submit job to. Example: 'short', 'batch-h', etc...
+        name : str
+            PBS job name.
+        feature : str | None
+            PBS feature request (-l=feature). Example: '24core', '64GB', etc...
+        stdout_path : str
+            Path to print .stdout and .stderr files.
+        """
+
         self.make_path(stdout_path)
         self.id, self.err = self.qsub(cmd,
                                       alloc=alloc,
@@ -115,8 +146,7 @@ class PBS(SubprocessManager):
                                       feature=feature,
                                       stdout_path=stdout_path)
 
-    @staticmethod
-    def check_status(job, var='id'):
+    def check_status(self, job, var='id'):
         """Check the status of this PBS job using qstat.
 
         Parameters
@@ -134,7 +164,7 @@ class PBS(SubprocessManager):
 
         # column location of various job identifiers
         col_loc = {'id': 0, 'name': 3}
-        qstat_rows = PBS.qstat()
+        qstat_rows = self.qstat()
         if qstat_rows is None:
             return None
         else:
@@ -149,11 +179,18 @@ class PBS(SubprocessManager):
                     return row[-2]
         return None
 
-    @staticmethod
-    def qstat():
-        """Run the PBS qstat command and return the stdout split to rows."""
-        cmd = 'qstat -u {user}'.format(user=PBS.user)
-        stdout, _ = PBS.submit(cmd)
+    def qstat(self):
+        """Run the PBS qstat command and return the stdout split to rows.
+
+        Returns
+        -------
+        qstat_rows : list | None
+            List of strings where each string is a row in the qstat printout.
+            Returns None if qstat is empty.
+        """
+
+        cmd = 'qstat -u {user}'.format(user=self.USER)
+        stdout, _ = self.submit(cmd)
         if not stdout:
             # No jobs are currently running.
             return None
@@ -161,12 +198,39 @@ class PBS(SubprocessManager):
             qstat_rows = stdout.split('\n')
             return qstat_rows
 
-    @staticmethod
-    def qsub(cmd, alloc='rev', queue='short', name='reV', feature=None,
+    def qsub(self, cmd, alloc, queue, name='reV', feature=None,
              stdout_path='./stdout', keep_sh=False):
-        """Submit a PBS job via qsub command and PBS shell script."""
+        """Submit a PBS job via qsub command and PBS shell script
 
-        status = PBS.check_status(name, var='name')
+        Parameters
+        ----------
+        cmd : str
+            Command to be submitted in PBS shell script. Example:
+                'python -m reV.generation.cli_gen'
+        alloc : str
+            HPC allocation account. Example: 'rev'.
+        queue : str
+            HPC queue to submit job to. Example: 'short', 'batch-h', etc...
+        name : str
+            PBS job name.
+        feature : str | None
+            PBS feature request (-l=feature). Example: '24core', '64GB', etc...
+        stdout_path : str
+            Path to print .stdout and .stderr files.
+        keep_sh : bool
+            Boolean to keep the .sh files. Default is to remove these files
+            after job submission.
+
+        Returns
+        -------
+        out : str
+            qsub standard output, this is typically the PBS job ID.
+        err : str
+            qsub standard error, this is typically an empty string if the job
+            was submitted successfully.
+        """
+
+        status = self.check_status(name, var='name')
 
         if status == 'Q' or status == 'R':
             warn('Not submitting job "{}" because it is already in '
@@ -189,14 +253,14 @@ class PBS(SubprocessManager):
                               cmd=cmd))
 
             # write the shell script file and submit as qsub job
-            PBS.make_sh(fname, script)
-            out, err = PBS.submit('qsub {script}'.format(script=fname))
+            self.make_sh(fname, script)
+            out, err = self.submit('qsub {script}'.format(script=fname))
 
             if not err:
                 logger.debug('PBS job "{}" with id #{} submitted successfully'
                              .format(name, out))
                 if not keep_sh:
-                    PBS.rm(fname)
+                    self.rm(fname)
 
         return out, err
 
@@ -242,7 +306,7 @@ def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,
     return results
 
 
-def execute_futures(fun, execution_iter, cluster, loggers=[], **kwargs):
+def execute_futures(fun, execution_iter, cluster=None, loggers=[], **kwargs):
     """Execute concurrent futures with an established cluster.
 
     Parameters
@@ -252,8 +316,9 @@ def execute_futures(fun, execution_iter, cluster, loggers=[], **kwargs):
         downstream execution methods for arg passing structure.
     execution_iter : iter
         Python iterator that controls the futures submitted to dask.
-    cluster : dask.distributed.LocalCluster
-        Dask cluster object created from the LocalCluster() class.
+    cluster : dask.distributed.LocalCluster | None
+        Dask cluster object created from the LocalCluster() class. None creates
+        a client with all available workers.
     loggers : list
         List of logger names to initialize on the workers.
     **kwargs : dict
@@ -302,16 +367,15 @@ def execute_single(fun, input_obj, worker=0, **kwargs):
         object that can be the result of iteration in the parallel execution
         framework.
     worker : int
-        Worker number for debugging purposes.
+        Worker number (for debugging purposes).
     **kwargs : dict
         Key word arguments passed to fun.
     """
 
     logger.debug('Running single serial execution on worker #{} for: {}'
                  .format(worker, input_obj))
-    log_mem()
-
     out = fun(input_obj, **kwargs)
+    log_mem()
 
     return out
 
@@ -329,8 +393,10 @@ class SmartParallelJob:
             Python object that will be submitted to futures. Must have methods
             run(arg) and flush(). run(arg) must take the iteration result of
             execution_iter as the single positional argument. Additionally,
-            obj.out will be passed the results of obj.run(arg). obj.out will be
-            passed None when the memory is to be cleared.
+            the results of obj.run(arg) will be passed to obj.out. obj.out
+            will be passed None when the memory is to be cleared. It is
+            advisable that obj.run() be a @staticmethod for dramatically
+            faster submission to the Dask client.
         execution_iter : iter
             Python iterator that controls the futures submitted to dask.
         loggers : list
@@ -343,6 +409,7 @@ class SmartParallelJob:
             by the total memory is greater than this value, the obj.out will
             be flushed and the local node memory will be cleared.
         """
+
         self._obj = obj
         self._execution_iter = execution_iter
         self._loggers = loggers
@@ -401,19 +468,43 @@ class SmartParallelJob:
             self._obj = inp_obj
 
     def init_loggers(self, client):
-        """Initialize loggers on workers"""
+        """Initialize loggers on all workers"""
         for logger_name in self.loggers:
             client.run(REV_LOGGERS.init_logger, logger_name)
 
     def flush(self):
-        """Flush obj.out to disk and garbage collect."""
+        """Flush obj.out to disk, set obj.out=None, and garbage collect."""
         # memory utilization limit exceeded, flush memory to disk
         self.obj.flush()
         self.obj.out = None
         gc.collect()
 
     def gather_and_flush(self, i, client, futures, force_flush=False):
-        """Wait or gather futures, update obj.out, flush to disk."""
+        """Wait on futures, potentially update obj.out and flush to disk.
+
+        Parameters
+        ----------
+        i : int | str
+            Iteration number (for logging purposes).
+        client : dask.distributed.Client
+            Dask client.
+        futures : list
+            List of Dask futures to wait on or gather.
+        force_flush : bool
+            Option to force a disk flush. Useful for end-of-iteration. If this
+            is False, will only flush to disk if the memory utilization exceeds
+            the mem_util_lim.
+
+        Returns
+        -------
+        futures : list
+            List of Dask futures. If the memory was flushed, this is a
+            cleared list: futures.clear()
+        client : dask.distributed.Client
+            Dask client. If the memory was flushed, the client is restarted
+            before returning: client.restart()
+        """
+
         wait(futures)
         mem = psutil.virtual_memory()
         logger.debug('Parallel run at iteration {0}. '
@@ -442,7 +533,33 @@ class SmartParallelJob:
     @classmethod
     def execute(cls, obj, execution_iter, loggers=[], n_workers=None,
                 mem_util_lim=0.7, **kwargs):
-        """Execute the smart parallel run with data flushing."""
+        """Execute the smart parallel run with data flushing.
+
+        Parameters
+        ----------
+        obj : object
+            Python object that will be submitted to futures. Must have methods
+            run(arg) and flush(). run(arg) must take the iteration result of
+            execution_iter as the single positional argument. Additionally,
+            the results of obj.run(arg) will be passed to obj.out. obj.out
+            will be passed None when the memory is to be cleared. It is
+            advisable that obj.run() be a @staticmethod for dramatically
+            faster submission to the Dask client.
+        execution_iter : iter
+            Python iterator that controls the futures submitted to dask.
+        loggers : list
+            List of logger names to initialize on the workers.
+        n_workers : int
+            Number of workers to scale the cluster to. None will use all
+            available workers in a local cluster.
+        mem_util_lim : float
+            Memory utilization limit (fractional). If the used memory divided
+            by the total memory is greater than this value, the obj.out will
+            be flushed and the local node memory will be cleared.
+        kwargs : dict
+            Keyword arguments to be passed to obj.run(). Makes it easier to
+            have obj.run() as a @staticmethod.
+        """
 
         manager = cls(obj, execution_iter, loggers=loggers,
                       n_workers=n_workers, mem_util_lim=mem_util_lim)
@@ -452,12 +569,9 @@ class SmartParallelJob:
         # Get the number of workers in case it was input as None
         n_workers = manager.n_workers
 
-        mem = psutil.virtual_memory()
         logger.info('Executing parallel run on cluster with {0} workers. '
-                    'Initial memory usage is {1:.3f} GB out of {2:.3f} total '
-                    '({3:.1f}% used)'.format(n_workers, mem.used / 1e9,
-                                             mem.total / 1e9,
-                                             100 * mem.used / mem.total))
+                    .format(n_workers))
+        log_mem()
 
         # initialize a client based on the input cluster.
         with Client(cluster) as client:
@@ -466,14 +580,8 @@ class SmartParallelJob:
 
             # iterate through split executions, submitting each to worker
             for i, exec_slice in enumerate(manager.execution_iter):
-                mem = psutil.virtual_memory()
                 logger.debug('Kicking off serial worker #{0} for: {1}. '
-                             'Memory usage is {2:.3f} GB out of {3:.3f} GB '
-                             'total ({4:.1f}% used)'
-                             .format(i, exec_slice,
-                                     mem.used / 1e9,
-                                     mem.total / 1e9,
-                                     100 * mem.used / mem.total))
+                             .format(i, exec_slice))
 
                 # submit executions and append to futures list
                 futures.append(client.submit(obj.run, exec_slice, **kwargs))

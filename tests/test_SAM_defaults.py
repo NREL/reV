@@ -8,7 +8,7 @@ import pytest
 
 import utilities as ut
 from reV.SAM import SAM
-from reV.utilities.rev_logger import init_logger
+from reV.utilities.loggers import init_logger
 
 
 class SAMTestManager:

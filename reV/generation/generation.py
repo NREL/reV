@@ -22,7 +22,7 @@ class Gen:
     """Base class for generation"""
 
     # Mapping of available SAM generation functions
-    funs = {'pv': PV.reV_run,
+    FUNS = {'pv': PV.reV_run,
             'csp': CSP.reV_run,
             'landbasedwind': LandBasedWind.reV_run,
             'offshorewind': OffshoreWind.reV_run,
@@ -95,7 +95,16 @@ class Gen:
 
     @property
     def meta(self):
-        """Get the generation resource meta data."""
+        """Get resource meta data for the analyzed sites stored in self._out.
+
+        Returns
+        -------
+        _meta : pd.DataFrame
+            Meta data df for sites that have completed results in self._out.
+            Column names are variables, rows are different sites. The row index
+            does not indicate the site number, so a 'gid' column is added.
+        """
+
         if hasattr(self, '_out'):
             finished_sites = sorted(list(self._out.keys()))
         with Resource(self.res_file) as res:
@@ -106,7 +115,14 @@ class Gen:
 
     @property
     def out(self):
-        """Get the generation output results."""
+        """Get the generation output results.
+
+        Returns
+        -------
+        out : dict
+            Dictionary of generation results from SAM.
+        """
+
         if not hasattr(self, '_out'):
             self._out = {}
         return self._out
@@ -114,7 +130,17 @@ class Gen:
     @out.setter
     def out(self, result):
         """Set the output attribute, unpack futures, clear output from mem.
+
+        Parameters
+        ----------
+        result : list | dict | None
+            Generation results to set to output dictionary. Use cases:
+             - List input is interpreted as a futures list, which is unpacked
+               before setting to the output dict.
+             - Dictionary input is interpreted as an already unpacked result.
+             - None is interpreted as a signal to clear the output dictionary.
         """
+
         if not hasattr(self, '_out'):
             self._out = {}
         if isinstance(result, list):
@@ -143,7 +169,29 @@ class Gen:
 
     @staticmethod
     def sites_per_core(res_file, default=100):
-        """Get the nominal sites per core (x-chunk size) for a given file."""
+        """Get the nominal sites per core (x-chunk size) for a given file.
+
+        This is based on the concept that it is most efficient for one core to
+        perform one read on one chunk of resource data, such that chunks will
+        not have to be read into memory twice and no sites will be read
+        redundantly.
+
+        Parameters
+        ----------
+        res_file : str
+            Full resource file path + filename.
+        default : int
+            Sites to be analyzed on a single core if the chunk size cannot be
+            determined from res_file.
+
+        Returns
+        -------
+        sites_per_core : int
+            Nominal sites to be analyzed per core. This is set to the x-axis
+            chunk size for windspeed and dni datasets for the WTK and NSRDB
+            data, respectively.
+        """
+
         with Resource(res_file) as res:
             if 'wtk' in res_file.lower():
                 for dset in res.dsets:
@@ -183,20 +231,48 @@ class Gen:
         out : dict
             Compiled results of the native future results type (dict).
         """
+
         out = {}
         {out.update(x) for x in futures}
         return out
 
     @staticmethod
     def unpack_cf_means(gen_out):
-        """Unpack a numpy means 1darray from a gen output dictionary."""
+        """Unpack a numpy means 1darray from a gen output dictionary.
+
+        Parameters
+        ----------
+        gen_out : dict
+            Nested dictionary of SAM results. Top level key is site number,
+            Next level key should include 'cf_mean'.
+
+        Returns
+        -------
+        out : np.array
+            1D array of capacity factor means sorted by site number.
+        """
+
         sorted_keys = sorted(list(gen_out.keys()), key=float)
         out = np.array([gen_out[k]['cf_mean'] for k in sorted_keys])
         return out
 
     @staticmethod
     def unpack_cf_profiles(gen_out):
-        """Unpack a numpy profiles 2darray from a gen output dictionary."""
+        """Unpack a numpy profiles 2darray from a gen output dictionary.
+
+        Parameters
+        ----------
+        gen_out : dict
+            Nested dictionary of SAM results. Top level key is site number,
+            Next level key should include 'cf_profile'.
+
+        Returns
+        -------
+        out : np.ndarray
+            2D array of capacity factor profiles. Columns are sorted by site
+            number. Rows correspond to the profile timeseries.
+        """
+
         sorted_keys = sorted(list(gen_out.keys()), key=float)
         out = np.array([gen_out[k]['cf_profile'] for k in sorted_keys])
         return out.transpose()
@@ -220,7 +296,22 @@ class Gen:
 
     @staticmethod
     def get_unique_fout(fout):
-        """Ensure a unique tag of format _x000 on the fout file name."""
+        """Ensure a unique tag of format _x000 on the fout file name.
+
+        Parameters
+        ----------
+        fout : str
+            Target output directory joined with the INTENDED filename. Should
+            contain a _x000 tag in the filename.
+
+        Returns
+        -------
+        fout : str
+            Target output directory joined with a UNIQUE filename. The
+            extension in the original fout ("_x000") is incremented until the
+            result is unique in the output directory.
+        """
+
         if os.path.exists(fout):
             match = re.match(r'.*_x([0-9]{3})', fout)
             if match:
@@ -231,7 +322,24 @@ class Gen:
 
     @staticmethod
     def handle_fout(fout, dirout):
-        """Ensure that the file+dir output exist and have unique names."""
+        """Ensure that the file+dir output exist and have unique names.
+
+        Parameters
+        ----------
+        fout : str
+            Target filename (with or without .h5 extension).
+        dirout : str
+            Target output directory.
+
+        Returns
+        -------
+        fout : str
+            Target output directory joined with the target filename. An
+            extension is appended to the filename in the format
+            "basename_x000.h5" where basename is the input fout and _x000
+            creates a unique filename in the output directory.
+        """
+
         if not fout.endswith('.h5'):
             fout += '.h5'
             warn('Generation output file request must be .h5, '
@@ -252,11 +360,18 @@ class Gen:
     def flush(self, mode='w'):
         """Flush generation data in self.out attribute to disk in .h5 format.
 
+        The data to be flushed is accessed from the instance attribute
+        "self.out". The disk target is based on the isntance attributes
+        "self.fout" and "self.dirout". The flushed file is ensured to have a
+        unique filename. Data is not flushed if fout is None or if .out is
+        empty.
+
         Parameters
         ----------
         mode : str
             .h5 file write mode (e.g. 'w', 'a').
         """
+
         # use mutable copies of the properties
         fout = self.fout
         dirout = self.dirout
@@ -282,8 +397,9 @@ class Gen:
         points_control : reV.config.PointsControl
             A PointsControl instance dictating what sites and configs are run.
             This function uses an explicit points_control input instance
-            instead of the Gen object property so that the execute_futures
-            can pass in a split instance of points_control.
+            instead of an instance attribute so that the execute_futures
+            can pass in a split instance of points_control. This is a
+            @staticmethod to expedite submission to Dask client.
 
         Returns
         -------
@@ -292,7 +408,7 @@ class Gen:
         """
 
         try:
-            out = Gen.funs[tech](points_control, res_file,
+            out = Gen.FUNS[tech](points_control, res_file,
                                  output_request=output_request)
         except Exception:
             out = {}
@@ -469,56 +585,3 @@ class Gen:
         SmartParallelJob.execute(gen, pc, n_workers=n_workers,
                                  loggers=['reV.generation', 'reV.utilities'],
                                  **kwargs, mem_util_lim=mem_util_lim)
-
-
-if __name__ == '__main__':
-    # TEST case on local machine
-    import time
-    from reV.utilities.rev_logger import init_logger
-    modules = [__name__, 'reV.config', 'reV.utilities']
-    for mod in modules:
-        init_logger(mod, log_level='DEBUG')
-    t0 = time.time()
-    tech = 'pv'
-
-    points = ('C:/sandbox/reV/reV-docker/rev-utils/rev_config/'
-              'project_points_1m.csv')
-    sam_files = {'sam_gen_pv_1': ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
-                                  'naris_pv_1axis_inv13.json')}
-
-    points = slice(0, 100)
-    sam_files = ('C:/sandbox/reV/git_reV2/tests/data/SAM/'
-                 'naris_pv_1axis_inv13.json')
-
-    res_file = 'C:/sandbox/reV/git_reV2/tests/data/nsrdb/ri_100_nsrdb_2012.h5'
-    cf_profiles = True
-    n_workers = 2
-    sites_per_core = 25
-    points_range = None
-    fout = 'reV.h5'
-    dirout = 'C:/sandbox/reV/test_output'
-
-    pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-    sites_per_split = sites_per_core
-    points_range = None
-
-    if points_range is None:
-        pc = PointsControl(pp, sites_per_split=sites_per_split)
-    else:
-        pc = PointsControl.split(points_range[0], points_range[1], pp)
-
-    print(pc.project_points.df.head())
-    print(pc.project_points.df.tail())
-
-    Gen.run_smart(tech=tech, points=pc, sam_files=sam_files,
-                  res_file=res_file, cf_profiles=cf_profiles,
-                  n_workers=n_workers, sites_per_split=sites_per_core,
-                  points_range=points_range, fout=fout, dirout=dirout)
-
-    print('reV generation local run complete. Total time elapsed: '
-          '{0:.2f} minutes.'.format((time.time() - t0) / 60))
-
-    fout = 'C:/sandbox/reV/test_output/reV_x001.h5'
-    with CapacityFactor(fout) as cf:
-        meta = cf.meta
-    print(meta)
