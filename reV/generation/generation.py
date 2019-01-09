@@ -4,6 +4,7 @@ Generation
 import logging
 import numpy as np
 import os
+import pprint
 import re
 from warnings import warn
 
@@ -582,6 +583,14 @@ class Gen:
 
         logger.info('Running parallel generation with smart data flushing '
                     'for: {}'.format(pc))
-        SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                 loggers=['reV.generation', 'reV.utilities'],
-                                 **kwargs, mem_util_lim=mem_util_lim)
+        logger.debug('The following project points were specified: "{}"'
+                     .format(points))
+        logger.debug('The following SAM configs are available to this run:\n{}'
+                     .format(pprint.pformat(sam_files, indent=4)))
+        try:
+            SmartParallelJob.execute(gen, pc, n_workers=n_workers,
+                                     loggers=['reV.generation',
+                                              'reV.utilities'],
+                                     mem_util_lim=mem_util_lim, **kwargs)
+        except Exception:
+            logger.exception('SmartParallelJob.execute() failed.')

@@ -229,8 +229,8 @@ def local(ctx, n_workers, points_range, verbose):
     for key, val in ctx.obj.items():
         logger.debug('ctx var passed to local method: "{}" : "{}" with type '
                      '"{}"'.format(key, val, type(val)))
-    click.echo('Kicking off reV generation local run "{}".'.format(name))
-    logger.info('Generation is being run with with job name "{}" and resource '
+
+    logger.info('Gen local is being run with with job name "{}" and resource '
                 'file: {}. Target output path is: {}'
                 .format(name, res_file, os.path.join(dirout, fout)))
     t0 = time.time()
@@ -246,9 +246,6 @@ def local(ctx, n_workers, points_range, verbose):
                   points_range=points_range,
                   fout=fout,
                   dirout=dirout)
-
-    click.echo('Gen local run complete. Time elapsed: '
-               '{0:.2f} min.'.format((time.time() - t0) / 60))
 
     tmp_str = ' with points range {}'.format(points_range)
     logger.info('Gen compute complete for project points "{0}"{1}. '

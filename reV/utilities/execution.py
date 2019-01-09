@@ -596,4 +596,5 @@ class SmartParallelJob:
                                                force_flush=True)
             logger.debug('Smart parallel job complete. Returning execution '
                          'control to higher level processes.')
+            log_mem()
         manager.cluster.close()
