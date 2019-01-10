@@ -1,3 +1,4 @@
+# pylint: skip-file
 """
 PyTest file for PV generation in Rhode Island.
 
@@ -9,11 +10,16 @@ Created on Thu Nov 29 09:54:51 2018
 import os
 import h5py
 import pytest
+import numpy as np
 
-import utilities as ut
 from reV.generation.generation import Gen
-from reV.config.config import ProjectPoints
-from reV import __testdatadir__ as TESTDATA
+from reV.config.project_points import ProjectPoints
+from reV import __testdatadir__ as TESTDATADIR
+from reV.handlers.capacity_factor import CapacityFactor
+
+
+RTOL = 0.0
+ATOL = 0.04
 
 
 class pv_results:
@@ -74,82 +80,157 @@ def to_list(gen_out):
 def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
     # get full file paths.
-    rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
-    sam_files = TESTDATA + '/SAM/naris_pv_1axis_inv13.json'
-    res_file = TESTDATA + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    rev1_outs = os.path.join(TESTDATADIR, 'ri_pv', 'scalar_outputs',
+                             f_rev1_out)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
 
-    # initialize the generation module
-    bad_data = 0
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
-    gen_outs = Gen.direct('pv', rev2_points, sam_files, res_file,
-                          n_workers=n_workers, sites_per_split=3)
+    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file,
+                         n_workers=n_workers, sites_per_split=3, fout=None,
+                         return_obj=True)
 
-    gen_outs = to_list(gen_outs)
+    gen_outs = to_list(gen.out)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
         # get reV 1.0 results
         cf_mean_list = pv.get_cf_mean(pp.sites, year)
 
-        # benchmark the results and count the number of bad results
-        count = ut.compare_arrays(gen_outs, cf_mean_list)
-        bad_data += count
-
-    if bad_data == 0:
-        return True
+    # benchmark the results
+    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
+    assert result is True
 
 
 def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
-                     rev2_points=TESTDATA + '/project_points/ri.csv',
-                     res_file=TESTDATA + '/nsrdb/ri_100_nsrdb_2012.h5'):
+                     rev2_points=TESTDATADIR + '/project_points/ri.csv',
+                     res_file=TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'):
     """Test project points csv input with dictionary-based sam files."""
-    bad_data = 0
-    rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
-    sam_files = {'sam_param_0': TESTDATA + '/SAM/naris_pv_1axis_inv13.json',
-                 'sam_param_1': TESTDATA + '/SAM/naris_pv_1axis_inv13.json'}
+    rev1_outs = os.path.join(TESTDATADIR, 'ri_pv', 'scalar_outputs',
+                             f_rev1_out)
+    sam_files = {'sam_param_0': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
+                 'sam_param_1': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'}
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
 
     # run reV 2.0 generation
-    gen_outs = Gen.direct('pv', rev2_points, sam_files, res_file)
-    gen_outs = to_list(gen_outs)
+    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
+                         return_obj=True)
+    gen_outs = to_list(gen.out)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
         # get reV 1.0 results
         cf_mean_list = pv.get_cf_mean(pp.sites, '2012')
 
-        # benchmark the results and count the number of bad results
-        count = ut.compare_arrays(gen_outs, cf_mean_list)
-        bad_data += count
-
-    if bad_data == 0:
-        return True
+    # benchmark the results
+    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
+    assert result is True
 
 
 def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
-                     rev2_points=TESTDATA + '/project_points/ri.csv',
-                     res_file=TESTDATA + '/nsrdb/ri_100_nsrdb_2012.h5'):
+                     rev2_points=TESTDATADIR + '/project_points/ri.csv',
+                     res_file=TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'):
     """Test project points csv input with list-based sam files."""
-    bad_data = 0
-    rev1_outs = os.path.join(TESTDATA, 'ri_pv', 'scalar_outputs', f_rev1_out)
-    sam_files = [TESTDATA + '/SAM/naris_pv_1axis_inv13.json',
-                 TESTDATA + '/SAM/naris_pv_1axis_inv13.json']
+    rev1_outs = os.path.join(TESTDATADIR, 'ri_pv', 'scalar_outputs',
+                             f_rev1_out)
+    sam_files = [TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
+                 TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json']
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
-    gen_outs = Gen.direct('pv', rev2_points, sam_files, res_file)
-    gen_outs = to_list(gen_outs)
+    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
+                         return_obj=True)
+    gen_outs = to_list(gen.out)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
         # get reV 1.0 results
         cf_mean_list = pv.get_cf_mean(pp.sites, '2012')
 
-        # benchmark the results and count the number of bad results
-        count = ut.compare_arrays(gen_outs, cf_mean_list)
-        bad_data += count
+    # benchmark the results
+    result = np.allclose(gen_outs, cf_mean_list, rtol=RTOL, atol=ATOL)
+    assert result is True
 
-    if bad_data == 0:
-        return True
+
+@pytest.mark.parametrize('year', [('2012'), ('2013')])
+def test_pv_gen_profiles(year):
+    """Gen PV CF profiles with write to disk and compare against rev1."""
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
+    rev2_out = 'gen_ri_pv_{}.h5'.format(year)
+
+    points = slice(0, 100)
+
+    # run reV 2.0 generation and write to disk
+    Gen.run_direct('pv', points, sam_files, res_file, fout=rev2_out,
+                   n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
+                   return_obj=False)
+
+    # get reV 2.0 generation profiles from disk
+    flist = os.listdir(rev2_out_dir)
+    for fname in flist:
+        if rev2_out.strip('.h5') in fname:
+            with CapacityFactor(os.path.join(rev2_out_dir, fname), 'r') as cf:
+                rev2_profiles = cf['cf_profiles']
+            break
+
+    # get reV 1.0 generation profiles
+    rev1_profiles = get_r1_profiles(year=year)
+    rev1_profiles = rev1_profiles[:, points]
+
+    result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
+    if result:
+        # remove output files if test passes.
+        flist = os.listdir(rev2_out_dir)
+        for fname in flist:
+            os.remove(os.path.join(rev2_out_dir, fname))
+
+    assert result is True
+
+
+@pytest.mark.parametrize('year', [('2012'), ('2013')])
+def test_smart(year):
+    """Gen PV CF profiles with write to disk and compare against rev1."""
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
+    rev2_out = 'gen_ri_pv_smart_{}.h5'.format(year)
+
+    points = slice(0, 10)
+
+    # run reV 2.0 generation and write to disk
+    Gen.run_smart('pv', points, sam_files, res_file, fout=rev2_out,
+                  n_workers=2, sites_per_split=50, dirout=rev2_out_dir)
+
+    # get reV 2.0 generation profiles from disk
+    flist = os.listdir(rev2_out_dir)
+    for fname in flist:
+        if rev2_out.strip('.h5') in fname:
+            with CapacityFactor(os.path.join(rev2_out_dir, fname), 'r') as cf:
+                rev2_profiles = cf['cf_profiles']
+            break
+
+    # get reV 1.0 generation profiles
+    rev1_profiles = get_r1_profiles(year=year)
+    rev1_profiles = rev1_profiles[:, points]
+
+    result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
+    if result:
+        # remove output files if test passes.
+        flist = os.listdir(rev2_out_dir)
+        for fname in flist:
+            os.remove(os.path.join(rev2_out_dir, fname))
+
+    assert result is True
+
+
+def get_r1_profiles(year=2012):
+    """Get the first 100 reV 1.0 ri pv generation profiles."""
+    rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
+                        'pv_{}_0.h5'.format(year))
+    with CapacityFactor(rev1) as cf:
+        data = cf['cf_profile'][...] / 10000
+    return data
 
 
 def execute_pytest(capture='all', flags='-rapP'):
@@ -164,8 +245,8 @@ def execute_pytest(capture='all', flags='-rapP'):
         Which tests to show logs and results for.
     """
 
-    pytest.main(['-q', '--show-capture={}'.format(capture),
-                 'test_ri_pv_gen.py', flags])
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
 
 
 if __name__ == '__main__':

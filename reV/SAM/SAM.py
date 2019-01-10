@@ -4,6 +4,7 @@
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
 SAM software development kit (SDK).
 """
+import gc
 import json
 import logging
 import numpy as np
@@ -13,7 +14,7 @@ from warnings import warn
 
 from reV.handlers.resource import WTK, NSRDB
 from reV.SAM.PySSC import PySSC
-from reV.exceptions import SAMInputWarning, SAMExecutionError
+from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 
 
 logger = logging.getLogger(__name__)
@@ -358,16 +359,10 @@ class SAM:
             dictionary self.parameters. Otherwise, only parameter keys in
             keys_to_set will be set.
         """
-        logger.debug('On site {}, Setting SAM input parameters.'
-                     .format(self.site))
         if keys_to_set == 'all':
             keys_to_set = self.parameters.keys()
 
         for key in keys_to_set:
-            logger.debug('On site {}, setting parameter: {} = {}...'
-                         .format(self.site, key,
-                                 str(self.parameters[key])[:20]))
-
             # Set data to SSC using appropriate logic
             if is_num(self.parameters[key]) is True:
                 self.ssc.data_set_number(self.data, key,
@@ -402,10 +397,18 @@ class SAM:
                    'elevation': 'elev'}
 
         for var in meta_vars:
-            logger.debug('On site {}, setting {} meta data.'
-                         .format(self.site, var))
             self.ssc.data_set_number(self.res_data, var_map[var],
                                      self.meta[var])
+
+    @staticmethod
+    def drop_leap(resource):
+        """Drop Feb 29th from all dataframes in resource dict."""
+        if hasattr(resource, 'index'):
+            if hasattr(resource.index, 'month') and hasattr(resource, 'day'):
+                leap_day = ((resource.index.month == 2) &
+                            (resource.index.day == 29))
+                resource = resource.drop(resource.index[leap_day])
+        return resource
 
     def set_time_index(self, time_index, time_vars=('year', 'month', 'day',
                                                     'hour', 'minute')):
@@ -421,6 +424,7 @@ class SAM:
         """
 
         time_index = self.make_datetime(time_index)
+
         for var in time_vars:
             self.ssc.data_set_array(self.res_data, var,
                                     getattr(time_index.dt, var).values)
@@ -475,18 +479,15 @@ class SAM:
 
     @property
     def cf_profile(self):
-        """Get hourly capacity factor (fractional) profile from SAM.
+        """Get hourly capacity factor (frac) profile in orig timezone.
 
         Returns
         -------
         cf_profile : np.ndarray
             1D numpy array of capacity factor profile.
-            Datatype is float32 and array length is 8760.
+            Datatype is float32 and array length is 8760*time_interval.
         """
-        gen_array = np.array(self.ssc.data_get_array(self.data, 'gen'),
-                             dtype=np.float32)
-        cf_profile = gen_array / self.parameters['system_capacity']
-        return cf_profile
+        return self.gen_profile / self.parameters['system_capacity']
 
     @property
     def annual_energy(self):
@@ -512,27 +513,32 @@ class SAM:
 
     @property
     def gen_profile(self):
-        """Get hourly (8760) AC inverter power generation profile in kW.
+        """Get AC inverter power generation profile (orig timezone) in kW.
 
         Returns
         -------
         output : np.ndarray
             1D array of hourly AC inverter power generation in kW.
-            Datatype is float32 and array length is 8760.
+            Datatype is float32 and array length is 8760*time_interval.
         """
-        return np.array(self.ssc.data_get_array(self.data, 'gen'),
-                        dtype=np.float32)
+        gen = np.array(self.ssc.data_get_array(self.data, 'gen'),
+                       dtype=np.float32)
+        # Roll back to native timezone if resource meta has a timezone
+        if hasattr(self, '_meta'):
+            if self._meta is not None:
+                if 'timezone' in self.meta:
+                    gen = np.roll(gen, -1 * int(self.meta['timezone'] *
+                                                self.time_interval))
+        return gen
 
     @property
     def ppa_price(self):
-        """Get PPA price (cents/kWh)
-        """
+        """Get PPA price (cents/kWh)."""
         return self.ssc.data_get_number(self.data, 'ppa')
 
     @property
     def lcoe_fcr(self):
-        """Get LCOE (cents/kWh).
-        """
+        """Get LCOE (cents/kWh)."""
         return 100 * self.ssc.data_get_number(self.data, 'lcoe_fcr')
 
     def execute(self, modules_to_run, close=True):
@@ -616,6 +622,9 @@ class SAM:
             Resource file with full path.
         output_request : list | tuple
             Outputs to retrieve from SAM.
+        return_meta : bool
+            Adds meta key/value pair to dictionary output. Additional reV
+            variables added to the meta series.
 
         Returns
         -------
@@ -641,7 +650,9 @@ class SAM:
 
             logger.debug('Outputs for site {} with config "{}", \n\t{}...'
                          .format(site, config, str(out[site])[:100]))
-
+            del res_df, meta, sim
+        del resources
+        gc.collect()
         return out
 
 
@@ -650,7 +661,7 @@ class Solar(SAM):
     """
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+                 output_request=None, drop_leap=True):
         """Initialize a SAM solar object.
 
         Parameters
@@ -665,7 +676,14 @@ class Solar(SAM):
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data.
         """
+
+        # drop the leap day
+        if drop_leap:
+            resource = self.drop_leap(resource)
+
         # don't pass resource to base class, set in set_nsrdb instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,
                          output_request=output_request)
@@ -703,8 +721,6 @@ class Solar(SAM):
         # set resource variables
         for var in resource.columns.values:
             if var != 'time_index':
-                logger.debug('On site {}, setting {} resource data.'
-                             .format(self.site, var))
                 self.ssc.data_set_array(self.res_data, var_map[var],
                                         np.roll(resource[var],
                                                 int(self.meta['timezone'] *
@@ -740,8 +756,6 @@ class PV(Solar):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        logger.debug('SAM PV class initializing for site {}.'
-                     .format(self.site))
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM PV solar simulation.
@@ -770,8 +784,6 @@ class CSP(Solar):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        logger.debug('SAM CSP class initializing for site {}'
-                     .format(self.site))
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM CSP solar simulation.
@@ -794,7 +806,7 @@ class Wind(SAM):
     """
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+                 output_request=None, drop_leap=True):
         """Initialize a SAM wind object.
 
         Parameters
@@ -809,7 +821,13 @@ class Wind(SAM):
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data.
         """
+
+        # drop the leap day
+        if drop_leap:
+            resource = self.drop_leap(resource)
 
         # don't pass resource to base class, set in set_wtk instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,
@@ -863,8 +881,6 @@ class LandBasedWind(Wind):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        logger.debug('SAM land-based wind class initializing for site {}.'
-                     .format(self.site))
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM land based wind simulation.
@@ -893,8 +909,6 @@ class OffshoreWind(LandBasedWind):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
-        logger.debug('SAM offshore wind class initializing for site {}.'
-                     .format(self.site))
 
 
 class Economic(SAM):
@@ -921,8 +935,6 @@ class Economic(SAM):
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         """
-
-        logger.debug('SAM Economomic class initializing...')
 
         # set attribute to store site number
         self.site = None
@@ -953,7 +965,6 @@ class LCOE(Economic):
         """Initialize a SAM LCOE economic model object.
         """
         super().__init__(ssc, data, parameters, output_request)
-        logger.debug('SAM LCOE class initializing...')
 
 
 class SingleOwner(Economic):
@@ -965,4 +976,3 @@ class SingleOwner(Economic):
         """Initialize a SAM single owner economic model object.
         """
         super().__init__(ssc, data, parameters, output_request)
-        logger.debug('SAM LCOE class initializing...')

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""reV unit test module
+# pylint: skip-file
+"""reV unit test modul
 """
 import json
 import os
@@ -7,7 +8,7 @@ import pytest
 
 import utilities as ut
 from reV.SAM import SAM
-from reV.rev_logger import init_logger
+from reV.utilities.loggers import init_logger
 
 
 class SAMTestManager:
@@ -188,8 +189,8 @@ def execute_pytest(capture='all', flags='-rapP'):
         Which tests to show logs and results for.
     """
 
-    pytest.main(['-q', '--show-capture={}'.format(capture),
-                 'test_SAM_defaults.py', flags])
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
 
 
 if __name__ == '__main__':

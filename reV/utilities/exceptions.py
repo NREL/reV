@@ -10,6 +10,20 @@ class reVError(Exception):
     pass
 
 
+class ConfigError(Exception):
+    """
+    Error for bad configuration inputs
+    """
+    pass
+
+
+class ExecutionError(Exception):
+    """
+    Error for execution failure
+    """
+    pass
+
+
 class ResourceKeyError(Exception):
     """
     KeyError for Resource Handlers

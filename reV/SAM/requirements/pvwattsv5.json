@@ -9,7 +9,8 @@
   [
     "module_type",
     [
-      "int"
+      "int",
+      "float"
     ]
   ],
   [
@@ -35,7 +36,8 @@
   [
     "array_type",
     [
-      "int"
+      "int",
+      "float"
     ]
   ],
   [

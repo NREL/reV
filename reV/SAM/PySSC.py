@@ -7,6 +7,7 @@ import sys
 import os
 from ctypes import (c_int, c_char_p, c_float, CDLL, c_void_p, pointer,
                     POINTER, byref)
+from warnings import warn
 
 
 # must be c_double or c_float depending on how defined in sscapi.h
@@ -18,18 +19,35 @@ class PySSC():
 
     Created with SAM version 2017.9.5
     """
-    def __init__(self):
+
+    # Default directory containing SAM SSC files
+    def_pyssc_dir = os.path.dirname(os.path.abspath(__file__))
+
+    def __init__(self, pyssc_dir=None):
         """Initialize a PySSC object."""
-        pyssc_dir = os.path.dirname(os.path.abspath(__file__))
+
+        if not pyssc_dir:
+            # no pyssc_dir specified, use SSC files in this file's path
+            pyssc_dir = self.def_pyssc_dir
+        else:
+            if not os.path.exists(pyssc_dir):
+                # specified pyssc_dir not found
+                warn('Requested SAM Simulation Core directory not found: '
+                     '"{}". Defaulting to PySSC.py directory: "{}".'
+                     .format(pyssc_dir, self.def_pyssc_dir))
+                pyssc_dir = self.def_pyssc_dir
+
         if sys.platform == 'win32' or sys.platform == 'cygwin':
-            self.pdll = CDLL(os.path.join(pyssc_dir, 'ssc.dll'))
+            f_ssc = 'ssc.dll'
         elif sys.platform == 'darwin':
-            self.pdll = CDLL(os.path.join(pyssc_dir, 'ssc.dylib'))
+            f_ssc = 'ssc.dylib'
         elif sys.platform == 'linux' or sys.platform == 'linux2':
             # instead of relative path, require user to have on LD_LIBRARY_PATH
-            self.pdll = CDLL(os.path.join(pyssc_dir, 'ssc.so'))
+            f_ssc = 'ssc.so'
         else:
             raise Exception('Platform not supported ', sys.platform)
+
+        self.pdll = CDLL(os.path.join(pyssc_dir, f_ssc))
 
         self.INVALID = 0
         self.STRING = 1
