@@ -626,11 +626,6 @@ class SmartParallelJob:
         return self._execution_iter
 
     @property
-    def loggers(self):
-        """Get the list of logger names."""
-        return self._loggers
-
-    @property
     def mem_util_lim(self):
         """Get the memory utilization limit (fractional)."""
         return self._mem_util_lim
@@ -656,6 +651,11 @@ class SmartParallelJob:
                                  'run() and flush()'.format(inp_obj))
         else:
             self._obj = inp_obj
+
+    @property
+    def loggers(self):
+        """Get the list of logger names."""
+        return self._loggers
 
     def init_loggers(self, client):
         """Initialize loggers on all workers"""

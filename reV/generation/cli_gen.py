@@ -23,13 +23,19 @@ logger = logging.getLogger(__name__)
 
 
 def init_gen_loggers(verbose, name, logdir='./out/log',
-                     modules=['reV.config', 'reV.generation',
-                              'reV.utilities']):
+                     modules=[__name__, 'reV.generation.generation',
+                              'reV.config', 'reV.utilities']):
     """Initialize multiple loggers to a single file for the gen compute."""
     if verbose:
         log_level = 'DEBUG'
     else:
         log_level = 'INFO'
+
+    match_id = re.match(r'.*_([0-9]{2})$', name)
+    node = None
+    if match_id:
+        if name.endswith(match_id.group(1)):
+            node = match_id.group(1)
 
     if not os.path.exists(logdir):
         os.makedirs(logdir)
@@ -39,9 +45,19 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
 
         # do not initialize a redundant logger
         logger = REV_LOGGERS[module]
-        if 'log_file' not in logger:
+        if ((not node or (node and log_level == 'DEBUG')) and
+                'log_file' not in logger):
+            # No log file belongs to this logger, init
             logger = init_logger(module, log_level=log_level,
                                  log_file=log_file)
+        elif node and log_level == 'INFO' and 'log_file' not in logger:
+            # If this is recognized to be on the node level and info,
+            # Initialize a stream handler and a year level logger
+            log_name_temp = '{}.log'.format(name.rstrip('_' + node))
+            log_file_temp = os.path.join(logdir, log_name_temp)
+            log_files = [None, log_file_temp]
+            logger = init_logger(module, log_level=log_level,
+                                 log_file=log_files)
     return logger
 
 
@@ -457,7 +473,8 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     cf_profiles = ctx.obj['CF_PROFILES']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    init_gen_loggers(verbose, name, logdir=logdir)
+    # initialize an info logger on the year level
+    init_gen_loggers(False, name, logdir=logdir)
 
     pc = get_node_pc(points, sam_files, tech, res_file, nodes)
 
@@ -521,7 +538,8 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     cf_profiles = ctx.obj['CF_PROFILES']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    init_gen_loggers(verbose, name, logdir=logdir)
+    # initialize an info logger on the year level
+    init_gen_loggers(False, name, logdir=logdir)
 
     pc = get_node_pc(points, sam_files, tech, res_file, nodes)
 
