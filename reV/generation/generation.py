@@ -54,6 +54,8 @@ class Gen:
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
+        drop_leap : bool
+            Drop leap day instead of final day of year during leap years
         """
 
         self._points_control = points_control
