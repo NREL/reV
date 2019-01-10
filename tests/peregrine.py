@@ -20,6 +20,7 @@ from reV import __testdatadir__ as TESTDATADIR
 from reV.handlers.capacity_factor import CapacityFactor
 from reV.utilities.execution import PBS
 from reV.utilities.loggers import init_logger
+from reV.generation.cli_gen import get_node_cmd
 
 
 RTOL = 0.0
@@ -84,6 +85,9 @@ def test_peregrine(year):
     rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
     rev2_out = 'gen_ri_pv_smart_{}.h5'.format(year)
 
+    if not os.path.exists(rev2_out_dir):
+        os.mkdir(rev2_out_dir)
+
     name = 'ptest'
     points = slice(0, 100)
     cf_profiles = True
@@ -95,43 +99,12 @@ def test_peregrine(year):
     for mod in modules:
         init_logger(mod, log_level=log_level, log_file=log_file)
 
-    # mark a cli arg string for main() in this module
-    arg_main = ('-n {name} '.format(name=PBS.s(name)))
-
-    # make a cli arg string for direct() in this module
-    arg_direct = ('-t {tech} '
-                  '-p {points} '
-                  '-sf {sam_files} '
-                  '-rf {res_file} '
-                  '-spc {sites_per_core} '
-                  '-fo {fout} '
-                  '-do {dirout} '
-                  '-lo {logdir} '
-                  '{cfp} '
-                  .format(tech=PBS.s('pv'),
-                          points=PBS.s(points),
-                          sam_files=PBS.s(sam_files),
-                          res_file=PBS.s(res_file),
-                          sites_per_core=PBS.s(None),
-                          fout=PBS.s(rev2_out),
-                          dirout=PBS.s(rev2_out_dir),
-                          logdir=PBS.s(rev2_out_dir),
-                          cfp='-cfp' if cf_profiles else '',
-                          ))
-
-    # make a cli arg string for local() in this module
-    arg_loc = ('-nw {n_workers} '
-               '-pr {points_range} '
-               '{v}'.format(n_workers=PBS.s(None),
-                            points_range=PBS.s(None),
-                            v='-v' if verbose else ''))
-
-    # Python command that will be executed on a node
-    cmd = ('python -m reV.generation.cli_gen '
-           '{arg_main} direct {arg_direct} local {arg_loc}'
-           .format(arg_main=arg_main,
-                   arg_direct=arg_direct,
-                   arg_loc=arg_loc))
+    cmd = get_node_cmd(name=name, tech='pv',
+                       points=points, points_range=None,
+                       sam_files=sam_files, res_file=res_file,
+                       sites_per_core=None, n_workers=None,
+                       fout=rev2_out, dirout=rev2_out_dir, logdir=rev2_out_dir,
+                       cf_profiles=cf_profiles, verbose=verbose)
 
     # create and submit the PBS job
     pbs = PBS(cmd, alloc='rev', queue='short', name=name,
