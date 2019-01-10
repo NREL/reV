@@ -11,6 +11,7 @@ from warnings import warn
 from reV.utilities.exceptions import (ResourceRuntimeError, ResourceKeyError,
                                       ResourceValueError)
 from reV.handlers.resource import Resource, parse_keys
+from reV.utilities.utilities import parse_year
 
 
 class Outputs(Resource):

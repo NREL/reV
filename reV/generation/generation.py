@@ -38,7 +38,7 @@ class Gen:
                  }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
-                 fout=None, dirout='./gen_out'):
+                 fout=None, dirout='./gen_out', drop_leap=True):
         """Initialize a generation instance.
 
         Parameters
@@ -61,6 +61,7 @@ class Gen:
         self._output_request = output_request
         self._fout = fout
         self._dirout = dirout
+        self._drop_leap = drop_leap
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -219,23 +220,12 @@ class Gen:
                             'list, dict or None.'.format(type(result)))
 
     @property
-    def time_index(self, drop_leap=True):
-        """Get the generation resource time index data.
-
-        Parameters
-        ----------
-        drop_leap : bool
-            Option to drop the leap day from the time_index.
-
-        Returns
-        -------
-        _time_index : pd.DatetimeIndex
-            Time index objects from the resource data (self.res_file).
-        """
+    def time_index(self):
+        """Get the generation resource time index data."""
         if not hasattr(self, '_time_index'):
             with Resource(self.res_file) as res:
                 self._time_index = res.time_index
-            if drop_leap:
+            if self._drop_leap:
                 leap_day = ((self._time_index.month == 2) &
                             (self._time_index.day == 29))
                 self._time_index = self._time_index.drop(
@@ -363,7 +353,9 @@ class Gen:
         """
 
         out = {}
-        {out.update(x) for x in futures}
+        for x in futures:
+            out.update(x)
+
         return out
 
     @staticmethod
@@ -576,9 +568,10 @@ class Gen:
             logger.info('Flushing generation outputs to disk, target file: {}'
                         .format(fout))
             if 'profile' in str(self.output_request):
-                self.profiles_to_disk(fout=fout, mode=mode)
+                self.profiles_to_disk(fout, mode=mode)
             else:
-                self.means_to_disk(fout=fout, mode=mode)
+                self.means_to_disk(fout, mode=mode)
+
             logger.debug('Flushed generation output successfully to disk.')
 
     @staticmethod
