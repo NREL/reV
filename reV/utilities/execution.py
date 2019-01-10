@@ -344,7 +344,13 @@ class SLURM(SubprocessManager):
 
         # column location of various job identifiers
         col_loc = {'id': 0, 'name': 2}
-        squeue_rows = self.squeue()
+
+        if var == 'name':
+            # check for specific name
+            squeue_rows = self.squeue(name=job)
+        else:
+            squeue_rows = self.squeue()
+
         if squeue_rows is None:
             return None
         else:
@@ -356,7 +362,7 @@ class SLURM(SubprocessManager):
             row = row.split()
             # make sure the row is long enough to be a job status listing
             if len(row) > 7:
-                if row[col_loc[var]].strip() == job.strip():
+                if row[col_loc[var]].strip() in job.strip():
                     # Job status is located at the 4 index
                     status = row[4]
                     logger.debug('Job with {} "{}" has status: "{}"'
@@ -364,8 +370,14 @@ class SLURM(SubprocessManager):
                     return row[4]
         return None
 
-    def squeue(self):
+    def squeue(self, name=None):
         """Run the SLURM squeue command and return the stdout split to rows.
+
+        Parameters
+        ----------
+        name : str | None
+            Optional to check the squeue for a specific job name (not limited
+            to the 8 shown characters) or show users whole squeue.
 
         Returns
         -------
@@ -374,7 +386,9 @@ class SLURM(SubprocessManager):
             Returns None if squeue is empty.
         """
 
-        cmd = 'squeue -u {user}'.format(user=self.USER)
+        cmd = ('squeue -u {user}{job_name}'
+               .format(user=self.USER,
+                       job_name=' -n {}'.format(name) if name else ''))
         stdout, _ = self.submit(cmd)
         if not stdout:
             # No jobs are currently running.

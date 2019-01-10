@@ -142,8 +142,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 
     elif config.execution_control.option == 'peregrine':
         if not match:
-            # 11 chars for pbs job name (lim is 16, -5 for "_yrID")
-            ctx.obj['NAME'] = '{}_{}'.format(name[:11], str(year)[-2:])
+            # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
+            ctx.obj['NAME'] = '{}_{}'.format(name[:8], str(year))
         ctx.invoke(peregrine, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    queue=config.execution_control.queue,
@@ -154,7 +154,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     elif config.execution_control.option == 'eagle':
         if not match:
             # 3 chars for slurm job name (lim is 8, -5 for "_yrID")
-            ctx.obj['NAME'] = '{}_{}'.format(name[:3], str(year)[-2:])
+            ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(eagle, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
@@ -322,12 +322,11 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
         Base file output name with _node00 tag.
     """
     if hpc is 'slurm':
-        lim = 6
+        node_name = '{0}_{1:02d}'.format(name, i)
     elif hpc is 'pbs':
-        lim = 14
+        # 13 chars for pbs, (lim is 16, -3 for "_ID")
+        node_name = '{0}_{1:02d}'.format(name[:13], i)
 
-    # 14 chars for pbs, 6 for slurm (lim is 16/8, -2 for "2charID")
-    node_name = '{0}{1:02d}'.format(name[:lim], i)
     if fout.endswith('.h5'):
         # remove file extension to add additional node and year strings
         fout = fout.strip('.h5')
