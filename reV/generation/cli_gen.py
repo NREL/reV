@@ -167,19 +167,16 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 
 
 @main.group()
-@click.option('--tech', '-t', default='pv', type=STR,
-              help='reV tech to analyze. Default is "pv".')
+@click.option('--tech', '-t', required=True, type=STR,
+              help='reV tech to analyze (required).')
+@click.option('--sam_files', '-sf', required=True, type=SAMFILES,
+              help='SAM config files (required) (str, dict, or list).')
+@click.option('--res_file', '-rf', required=True,
+              help='Single resource file (required) (str).')
 @click.option('--points', '-p', default=slice(0, 100), type=PROJECTPOINTS,
               help=('reV project points to analyze '
                     '(slice, list, or file string). '
                     'Default is slice(0, 100)'))
-@click.option('--sam_files', '-sf',
-              default=__testdatadir__ + '/SAM/naris_pv_1axis_inv13.json',
-              type=SAMFILES, help=('SAM config files (str, dict, or list). '
-                                   'Default is test SAM config.'))
-@click.option('--res_file', '-rf',
-              default=__testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5',
-              help='Single resource file (str). Default is test NSRDB file.')
 @click.option('--sites_per_core', '-spc', default=None, type=INT,
               help=('Number of sites to run in series on a single core. '
                     'Default is the resource column chunk size.'))
@@ -196,7 +193,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, tech, points, sam_files, res_file, sites_per_core,
+def direct(ctx, tech, sam_files, res_file, points, sites_per_core,
            fout, dirout, logdir, cf_profiles, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
@@ -534,7 +531,7 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     for i, split in enumerate(pc):
         node_name, fout_node = get_node_name_fout(name, fout, i, hpc='slurm')
 
-        cmd = get_node_cmd(split, name=node_name, tech=tech,
+        cmd = get_node_cmd(name=node_name, tech=tech,
                            points=points, points_range=split.split_range,
                            sam_files=sam_files, res_file=res_file,
                            sites_per_core=sites_per_core, n_workers=None,
