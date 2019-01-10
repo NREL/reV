@@ -1,0 +1,46 @@
+reV.utilities package
+=====================
+
+Submodules
+----------
+
+reV.utilities.cli\_dtypes module
+--------------------------------
+
+.. automodule:: reV.utilities.cli_dtypes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+reV.utilities.exceptions module
+-------------------------------
+
+.. automodule:: reV.utilities.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+reV.utilities.execution module
+------------------------------
+
+.. automodule:: reV.utilities.execution
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+reV.utilities.loggers module
+----------------------------
+
+.. automodule:: reV.utilities.loggers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: reV.utilities
+    :members:
+    :undoc-members:
+    :show-inheritance:

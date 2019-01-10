@@ -9,11 +9,11 @@ Subpackages
     reV.SAM
     reV.config
     reV.exclusions
-    reV.execution
     reV.generation
     reV.handlers
     reV.lcoe
     reV.supply_curve
+    reV.utilities
 
 Submodules
 ----------
@@ -22,22 +22,6 @@ reV.cli module
 --------------
 
 .. automodule:: reV.cli
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-reV.exceptions module
----------------------
-
-.. automodule:: reV.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-reV.rev\_logger module
-----------------------
-
-.. automodule:: reV.rev_logger
     :members:
     :undoc-members:
     :show-inheritance:
