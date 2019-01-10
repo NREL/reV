@@ -80,8 +80,6 @@ class SubprocessManager:
         """
 
         cmd = shlex.split(cmd)
-        logger.debug('Submitting the following cmd as a subprocess:\n\t{}'
-                     .format(cmd))
 
         # use subprocess to submit command and get piped o/e
         process = Popen(cmd, stdout=PIPE, stderr=PIPE)
@@ -180,6 +178,7 @@ class PBS(SubprocessManager):
         -------
         out : str or NoneType
             Qstat job status character or None if not found.
+            Common status codes: Q, R, C (queued, running, complete).
         """
 
         # column location of various job identifiers
@@ -198,7 +197,10 @@ class PBS(SubprocessManager):
             if len(row) > 10:
                 if row[col_loc[var]].strip() == job.strip():
                     # Job status is located at the -2 index
-                    return row[-2]
+                    status = row[-2]
+                    logger.debug('Job with {} "{}" has status: "{}"'
+                                 .format(var, job, status))
+                    return status
         return None
 
     def qstat(self):
@@ -312,12 +314,16 @@ class SLURM(SubprocessManager):
         """
 
         self.make_path(stdout_path)
-        self.id, self.err = self.sbatch(cmd,
-                                        alloc=alloc,
-                                        memory=memory,
-                                        walltime=walltime,
-                                        name=name,
-                                        stdout_path=stdout_path)
+        self.out, self.err = self.sbatch(cmd,
+                                         alloc=alloc,
+                                         memory=memory,
+                                         walltime=walltime,
+                                         name=name,
+                                         stdout_path=stdout_path)
+        if self.out:
+            self.id = self.out.split(' ')[-1]
+        else:
+            self.id = None
 
     def check_status(self, job, var='id'):
         """Check the status of this PBS job using qstat.
@@ -333,6 +339,7 @@ class SLURM(SubprocessManager):
         -------
         out : str or NoneType
             squeue job status str or None if not found.
+            Common status codes: PD, R, CG (pending, running, complete).
         """
 
         # column location of various job identifiers
@@ -351,6 +358,9 @@ class SLURM(SubprocessManager):
             if len(row) > 7:
                 if row[col_loc[var]].strip() == job.strip():
                     # Job status is located at the 4 index
+                    status = row[4]
+                    logger.debug('Job with {} "{}" has status: "{}"'
+                                 .format(var, job, status))
                     return row[4]
         return None
 
@@ -424,7 +434,7 @@ class SLURM(SubprocessManager):
                       '#SBATCH --error={p}/{n}_%j.e\n'
                       '{cmd}'
                       .format(a=alloc, t=self.walltime(walltime), n=name,
-                              m=int(memory / 1000), p=stdout_path, cmd=cmd))
+                              m=int(memory * 1000), p=stdout_path, cmd=cmd))
 
             # write the shell script file and submit as qsub job
             self.make_sh(fname, script)

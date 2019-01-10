@@ -123,8 +123,6 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     match = re.match(r'.*([1-3][0-9]{3})', name)
     if not match:
         ctx.obj['FOUT'] = '{}_{}.h5'.format(name, year)
-        # 8 chars for pbs job name (lim is 16, -8 for "_year_2charID")
-        ctx.obj['NAME'] = '{}_{}'.format(name[:8], year)
 
     # check to make sure that the year matches the resource file
     if str(year) not in config.res_files[i]:
@@ -143,6 +141,9 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
+        if not match:
+            # 11 chars for pbs job name (lim is 16, -5 for "_yrID")
+            ctx.obj['NAME'] = '{}_{}'.format(name[:11], str(year)[-2:])
         ctx.invoke(peregrine, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    queue=config.execution_control.queue,
@@ -151,10 +152,13 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
+        if not match:
+            # 3 chars for slurm job name (lim is 8, -5 for "_yrID")
+            ctx.obj['NAME'] = '{}_{}'.format(name[:3], str(year)[-2:])
         ctx.invoke(eagle, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
-                   memory=config.execution_control.memory,
+                   memory=config.execution_control.node_mem,
                    stdout_path=os.path.join(config.dirout, 'stdout'),
                    verbose=verbose)
     else:
@@ -259,7 +263,7 @@ def local(ctx, n_workers, points_range, verbose):
     logger.info('Gen compute complete for project points "{0}"{1}. '
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'
                 .format(points, tmp_str if points_range else '',
-                        (time.time() - t0) / 60), dirout)
+                        (time.time() - t0) / 60, dirout))
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
@@ -300,7 +304,7 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
     return pc
 
 
-def get_node_name_fout(name, fout, i):
+def get_node_name_fout(name, fout, i, hpc='slurm'):
     """Make a node name and fout unique to the run name, year, and node number
     Parameters
     ----------
@@ -310,6 +314,8 @@ def get_node_name_fout(name, fout, i):
         Base file output name (no path) (with or without .h5 extension)
     i : int
         Node number.
+    hpc : str
+        HPC job submission tool name (e.g. slurm or pbs). Affects job name.
 
     Returns
     -------
@@ -318,9 +324,13 @@ def get_node_name_fout(name, fout, i):
     fout_node : str
         Base file output name with _node00 tag.
     """
+    if hpc is 'slurm':
+        lim = 6
+    elif hpc is 'pbs':
+        lim = 14
 
-    # 8 chars for pbs job name (lim is 16, -3 for "_2charID")
-    node_name = '{0}_{1:02d}'.format(name[:13], i)
+    # 14 chars for pbs, 6 for slurm (lim is 16/8, -2 for "2charID")
+    node_name = '{0}{1:02d}'.format(name[:lim], i)
     if fout.endswith('.h5'):
         # remove file extension to add additional node and year strings
         fout = fout.strip('.h5')
@@ -329,19 +339,17 @@ def get_node_name_fout(name, fout, i):
     return node_name, fout_node
 
 
-def get_node_cmd(split, name='reV', tech='pv',
-                 points=slice(0, 100),
+def get_node_cmd(name='reV', tech='pv',
+                 points=slice(0, 100), points_range=None,
                  sam_files=__testdatadir__ + '/SAM/naris_pv_1axis_inv13.json',
                  res_file=__testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5',
-                 sites_per_core=None, fout='reV.h5',
+                 sites_per_core=None, n_workers=None, fout='reV.h5',
                  dirout='./out/gen_out', logdir='./out/log_gen',
                  cf_profiles=False, verbose=False):
     """Made a reV gen local cli call string.
 
     Parameters
     ----------
-    split : reV.config.project_points.PointsControl
-        Split (iteration result) instance of a PointsControl object.
     name : str
         Name of the job to be submitted.
     tech : str
@@ -349,7 +357,8 @@ def get_node_cmd(split, name='reV', tech='pv',
         (e.g. pv, csp, landbasedwind, offshorewind).
     points : slice | str | list | tuple
         Slice/list specifying project points, string pointing to a project
-        points csv.
+    points_range : list | None
+        Optional range list to run a subset of sites
     sam_files : dict | str | list
         SAM input configuration ID(s) and file path(s). Keys are the SAM
         config ID(s), top level value is the SAM path. Can also be a single
@@ -359,6 +368,9 @@ def get_node_cmd(split, name='reV', tech='pv',
         WTK or NSRDB resource file name + path.
     sites_per_core : int | None
         Number of sites to be analyzed in serial on a single local core.
+    n_workers : int | None
+        Number of workers to use on a node. None defaults to all available
+        workers.
     fout : str
         Target filename to dump generation outputs.
     dirout : str
@@ -403,11 +415,10 @@ def get_node_cmd(split, name='reV', tech='pv',
                           ))
 
     # make a cli arg string for local() in this module
-    points_range = SubprocessManager.s(split.split_range)
     arg_loc = ('-nw {n_workers} '
                '-pr {points_range} '
-               '{v}'.format(n_workers=SubprocessManager.s(None),
-                            points_range=points_range,
+               '{v}'.format(n_workers=SubprocessManager.s(n_workers),
+                            points_range=SubprocessManager.s(points_range),
                             v='-v' if verbose else ''))
 
     # Python command that will be executed on a node
@@ -457,12 +468,13 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i)
+        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='pbs')
 
-        cmd = get_node_cmd(split, name=node_name, tech=tech, points=points,
+        cmd = get_node_cmd(name=node_name, tech=tech,
+                           points=points, points_range=split.split_range,
                            sam_files=sam_files, res_file=res_file,
-                           sites_per_core=sites_per_core, fout=fout_node,
-                           dirout=dirout, logdir=logdir,
+                           sites_per_core=sites_per_core, n_workers=None,
+                           fout=fout_node, dirout=dirout, logdir=logdir,
                            cf_profiles=cf_profiles, verbose=verbose)
 
         logger.info('Running reV generation on Peregrine with node name "{}" '
@@ -486,9 +498,9 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
 
 @direct.command()
 @click.option('--nodes', '-no', default=1, type=INT,
-              help='Number of Peregrine nodes. Default is 1.')
+              help='Number of Eagle nodes. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
-              help='Peregrine allocation account name. Default is "rev".')
+              help='Eagle allocation account name. Default is "rev".')
 @click.option('--memory', '-mem', default=96, type=INT,
               help='Eagle node memory request in GB. Default is 96')
 @click.option('--walltime', '-wt', default=1.0, type=float,
@@ -520,19 +532,20 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i)
+        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='slurm')
 
-        cmd = get_node_cmd(split, name=node_name, tech=tech, points=points,
+        cmd = get_node_cmd(split, name=node_name, tech=tech,
+                           points=points, points_range=split.split_range,
                            sam_files=sam_files, res_file=res_file,
-                           sites_per_core=sites_per_core, fout=fout_node,
-                           dirout=dirout, logdir=logdir,
+                           sites_per_core=sites_per_core, n_workers=None,
+                           fout=fout_node, dirout=dirout, logdir=logdir,
                            cf_profiles=cf_profiles, verbose=verbose)
 
         logger.info('Running reV generation on Eagle with node name "{}" for '
                     '{} (points range: {}) with target output directory: {}'
                     .format(node_name, pc, split.split_range, dirout))
 
-        # create and submit the PBS job
+        # create and submit the SLURM job
         slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
                       name=node_name, stdout_path=stdout_path)
         if slurm.id:

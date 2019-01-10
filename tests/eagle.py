@@ -1,6 +1,6 @@
 # pylint: skip-file
 """
-Test file for qsub on Peregrine. Will not run with pytest
+Test file for qsub on Eagle. Will not run with pytest
 (in case using on local machine).
 
 RUN THIS FILE AS A SCRIPT
@@ -18,7 +18,7 @@ import time
 
 from reV import __testdatadir__ as TESTDATADIR
 from reV.handlers.capacity_factor import CapacityFactor
-from reV.utilities.execution import PBS
+from reV.utilities.execution import SLURM
 from reV.utilities.loggers import init_logger
 from reV.generation.cli_gen import get_node_cmd
 
@@ -78,7 +78,7 @@ def to_list(gen_out):
 
 
 @pytest.mark.parametrize('year', [('2012')])
-def test_peregrine(year):
+def test_eagle(year):
     """Gen PV CF profiles with write to disk and compare against rev1."""
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
@@ -88,7 +88,7 @@ def test_peregrine(year):
     if not os.path.exists(rev2_out_dir):
         os.mkdir(rev2_out_dir)
 
-    name = 'ptest'
+    name = 'etest'
     points = slice(0, 100)
     cf_profiles = True
     verbose = True
@@ -106,13 +106,13 @@ def test_peregrine(year):
                        fout=rev2_out, dirout=rev2_out_dir, logdir=rev2_out_dir,
                        cf_profiles=cf_profiles, verbose=verbose)
 
-    # create and submit the PBS job
-    pbs = PBS(cmd, alloc='rev', queue='short', name=name,
-              feature=None, stdout_path=rev2_out_dir)
+    # create and submit the SLURM job
+    slurm = SLURM(cmd, alloc='rev', memory=96, walltime=0.1,
+                  name=name, stdout_path=rev2_out_dir)
 
     while True:
-        status = pbs.check_status(name, var='name')
-        if status == 'C':
+        status = slurm.check_status(name, var='name')
+        if status == 'CG':
             break
         else:
             time.sleep(5)
