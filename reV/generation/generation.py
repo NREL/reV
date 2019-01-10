@@ -22,12 +22,12 @@ logger = logging.getLogger(__name__)
 class Gen:
     """Base class for generation"""
 
-    # Mapping of available SAM generation functions
-    FUNS = {'pv': PV.reV_run,
-            'csp': CSP.reV_run,
-            'landbasedwind': LandBasedWind.reV_run,
-            'offshorewind': OffshoreWind.reV_run,
-            }
+    # Mapping of reV technology strings to SAM generation functions
+    REVTECHS = {'pv': PV.reV_run,
+                'csp': CSP.reV_run,
+                'landbasedwind': LandBasedWind.reV_run,
+                'offshorewind': OffshoreWind.reV_run,
+                }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out'):
@@ -53,6 +53,12 @@ class Gen:
         self._output_request = output_request
         self._fout = fout
         self._dirout = dirout
+
+        if self.tech not in self.REVTECHS:
+            raise KeyError('Requested technology "{}" is not available. '
+                           'reV generation can analyze the following '
+                           'technologies: {}'
+                           .format(self.tech, list(self.REVTECHS.keys())))
 
     @property
     def output_request(self):
@@ -409,8 +415,8 @@ class Gen:
         """
 
         try:
-            out = Gen.FUNS[tech](points_control, res_file,
-                                 output_request=output_request)
+            out = Gen.REVTECHS[tech](points_control, res_file,
+                                     output_request=output_request)
         except Exception:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))

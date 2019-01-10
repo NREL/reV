@@ -5,6 +5,7 @@ from dask.distributed import Client, LocalCluster, wait
 from subprocess import Popen, PIPE
 import logging
 import gc
+from math import floor
 import os
 import psutil
 import getpass
@@ -113,6 +114,25 @@ class SubprocessManager:
         else:
             return '{}'.format(s)
 
+    @staticmethod
+    def walltime(hours):
+        """Get the SLURM walltime string in format "HH:MM:SS"
+
+        Parameters
+        ----------
+        hours : float | int
+            Requested number of job hours.
+
+        Returns
+        -------
+        walltime : str
+            SLURM walltime request in format "HH:MM:SS"
+        """
+
+        m_str = '{0:02d}'.format(round(60 * (hours % 1)))
+        h_str = '{0:02d}'.format(floor(hours))
+        return '{}:{}:00'.format(h_str, m_str)
+
 
 class PBS(SubprocessManager):
     """Subclass for PBS subprocess jobs."""
@@ -174,8 +194,10 @@ class PBS(SubprocessManager):
         # update job status from qstat list
         for row in qstat_rows:
             row = row.split()
+            # make sure the row is long enough to be a job status listing
             if len(row) > 10:
                 if row[col_loc[var]].strip() == job.strip():
+                    # Job status is located at the -2 index
                     return row[-2]
         return None
 
@@ -267,10 +289,154 @@ class PBS(SubprocessManager):
 
 class SLURM(SubprocessManager):
     """Subclass for SLURM subprocess jobs."""
-    def __init__(self, py=None, alloc=None, name='reV',
-                 feature=None, stdout_path='./stdout'):
-        """Initialize a SLURM job."""
-        pass
+
+    def __init__(self, cmd, alloc, memory, walltime, name='reV',
+                 stdout_path='./stdout'):
+        """Initialize and submit a PBS job.
+
+        Parameters
+        ----------
+        cmd : str
+            Command to be submitted in PBS shell script. Example:
+                'python -m reV.generation.cli_gen'
+        alloc : str
+            HPC project (allocation) handle. Example: 'rev'.
+        memory : int
+            Node memory request in GB.
+        walltime : float
+            Node walltime request in hours.
+        name : str
+            SLURM job name.
+        stdout_path : str
+            Path to print .stdout and .stderr files.
+        """
+
+        self.make_path(stdout_path)
+        self.id, self.err = self.sbatch(cmd,
+                                        alloc=alloc,
+                                        memory=memory,
+                                        walltime=walltime,
+                                        name=name,
+                                        stdout_path=stdout_path)
+
+    def check_status(self, job, var='id'):
+        """Check the status of this PBS job using qstat.
+
+        Parameters
+        ----------
+        job : str
+            Job name or ID number.
+        var : str
+            Identity/type of job identification input arg ('id' or 'name').
+
+        Returns
+        -------
+        out : str or NoneType
+            squeue job status str or None if not found.
+        """
+
+        # column location of various job identifiers
+        col_loc = {'id': 0, 'name': 2}
+        squeue_rows = self.squeue()
+        if squeue_rows is None:
+            return None
+        else:
+            # reverse the list so most recent jobs are first
+            squeue_rows = reversed(squeue_rows)
+
+        # update job status from qstat list
+        for row in squeue_rows:
+            row = row.split()
+            # make sure the row is long enough to be a job status listing
+            if len(row) > 7:
+                if row[col_loc[var]].strip() == job.strip():
+                    # Job status is located at the 4 index
+                    return row[4]
+        return None
+
+    def squeue(self):
+        """Run the SLURM squeue command and return the stdout split to rows.
+
+        Returns
+        -------
+        squeue_rows : list | None
+            List of strings where each string is a row in the squeue printout.
+            Returns None if squeue is empty.
+        """
+
+        cmd = 'squeue -u {user}'.format(user=self.USER)
+        stdout, _ = self.submit(cmd)
+        if not stdout:
+            # No jobs are currently running.
+            return None
+        else:
+            squeue_rows = stdout.split('\n')
+            return squeue_rows
+
+    def sbatch(self, cmd, alloc, memory, walltime, name='reV',
+               stdout_path='./stdout', keep_sh=False):
+        """Submit a SLURM job via sbatch command and SLURM shell script
+
+        Parameters
+        ----------
+        cmd : str
+            Command to be submitted in PBS shell script. Example:
+                'python -m reV.generation.cli_gen'
+        alloc : str
+            HPC project (allocation) handle. Example: 'rev'.
+        memory : int
+            Node memory request in GB.
+        walltime : float
+            Node walltime request in hours.
+        name : str
+            SLURM job name.
+        stdout_path : str
+            Path to print .stdout and .stderr files.
+        keep_sh : bool
+            Boolean to keep the .sh files. Default is to remove these files
+            after job submission.
+
+        Returns
+        -------
+        out : str
+            sbatch standard output, this is typically the SLURM job ID.
+        err : str
+            sbatch standard error, this is typically an empty string if the job
+            was submitted successfully.
+        """
+
+        status = self.check_status(name, var='name')
+
+        if status == 'PD' or status == 'R':
+            warn('Not submitting job "{}" because it is already in '
+                 'squeue with status: "{}"'.format(name, status))
+            out = None
+            err = 'already_running'
+        else:
+            fname = '{}.sh'.format(name)
+            script = ('#!/bin/bash\n'
+                      '#SBATCH --account={a} # allocation account\n'
+                      '#SBATCH --time={t} # walltime\n'
+                      '#SBATCH --job-name={n} # job name\n'
+                      '#SBATCH --nodes=1 # number of nodes\n'
+                      '#SBATCH --mem={m} # node RAM in MB\n'
+                      '#SBATCH --output={p}/{n}_%j.o\n'
+                      '#SBATCH --error={p}/{n}_%j.e\n'
+                      '{cmd}'
+                      .format(a=alloc, t=self.walltime(walltime), n=name,
+                              m=int(memory / 1000), p=stdout_path, cmd=cmd))
+
+            # write the shell script file and submit as qsub job
+            self.make_sh(fname, script)
+            out, err = self.submit('sbatch {script}'.format(script=fname))
+
+            if not err:
+                logger.debug('SLURM job "{}" with id #{} submitted '
+                             'successfully'.format(name, out))
+                if not keep_sh:
+                    self.rm(fname)
+
+        return out, err
 
 
 def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,

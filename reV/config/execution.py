@@ -26,16 +26,12 @@ class BaseExecutionConfig(BaseConfig):
 
         default = 'local'
         if not hasattr(self, '_option'):
+            # default option if not specified
+            self._option = default
             if 'option' in self:
                 if self['option']:
+                    # config-specified, set to attribute
                     self._option = self['option'].lower()
-                else:
-                    # default option if not specifiedserial
-                    self._option = default
-            else:
-                # default option if not specified
-                self._option = default
-
         return self._option
 
     @property
@@ -70,16 +66,12 @@ class HPCConfig(BaseExecutionConfig):
         """Get the HPC allocation property."""
         default = 'rev'
         if not hasattr(self, '_hpc_alloc'):
+            # default option if not specified
+            self._hpc_alloc = default
             if 'allocation' in self:
                 if self['allocation']:
+                    # config-specified, set to attribute
                     self._hpc_alloc = self['allocation']
-                else:
-                    # default option if not specified
-                    self._hpc_alloc = default
-            else:
-                # default option if not specified
-                self._hpc_alloc = default
-
         return self._hpc_alloc
 
 
@@ -91,7 +83,7 @@ class PeregrineConfig(HPCConfig):
 
     @property
     def node_mem(self):
-        """Get the HPC node memory property."""
+        """Get the Peregrine node memory property."""
         defaults = {'short': '32GB',
                     'debug': '32GB',
                     'batch': '32GB',
@@ -101,21 +93,17 @@ class PeregrineConfig(HPCConfig):
                     'data-transfer': '32GB',
                     }
         if not hasattr(self, '_hpc_node_mem'):
+            # default option if not specified
+            self._hpc_node_mem = defaults[self.queue]
             if 'memory' in self:
                 if self['memory']:
+                    # config-specified, set to attribute
                     self._hpc_node_mem = self['memory']
-                else:
-                    # default option if not specified
-                    self._hpc_node_mem = defaults[self.queue]
-            else:
-                # default option if not specified
-                self._hpc_node_mem = defaults[self.queue]
-
         return self._hpc_node_mem
 
     @property
     def walltime(self):
-        """Get the HPC node walltime property."""
+        """Get the Peregrine node walltime property."""
         defaults = {'short': '04:00:00',
                     'debug': '01:00:00',
                     'batch': '48:00:00',
@@ -125,16 +113,12 @@ class PeregrineConfig(HPCConfig):
                     'data-transfer': '120:00:00',
                     }
         if not hasattr(self, '_hpc_walltime'):
+            # default option if not specified
+            self._hpc_walltime = defaults[self.queue]
             if 'walltime' in self:
                 if self['walltime']:
+                    # config-specified, set to attribute
                     self._hpc_walltime = self['walltime']
-                else:
-                    # default option if not specified
-                    self._hpc_walltime = defaults[self.queue]
-            else:
-                # default option if not specified
-                self._hpc_walltime = defaults[self.queue]
-
         return self._hpc_walltime
 
     @property
@@ -142,27 +126,61 @@ class PeregrineConfig(HPCConfig):
         """Get the Peregrine queue property."""
         default = 'short'
         if not hasattr(self, '_hpc_queue'):
+            # default option if not specified
+            self._hpc_queue = default
             if 'queue' in self:
                 if self['queue']:
+                    # config-specified, set to attribute
                     self._hpc_queue = self['queue']
-                else:
-                    # default option if not specified
-                    self._hpc_queue = default
-            else:
-                # default option if not specified
-                self._hpc_queue = default
-
         return self._hpc_queue
 
     @property
     def feature(self):
         """Get feature request str. Cores or memory. Mem is prioritized."""
         if not hasattr(self, '_feature'):
+            # default option if not specified
             self._feature = None
             if 'memory' in self:
                 if self['memory']:
+                    # config-specified, set to attribute
                     self._feature = self['memory']
             elif 'ppn' in self:
                 if self['ppn']:
+                    # config-specified, set to attribute
                     self._feature = '{}core'.format(self['ppn'])
         return self._feature
+
+
+class EagleConfig(HPCConfig):
+    """Class to handle Eagle configuration inputs."""
+
+    def __init__(self, config_dict):
+        super().__init__(config_dict)
+
+    @property
+    def node_mem(self):
+        """Get the requested Eagle node memory property."""
+        # Eagle default is 96 GB
+        default = 96
+        if not hasattr(self, '_hpc_node_mem'):
+            # default option if not specified
+            self._hpc_node_mem = default
+            if 'memory' in self:
+                if self['memory']:
+                    # config-specified, set to attribute
+                    self._hpc_node_mem = self['memory']
+        return self._hpc_node_mem
+
+    @property
+    def walltime(self):
+        """Get the requested Eagle node walltime property."""
+        # Eagle default is one hour
+        default = 1
+        if not hasattr(self, '_hpc_walltime'):
+            # default option if not specified
+            self._hpc_walltime = default
+            if 'walltime' in self:
+                if self['walltime']:
+                    # config-specified, set to attribute
+                    self._hpc_walltime = self['walltime']
+        return self._hpc_walltime

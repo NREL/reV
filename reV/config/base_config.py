@@ -107,11 +107,10 @@ class BaseConfig(dict):
                       'ERROR': logging.ERROR,
                       'CRITICAL': logging.CRITICAL,
                       }
+            self._logging_level = levels[default]
             if 'logging_level' in self['project_control']:
                 x = self['project_control']['logging_level']
                 self._logging_level = levels[x.upper()]
-            else:
-                self._logging_level = levels[default]
         return self._logging_level
 
     @property
@@ -119,12 +118,8 @@ class BaseConfig(dict):
         """Get the project name in "project_control" namespace."""
         default = 'rev'
         if not hasattr(self, '_name'):
+            self._name = default
             if 'name' in self['project_control']:
                 if self['project_control']['name']:
                     self._name = self['project_control']['name']
-                else:
-                    self._name = default
-            else:
-                self._name = default
-
         return self._name

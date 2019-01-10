@@ -11,7 +11,8 @@ from reV import __testdatadir__ as TESTDATADIR
 from reV.config.sam import SAMGenConfig
 from reV.config.base_config import BaseConfig
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.config.execution import BaseExecutionConfig, PeregrineConfig
+from reV.config.execution import (BaseExecutionConfig, PeregrineConfig,
+                                  EagleConfig)
 from reV.utilities.exceptions import ConfigWarning, ConfigError
 
 
@@ -93,10 +94,9 @@ class GenConfig(BaseConfig):
         """Get the output directory."""
         default = './gen_out'
         if not hasattr(self, '_dirout'):
+            self._dirout = default
             if 'output_directory' in self['directories']:
                 self._dirout = self['directories']['output_directory']
-            else:
-                self._dirout = default
         return self._dirout
 
     @property
@@ -104,10 +104,9 @@ class GenConfig(BaseConfig):
         """Get the logging directory."""
         default = './logs'
         if not hasattr(self, '_logdir'):
+            self._logdir = default
             if 'logging_directory' in self['directories']:
                 self._logdir = self['directories']['logging_directory']
-            else:
-                self._logdir = default
         return self._logdir
 
     @property
@@ -115,10 +114,9 @@ class GenConfig(BaseConfig):
         """Get the boolean arg whether to write the CF profiles."""
         default = False
         if not hasattr(self, '_profiles'):
+            self._profiles = default
             if 'write_profiles' in self['project_control']:
                 self._profiles = self['project_control']['write_profiles']
-            else:
-                self._profiles = default
         return self._profiles
 
     @property
@@ -128,7 +126,8 @@ class GenConfig(BaseConfig):
             ec = self['execution_control']
             # static map of avail execution options with corresponding classes
             ec_config_types = {'local': BaseExecutionConfig,
-                               'peregrine': PeregrineConfig}
+                               'peregrine': PeregrineConfig,
+                               'eagle': EagleConfig}
             if 'option' in ec:
                 try:
                     # Try setting the attribute to the appropriate exec option
