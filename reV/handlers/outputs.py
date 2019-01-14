@@ -11,10 +11,8 @@ from warnings import warn
 from reV.utilities.exceptions import (ResourceRuntimeError, ResourceKeyError,
                                       ResourceValueError)
 from reV.handlers.resource import Resource, parse_keys
-from reV.utilities.exceptions import (HandlerRuntimeError,
-                                      HandlerKeyError,
+from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
                                       HandlerValueError)
-from reV.utilities.execution import execute_futures
 from reV.utilities.utilities import parse_year
 
 
