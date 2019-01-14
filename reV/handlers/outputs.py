@@ -11,6 +11,10 @@ from warnings import warn
 from reV.utilities.exceptions import (ResourceRuntimeError, ResourceKeyError,
                                       ResourceValueError)
 from reV.handlers.resource import Resource, parse_keys
+from reV.utilities.exceptions import (HandlerRuntimeError,
+                                      HandlerKeyError,
+                                      HandlerValueError)
+from reV.utilities.execution import execute_futures
 from reV.utilities.utilities import parse_year
 
 
@@ -52,7 +56,7 @@ class Outputs(Resource):
                 out = self._get_ds(ds, *ds_slice)
         else:
             msg = '{} is not a valid Dataset'
-            raise ResourceKeyError(msg)
+            raise HandlerKeyError(msg)
 
         return out
 
@@ -97,7 +101,7 @@ class Outputs(Resource):
         mode = ['a', 'w', 'w-', 'x']
         if self._mode not in mode:
             msg = 'mode must be writable: {}'.format(mode)
-            raise ResourceRuntimeError(msg)
+            raise HandlerRuntimeError(msg)
 
         return True
 
@@ -277,7 +281,7 @@ class Outputs(Resource):
         """
         if ds_name not in self._h5:
             msg = '{} must be initialized!'.format(ds_name)
-            raise ResourceRuntimeError(msg)
+            raise HandlerRuntimeError(msg)
 
         self._h5[ds_name][ds_slice] = arr
 

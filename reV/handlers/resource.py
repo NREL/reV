@@ -4,8 +4,8 @@ Classes to handle resource data
 import h5py
 import numpy as np
 import pandas as pd
-from reV.utilities.exceptions import (ResourceKeyError, ResourceRuntimeError,
-                                      ResourceValueError, ExtrapolationWarning)
+from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
+                                      HandlerValueError, ExtrapolationWarning)
 import warnings
 
 
@@ -65,7 +65,7 @@ class SAMResource:
             if isinstance(h, (list, np.ndarray)):
                 if len(h) != self._n:
                     msg = 'Must have a unique height for each site'
-                    raise ResourceValueError(msg)
+                    raise HandlerValueError(msg)
             if not require_wind_dir:
                 self._res_arrays['winddirection'] = np.zeros(self._shape,
                                                              dtype='float32')
@@ -95,7 +95,7 @@ class SAMResource:
             site = var
             out, _ = self._get_res_df(site)
         else:
-            raise ResourceKeyError('Cannot interpret {}'.format(var))
+            raise HandlerKeyError('Cannot interpret {}'.format(var))
 
         return out
 
@@ -162,7 +162,7 @@ class SAMResource:
             var_list = ['pressure', 'temperature', 'winddirection',
                         'windspeed']
         else:
-            raise ResourceValueError("Resource type is invalid!")
+            raise HandlerValueError("Resource type is invalid!")
 
         return var_list
 
@@ -201,14 +201,14 @@ class SAMResource:
             Sites meta as records array or DataFrame
         """
         if len(meta) != self._n:
-            raise ResourceValueError('Meta does not contain {} sites'
-                                     .format(self._n))
+            raise HandlerValueError('Meta does not contain {} sites'
+                                    .format(self._n))
 
         if not isinstance(meta, pd.DataFrame):
             meta = pd.DataFrame(meta, index=self.sites)
         else:
             if not np.array_equal(meta.index, self.sites):
-                raise ResourceValueError('Meta does not match sites!')
+                raise HandlerValueError('Meta does not match sites!')
 
         self._meta = meta
 
@@ -265,12 +265,12 @@ class SAMResource:
             Returns True if runnable check passes
         """
         if self._meta is None:
-            raise ResourceRuntimeError('meta has not been set!')
+            raise HandlerRuntimeError('meta has not been set!')
         else:
             for var in self.var_list:
                 if var not in self._res_arrays.keys():
-                    raise ResourceRuntimeError('{} has not been set!'
-                                               .format(var))
+                    raise HandlerRuntimeError('{} has not been set!'
+                                              .format(var))
 
         return True
 
@@ -294,11 +294,11 @@ class SAMResource:
                 var_arr[var_slice] = arr
                 self._res_arrays[var] = var_arr
             else:
-                raise ResourceValueError('{} does not have proper shape: {}'
-                                         .format(var, self._shape))
+                raise HandlerValueError('{} does not have proper shape: {}'
+                                        .format(var, self._shape))
         else:
-            raise ResourceKeyError('{} not in {}'
-                                   .format(var, self.var_list))
+            raise HandlerKeyError('{} not in {}'
+                                  .format(var, self.var_list))
 
     def _get_var_ts(self, var, *var_slice):
         """
@@ -320,15 +320,15 @@ class SAMResource:
             try:
                 var_array = self._res_arrays[var]
             except KeyError:
-                raise ResourceKeyError('{} has yet to be set!')
+                raise HandlerKeyError('{} has yet to be set!')
 
             sites = np.array(self.sites)
             ts = pd.DataFrame(var_array[var_slice],
                               index=self.time_index[var_slice[0]],
                               columns=sites[var_slice[1]])
         else:
-            raise ResourceKeyError('{} not in {}'
-                                   .format(var, self.var_list))
+            raise HandlerKeyError('{} not in {}'
+                                  .format(var, self.var_list))
 
         return ts
 
@@ -350,8 +350,8 @@ class SAMResource:
         try:
             idx = self.sites.index(site)
         except ValueError:
-            raise ResourceValueError('{} is not in available sites'
-                                     .format(site))
+            raise HandlerValueError('{} is not in available sites'
+                                    .format(site))
         site_meta = self.meta.loc[site].copy()
         if self._h is not None:
             try:
@@ -419,7 +419,7 @@ class Resource:
                 out = self._get_SAM_df(ds, site)
             else:
                 msg = "Can only extract SAM DataFrame for a single site"
-                raise ResourceRuntimeError(msg)
+                raise HandlerRuntimeError(msg)
         else:
             out = self._get_ds(ds, *ds_slice)
 
@@ -651,8 +651,8 @@ class Resource:
 
             return ds[ds_slice] / scale_factor
         else:
-            raise ResourceKeyError('{} not in {}'
-                                   .format(ds_name, self.dsets))
+            raise HandlerKeyError('{} not in {}'
+                                  .format(ds_name, self.dsets))
 
     def close(self):
         """
@@ -704,7 +704,7 @@ class SolarResource(Resource):
 
             return res_df
         else:
-            raise ResourceValueError("SAM requires unscaled values")
+            raise HandlerValueError("SAM requires unscaled values")
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points):
@@ -1061,7 +1061,7 @@ class WindResource(Resource):
 
             return res_df
         else:
-            raise ResourceValueError("SAM requires unscaled values")
+            raise HandlerValueError("SAM requires unscaled values")
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, require_wind_dir=False):
