@@ -23,26 +23,63 @@ logger = logging.getLogger(__name__)
 
 
 def init_gen_loggers(verbose, name, logdir='./out/log',
-                     modules=['reV.config', 'reV.generation',
-                              'reV.utilities']):
-    """Initialize multiple loggers to a single file for the gen compute."""
+                     modules=[__name__, 'reV.generation.generation',
+                              'reV.config', 'reV.utilities']):
+    """Init multiple loggers to a single file or stdout for the gen compute.
+
+    Parameters
+    ----------
+    verbose : bool
+        Option to turn on debug vs. info logging.
+    name : str
+        Generation compute job name, interpreted as name of intended log file.
+        May include a *_00 tag for the node number if running on HPC.
+    logdir : str
+        Target directory to save .log files.
+    modules : list
+        List of reV modules to initialize loggers for.
+        Note: From the generation cli, __name__ AND 'reV.generation.generation'
+        must both be initialized.
+
+    Returns
+    -------
+    loggers : list
+        List of logging instances that were initialized.
+    """
+
     if verbose:
         log_level = 'DEBUG'
     else:
         log_level = 'INFO'
 
+    # find a string match of format *_00 at end of name string.
+    match_id = re.match(r'.*_([0-9]{2})$', name)
+    node = None
+    if match_id:
+        if name.endswith(match_id.group(1)):
+            # node is node number from the *_00 string match
+            node = match_id.group(1)
+
     if not os.path.exists(logdir):
         os.makedirs(logdir)
 
+    loggers = []
     for module in modules:
         log_file = os.path.join(logdir, '{}.log'.format(name))
 
-        # do not initialize a redundant logger
+        # check for redundant loggers in the REV_LOGGERS singleton
         logger = REV_LOGGERS[module]
-        if 'log_file' not in logger:
+
+        if ((not node or (node and log_level == 'DEBUG')) and
+                'log_file' not in logger):
+            # No log file belongs to this logger, init a logger file
             logger = init_logger(module, log_level=log_level,
                                  log_file=log_file)
-    return logger
+        elif node and log_level == 'INFO':
+            # Node level info loggers only go to STDOUT/STDERR files
+            logger = init_logger(module, log_level=log_level, log_file=None)
+        loggers.append(logger)
+    return loggers
 
 
 @click.group()
@@ -81,6 +118,8 @@ def from_config(ctx, config_file, verbose):
     # Initial log statements
     logger.info('Running reV 2.0 generation from config file: "{}"'
                 .format(config_file))
+    logger.info('Target output directory: "{}"'.format(config.dirout))
+    logger.info('Target logging directory: "{}"'.format(config.logdir))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.info('The following SAM configs are available to this run:\n{}'
@@ -116,6 +155,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     config : reV.config.GenConfig
         Generation config object.
     """
+
     # set the year-specific variables
     ctx.obj['RES_FILE'] = config.res_files[i]
 
@@ -142,8 +182,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 
     elif config.execution_control.option == 'peregrine':
         if not match:
-            # 11 chars for pbs job name (lim is 16, -5 for "_yrID")
-            ctx.obj['NAME'] = '{}_{}'.format(name[:11], str(year)[-2:])
+            # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
+            ctx.obj['NAME'] = '{}_{}'.format(name[:8], str(year))
         ctx.invoke(peregrine, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    queue=config.execution_control.queue,
@@ -154,7 +194,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     elif config.execution_control.option == 'eagle':
         if not match:
             # 3 chars for slurm job name (lim is 8, -5 for "_yrID")
-            ctx.obj['NAME'] = '{}_{}'.format(name[:3], str(year)[-2:])
+            ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(eagle, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
@@ -302,7 +342,8 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
 
 
 def get_node_name_fout(name, fout, i, hpc='slurm'):
-    """Make a node name and fout unique to the run name, year, and node number
+    """Make a node name and fout unique to the run name, year, and node number.
+
     Parameters
     ----------
     name : str
@@ -321,13 +362,13 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
     fout_node : str
         Base file output name with _node00 tag.
     """
-    if hpc is 'slurm':
-        lim = 6
-    elif hpc is 'pbs':
-        lim = 14
 
-    # 14 chars for pbs, 6 for slurm (lim is 16/8, -2 for "2charID")
-    node_name = '{0}{1:02d}'.format(name[:lim], i)
+    if hpc is 'slurm':
+        node_name = '{0}_{1:02d}'.format(name, i)
+    elif hpc is 'pbs':
+        # 13 chars for pbs, (lim is 16, -3 for "_ID")
+        node_name = '{0}_{1:02d}'.format(name[:13], i)
+
     if fout.endswith('.h5'):
         # remove file extension to add additional node and year strings
         fout = fout.strip('.h5')
@@ -343,7 +384,7 @@ def get_node_cmd(name='reV', tech='pv',
                  sites_per_core=None, n_workers=None, fout='reV.h5',
                  dirout='./out/gen_out', logdir='./out/log_gen',
                  cf_profiles=False, verbose=False):
-    """Made a reV gen local cli call string.
+    """Made a reV geneneration direct-local command line interface call string.
 
     Parameters
     ----------
@@ -383,8 +424,8 @@ def get_node_cmd(name='reV', tech='pv',
     -------
     cmd : str
         Single line command line argument to call the following CLI with
-        appropriately formatted arguments based on inputs:
-            python -m reV.generation.cli_gen direct local
+        appropriately formatted arguments based on input args:
+            python -m reV.generation.cli_gen [args] direct [args] local [args]
     """
 
     # mark a cli arg string for main() in this module
@@ -458,7 +499,8 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     cf_profiles = ctx.obj['CF_PROFILES']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    init_gen_loggers(verbose, name, logdir=logdir)
+    # initialize an info logger on the year level
+    init_gen_loggers(False, name, logdir=logdir)
 
     pc = get_node_pc(points, sam_files, tech, res_file, nodes)
 
@@ -475,19 +517,21 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                            cf_profiles=cf_profiles, verbose=verbose)
 
         logger.info('Running reV generation on Peregrine with node name "{}" '
-                    'for {} (points range: {}) with target output directory: '
-                    '{}'.format(node_name, pc, split.split_range, dirout))
+                    'for {} (points range: {}).'
+                    .format(node_name, pc, split.split_range))
 
         # create and submit the PBS job
         pbs = PBS(cmd, alloc=alloc, queue=queue, name=node_name,
                   feature=feature, stdout_path=stdout_path)
         if pbs.id:
-            click.echo('Kicked off reV generation job "{}" ({}) on Peregrine.'
-                       .format(node_name, pbs.id))
+            msg = ('Kicked off reV generation job "{}" (PBS jobid #{}) on '
+                   'Peregrine.'.format(node_name, pbs.id))
         else:
-            click.echo('Was unable to kick of reV generation job "{}". '
-                       'Please see the stdout error messages'
-                       .format(node_name))
+            msg = ('Was unable to kick off reV generation job "{}". '
+                   'Please see the stdout error messages'
+                   .format(node_name))
+        click.echo(msg)
+        logger.info(msg)
         jobs[i] = pbs
 
     return jobs
@@ -522,7 +566,8 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     cf_profiles = ctx.obj['CF_PROFILES']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    init_gen_loggers(verbose, name, logdir=logdir)
+    # initialize an info logger on the year level
+    init_gen_loggers(False, name, logdir=logdir)
 
     pc = get_node_pc(points, sam_files, tech, res_file, nodes)
 
@@ -539,19 +584,21 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
                            cf_profiles=cf_profiles, verbose=verbose)
 
         logger.info('Running reV generation on Eagle with node name "{}" for '
-                    '{} (points range: {}) with target output directory: {}'
-                    .format(node_name, pc, split.split_range, dirout))
+                    '{} (points range: {}).'
+                    .format(node_name, pc, split.split_range))
 
         # create and submit the SLURM job
         slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
                       name=node_name, stdout_path=stdout_path)
         if slurm.id:
-            click.echo('Kicked off reV generation job "{}" ({}) on Eagle.'
-                       .format(node_name, slurm.id))
+            msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) on '
+                   'Eagle.'.format(node_name, slurm.id))
         else:
-            click.echo('Was unable to kick of reV generation job "{}". '
-                       'Please see the stdout error messages'
-                       .format(node_name))
+            msg = ('Was unable to kick off reV generation job "{}". '
+                   'Please see the stdout error messages'
+                   .format(node_name))
+        click.echo(msg)
+        logger.info(msg)
         jobs[i] = slurm
 
     return jobs
