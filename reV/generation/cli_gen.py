@@ -31,10 +31,12 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
     else:
         log_level = 'INFO'
 
+    # find a string match of format *_00 at end of name string.
     match_id = re.match(r'.*_([0-9]{2})$', name)
     node = None
     if match_id:
         if name.endswith(match_id.group(1)):
+            # node is node number from the *_00 string match
             node = match_id.group(1)
 
     if not os.path.exists(logdir):
@@ -43,21 +45,17 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
     for module in modules:
         log_file = os.path.join(logdir, '{}.log'.format(name))
 
-        # do not initialize a redundant logger
+        # check for redundant loggers in the REV_LOGGERS singleton
         logger = REV_LOGGERS[module]
+
         if ((not node or (node and log_level == 'DEBUG')) and
                 'log_file' not in logger):
-            # No log file belongs to this logger, init
+            # No log file belongs to this logger, init a logger file
             logger = init_logger(module, log_level=log_level,
                                  log_file=log_file)
-        elif node and log_level == 'INFO' and 'log_file' not in logger:
-            # If this is recognized to be on the node level and info,
-            # Initialize a stream handler and a year level logger
-            log_name_temp = '{}.log'.format(name.rstrip('_' + node))
-            log_file_temp = os.path.join(logdir, log_name_temp)
-            log_files = [None, log_file_temp]
-            logger = init_logger(module, log_level=log_level,
-                                 log_file=log_files)
+        elif node and log_level == 'INFO':
+            # Node level info loggers only go to STDOUT/STDERR files
+            logger = init_logger(module, log_level=log_level, log_file=None)
     return logger
 
 
@@ -97,6 +95,8 @@ def from_config(ctx, config_file, verbose):
     # Initial log statements
     logger.info('Running reV 2.0 generation from config file: "{}"'
                 .format(config_file))
+    logger.info('Target output directory: "{}"'.format(config.dirout))
+    logger.info('Target logging directory: "{}"'.format(config.logdir))
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.info('The following SAM configs are available to this run:\n{}'
@@ -491,19 +491,21 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                            cf_profiles=cf_profiles, verbose=verbose)
 
         logger.info('Running reV generation on Peregrine with node name "{}" '
-                    'for {} (points range: {}) with target output directory: '
-                    '{}'.format(node_name, pc, split.split_range, dirout))
+                    'for {} (points range: {}).'
+                    .format(node_name, pc, split.split_range))
 
         # create and submit the PBS job
         pbs = PBS(cmd, alloc=alloc, queue=queue, name=node_name,
                   feature=feature, stdout_path=stdout_path)
         if pbs.id:
-            click.echo('Kicked off reV generation job "{}" ({}) on Peregrine.'
-                       .format(node_name, pbs.id))
+            msg = ('Kicked off reV generation job "{}" (PBS jobid #{}) on '
+                   'Peregrine.'.format(node_name, pbs.id))
         else:
-            click.echo('Was unable to kick of reV generation job "{}". '
-                       'Please see the stdout error messages'
-                       .format(node_name))
+            msg = ('Was unable to kick of reV generation job "{}". '
+                   'Please see the stdout error messages'
+                   .format(node_name))
+        click.echo(msg)
+        logger.info(msg)
         jobs[i] = pbs
 
     return jobs
@@ -556,19 +558,21 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
                            cf_profiles=cf_profiles, verbose=verbose)
 
         logger.info('Running reV generation on Eagle with node name "{}" for '
-                    '{} (points range: {}) with target output directory: {}'
-                    .format(node_name, pc, split.split_range, dirout))
+                    '{} (points range: {}).'
+                    .format(node_name, pc, split.split_range))
 
         # create and submit the SLURM job
         slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
                       name=node_name, stdout_path=stdout_path)
         if slurm.id:
-            click.echo('Kicked off reV generation job "{}" ({}) on Eagle.'
-                       .format(node_name, slurm.id))
+            msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) on '
+                   'Eagle.'.format(node_name, slurm.id))
         else:
-            click.echo('Was unable to kick of reV generation job "{}". '
-                       'Please see the stdout error messages'
-                       .format(node_name))
+            msg = ('Was unable to kick of reV generation job "{}". '
+                   'Please see the stdout error messages'
+                   .format(node_name))
+        click.echo(msg)
+        logger.info(msg)
         jobs[i] = slurm
 
     return jobs
