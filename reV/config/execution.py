@@ -19,9 +19,10 @@ class BaseExecutionConfig(BaseConfig):
     def option(self):
         """Get the hardware run option.
 
-        Available options:
-            - local
-            - peregrine
+        Returns
+        -------
+        _option : str
+            Execution control option, e.g. local, peregrine, eagle...
         """
 
         default = 'local'
@@ -36,7 +37,13 @@ class BaseExecutionConfig(BaseConfig):
 
     @property
     def nodes(self):
-        """Get the number of nodes property. Default is 1 node."""
+        """Get the number of nodes property.
+
+        Returns
+        -------
+        _nodes : int
+            Number of available nodes. Default is 1 node.
+        """
         if not hasattr(self, '_nodes'):
             if 'nodes' in self:
                 self._nodes = self['nodes']
@@ -46,7 +53,13 @@ class BaseExecutionConfig(BaseConfig):
 
     @property
     def ppn(self):
-        """Get the process per node (ppn) property. Default is 1 ppn."""
+        """Get the process per node (ppn) property.
+
+        Returns
+        -------
+        _ppn : int
+            Processes per node. Default is 1 ppn.
+        """
         if not hasattr(self, '_ppn'):
             if 'ppn' in self:
                 self._ppn = self['ppn']
@@ -63,7 +76,13 @@ class HPCConfig(BaseExecutionConfig):
 
     @property
     def alloc(self):
-        """Get the HPC allocation property."""
+        """Get the HPC allocation property.
+
+        Returns
+        -------
+        _hpc_alloc : str
+            Name of the HPC allocation account for the specified job.
+        """
         default = 'rev'
         if not hasattr(self, '_hpc_alloc'):
             # default option if not specified
@@ -83,7 +102,13 @@ class PeregrineConfig(HPCConfig):
 
     @property
     def node_mem(self):
-        """Get the Peregrine node memory property."""
+        """Get the Peregrine node memory property.
+
+        Returns
+        -------
+        _hpc_node_mem : str
+            Single node memory request, e.g. 32GB, 64GB, etc...
+        """
         defaults = {'short': '32GB',
                     'debug': '32GB',
                     'batch': '32GB',
@@ -103,7 +128,13 @@ class PeregrineConfig(HPCConfig):
 
     @property
     def walltime(self):
-        """Get the Peregrine node walltime property."""
+        """Get the Peregrine node walltime property.
+
+        Returns
+        -------
+        _hpc_walltime : str
+            Single node job time request, e.g. '04:00:00'.
+        """
         defaults = {'short': '04:00:00',
                     'debug': '01:00:00',
                     'batch': '48:00:00',
@@ -123,7 +154,13 @@ class PeregrineConfig(HPCConfig):
 
     @property
     def queue(self):
-        """Get the Peregrine queue property."""
+        """Get the Peregrine queue property.
+
+        Returns
+        -------
+        _hpc_queue : str
+            Peregrine queue request, e.g. 'short' or 'long'.
+        """
         default = 'short'
         if not hasattr(self, '_hpc_queue'):
             # default option if not specified
@@ -136,7 +173,13 @@ class PeregrineConfig(HPCConfig):
 
     @property
     def feature(self):
-        """Get feature request str. Cores or memory. Mem is prioritized."""
+        """Get feature request str. Cores or memory. Mem is prioritized.
+
+        Returns
+        -------
+        _feature : str | NoneType
+            Memory or cores feature request for the -l peregrine arg.
+        """
         if not hasattr(self, '_feature'):
             # default option if not specified
             self._feature = None
@@ -159,7 +202,13 @@ class EagleConfig(HPCConfig):
 
     @property
     def node_mem(self):
-        """Get the requested Eagle node memory property."""
+        """Get the requested Eagle node memory property.
+
+        Returns
+        -------
+        _hpc_node_mem : int
+            Requested node memory in GB.
+        """
         # Eagle default is 96 GB
         default = 96
         if not hasattr(self, '_hpc_node_mem'):
@@ -173,7 +222,13 @@ class EagleConfig(HPCConfig):
 
     @property
     def walltime(self):
-        """Get the requested Eagle node walltime property."""
+        """Get the requested Eagle node walltime property.
+
+        Returns
+        -------
+        _hpc_walltime : int
+            Requested single node job time in hours.
+        """
         # Eagle default is one hour
         default = 1
         if not hasattr(self, '_hpc_walltime'):

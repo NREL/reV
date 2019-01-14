@@ -20,6 +20,8 @@ def get_handler(log_level="INFO", log_file=None, log_format=FORMAT):
 
     Parameters
     ----------
+    log_level : str
+        handler-specific logging level, must be key in LOG_LEVEL.
     log_file : str
         path to the log file
     log_format : str
@@ -57,7 +59,9 @@ def setup_logger(logger_name, log_level="INFO", log_file=None,
     logger_name : str
         Name of logger
     log_level : str
-        Level of logging to capture, must be key in LOG_LEVEL
+        Level of logging to capture, must be key in LOG_LEVEL. If multiple
+        handlers/log_files are requested in a single call of this function,
+        the specified logging level will be applied to all requested handlers.
     log_file : str | list
         Path to file to use for logging, if None use a StreamHandler
         list of multiple handlers is permitted

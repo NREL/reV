@@ -23,7 +23,13 @@ class GenConfig(BaseConfig):
     """Class to import and manage user configuration inputs."""
 
     def __init__(self, fname):
-        """Initialize a config object."""
+        """Initialize a config object.
+
+        Parameters
+        ----------
+        fname : str
+            Generation config name (with path).
+        """
 
         # get the directory of the config file
         self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
@@ -40,7 +46,15 @@ class GenConfig(BaseConfig):
 
     @property
     def res_files(self):
-        """Get a list of the resource files with years filled in."""
+        """Get a list of the resource files with years filled in.
+
+        Returns
+        -------
+        _res_files : list
+            List of config-specified resource files. Resource files with {}
+            formatting will be filled with the specified year(s). This return
+            value is a list with len=1 for a single year run.
+        """
         if not hasattr(self, '_res_files'):
             # get base filename, may have {} for year format
             fname = self['resource_file']
@@ -61,14 +75,28 @@ class GenConfig(BaseConfig):
 
     @property
     def sam_gen(self):
-        """Get the SAM generation configuration object."""
+        """Get the SAM generation configuration object.
+
+        Returns
+        -------
+        _sam_gen : reV.config.sam.SAMGenConfig
+            SAM generation config object. This object emulates a dictionary.
+        """
         if not hasattr(self, '_sam_gen'):
             self._sam_gen = SAMGenConfig(self['sam_generation'])
         return self._sam_gen
 
     @property
     def tech(self):
-        """Get the tech property from the config."""
+        """Get the tech property from the config.
+
+        Returns
+        -------
+        _tech : str
+            reV generation technology string to analyze. This string should
+            match the available technologies in the following dictionary:
+            reV.generation.generation.Gen.REVTECHS
+        """
         if not hasattr(self, '_tech'):
             self._tech = self['project_control']['technology']
             self._tech = self._tech.lower().replace(' ', '')
@@ -76,7 +104,15 @@ class GenConfig(BaseConfig):
 
     @property
     def years(self):
-        """Get the analysis years."""
+        """Get the analysis years.
+
+        Returns
+        -------
+        _years : list
+            List of years to analyze. If this is a single year run, this return
+            value is a single entry list. If no analysis_years are specified,
+            the code will look anticipate a year in the resource file spec.
+        """
         if not hasattr(self, '_years'):
             try:
                 self._years = self['project_control']['analysis_years']
@@ -91,7 +127,13 @@ class GenConfig(BaseConfig):
 
     @property
     def dirout(self):
-        """Get the output directory."""
+        """Get the output directory.
+
+        Returns
+        -------
+        _dirout : str
+            Target path for reV generation output files.
+        """
         default = './gen_out'
         if not hasattr(self, '_dirout'):
             self._dirout = default
@@ -101,7 +143,13 @@ class GenConfig(BaseConfig):
 
     @property
     def logdir(self):
-        """Get the logging directory."""
+        """Get the logging directory.
+
+        Returns
+        -------
+        _logdir : str
+            Target path for reV generation log files.
+        """
         default = './logs'
         if not hasattr(self, '_logdir'):
             self._logdir = default
@@ -111,7 +159,13 @@ class GenConfig(BaseConfig):
 
     @property
     def write_profiles(self):
-        """Get the boolean arg whether to write the CF profiles."""
+        """Get the boolean arg whether to write the CF profiles.
+
+        Returns
+        -------
+        _profiles : bool
+            Boolean flag on whether to write capacity factor profiles to disk.
+        """
         default = False
         if not hasattr(self, '_profiles'):
             self._profiles = default
@@ -121,7 +175,14 @@ class GenConfig(BaseConfig):
 
     @property
     def execution_control(self):
-        """Get the execution control object."""
+        """Get the execution control object.
+
+        Returns
+        -------
+        _ec : BaseExecutionConfig | PeregrineConfig | EagleConfig
+            reV execution config object specific to the execution_control
+            option.
+        """
         if not hasattr(self, '_ec'):
             ec = self['execution_control']
             # static map of avail execution options with corresponding classes
@@ -148,11 +209,19 @@ class GenConfig(BaseConfig):
 
     @property
     def points_control(self):
-        """Get the generation points control object."""
+        """Get the generation points control object.
+
+        Returns
+        -------
+        _pc : reV.config.project_points.PointsControl
+            PointsControl object based on specified project points and
+            execution control option.
+        """
         if not hasattr(self, '_pc'):
             pp = ProjectPoints(self['project_points'], self['sam_generation'],
                                self.tech)
-            if self.execution_control.option == 'peregrine':
+            if (self.execution_control.option == 'peregrine' or
+                    self.execution_control.option == 'eagle'):
                 sites_per_split = ceil(len(pp) / self.execution_control.nodes)
             elif self.execution_control.option == 'local':
                 sites_per_split = ceil(len(pp) / self.execution_control.ppn)

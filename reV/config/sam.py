@@ -49,10 +49,3 @@ class SAMGenConfig(BaseConfig):
                     raise IOError('SAM inputs file must be a JSON: {}'
                                   .format(fname))
         return self._inputs
-
-    @property
-    def write_profiles(self):
-        """Get the boolean write profiles option."""
-        if not hasattr(self, '_write_profiles'):
-            self._write_profiles = self.__getitem__('write_profiles')
-        return self._write_profiles

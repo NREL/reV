@@ -111,22 +111,50 @@ class PointsControl:
 
     @property
     def sites_per_split(self):
-        """Get the iterator increment: number of sites per split."""
+        """Get the iterator increment: number of sites per split.
+
+        Returns
+        -------
+        _sites_per_split : int
+            Sites per split iter object.
+        """
         return self._sites_per_split
 
     @property
     def project_points(self):
-        """Get the project points property"""
+        """Get the project points property.
+
+        Returns
+        -------
+        _project_points : reV.config.project_points.ProjectPoints
+            ProjectPoints instance corresponding to this PointsControl
+            instance.
+        """
         return self._project_points
 
     @property
     def sites(self):
-        """Get the project points sites for this instance."""
+        """Get the project points sites for this instance.
+
+        Returns
+        -------
+        sites : list
+            List of sites belonging to the _project_points attribute.
+        """
         return self._project_points.sites
 
     @property
     def split_range(self):
-        """Get the current split range property."""
+        """Get the current split range property.
+
+        Returns
+        -------
+        _split_range : list
+            Two-entry list that indicates the starting and finishing
+            (inclusive, exclusive, respectively) indices of a split instance
+            of the PointsControl object. This is set in the iterator dunder
+            methods of PointsControl.
+        """
         return self._split_range
 
     @classmethod
@@ -188,7 +216,7 @@ class ProjectPoints:
             of unique configs requested by points csv.
         tech : str
             reV technology being executed.
-        res_file : str
+        res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
         """
@@ -251,11 +279,10 @@ class ProjectPoints:
 
         Returns
         -------
-        self._df : pd.DataFrame
+        _df : pd.DataFrame
             Table of sites and corresponding SAM configuration IDs.
             Has columns 'gid' and 'config'.
         """
-
         return self._df
 
     @df.setter
@@ -293,9 +320,16 @@ class ProjectPoints:
                             'dictionary but received: {}'.format(type(data)))
 
     @property
-    def h(self, h_var='wind_turbine_hub_ht'):
-        """Get the hub heights corresponding to the site list or None for solar
+    def h(self):
+        """Get the hub heights corresponding to the site list.
+
+        Returns
+        -------
+        _h : list | NoneType
+            Hub heights corresponding to each site, taken from the sam config
+            for each site. This is None if the technology is not wind.
         """
+        h_var = 'wind_turbine_hub_ht'
         if not hasattr(self, '_h') and 'wind' in self.tech:
             # wind technology, get a list of h values
             self._h = [self[site][1][h_var] for site in self.sites]
@@ -308,7 +342,14 @@ class ProjectPoints:
 
     @property
     def points(self):
-        """Get the original points input."""
+        """Get the original points input.
+
+        Returns
+        -------
+        points : slice | str | pd.DataFrame
+            Slice specifying project points, string pointing to a project
+            points csv, or a dataframe containing the effective csv contents.
+        """
         return self._points
 
     @property
@@ -326,7 +367,16 @@ class ProjectPoints:
 
     @sam_files.setter
     def sam_files(self, files):
-        """Set the SAM files dictionary."""
+        """Set the SAM files dictionary.
+
+        Parameters
+        ----------
+        files : dict | str | list
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv.
+        """
 
         if isinstance(files, dict):
             self._sam_files = files
@@ -369,8 +419,14 @@ class ProjectPoints:
 
     @property
     def sites(self):
-        """Get sites property, type is list if possible
-        (if slice stop is None, this will be a slice)."""
+        """Get the sites belonging to this instance of ProjectPoints.
+
+        Returns
+        -------
+        _sites : list | slice
+            List of sites belonging to this instance of ProjectPoints. The type
+            is list if possible. Will be a slice only if slice stop is None.
+        """
         return self._sites
 
     @sites.setter
@@ -405,8 +461,15 @@ class ProjectPoints:
 
     @property
     def sites_as_slice(self):
-        """Get sites property, type is slice if possible
-        (if sites is a non-sequential list, this will return a list)."""
+        """Get the sites in slice format.
+
+        Returns
+        -------
+        _sites_as_slice : list | slice
+            Sites slice belonging to this instance of ProjectPoints.
+            The type is slice if possible. Will be a list only if sites are
+            non-sequential.
+        """
 
         if not hasattr(self, '_sites_as_slice'):
             if isinstance(self.sites, slice):
@@ -431,12 +494,25 @@ class ProjectPoints:
 
     @property
     def res_file(self):
-        """Get the resource file (only used for getting number of sites)."""
+        """Get the resource file (only used for getting number of sites).
+
+        Returns
+        -------
+        _res_file : str | NoneType
+            Optional resource file to find maximum length of project points if
+            points slice stop is None.
+        """
         return self._res_file
 
     @property
     def tech(self):
-        """Get the tech property from the config."""
+        """Get the tech property from the config.
+
+        Returns
+        -------
+        _tech : str
+            reV technology being executed.
+        """
         return self._tech
 
     def get_sites_from_config(self, config):
@@ -458,7 +534,14 @@ class ProjectPoints:
         return list(sites)
 
     def parse_project_points(self, points):
-        """Parse and set the project points using either a file or slice."""
+        """Parse points and set the project points attributes.
+
+        Parameters
+        ----------
+        points : slice | str | pd.DataFrame
+            Slice specifying project points, string pointing to a project
+            points csv, or a dataframe containing the effective csv contents.
+        """
         if isinstance(points, pd.DataFrame):
             self.df = points
             self.sites = list(self.df['gid'].values)
@@ -476,7 +559,14 @@ class ProjectPoints:
                             .format(type(points)))
 
     def csv_project_points(self, fname):
-        """Set the project points using the target csv."""
+        """Set the project points using the target csv.
+
+        Parameters
+        ----------
+        fname : str
+            Project points .csv file (with path). Must have 'gid' and 'config'
+            column names.
+        """
         if fname.endswith('.csv'):
             self.df = fname
             self.sites = list(self.df['gid'].values)

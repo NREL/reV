@@ -25,7 +25,28 @@ logger = logging.getLogger(__name__)
 def init_gen_loggers(verbose, name, logdir='./out/log',
                      modules=[__name__, 'reV.generation.generation',
                               'reV.config', 'reV.utilities']):
-    """Initialize multiple loggers to a single file for the gen compute."""
+    """Init multiple loggers to a single file or stdout for the gen compute.
+
+    Parameters
+    ----------
+    verbose : bool
+        Option to turn on debug vs. info logging.
+    name : str
+        Generation compute job name, interpreted as name of intended log file.
+        May include a *_00 tag for the node number if running on HPC.
+    logdir : str
+        Target directory to save .log files.
+    modules : list
+        List of reV modules to initialize loggers for.
+        Note: From the generation cli, __name__ AND 'reV.generation.generation'
+        must both be initialized.
+
+    Returns
+    -------
+    loggers : list
+        List of logging instances that were initialized.
+    """
+
     if verbose:
         log_level = 'DEBUG'
     else:
@@ -42,6 +63,7 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
     if not os.path.exists(logdir):
         os.makedirs(logdir)
 
+    loggers = []
     for module in modules:
         log_file = os.path.join(logdir, '{}.log'.format(name))
 
@@ -56,7 +78,8 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
         elif node and log_level == 'INFO':
             # Node level info loggers only go to STDOUT/STDERR files
             logger = init_logger(module, log_level=log_level, log_file=None)
-    return logger
+        loggers.append(logger)
+    return loggers
 
 
 @click.group()
@@ -132,6 +155,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     config : reV.config.GenConfig
         Generation config object.
     """
+
     # set the year-specific variables
     ctx.obj['RES_FILE'] = config.res_files[i]
 
@@ -318,7 +342,8 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
 
 
 def get_node_name_fout(name, fout, i, hpc='slurm'):
-    """Make a node name and fout unique to the run name, year, and node number
+    """Make a node name and fout unique to the run name, year, and node number.
+
     Parameters
     ----------
     name : str
@@ -337,6 +362,7 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
     fout_node : str
         Base file output name with _node00 tag.
     """
+
     if hpc is 'slurm':
         node_name = '{0}_{1:02d}'.format(name, i)
     elif hpc is 'pbs':
@@ -358,7 +384,7 @@ def get_node_cmd(name='reV', tech='pv',
                  sites_per_core=None, n_workers=None, fout='reV.h5',
                  dirout='./out/gen_out', logdir='./out/log_gen',
                  cf_profiles=False, verbose=False):
-    """Made a reV gen local cli call string.
+    """Made a reV geneneration direct-local command line interface call string.
 
     Parameters
     ----------
@@ -398,8 +424,8 @@ def get_node_cmd(name='reV', tech='pv',
     -------
     cmd : str
         Single line command line argument to call the following CLI with
-        appropriately formatted arguments based on inputs:
-            python -m reV.generation.cli_gen direct local
+        appropriately formatted arguments based on input args:
+            python -m reV.generation.cli_gen [args] direct [args] local [args]
     """
 
     # mark a cli arg string for main() in this module
@@ -501,7 +527,7 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
             msg = ('Kicked off reV generation job "{}" (PBS jobid #{}) on '
                    'Peregrine.'.format(node_name, pbs.id))
         else:
-            msg = ('Was unable to kick of reV generation job "{}". '
+            msg = ('Was unable to kick off reV generation job "{}". '
                    'Please see the stdout error messages'
                    .format(node_name))
         click.echo(msg)
@@ -568,7 +594,7 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
             msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(node_name, slurm.id))
         else:
-            msg = ('Was unable to kick of reV generation job "{}". '
+            msg = ('Was unable to kick off reV generation job "{}". '
                    'Please see the stdout error messages'
                    .format(node_name))
         click.echo(msg)

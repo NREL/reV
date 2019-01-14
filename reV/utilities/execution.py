@@ -39,13 +39,27 @@ class SubprocessManager:
 
     @staticmethod
     def make_path(d):
-        """Make a directory if it doesn't exist."""
+        """Make a directory tree if it doesn't exist.
+
+        Parameters
+        ----------
+        d : str
+            Directory tree to check and potentially create.
+        """
         if not os.path.exists(d):
             os.makedirs(d)
 
     @staticmethod
     def make_sh(fname, script):
-        """Make a shell script (.sh file) to execute a subprocess."""
+        """Make a shell script (.sh file) to execute a subprocess.
+
+        Parameters
+        ----------
+        fname : str
+            Name of the .sh file to create.
+        script : str
+            Contents to be written into the .sh file.
+        """
         logger.debug('The shell script "{n}" contains the following:\n'
                      '~~~~~~~~~~ {n} ~~~~~~~~~~\n'
                      '{s}\n'
@@ -56,7 +70,13 @@ class SubprocessManager:
 
     @staticmethod
     def rm(fname):
-        """Remove a file."""
+        """Remove a file.
+
+        Parameters
+        ----------
+        fname : str
+            Filename (with path) to remove.
+        """
         os.remove(fname)
 
     @staticmethod
@@ -337,7 +357,7 @@ class SLURM(SubprocessManager):
 
         Returns
         -------
-        out : str or NoneType
+        out : str | NoneType
             squeue job status str or None if not found.
             Common status codes: PD, R, CG (pending, running, complete).
         """
@@ -608,7 +628,15 @@ class SmartParallelJob:
 
     @property
     def cluster(self):
-        """Get a Dask LocalCluster object."""
+        """Get a Dask LocalCluster object.
+
+        Returns
+        -------
+        _cluster : dask.distributed.LocalCluster
+            Local cluster object with all available workers or  self._n_workers
+            (if specified).
+        """
+
         if not hasattr(self, '_cluster'):
             # start a local cluster on a personal comp or HPC single node
             if self._n_workers is None:
@@ -622,29 +650,75 @@ class SmartParallelJob:
 
     @property
     def execution_iter(self):
-        """Get the iterator object that controls the parallel execution."""
+        """Get the iterator object that controls the parallel execution.
+
+        Returns
+        -------
+        _execution_iter : iterable
+            Iterable object that controls the processes of the parallel job.
+        """
         return self._execution_iter
 
     @property
     def mem_util_lim(self):
-        """Get the memory utilization limit (fractional)."""
+        """Get the memory utilization limit (fractional).
+
+        Returns
+        -------
+        _mem_util_lim : float
+            Fractional memory utilization limit. If the used memory divided
+            by the total memory is greater than this value, the obj.out will
+            be flushed and the local node memory will be cleared.
+        """
         return self._mem_util_lim
 
     @property
     def n_workers(self):
-        """Get the number of workers in the local cluster."""
+        """Get the number of workers in the local cluster.
+
+        Returns
+        -------
+        _n_workers : int | NoneType
+            Number of workers. Will be calculated based on the local cluster if
+            self._cluster is an attribute.
+        """
+
         if hasattr(self, '_cluster') and self._n_workers is None:
             self._n_workers = len(self.cluster.workers)
         return self._n_workers
 
     @property
     def obj(self):
-        """Get the main python object that will be submitted to futures."""
+        """Get the main python object that will be submitted to futures.
+
+        Returns
+        -------
+        _obj : Object
+            Python object that will be submitted to futures. Must have methods
+            run(arg) and flush(). run(arg) must take the iteration result of
+            execution_iter as the single positional argument. Additionally,
+            the results of obj.run(arg) will be passed to obj.out. obj.out
+            will be passed None when the memory is to be cleared. It is
+            advisable that obj.run() be a @staticmethod for dramatically
+            faster submission to the Dask client.
+        """
         return self._obj
 
     @obj.setter
     def obj(self, inp_obj):
-        """Verify the input object and set to protected property."""
+        """Verify the input object and set to protected property.
+
+        Parameters
+        ----------
+        inp_obj : Object
+            Python object that will be submitted to futures. Must have methods
+            run(arg) and flush(). run(arg) must take the iteration result of
+            execution_iter as the single positional argument. Additionally,
+            the results of obj.run(arg) will be passed to obj.out. obj.out
+            will be passed None when the memory is to be cleared. It is
+            advisable that obj.run() be a @staticmethod for dramatically
+            faster submission to the Dask client.
+        """
         if not hasattr(inp_obj, 'run') or not hasattr(inp_obj, 'flush'):
             raise ExecutionError('Parallel execution with object: "{}" '
                                  'failed. The target object must have methods '
@@ -658,7 +732,14 @@ class SmartParallelJob:
         return self._loggers
 
     def init_loggers(self, client):
-        """Initialize loggers on all workers"""
+        """Initialize loggers on all workers
+
+        Parameters
+        ----------
+        client : dask.distributed.Client
+            Local Dask client with a local cluster. Loggers will be initialized
+            on the workers in this client.
+        """
         for logger_name in self.loggers:
             client.run(REV_LOGGERS.init_logger, logger_name)
 

@@ -20,14 +20,31 @@ class BaseConfig(dict):
 
     @staticmethod
     def check_files(flist):
-        """Make sure all files in the input file list exist."""
+        """Make sure all files in the input file list exist.
+
+        Parameters
+        ----------
+        flist : list
+            List of files (with paths) to check existance of.
+        """
         for f in flist:
             if os.path.exists(f) is False:
                 raise IOError('File does not exist: {}'.format(f))
 
     @staticmethod
     def load_json(fname):
-        """Load json config into config class instance."""
+        """Load json config into config class instance.
+
+        Parameters
+        ----------
+        fname : str
+            JSON filename (with path).
+
+        Returns
+        -------
+        config : dict
+            JSON file contents loaded as a python dictionary.
+        """
         with open(fname, 'r') as f:
             # get config file
             config = json.load(f)
@@ -67,7 +84,13 @@ class BaseConfig(dict):
         return d
 
     def set_self_dict(self, dictlike):
-        """Save a dict-like variable as object instance dictionary items."""
+        """Save a dict-like variable as object instance dictionary items.
+
+        Parameters
+        ----------
+        dictlike : dict
+            Python namespace object to set to this dictionary-emulating class.
+        """
         for key, val in dictlike.items():
             self.__setitem__(key, val)
 
@@ -77,7 +100,7 @@ class BaseConfig(dict):
         Parameters
         ----------
         fname : str
-            Full path + filename.
+            Full path + filename. Must be a .json file.
 
         Returns
         -------
@@ -98,8 +121,16 @@ class BaseConfig(dict):
 
     @property
     def logging_level(self):
-        """Get user-specified logging level in "project_control" namespace."""
-        default = 'WARNING'
+        """Get user-specified logging level in "project_control" namespace.
+
+        Returns
+        -------
+        _logging_level : int
+            Python logging module level (integer format) corresponding to the
+            config-specified logging level string.
+        """
+
+        default = 'INFO'
         if not hasattr(self, '_logging_level'):
             levels = {'DEBUG': logging.DEBUG,
                       'INFO': logging.INFO,
@@ -115,7 +146,14 @@ class BaseConfig(dict):
 
     @property
     def name(self):
-        """Get the project name in "project_control" namespace."""
+        """Get the project name in "project_control" namespace.
+
+        Returns
+        -------
+        _name : str
+            Config-specified project control name.
+        """
+
         default = 'rev'
         if not hasattr(self, '_name'):
             self._name = default
