@@ -345,7 +345,8 @@ class CapacityFactor(Resource):
 
     @classmethod
     def write_profiles(cls, h5_file, meta, time_index, cf_profiles,
-                       SAM_configs, cf_chunks=(None, 100), **kwargs):
+                       SAM_configs, year=None, cf_chunks=(None, 100),
+                       lcoe=None, **kwargs):
         """
         Write cf_profiles to disk
 
@@ -361,12 +362,27 @@ class CapacityFactor(Resource):
             Capacity factor profiles
         SAM_configs : dict
             Dictionary of SAM configuration JSONs used to compute cf profiles
+        year : int | str
+            Year for which cf means were computed
+            If None, inferred from h5_file name
         cf_chunks : tuple
             Chunk size for capacity factor profiles dataset
+        lcoe : ndarray | NoneType
+            Optional LCOE scalar array.
         """
         if cf_profiles.shape != (len(time_index), len(meta)):
             msg = 'CF profile dimensions does not match time index and meta'
             raise ResourceValueError(msg)
+
+        if year is None:
+            # Attempt to parse year from file name
+            f_name = os.path.basename(h5_file)
+            match = re.match(r'.*([1-3][0-9]{3})', f_name)
+            if match:
+                year = int(match.group(1))
+            else:
+                msg = 'Cannot parse year from {}'.format(f_name)
+                raise ResourceValueError(msg)
 
         with cls(h5_file, mode=kwargs.get('mode', 'w-')) as cf:
             # Save time index
@@ -383,10 +399,18 @@ class CapacityFactor(Resource):
             cf.create_ds('cf_profiles', cf_profiles.shape, cf_profiles.dtype,
                          chunks=cf_chunks, attrs=cf_attrs,
                          data=cf_profiles)
+            if lcoe:
+                # create an LCOE dataset if passed to this method
+                lcoe_attrs = {'scale_factor': 1000, 'units': 'cents/kWh'}
+                if np.issubdtype(lcoe.dtype, np.floating):
+                    lcoe = (lcoe * 1000).astype('uint16')
+
+                cf.create_ds('lcoe_{}'.format(year), lcoe.shape, lcoe.dtype,
+                             chunks=cf_chunks, attrs=lcoe_attrs, data=lcoe)
 
     @classmethod
     def write_means(cls, h5_file, meta, cf_means, SAM_configs, year=None,
-                    cf_chunks=None, **kwargs):
+                    cf_chunks=None, lcoe=None, **kwargs):
         """
         Write cf_profiles to disk
 
@@ -405,6 +429,8 @@ class CapacityFactor(Resource):
             If None, inferred from h5_file name
         cf_chunks : tuple
             Chunk size for capacity factor means dataset
+        lcoe : ndarray | NoneType
+            Optional LCOE scalar array.
         """
         if len(cf_means) != len(meta):
             msg = 'Number of CF means do not match meta'
@@ -432,3 +458,11 @@ class CapacityFactor(Resource):
 
             cf.create_ds('cf_{}'.format(year), cf_means.shape, cf_means.dtype,
                          chunks=cf_chunks, attrs=cf_attrs, data=cf_means)
+            if lcoe:
+                # create an LCOE dataset if passed to this method
+                lcoe_attrs = {'scale_factor': 1000, 'units': 'cents/kWh'}
+                if np.issubdtype(lcoe.dtype, np.floating):
+                    lcoe = (lcoe * 1000).astype('uint16')
+
+                cf.create_ds('lcoe_{}'.format(year), lcoe.shape, lcoe.dtype,
+                             chunks=cf_chunks, attrs=lcoe_attrs, data=lcoe)

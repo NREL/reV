@@ -295,11 +295,14 @@ class Gen:
         cf_means = self.unpack_scalars(self.out, sam_var='cf_mean')
         meta = self.meta
         meta.loc[:, 'cf_means'] = cf_means
+        # get LCOE if in output request, otherwise default to None
+        lcoe = None
         if 'lcoe' in str(self.output_request):
-            meta.loc[:, 'lcoe_fcr'] = self.unpack_scalars(self.out,
-                                                          sam_var='lcoe_fcr')
+            lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
+
+        # write means to disk using CapacityFactor class
         CapacityFactor.write_means(fout, meta, cf_means, self.sam_configs,
-                                   **{'mode': mode})
+                                   lcoe=lcoe, **{'mode': mode})
 
     def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
         """Save capacity factor profiles to disk."""
@@ -307,12 +310,15 @@ class Gen:
         meta = self.meta
         meta.loc[:, 'cf_means'] = self.unpack_scalars(self.out,
                                                       sam_var='cf_mean')
+        # get LCOE if in output request, otherwise default to None
+        lcoe = None
         if 'lcoe' in str(self.output_request):
-            meta.loc[:, 'lcoe_fcr'] = self.unpack_scalars(self.out,
-                                                          sam_var='lcoe_fcr')
+            lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
+
+        # write profiles to disk using CapacityFactor class
         CapacityFactor.write_profiles(fout, meta, self.time_index,
                                       cf_profiles, self.sam_configs,
-                                      **{'mode': mode})
+                                      lcoe=lcoe, **{'mode': mode})
 
     @staticmethod
     def get_unique_fout(fout):
