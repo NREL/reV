@@ -1,10 +1,255 @@
 """
 Levelized Cost of Energy
 """
+import logging
+import pandas as pd
+
+from reV.SAM.SAM import LCOE as SAM_LCOE
+from reV.handlers.capacity_factor import CapacityFactor
+from reV.utilities.execution import execute_parallel, execute_single
+from reV.generation.generation import Gen
 
 
-class LCOE(object):
-    """
-    Base LCOE class
-    """
-    pass
+logger = logging.getLogger(__name__)
+
+
+class LCOE(Gen):
+    """Base LCOE class"""
+
+    def __init__(self, points_control, cf_file, cf_year=2012,
+                 output_request=('lcoe_fcr',), fout=None, dirout='./lcoe_out'):
+        """Initialize an LCOE instance.
+
+        Parameters
+        ----------
+        points_control : reV.config.PointsControl
+            Project points control instance for site and SAM config spec.
+        cf_file : str
+            reV generation capacity factor output file with path.
+        cf_year : int | str
+            reV generation year to calculate LCOE for. 'my' will look for the
+            multi-year mean generation results.
+        output_request : list | tuple
+            Output variables requested from SAM.
+        fout : str | None
+            Optional .h5 output file specification.
+        dirout : str | None
+            Optional output directory specification. The directory will be
+            created if it does not already exist.
+        """
+
+        self._points_control = points_control
+        self._cf_file = cf_file
+        self._cf_year = cf_year
+        self._output_request = output_request
+        self._fout = fout
+        self._dirout = dirout
+
+    @property
+    def cf_file(self):
+        """Get the capacity factor output filename and path."""
+        return self._cf_file
+
+    @property
+    def cf_year(self):
+        """Get the year to analyze."""
+        return self._cf_year
+
+    @staticmethod
+    def handle_fout(fout, dirout, year):
+        """Ensure that the file+dir output exist and have unique names.
+
+        Parameters
+        ----------
+        fout : str
+            Target filename (with or without .h5 extension).
+        dirout : str
+            Target output directory.
+        year : str | int
+            Analysis year to be added to the fout.
+
+        Returns
+        -------
+        fout : str
+            Target output directory joined with the target filename.
+        """
+        # combine filename and path
+        fout = LCOE.make_h5_fpath(fout, dirout)
+
+        if str(year) not in fout:
+            # add year tag to fout
+            if fout.endswith('.h5'):
+                fout = fout.replace('.h5', '_{}.h5'.format(year))
+
+        return fout
+
+    @property
+    def meta(self):
+        """Get meta data from the source capacity factors file.
+
+        Returns
+        -------
+        _meta : pd.DataFrame
+            Meta data from capacity factor outputs file.
+        """
+
+        if not hasattr(self, '_meta'):
+            with CapacityFactor(self.cf_file) as cfh:
+                self._meta = cfh.meta
+        return self._meta
+
+    @property
+    def site_df(self):
+        """Get the dataframe of site-specific variables.
+
+        Returns
+        -------
+        _site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Number of rows should
+            match the number of sites, column labels are the variable keys
+            that will be passed forward as SAM parameters.
+        """
+        if not hasattr(self, '_site_df'):
+            site_gids = self.meta['gid']
+            with CapacityFactor(self.cf_file) as cfh:
+                if 'cf_means' in str(list(cfh.dsets)):
+                    cf_arr = cfh['cf_{}'.format(self.cf_year)]
+                else:
+                    cf_arr = self.meta['cf_means']
+
+            self._site_df = pd.DataFrame({'capacity_factor': cf_arr},
+                                         index=site_gids)
+        return self._site_df
+
+    def lcoe_to_disk(self, fout='lcoe_out.h5', mode='w'):
+        """Save LCOE results to disk."""
+        lcoe_arr = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
+        # write means to disk using CapacityFactor class
+        CapacityFactor.write_means(fout, self.meta, lcoe_arr, self.sam_configs,
+                                   **{'mode': mode})
+
+    def flush(self, mode='w'):
+        """Flush LCOE data in self.out attribute to disk in .h5 format.
+
+        The data to be flushed is accessed from the instance attribute
+        "self.out". The disk target is based on the isntance attributes
+        "self.fout" and "self.dirout". The flushed file is ensured to have a
+        unique filename. Data is not flushed if fout is None or if .out is
+        empty.
+
+        Parameters
+        ----------
+        mode : str
+            .h5 file write mode (e.g. 'w', 'a').
+        """
+
+        # use mutable copies of the properties
+        fout = self.fout
+        dirout = self.dirout
+
+        # handle output file request if file is specified and .out is not empty
+        if isinstance(fout, str) and self.out:
+            fout = self.handle_fout(fout, dirout, self.cf_year)
+
+            logger.info('Flushing LCOE outputs to disk, target file: {}'
+                        .format(fout))
+            self.lcoe_to_disk(fout=fout, mode=mode)
+            logger.debug('Flushed LCOE output successfully to disk.')
+
+    @staticmethod
+    def run(pc, site_df):
+        """Run the SAM LCOE calculation."""
+        site_df = site_df[site_df.index.isin(pc.sites)]
+        out = SAM_LCOE.reV_run(pc, site_df)
+        return out
+
+    @classmethod
+    def run_direct(cls, points=None, sam_files=None, cf_file=None,
+                   cf_year=None, n_workers=1, sites_per_split=100,
+                   points_range=None, fout=None, dirout='./lcoe_out',
+                   return_obj=True):
+        """Execute a generation run directly from source files without config.
+
+        Parameters
+        ----------
+        points : slice | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        sam_files : dict | str | list
+            Dict contains SAM input configuration ID(s) and file path(s).
+            Keys are the SAM config ID(s), top level value is the SAM path.
+            Can also be a single config file str. If it's a list, it is mapped
+            to the sorted list of unique configs requested by points csv.
+        cf_file : str
+            reV generation capacity factor output file with path.
+        cf_year : int | str
+            reV generation year to calculate LCOE for. 'my' will look for the
+            multi-year mean generation results.
+        n_workers : int
+            Number of local workers to run on.
+        sites_per_split : int
+            Number of sites to run in series on a core.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
+        fout : str | None
+            Optional .h5 output file specification.
+        dirout : str | None
+            Optional output directory specification. The directory will be
+            created if it does not already exist.
+        return_obj : bool
+            Option to return the Gen object instance.
+
+        Returns
+        -------
+        lcoe : reV.lcoe.LCOE
+            LCOE object instance with outputs stored in .out attribute.
+            Only returned if return_obj is True.
+        """
+
+        # get a points control instance
+        pc = LCOE.get_pc(points, points_range, sam_files, tech=None)
+
+        # make a Gen class instance to operate with
+        lcoe = cls(pc, cf_file, cf_year=cf_year, fout=fout, dirout=dirout)
+
+        diff = set(pc.sites) - set(lcoe.meta['gid'].values)
+        if diff:
+            raise Exception('The following analysis sites were requested '
+                            'through project points for LCOE but are not '
+                            'found in the CF file ("{}"): {}'
+                            .format(lcoe.cf_file, diff))
+
+        # make a kwarg dict
+        kwargs = {'site_df': lcoe.site_df}
+
+        # use serial or parallel execution control based on n_workers
+        if n_workers == 1:
+            logger.debug('Running serial generation for: {}'.format(pc))
+            out = execute_single(lcoe.run, pc, **kwargs)
+        else:
+            logger.debug('Running parallel generation for: {}'.format(pc))
+            out = execute_parallel(lcoe.run, pc, n_workers=n_workers,
+                                   loggers=[__name__, 'reV.SAM'], **kwargs)
+
+        # save output data to object attribute
+        lcoe.out = out
+
+        # flush output data (will only write to disk if fout is a str)
+        lcoe.flush()
+
+        # optionally return Gen object (useful for debugging and hacking)
+        if return_obj:
+            return lcoe
+
+
+if __name__ == '__main__':
+    points = slice(0, 50)
+    sam_files = 'C:/sandbox/reV/test_lcoe/lcoe_pv_1.json'
+    cf_file = 'C:/sandbox/reV/test_lcoe/reV_2012_node00_x000.h5'
+    lcoe = LCOE.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
+                           cf_year=2012, n_workers=2, sites_per_split=25,
+                           points_range=None, fout='lcoe.h5',
+                           dirout='./lcoe_out',
+                           return_obj=True)

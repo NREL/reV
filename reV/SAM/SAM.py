@@ -964,7 +964,7 @@ class Economic(SAM):
         super().execute(modules_to_run, close=close)
 
     @classmethod
-    def reV_run(cls, points_control, output_request=('lcoe_fcr',)):
+    def reV_run(cls, points_control, site_df, output_request=('lcoe_fcr',)):
         """Execute SAM simulations based on a reV points control instance.
 
         Parameters
@@ -972,6 +972,10 @@ class Economic(SAM):
         points_control : config.PointsControl
             PointsControl instance containing project points site and SAM
             config info.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Number of rows should
+            match the number of sites, column labels are the variable keys
+            that will be passed forward as SAM parameters.
         output_request : list | tuple
             Outputs to retrieve from SAM.
 
@@ -985,9 +989,42 @@ class Economic(SAM):
 
         out = {}
 
+        calc_aey = False
+        if 'annual_energy' not in site_df:
+            # annual energy yield has not been input, flag to calculate
+            site_df['annual_energy'] = 0
+            calc_aey = True
+
+        if calc_aey and 'capacity_factor' not in site_df:
+            raise SAMExecutionError('Input parameter "capacity_factor" must '
+                                    'be included as a site-specific variable '
+                                    'as a column in the "site_df" input.')
+        site_vars = site_df.columns.values
+
         for site in points_control.sites:
             # get SAM inputs from project_points based on the current site
             config, inputs = points_control.project_points[site]
+
+            if calc_aey and 'system_capacity' not in inputs:
+                raise SAMExecutionError('Input parameter "system_capacity" '
+                                        'must be included in the SAM config '
+                                        'inputs.')
+
+            # calculate the annual energy yield if not input
+            if calc_aey:
+                if site_df.loc[site, 'capacity_factor'] > 1:
+                    warn('Capacity factor > 1. Dividing by 100.')
+                    cf = site_df.loc[site, 'capacity_factor'] / 100
+                else:
+                    cf = site_df.loc[site, 'capacity_factor']
+
+                # add aey to site-specific inputs
+                aey = inputs['system_capacity'] * cf
+                site_df.loc[site, 'annual_energy'] = aey
+
+            # Add any site-specific inputs to the inputs dict
+            inputs.update(dict(zip(site_vars, site_df.loc[site, :])))
+
             # iterate through requested sites.
             sim = cls(ssc=None, data=None, parameters=inputs,
                       output_request=output_request)

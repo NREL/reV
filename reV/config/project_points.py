@@ -17,18 +17,13 @@ logger = logging.getLogger(__name__)
 
 class PointsControl:
     """Class to manage and split ProjectPoints."""
-    def __init__(self, project_points, level='supervisor',
-                 sites_per_split=100):
+    def __init__(self, project_points, sites_per_split=100):
         """Initialize points control object.
 
         Parameters
         ----------
         project_points : reV.config.ProjectPoints
             ProjectPoints instance to be split between execution workers.
-        level : str
-            CURRENT execution level, will control how this instance of
-            PointsControl is being split and iterated upon.
-            Options: 'supervisor' or 'core'
         sites_per_split : int
             Sites per project points split instance returned in the __next__
             iterator function.
@@ -36,7 +31,6 @@ class PointsControl:
 
         self._project_points = project_points
         self._sites_per_split = sites_per_split
-        self.level = level
         self._split_range = []
 
     def __iter__(self):

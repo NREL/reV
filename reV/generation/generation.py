@@ -6,7 +6,6 @@ import numpy as np
 import os
 import pprint
 import re
-from warnings import warn
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
@@ -175,6 +174,57 @@ class Gen:
         return self._time_index
 
     @staticmethod
+    def get_pc(points, points_range, sam_files, tech, sites_per_split=None,
+               res_file=None):
+        """Get a PointsControl instance.
+
+        Parameters
+        ----------
+        points : slice | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
+        sam_files : dict | str | list
+            Dict contains SAM input configuration ID(s) and file path(s).
+            Keys are the SAM config ID(s), top level value is the SAM path.
+            Can also be a single config file str. If it's a list, it is mapped
+            to the sorted list of unique configs requested by points csv.
+        tech : str
+            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+        sites_per_split : int
+            Number of sites to run in series on a core. None defaults to the
+            resource file chunk size.
+        res_file : str
+            Single resource file with path.
+
+        Returns
+        -------
+        pc : reV.config.project_points.PointsControl
+            PointsControl object instance.
+        """
+
+        if sites_per_split is None:
+            sites_per_split = Gen.sites_per_core(res_file)
+
+        if isinstance(points, (slice, str)):
+            # make Project Points and Points Control instances
+            pp = ProjectPoints(points, sam_files, tech=tech, res_file=res_file)
+            if points_range is None:
+                pc = PointsControl(pp, sites_per_split=sites_per_split)
+            else:
+                pc = PointsControl.split(points_range[0], points_range[1], pp,
+                                         sites_per_split=sites_per_split)
+        elif isinstance(points, PointsControl):
+            pc = points
+        else:
+            raise TypeError('Points input type is unrecognized: '
+                            '"{}"'.format(type(points)))
+        return pc
+
+    @staticmethod
     def sites_per_core(res_file, default=100):
         """Get the nominal sites per core (x-chunk size) for a given file.
 
@@ -198,6 +248,8 @@ class Gen:
             chunk size for windspeed and dni datasets for the WTK and NSRDB
             data, respectively.
         """
+        if not res_file:
+            return default
 
         with Resource(res_file) as res:
             if 'wtk' in res_file.lower():
@@ -366,21 +418,41 @@ class Gen:
             creates a unique filename in the output directory.
         """
 
-        if not fout.endswith('.h5'):
-            fout += '.h5'
-            warn('Generation output file request must be .h5, '
-                 'set to: "{}"'.format(fout))
-        # create and use optional output dir
-        if dirout:
-            if not os.path.exists(dirout):
-                os.makedirs(dirout)
-            # Add output dir to fout string
-            fout = os.path.join(dirout, fout)
+        # combine filename and path
+        fout = Gen.make_h5_fpath(fout, dirout)
 
         # check to see if target already exists. If so, assign unique ID.
         fout = fout.replace('.h5', '_x000.h5')
         fout = Gen.get_unique_fout(fout)
 
+        return fout
+
+    @staticmethod
+    def make_h5_fpath(fout, dirout):
+        """Combine directory and filename and ensure .h5 extension.
+
+        Parameters
+        ----------
+        fout : str
+            Target filename (with or without .h5 extension).
+        dirout : str
+            Target output directory.
+
+        Returns
+        -------
+        fout : str
+            Target output directory joined with the target filename
+            ending in .h5.
+        """
+
+        if not fout.endswith('.h5'):
+            fout += '.h5'
+        # create and use optional LCOE output dir
+        if dirout:
+            if not os.path.exists(dirout):
+                os.makedirs(dirout)
+            # Add output dir to LCOE fout string
+            fout = os.path.join(dirout, fout)
         return fout
 
     def flush(self, mode='w'):
@@ -445,7 +517,7 @@ class Gen:
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
                    cf_profiles=True, lcoe=False, n_workers=1,
-                   sites_per_split=100, points_range=None, fout=None,
+                   sites_per_split=None, points_range=None, fout=None,
                    dirout='./gen_out', return_obj=True):
         """Execute a generation run directly from source files without config.
 
@@ -471,7 +543,8 @@ class Gen:
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
-            Number of sites to run in series on a core.
+            Number of sites to run in series on a core. None defaults to the
+            resource file chunk size.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -498,19 +571,10 @@ class Gen:
         if lcoe:
             output_request += ('lcoe_fcr',)
 
-        if isinstance(points, (slice, str)):
-            # make Project Points and Points Control instances
-            pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-            if points_range is None:
-                pc = PointsControl(pp, sites_per_split=sites_per_split)
-            else:
-                pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                         sites_per_split=sites_per_split)
-        elif isinstance(points, PointsControl):
-            pc = points
-        else:
-            raise TypeError('Generation Points input type is unrecognized: '
-                            '"{}"'.format(type(points)))
+        # get a points control instance
+        pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
+                        res_file=res_file)
+
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout)
@@ -590,22 +654,9 @@ class Gen:
         if lcoe:
             output_request += ('lcoe_fcr',)
 
-        if sites_per_split is None:
-            sites_per_split = Gen.sites_per_core(res_file)
-
-        if isinstance(points, (slice, str)):
-            # make Project Points and Points Control instances
-            pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-            if points_range is None:
-                pc = PointsControl(pp, sites_per_split=sites_per_split)
-            else:
-                pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                         sites_per_split=sites_per_split)
-        elif isinstance(points, PointsControl):
-            pc = points
-        else:
-            raise TypeError('Generation Points input type is unrecognized: '
-                            '"{}"'.format(type(points)))
+        # get a points control instance
+        pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
+                        res_file=res_file)
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
