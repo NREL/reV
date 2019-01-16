@@ -256,7 +256,7 @@ class SAM:
         self._res_data = self.ssc.data_create()
 
         # Use Parameters class to manage inputs, defaults, and requirements.
-        if parameters.__class__.__name__ == 'ParametersManager':
+        if isinstance(parameters, ParametersManager):
             self.parameters = parameters
         else:
             self.parameters = ParametersManager(parameters, self.module)
@@ -952,7 +952,7 @@ class Economic(SAM):
         self.output_request = output_request
 
         # Use Parameters class to manage inputs, defaults, and requirements.
-        if parameters.__class__.__name__ == 'ParametersManager':
+        if isinstance(parameters, ParametersManager):
             self.parameters = parameters
         else:
             self.parameters = ParametersManager(parameters, self.module)

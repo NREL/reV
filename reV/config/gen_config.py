@@ -174,6 +174,22 @@ class GenConfig(BaseConfig):
         return self._profiles
 
     @property
+    def lcoe(self):
+        """Get the boolean arg whether to calculate LCOE as part of gen run.
+
+        Returns
+        -------
+        _lcoe : bool
+            Boolean flag on whether to calc LCOE as part of the generation run.
+        """
+        default = False
+        if not hasattr(self, '_lcoe'):
+            self._lcoe = default
+            if 'lcoe' in self['project_control']:
+                self._lcoe = self['project_control']['lcoe']
+        return self._lcoe
+
+    @property
     def execution_control(self):
         """Get the execution control object.
 

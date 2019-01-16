@@ -244,59 +244,72 @@ class Gen:
         return out
 
     @staticmethod
-    def unpack_cf_means(gen_out):
-        """Unpack a numpy means 1darray from a gen output dictionary.
+    def unpack_scalars(gen_out, sam_var='cf_mean'):
+        """Unpack a numpy 1darray of scalars from a gen output dictionary.
 
         Parameters
         ----------
         gen_out : dict
             Nested dictionary of SAM results. Top level key is site number,
-            Next level key should include 'cf_mean'.
+            Next level key should include the target sam_var.
+        sam_var : str
+            SAM variable name to be unpacked from gen_out. The SAM outputs
+            associated with this variable must be scalar values.
 
         Returns
         -------
         out : np.array
-            1D array of capacity factor means sorted by site number.
+            1D array of scalar values sorted by site number.
         """
 
         sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k]['cf_mean'] for k in sorted_keys])
+        out = np.array([gen_out[k][sam_var] for k in sorted_keys])
         return out
 
     @staticmethod
-    def unpack_cf_profiles(gen_out):
-        """Unpack a numpy profiles 2darray from a gen output dictionary.
+    def unpack_profiles(gen_out, sam_var='cf_profile'):
+        """Unpack a numpy 2darray of profiles from a gen output dictionary.
 
         Parameters
         ----------
         gen_out : dict
             Nested dictionary of SAM results. Top level key is site number,
-            Next level key should include 'cf_profile'.
+            Next level key should include the target sam_var.
+        sam_var : str
+            SAM variable name to be unpacked from gen_out. The SAM outputs
+            associated with this variable must be profiles.
 
         Returns
         -------
         out : np.ndarray
-            2D array of capacity factor profiles. Columns are sorted by site
+            2D array of profiles. Columns are sorted by site
             number. Rows correspond to the profile timeseries.
         """
 
         sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k]['cf_profile'] for k in sorted_keys])
+        out = np.array([gen_out[k][sam_var] for k in sorted_keys])
         return out.transpose()
 
     def means_to_disk(self, fout='gen_out.h5', mode='w'):
         """Save capacity factor means to disk."""
-        cf_means = self.unpack_cf_means(self.out)
+        cf_means = self.unpack_scalars(self.out, sam_var='cf_mean')
         meta = self.meta
         meta.loc[:, 'cf_means'] = cf_means
+        if 'lcoe' in str(self.output_request):
+            meta.loc[:, 'lcoe_fcr'] = self.unpack_scalars(self.out,
+                                                          sam_var='lcoe_fcr')
         CapacityFactor.write_means(fout, meta, cf_means, self.sam_configs,
                                    **{'mode': mode})
 
     def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
         """Save capacity factor profiles to disk."""
-        cf_profiles = self.unpack_cf_profiles(self.out)
+        cf_profiles = self.unpack_profiles(self.out, sam_var='cf_profile')
         meta = self.meta
-        meta.loc[:, 'cf_means'] = self.unpack_cf_means(self.out)
+        meta.loc[:, 'cf_means'] = self.unpack_scalars(self.out,
+                                                      sam_var='cf_mean')
+        if 'lcoe' in str(self.output_request):
+            meta.loc[:, 'lcoe_fcr'] = self.unpack_scalars(self.out,
+                                                          sam_var='lcoe_fcr')
         CapacityFactor.write_profiles(fout, meta, self.time_index,
                                       cf_profiles, self.sam_configs,
                                       **{'mode': mode})
@@ -425,9 +438,9 @@ class Gen:
 
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-                   cf_profiles=True, n_workers=1, sites_per_split=100,
-                   points_range=None, fout=None, dirout='./gen_out',
-                   return_obj=True):
+                   cf_profiles=True, lcoe=False, n_workers=1,
+                   sites_per_split=100, points_range=None, fout=None,
+                   dirout='./gen_out', return_obj=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -447,6 +460,8 @@ class Gen:
         cf_profiles : bool
             Enables capacity factor annual profile output. Capacity factor
             means output if this is False.
+        lcoe : bool
+            Enables lcoe calculation and output.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -474,6 +489,8 @@ class Gen:
         output_request = ('cf_mean',)
         if cf_profiles:
             output_request += ('cf_profile',)
+        if lcoe:
+            output_request += ('lcoe_fcr',)
 
         if isinstance(points, (slice, str)):
             # make Project Points and Points Control instances
@@ -516,9 +533,9 @@ class Gen:
 
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  cf_profiles=True, n_workers=1, sites_per_split=None,
-                  points_range=None, fout=None, dirout='./gen_out',
-                  mem_util_lim=0.7):
+                  cf_profiles=True, lcoe=False, n_workers=1,
+                  sites_per_split=None, points_range=None, fout=None,
+                  dirout='./gen_out', mem_util_lim=0.7):
         """Execute a generation run with smart data flushing.
 
         Parameters
@@ -538,6 +555,8 @@ class Gen:
         cf_profiles : bool
             Enables capacity factor annual profile output. Capacity factor
             means output if this is False.
+        lcoe : bool
+            Enables lcoe calculation and output.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int | None
@@ -562,6 +581,8 @@ class Gen:
         output_request = ('cf_mean',)
         if cf_profiles:
             output_request += ('cf_profile',)
+        if lcoe:
+            output_request += ('lcoe_fcr',)
 
         if sites_per_split is None:
             sites_per_split = Gen.sites_per_core(res_file)
@@ -593,6 +614,8 @@ class Gen:
                      .format(points))
         logger.debug('The following SAM configs are available to this run:\n{}'
                      .format(pprint.pformat(sam_files, indent=4)))
+        logger.debug('The SAM output variables have been requested:\n{}'
+                     .format(output_request))
         try:
             SmartParallelJob.execute(gen, pc, n_workers=n_workers,
                                      loggers=['reV.generation',

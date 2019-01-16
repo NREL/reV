@@ -135,6 +135,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['CF_PROFILES'] = config.write_profiles
+    ctx.obj['LCOE'] = config.lcoe
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
 
     for i, year in enumerate(config.years):
@@ -230,11 +231,14 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 @click.option('-cfp', '--cf_profiles', is_flag=True,
               help=('Flag to output/save capacity factor profiles. '
                     'Default is not to save profiles.'))
+@click.option('-lc', '--lcoe', is_flag=True,
+              help=('Flag to calculate/output/save LCOE values. '
+                    'Default is not to calculate LCOE.'))
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, sites_per_core,
-           fout, dirout, logdir, cf_profiles, verbose):
+           fout, dirout, logdir, cf_profiles, lcoe, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['TECH'] = tech
@@ -246,6 +250,7 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_core,
     ctx.obj['DIROUT'] = dirout
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['CF_PROFILES'] = cf_profiles
+    ctx.obj['LCOE'] = lcoe
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
 
@@ -271,6 +276,7 @@ def local(ctx, n_workers, points_range, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     cf_profiles = ctx.obj['CF_PROFILES']
+    lcoe = ctx.obj['LCOE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     init_gen_loggers(verbose, name, logdir=logdir)
@@ -290,6 +296,7 @@ def local(ctx, n_workers, points_range, verbose):
                   sam_files=sam_files,
                   res_file=res_file,
                   cf_profiles=cf_profiles,
+                  lcoe=lcoe,
                   n_workers=n_workers,
                   sites_per_split=sites_per_core,
                   points_range=points_range,
@@ -383,7 +390,7 @@ def get_node_cmd(name='reV', tech='pv',
                  res_file=__testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5',
                  sites_per_core=None, n_workers=None, fout='reV.h5',
                  dirout='./out/gen_out', logdir='./out/log_gen',
-                 cf_profiles=False, verbose=False):
+                 cf_profiles=False, lcoe=False, verbose=False):
     """Made a reV geneneration direct-local command line interface call string.
 
     Parameters
@@ -417,6 +424,8 @@ def get_node_cmd(name='reV', tech='pv',
         Target directory to save log files.
     cf_profiles : bool
         Flag to save capacity factor timeseries profiles. Default is False.
+    lcoe : bool
+        Enables lcoe calculation and output.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -441,6 +450,7 @@ def get_node_cmd(name='reV', tech='pv',
                   '-do {dirout} '
                   '-lo {logdir} '
                   '{cfp} '
+                  '{lcoe} '
                   .format(tech=SubprocessManager.s(tech),
                           points=SubprocessManager.s(points),
                           sam_files=SubprocessManager.s(sam_files),
@@ -450,6 +460,7 @@ def get_node_cmd(name='reV', tech='pv',
                           dirout=SubprocessManager.s(dirout),
                           logdir=SubprocessManager.s(logdir),
                           cfp='-cfp' if cf_profiles else '',
+                          lcoe='-lc' if lcoe else '',
                           ))
 
     # make a cli arg string for local() in this module
@@ -497,6 +508,7 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     cf_profiles = ctx.obj['CF_PROFILES']
+    lcoe = ctx.obj['LCOE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -514,7 +526,7 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                            sam_files=sam_files, res_file=res_file,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
-                           cf_profiles=cf_profiles, verbose=verbose)
+                           cf_profiles=cf_profiles, lcoe=lcoe, verbose=verbose)
 
         logger.info('Running reV generation on Peregrine with node name "{}" '
                     'for {} (points range: {}).'
@@ -564,6 +576,7 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     cf_profiles = ctx.obj['CF_PROFILES']
+    lcoe = ctx.obj['LCOE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -581,7 +594,7 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
                            sam_files=sam_files, res_file=res_file,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
-                           cf_profiles=cf_profiles, verbose=verbose)
+                           cf_profiles=cf_profiles, lcoe=lcoe, verbose=verbose)
 
         logger.info('Running reV generation on Eagle with node name "{}" for '
                     '{} (points range: {}).'
