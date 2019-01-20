@@ -310,6 +310,28 @@ class Collector(Outputs):
                 time_index = f.time_index
                 self.time_index = time_index
 
+    @property
+    def time_index(self):
+        """
+        Extract time_index, None if not present in .h5 files
+
+        Returns
+        -------
+        _time_index : pandas.DatetimeIndex
+            Datetimestamps associated with profiles to be combined
+        """
+        if not hasattr(self, '_time_index'):
+            with h5py.File(self._h5_files[0], mode='r') as f:
+                if 'time_index' in f:
+                    time_index = f['time_index'][...]
+                    time_index = pd.to_datetime(time_index.astype(str))
+                else:
+                    time_index = None
+
+            self._time_index = time_index
+
+        return self._time_index
+
     def _check_meta(self, meta):
         """
         Check combined meta against self._gids to make sure all sites

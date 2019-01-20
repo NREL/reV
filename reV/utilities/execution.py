@@ -881,8 +881,7 @@ class SmartParallelJob:
                                                                futures)
 
             # All futures complete
-            futures = manager.gather_and_flush('END', client, futures,
-                                               force_flush=True)
+            manager.gather_and_flush('END', client, futures, force_flush=True)
             logger.debug('Smart parallel job complete. Returning execution '
                          'control to higher level processes.')
             log_mem()
