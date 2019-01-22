@@ -321,10 +321,9 @@ class Collector(Outputs):
             Datetimestamps associated with profiles to be combined
         """
         if not hasattr(self, '_time_index'):
-            with h5py.File(self._h5_files[0], mode='r') as f:
-                if 'time_index' in f:
-                    time_index = f['time_index'][...]
-                    time_index = pd.to_datetime(time_index.astype(str))
+            with CapacityFactor(self._h5_files[0], mode='r') as cf:
+                if 'time_index' in cf.dsets:
+                    time_index = cf.time_index
                 else:
                     time_index = None
 
