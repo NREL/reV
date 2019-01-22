@@ -25,27 +25,6 @@
     ]
   ],
   [
-    "weibull_reference_height",
-    [
-      "int",
-      "float"
-    ]
-  ],
-  [
-    "weibull_k_factor",
-    [
-      "int",
-      "float"
-    ]
-  ],
-  [
-    "weibull_wind_speed",
-    [
-      "int",
-      "float"
-    ]
-  ],
-  [
     "wind_turbine_rotor_diameter",
     [
       "int",
@@ -68,13 +47,6 @@
   ],
   [
     "wind_turbine_hub_ht",
-    [
-      "int",
-      "float"
-    ]
-  ],
-  [
-    "wind_turbine_max_cp",
     [
       "int",
       "float"

@@ -8,6 +8,7 @@ import os
 import pprint
 import re
 import time
+from warnings import warn
 
 from reV import __testdatadir__
 from reV.config.project_points import ProjectPoints, PointsControl
@@ -22,7 +23,7 @@ from reV.utilities.loggers import init_logger, REV_LOGGERS
 logger = logging.getLogger(__name__)
 
 
-def init_gen_loggers(verbose, name, logdir='./out/log',
+def init_gen_loggers(verbose, name, node=False, logdir='./out/log',
                      modules=[__name__, 'reV.generation.generation',
                               'reV.config', 'reV.utilities']):
     """Init multiple loggers to a single file or stdout for the gen compute.
@@ -33,7 +34,9 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
         Option to turn on debug vs. info logging.
     name : str
         Generation compute job name, interpreted as name of intended log file.
-        May include a *_00 tag for the node number if running on HPC.
+    node : bool
+        Flag for whether this is a node-level logger. If this is a node logger,
+        and the log level is info, the log_file will be None (sent to stdout).
     logdir : str
         Target directory to save .log files.
     modules : list
@@ -51,14 +54,6 @@ def init_gen_loggers(verbose, name, logdir='./out/log',
         log_level = 'DEBUG'
     else:
         log_level = 'INFO'
-
-    # find a string match of format *_00 at end of name string.
-    match_id = re.match(r'.*_([0-9]{2})$', name)
-    node = None
-    if match_id:
-        if name.endswith(match_id.group(1)):
-            # node is node number from the *_00 string match
-            node = match_id.group(1)
 
     if not os.path.exists(logdir):
         os.makedirs(logdir)
@@ -108,6 +103,11 @@ def from_config(ctx, config_file, verbose):
     # Instantiate the config object
     config = GenConfig(config_file)
 
+    # take name from config if not default
+    if config.name.lower() != 'rev':
+        name = config.name
+        ctx.obj['NAME'] = config.name
+
     # Enforce verbosity if logging level is specified in the config
     if config.logging_level == logging.DEBUG:
         verbose = True
@@ -151,8 +151,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
         Click context object. Use case: data = ctx.obj['key']
     name : str
         Job name.
-    year : int | str
-        4 digit year
+    year : int | str | NoneType
+        4 digit year or None.
     config : reV.config.GenConfig
         Generation config object.
     """
@@ -162,16 +162,19 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 
     # if the year isn't in the name, add it before setting the file output
     match = re.match(r'.*([1-3][0-9]{3})', name)
-    if not match:
-        ctx.obj['FOUT'] = '{}_{}.h5'.format(name, year)
+    if year:
+        ctx.obj['FOUT'] = '{}{}.h5'.format(name, '_{}'.format(year) if not
+                                           match else '')
+    else:
+        ctx.obj['FOUT'] = '{}.h5'.format(name)
 
     # check to make sure that the year matches the resource file
     if str(year) not in config.res_files[i]:
-        raise Exception('Resource file and year do not appear to match. '
-                        'Expected the string representation of the year '
-                        'to be in the resource file name. '
-                        'Year: {}, Resource file: {}'
-                        .format(year, config.res_files[i]))
+        warn('Resource file and year do not appear to match. '
+             'Expected the string representation of the year '
+             'to be in the resource file name. '
+             'Year: {}, Resource file: {}'
+             .format(year, config.res_files[i]))
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
@@ -182,7 +185,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
-        if not match:
+        if not match and year:
+            # Add year to name before submitting
             # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
             ctx.obj['NAME'] = '{}_{}'.format(name[:8], str(year))
         ctx.invoke(peregrine, nodes=config.execution_control.nodes,
@@ -193,8 +197,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
-        if not match:
-            # 3 chars for slurm job name (lim is 8, -5 for "_yrID")
+        if not match and year:
+            # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(eagle, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
@@ -279,7 +283,7 @@ def local(ctx, n_workers, points_range, verbose):
     lcoe = ctx.obj['LCOE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    init_gen_loggers(verbose, name, logdir=logdir)
+    init_gen_loggers(verbose, name, node=True, logdir=logdir)
 
     for key, val in ctx.obj.items():
         logger.debug('ctx var passed to local method: "{}" : "{}" with type '
@@ -377,10 +381,10 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
         node_name = '{0}_{1:02d}'.format(name[:13], i)
 
     if fout.endswith('.h5'):
-        # remove file extension to add additional node and year strings
-        fout = fout.strip('.h5')
-    # add node number to file name.
-    fout_node = fout + '_node{0:02d}.h5'.format(i)
+        fout_node = fout.replace('.h5', '_node{0:02d}.h5'.format(i))
+    else:
+        fout_node = fout + '_node{0:02d}.h5'.format(i)
+
     return node_name, fout_node
 
 

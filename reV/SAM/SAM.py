@@ -7,6 +7,7 @@ SAM software development kit (SDK).
 import gc
 import json
 import logging
+from math import floor
 import numpy as np
 import os
 import pandas as pd
@@ -310,7 +311,7 @@ class SAM:
         return self._site
 
     @staticmethod
-    def get_sam_res(res_file, project_points):
+    def get_sam_res(res_file, project_points, module=''):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -320,6 +321,12 @@ class SAM:
         project_points : reV.config.ProjectPoints
             reV 2.0 Project Points instance used to retrieve resource data at a
             specific set of sites.
+        module : str
+            Optional SAM module name or reV technology to force interpretation
+            of the resource file type.
+            Example: if the resource file does not have 'nsrdb' in the
+            name, module can be set to 'pvwatts' or 'tcsmolten' to force
+            interpretation of the resource file as a solar resource.
 
         Returns
         -------
@@ -327,10 +334,16 @@ class SAM:
             Resource iterator object to pass to SAM.
         """
 
-        if 'nsrdb' in res_file:
+        if ('nsrdb' in res_file or 'pv' in module or 'tcsmolten' in module or
+                'csp' in module):
             res = NSRDB.preload_SAM(res_file, project_points)
-        elif 'wtk' in res_file:
+        elif 'wtk' in res_file or 'wind' in module:
             res = WTK.preload_SAM(res_file, project_points)
+        else:
+            raise SAMExecutionError('Cannot interpret the type of resource '
+                                    'file being input: {}. Should have nsrdb '
+                                    'or wtk in the name, or specify which SAM '
+                                    'module is being run.'.format(res_file))
         return res
 
     def set_resource(self, resource=None):
@@ -424,10 +437,40 @@ class SAM:
         """
 
         time_index = self.make_datetime(time_index)
+        time_index = self.ensure_res_len(time_index)
 
         for var in time_vars:
             self.ssc.data_set_array(self.res_data, var,
                                     getattr(time_index.dt, var).values)
+
+    @staticmethod
+    def ensure_res_len(res_arr, base=8760):
+        """Ensure that the length of resource array is a multiple of base.
+
+        Parameters
+        ----------
+        res_arr : array-like
+            Array of resource data.
+        base : int
+            Ensure that length of resource array is a multiple of this value.
+
+        Returns
+        -------
+        res_arr : array-like
+            Truncated array of resource data such that length(res_arr)%base=0.
+        """
+
+        if len(res_arr) % base != 0:
+            div = floor(len(res_arr) / 8760)
+            target_len = div * 8760
+            warn('Resource array length is {}, but SAM requires a multiple of '
+                 '8760. Truncating the timeseries to length {}.'
+                 .format(len(res_arr), target_len), SAMInputWarning)
+            if len(res_arr.shape) == 1:
+                res_arr = res_arr[0:target_len]
+            else:
+                res_arr = res_arr[0:target_len, :]
+        return res_arr
 
     @staticmethod
     def make_datetime(series):
@@ -567,12 +610,13 @@ class SAM:
             if self.ssc.module_exec(module, self.data) == 0:
                 msg = ('SAM Simulation Error in "{}" for site #{}'
                        .format(m, self.site))
-                raise SAMExecutionError(msg)
-                idx = 1
-                msg = self.ssc.module_log(module, 0)
+                logger.exception(msg)
+                idx = 0
                 while msg is not None:
-                    raise SAMExecutionError('{}'.format(msg.decode('utf-8')))
                     msg = self.ssc.module_log(module, idx)
+                    raise SAMExecutionError('SAM error message: "{}"'
+                                            .format(msg.decode('utf-8')))
+                    logger.exception(msg)
                     idx = idx + 1
                 raise Exception(msg)
             self.ssc.module_free(module)
@@ -636,7 +680,8 @@ class SAM:
 
         out = {}
 
-        resources = SAM.get_sam_res(res_file, points_control.project_points)
+        resources = SAM.get_sam_res(res_file, points_control.project_points,
+                                    module=points_control.project_points.tech)
 
         for res_df, meta in resources:
             # get SAM inputs from project_points based on the current site
@@ -661,7 +706,7 @@ class Solar(SAM):
     """
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=True):
+                 output_request=None, drop_leap=False):
         """Initialize a SAM solar object.
 
         Parameters
@@ -721,10 +766,11 @@ class Solar(SAM):
         # set resource variables
         for var in resource.columns.values:
             if var != 'time_index':
-                self.ssc.data_set_array(self.res_data, var_map[var],
-                                        np.roll(resource[var],
-                                                int(self.meta['timezone'] *
-                                                    self.time_interval)))
+                # ensure that resource array length is multiple of 8760
+                res_arr = self.ensure_res_len(np.roll(resource[var],
+                                              int(self.meta['timezone'] *
+                                                  self.time_interval)))
+                self.ssc.data_set_array(self.res_data, var_map[var], res_arr)
 
         # add resource data to self.data and clear
         self.ssc.data_set_table(self.data, 'solar_resource_data',
@@ -806,7 +852,7 @@ class Wind(SAM):
     """
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=True):
+                 output_request=None, drop_leap=False):
         """Initialize a SAM wind object.
 
         Parameters
@@ -860,10 +906,11 @@ class Wind(SAM):
                                 4 * [self.parameters['wind_turbine_hub_ht']])
 
         # must be set as matrix in [temp, pres, speed, direction] order
-        self.ssc.data_set_matrix(self.res_data, 'data',
-                                 resource[['temperature', 'pressure',
-                                           'windspeed',
-                                           'winddirection']].values)
+        # ensure that resource array length is multiple of 8760
+        res_data = self.ensure_res_len(resource[['temperature', 'pressure',
+                                                 'windspeed',
+                                                 'winddirection']].values)
+        self.ssc.data_set_matrix(self.res_data, 'data', res_data)
 
         # add resource data to self.data and clear
         self.ssc.data_set_table(self.data, 'wind_resource_data', self.res_data)
