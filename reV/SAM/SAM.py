@@ -581,8 +581,8 @@ class SAM:
 
     @property
     def lcoe_fcr(self):
-        """Get LCOE (cents/kWh)."""
-        return 100 * self.ssc.data_get_number(self.data, 'lcoe_fcr')
+        """Get LCOE ($/MWh). Native units are $/kWh, mult by 1000 for $/MWh."""
+        return self.ssc.data_get_number(self.data, 'lcoe_fcr') * 1000
 
     def execute(self, modules_to_run, close=True):
         """Execute a SAM simulation by module name.
@@ -905,12 +905,12 @@ class Wind(SAM):
         self.ssc.data_set_array(self.res_data, 'heights',
                                 4 * [self.parameters['wind_turbine_hub_ht']])
 
-        # must be set as matrix in [temp, pres, speed, direction] order
+        # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760
-        res_data = self.ensure_res_len(resource[['temperature', 'pressure',
-                                                 'windspeed',
-                                                 'winddirection']].values)
-        self.ssc.data_set_matrix(self.res_data, 'data', res_data)
+        temp = self.ensure_res_len(resource[['temperature', 'pressure',
+                                             'windspeed',
+                                             'winddirection']].values)
+        self.ssc.data_set_matrix(self.res_data, 'data', temp)
 
         # add resource data to self.data and clear
         self.ssc.data_set_table(self.data, 'wind_resource_data', self.res_data)
@@ -1066,7 +1066,8 @@ class Economic(SAM):
                     cf = site_df.loc[site, 'capacity_factor']
 
                 # add aey to site-specific inputs
-                aey = inputs['system_capacity'] * cf
+                # mult by 8760 to convert kW to kWh
+                aey = inputs['system_capacity'] * cf * 8760
                 site_df.loc[site, 'annual_energy'] = aey
 
             # Add any site-specific inputs to the inputs dict
@@ -1080,7 +1081,6 @@ class Economic(SAM):
 
             logger.debug('Outputs for site {} with config "{}", \n\t{}...'
                          .format(site, config, str(out[site])[:100]))
-
         return out
 
 

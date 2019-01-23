@@ -20,6 +20,7 @@ from reV.handlers.outputs import Outputs
 
 RTOL = 0.0
 ATOL = 0.04
+PURGE_OUT = True
 
 
 class pv_results:
@@ -179,7 +180,7 @@ def test_pv_gen_profiles(year):
     rev1_profiles = rev1_profiles[:, points]
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if result:
+    if result and PURGE_OUT:
         # remove output files if test passes.
         flist = os.listdir(rev2_out_dir)
         for fname in flist:
@@ -215,7 +216,7 @@ def test_smart(year):
     rev1_profiles = rev1_profiles[:, points]
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if result:
+    if result and PURGE_OUT:
         # remove output files if test passes.
         flist = os.listdir(rev2_out_dir)
         for fname in flist:

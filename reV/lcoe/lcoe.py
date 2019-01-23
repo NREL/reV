@@ -125,9 +125,9 @@ class LCOE(Gen):
         """Save LCOE results to disk."""
         lcoe_arr = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
         # write means to disk using CapacityFactor class
-        attrs = {'scale_factor': 1000, 'units': 'cents/kWh'}
-        Outputs.write_means(fout, self.meta, 'lcoe', lcoe_arr, attrs, 'uint16',
-                            self.sam_configs, **{'mode': mode})
+        attrs = {'scale_factor': 1, 'units': 'dol/MWh'}
+        Outputs.write_means(fout, self.meta, 'lcoe', lcoe_arr, attrs,
+                            'float32', self.sam_configs, **{'mode': mode})
 
     def flush(self, mode='w'):
         """Flush LCOE data in self.out attribute to disk in .h5 format.

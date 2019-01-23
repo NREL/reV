@@ -378,7 +378,7 @@ class Outputs(Resource):
             Optional LCOE scalar array.
         """
         if profiles.shape != (len(time_index), len(meta)):
-            msg = 'CF profile dimensions does not match time index and meta'
+            msg = 'Profile dimensions does not match time index and meta'
             raise ResourceValueError(msg)
 
         if year is None:
@@ -400,6 +400,7 @@ class Outputs(Resource):
             f.set_configs(SAM_configs)
 
             # Get scale factor or default to 1 (no scaling)
+            scale_factor = 1
             if 'scale_factor' in attrs:
                 scale_factor = attrs['scale_factor']
 
@@ -411,9 +412,8 @@ class Outputs(Resource):
                         data=profiles)
             if lcoe is not None:
                 # create an LCOE dataset if passed to this method
-                lcoe_attrs = {'scale_factor': 1000, 'units': 'cents/kWh'}
-                if np.issubdtype(lcoe.dtype, np.floating):
-                    lcoe = (lcoe * 1000).astype('uint16')
+                lcoe_attrs = {'scale_factor': 1, 'units': 'dol/MWh'}
+                lcoe = lcoe.astype('float32')
 
                 f.create_ds('lcoe{}'.format(year), lcoe.shape, lcoe.dtype,
                             chunks=None, attrs=lcoe_attrs, data=lcoe)
@@ -450,7 +450,7 @@ class Outputs(Resource):
             Optional LCOE scalar array.
         """
         if len(means) != len(meta):
-            msg = 'Number of CF means do not match meta'
+            msg = 'Number of means does not match meta'
             raise ResourceValueError(msg)
 
         if year is None:
@@ -482,9 +482,9 @@ class Outputs(Resource):
                         data=means)
             if lcoe is not None:
                 # create an LCOE dataset if passed to this method
-                lcoe_attrs = {'scale_factor': 1000, 'units': 'cents/kWh'}
-                if np.issubdtype(lcoe.dtype, np.floating):
-                    lcoe = (lcoe * 1000).astype('uint16')
+                # units fixed as per reV SAM outputs
+                lcoe_attrs = {'scale_factor': 1, 'units': 'dol/MWh'}
+                lcoe = lcoe.astype('float32')
 
                 f.create_ds('lcoe{}'.format(year), lcoe.shape, lcoe.dtype,
                             chunks=cf_chunks, attrs=lcoe_attrs, data=lcoe)
