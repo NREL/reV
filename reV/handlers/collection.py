@@ -254,8 +254,7 @@ class Collector(Outputs):
 
         return gids
 
-    @staticmethod
-    def parse_meta(h5_file):
+    def parse_meta(self, h5_file):
         """
         Extract and convert meta data from a rec.array to pandas.DataFrame
 
@@ -321,9 +320,9 @@ class Collector(Outputs):
             Datetimestamps associated with profiles to be combined
         """
         if not hasattr(self, '_time_index'):
-            with CapacityFactor(self._h5_files[0], mode='r') as cf:
-                if 'time_index' in cf.dsets:
-                    time_index = cf.time_index
+            with self._handler_cls(self._h5_files[0]) as res:
+                if 'time_index' in res.dsets:
+                    time_index = res.time_index
                 else:
                     time_index = None
 
