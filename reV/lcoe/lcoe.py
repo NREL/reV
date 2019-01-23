@@ -5,7 +5,7 @@ import logging
 import pandas as pd
 
 from reV.SAM.SAM import LCOE as SAM_LCOE
-from reV.handlers.capacity_factor import CapacityFactor
+from reV.handlers.outputs import Outputs
 from reV.utilities.execution import execute_parallel, execute_single
 from reV.generation.generation import Gen
 
@@ -94,7 +94,7 @@ class LCOE(Gen):
         """
 
         if not hasattr(self, '_meta'):
-            with CapacityFactor(self.cf_file) as cfh:
+            with Outputs(self.cf_file) as cfh:
                 self._meta = cfh.meta
         return self._meta
 
@@ -111,7 +111,7 @@ class LCOE(Gen):
         """
         if not hasattr(self, '_site_df'):
             site_gids = self.meta['gid']
-            with CapacityFactor(self.cf_file) as cfh:
+            with Outputs(self.cf_file) as cfh:
                 if 'cf_means' in str(list(cfh.dsets)):
                     cf_arr = cfh['cf_{}'.format(self.cf_year)]
                 else:
@@ -125,8 +125,9 @@ class LCOE(Gen):
         """Save LCOE results to disk."""
         lcoe_arr = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
         # write means to disk using CapacityFactor class
-        CapacityFactor.write_means(fout, self.meta, lcoe_arr, self.sam_configs,
-                                   **{'mode': mode})
+        attrs = {'scale_factor': 1000, 'units': 'cents/kWh'}
+        Outputs.write_means(fout, self.meta, 'lcoe', lcoe_arr, attrs, 'uint16',
+                            self.sam_configs, **{'mode': mode})
 
     def flush(self, mode='w'):
         """Flush LCOE data in self.out attribute to disk in .h5 format.

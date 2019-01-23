@@ -13,9 +13,9 @@ from reV.utilities.exceptions import (ResourceRuntimeError, ResourceKeyError,
 from reV.handlers.resource import Resource, parse_keys
 
 
-class CapacityFactor(Resource):
+class Outputs(Resource):
     """
-    Base class to handle capacity factor data in .h5 format
+    Base class to handle reV output data in .h5 format
     """
     def __init__(self, h5_file, unscale=True, mode='r'):
         """
@@ -249,7 +249,7 @@ class CapacityFactor(Resource):
         meta_arrays = []
         dtypes = []
         for c_name, c_data in df.iteritems():
-            dtype = CapacityFactor.get_dtype(c_data)
+            dtype = Outputs.get_dtype(c_data)
             if np.issubdtype(dtype, np.bytes_):
                 data = c_data.str.encode('utf-8').values
             else:
@@ -345,11 +345,11 @@ class CapacityFactor(Resource):
                 ds[...] = data
 
     @classmethod
-    def write_profiles(cls, h5_file, meta, time_index, cf_profiles,
-                       SAM_configs, year=None, cf_chunks=(None, 100),
-                       lcoe=None, **kwargs):
+    def write_profiles(cls, h5_file, meta, time_index, dset_name, profiles,
+                       attrs, dtype, SAM_configs, year=None,
+                       chunks=(None, 100), lcoe=None, **kwargs):
         """
-        Write cf_profiles to disk
+        Write profiles to disk
 
         Parameters
         ----------
@@ -359,19 +359,25 @@ class CapacityFactor(Resource):
             Locational meta data
         time_index : pandas.DatetimeIndex
             Temporal timesteps
-        cf_profiles : ndarray
-            Capacity factor profiles
+        dset_name : str
+            Name of the target dataset (should identify the profiles).
+        profiles : ndarray
+            reV output result timeseries profiles
+        attrs : dict
+            Attributes to be set. May include 'scale_factor'.
+        dtype : str
+            Intended dataset datatype after scaling.
         SAM_configs : dict
             Dictionary of SAM configuration JSONs used to compute cf profiles
         year : int | str
             Year for which cf means were computed
             If None, inferred from h5_file name
-        cf_chunks : tuple
-            Chunk size for capacity factor profiles dataset
+        chunks : tuple
+            Chunk size for profiles dataset
         lcoe : ndarray | NoneType
             Optional LCOE scalar array.
         """
-        if cf_profiles.shape != (len(time_index), len(meta)):
+        if profiles.shape != (len(time_index), len(meta)):
             msg = 'CF profile dimensions does not match time index and meta'
             raise ResourceValueError(msg)
 
@@ -385,35 +391,39 @@ class CapacityFactor(Resource):
                 warn('Cannot parse year from {}'.format(f_name))
                 year = ''
 
-        with cls(h5_file, mode=kwargs.get('mode', 'w-')) as cf:
+        with cls(h5_file, mode=kwargs.get('mode', 'w-')) as f:
             # Save time index
-            cf['time_index'] = time_index
+            f['time_index'] = time_index
             # Save meta
-            cf['meta'] = meta
+            f['meta'] = meta
             # Add SAM configurations as attributes to meta
-            cf.set_configs(SAM_configs)
-            # Save CF
-            cf_attrs = {'scale_factor': 1000, 'units': 'unitless'}
-            if np.issubdtype(cf_profiles.dtype, np.floating):
-                cf_profiles = (cf_profiles * 1000).astype('uint16')
+            f.set_configs(SAM_configs)
 
-            cf.create_ds('cf_profiles', cf_profiles.shape, cf_profiles.dtype,
-                         chunks=cf_chunks, attrs=cf_attrs,
-                         data=cf_profiles)
+            # Get scale factor or default to 1 (no scaling)
+            if 'scale_factor' in attrs:
+                scale_factor = attrs['scale_factor']
+
+            # apply scale factor and dtype
+            profiles = (profiles * scale_factor).astype(dtype)
+
+            f.create_ds(dset_name, profiles.shape, profiles.dtype,
+                        chunks=chunks, attrs=attrs,
+                        data=profiles)
             if lcoe is not None:
                 # create an LCOE dataset if passed to this method
                 lcoe_attrs = {'scale_factor': 1000, 'units': 'cents/kWh'}
                 if np.issubdtype(lcoe.dtype, np.floating):
                     lcoe = (lcoe * 1000).astype('uint16')
 
-                cf.create_ds('lcoe{}'.format(year), lcoe.shape, lcoe.dtype,
-                             chunks=None, attrs=lcoe_attrs, data=lcoe)
+                f.create_ds('lcoe{}'.format(year), lcoe.shape, lcoe.dtype,
+                            chunks=None, attrs=lcoe_attrs, data=lcoe)
 
     @classmethod
-    def write_means(cls, h5_file, meta, cf_means, SAM_configs, year=None,
-                    cf_chunks=None, lcoe=None, **kwargs):
+    def write_means(cls, h5_file, meta, dset_name, means, attrs, dtype,
+                    SAM_configs, year=None, cf_chunks=None, lcoe=None,
+                    **kwargs):
         """
-        Write cf_profiles to disk
+        Write means array to disk
 
         Parameters
         ----------
@@ -421,8 +431,14 @@ class CapacityFactor(Resource):
             Path to .h5 resource file
         meta : pandas.Dataframe
             Locational meta data
-        cf_means : ndarray
-            Capacity factor means
+        dset_name : str
+            Name of the target dataset (should identify the means).
+        means : ndarray
+            reV output means array.
+        attrs : dict
+            Attributes to be set. May include 'scale_factor'.
+        dtype : str
+            Intended dataset datatype after scaling.
         SAM_configs : dict
             Dictionary of SAM configuration JSONs used to compute cf means
         year : int | str
@@ -433,7 +449,7 @@ class CapacityFactor(Resource):
         lcoe : ndarray | NoneType
             Optional LCOE scalar array.
         """
-        if len(cf_means) != len(meta):
+        if len(means) != len(meta):
             msg = 'Number of CF means do not match meta'
             raise ResourceValueError(msg)
 
@@ -447,23 +463,28 @@ class CapacityFactor(Resource):
                 warn('Cannot parse year from {}'.format(f_name))
                 year = ''
 
-        with cls(h5_file, mode=kwargs.get('mode', 'w-')) as cf:
+        with cls(h5_file, mode=kwargs.get('mode', 'w-')) as f:
             # Save meta
-            cf['meta'] = meta
+            f['meta'] = meta
             # Add SAM configurations as attributes to meta
-            cf.set_configs(SAM_configs)
-            # Save CF
-            cf_attrs = {'scale_factor': 1000, 'units': 'unitless'}
-            if np.issubdtype(cf_means.dtype, np.floating):
-                cf_means = (cf_means * 1000).astype('uint16')
+            f.set_configs(SAM_configs)
 
-            cf.create_ds('cf{}'.format(year), cf_means.shape, cf_means.dtype,
-                         chunks=cf_chunks, attrs=cf_attrs, data=cf_means)
+            # Get scale factor or default to 1 (no scaling)
+            scale_factor = 1
+            if 'scale_factor' in attrs:
+                scale_factor = attrs['scale_factor']
+
+            # apply scale factor and dtype
+            means = (means * scale_factor).astype(dtype)
+
+            f.create_ds('{}{}'.format(dset_name, year), means.shape,
+                        means.dtype, chunks=cf_chunks, attrs=attrs,
+                        data=means)
             if lcoe is not None:
                 # create an LCOE dataset if passed to this method
                 lcoe_attrs = {'scale_factor': 1000, 'units': 'cents/kWh'}
                 if np.issubdtype(lcoe.dtype, np.floating):
                     lcoe = (lcoe * 1000).astype('uint16')
 
-                cf.create_ds('lcoe{}'.format(year), lcoe.shape, lcoe.dtype,
-                             chunks=cf_chunks, attrs=lcoe_attrs, data=lcoe)
+                f.create_ds('lcoe{}'.format(year), lcoe.shape, lcoe.dtype,
+                            chunks=cf_chunks, attrs=lcoe_attrs, data=lcoe)

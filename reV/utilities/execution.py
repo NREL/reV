@@ -1,5 +1,5 @@
 """
-Generation
+Execution utilities.
 """
 from dask.distributed import Client, LocalCluster, wait
 from subprocess import Popen, PIPE

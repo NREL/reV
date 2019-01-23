@@ -12,7 +12,7 @@ from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
-from reV.handlers.capacity_factor import CapacityFactor
+from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource
 
 
@@ -357,8 +357,9 @@ class Gen:
             lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
 
         # write means to disk using CapacityFactor class
-        CapacityFactor.write_means(fout, meta, cf_means, self.sam_configs,
-                                   lcoe=lcoe, **{'mode': mode})
+        attrs = {'scale_factor': 1000, 'units': 'unitless'}
+        Outputs.write_means(fout, meta, 'cf', cf_means, attrs, 'uint16',
+                            self.sam_configs, lcoe=lcoe, **{'mode': mode})
 
     def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
         """Save capacity factor profiles to disk."""
@@ -372,9 +373,10 @@ class Gen:
             lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
 
         # write profiles to disk using CapacityFactor class
-        CapacityFactor.write_profiles(fout, meta, self.time_index,
-                                      cf_profiles, self.sam_configs,
-                                      lcoe=lcoe, **{'mode': mode})
+        attrs = {'scale_factor': 1000, 'units': 'unitless'}
+        Outputs.write_profiles(fout, meta, self.time_index, 'cf_profiles',
+                               cf_profiles, attrs, 'uint16', self.sam_configs,
+                               lcoe=lcoe, **{'mode': mode})
 
     @staticmethod
     def get_unique_fout(fout):
