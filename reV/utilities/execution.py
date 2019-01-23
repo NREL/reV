@@ -291,6 +291,7 @@ class PBS(SubprocessManager):
                       '#PBS -o {p}/{n}_$PBS_JOBID.o\n'
                       '#PBS -e {p}/{n}_$PBS_JOBID.e\n'
                       '{L}'
+                      'echo Running on: $HOSTNAME, Machine Type: $MACHTYPE\n'
                       '{cmd}'
                       .format(n=name, a=alloc, q=queue, p=stdout_path,
                               L=feature_str if feature else '',
@@ -466,6 +467,7 @@ class SLURM(SubprocessManager):
                       '#SBATCH --mem={m} # node RAM in MB\n'
                       '#SBATCH --output={p}/{n}_%j.o\n'
                       '#SBATCH --error={p}/{n}_%j.e\n'
+                      'echo Running on: $HOSTNAME, Machine Type: $MACHTYPE\n'
                       '{cmd}'
                       .format(a=alloc, t=self.walltime(walltime), n=name,
                               m=int(memory * 1000), p=stdout_path, cmd=cmd))
@@ -508,7 +510,11 @@ def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,
     """
 
     # start a local cluster on a personal comp or HPC single node
-    cluster = LocalCluster(n_workers=n_workers)
+    try:
+        cluster = LocalCluster(n_workers=n_workers)
+    except Exception as e:
+        logger.exception('Failed to start Dask LocalCluster: {}'
+                         .format(e))
 
     results = execute_futures(fun, execution_iter, cluster, loggers=loggers,
                               **kwargs)
@@ -640,9 +646,18 @@ class SmartParallelJob:
         if not hasattr(self, '_cluster'):
             # start a local cluster on a personal comp or HPC single node
             if self._n_workers is None:
-                self._cluster = LocalCluster(n_workers=None)
+                try:
+                    self._cluster = LocalCluster(n_workers=None)
+                except Exception as e:
+                    logger.exception('Failed to start Dask LocalCluster: {}'
+                                     .format(e))
+
             elif isinstance(self._n_workers, int):
-                self._cluster = LocalCluster(n_workers=self._n_workers)
+                try:
+                    self._cluster = LocalCluster(n_workers=self._n_workers)
+                except Exception as e:
+                    logger.exception('Failed to start Dask LocalCluster: {}'
+                                     .format(e))
             else:
                 raise ExecutionError('Bad number of workers: {}'
                                      .format(self._n_workers))

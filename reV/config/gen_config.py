@@ -114,15 +114,16 @@ class GenConfig(BaseConfig):
             the code will look anticipate a year in the resource file spec.
         """
         if not hasattr(self, '_years'):
-            try:
+            self._years = [None]
+            if 'analysis_years' in self['project_control']:
                 self._years = self['project_control']['analysis_years']
                 if isinstance(self._years, list) is False:
                     self._years = [self._years]
-            except KeyError as e:
+            else:
                 warn('Analysis years may not have been '
                      'specified, may default to year '
-                     'specification in resource_file input. '
-                     '\n\nKey Error: {}'.format(e), ConfigWarning)
+                     'specification in resource_file input.',
+                     ConfigWarning)
         return self._years
 
     @property

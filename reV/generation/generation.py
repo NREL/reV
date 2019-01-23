@@ -6,6 +6,7 @@ import numpy as np
 import os
 import pprint
 import re
+from warnings import warn
 
 from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
@@ -24,6 +25,7 @@ class Gen:
     # Mapping of reV technology strings to SAM generation functions
     REVTECHS = {'pv': PV.reV_run,
                 'csp': CSP.reV_run,
+                'wind': LandBasedWind.reV_run,
                 'landbasedwind': LandBasedWind.reV_run,
                 'offshorewind': OffshoreWind.reV_run,
                 }
@@ -262,8 +264,10 @@ class Gen:
                 # take nominal NSRDB chunks from dni
                 chunks = res._h5['dni'].chunks
             else:
-                raise Exception('Expected "nsrdb" or "wtk" to be in resource '
-                                'filename: {}'.format(res_file))
+                warn('Expected "nsrdb" or "wtk" to be in resource filename: {}'
+                     .format(res_file))
+                chunks = None
+
         if chunks is None:
             # if chunks not set, go to default
             sites_per_core = default
