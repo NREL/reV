@@ -17,7 +17,7 @@ import numpy as np
 import time
 
 from reV import __testdatadir__ as TESTDATADIR
-from reV.handlers.capacity_factor import CapacityFactor
+from reV.handlers.outputs import Outputs
 from reV.utilities.execution import PBS
 from reV.utilities.loggers import init_logger
 from reV.generation.cli_gen import get_node_cmd
@@ -123,7 +123,7 @@ def test_peregrine(year):
         if '.h5' in fname:
             if rev2_out.strip('.h5') in fname:
                 full_f = os.path.join(rev2_out_dir, fname)
-                with CapacityFactor(full_f, 'r') as cf:
+                with Outputs(full_f, 'r') as cf:
                     rev2_profiles = cf['cf_profiles']
                 break
 
@@ -145,7 +145,7 @@ def get_r1_profiles(year=2012):
     """Get the first 100 reV 1.0 ri pv generation profiles."""
     rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
                         'pv_{}_0.h5'.format(year))
-    with CapacityFactor(rev1) as cf:
+    with Outputs(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
     return data
 

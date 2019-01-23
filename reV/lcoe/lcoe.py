@@ -243,14 +243,3 @@ class LCOE(Gen):
         # optionally return Gen object (useful for debugging and hacking)
         if return_obj:
             return lcoe
-
-
-if __name__ == '__main__':
-    points = slice(0, 50)
-    sam_files = 'C:/sandbox/reV/test_lcoe/lcoe_pv_1.json'
-    cf_file = 'C:/sandbox/reV/test_lcoe/reV_2012_node00_x000.h5'
-    lcoe = LCOE.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
-                           cf_year=2012, n_workers=2, sites_per_split=25,
-                           points_range=None, fout='lcoe.h5',
-                           dirout='./lcoe_out',
-                           return_obj=True)

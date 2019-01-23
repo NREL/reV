@@ -15,7 +15,7 @@ import numpy as np
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
 from reV import __testdatadir__ as TESTDATADIR
-from reV.handlers.capacity_factor import CapacityFactor
+from reV.handlers.outputs import Outputs
 
 
 RTOL = 0.0
@@ -170,7 +170,7 @@ def test_pv_gen_profiles(year):
     flist = os.listdir(rev2_out_dir)
     for fname in flist:
         if rev2_out.strip('.h5') in fname:
-            with CapacityFactor(os.path.join(rev2_out_dir, fname), 'r') as cf:
+            with Outputs(os.path.join(rev2_out_dir, fname), 'r') as cf:
                 rev2_profiles = cf['cf_profiles']
             break
 
@@ -206,7 +206,7 @@ def test_smart(year):
     flist = os.listdir(rev2_out_dir)
     for fname in flist:
         if rev2_out.strip('.h5') in fname:
-            with CapacityFactor(os.path.join(rev2_out_dir, fname), 'r') as cf:
+            with Outputs(os.path.join(rev2_out_dir, fname), 'r') as cf:
                 rev2_profiles = cf['cf_profiles']
             break
 
@@ -228,7 +228,7 @@ def get_r1_profiles(year=2012):
     """Get the first 100 reV 1.0 ri pv generation profiles."""
     rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
                         'pv_{}_0.h5'.format(year))
-    with CapacityFactor(rev1) as cf:
+    with Outputs(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
     return data
 
