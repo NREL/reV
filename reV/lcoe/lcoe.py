@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class LCOE(Gen):
     """Base LCOE class"""
 
-    def __init__(self, points_control, cf_file, cf_year=2012,
+    def __init__(self, points_control, cf_file, orca_file=None, cf_year=2012,
                  output_request=('lcoe_fcr',), fout=None, dirout='./lcoe_out'):
         """Initialize an LCOE instance.
 
@@ -40,6 +40,7 @@ class LCOE(Gen):
 
         self._points_control = points_control
         self._cf_file = cf_file
+        self._orca_file = orca_file
         self._cf_year = cf_year
         self._output_request = output_request
         self._fout = fout
@@ -55,6 +56,11 @@ class LCOE(Gen):
             reV generation capacity factor output file with path.
         """
         return self._cf_file
+
+    @property
+    def orca_file(self):
+        """Get the ORCA data filename and path."""
+        return self._orca_file
 
     @property
     def cf_year(self):
@@ -125,14 +131,57 @@ class LCOE(Gen):
         if not hasattr(self, '_site_df'):
             site_gids = self.meta['gid']
             with Outputs(self.cf_file) as cfh:
-                if 'cf_means' in str(list(cfh.dsets)):
+                if 'cf_{}'.format(self.cf_year) in str(list(cfh.dsets)):
                     cf_arr = cfh['cf_{}'.format(self.cf_year)]
-                else:
+                elif 'cf_means' in str(list(cfh.dsets)):
+                    cf_arr = cfh['cf_means']
+                elif 'cf_means' in self.meta:
                     cf_arr = self.meta['cf_means']
+                else:
+                    raise KeyError('Could not find "cf_means" or "{}" dataset '
+                                   'in {}. Looked in both the h5 datasets and '
+                                   'the meta data.'
+                                   .format('cf_{}'.format(self.cf_year),
+                                           self.cf_file))
 
+            # set site-specific values in dataframe with
+            # columns -> variables, rows -> sites
             self._site_df = pd.DataFrame({'capacity_factor': cf_arr},
                                          index=site_gids)
+
+        # check for offshore flag and add to site_df before returning
+        if 'offshore' not in str(self._site_df.columns.values):
+            self.check_offshore()
+
         return self._site_df
+
+    def check_offshore(self):
+        """Check if input cf data has offshore flags then add to site_df."""
+        # only run this once site_df has been set
+        if hasattr(self, '_site_df'):
+            # only run this if offshore has not yet been added to site_df
+            if 'offshore' not in self._site_df:
+                # check for offshore flags for wind data
+                if 'offshore' in self.meta:
+                    logger.info('Found "offshore" data in meta. Interpreting '
+                                'as wind sites that may be analyzed using '
+                                'ORCA.')
+                    # save offshore flags as boolean array
+                    self._site_df['offshore'] = self.meta['offshore']\
+                        .astype(bool)
+                    if hasattr(self, '_orca_file'):
+                        if self.orca_file.endswith('.csv'):
+                            orca_data = pd.read_csv(self.orca_file)
+                            if 'gid' not in orca_data:
+                                raise KeyError('ORCA input data must have '
+                                               '"gid" column to match reV '
+                                               'site index.')
+                            orca_data = orca_data.set_index('gid', drop=True)
+                        self._site_df = pd.merge(self._site_df, orca_data,
+                                                 how='left', left_index=True,
+                                                 right_index=True,
+                                                 suffixes=['', '_orca'],
+                                                 copy=False, validate='1:1')
 
     def lcoe_to_disk(self, fout='lcoe_out.h5', mode='w'):
         """Save LCOE results to disk.
@@ -197,6 +246,7 @@ class LCOE(Gen):
 
     @classmethod
     def run_direct(cls, points=None, sam_files=None, cf_file=None,
+                   orca_file=None,
                    cf_year=None, n_workers=1, sites_per_split=100,
                    points_range=None, fout=None, dirout='./lcoe_out',
                    return_obj=True):
@@ -244,7 +294,8 @@ class LCOE(Gen):
         pc = LCOE.get_pc(points, points_range, sam_files, tech=None)
 
         # make a Gen class instance to operate with
-        lcoe = cls(pc, cf_file, cf_year=cf_year, fout=fout, dirout=dirout)
+        lcoe = cls(pc, cf_file, orca_file=orca_file, cf_year=cf_year,
+                   fout=fout, dirout=dirout)
 
         diff = set(pc.sites) - set(lcoe.meta['gid'].values)
         if diff:

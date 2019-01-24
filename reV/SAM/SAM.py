@@ -12,6 +12,9 @@ import os
 import pandas as pd
 from warnings import warn
 
+from ORCA.system import System as ORCASystem
+from ORCA.data import Data as ORCAData
+
 from reV.handlers.resource import WTK, NSRDB
 from reV.SAM.PySSC import PySSC
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
@@ -60,7 +63,7 @@ def is_2D_list(a):
 class ParametersManager:
     """Class to manage SAM input parameters, requirements, and defaults."""
 
-    def __init__(self, parameters, module):
+    def __init__(self, parameters, module, verify=True, set_def=True):
         """Initialize the SAM input parameters class.
 
         Parameters
@@ -69,6 +72,11 @@ class ParametersManager:
             SAM model input parameters.
         module : str
             SAM module ('pvwatts', 'tcsmolten_salt', etc...)
+        verify : bool
+            Flag on whether to verify input parameters.
+        set_def : bool
+            Flag on whether to set defaults for missing input parameters
+            (prints SAMInputWarning if defaults get set).
         """
 
         # set the parameters and module properties
@@ -77,7 +85,8 @@ class ParametersManager:
 
         # get requirements and verify that all are satisfied
         self._requirements = self.get_requirements(self.module)
-        self.verify_inputs()
+        if verify:
+            self.verify_inputs(set_def=set_def)
 
     def __getitem__(self, key):
         """Get parameters property"""
@@ -198,12 +207,18 @@ class ParametersManager:
         # resource file if one is not provided.
         self.verify_inputs()
 
-    def verify_inputs(self):
+    def verify_inputs(self, set_def=True):
         """Verify that required inputs are available and have correct dtype.
         Also set missing inputs to default values.
 
         Prints logger warnings when variables are missing, set to default,
         or are of the incorrect datatype.
+
+        Parameters
+        ----------
+        set_def : bool
+            Flag on whether to set defaults for missing input parameters
+            (prints SAMInputWarning if defaults get set).
         """
         missing_inputs = False
         for name, dtypes in self.requirements:
@@ -217,8 +232,25 @@ class ParametersManager:
                     warn('SAM input parameter "{}" must be of '
                          'type {} but is of type {}'
                          .format(name, dtypes, type(p)), SAMInputWarning)
-        if missing_inputs:
+        if missing_inputs and set_def:
             self.set_defaults()
+
+    def update(self, more_parameters):
+        """Add more parameters to this class.
+
+        Parameters
+        ----------
+        more_parameters : dict
+            New key-value pairs to add to this instance of SAM Parameters.
+        """
+
+        if isinstance(more_parameters, dict):
+            self._parameters.update(more_parameters)
+        else:
+            warn('Attempting to update SAM input parameters with non-dict '
+                 'input. Cannot perform update operation. Proceeding without '
+                 'additional inputs: {}'.format(more_parameters),
+                 SAMInputWarning)
 
 
 class SAM:
@@ -298,16 +330,17 @@ class SAM:
         return self._site
 
     @site.setter
-    def site(self, resource):
-        """Set the site number based on the resource name attribute."""
+    def site(self, inp):
+        """Set the site number based on resource input or integer."""
         if not hasattr(self, '_site'):
-            if hasattr(resource, 'name'):
+            if hasattr(inp, 'name'):
                 # Set the protected property with the site number from resource
-                self._site = resource.name
+                self._site = inp.name
+            elif isinstance(inp, int):
+                self._site = inp
             else:
                 # resource site number not found, set as N/A
                 self._site = 'N/A'
-        return self._site
 
     @staticmethod
     def get_sam_res(res_file, project_points, module=''):
@@ -811,7 +844,7 @@ class PV(Solar):
             # econ outputs requested, run LCOE model after pvwatts.
             super().execute(modules_to_run, close=False)
             lcoe = LCOE(self.ssc, self.data, self.parameters,
-                        self.output_request)
+                        output_request=self.output_request)
             lcoe.execute(LCOE.MODULE)
             self.outputs = lcoe.outputs
         else:
@@ -839,7 +872,7 @@ class CSP(Solar):
             # econ outputs requested, run single owner model after csp.
             super().execute(modules_to_run, close=False)
             so = SingleOwner(self.ssc, self.data, self.parameters,
-                             self.output_request)
+                             output_request=self.output_request)
             so.execute(SingleOwner.MODULE)
             self.outputs = so.outputs
         else:
@@ -937,7 +970,7 @@ class LandBasedWind(Wind):
             # econ outputs requested, run LCOE model after pvwatts.
             super().execute(modules_to_run, close=False)
             lcoe = LCOE(self.ssc, self.data, self.parameters,
-                        self.output_request)
+                        output_request=self.output_request)
             lcoe.execute(LCOE.MODULE)
             self.outputs = lcoe.outputs
         else:
@@ -962,7 +995,8 @@ class Economic(SAM):
     """
     MODULE = None
 
-    def __init__(self, ssc, data, parameters, output_request):
+    def __init__(self, ssc, data, parameters, site_parameters=None,
+                 output_request=('lcoe_fcr',)):
         """Initialize a SAM economic model object.
 
         Parameters
@@ -975,9 +1009,12 @@ class Economic(SAM):
             SSC data creation object. If passed from a technology generation
             class, do not run ssc.data_free(data) until after the Economic
             model has been run.
-        parameters : dict or ParametersManager()
+        parameters : dict | ParametersManager()
             SAM model input parameters.
-        output_request : list
+        site_parameters : dict
+            Optional set of site-specific parameters to complement the generic
+            parameters input arg.
+        output_request : list | tuple
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
@@ -995,19 +1032,79 @@ class Economic(SAM):
             self._ssc = ssc
             self._data = data
 
+        # check if offshore wind
+        offshore = False
+        if site_parameters is not None:
+            if 'offshore' in site_parameters:
+                offshore = site_parameters['offshore']
+
         self.output_request = output_request
 
         # Use Parameters class to manage inputs, defaults, and requirements.
         if isinstance(parameters, ParametersManager):
             self.parameters = parameters
+        elif isinstance(parameters, dict) and offshore:
+            # use parameters manager for offshore but do not verify or
+            # set defaults (ORCA handles this)
+            self.parameters = ParametersManager(parameters, self.module,
+                                                verify=False, set_def=False)
         else:
             self.parameters = ParametersManager(parameters, self.module)
 
+        # handle site-specific parameters
+        if offshore:
+            # offshore ORCA parameters will be handled seperately
+            self._site_parameters = site_parameters
+        # Non-offshore parameters can be added to ParametersManager class
+        else:
+            self.parameters.update(site_parameters)
+
     def execute(self, modules_to_run, close=True):
-        """Execute a SAM single owner model calculation.
+        """Execute a SAM economic model calculation.
         """
         self.set_parameters()
         super().execute(modules_to_run, close=close)
+
+    @staticmethod
+    def parse_sys_cap(site, inputs, site_df):
+        """Find the system capacity variable in either inputs or df.
+
+        Parameters
+        ----------
+        site : int
+            Site gid.
+        inputs : dict
+            Generic system inputs (not site-specific).
+        site_df : pd.DataFrame
+            Site-specific inputs table with index = site gid's
+
+        Returns
+        -------
+        sys_cap : int | float
+            System nameplate capacity in native units (SAM is kW, ORCA is MW).
+        """
+
+        if ('system_capacity' not in inputs and
+                'turbine_capacity' not in inputs and
+                'system_capacity' not in site_df and
+                'turbine_capacity' not in site_df):
+            raise SAMExecutionError('Input parameter "system_capacity" '
+                                    'or "turbine_capacity" '
+                                    'must be included in the SAM config '
+                                    'inputs or site-specific inputs in '
+                                    'order to calculate annual energy '
+                                    'yield for LCOE.')
+
+        if 'system_capacity' in inputs:
+            sys_cap = inputs['system_capacity']
+        elif 'turbine_capacity' in inputs:
+            sys_cap = inputs['turbine_capacity']
+        elif 'system_capacity' in site_df:
+            sys_cap = site_df.loc[site, 'system_capacity']
+        elif 'turbine_capacity' in site_df:
+            sys_cap = site_df.loc[site, 'turbine_capacity']
+
+        return sys_cap
 
     @classmethod
     def reV_run(cls, points_control, site_df, output_request=('lcoe_fcr',)):
@@ -1019,9 +1116,9 @@ class Economic(SAM):
             PointsControl instance containing project points site and SAM
             config info.
         site_df : pd.DataFrame
-            Dataframe of site-specific input variables. Number of rows should
-            match the number of sites, column labels are the variable keys
-            that will be passed forward as SAM parameters.
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
         output_request : list | tuple
             Outputs to retrieve from SAM.
 
@@ -1038,42 +1135,43 @@ class Economic(SAM):
         calc_aey = False
         if 'annual_energy' not in site_df:
             # annual energy yield has not been input, flag to calculate
-            site_df['annual_energy'] = 0
+            site_df.loc[:, 'annual_energy'] = np.nan
             calc_aey = True
 
-        if calc_aey and 'capacity_factor' not in site_df:
-            raise SAMExecutionError('Input parameter "capacity_factor" must '
-                                    'be included as a site-specific variable '
-                                    'as a column in the "site_df" input.')
         site_vars = site_df.columns.values
 
         for site in points_control.sites:
             # get SAM inputs from project_points based on the current site
             config, inputs = points_control.project_points[site]
 
-            if calc_aey and 'system_capacity' not in inputs:
-                raise SAMExecutionError('Input parameter "system_capacity" '
-                                        'must be included in the SAM config '
-                                        'inputs.')
+            # check to see if offshore
+            offshore = False
+            if 'offshore' in site_df:
+                offshore = site_df.loc[site, 'offshore']
 
             # calculate the annual energy yield if not input
-            if calc_aey:
+            if calc_aey and not offshore:
                 if site_df.loc[site, 'capacity_factor'] > 1:
                     warn('Capacity factor > 1. Dividing by 100.')
                     cf = site_df.loc[site, 'capacity_factor'] / 100
                 else:
                     cf = site_df.loc[site, 'capacity_factor']
 
+                # get the system capacity
+                sys_cap = cls.parse_sys_cap(site, inputs, site_df)
+
+                # Calc annual energy, mult by 8760 to convert kW to kWh
+                aey = sys_cap * cf * 8760
+
                 # add aey to site-specific inputs
-                # mult by 8760 to convert kW to kWh
-                aey = inputs['system_capacity'] * cf * 8760
                 site_df.loc[site, 'annual_energy'] = aey
 
-            # Add any site-specific inputs to the inputs dict
-            inputs.update(dict(zip(site_vars, site_df.loc[site, :])))
+            # Make a dict of any site-specific inputs
+            site_parameters = dict(zip(site_vars, site_df.loc[site, :]))
 
             # iterate through requested sites.
             sim = cls(ssc=None, data=None, parameters=inputs,
+                      site_parameters=site_parameters,
                       output_request=output_request)
             sim.execute(cls.MODULE)
             out[site] = sim.outputs
@@ -1088,10 +1186,70 @@ class LCOE(Economic):
     """
     MODULE = 'lcoefcr'
 
-    def __init__(self, ssc, data, parameters, output_request):
+    def __init__(self, ssc, data, parameters, site_parameters=None,
+                 output_request=('lcoe_fcr',)):
         """Initialize a SAM LCOE economic model object.
         """
-        super().__init__(ssc, data, parameters, output_request)
+        super().__init__(ssc, data, parameters,
+                         site_parameters=site_parameters,
+                         output_request=output_request)
+
+    def execute(self, modules_to_run, close=True, offshore=False):
+        """Execute a SAM economic model calculation.
+        """
+        # check to see if there is an offshore flag and set for this run
+        if hasattr(self, '_site_parameters'):
+            if 'offshore' in self._site_parameters:
+                offshore = bool(self._site_parameters['offshore'])
+
+        if offshore:
+            # execute ORCA here for offshore wind LCOE
+            out = self.ORCA_LCOE(self.parameters, self._site_parameters)
+            self.outputs = {'lcoe_fcr': out}
+        else:
+            # run SAM LCOE normally for non-offshore technologies
+            super().execute(modules_to_run, close=close)
+
+    @staticmethod
+    def ORCA_LCOE(config_inputs, site_parameters):
+        """Execute an ORCA LCOE calculation for single-site offshore wind.
+
+        Parameters
+        ----------
+        config_inputs : dict | ParametersManager
+            System/technology configuration inputs (non-site-specific).
+        site_parameters : dict | pd.DataFrame
+            Site-specific inputs.
+
+        Returns
+        -------
+        lcoe_result : float
+            LCOE value. Units: $/MWh.
+        """
+
+        ORCA_arg_map = {'capacity_factor': 'gcf', 'cf': 'gcf'}
+
+        # extract config inputs as dict if ParametersManager was received
+        if isinstance(config_inputs, ParametersManager):
+            config_inputs = config_inputs.parameters
+
+        # convert site parameters to dataframe if necessary
+        if not isinstance(site_parameters, pd.DataFrame):
+            site_parameters = pd.DataFrame(site_parameters, index=(0,))
+
+        # rename any SAM kwargs to match ORCA requirements
+        site_parameters = site_parameters.rename(index=str,
+                                                 columns=ORCA_arg_map)
+
+        # make an ORCA tech system instance
+        system = ORCASystem(config_inputs)
+
+        # make a site-specific data structure
+        orca_data_struct = ORCAData(site_parameters)
+
+        # calculate LCOE
+        lcoe_result = system.lcoe(orca_data_struct)
+        return lcoe_result[0]
 
 
 class SingleOwner(Economic):
@@ -1099,7 +1257,10 @@ class SingleOwner(Economic):
     """
     MODULE = 'singleowner'
 
-    def __init__(self, ssc, data, parameters, output_request):
+    def __init__(self, ssc, data, parameters, site_parameters=None,
+                 output_request=('ppa_price',)):
         """Initialize a SAM single owner economic model object.
         """
-        super().__init__(ssc, data, parameters, output_request)
+        super().__init__(ssc, data, parameters,
+                         site_parameters=site_parameters,
+                         output_request=output_request)

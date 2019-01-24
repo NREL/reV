@@ -68,3 +68,17 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 if __name__ == '__main__':
     execute_pytest()
+    year = 2012
+    cf_file = TESTDATADIR + '/gen_out/rut_0_node00_x000.h5'
+    sam_files = TESTDATADIR + '/ORCA/orca_system_inputs.json'
+    orca_csv = TESTDATADIR + '/ORCA/rutgers_data.csv'
+    dirout = os.path.join(TESTDATADIR, 'lcoe_out')
+    fout = 'lcoe_ri_pv_{}.h5'.format(year)
+    points = slice(1521, 1523)
+    obj = LCOE.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
+                          orca_file=orca_csv,
+                          cf_year=year, n_workers=1, sites_per_split=25,
+                          points_range=None, fout=None, dirout=dirout,
+                          return_obj=True)
+    lcoe = [c['lcoe_fcr'] for c in obj.out.values()]
+    print(lcoe)
