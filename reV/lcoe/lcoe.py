@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class LCOE(Gen):
     """Base LCOE class"""
 
-    def __init__(self, points_control, cf_file, cf_year, orca_site_data=None,
+    def __init__(self, points_control, cf_file, cf_year, site_data=None,
                  output_request=('lcoe_fcr',), fout=None, dirout='./lcoe_out'):
         """Initialize an LCOE instance.
 
@@ -30,8 +30,8 @@ class LCOE(Gen):
         cf_year : int | str
             reV generation year to calculate LCOE for. cf_year='my' will look
             for the multi-year mean generation results.
-        orca_site_data : str | pd.DataFrame | None
-            Site-specific data for ORCA LCOE calculation. Str points to csv,
+        site_data : str | pd.DataFrame | None
+            Site-specific data for LCOE calculation. Str points to csv,
             DataFrame is pre-extracted data. Rows match sites, columns are
             variables. Input as None if the only site data required is present
             in the cf_file.
@@ -50,8 +50,8 @@ class LCOE(Gen):
         self._output_request = output_request
         self._fout = fout
         self._dirout = dirout
-        if orca_site_data:
-            self.orca_site_data = orca_site_data
+        if site_data:
+            self.site_data = site_data
 
     @property
     def cf_file(self):
@@ -65,47 +65,47 @@ class LCOE(Gen):
         return self._cf_file
 
     @property
-    def orca_site_data(self):
-        """Get the ORCA data filename and path.
+    def site_data(self):
+        """Get the site-specific dataframe.
 
         Returns
         -------
-        orca_site_data : pd.DataFrame
-            Site-specific data for ORCA LCOE calculation. Rows match sites,
+        _site_data : pd.DataFrame
+            Site-specific data for LCOE calculation. Rows match sites,
             columns are variables.
         """
-        return self._orca_site_data
+        return self._site_data
 
-    @orca_site_data.setter
-    def orca_site_data(self, inp):
-        """Set the ORCA site data attribute
+    @site_data.setter
+    def site_data(self, inp):
+        """Set the site data attribute
 
         Parameters
         ----------
         inp : str | pd.DataFrame
-            ORCA site data in .csv or pre-extracted dataframe format.
+            Site data in .csv or pre-extracted dataframe format.
         """
 
         if isinstance(inp, str):
             if inp.endswith('.csv'):
-                self._orca_site_data = pd.read_csv(inp)
+                self._site_data = pd.read_csv(inp)
         elif isinstance(inp, pd.DataFrame):
-            self._orca_site_data = inp
+            self._site_data = inp
 
-        if not hasattr(self, '_orca_site_data'):
-            # orca site data was not able to be set. Raise error.
-            raise Exception('ORCA site data input must be .csv or '
+        if not hasattr(self, '_site_data'):
+            # site data was not able to be set. Raise error.
+            raise Exception('Site data input must be .csv or '
                             'dataframe, but received: {}'.format(inp))
 
-        if ('gid' not in self._orca_site_data and
-                self._orca_site_data.index.name != 'gid'):
+        if ('gid' not in self._site_data and
+                self._site_data.index.name != 'gid'):
             # require gid as column label or index
-            raise KeyError('ORCA input data must have "gid" column to match '
+            raise KeyError('Site data input must have "gid" column to match '
                            'reV site index.')
 
-        if self._orca_site_data.index.name != 'gid':
+        if self._site_data.index.name != 'gid':
             # make gid index if not already
-            self._orca_site_data = self._orca_site_data.\
+            self._site_data = self._site_data.\
                 set_index('gid', drop=True)
 
     @property
@@ -216,13 +216,13 @@ class LCOE(Gen):
                     self._site_df['offshore'] = self.meta['offshore']\
                         .astype(bool)
 
-                    # if available, merge ORCA site data into site_df
-                    if hasattr(self, '_orca_site_data'):
+                    # if available, merge site data into site_df
+                    if hasattr(self, '_site_data'):
                         self._site_df = pd.merge(self._site_df,
-                                                 self.orca_site_data,
+                                                 self.site_data,
                                                  how='left', left_index=True,
                                                  right_index=True,
-                                                 suffixes=['', '_orca'],
+                                                 suffixes=['', '_site'],
                                                  copy=False, validate='1:1')
 
     def lcoe_to_disk(self, fout='lcoe_out.h5', mode='w'):
@@ -296,7 +296,7 @@ class LCOE(Gen):
 
     @classmethod
     def run_direct(cls, points=None, sam_files=None, cf_file=None,
-                   cf_year=None, orca_site_data=None, n_workers=1,
+                   cf_year=None, site_data=None, n_workers=1,
                    sites_per_split=100, points_range=None, fout=None,
                    dirout='./lcoe_out', return_obj=True):
         """Execute a generation run directly from source files without config.
@@ -307,6 +307,7 @@ class LCOE(Gen):
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.
         sam_files : dict | str | list
+            Site-agnostic input data.
             Dict contains SAM input configuration ID(s) and file path(s).
             Keys are the SAM config ID(s), top level value is the SAM path.
             Can also be a single config file str. If it's a list, it is mapped
@@ -316,8 +317,8 @@ class LCOE(Gen):
         cf_year : int | str
             reV generation year to calculate LCOE for. cf_year='my' will look
             for the multi-year mean generation results.
-        orca_site_data : str | pd.DataFrame | None
-            Site-specific data for ORCA LCOE calculation. Str points to csv,
+        site_data : str | pd.DataFrame | None
+            Site-specific data for LCOE calculation. Str points to csv,
             DataFrame is pre-extracted data. Rows match sites, columns are
             variables. Input as None if the only site data required is present
             in the cf_file.
@@ -348,7 +349,7 @@ class LCOE(Gen):
         pc = LCOE.get_pc(points, points_range, sam_files, tech=None)
 
         # make a Gen class instance to operate with
-        lcoe = cls(pc, cf_file, cf_year=cf_year, orca_site_data=orca_site_data,
+        lcoe = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
                    fout=fout, dirout=dirout)
 
         diff = set(pc.sites) - set(lcoe.meta['gid'].values)
@@ -359,7 +360,7 @@ class LCOE(Gen):
                             .format(lcoe.cf_file, diff))
 
         # make a kwarg dict
-        kwargs = {'site_df': lcoe.site_df}
+        kwargs = {'site_df': lcoe.site_df[lcoe.site_df.index.isin(pc.sites)]}
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:

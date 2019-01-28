@@ -69,10 +69,10 @@ def test_ORCA(rut_id):
                  't233_t217': TESTDATADIR + '/ORCA/t233_t217.json',
                  't325_t302': TESTDATADIR + '/ORCA/t325_t302.json',
                  }
-    orca_site_data = TESTDATADIR + '/ORCA/orca_site_data.csv'
+    site_data = TESTDATADIR + '/ORCA/orca_site_data.csv'
 
     obj = LCOE.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
-                          cf_year=None, orca_site_data=orca_site_data,
+                          cf_year=None, site_data=site_data,
                           n_workers=1, sites_per_split=25, points_range=None,
                           fout=None, dirout=None, return_obj=True)
 
