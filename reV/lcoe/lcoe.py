@@ -3,6 +3,7 @@ Levelized Cost of Energy
 """
 import logging
 import pandas as pd
+from warnings import warn
 
 from reV.SAM.SAM import LCOE as SAM_LCOE
 from reV.handlers.outputs import Outputs
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 class LCOE(Gen):
     """Base LCOE class"""
 
-    def __init__(self, points_control, cf_file, orca_file=None, cf_year=2012,
+    def __init__(self, points_control, cf_file, cf_year, orca_site_data=None,
                  output_request=('lcoe_fcr',), fout=None, dirout='./lcoe_out'):
         """Initialize an LCOE instance.
 
@@ -29,6 +30,11 @@ class LCOE(Gen):
         cf_year : int | str
             reV generation year to calculate LCOE for. cf_year='my' will look
             for the multi-year mean generation results.
+        orca_site_data : str | pd.DataFrame | None
+            Site-specific data for ORCA LCOE calculation. Str points to csv,
+            DataFrame is pre-extracted data. Rows match sites, columns are
+            variables. Input as None if the only site data required is present
+            in the cf_file.
         output_request : list | tuple
             Output variables requested from SAM.
         fout : str | None
@@ -40,11 +46,12 @@ class LCOE(Gen):
 
         self._points_control = points_control
         self._cf_file = cf_file
-        self._orca_file = orca_file
         self._cf_year = cf_year
         self._output_request = output_request
         self._fout = fout
         self._dirout = dirout
+        if orca_site_data:
+            self.orca_site_data = orca_site_data
 
     @property
     def cf_file(self):
@@ -58,9 +65,48 @@ class LCOE(Gen):
         return self._cf_file
 
     @property
-    def orca_file(self):
-        """Get the ORCA data filename and path."""
-        return self._orca_file
+    def orca_site_data(self):
+        """Get the ORCA data filename and path.
+
+        Returns
+        -------
+        orca_site_data : pd.DataFrame
+            Site-specific data for ORCA LCOE calculation. Rows match sites,
+            columns are variables.
+        """
+        return self._orca_site_data
+
+    @orca_site_data.setter
+    def orca_site_data(self, inp):
+        """Set the ORCA site data attribute
+
+        Parameters
+        ----------
+        inp : str | pd.DataFrame
+            ORCA site data in .csv or pre-extracted dataframe format.
+        """
+
+        if isinstance(inp, str):
+            if inp.endswith('.csv'):
+                self._orca_site_data = pd.read_csv(inp)
+        elif isinstance(inp, pd.DataFrame):
+            self._orca_site_data = inp
+
+        if not hasattr(self, '_orca_site_data'):
+            # orca site data was not able to be set. Raise error.
+            raise Exception('ORCA site data input must be .csv or '
+                            'dataframe, but received: {}'.format(inp))
+
+        if ('gid' not in self._orca_site_data and
+                self._orca_site_data.index.name != 'gid'):
+            # require gid as column label or index
+            raise KeyError('ORCA input data must have "gid" column to match '
+                           'reV site index.')
+
+        if self._orca_site_data.index.name != 'gid':
+            # make gid index if not already
+            self._orca_site_data = self._orca_site_data.\
+                set_index('gid', drop=True)
 
     @property
     def cf_year(self):
@@ -169,15 +215,11 @@ class LCOE(Gen):
                     # save offshore flags as boolean array
                     self._site_df['offshore'] = self.meta['offshore']\
                         .astype(bool)
-                    if hasattr(self, '_orca_file'):
-                        if self.orca_file.endswith('.csv'):
-                            orca_data = pd.read_csv(self.orca_file)
-                            if 'gid' not in orca_data:
-                                raise KeyError('ORCA input data must have '
-                                               '"gid" column to match reV '
-                                               'site index.')
-                            orca_data = orca_data.set_index('gid', drop=True)
-                        self._site_df = pd.merge(self._site_df, orca_data,
+
+                    # if available, merge ORCA site data into site_df
+                    if hasattr(self, '_orca_site_data'):
+                        self._site_df = pd.merge(self._site_df,
+                                                 self.orca_site_data,
                                                  how='left', left_index=True,
                                                  right_index=True,
                                                  suffixes=['', '_orca'],
@@ -193,6 +235,7 @@ class LCOE(Gen):
         mode : str
             .h5 file write mode (e.g. 'w', 'w-', 'a').
         """
+
         lcoe_arr = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
         # write means to disk using CapacityFactor class
         attrs = {'scale_factor': 1, 'units': 'dol/MWh'}
@@ -236,20 +279,26 @@ class LCOE(Gen):
         pc : reV.config.project_points.PointsControl
             Iterable points control object from reV config module.
         site_df : pd.DataFrame
-            Dataframe of site-specific input variables. Number of rows should
-            match the number of sites, column labels are the variable keys
+            Dataframe of site-specific input variables. Rows correspond to
+            sites with index being the gid. Column labels are the variable keys
             that will be passed forward as SAM parameters.
         """
+        # check that index corresponds to gid
+        if site_df.index.name != 'gid':
+            warn('LCOE input "site_df" does not have an index label '
+                 'corresponding to site gid. This may cause an incorrect '
+                 'interpretation of site id.')
+        # extract only the sites in the current points control
         site_df = site_df[site_df.index.isin(pc.sites)]
+        # SAM execute LCOE analysis
         out = SAM_LCOE.reV_run(pc, site_df)
         return out
 
     @classmethod
     def run_direct(cls, points=None, sam_files=None, cf_file=None,
-                   orca_file=None,
-                   cf_year=None, n_workers=1, sites_per_split=100,
-                   points_range=None, fout=None, dirout='./lcoe_out',
-                   return_obj=True):
+                   cf_year=None, orca_site_data=None, n_workers=1,
+                   sites_per_split=100, points_range=None, fout=None,
+                   dirout='./lcoe_out', return_obj=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -265,8 +314,13 @@ class LCOE(Gen):
         cf_file : str
             reV generation capacity factor output file with path.
         cf_year : int | str
-            reV generation year to calculate LCOE for. 'my' will look for the
-            multi-year mean generation results.
+            reV generation year to calculate LCOE for. cf_year='my' will look
+            for the multi-year mean generation results.
+        orca_site_data : str | pd.DataFrame | None
+            Site-specific data for ORCA LCOE calculation. Str points to csv,
+            DataFrame is pre-extracted data. Rows match sites, columns are
+            variables. Input as None if the only site data required is present
+            in the cf_file.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -294,7 +348,7 @@ class LCOE(Gen):
         pc = LCOE.get_pc(points, points_range, sam_files, tech=None)
 
         # make a Gen class instance to operate with
-        lcoe = cls(pc, cf_file, orca_file=orca_file, cf_year=cf_year,
+        lcoe = cls(pc, cf_file, cf_year=cf_year, orca_site_data=orca_site_data,
                    fout=fout, dirout=dirout)
 
         diff = set(pc.sites) - set(lcoe.meta['gid'].values)

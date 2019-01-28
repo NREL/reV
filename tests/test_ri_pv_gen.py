@@ -20,7 +20,7 @@ from reV.handlers.outputs import Outputs
 
 RTOL = 0.0
 ATOL = 0.04
-PURGE_OUT = True
+PURGE_OUT = False
 
 
 class pv_results:
@@ -93,6 +93,7 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
                          return_obj=True)
 
     gen_outs = to_list(gen.out)
+    print(gen.out)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:

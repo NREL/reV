@@ -494,7 +494,7 @@ class SAM:
 
         if len(res_arr) % base != 0:
             div = np.floor(len(res_arr) / 8760)
-            target_len = div * 8760
+            target_len = int(div * 8760)
             warn('Resource array length is {}, but SAM requires a multiple of '
                  '8760. Truncating the timeseries to length {}.'
                  .format(len(res_arr), target_len), SAMInputWarning)
@@ -1001,23 +1001,26 @@ class Economic(SAM):
 
         Parameters
         ----------
-        ssc : PySSC()
+        ssc : PySSC() | None
             Python SAM Simulation Core (SSC) object. Can be passed from a
             technology generation class after the SAM technology generation
-            simulation has been run.
-        data : PySSC.data_create()
+            simulation has been run. This can be None, signifying that a new
+            LCOE analysis is to be performed, not based on a SAM generation
+            instance.
+        data : PySSC.data_create() | None
             SSC data creation object. If passed from a technology generation
             class, do not run ssc.data_free(data) until after the Economic
-            model has been run.
+            model has been run. This can be None, signifying that a new
+            LCOE analysis is to be performed, not based on a SAM generation
+            instance.
         parameters : dict | ParametersManager()
-            SAM model input parameters.
+            Site-agnostic SAM model input parameters.
         site_parameters : dict
-            Optional set of site-specific parameters to complement the generic
-            parameters input arg.
+            Optional set of site-specific parameters to complement the
+            site-agnostic 'parameters' input arg. Must have an 'offshore'
+            column with boolean dtype if running ORCA.
         output_request : list | tuple
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
+            Requested SAM outputs (e.g., 'ppa_price', 'lcoe_fcr').
         """
 
         # set attribute to store site number
@@ -1036,7 +1039,7 @@ class Economic(SAM):
         offshore = False
         if site_parameters is not None:
             if 'offshore' in site_parameters:
-                offshore = site_parameters['offshore']
+                offshore = bool(site_parameters['offshore'])
 
         self.output_request = output_request
 
@@ -1093,7 +1096,9 @@ class Economic(SAM):
                                     'must be included in the SAM config '
                                     'inputs or site-specific inputs in '
                                     'order to calculate annual energy '
-                                    'yield for LCOE.')
+                                    'yield for LCOE. Received the following '
+                                    'inputs, site_df:\n{}\n{}'
+                                    .format(inputs, site_df.head()))
 
         if 'system_capacity' in inputs:
             sys_cap = inputs['system_capacity']
@@ -1138,8 +1143,6 @@ class Economic(SAM):
             site_df.loc[:, 'annual_energy'] = np.nan
             calc_aey = True
 
-        site_vars = site_df.columns.values
-
         for site in points_control.sites:
             # get SAM inputs from project_points based on the current site
             config, inputs = points_control.project_points[site]
@@ -1166,12 +1169,9 @@ class Economic(SAM):
                 # add aey to site-specific inputs
                 site_df.loc[site, 'annual_energy'] = aey
 
-            # Make a dict of any site-specific inputs
-            site_parameters = dict(zip(site_vars, site_df.loc[site, :]))
-
             # iterate through requested sites.
             sim = cls(ssc=None, data=None, parameters=inputs,
-                      site_parameters=site_parameters,
+                      site_parameters=dict(site_df.loc[site, :]),
                       output_request=output_request)
             sim.execute(cls.MODULE)
             out[site] = sim.outputs
@@ -1194,10 +1194,11 @@ class LCOE(Economic):
                          site_parameters=site_parameters,
                          output_request=output_request)
 
-    def execute(self, modules_to_run, close=True, offshore=False):
+    def execute(self, modules_to_run, close=True):
         """Execute a SAM economic model calculation.
         """
         # check to see if there is an offshore flag and set for this run
+        offshore = False
         if hasattr(self, '_site_parameters'):
             if 'offshore' in self._site_parameters:
                 offshore = bool(self._site_parameters['offshore'])

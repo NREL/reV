@@ -3,5 +3,7 @@
   "fixed_charge_rate": 0.09979595,
   "fixed_operating_cost": 102000.0,
   "lcoe_region_gid": 2.0,
-  "variable_operating_cost": 0.0
+  "system_capacity": 2000,
+  "variable_operating_cost": 0.0,
+  "wind_turbine_rotor_diameter": 92
 }
