@@ -27,8 +27,8 @@ class LCOE(Gen):
         cf_file : str
             reV generation capacity factor output file with path.
         cf_year : int | str
-            reV generation year to calculate LCOE for. 'my' will look for the
-            multi-year mean generation results.
+            reV generation year to calculate LCOE for. cf_year='my' will look
+            for the multi-year mean generation results.
         output_request : list | tuple
             Output variables requested from SAM.
         fout : str | None
@@ -47,12 +47,25 @@ class LCOE(Gen):
 
     @property
     def cf_file(self):
-        """Get the capacity factor output filename and path."""
+        """Get the capacity factor output filename and path.
+
+        Returns
+        -------
+        cf_file : str
+            reV generation capacity factor output file with path.
+        """
         return self._cf_file
 
     @property
     def cf_year(self):
-        """Get the year to analyze."""
+        """Get the year to analyze.
+
+        Returns
+        -------
+        cf_year : int | str
+            reV generation year to calculate LCOE for. cf_year='my' will look
+            for the multi-year mean generation results.
+        """
         return self._cf_year
 
     @staticmethod
@@ -122,7 +135,15 @@ class LCOE(Gen):
         return self._site_df
 
     def lcoe_to_disk(self, fout='lcoe_out.h5', mode='w'):
-        """Save LCOE results to disk."""
+        """Save LCOE results to disk.
+
+        Parameters
+        ----------
+        fout : str
+            Target .h5 output file (with path).
+        mode : str
+            .h5 file write mode (e.g. 'w', 'w-', 'a').
+        """
         lcoe_arr = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
         # write means to disk using CapacityFactor class
         attrs = {'scale_factor': 1, 'units': 'dol/MWh'}
@@ -141,7 +162,7 @@ class LCOE(Gen):
         Parameters
         ----------
         mode : str
-            .h5 file write mode (e.g. 'w', 'a').
+            .h5 file write mode (e.g. 'w', 'w-', 'a').
         """
 
         # use mutable copies of the properties
@@ -159,7 +180,17 @@ class LCOE(Gen):
 
     @staticmethod
     def run(pc, site_df):
-        """Run the SAM LCOE calculation."""
+        """Run the SAM LCOE calculation.
+
+        Parameters
+        ----------
+        pc : reV.config.project_points.PointsControl
+            Iterable points control object from reV config module.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Number of rows should
+            match the number of sites, column labels are the variable keys
+            that will be passed forward as SAM parameters.
+        """
         site_df = site_df[site_df.index.isin(pc.sites)]
         out = SAM_LCOE.reV_run(pc, site_df)
         return out

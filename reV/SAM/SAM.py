@@ -7,7 +7,6 @@ SAM software development kit (SDK).
 import gc
 import json
 import logging
-from math import floor
 import numpy as np
 import os
 import pandas as pd
@@ -461,7 +460,7 @@ class SAM:
         """
 
         if len(res_arr) % base != 0:
-            div = floor(len(res_arr) / 8760)
+            div = np.floor(len(res_arr) / 8760)
             target_len = div * 8760
             warn('Resource array length is {}, but SAM requires a multiple of '
                  '8760. Truncating the timeseries to length {}.'

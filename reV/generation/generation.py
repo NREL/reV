@@ -36,7 +36,7 @@ class Gen:
 
         Parameters
         ----------
-        points_control : reV.config.PointsControl
+        points_control : reV.config.project_points.PointsControl
             Project points control instance for site and SAM config spec.
         res_file : str
             Resource file with path.
@@ -63,42 +63,91 @@ class Gen:
 
     @property
     def output_request(self):
-        """Get the list of output variables requested from generation."""
+        """Get the list of output variables requested from generation.
+
+        Returns
+        -------
+        output_request : list | tuple
+            Output variables requested from SAM.
+        """
         return self._output_request
 
     @property
     def points_control(self):
-        """Get project points controller."""
+        """Get project points controller.
+
+        Returns
+        -------
+        points_control : reV.config.project_points.PointsControl
+            Project points control instance for site and SAM config spec.
+        """
         return self._points_control
 
     @property
     def project_points(self):
-        """Get project points"""
+        """Get project points
+
+        Returns
+        -------
+        project_points : reV.config.project_points.ProjectPoints
+            Project points from the points control instance.
+        """
         return self._points_control.project_points
 
     @property
     def sam_configs(self):
-        """Get the sam config dictionary."""
+        """Get the sam config dictionary.
+
+        Returns
+        -------
+        sam_configs : reV.config.sam.SAMGenConfig
+            SAM config from the project points instance.
+        """
         return self.project_points.sam_configs
 
     @property
     def tech(self):
-        """Get the reV technology string."""
+        """Get the reV technology string.
+
+        Returns
+        -------
+        tech : str
+            reV technology being executed (e.g. pv, csp, wind).
+        """
         return self.project_points.tech
 
     @property
     def res_file(self):
-        """Get the resource filename and path."""
+        """Get the resource filename and path.
+
+        Returns
+        -------
+        res_file : str
+            Resource file with path.
+        """
         return self._res_file
 
     @property
     def fout(self):
-        """Get the target file output."""
+        """Get the target file output.
+
+        Returns
+        -------
+        fout : str | None
+            Optional .h5 output file specification.
+        """
         return self._fout
 
     @property
     def dirout(self):
-        """Get the target output directory."""
+        """Get the target output directory.
+
+        Returns
+        -------
+        dirout : str | None
+            Optional output directory specification. The directory will be
+            created if it does not already exist.
+        """
         return self._dirout
 
     @property
@@ -164,7 +213,18 @@ class Gen:
 
     @property
     def time_index(self, drop_leap=True):
-        """Get the generation resource time index data."""
+        """Get the generation resource time index data.
+
+        Parameters
+        ----------
+        drop_leap : bool
+            Option to drop the leap day from the time_index.
+
+        Returns
+        -------
+        _time_index : pd.DatetimeIndex
+            Time index objects from the resource data (self.res_file).
+        """
         if not hasattr(self, '_time_index'):
             with Resource(self.res_file) as res:
                 self._time_index = res.time_index
@@ -347,7 +407,15 @@ class Gen:
         return out.transpose()
 
     def means_to_disk(self, fout='gen_out.h5', mode='w'):
-        """Save capacity factor means to disk."""
+        """Save capacity factor means to disk.
+
+        Parameters
+        ----------
+        fout : str
+            Target .h5 output file (with path).
+        mode : str
+            .h5 file write mode (e.g. 'w', 'w-', 'a').
+        """
         cf_means = self.unpack_scalars(self.out, sam_var='cf_mean')
         meta = self.meta
         meta.loc[:, 'cf_means'] = cf_means
@@ -362,7 +430,15 @@ class Gen:
                             self.sam_configs, lcoe=lcoe, **{'mode': mode})
 
     def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
-        """Save capacity factor profiles to disk."""
+        """Save capacity factor profiles to disk.
+
+        Parameters
+        ----------
+        fout : str
+            Target .h5 output file (with path).
+        mode : str
+            .h5 file write mode (e.g. 'w', 'w-', 'a').
+        """
         cf_profiles = self.unpack_profiles(self.out, sam_var='cf_profile')
         meta = self.meta
         meta.loc[:, 'cf_means'] = self.unpack_scalars(self.out,
