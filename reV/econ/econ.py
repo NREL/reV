@@ -6,6 +6,7 @@ import pandas as pd
 from warnings import warn
 
 from reV.SAM.SAM import LCOE as SAM_LCOE
+from reV.SAM.SAM import SingleOwner
 from reV.handlers.outputs import Outputs
 from reV.utilities.execution import execute_parallel, execute_single
 from reV.generation.generation import Gen
@@ -14,12 +15,22 @@ from reV.generation.generation import Gen
 logger = logging.getLogger(__name__)
 
 
-class LCOE(Gen):
-    """Base LCOE class"""
+class Econ(Gen):
+    """Base econ class"""
+
+    # Mapping of reV econ output strings to SAM econ functions
+    OPTIONS = {'lcoe_fcr': SAM_LCOE.reV_run,
+               'ppa_price': SingleOwner.reV_run,
+               }
+
+    # Mapping of reV econ outputs to scale factors and units
+    ATTRS = {'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh'},
+             'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh'},
+             }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
-                 output_request=('lcoe_fcr',), fout=None, dirout='./lcoe_out'):
-        """Initialize an LCOE instance.
+                 output_request='lcoe_fcr', fout=None, dirout='./econ_out'):
+        """Initialize an econ instance.
 
         Parameters
         ----------
@@ -28,15 +39,15 @@ class LCOE(Gen):
         cf_file : str
             reV generation capacity factor output file with path.
         cf_year : int | str
-            reV generation year to calculate LCOE for. cf_year='my' will look
+            reV generation year to calculate econ for. cf_year='my' will look
             for the multi-year mean generation results.
         site_data : str | pd.DataFrame | None
-            Site-specific data for LCOE calculation. Str points to csv,
+            Site-specific data for econ calculation. Str points to csv,
             DataFrame is pre-extracted data. Rows match sites, columns are
             variables. Input as None if the only site data required is present
             in the cf_file.
-        output_request : list | tuple
-            Output variables requested from SAM.
+        output_request : str
+            Economic output variable requested from SAM (lcoe_fcr, ppa_price).
         fout : str | None
             Optional .h5 output file specification.
         dirout : str | None
@@ -47,9 +58,13 @@ class LCOE(Gen):
         self._points_control = points_control
         self._cf_file = cf_file
         self._cf_year = cf_year
-        self._output_request = output_request
         self._fout = fout
         self._dirout = dirout
+        if output_request not in self.OPTIONS:
+            raise KeyError('Requested econ variable "{}" is not available. '
+                           'reV econ can analyze the following: {}'
+                           .format(output_request, list(self.OPTIONS.keys())))
+        self._output_request = output_request
         if site_data:
             self.site_data = site_data
 
@@ -71,7 +86,7 @@ class LCOE(Gen):
         Returns
         -------
         _site_data : pd.DataFrame
-            Site-specific data for LCOE calculation. Rows match sites,
+            Site-specific data for econ calculation. Rows match sites,
             columns are variables.
         """
         return self._site_data
@@ -115,7 +130,7 @@ class LCOE(Gen):
         Returns
         -------
         cf_year : int | str
-            reV generation year to calculate LCOE for. cf_year='my' will look
+            reV generation year to calculate econ for. cf_year='my' will look
             for the multi-year mean generation results.
         """
         return self._cf_year
@@ -139,7 +154,7 @@ class LCOE(Gen):
             Target output directory joined with the target filename.
         """
         # combine filename and path
-        fout = LCOE.make_h5_fpath(fout, dirout)
+        fout = Econ.make_h5_fpath(fout, dirout)
 
         if str(year) not in fout:
             # add year tag to fout
@@ -225,8 +240,8 @@ class LCOE(Gen):
                                                  suffixes=['', '_site'],
                                                  copy=False, validate='1:1')
 
-    def lcoe_to_disk(self, fout='lcoe_out.h5', mode='w'):
-        """Save LCOE results to disk.
+    def econ_results_to_disk(self, fout='econ_out.h5', mode='w'):
+        """Save econ results to disk.
 
         Parameters
         ----------
@@ -236,14 +251,14 @@ class LCOE(Gen):
             .h5 file write mode (e.g. 'w', 'w-', 'a').
         """
 
-        lcoe_arr = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
-        # write means to disk using CapacityFactor class
-        attrs = {'scale_factor': 1, 'units': 'dol/MWh'}
-        Outputs.write_means(fout, self.meta, 'lcoe', lcoe_arr, attrs,
-                            'float32', self.sam_configs, **{'mode': mode})
+        arr = self.unpack_scalars(self.out, sam_var=self.output_request)
+        # write means to disk using Outputs handler class
+        Outputs.write_means(fout, self.meta, self.output_request, arr,
+                            self.ATTRS[self.output_request], 'float32',
+                            self.sam_configs, **{'mode': mode})
 
     def flush(self, mode='w'):
-        """Flush LCOE data in self.out attribute to disk in .h5 format.
+        """Flush econ data in self.out attribute to disk in .h5 format.
 
         The data to be flushed is accessed from the instance attribute
         "self.out". The disk target is based on the isntance attributes
@@ -265,14 +280,14 @@ class LCOE(Gen):
         if isinstance(fout, str) and self.out:
             fout = self.handle_fout(fout, dirout, self.cf_year)
 
-            logger.info('Flushing LCOE outputs to disk, target file: {}'
+            logger.info('Flushing econ outputs to disk, target file: {}'
                         .format(fout))
-            self.lcoe_to_disk(fout=fout, mode=mode)
-            logger.debug('Flushed LCOE output successfully to disk.')
+            self.econ_results_to_disk(fout=fout, mode=mode)
+            logger.debug('Flushed econ output successfully to disk.')
 
     @staticmethod
-    def run(pc, site_df):
-        """Run the SAM LCOE calculation.
+    def run(pc, site_df, output_request):
+        """Run the SAM econ calculation.
 
         Parameters
         ----------
@@ -285,21 +300,22 @@ class LCOE(Gen):
         """
         # check that index corresponds to gid
         if site_df.index.name != 'gid':
-            warn('LCOE input "site_df" does not have an index label '
+            warn('Econ input "site_df" does not have an index label '
                  'corresponding to site gid. This may cause an incorrect '
                  'interpretation of site id.')
         # extract only the sites in the current points control
         site_df = site_df[site_df.index.isin(pc.sites)]
-        # SAM execute LCOE analysis
-        out = SAM_LCOE.reV_run(pc, site_df)
+        # SAM execute econ analysis based on output request
+        out = Econ.OPTIONS[output_request](pc, site_df,
+                                           output_request=output_request)
         return out
 
     @classmethod
     def run_direct(cls, points=None, sam_files=None, cf_file=None,
-                   cf_year=None, site_data=None, n_workers=1,
-                   sites_per_split=100, points_range=None, fout=None,
-                   dirout='./lcoe_out', return_obj=True):
-        """Execute a generation run directly from source files without config.
+                   cf_year=None, site_data=None, output_request='lcoe_fcr',
+                   n_workers=1, sites_per_split=100, points_range=None,
+                   fout=None, dirout='./econ_out', return_obj=True):
+        """Execute a econ run directly from source files without config.
 
         Parameters
         ----------
@@ -315,13 +331,15 @@ class LCOE(Gen):
         cf_file : str
             reV generation capacity factor output file with path.
         cf_year : int | str
-            reV generation year to calculate LCOE for. cf_year='my' will look
+            reV generation year to calculate econ for. cf_year='my' will look
             for the multi-year mean generation results.
         site_data : str | pd.DataFrame | None
-            Site-specific data for LCOE calculation. Str points to csv,
+            Site-specific data for econ calculation. Str points to csv,
             DataFrame is pre-extracted data. Rows match sites, columns are
             variables. Input as None if the only site data required is present
             in the cf_file.
+        output_request : str
+            Economic output variable requested from SAM (lcoe_fcr, ppa_price).
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -340,43 +358,44 @@ class LCOE(Gen):
 
         Returns
         -------
-        lcoe : reV.lcoe.LCOE
-            LCOE object instance with outputs stored in .out attribute.
+        econ : reV.econ.Econ
+            Econ object instance with outputs stored in .out attribute.
             Only returned if return_obj is True.
         """
 
         # get a points control instance
-        pc = LCOE.get_pc(points, points_range, sam_files, tech=None)
+        pc = cls.get_pc(points, points_range, sam_files, tech=None)
 
         # make a Gen class instance to operate with
-        lcoe = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
-                   fout=fout, dirout=dirout)
+        econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
+                   output_request=output_request, fout=fout, dirout=dirout)
 
-        diff = set(pc.sites) - set(lcoe.meta['gid'].values)
+        diff = set(pc.sites) - set(econ.meta['gid'].values)
         if diff:
             raise Exception('The following analysis sites were requested '
-                            'through project points for LCOE but are not '
+                            'through project points for econ but are not '
                             'found in the CF file ("{}"): {}'
-                            .format(lcoe.cf_file, diff))
+                            .format(econ.cf_file, diff))
 
         # make a kwarg dict
-        kwargs = {'site_df': lcoe.site_df[lcoe.site_df.index.isin(pc.sites)]}
+        kwargs = {'site_df': econ.site_df[econ.site_df.index.isin(pc.sites)],
+                  'output_request': output_request}
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
             logger.debug('Running serial generation for: {}'.format(pc))
-            out = execute_single(lcoe.run, pc, **kwargs)
+            out = execute_single(econ.run, pc, **kwargs)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(lcoe.run, pc, n_workers=n_workers,
+            out = execute_parallel(econ.run, pc, n_workers=n_workers,
                                    loggers=[__name__, 'reV.SAM'], **kwargs)
 
         # save output data to object attribute
-        lcoe.out = out
+        econ.out = out
 
         # flush output data (will only write to disk if fout is a str)
-        lcoe.flush()
+        econ.flush()
 
         # optionally return Gen object (useful for debugging and hacking)
         if return_obj:
-            return lcoe
+            return econ

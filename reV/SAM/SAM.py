@@ -254,8 +254,8 @@ class ParametersManager:
 
 
 class SAM:
-    """Base class for SAM derived generation.
-    """
+    """Base class for SAM simulations (generation and econ)."""
+
     DIR = os.path.dirname(os.path.realpath(__file__))
     MODULE = None
 
@@ -608,21 +608,21 @@ class SAM:
 
     @property
     def ppa_price(self):
-        """Get PPA price (cents/kWh)."""
-        return self.ssc.data_get_number(self.data, 'ppa')
+        """Get PPA price ($/MWh). Native units are cents/kWh."""
+        return self.ssc.data_get_number(self.data, 'ppa') * 10
 
     @property
     def lcoe_fcr(self):
         """Get LCOE ($/MWh). Native units are $/kWh, mult by 1000 for $/MWh."""
         return self.ssc.data_get_number(self.data, 'lcoe_fcr') * 1000
 
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM simulation by module name.
+    def execute(self, module_to_run, close=True):
+        """Execute a single SAM simulation core by module name.
 
         Parameters
         ----------
-        modules_to_run : str or list
-            SAM module names (e.g., 'pvwattsv5', 'tcsmolten_salt', 'windpower',
+        module_to_run : str
+            SAM module name (e.g., 'pvwattsv5', 'tcsmolten_salt', 'windpower',
             'singleowner', 'lcoefcr'...)
         close : boolean
             close=True (default) runs a single simulation and clears the data,
@@ -631,27 +631,24 @@ class SAM:
             passed to downstream modules. In this case, output collection is
             also not executed.
         """
-        if isinstance(modules_to_run, str):
-            modules_to_run = [modules_to_run]
 
-        for m in modules_to_run:
-            logger.debug('Running SAM module "{}" for site #{}'
-                         .format(m, self.site))
-            module = self.ssc.module_create(m.encode())
-            self.ssc.module_exec_set_print(0)
-            if self.ssc.module_exec(module, self.data) == 0:
-                msg = ('SAM Simulation Error in "{}" for site #{}'
-                       .format(m, self.site))
+        logger.debug('Running SAM module "{}" for site #{}'
+                     .format(module_to_run, self.site))
+        module = self.ssc.module_create(module_to_run.encode())
+        self.ssc.module_exec_set_print(0)
+        if self.ssc.module_exec(module, self.data) == 0:
+            msg = ('SAM Simulation Error in "{}" for site #{}'
+                   .format(module_to_run, self.site))
+            logger.exception(msg)
+            idx = 0
+            while msg is not None:
+                msg = self.ssc.module_log(module, idx)
+                raise SAMExecutionError('SAM error message: "{}"'
+                                        .format(msg.decode('utf-8')))
                 logger.exception(msg)
-                idx = 0
-                while msg is not None:
-                    msg = self.ssc.module_log(module, idx)
-                    raise SAMExecutionError('SAM error message: "{}"'
-                                            .format(msg.decode('utf-8')))
-                    logger.exception(msg)
-                    idx = idx + 1
-                raise Exception(msg)
-            self.ssc.module_free(module)
+                idx = idx + 1
+            raise Exception(msg)
+        self.ssc.module_free(module)
 
         if close is True:
             self.outputs = self.collect_outputs()
@@ -685,9 +682,50 @@ class SAM:
 
         return results
 
+
+class Generation(SAM):
+    """Base class for SAM generation simulations."""
+
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None):
+        """Initialize a SAM generation object."""
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request)
+
+    def gen_exec(self, module_to_run):
+        """Run SAM generation with possibility for follow on econ analysis.
+
+        Parameters
+        ----------
+        module_to_run : str
+            SAM module name (e.g., 'pvwattsv5', 'tcsmolten_salt', 'windpower').
+        """
+
+        self.set_parameters()
+
+        if 'lcoe_fcr' in self.output_request:
+            # econ outputs requested, run LCOE model after generation.
+            self.execute(module_to_run, close=False)
+            lcoe = LCOE(self.ssc, self.data, self.parameters,
+                        output_request=self.output_request)
+            lcoe.execute(LCOE.MODULE)
+            self.outputs = lcoe.outputs
+
+        elif 'ppa_price' in self.output_request:
+            # econ outputs requested, run SingleOwner model after generation.
+            self.execute(module_to_run, close=False)
+            so = SingleOwner(self.ssc, self.data, self.parameters,
+                             output_request=self.output_request)
+            so.execute(so.MODULE)
+            self.outputs = so.outputs
+
+        else:
+            # normal run, no econ analysis
+            self.execute(module_to_run, close=True)
+
     @classmethod
     def reV_run(cls, points_control, res_file, output_request=('cf_mean',)):
-        """Execute SAM simulations based on a reV points control instance.
+        """Execute SAM generation based on a reV points control instance.
 
         Parameters
         ----------
@@ -722,7 +760,7 @@ class SAM:
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
                       output_request=output_request)
-            sim.execute(cls.MODULE)
+            sim.gen_exec(cls.MODULE)
             out[site] = sim.outputs
 
             logger.debug('Outputs for site {} with config "{}", \n\t{}...'
@@ -733,7 +771,7 @@ class SAM:
         return out
 
 
-class Solar(SAM):
+class Solar(Generation):
     """Base Class for Solar generation from SAM
     """
 
@@ -835,21 +873,6 @@ class PV(Solar):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM PV solar simulation.
-        """
-        self.set_parameters()
-
-        if 'lcoe_fcr' in self.output_request:
-            # econ outputs requested, run LCOE model after pvwatts.
-            super().execute(modules_to_run, close=False)
-            lcoe = LCOE(self.ssc, self.data, self.parameters,
-                        output_request=self.output_request)
-            lcoe.execute(LCOE.MODULE)
-            self.outputs = lcoe.outputs
-        else:
-            super().execute(modules_to_run, close=close)
-
 
 class CSP(Solar):
     """Concentrated Solar Power (CSP) generation
@@ -863,23 +886,8 @@ class CSP(Solar):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM CSP solar simulation.
-        """
-        self.set_parameters()
 
-        if 'ppa_price' in self.output_request:
-            # econ outputs requested, run single owner model after csp.
-            super().execute(modules_to_run, close=False)
-            so = SingleOwner(self.ssc, self.data, self.parameters,
-                             output_request=self.output_request)
-            so.execute(SingleOwner.MODULE)
-            self.outputs = so.outputs
-        else:
-            super().execute(modules_to_run, close=close)
-
-
-class Wind(SAM):
+class Wind(Generation):
     """Base class for Wind generation from SAM
     """
 
@@ -961,21 +969,6 @@ class LandBasedWind(Wind):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM land based wind simulation.
-        """
-        self.set_parameters()
-
-        if 'lcoe_fcr' in self.output_request:
-            # econ outputs requested, run LCOE model after pvwatts.
-            super().execute(modules_to_run, close=False)
-            lcoe = LCOE(self.ssc, self.data, self.parameters,
-                        output_request=self.output_request)
-            lcoe.execute(LCOE.MODULE)
-            self.outputs = lcoe.outputs
-        else:
-            super().execute(modules_to_run, close=close)
-
 
 class OffshoreWind(LandBasedWind):
     """Offshore wind generation
@@ -996,7 +989,7 @@ class Economic(SAM):
     MODULE = None
 
     def __init__(self, ssc, data, parameters, site_parameters=None,
-                 output_request=('lcoe_fcr',)):
+                 output_request='lcoe_fcr'):
         """Initialize a SAM economic model object.
 
         Parameters
@@ -1019,8 +1012,8 @@ class Economic(SAM):
             Optional set of site-specific parameters to complement the
             site-agnostic 'parameters' input arg. Must have an 'offshore'
             column with boolean dtype if running ORCA.
-        output_request : list | tuple
-            Requested SAM outputs (e.g., 'ppa_price', 'lcoe_fcr').
+        output_request : list | tuple | str
+            Requested SAM output(s) (e.g., 'ppa_price', 'lcoe_fcr').
         """
 
         # set attribute to store site number
@@ -1041,7 +1034,10 @@ class Economic(SAM):
             if 'offshore' in site_parameters:
                 offshore = bool(site_parameters['offshore'])
 
-        self.output_request = output_request
+        if isinstance(output_request, (list, tuple)):
+            self.output_request = output_request
+        else:
+            self.output_request = (output_request,)
 
         # Use Parameters class to manage inputs, defaults, and requirements.
         if isinstance(parameters, ParametersManager):
@@ -1062,11 +1058,11 @@ class Economic(SAM):
         else:
             self.parameters.update(site_parameters)
 
-    def execute(self, modules_to_run, close=True):
+    def execute(self, module_to_run, close=True):
         """Execute a SAM economic model calculation.
         """
         self.set_parameters()
-        super().execute(modules_to_run, close=close)
+        super().execute(module_to_run, close=close)
 
     @staticmethod
     def parse_sys_cap(site, inputs, site_df):
@@ -1112,7 +1108,7 @@ class Economic(SAM):
         return sys_cap
 
     @classmethod
-    def reV_run(cls, points_control, site_df, output_request=('lcoe_fcr',)):
+    def reV_run(cls, points_control, site_df, output_request='lcoe_fcr'):
         """Execute SAM simulations based on a reV points control instance.
 
         Parameters
@@ -1124,8 +1120,8 @@ class Economic(SAM):
             Dataframe of site-specific input variables. Row index corresponds
             to site number/gid (via df.loc not df.iloc), column labels are the
             variable keys that will be passed forward as SAM parameters.
-        output_request : list | tuple
-            Outputs to retrieve from SAM.
+        output_request : list | tuple | str
+            Output(s) to retrieve from SAM.
 
         Returns
         -------
@@ -1194,7 +1190,7 @@ class LCOE(Economic):
                          site_parameters=site_parameters,
                          output_request=output_request)
 
-    def execute(self, modules_to_run, close=True):
+    def execute(self, module_to_run, close=True):
         """Execute a SAM economic model calculation.
         """
         # check to see if there is an offshore flag and set for this run
@@ -1209,7 +1205,7 @@ class LCOE(Economic):
             self.outputs = {'lcoe_fcr': out}
         else:
             # run SAM LCOE normally for non-offshore technologies
-            super().execute(modules_to_run, close=close)
+            super().execute(module_to_run, close=close)
 
     @staticmethod
     def ORCA_LCOE(config_inputs, site_parameters):

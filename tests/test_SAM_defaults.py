@@ -67,7 +67,7 @@ class SAMTestManager:
                                                     'gen_profile',
                                                     'lcoe_fcr'])
 
-        sim.execute(sim.MODULE)
+        sim.gen_exec(sim.MODULE)
         test = self.check_test_results(sim.outputs, o_fname,
                                        module)
 

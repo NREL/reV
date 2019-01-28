@@ -12,7 +12,7 @@ import h5py
 import pytest
 import numpy as np
 
-from reV.lcoe.lcoe import LCOE
+from reV.econ.econ import Econ
 from reV import __testdatadir__ as TESTDATADIR
 
 
@@ -30,8 +30,9 @@ def test_lcoe(year):
     dirout = os.path.join(TESTDATADIR, 'lcoe_out')
     fout = 'lcoe_ri_pv_{}.h5'.format(year)
     points = slice(0, 100)
-    obj = LCOE.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
-                          cf_year=year, n_workers=1, sites_per_split=25,
+    obj = Econ.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
+                          cf_year=year, output_request='lcoe_fcr',
+                          n_workers=1, sites_per_split=25,
                           points_range=None, fout=fout, dirout=dirout,
                           return_obj=True)
     lcoe = [c['lcoe_fcr'] for c in obj.out.values()]
@@ -71,9 +72,10 @@ def test_ORCA(rut_id):
                  }
     site_data = TESTDATADIR + '/ORCA/orca_site_data.csv'
 
-    obj = LCOE.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
+    obj = Econ.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
                           cf_year=None, site_data=site_data,
-                          n_workers=1, sites_per_split=25, points_range=None,
+                          output_request='lcoe_fcr', n_workers=1,
+                          sites_per_split=25, points_range=None,
                           fout=None, dirout=None, return_obj=True)
 
     lcoe = [c['lcoe_fcr'] for c in obj.out.values()]

@@ -23,12 +23,12 @@ class Gen:
     """Base class for generation"""
 
     # Mapping of reV technology strings to SAM generation functions
-    REVTECHS = {'pv': PV.reV_run,
-                'csp': CSP.reV_run,
-                'wind': LandBasedWind.reV_run,
-                'landbasedwind': LandBasedWind.reV_run,
-                'offshorewind': OffshoreWind.reV_run,
-                }
+    OPTIONS = {'pv': PV.reV_run,
+               'csp': CSP.reV_run,
+               'wind': LandBasedWind.reV_run,
+               'landbasedwind': LandBasedWind.reV_run,
+               'offshorewind': OffshoreWind.reV_run,
+               }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out'):
@@ -55,11 +55,11 @@ class Gen:
         self._fout = fout
         self._dirout = dirout
 
-        if self.tech not in self.REVTECHS:
+        if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
                            'reV generation can analyze the following '
                            'technologies: {}'
-                           .format(self.tech, list(self.REVTECHS.keys())))
+                           .format(self.tech, list(self.OPTIONS.keys())))
 
     @property
     def output_request(self):
@@ -588,8 +588,7 @@ class Gen:
         """
 
         try:
-            out = Gen.REVTECHS[tech](points_control, res_file,
-                                     output_request=output_request)
+            out = Gen.OPTIONS[tech](points_control, res_file, output_request)
         except Exception:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
