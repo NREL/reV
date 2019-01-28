@@ -1,15 +1,20 @@
 """
-reV SAM Configuration
+reV Base Configuration Frameworks
 """
 import json
+import logging
 import os
+
 from reV.config.base_config import BaseConfig
 
 
-class SAMGenConfig(BaseConfig):
-    """Class to handle the SAM generation section of config input."""
+logger = logging.getLogger(__name__)
+
+
+class SAMConfig(BaseConfig):
+    """Class to handle the SAM section of config input."""
     def __init__(self, SAM_configs):
-        """Initialize the SAM generation section of config as an object.
+        """Initialize the SAM section of config as an object.
 
         Parameters
         ----------
@@ -17,7 +22,7 @@ class SAMGenConfig(BaseConfig):
             Keys are config ID's, values are filepaths to the SAM configs.
         """
 
-        # Initialize the SAM generation config section as a dictionary.
+        # Initialize the SAM config section as a dictionary.
         self.set_self_dict(SAM_configs)
 
     @property

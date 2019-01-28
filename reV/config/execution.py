@@ -13,7 +13,8 @@ class BaseExecutionConfig(BaseConfig):
     """Base class to handle execution configuration"""
 
     def __init__(self, config_dict):
-        super().__init__(config_dict)
+        for key, val in config_dict.items():
+            self.__setitem__(key, val)
 
     @property
     def option(self):

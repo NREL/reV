@@ -12,7 +12,7 @@ from warnings import warn
 
 from reV import __testdatadir__
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.config.gen_config import GenConfig
+from reV.config.analysis_configs import GenConfig
 from reV.generation.generation import Gen
 from reV.utilities.cli_dtypes import INT, STR, SAMFILES, PROJECTPOINTS, INTLIST
 from reV.utilities.exceptions import ConfigError
@@ -131,7 +131,7 @@ def from_config(ctx, config_file, verbose):
     # set config objects to be passed through invoke to direct methods
     ctx.obj['TECH'] = config.tech
     ctx.obj['POINTS'] = config['project_points']
-    ctx.obj['SAM_FILES'] = config.sam_gen
+    ctx.obj['SAM_FILES'] = config.sam_config
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['CF_PROFILES'] = config.write_profiles

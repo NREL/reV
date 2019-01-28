@@ -9,7 +9,7 @@ from math import ceil
 
 from reV.utilities.exceptions import ConfigWarning
 from reV.handlers.resource import Resource
-from reV.config.sam import SAMGenConfig
+from reV.config.sam_config import SAMConfig
 
 
 logger = logging.getLogger(__name__)
@@ -408,7 +408,7 @@ class ProjectPoints:
         """
 
         if not hasattr(self, '_sam_configs'):
-            self._sam_configs = SAMGenConfig(self.sam_files).inputs
+            self._sam_configs = SAMConfig(self.sam_files).inputs
         return self._sam_configs
 
     @property
