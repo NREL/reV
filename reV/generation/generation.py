@@ -1,6 +1,7 @@
 """
 Generation
 """
+from copy import deepcopy
 import logging
 import numpy as np
 import os
@@ -29,6 +30,12 @@ class Gen:
                'landbasedwind': LandBasedWind.reV_run,
                'offshorewind': OffshoreWind.reV_run,
                }
+
+    OUT_ATTRS = {'cf_means': {'scale_factor': 1000, 'units': 'unitless',
+                              'dtype': 'uint16'},
+                 'cf_profiles': {'scale_factor': 1000, 'units': 'unitless',
+                                 'dtype': 'uint16'},
+                 }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out'):
@@ -424,9 +431,12 @@ class Gen:
         if 'lcoe' in str(self.output_request):
             lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
 
-        # write means to disk using CapacityFactor class
-        attrs = {'scale_factor': 1000, 'units': 'unitless'}
-        Outputs.write_means(fout, meta, 'cf', cf_means, attrs, 'uint16',
+        # get dset attributes
+        attrs = deepcopy(self.OUT_ATTRS['cf_means'])
+        dtype = attrs['dtype']
+        del attrs['dtype']
+
+        Outputs.write_means(fout, meta, 'cf', cf_means, attrs, dtype,
                             self.sam_configs, lcoe=lcoe, **{'mode': mode})
 
     def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
@@ -448,10 +458,13 @@ class Gen:
         if 'lcoe' in str(self.output_request):
             lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
 
-        # write profiles to disk using CapacityFactor class
-        attrs = {'scale_factor': 1000, 'units': 'unitless'}
+        # get dset attributes
+        attrs = deepcopy(self.OUT_ATTRS['cf_profiles'])
+        dtype = attrs['dtype']
+        del attrs['dtype']
+
         Outputs.write_profiles(fout, meta, self.time_index, 'cf_profiles',
-                               cf_profiles, attrs, 'uint16', self.sam_configs,
+                               cf_profiles, attrs, dtype, self.sam_configs,
                                lcoe=lcoe, **{'mode': mode})
 
     @staticmethod

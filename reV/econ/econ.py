@@ -1,6 +1,7 @@
 """
 Levelized Cost of Energy
 """
+from copy import deepcopy
 import logging
 import pandas as pd
 from warnings import warn
@@ -24,9 +25,11 @@ class Econ(Gen):
                }
 
     # Mapping of reV econ outputs to scale factors and units
-    ATTRS = {'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh'},
-             'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh'},
-             }
+    OUT_ATTRS = {'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
+                              'dtype': 'float32'},
+                 'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
+                               'dtype': 'float32'},
+                 }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
                  output_request='lcoe_fcr', fout=None, dirout='./econ_out'):
@@ -260,10 +263,13 @@ class Econ(Gen):
         """
 
         arr = self.unpack_scalars(self.out, sam_var=self.output_request)
+        # get dset attributes
+        attrs = deepcopy(self.OUT_ATTRS[self.output_request])
+        dtype = attrs['dtype']
+        del attrs['dtype']
         # write means to disk using Outputs handler class
         Outputs.write_means(fout, self.meta, self.output_request, arr,
-                            self.ATTRS[self.output_request], 'float32',
-                            self.sam_configs, **{'mode': mode})
+                            attrs, dtype, self.sam_configs, {'mode': mode})
 
     def flush(self, mode='w'):
         """Flush econ data in self.out attribute to disk in .h5 format.
