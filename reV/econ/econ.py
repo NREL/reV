@@ -6,8 +6,8 @@ import logging
 import pandas as pd
 from warnings import warn
 
-from reV.SAM.SAM import LCOE as SAM_LCOE
-from reV.SAM.SAM import SingleOwner
+from reV.SAM.econ import LCOE as SAM_LCOE
+from reV.SAM.econ import SingleOwner
 from reV.handlers.outputs import Outputs
 from reV.utilities.execution import execute_parallel, execute_single
 from reV.generation.generation import Gen

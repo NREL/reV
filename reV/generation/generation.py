@@ -9,7 +9,7 @@ import pprint
 import re
 from warnings import warn
 
-from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
+from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
@@ -593,6 +593,12 @@ class Gen:
             instead of an instance attribute so that the execute_futures
             can pass in a split instance of points_control. This is a
             @staticmethod to expedite submission to Dask client.
+        tech : str
+            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+        res_file : str
+            Single resource file with path.
+        output_request : list | tuple
+            Output variables requested from SAM.
 
         Returns
         -------
