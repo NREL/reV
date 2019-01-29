@@ -313,6 +313,26 @@ class ProjectPoints:
             raise TypeError('Project points data must be csv filename or '
                             'dictionary but received: {}'.format(type(data)))
 
+    def join_df(self, df2, key='gid'):
+        """Join new df2 to the _df attribute using the _df's gid as pkey.
+
+        This can be used to add site-specific data to the project_points,
+        taking advantage of the points_control iterator/split functions such
+        that only the relevant site data is passed to the analysis functions.
+
+        Parameters
+        ----------
+        df2 : pd.DataFrame
+            Dataframe to be joined to the _df attribute. This likely contains
+            site-specific inputs that are to be passed to parallel workers.
+        key : str | pd.DataFrame.index
+            Primary key of df2 to be joined to the _df attribute. Primary key
+            of the _df attribute is fixed as the gid column.
+        """
+
+        self._df = pd.merge(self._df, df2, how='left', left_on='gid',
+                            right_on=key, copy=False, validate='1:1')
+
     @property
     def h(self):
         """Get the hub heights corresponding to the site list.

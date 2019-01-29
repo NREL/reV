@@ -216,6 +216,14 @@ class Econ(Gen):
 
         return self._site_df
 
+    def add_site_df(self):
+        """Add the site df (site-specific inputs) to project points dataframe.
+
+        This ensures that only the relevant site's data will be passed through
+        to dask workers when points_control is iterated and split.
+        """
+        self.project_points.join_df(self.site_df, key=self.site_df.index)
+
     def check_offshore(self):
         """Check if input cf data has offshore flags then add to site_df."""
         # only run this once site_df has been set
@@ -286,25 +294,31 @@ class Econ(Gen):
             logger.debug('Flushed econ output successfully to disk.')
 
     @staticmethod
-    def run(pc, site_df, output_request):
+    def run(pc, output_request):
         """Run the SAM econ calculation.
 
         Parameters
         ----------
         pc : reV.config.project_points.PointsControl
             Iterable points control object from reV config module.
-        site_df : pd.DataFrame
-            Dataframe of site-specific input variables. Rows correspond to
-            sites with index being the gid. Column labels are the variable keys
-            that will be passed forward as SAM parameters.
+            Must have project_points with df property with all relevant
+            site-specific inputs and a 'gid' column. By passing site-specific
+            inputs in this dataframe, which was split using points_control,
+            only the data relevant to the current sites should be passed here.
         """
-        # check that index corresponds to gid
-        if site_df.index.name != 'gid':
-            warn('Econ input "site_df" does not have an index label '
-                 'corresponding to site gid. This may cause an incorrect '
-                 'interpretation of site id.')
-        # extract only the sites in the current points control
-        site_df = site_df[site_df.index.isin(pc.sites)]
+
+        # Extract the site df from the project points df.
+        site_df = pc.project_points.df
+
+        # check that there is a gid column
+        if 'gid' not in site_df:
+            warn('Econ input "site_df" (in project_points.df) does not have '
+                 'a label corresponding to site gid. This may cause an '
+                 'incorrect interpretation of site id.')
+        else:
+            # extract site df from project points df and set gid as index
+            site_df = site_df.set_index('gid', drop=True)
+
         # SAM execute econ analysis based on output request
         out = Econ.OPTIONS[output_request](pc, site_df,
                                            output_request=output_request)
@@ -378,8 +392,10 @@ class Econ(Gen):
                             .format(econ.cf_file, diff))
 
         # make a kwarg dict
-        kwargs = {'site_df': econ.site_df[econ.site_df.index.isin(pc.sites)],
-                  'output_request': output_request}
+        kwargs = {'output_request': output_request}
+
+        # add site_df to project points dataframe
+        econ.add_site_df()
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:

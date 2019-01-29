@@ -1143,12 +1143,13 @@ class Economic(SAM):
             # get SAM inputs from project_points based on the current site
             config, inputs = points_control.project_points[site]
 
-            # check to see if offshore
+            # check to see if this site is offshore
             offshore = False
             if 'offshore' in site_df:
-                offshore = site_df.loc[site, 'offshore']
+                offshore = bool(site_df.loc[site, 'offshore'])
 
-            # calculate the annual energy yield if not input
+            # calculate the annual energy yield if not input;
+            # offshore requires that ORCA does the aey calc
             if calc_aey and not offshore:
                 if site_df.loc[site, 'capacity_factor'] > 1:
                     warn('Capacity factor > 1. Dividing by 100.')
@@ -1165,7 +1166,7 @@ class Economic(SAM):
                 # add aey to site-specific inputs
                 site_df.loc[site, 'annual_energy'] = aey
 
-            # iterate through requested sites.
+            # Create SAM econ instance and calculate requested output.
             sim = cls(ssc=None, data=None, parameters=inputs,
                       site_parameters=dict(site_df.loc[site, :]),
                       output_request=output_request)
