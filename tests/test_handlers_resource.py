@@ -5,7 +5,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import pytest
-from reV.handlers.resource import NSRDB, WTK
+from reV.handlers.resource import NSRDB, WindResource
 
 
 @pytest.fixture
@@ -17,11 +17,11 @@ def NSRDB_res():
 
 
 @pytest.fixture
-def WTK_res():
+def WindResource_res():
     """
-    Init WTK resource handler
+    Init WindResource resource handler
     """
-    return WTK('./data/wtk/ri_100_wtk_2012.h5')
+    return WindResource('./data/wtk/ri_100_wtk_2012.h5')
 
 
 def check_res(res_cls):
@@ -212,83 +212,83 @@ class TestNSRDB:
         NSRDB_res.close()
 
 
-class TestWTK:
+class TestWindResource:
     """
-    WTK Resource handler tests
+    WindResource Resource handler tests
     """
     @staticmethod
-    def test_res(WTK_res):
+    def test_res(WindResource_res):
         """
-        test WTK class calls
+        test WindResource class calls
         """
-        check_res(WTK_res)
-        WTK_res.close()
+        check_res(WindResource_res)
+        WindResource_res.close()
 
     @staticmethod
-    def test_meta(WTK_res):
+    def test_meta(WindResource_res):
         """
-        test extraction of WTK meta data
+        test extraction of WindResource meta data
         """
-        check_meta(WTK_res)
-        WTK_res.close()
+        check_meta(WindResource_res)
+        WindResource_res.close()
 
     @staticmethod
-    def test_time_index(WTK_res):
+    def test_time_index(WindResource_res):
         """
-        test extraction of WTK time_index
+        test extraction of WindResource time_index
         """
-        check_time_index(WTK_res)
-        WTK_res.close()
+        check_time_index(WindResource_res)
+        WindResource_res.close()
 
     @staticmethod
-    def test_ds(WTK_res, ds_name='windspeed_100m'):
+    def test_ds(WindResource_res, ds_name='windspeed_100m'):
         """
         test extraction of a variable array
         """
-        check_dset(WTK_res, ds_name)
-        WTK_res.close()
+        check_dset(WindResource_res, ds_name)
+        WindResource_res.close()
 
     @staticmethod
-    def test_new_hubheight(WTK_res, ds_name='windspeed_90m'):
+    def test_new_hubheight(WindResource_res, ds_name='windspeed_90m'):
         """
         test extraction of a variable array
         """
-        check_dset(WTK_res, ds_name)
-        WTK_res.close()
+        check_dset(WindResource_res, ds_name)
+        WindResource_res.close()
 
     @staticmethod
-    def test_unscale_windspeed(WTK_res):
+    def test_unscale_windspeed(WindResource_res):
         """
         test unscaling of windspeed values
         """
-        check_scale(WTK_res, 'windspeed_100m')
-        WTK_res.close()
+        check_scale(WindResource_res, 'windspeed_100m')
+        WindResource_res.close()
 
     @staticmethod
-    def test_unscale_pressure(WTK_res):
+    def test_unscale_pressure(WindResource_res):
         """
         test unscaling of pressure values
         """
-        check_scale(WTK_res, 'pressure_100m')
-        WTK_res.close()
+        check_scale(WindResource_res, 'pressure_100m')
+        WindResource_res.close()
 
     @staticmethod
-    def test_interpolation(WTK_res, h=90):
+    def test_interpolation(WindResource_res, h=90):
         """
         test variable interpolation
         """
-        for var in WTK_res.heights.keys():
+        for var in WindResource_res.heights.keys():
             if 'winddirection' not in var:
-                check_interp(WTK_res, var, h)
+                check_interp(WindResource_res, var, h)
 
-        WTK_res.close()
+        WindResource_res.close()
 
     @staticmethod
-    def test_extrapolation(WTK_res, h=110):
+    def test_extrapolation(WindResource_res, h=110):
         """
         test variable interpolation
         """
         for var in ['temperature', 'pressure']:
-            check_interp(WTK_res, var, h)
+            check_interp(WindResource_res, var, h)
 
-        WTK_res.close()
+        WindResource_res.close()

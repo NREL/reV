@@ -11,7 +11,7 @@ import os
 import pandas as pd
 from warnings import warn
 
-from reV.handlers.resource import WTK, NSRDB
+from reV.handlers.resource import WindResource, SolarResource, NSRDB
 from reV.SAM.PySSC import PySSC
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 
@@ -255,6 +255,14 @@ class SAM:
     DIR = os.path.dirname(os.path.realpath(__file__))
     MODULE = None
 
+    # Mapping for reV technology and SAM module to h5 resource handler type
+    # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
+    RESOURCE_TYPES = {'pv': SolarResource, 'pvwattsv5': SolarResource,
+                      'csp': SolarResource, 'tcsmolten_salt': SolarResource,
+                      'wind': WindResource, 'landbasedwind': WindResource,
+                      'offshorewind': WindResource, 'windpower': WindResource,
+                      }
+
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
         """Initialize a SAM object.
@@ -339,7 +347,7 @@ class SAM:
                 self._site = 'N/A'
 
     @staticmethod
-    def get_sam_res(res_file, project_points, module=''):
+    def get_sam_res(res_file, project_points, module):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -350,11 +358,11 @@ class SAM:
             reV 2.0 Project Points instance used to retrieve resource data at a
             specific set of sites.
         module : str
-            Optional SAM module name or reV technology to force interpretation
+            SAM module name or reV technology to force interpretation
             of the resource file type.
-            Example: if the resource file does not have 'nsrdb' in the
-            name, module can be set to 'pvwatts' or 'tcsmolten' to force
-            interpretation of the resource file as a solar resource.
+            Example: module set to 'pvwatts' or 'tcsmolten' means that this
+            expects a SolarResource file. If 'nsrdb' is in the res_file name,
+            the NSRDB handler will be used.
 
         Returns
         -------
@@ -362,16 +370,22 @@ class SAM:
             Resource iterator object to pass to SAM.
         """
 
-        if ('nsrdb' in res_file or 'pv' in module or 'tcsmolten' in module or
-                'csp' in module):
-            res = NSRDB.preload_SAM(res_file, project_points)
-        elif 'wtk' in res_file or 'wind' in module:
-            res = WTK.preload_SAM(res_file, project_points)
-        else:
-            raise SAMExecutionError('Cannot interpret the type of resource '
-                                    'file being input: {}. Should have nsrdb '
-                                    'or wtk in the name, or specify which SAM '
-                                    'module is being run.'.format(res_file))
+        try:
+            res_handler = SAM.RESOURCE_TYPES[module.lower()]
+        except KeyError:
+            msg = ('Cannot interpret what kind of resource handler the SAM '
+                   'module or reV technology "{}" requires. Expecting one of '
+                   'the following SAM modules or reV technologies: {}'
+                   .format(module, list(SAM.RESOURCE_TYPES.keys())))
+            raise SAMExecutionError(msg)
+
+        if (isinstance(res_handler, SolarResource) and
+                'nsrdb' in res_file.lower()):
+            # Use NSRDB handler if definitely an NSRDB file
+            res_handler = NSRDB
+
+        # use resource handler to preload the SAM resource data
+        res = res_handler.preload_SAM(res_file, project_points)
         return res
 
     def set_resource(self, resource=None):

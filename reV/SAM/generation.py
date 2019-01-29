@@ -83,7 +83,7 @@ class Generation(SAM):
         out = {}
 
         resources = SAM.get_sam_res(res_file, points_control.project_points,
-                                    module=points_control.project_points.tech)
+                                    points_control.project_points.tech)
 
         for res_df, meta in resources:
             # get SAM inputs from project_points based on the current site
