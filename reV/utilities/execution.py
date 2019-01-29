@@ -276,7 +276,7 @@ class PBS(SubprocessManager):
 
         status = self.check_status(name, var='name')
 
-        if status == 'Q' or status == 'R':
+        if status in ('Q', 'R'):
             warn('Not submitting job "{}" because it is already in '
                  'qstat with status: "{}"'.format(name, status))
             out = None
@@ -452,7 +452,7 @@ class SLURM(SubprocessManager):
 
         status = self.check_status(name, var='name')
 
-        if status == 'PD' or status == 'R':
+        if status in ('PD', 'R'):
             warn('Not submitting job "{}" because it is already in '
                  'squeue with status: "{}"'.format(name, status))
             out = None
@@ -485,7 +485,7 @@ class SLURM(SubprocessManager):
         return out, err
 
 
-def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,
+def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
                      **kwargs):
     """Execute a parallel compute on a single node.
 
@@ -523,7 +523,7 @@ def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,
     return results
 
 
-def execute_futures(fun, execution_iter, cluster=None, loggers=[], **kwargs):
+def execute_futures(fun, execution_iter, cluster=None, loggers=(), **kwargs):
     """Execute concurrent futures with an established cluster.
 
     Parameters
@@ -600,7 +600,7 @@ def execute_single(fun, input_obj, worker=0, **kwargs):
 class SmartParallelJob:
     """Single node parallel compute manager with smart data flushing."""
 
-    def __init__(self, obj, execution_iter, loggers=[], n_workers=None,
+    def __init__(self, obj, execution_iter, loggers=(), n_workers=None,
                  mem_util_lim=0.7):
         """Single node parallel compute manager with smart data flushing.
 
@@ -820,7 +820,7 @@ class SmartParallelJob:
         return futures, client
 
     @classmethod
-    def execute(cls, obj, execution_iter, loggers=[], n_workers=None,
+    def execute(cls, obj, execution_iter, loggers=(), n_workers=None,
                 mem_util_lim=0.7, **kwargs):
         """Execute the smart parallel run with data flushing.
 

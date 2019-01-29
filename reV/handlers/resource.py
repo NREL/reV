@@ -503,6 +503,27 @@ class Resource:
 
         return attrs
 
+    def get_dset_properties(self, dset):
+        """
+        Get dataset properties (shape, dtype, chunks)
+
+        Parameters
+        ----------
+        dset : str
+            Dataset to get scale factor for
+
+        Returns
+        -------
+        shape : tuple
+            Dataset array shape
+        dtype : str
+            Dataset array dtype
+        chunks : tuple
+            Dataset chunk size
+        """
+        ds = self._h5[dset]
+        return ds.shape, ds.dtype, ds.chunks
+
     def get_scale(self, dset):
         """
         Get dataset scale factor
