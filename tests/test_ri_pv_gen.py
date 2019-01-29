@@ -164,6 +164,7 @@ def test_pv_gen_profiles(year):
 
     # run reV 2.0 generation and write to disk
     Gen.run_direct('pv', points, sam_files, res_file, fout=rev2_out,
+                   output_request=('cf_profile',),
                    n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
                    return_obj=False)
 
@@ -201,7 +202,8 @@ def test_smart(year):
 
     # run reV 2.0 generation and write to disk
     Gen.run_smart('pv', points, sam_files, res_file, fout=rev2_out,
-                  n_workers=2, sites_per_split=50, dirout=rev2_out_dir)
+                  n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
+                  output_request=('cf_profile',))
 
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(rev2_out_dir)

@@ -1,6 +1,7 @@
 """
 Generation
 """
+from copy import deepcopy
 import logging
 import numpy as np
 import os
@@ -8,7 +9,7 @@ import pprint
 import re
 from warnings import warn
 
-from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
+from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
@@ -23,12 +24,18 @@ class Gen:
     """Base class for generation"""
 
     # Mapping of reV technology strings to SAM generation functions
-    REVTECHS = {'pv': PV.reV_run,
-                'csp': CSP.reV_run,
-                'wind': LandBasedWind.reV_run,
-                'landbasedwind': LandBasedWind.reV_run,
-                'offshorewind': OffshoreWind.reV_run,
-                }
+    OPTIONS = {'pv': PV.reV_run,
+               'csp': CSP.reV_run,
+               'wind': LandBasedWind.reV_run,
+               'landbasedwind': LandBasedWind.reV_run,
+               'offshorewind': OffshoreWind.reV_run,
+               }
+
+    OUT_ATTRS = {'cf_means': {'scale_factor': 1000, 'units': 'unitless',
+                              'dtype': 'uint16'},
+                 'cf_profiles': {'scale_factor': 1000, 'units': 'unitless',
+                                 'dtype': 'uint16'},
+                 }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out'):
@@ -55,11 +62,11 @@ class Gen:
         self._fout = fout
         self._dirout = dirout
 
-        if self.tech not in self.REVTECHS:
+        if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
                            'reV generation can analyze the following '
                            'technologies: {}'
-                           .format(self.tech, list(self.REVTECHS.keys())))
+                           .format(self.tech, list(self.OPTIONS.keys())))
 
     @property
     def output_request(self):
@@ -424,9 +431,12 @@ class Gen:
         if 'lcoe' in str(self.output_request):
             lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
 
-        # write means to disk using CapacityFactor class
-        attrs = {'scale_factor': 1000, 'units': 'unitless'}
-        Outputs.write_means(fout, meta, 'cf', cf_means, attrs, 'uint16',
+        # get dset attributes
+        attrs = deepcopy(self.OUT_ATTRS['cf_means'])
+        dtype = attrs['dtype']
+        del attrs['dtype']
+
+        Outputs.write_means(fout, meta, 'cf', cf_means, attrs, dtype,
                             self.sam_configs, lcoe=lcoe, **{'mode': mode})
 
     def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
@@ -448,10 +458,13 @@ class Gen:
         if 'lcoe' in str(self.output_request):
             lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
 
-        # write profiles to disk using CapacityFactor class
-        attrs = {'scale_factor': 1000, 'units': 'unitless'}
+        # get dset attributes
+        attrs = deepcopy(self.OUT_ATTRS['cf_profiles'])
+        dtype = attrs['dtype']
+        del attrs['dtype']
+
         Outputs.write_profiles(fout, meta, self.time_index, 'cf_profiles',
-                               cf_profiles, attrs, 'uint16', self.sam_configs,
+                               cf_profiles, attrs, dtype, self.sam_configs,
                                lcoe=lcoe, **{'mode': mode})
 
     @staticmethod
@@ -580,6 +593,12 @@ class Gen:
             instead of an instance attribute so that the execute_futures
             can pass in a split instance of points_control. This is a
             @staticmethod to expedite submission to Dask client.
+        tech : str
+            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+        res_file : str
+            Single resource file with path.
+        output_request : list | tuple
+            Output variables requested from SAM.
 
         Returns
         -------
@@ -588,17 +607,17 @@ class Gen:
         """
 
         try:
-            out = Gen.REVTECHS[tech](points_control, res_file,
-                                     output_request=output_request)
-        except Exception:
+            out = Gen.OPTIONS[tech](points_control, res_file, output_request)
+        except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
+            raise e
 
         return out
 
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-                   cf_profiles=True, lcoe=False, n_workers=1,
+                   output_request=('cf_mean',), n_workers=1,
                    sites_per_split=None, points_range=None, fout=None,
                    dirout='./gen_out', return_obj=True):
         """Execute a generation run directly from source files without config.
@@ -617,11 +636,8 @@ class Gen:
             to the sorted list of unique configs requested by points csv.
         res_file : str
             Single resource file with path.
-        cf_profiles : bool
-            Enables capacity factor annual profile output. Capacity factor
-            means output if this is False.
-        lcoe : bool
-            Enables lcoe calculation and output.
+        output_request : list | tuple
+            Output variables requested from SAM.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -646,12 +662,9 @@ class Gen:
             Only returned if return_obj is True.
         """
 
-        # create the output request tuple
-        output_request = ('cf_mean',)
-        if cf_profiles:
-            output_request += ('cf_profile',)
-        if lcoe:
-            output_request += ('lcoe_fcr',)
+        # always extract cf mean
+        if 'cf_mean' not in output_request:
+            output_request += ('cf_mean',)
 
         # get a points control instance
         pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
@@ -685,7 +698,7 @@ class Gen:
 
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  cf_profiles=True, lcoe=False, n_workers=1,
+                  output_request=('cf_mean',), n_workers=1,
                   sites_per_split=None, points_range=None, fout=None,
                   dirout='./gen_out', mem_util_lim=0.7):
         """Execute a generation run with smart data flushing.
@@ -704,11 +717,8 @@ class Gen:
             to the sorted list of unique configs requested by points csv.
         res_file : str
             Single resource file with path.
-        cf_profiles : bool
-            Enables capacity factor annual profile output. Capacity factor
-            means output if this is False.
-        lcoe : bool
-            Enables lcoe calculation and output.
+        output_request : list | tuple
+            Output variables requested from SAM.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int | None
@@ -729,12 +739,9 @@ class Gen:
             be flushed and the local node memory will be cleared.
         """
 
-        # create the output request tuple
-        output_request = ('cf_mean',)
-        if cf_profiles:
-            output_request += ('cf_profile',)
-        if lcoe:
-            output_request += ('lcoe_fcr',)
+        # always extract cf mean
+        if 'cf_mean' not in output_request:
+            output_request += ('cf_mean',)
 
         # get a points control instance
         pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
@@ -760,5 +767,6 @@ class Gen:
                                      loggers=['reV.generation',
                                               'reV.utilities'],
                                      mem_util_lim=mem_util_lim, **kwargs)
-        except Exception:
+        except Exception as e:
             logger.exception('SmartParallelJob.execute() failed.')
+            raise e

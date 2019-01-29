@@ -1,5 +1,5 @@
 """
-reV Configuration
+reV Base Configuration Frameworks
 """
 import json
 import logging

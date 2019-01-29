@@ -742,12 +742,6 @@ class NSRDB(SolarResource):
     UNIT_ATTRS = 'psm_units'
 
 
-class SolarFCST(SolarResource):
-    """
-    Class to handle ECMWF weather forecast .h5 files
-    """
-
-
 class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
@@ -1117,27 +1111,3 @@ class WindResource(Resource):
                         SAM_res[var, :, sam_pos] = res[ds_name, :, h_pos]
 
         return SAM_res
-
-
-class WTK(WindResource):
-    """
-    Class to handle WTK .h5 files
-    """
-
-
-class WindFCST(WindResource):
-    """
-    Class to handle ECMWF weather forecast .h5 files
-    """
-
-
-class MERRA2(WindResource):
-    """
-    Class to handle MERRA2 .h5 files
-    """
-
-
-class ERA5(WindResource):
-    """
-    Class to handle ERA5 .h5 files
-    """

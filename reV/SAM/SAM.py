@@ -4,7 +4,6 @@
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
 SAM software development kit (SDK).
 """
-import gc
 import json
 import logging
 import numpy as np
@@ -12,7 +11,7 @@ import os
 import pandas as pd
 from warnings import warn
 
-from reV.handlers.resource import WTK, NSRDB
+from reV.handlers.resource import WindResource, SolarResource, NSRDB
 from reV.SAM.PySSC import PySSC
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 
@@ -60,7 +59,7 @@ def is_2D_list(a):
 class ParametersManager:
     """Class to manage SAM input parameters, requirements, and defaults."""
 
-    def __init__(self, parameters, module):
+    def __init__(self, parameters, module, verify=True, set_def=True):
         """Initialize the SAM input parameters class.
 
         Parameters
@@ -69,6 +68,11 @@ class ParametersManager:
             SAM model input parameters.
         module : str
             SAM module ('pvwatts', 'tcsmolten_salt', etc...)
+        verify : bool
+            Flag on whether to verify input parameters.
+        set_def : bool
+            Flag on whether to set defaults for missing input parameters
+            (prints SAMInputWarning if defaults get set).
         """
 
         # set the parameters and module properties
@@ -77,7 +81,8 @@ class ParametersManager:
 
         # get requirements and verify that all are satisfied
         self._requirements = self.get_requirements(self.module)
-        self.verify_inputs()
+        if verify:
+            self.verify_inputs(set_def=set_def)
 
     def __getitem__(self, key):
         """Get parameters property"""
@@ -198,12 +203,18 @@ class ParametersManager:
         # resource file if one is not provided.
         self.verify_inputs()
 
-    def verify_inputs(self):
+    def verify_inputs(self, set_def=True):
         """Verify that required inputs are available and have correct dtype.
         Also set missing inputs to default values.
 
         Prints logger warnings when variables are missing, set to default,
         or are of the incorrect datatype.
+
+        Parameters
+        ----------
+        set_def : bool
+            Flag on whether to set defaults for missing input parameters
+            (prints SAMInputWarning if defaults get set).
         """
         missing_inputs = False
         for name, dtypes in self.requirements:
@@ -217,15 +228,40 @@ class ParametersManager:
                     warn('SAM input parameter "{}" must be of '
                          'type {} but is of type {}'
                          .format(name, dtypes, type(p)), SAMInputWarning)
-        if missing_inputs:
+        if missing_inputs and set_def:
             self.set_defaults()
+
+    def update(self, more_parameters):
+        """Add more parameters to this class.
+
+        Parameters
+        ----------
+        more_parameters : dict | None
+            New key-value pairs to add to this instance of SAM Parameters.
+        """
+        if more_parameters is not None:
+            if isinstance(more_parameters, dict):
+                self._parameters.update(more_parameters)
+            else:
+                warn('Attempting to update SAM input parameters with non-dict '
+                     'input. Cannot perform update operation. Proceeding '
+                     'without additional inputs: {}'.format(more_parameters),
+                     SAMInputWarning)
 
 
 class SAM:
-    """Base class for SAM derived generation.
-    """
+    """Base class for SAM simulations (generation and econ)."""
+
     DIR = os.path.dirname(os.path.realpath(__file__))
     MODULE = None
+
+    # Mapping for reV technology and SAM module to h5 resource handler type
+    # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
+    RESOURCE_TYPES = {'pv': SolarResource, 'pvwattsv5': SolarResource,
+                      'csp': SolarResource, 'tcsmolten_salt': SolarResource,
+                      'wind': WindResource, 'landbasedwind': WindResource,
+                      'offshorewind': WindResource, 'windpower': WindResource,
+                      }
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
@@ -298,19 +334,20 @@ class SAM:
         return self._site
 
     @site.setter
-    def site(self, resource):
-        """Set the site number based on the resource name attribute."""
+    def site(self, inp):
+        """Set the site number based on resource input or integer."""
         if not hasattr(self, '_site'):
-            if hasattr(resource, 'name'):
+            if hasattr(inp, 'name'):
                 # Set the protected property with the site number from resource
-                self._site = resource.name
+                self._site = inp.name
+            elif isinstance(inp, int):
+                self._site = inp
             else:
                 # resource site number not found, set as N/A
                 self._site = 'N/A'
-        return self._site
 
     @staticmethod
-    def get_sam_res(res_file, project_points, module=''):
+    def get_sam_res(res_file, project_points, module):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -321,11 +358,11 @@ class SAM:
             reV 2.0 Project Points instance used to retrieve resource data at a
             specific set of sites.
         module : str
-            Optional SAM module name or reV technology to force interpretation
+            SAM module name or reV technology to force interpretation
             of the resource file type.
-            Example: if the resource file does not have 'nsrdb' in the
-            name, module can be set to 'pvwatts' or 'tcsmolten' to force
-            interpretation of the resource file as a solar resource.
+            Example: module set to 'pvwatts' or 'tcsmolten' means that this
+            expects a SolarResource file. If 'nsrdb' is in the res_file name,
+            the NSRDB handler will be used.
 
         Returns
         -------
@@ -333,16 +370,22 @@ class SAM:
             Resource iterator object to pass to SAM.
         """
 
-        if ('nsrdb' in res_file or 'pv' in module or 'tcsmolten' in module or
-                'csp' in module):
-            res = NSRDB.preload_SAM(res_file, project_points)
-        elif 'wtk' in res_file or 'wind' in module:
-            res = WTK.preload_SAM(res_file, project_points)
-        else:
-            raise SAMExecutionError('Cannot interpret the type of resource '
-                                    'file being input: {}. Should have nsrdb '
-                                    'or wtk in the name, or specify which SAM '
-                                    'module is being run.'.format(res_file))
+        try:
+            res_handler = SAM.RESOURCE_TYPES[module.lower()]
+        except KeyError:
+            msg = ('Cannot interpret what kind of resource handler the SAM '
+                   'module or reV technology "{}" requires. Expecting one of '
+                   'the following SAM modules or reV technologies: {}'
+                   .format(module, list(SAM.RESOURCE_TYPES.keys())))
+            raise SAMExecutionError(msg)
+
+        if (isinstance(res_handler, SolarResource) and
+                'nsrdb' in res_file.lower()):
+            # Use NSRDB handler if definitely an NSRDB file
+            res_handler = NSRDB
+
+        # use resource handler to preload the SAM resource data
+        res = res_handler.preload_SAM(res_file, project_points)
         return res
 
     def set_resource(self, resource=None):
@@ -461,7 +504,7 @@ class SAM:
 
         if len(res_arr) % base != 0:
             div = np.floor(len(res_arr) / 8760)
-            target_len = div * 8760
+            target_len = int(div * 8760)
             warn('Resource array length is {}, but SAM requires a multiple of '
                  '8760. Truncating the timeseries to length {}.'
                  .format(len(res_arr), target_len), SAMInputWarning)
@@ -575,21 +618,21 @@ class SAM:
 
     @property
     def ppa_price(self):
-        """Get PPA price (cents/kWh)."""
-        return self.ssc.data_get_number(self.data, 'ppa')
+        """Get PPA price ($/MWh). Native units are cents/kWh."""
+        return self.ssc.data_get_number(self.data, 'ppa') * 10
 
     @property
     def lcoe_fcr(self):
         """Get LCOE ($/MWh). Native units are $/kWh, mult by 1000 for $/MWh."""
         return self.ssc.data_get_number(self.data, 'lcoe_fcr') * 1000
 
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM simulation by module name.
+    def execute(self, module_to_run, close=True):
+        """Execute a single SAM simulation core by module name.
 
         Parameters
         ----------
-        modules_to_run : str or list
-            SAM module names (e.g., 'pvwattsv5', 'tcsmolten_salt', 'windpower',
+        module_to_run : str
+            SAM module name (e.g., 'pvwattsv5', 'tcsmolten_salt', 'windpower',
             'singleowner', 'lcoefcr'...)
         close : boolean
             close=True (default) runs a single simulation and clears the data,
@@ -598,30 +641,28 @@ class SAM:
             passed to downstream modules. In this case, output collection is
             also not executed.
         """
-        if isinstance(modules_to_run, str):
-            modules_to_run = [modules_to_run]
 
-        for m in modules_to_run:
-            logger.debug('Running SAM module "{}" for site #{}'
-                         .format(m, self.site))
-            module = self.ssc.module_create(m.encode())
-            self.ssc.module_exec_set_print(0)
-            if self.ssc.module_exec(module, self.data) == 0:
-                msg = ('SAM Simulation Error in "{}" for site #{}'
-                       .format(m, self.site))
+        logger.debug('Running SAM module "{}" for site #{}'
+                     .format(module_to_run, self.site))
+        module = self.ssc.module_create(module_to_run.encode())
+        self.ssc.module_exec_set_print(0)
+        if self.ssc.module_exec(module, self.data) == 0:
+            msg = ('SAM Simulation Error in "{}" for site #{}'
+                   .format(module_to_run, self.site))
+            logger.exception(msg)
+            idx = 0
+            while msg is not None:
+                msg = self.ssc.module_log(module, idx)
+                raise SAMExecutionError('SAM error message: "{}"'
+                                        .format(msg.decode('utf-8')))
                 logger.exception(msg)
-                idx = 0
-                while msg is not None:
-                    msg = self.ssc.module_log(module, idx)
-                    raise SAMExecutionError('SAM error message: "{}"'
-                                            .format(msg.decode('utf-8')))
-                    logger.exception(msg)
-                    idx = idx + 1
-                raise Exception(msg)
-            self.ssc.module_free(module)
+                idx = idx + 1
+            raise Exception(msg)
+        self.ssc.module_free(module)
+
+        self.outputs = self.collect_outputs()
 
         if close is True:
-            self.outputs = self.collect_outputs()
             self.ssc.data_free(self.data)
 
     def collect_outputs(self):
@@ -651,455 +692,3 @@ class SAM:
                 results[request] = self.lcoe_fcr
 
         return results
-
-    @classmethod
-    def reV_run(cls, points_control, res_file, output_request=('cf_mean',)):
-        """Execute SAM simulations based on a reV points control instance.
-
-        Parameters
-        ----------
-        points_control : config.PointsControl
-            PointsControl instance containing project points site and SAM
-            config info.
-        res_file : str
-            Resource file with full path.
-        output_request : list | tuple
-            Outputs to retrieve from SAM.
-        return_meta : bool
-            Adds meta key/value pair to dictionary output. Additional reV
-            variables added to the meta series.
-
-        Returns
-        -------
-        out : dict
-            Nested dictionaries where the top level key is the site index,
-            the second level key is the variable name, second level value is
-            the output variable value.
-        """
-
-        out = {}
-
-        resources = SAM.get_sam_res(res_file, points_control.project_points,
-                                    module=points_control.project_points.tech)
-
-        for res_df, meta in resources:
-            # get SAM inputs from project_points based on the current site
-            site = res_df.name
-            config, inputs = points_control.project_points[site]
-            # iterate through requested sites.
-            sim = cls(resource=res_df, meta=meta, parameters=inputs,
-                      output_request=output_request)
-            sim.execute(cls.MODULE)
-            out[site] = sim.outputs
-
-            logger.debug('Outputs for site {} with config "{}", \n\t{}...'
-                         .format(site, config, str(out[site])[:100]))
-            del res_df, meta, sim
-        del resources
-        gc.collect()
-        return out
-
-
-class Solar(SAM):
-    """Base Class for Solar generation from SAM
-    """
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=False):
-        """Initialize a SAM solar object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data.
-        """
-
-        # drop the leap day
-        if drop_leap:
-            resource = self.drop_leap(resource)
-
-        # don't pass resource to base class, set in set_nsrdb instead.
-        super().__init__(resource=None, meta=meta, parameters=parameters,
-                         output_request=output_request)
-
-        # Set the site number using resource
-        self.site = resource
-
-        if resource is None or meta is None:
-            # if no resource input data is specified, you need a resource file
-            self.parameters.require_resource_file(res_type='solar')
-
-        elif resource is not None and meta is not None:
-            self.set_nsrdb(resource)
-
-    def set_nsrdb(self, resource):
-        """Set SSC NSRDB resource data arrays.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            2D table with resource data. Available columns must have var_list.
-        """
-
-        # call generic set resource method from the base class
-        super().set_resource(resource=resource)
-
-        # map resource data names to SAM required data names
-        var_map = {'dni': 'dn',
-                   'dhi': 'df',
-                   'ghi': 'gh',
-                   'wind_speed': 'wspd',
-                   'air_temperature': 'tdry',
-                   }
-
-        # set resource variables
-        for var in resource.columns.values:
-            if var != 'time_index':
-                # ensure that resource array length is multiple of 8760
-                res_arr = self.ensure_res_len(np.roll(resource[var],
-                                              int(self.meta['timezone'] *
-                                                  self.time_interval)))
-                self.ssc.data_set_array(self.res_data, var_map[var], res_arr)
-
-        # add resource data to self.data and clear
-        self.ssc.data_set_table(self.data, 'solar_resource_data',
-                                self.res_data)
-        self.ssc.data_free(self.res_data)
-
-
-class PV(Solar):
-    """Photovoltaic (PV) generation with pvwattsv5.
-    """
-    MODULE = 'pvwattsv5'
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
-        """Initialize a SAM solar PV object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        """
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
-
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM PV solar simulation.
-        """
-        self.set_parameters()
-
-        if 'lcoe_fcr' in self.output_request:
-            # econ outputs requested, run LCOE model after pvwatts.
-            super().execute(modules_to_run, close=False)
-            lcoe = LCOE(self.ssc, self.data, self.parameters,
-                        self.output_request)
-            lcoe.execute(LCOE.MODULE)
-            self.outputs = lcoe.outputs
-        else:
-            super().execute(modules_to_run, close=close)
-
-
-class CSP(Solar):
-    """Concentrated Solar Power (CSP) generation
-    """
-    MODULE = 'tcsmolten_salt'
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
-        """Initialize a SAM concentrated solar power (CSP) object.
-        """
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
-
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM CSP solar simulation.
-        """
-        self.set_parameters()
-
-        if 'ppa_price' in self.output_request:
-            # econ outputs requested, run single owner model after csp.
-            super().execute(modules_to_run, close=False)
-            so = SingleOwner(self.ssc, self.data, self.parameters,
-                             self.output_request)
-            so.execute(SingleOwner.MODULE)
-            self.outputs = so.outputs
-        else:
-            super().execute(modules_to_run, close=close)
-
-
-class Wind(SAM):
-    """Base class for Wind generation from SAM
-    """
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=False):
-        """Initialize a SAM wind object.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            2D table with resource data. Available columns must have wind_vars
-        meta : pd.DataFrame
-            1D table with resource meta data.
-        parameters : dict
-            SAM model input parameters.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        drop_leap : bool
-            Drops February 29th from the resource data.
-        """
-
-        # drop the leap day
-        if drop_leap:
-            resource = self.drop_leap(resource)
-
-        # don't pass resource to base class, set in set_wtk instead.
-        super().__init__(resource=None, meta=meta, parameters=parameters,
-                         output_request=output_request)
-
-        # Set the site number using resource
-        self.site = resource
-
-        if resource is None or meta is None:
-            # if no resource input data is specified, you need a resource file
-            self.parameters.require_resource_file(res_type='wind')
-
-        elif resource is not None and meta is not None:
-            self.set_wtk(resource)
-
-    def set_wtk(self, resource):
-        """Set SSC WTK resource data arrays.
-
-        Parameters
-        ----------
-        resource : pd.DataFrame
-            2D table with resource data. Available columns must have var_list.
-        """
-
-        # call generic set resource method from the base class
-        super().set_resource(resource=resource)
-
-        self.ssc.data_set_array(self.res_data, 'fields', [1, 2, 3, 4])
-        self.ssc.data_set_array(self.res_data, 'heights',
-                                4 * [self.parameters['wind_turbine_hub_ht']])
-
-        # must be set as matrix in [temperature, pres, speed, direction] order
-        # ensure that resource array length is multiple of 8760
-        temp = self.ensure_res_len(resource[['temperature', 'pressure',
-                                             'windspeed',
-                                             'winddirection']].values)
-        self.ssc.data_set_matrix(self.res_data, 'data', temp)
-
-        # add resource data to self.data and clear
-        self.ssc.data_set_table(self.data, 'wind_resource_data', self.res_data)
-        self.ssc.data_free(self.res_data)
-
-
-class LandBasedWind(Wind):
-    """Onshore wind generation
-    """
-    MODULE = 'windpower'
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
-        """Initialize a SAM land based wind object.
-        """
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
-
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM land based wind simulation.
-        """
-        self.set_parameters()
-
-        if 'lcoe_fcr' in self.output_request:
-            # econ outputs requested, run LCOE model after pvwatts.
-            super().execute(modules_to_run, close=False)
-            lcoe = LCOE(self.ssc, self.data, self.parameters,
-                        self.output_request)
-            lcoe.execute(LCOE.MODULE)
-            self.outputs = lcoe.outputs
-        else:
-            super().execute(modules_to_run, close=close)
-
-
-class OffshoreWind(LandBasedWind):
-    """Offshore wind generation
-    """
-    MODULE = 'windpower'
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
-        """Initialize a SAM offshore wind object.
-        """
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
-
-
-class Economic(SAM):
-    """Base class for SAM economic models.
-    """
-    MODULE = None
-
-    def __init__(self, ssc, data, parameters, output_request):
-        """Initialize a SAM economic model object.
-
-        Parameters
-        ----------
-        ssc : PySSC()
-            Python SAM Simulation Core (SSC) object. Can be passed from a
-            technology generation class after the SAM technology generation
-            simulation has been run.
-        data : PySSC.data_create()
-            SSC data creation object. If passed from a technology generation
-            class, do not run ssc.data_free(data) until after the Economic
-            model has been run.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
-        output_request : list
-            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
-            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
-            'lcoe_fcr').
-        """
-
-        # set attribute to store site number
-        self.site = None
-
-        if ssc is None and data is None:
-            # SAM generation simulation core not passed in. Create new SSC.
-            self._ssc = PySSC()
-            self._data = self._ssc.data_create()
-        else:
-            # Received SAM generation SSC.
-            self._ssc = ssc
-            self._data = data
-
-        self.output_request = output_request
-
-        # Use Parameters class to manage inputs, defaults, and requirements.
-        if isinstance(parameters, ParametersManager):
-            self.parameters = parameters
-        else:
-            self.parameters = ParametersManager(parameters, self.module)
-
-    def execute(self, modules_to_run, close=True):
-        """Execute a SAM single owner model calculation.
-        """
-        self.set_parameters()
-        super().execute(modules_to_run, close=close)
-
-    @classmethod
-    def reV_run(cls, points_control, site_df, output_request=('lcoe_fcr',)):
-        """Execute SAM simulations based on a reV points control instance.
-
-        Parameters
-        ----------
-        points_control : config.PointsControl
-            PointsControl instance containing project points site and SAM
-            config info.
-        site_df : pd.DataFrame
-            Dataframe of site-specific input variables. Number of rows should
-            match the number of sites, column labels are the variable keys
-            that will be passed forward as SAM parameters.
-        output_request : list | tuple
-            Outputs to retrieve from SAM.
-
-        Returns
-        -------
-        out : dict
-            Nested dictionaries where the top level key is the site index,
-            the second level key is the variable name, second level value is
-            the output variable value.
-        """
-
-        out = {}
-
-        calc_aey = False
-        if 'annual_energy' not in site_df:
-            # annual energy yield has not been input, flag to calculate
-            site_df['annual_energy'] = 0
-            calc_aey = True
-
-        if calc_aey and 'capacity_factor' not in site_df:
-            raise SAMExecutionError('Input parameter "capacity_factor" must '
-                                    'be included as a site-specific variable '
-                                    'as a column in the "site_df" input.')
-        site_vars = site_df.columns.values
-
-        for site in points_control.sites:
-            # get SAM inputs from project_points based on the current site
-            config, inputs = points_control.project_points[site]
-
-            if calc_aey and 'system_capacity' not in inputs:
-                raise SAMExecutionError('Input parameter "system_capacity" '
-                                        'must be included in the SAM config '
-                                        'inputs.')
-
-            # calculate the annual energy yield if not input
-            if calc_aey:
-                if site_df.loc[site, 'capacity_factor'] > 1:
-                    warn('Capacity factor > 1. Dividing by 100.')
-                    cf = site_df.loc[site, 'capacity_factor'] / 100
-                else:
-                    cf = site_df.loc[site, 'capacity_factor']
-
-                # add aey to site-specific inputs
-                # mult by 8760 to convert kW to kWh
-                aey = inputs['system_capacity'] * cf * 8760
-                site_df.loc[site, 'annual_energy'] = aey
-
-            # Add any site-specific inputs to the inputs dict
-            inputs.update(dict(zip(site_vars, site_df.loc[site, :])))
-
-            # iterate through requested sites.
-            sim = cls(ssc=None, data=None, parameters=inputs,
-                      output_request=output_request)
-            sim.execute(cls.MODULE)
-            out[site] = sim.outputs
-
-            logger.debug('Outputs for site {} with config "{}", \n\t{}...'
-                         .format(site, config, str(out[site])[:100]))
-        return out
-
-
-class LCOE(Economic):
-    """SAM LCOE model.
-    """
-    MODULE = 'lcoefcr'
-
-    def __init__(self, ssc, data, parameters, output_request):
-        """Initialize a SAM LCOE economic model object.
-        """
-        super().__init__(ssc, data, parameters, output_request)
-
-
-class SingleOwner(Economic):
-    """SAM single owner economic model.
-    """
-    MODULE = 'singleowner'
-
-    def __init__(self, ssc, data, parameters, output_request):
-        """Initialize a SAM single owner economic model object.
-        """
-        super().__init__(ssc, data, parameters, output_request)

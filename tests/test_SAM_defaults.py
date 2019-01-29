@@ -7,7 +7,7 @@ import os
 import pytest
 
 import utilities as ut
-from reV.SAM import SAM
+from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.utilities.loggers import init_logger
 
 
@@ -33,41 +33,41 @@ class SAMTestManager:
 
         if module == 'pvwatts':
             # test SAM pvwatts module
-            sim = SAM.PV(resource=None, meta=None, parameters=inputs,
-                         output_request=['cf_mean', 'cf_profile',
-                                         'annual_energy', 'energy_yield',
-                                         'gen_profile'])
+            sim = PV(resource=None, meta=None, parameters=inputs,
+                     output_request=['cf_mean', 'cf_profile',
+                                     'annual_energy', 'energy_yield',
+                                     'gen_profile'])
         elif module == 'pvwatts_lcoe':
             # test SAM pvwatts module with LCOE
-            sim = SAM.PV(resource=None, meta=None, parameters=inputs,
-                         output_request=['cf_mean', 'cf_profile',
-                                         'annual_energy', 'energy_yield',
-                                         'gen_profile', 'lcoe_fcr'])
+            sim = PV(resource=None, meta=None, parameters=inputs,
+                     output_request=['cf_mean', 'cf_profile',
+                                     'annual_energy', 'energy_yield',
+                                     'gen_profile', 'lcoe_fcr'])
         elif module == 'tcsmolten_salt':
             # test SAM tcs molten salt module with single owner
-            sim = SAM.CSP(resource=None, meta=None, parameters=inputs,
-                          output_request=['cf_mean', 'cf_profile',
-                                          'annual_energy', 'energy_yield',
-                                          'gen_profile', 'ppa_price'])
+            sim = CSP(resource=None, meta=None, parameters=inputs,
+                      output_request=['cf_mean', 'cf_profile',
+                                      'annual_energy', 'energy_yield',
+                                      'gen_profile', 'ppa_price'])
         elif module == 'landbasedwind':
             # test SAM windpower module
-            sim = SAM.LandBasedWind(resource=None, meta=None,
-                                    parameters=inputs,
-                                    output_request=['cf_mean', 'cf_profile',
-                                                    'annual_energy',
-                                                    'energy_yield',
-                                                    'gen_profile'])
+            sim = LandBasedWind(resource=None, meta=None,
+                                parameters=inputs,
+                                output_request=['cf_mean', 'cf_profile',
+                                                'annual_energy',
+                                                'energy_yield',
+                                                'gen_profile'])
         elif module == 'landbasedwind_lcoe':
             # test SAM windpower module
-            sim = SAM.LandBasedWind(resource=None, meta=None,
-                                    parameters=inputs,
-                                    output_request=['cf_mean', 'cf_profile',
-                                                    'annual_energy',
-                                                    'energy_yield',
-                                                    'gen_profile',
-                                                    'lcoe_fcr'])
+            sim = LandBasedWind(resource=None, meta=None,
+                                parameters=inputs,
+                                output_request=['cf_mean', 'cf_profile',
+                                                'annual_energy',
+                                                'energy_yield',
+                                                'gen_profile',
+                                                'lcoe_fcr'])
 
-        sim.execute(sim.MODULE)
+        sim.gen_exec(sim.MODULE)
         test = self.check_test_results(sim.outputs, o_fname,
                                        module)
 
@@ -96,13 +96,13 @@ class SAMTestManager:
                                  .format(i_fname))
 
         if module == 'pvwatts':
-            outputs = SAM.PV.reV_run(res_f, sites, inputs)
+            outputs = PV.reV_run(res_f, sites, inputs)
         elif module == 'tcsmolten_salt':
-            outputs = SAM.CSP.reV_run(res_f, sites, inputs)
+            outputs = CSP.reV_run(res_f, sites, inputs)
         elif module == 'windpower':
-            outputs = SAM.LandBasedWind.reV_run(res_f, sites, inputs)
+            outputs = LandBasedWind.reV_run(res_f, sites, inputs)
         elif module == 'offshore':
-            outputs = SAM.OffshoreWind.reV_run(res_f, sites, inputs)
+            outputs = OffshoreWind.reV_run(res_f, sites, inputs)
 
         test = self.check_test_results(outputs, o_fname, module)
 

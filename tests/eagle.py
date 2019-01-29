@@ -90,7 +90,6 @@ def test_eagle(year):
 
     name = 'etest'
     points = slice(0, 100)
-    cf_profiles = True
     verbose = True
 
     log_level = 'DEBUG'
@@ -104,7 +103,7 @@ def test_eagle(year):
                        sam_files=sam_files, res_file=res_file,
                        sites_per_core=None, n_workers=None,
                        fout=rev2_out, dirout=rev2_out_dir, logdir=rev2_out_dir,
-                       cf_profiles=cf_profiles, verbose=verbose)
+                       output_request=('cf_profile',), verbose=verbose)
 
     # create and submit the SLURM job
     slurm = SLURM(cmd, alloc='rev', memory=96, walltime=0.1,

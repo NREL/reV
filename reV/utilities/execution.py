@@ -515,6 +515,7 @@ def execute_parallel(fun, execution_iter, loggers=[], n_workers=None,
     except Exception as e:
         logger.exception('Failed to start Dask LocalCluster: {}'
                          .format(e))
+        raise e
 
     results = execute_futures(fun, execution_iter, cluster, loggers=loggers,
                               **kwargs)
@@ -651,6 +652,7 @@ class SmartParallelJob:
                 except Exception as e:
                     logger.exception('Failed to start Dask LocalCluster: {}'
                                      .format(e))
+                    raise e
 
             elif isinstance(self._n_workers, int):
                 try:
@@ -658,6 +660,7 @@ class SmartParallelJob:
                 except Exception as e:
                     logger.exception('Failed to start Dask LocalCluster: {}'
                                      .format(e))
+                    raise e
             else:
                 raise ExecutionError('Bad number of workers: {}'
                                      .format(self._n_workers))
