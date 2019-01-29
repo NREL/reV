@@ -9,9 +9,6 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
-from ORCA.system import System as ORCASystem
-from ORCA.data import Data as ORCAData
-
 from reV.SAM.PySSC import PySSC
 from reV.SAM.SAM import SAM, ParametersManager
 from reV.utilities.exceptions import SAMExecutionError
@@ -262,6 +259,8 @@ class ORCA_LCOE:
         site_data : dict | pd.DataFrame
             Site-specific inputs.
         """
+        from ORCA.system import System as ORCASystem
+        from ORCA.data import Data as ORCAData
 
         # make an ORCA tech system instance
         self.system_inputs = system_inputs
