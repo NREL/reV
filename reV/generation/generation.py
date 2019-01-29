@@ -608,9 +608,10 @@ class Gen:
 
         try:
             out = Gen.OPTIONS[tech](points_control, res_file, output_request)
-        except Exception:
+        except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
+            raise e
 
         return out
 
@@ -766,5 +767,6 @@ class Gen:
                                      loggers=['reV.generation',
                                               'reV.utilities'],
                                      mem_util_lim=mem_util_lim, **kwargs)
-        except Exception:
+        except Exception as e:
             logger.exception('SmartParallelJob.execute() failed.')
+            raise e
