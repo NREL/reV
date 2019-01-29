@@ -461,8 +461,10 @@ class Resource:
         meta : pandas.DataFrame
             Resource Meta Data
         """
-        meta = pd.DataFrame(self._h5['meta'][...])
-        return meta
+        if not hasattr(self, '_meta'):
+            self._meta = pd.DataFrame(self._h5['meta'][...])
+
+        return self._meta
 
     @property
     def time_index(self):
@@ -474,8 +476,11 @@ class Resource:
         time_index : pandas.DatetimeIndex
             Resource datetime index
         """
-        time_index = pd.to_datetime(self._h5['time_index'][...].astype(str))
-        return time_index
+        if not hasattr(self, '_time_index'):
+            ti = self._h5['time_index'][...].astype(str)
+            self._time_index = pd.to_datetime(ti)
+
+        return self._time_index
 
     def get_attrs(self, dset=None):
         """

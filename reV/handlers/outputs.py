@@ -11,9 +11,6 @@ from warnings import warn
 from reV.utilities.exceptions import (ResourceRuntimeError, ResourceKeyError,
                                       ResourceValueError)
 from reV.handlers.resource import Resource, parse_keys
-from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
-                                      HandlerValueError)
-from reV.utilities.utilities import parse_year
 
 
 class Outputs(Resource):
@@ -54,7 +51,7 @@ class Outputs(Resource):
                 out = self._get_ds(ds, *ds_slice)
         else:
             msg = '{} is not a valid Dataset'
-            raise HandlerKeyError(msg)
+            raise ResourceKeyError(msg)
 
         return out
 
@@ -99,9 +96,32 @@ class Outputs(Resource):
         mode = ['a', 'w', 'w-', 'x']
         if self._mode not in mode:
             msg = 'mode must be writable: {}'.format(mode)
-            raise HandlerRuntimeError(msg)
+            raise ResourceRuntimeError(msg)
 
         return True
+
+    def update_dset(self, dset, dset_array, dset_slice=None):
+        """
+        Check to see if dset needs to be updated on disk
+        If so write dset_array to disk
+
+        Parameters
+        ----------
+        dset : str
+            dataset to update
+        dset_array : ndarray
+            dataset array
+        dset_slice : tuple
+            slice of dataset to update, it None update all
+        """
+        if dset_slice is None:
+            dset_slice = (slice(None, None, None), )
+
+        keys = (dset, ) + dset_slice
+
+        arr = self.__getitem__(keys)
+        if not np.array_equal(arr, dset_array):
+            self._set_ds_array(dset, dset_array, *dset_slice)
 
     @Resource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
@@ -117,10 +137,11 @@ class Outputs(Resource):
             meta = self.to_records_array(meta)
 
         if 'meta' in self.dsets:
-            ds_slice = slice(None, None, None)
-            self._set_ds_array('meta', meta, ds_slice)
+            self.update_dset('meta', meta)
         else:
             self.create_ds('meta', meta.shape, meta.dtype, data=meta)
+
+        self._meta = meta
 
     @Resource.time_index.setter  # pylint: disable-msg=E1101
     def time_index(self, time_index):
@@ -136,11 +157,12 @@ class Outputs(Resource):
             time_index = np.array(time_index.astype(str), dtype='S20')
 
         if 'time_index' in self.dsets:
-            ds_slice = slice(None, None, None)
-            self._set_ds_array('time_index', time_index, ds_slice)
+            self.update_dset('time_index', time_index)
         else:
             self.create_ds('time_index', time_index.shape, time_index.dtype,
                            data=time_index)
+
+        self._time_index = time_index
 
     @property
     def SAM_configs(self):
@@ -279,7 +301,7 @@ class Outputs(Resource):
         """
         if ds_name not in self._h5:
             msg = '{} must be initialized!'.format(ds_name)
-            raise HandlerRuntimeError(msg)
+            raise ResourceRuntimeError(msg)
 
         self._h5[ds_name][ds_slice] = arr
 
