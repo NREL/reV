@@ -616,7 +616,7 @@ class Gen:
 
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-                   cf_profiles=True, lcoe=False, n_workers=1,
+                   output_request=('cf_mean',), n_workers=1,
                    sites_per_split=None, points_range=None, fout=None,
                    dirout='./gen_out', return_obj=True):
         """Execute a generation run directly from source files without config.
@@ -635,11 +635,8 @@ class Gen:
             to the sorted list of unique configs requested by points csv.
         res_file : str
             Single resource file with path.
-        cf_profiles : bool
-            Enables capacity factor annual profile output. Capacity factor
-            means output if this is False.
-        lcoe : bool
-            Enables lcoe calculation and output.
+        output_request : list | tuple
+            Output variables requested from SAM.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -664,12 +661,9 @@ class Gen:
             Only returned if return_obj is True.
         """
 
-        # create the output request tuple
-        output_request = ('cf_mean',)
-        if cf_profiles:
-            output_request += ('cf_profile',)
-        if lcoe:
-            output_request += ('lcoe_fcr',)
+        # always extract cf mean
+        if 'cf_mean' not in output_request:
+            output_request += ('cf_mean',)
 
         # get a points control instance
         pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
@@ -703,7 +697,7 @@ class Gen:
 
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  cf_profiles=True, lcoe=False, n_workers=1,
+                  output_request=('cf_mean',), n_workers=1,
                   sites_per_split=None, points_range=None, fout=None,
                   dirout='./gen_out', mem_util_lim=0.7):
         """Execute a generation run with smart data flushing.
@@ -722,11 +716,8 @@ class Gen:
             to the sorted list of unique configs requested by points csv.
         res_file : str
             Single resource file with path.
-        cf_profiles : bool
-            Enables capacity factor annual profile output. Capacity factor
-            means output if this is False.
-        lcoe : bool
-            Enables lcoe calculation and output.
+        output_request : list | tuple
+            Output variables requested from SAM.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int | None
@@ -747,12 +738,9 @@ class Gen:
             be flushed and the local node memory will be cleared.
         """
 
-        # create the output request tuple
-        output_request = ('cf_mean',)
-        if cf_profiles:
-            output_request += ('cf_profile',)
-        if lcoe:
-            output_request += ('lcoe_fcr',)
+        # always extract cf mean
+        if 'cf_mean' not in output_request:
+            output_request += ('cf_mean',)
 
         # get a points control instance
         pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,

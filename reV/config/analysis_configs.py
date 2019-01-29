@@ -174,6 +174,64 @@ class SAMAnalysisConfig(AnalysisConfig):
             self._pc = PointsControl(pp, sites_per_split=sites_per_split)
         return self._pc
 
+    @property
+    def output_request(self):
+        """Get the list of requested output variables.
+
+        Returns
+        -------
+        _output_request : list
+            List of requested reV output variables corresponding to SAM
+            variable names.
+        """
+        # default output request if not specified
+        default = ['cf_mean']
+
+        # map of commonly expected typos
+        corrections = {'cf_means': 'cf_mean',
+                       'cf': 'cf_mean',
+                       'capacity_factor': 'cf_mean',
+                       'capacityfactor': 'cf_mean',
+                       'cf_profiles': 'cf_profile',
+                       'profiles': 'cf_profile',
+                       'profile': 'cf_profile',
+                       'generation': 'annual_energy',
+                       'yield': 'energy_yield',
+                       'generation_profile': 'gen_profile',
+                       'generation_profiles': 'gen_profile',
+                       'gen_profiles': 'gen_profile',
+                       'lcoe': 'lcoe_fcr',
+                       'ppa': 'ppa_price',
+                       'single_owner': 'ppa_price',
+                       'singleowner': 'ppa_price',
+                       }
+
+        if not hasattr(self, '_output_request'):
+            self._output_request = []
+            temp = default
+            if 'output_request' in self['project_control']:
+                temp = self['project_control']['output_request']
+
+            if isinstance(temp, str):
+                temp = [temp]
+
+            for request in temp:
+                if request in corrections.values():
+                    self._output_request.append(request)
+                elif request in corrections.keys():
+                    self._output_request.append(corrections[request])
+                    warn('Correcting output request "{}" to "{}".'
+                         .format(request, corrections[request]), ConfigWarning)
+                else:
+                    self._output_request.append(request)
+                    warn('Did not recognize requested output variable "{}". '
+                         'Passing forward, but this may cause a downstream '
+                         'error. Available known output variables are: {}'
+                         .format(request, list(set(corrections.values()))),
+                         ConfigWarning)
+
+        return self._output_request
+
 
 class GenConfig(SAMAnalysisConfig):
     """Class to import and manage user configuration inputs."""
@@ -228,38 +286,6 @@ class GenConfig(SAMAnalysisConfig):
                               '\n\tYears: \n\t\t{}'
                               .format(self._res_files, self.years))
         return self._res_files
-
-    @property
-    def write_profiles(self):
-        """Get the boolean arg whether to write the CF profiles.
-
-        Returns
-        -------
-        _profiles : bool
-            Boolean flag on whether to write capacity factor profiles to disk.
-        """
-        default = False
-        if not hasattr(self, '_profiles'):
-            self._profiles = default
-            if 'write_profiles' in self['project_control']:
-                self._profiles = self['project_control']['write_profiles']
-        return self._profiles
-
-    @property
-    def lcoe(self):
-        """Get the boolean arg whether to calculate LCOE as part of gen run.
-
-        Returns
-        -------
-        _lcoe : bool
-            Boolean flag on whether to calc LCOE as part of the generation run.
-        """
-        default = False
-        if not hasattr(self, '_lcoe'):
-            self._lcoe = default
-            if 'lcoe' in self['project_control']:
-                self._lcoe = self['project_control']['lcoe']
-        return self._lcoe
 
 
 class EconConfig(SAMAnalysisConfig):

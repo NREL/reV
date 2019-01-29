@@ -1,0 +1,30 @@
+{
+  "directories": {
+    "logging_directory": "TESTDATADIR/ri_pv_reV2",
+    "output_directory": "TESTDATADIR/ri_pv_reV2"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "nodes": 2,
+    "option": "peregrine",
+    "ppn": 16,
+    "queue": "short",
+    "sites_per_core": null
+  },
+  "project_control": {
+    "analysis_years": 2012,
+    "logging_level": "DEBUG",
+    "name": "rev",
+    "output_request": [
+      "cf_mean",
+      "cf_profile",
+      "lcoe"
+    ],
+    "technology": "pv"
+  },
+  "project_points": "./project_points_100.csv",
+  "resource_file": "TESTDATADIR/nsrdb/ri_100_nsrdb_{}.h5",
+  "sam_files": {
+    "sam_gen_pv_1": "TESTDATADIR/SAM/naris_pv_1axis_inv13.json"
+  }
+}

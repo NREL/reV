@@ -1,9 +1,6 @@
 # pylint: skip-file
 """
-Test file for qsub on Eagle. Will not run with pytest
-(in case using on local machine).
-
-RUN THIS FILE AS A SCRIPT
+PyTest file for PV generation in Rhode Island.
 
 Created on Thu Nov 29 09:54:51 2018
 
@@ -14,17 +11,17 @@ import os
 import h5py
 import pytest
 import numpy as np
-import time
+from subprocess import Popen, PIPE
+import shlex
 
+from reV.config.analysis_configs import GenConfig
 from reV import __testdatadir__ as TESTDATADIR
 from reV.handlers.outputs import Outputs
-from reV.utilities.execution import SLURM
-from reV.utilities.loggers import init_logger
-from reV.generation.cli_gen import get_node_cmd
 
 
 RTOL = 0.0
 ATOL = 0.04
+PURGE_OUT = True
 
 
 class pv_results:
@@ -77,65 +74,42 @@ def to_list(gen_out):
     return out
 
 
-@pytest.mark.parametrize('year', [('2012')])
-def test_eagle(year):
+def test_config():
     """Gen PV CF profiles with write to disk and compare against rev1."""
-    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
-    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
-    rev2_out_dir = os.path.join(TESTDATADIR, 'ri_pv_reV2')
-    rev2_out = 'gen_ri_pv_smart_{}.h5'.format(year)
 
-    if not os.path.exists(rev2_out_dir):
-        os.mkdir(rev2_out_dir)
+    job_name = 'config_test'
+    config = os.path.join(TESTDATADIR, 'config/local.json').replace('\\', '/')
 
-    name = 'etest'
-    points = slice(0, 100)
-    verbose = True
+    cmd = 'python -m reV.cli -n "{}" -c {} generation'.format(job_name, config)
+    cmd = shlex.split(cmd)
 
-    log_level = 'DEBUG'
-    log_file = os.path.join(rev2_out_dir, '{}.log'.format(name))
-    modules = [__name__, 'reV.utilities', 'reV.generation']
-    for mod in modules:
-        init_logger(mod, log_level=log_level, log_file=log_file)
+    # use subprocess to submit command and get piped o/e
+    process = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate()
+    stderr = stderr.decode('ascii').rstrip()
+    stdout = stdout.decode('ascii').rstrip()
 
-    cmd = get_node_cmd(name=name, tech='pv',
-                       points=points, points_range=None,
-                       sam_files=sam_files, res_file=res_file,
-                       sites_per_core=None, n_workers=None,
-                       fout=rev2_out, dirout=rev2_out_dir, logdir=rev2_out_dir,
-                       output_request=('cf_profile',), verbose=verbose)
-
-    # create and submit the SLURM job
-    slurm = SLURM(cmd, alloc='rev', memory=96, walltime=0.1,
-                  name=name, stdout_path=rev2_out_dir)
-
-    while True:
-        status = slurm.check_status(name, var='name')
-        if status == 'CG':
-            break
-        else:
-            time.sleep(5)
+    config_obj = GenConfig(config)
 
     # get reV 2.0 generation profiles from disk
-    flist = os.listdir(rev2_out_dir)
+    flist = os.listdir(config_obj.dirout)
     for fname in flist:
-        if '.h5' in fname:
-            if rev2_out.strip('.h5') in fname:
-                full_f = os.path.join(rev2_out_dir, fname)
-                with Outputs(full_f, 'r') as cf:
-                    rev2_profiles = cf['cf_profiles']
-                break
+        if job_name in fname and fname.endswith('.h5'):
+            with Outputs(os.path.join(config_obj.dirout, fname), 'r') as cf:
+                rev2_profiles = cf['cf_profiles']
+            break
 
     # get reV 1.0 generation profiles
-    rev1_profiles = get_r1_profiles(year=year)
-    rev1_profiles = rev1_profiles[:, points]
+    rev1_profiles = get_r1_profiles(year=config_obj.years[0])
+    rev1_profiles = rev1_profiles[:, config_obj.points_control.sites]
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if result:
+
+    if result and PURGE_OUT:
         # remove output files if test passes.
-        flist = os.listdir(rev2_out_dir)
+        flist = os.listdir(config_obj.dirout)
         for fname in flist:
-            os.remove(os.path.join(rev2_out_dir, fname))
+            os.remove(os.path.join(config_obj.dirout, fname))
 
     assert result is True
 

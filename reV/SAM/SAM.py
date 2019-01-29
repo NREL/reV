@@ -236,17 +236,17 @@ class ParametersManager:
 
         Parameters
         ----------
-        more_parameters : dict
+        more_parameters : dict | None
             New key-value pairs to add to this instance of SAM Parameters.
         """
-
-        if isinstance(more_parameters, dict):
-            self._parameters.update(more_parameters)
-        else:
-            warn('Attempting to update SAM input parameters with non-dict '
-                 'input. Cannot perform update operation. Proceeding without '
-                 'additional inputs: {}'.format(more_parameters),
-                 SAMInputWarning)
+        if more_parameters is not None:
+            if isinstance(more_parameters, dict):
+                self._parameters.update(more_parameters)
+            else:
+                warn('Attempting to update SAM input parameters with non-dict '
+                     'input. Cannot perform update operation. Proceeding '
+                     'without additional inputs: {}'.format(more_parameters),
+                     SAMInputWarning)
 
 
 class SAM:
@@ -660,8 +660,9 @@ class SAM:
             raise Exception(msg)
         self.ssc.module_free(module)
 
+        self.outputs = self.collect_outputs()
+
         if close is True:
-            self.outputs = self.collect_outputs()
             self.ssc.data_free(self.data)
 
     def collect_outputs(self):

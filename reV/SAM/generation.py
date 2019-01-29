@@ -39,17 +39,17 @@ class Generation(SAM):
             # econ outputs requested, run LCOE model after generation.
             self.execute(module_to_run, close=False)
             lcoe = LCOE(self.ssc, self.data, self.parameters,
-                        output_request=self.output_request)
+                        output_request=('lcoe_fcr',))
             lcoe.execute(LCOE.MODULE)
-            self.outputs = lcoe.outputs
+            self.outputs.update(lcoe.outputs)
 
         elif 'ppa_price' in self.output_request:
             # econ outputs requested, run SingleOwner model after generation.
             self.execute(module_to_run, close=False)
             so = SingleOwner(self.ssc, self.data, self.parameters,
-                             output_request=self.output_request)
+                             output_request=('ppa_price',))
             so.execute(so.MODULE)
-            self.outputs = so.outputs
+            self.outputs.update(so.outputs)
 
         else:
             # normal run, no econ analysis
