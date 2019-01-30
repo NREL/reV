@@ -1,13 +1,13 @@
-reV.lcoe package
+reV.econ package
 ================
 
 Submodules
 ----------
 
-reV.lcoe.lcoe module
+reV.econ.econ module
 --------------------
 
-.. automodule:: reV.lcoe.lcoe
+.. automodule:: reV.econ.econ
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ reV.lcoe.lcoe module
 Module contents
 ---------------
 
-.. automodule:: reV.lcoe
+.. automodule:: reV.econ
     :members:
     :undoc-members:
     :show-inheritance:

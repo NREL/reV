@@ -4,10 +4,10 @@ reV.handlers package
 Submodules
 ----------
 
-reV.handlers.capacity\_factor module
-------------------------------------
+reV.handlers.outputs module
+---------------------------
 
-.. automodule:: reV.handlers.capacity_factor
+.. automodule:: reV.handlers.outputs
     :members:
     :undoc-members:
     :show-inheritance:

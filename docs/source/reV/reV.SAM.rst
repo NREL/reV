@@ -20,6 +20,22 @@ reV.SAM.SAM module
     :undoc-members:
     :show-inheritance:
 
+reV.SAM.econ module
+-------------------
+
+.. automodule:: reV.SAM.econ
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+reV.SAM.generation module
+-------------------------
+
+.. automodule:: reV.SAM.generation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------
