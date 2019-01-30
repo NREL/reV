@@ -600,8 +600,7 @@ def execute_single(fun, input_obj, worker=0, **kwargs):
 class SmartParallelJob:
     """Single node parallel compute manager with smart data flushing."""
 
-    def __init__(self, obj, execution_iter, loggers=(), n_workers=None,
-                 mem_util_lim=0.7):
+    def __init__(self, obj, execution_iter, n_workers=None, mem_util_lim=0.7):
         """Single node parallel compute manager with smart data flushing.
 
         Parameters
@@ -616,8 +615,6 @@ class SmartParallelJob:
             faster submission to the Dask client.
         execution_iter : iter
             Python iterator that controls the futures submitted to dask.
-        loggers : list
-            List of logger names to initialize on the workers.
         n_workers : int
             Number of workers to scale the cluster to. None will use all
             available workers in a local cluster.
@@ -627,9 +624,8 @@ class SmartParallelJob:
             be flushed and the local node memory will be cleared.
         """
 
-        self._obj = obj
+        self.obj = obj
         self._execution_iter = execution_iter
-        self._loggers = loggers
         self._n_workers = n_workers
         self._mem_util_lim = mem_util_lim
 
@@ -744,23 +740,6 @@ class SmartParallelJob:
         else:
             self._obj = inp_obj
 
-    @property
-    def loggers(self):
-        """Get the list of logger names."""
-        return self._loggers
-
-    def init_loggers(self, client):
-        """Initialize loggers on all workers
-
-        Parameters
-        ----------
-        client : dask.distributed.Client
-            Local Dask client with a local cluster. Loggers will be initialized
-            on the workers in this client.
-        """
-        for logger_name in self.loggers:
-            client.run(REV_LOGGERS.init_logger, logger_name)
-
     def flush(self):
         """Flush obj.out to disk, set obj.out=None, and garbage collect."""
         # memory utilization limit exceeded, flush memory to disk
@@ -819,9 +798,65 @@ class SmartParallelJob:
             self.flush()
         return futures, client
 
+    @staticmethod
+    def init_loggers(client, loggers):
+        """
+        Initialize loggers on all workers
+
+        Parameters
+        ----------
+        client : dask.distributed.Client
+            Local Dask client with a local cluster. Loggers will be initialized
+            on the workers in this client.
+        """
+        for logger_name in loggers:
+            client.run(REV_LOGGERS.init_logger, logger_name)
+
+    def run(self, loggers=None, **kwargs):
+        """
+        Run ParallelSmartJobs
+
+        Parameters
+        ----------
+        loggers : list
+            List of logger names to initialize on the workers.
+        kwargs : dict
+            Keyword arguments to be passed to obj.run(). Makes it easier to
+            have obj.run() as a @staticmethod.
+        """
+        logger.info('Executing parallel run on cluster with {0} workers. '
+                    .format(self.n_workers))
+        log_mem()
+
+        # initialize a client based on the input cluster.
+        with Client(self.cluster) as client:
+            futures = []
+            if loggers:
+                self.init_loggers(client, loggers)
+
+            # iterate through split executions, submitting each to worker
+            for i, exec_slice in enumerate(self.execution_iter):
+                logger.debug('Kicking off serial worker #{0} for: {1}. '
+                             .format(i, exec_slice))
+
+                # submit executions and append to futures list
+                futures.append(client.submit(self.obj.run, exec_slice,
+                                             **kwargs))
+
+                # Take a pause after one complete set of workers
+                if (i + 1) % self.n_workers == 0:
+                    futures, client = self.gather_and_flush(i, client, futures)
+
+            # All futures complete
+            self.gather_and_flush('END', client, futures, force_flush=True)
+            logger.debug('Smart parallel job complete. Returning execution '
+                         'control to higher level processes.')
+            log_mem()
+        self.cluster.close()
+
     @classmethod
-    def execute(cls, obj, execution_iter, loggers=(), n_workers=None,
-                mem_util_lim=0.7, **kwargs):
+    def execute(cls, obj, execution_iter, n_workers=None,
+                mem_util_lim=0.7, loggers=None, **kwargs):
         """Execute the smart parallel run with data flushing.
 
         Parameters
@@ -836,8 +871,6 @@ class SmartParallelJob:
             faster submission to the Dask client.
         execution_iter : iter
             Python iterator that controls the futures submitted to dask.
-        loggers : list
-            List of logger names to initialize on the workers.
         n_workers : int
             Number of workers to scale the cluster to. None will use all
             available workers in a local cluster.
@@ -845,44 +878,13 @@ class SmartParallelJob:
             Memory utilization limit (fractional). If the used memory divided
             by the total memory is greater than this value, the obj.out will
             be flushed and the local node memory will be cleared.
+        loggers : list
+            List of logger names to initialize on the workers.
         kwargs : dict
             Keyword arguments to be passed to obj.run(). Makes it easier to
             have obj.run() as a @staticmethod.
         """
 
-        manager = cls(obj, execution_iter, loggers=loggers,
-                      n_workers=n_workers, mem_util_lim=mem_util_lim)
-
-        # start a local cluster on a personal comp or HPC single node
-        cluster = manager.cluster
-        # Get the number of workers in case it was input as None
-        n_workers = manager.n_workers
-
-        logger.info('Executing parallel run on cluster with {0} workers. '
-                    .format(n_workers))
-        log_mem()
-
-        # initialize a client based on the input cluster.
-        with Client(cluster) as client:
-            futures = []
-            manager.init_loggers(client)
-
-            # iterate through split executions, submitting each to worker
-            for i, exec_slice in enumerate(manager.execution_iter):
-                logger.debug('Kicking off serial worker #{0} for: {1}. '
-                             .format(i, exec_slice))
-
-                # submit executions and append to futures list
-                futures.append(client.submit(obj.run, exec_slice, **kwargs))
-
-                # Take a pause after one complete set of workers
-                if (i + 1) % n_workers == 0:
-                    futures, client = manager.gather_and_flush(i, client,
-                                                               futures)
-
-            # All futures complete
-            manager.gather_and_flush('END', client, futures, force_flush=True)
-            logger.debug('Smart parallel job complete. Returning execution '
-                         'control to higher level processes.')
-            log_mem()
-        manager.cluster.close()
+        manager = cls(obj, execution_iter, n_workers=n_workers,
+                      mem_util_lim=mem_util_lim)
+        manager.run(loggers, **kwargs)
