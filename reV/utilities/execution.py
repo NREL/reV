@@ -808,6 +808,8 @@ class SmartParallelJob:
         client : dask.distributed.Client
             Local Dask client with a local cluster. Loggers will be initialized
             on the workers in this client.
+        loggers : list
+            List of loggers to initialize on the cluster
         """
         for logger_name in loggers:
             client.run(REV_LOGGERS.init_logger, logger_name)
