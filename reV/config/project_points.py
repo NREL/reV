@@ -9,7 +9,7 @@ from math import ceil
 
 from reV.utilities.exceptions import ConfigWarning
 from reV.handlers.resource import Resource
-from reV.config.sam import SAMGenConfig
+from reV.config.sam_config import SAMConfig
 
 
 logger = logging.getLogger(__name__)
@@ -17,18 +17,13 @@ logger = logging.getLogger(__name__)
 
 class PointsControl:
     """Class to manage and split ProjectPoints."""
-    def __init__(self, project_points, level='supervisor',
-                 sites_per_split=100):
+    def __init__(self, project_points, sites_per_split=100):
         """Initialize points control object.
 
         Parameters
         ----------
         project_points : reV.config.ProjectPoints
             ProjectPoints instance to be split between execution workers.
-        level : str
-            CURRENT execution level, will control how this instance of
-            PointsControl is being split and iterated upon.
-            Options: 'supervisor' or 'core'
         sites_per_split : int
             Sites per project points split instance returned in the __next__
             iterator function.
@@ -36,7 +31,6 @@ class PointsControl:
 
         self._project_points = project_points
         self._sites_per_split = sites_per_split
-        self.level = level
         self._split_range = []
 
     def __iter__(self):
@@ -319,6 +313,26 @@ class ProjectPoints:
             raise TypeError('Project points data must be csv filename or '
                             'dictionary but received: {}'.format(type(data)))
 
+    def join_df(self, df2, key='gid'):
+        """Join new df2 to the _df attribute using the _df's gid as pkey.
+
+        This can be used to add site-specific data to the project_points,
+        taking advantage of the points_control iterator/split functions such
+        that only the relevant site data is passed to the analysis functions.
+
+        Parameters
+        ----------
+        df2 : pd.DataFrame
+            Dataframe to be joined to the _df attribute. This likely contains
+            site-specific inputs that are to be passed to parallel workers.
+        key : str | pd.DataFrame.index
+            Primary key of df2 to be joined to the _df attribute. Primary key
+            of the _df attribute is fixed as the gid column.
+        """
+
+        self._df = pd.merge(self._df, df2, how='left', left_on='gid',
+                            right_on=key, copy=False, validate='1:1')
+
     @property
     def h(self):
         """Get the hub heights corresponding to the site list.
@@ -414,7 +428,7 @@ class ProjectPoints:
         """
 
         if not hasattr(self, '_sam_configs'):
-            self._sam_configs = SAMGenConfig(self.sam_files).inputs
+            self._sam_configs = SAMConfig(self.sam_files).inputs
         return self._sam_configs
 
     @property

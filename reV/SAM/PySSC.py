@@ -15,39 +15,42 @@ c_number = c_float
 
 
 class PySSC():
-    """Python SAM Simulation Core (PySSC)
+    """Python SAM Simulation Core (PySSC)"""
 
-    Created with SAM version 2017.9.5
-    """
+    # Default SAM SDK version, also the folder name in reV/SAM/
+    DEF_SDK_VER = 'sam-sdk-200_2018.11.11'
 
     # Default directory containing SAM SSC files
-    def_pyssc_dir = os.path.dirname(os.path.abspath(__file__))
+    DEF_PYSSC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 DEF_SDK_VER)
 
     def __init__(self, pyssc_dir=None):
         """Initialize a PySSC object."""
 
         if not pyssc_dir:
             # no pyssc_dir specified, use SSC files in this file's path
-            pyssc_dir = self.def_pyssc_dir
+            pyssc_dir = self.DEF_PYSSC_DIR
         else:
             if not os.path.exists(pyssc_dir):
                 # specified pyssc_dir not found
                 warn('Requested SAM Simulation Core directory not found: '
-                     '"{}". Defaulting to PySSC.py directory: "{}".'
-                     .format(pyssc_dir, self.def_pyssc_dir))
-                pyssc_dir = self.def_pyssc_dir
+                     '"{}". Defaulting to: "{}"'
+                     .format(pyssc_dir, self.DEF_PYSSC_DIR))
+                pyssc_dir = self.DEF_PYSSC_DIR
 
-        if sys.platform == 'win32' or sys.platform == 'cygwin':
+        if sys.platform.startswith('win'):
+            sub_dir = 'win64'
             f_ssc = 'ssc.dll'
-        elif sys.platform == 'darwin':
+        elif 'darwin' in sys.platform:
+            sub_dir = 'osx64'
             f_ssc = 'ssc.dylib'
-        elif sys.platform == 'linux' or sys.platform == 'linux2':
-            # instead of relative path, require user to have on LD_LIBRARY_PATH
+        elif 'linux' in sys.platform:
+            sub_dir = 'linux64'
             f_ssc = 'ssc.so'
         else:
-            raise Exception('Platform not supported ', sys.platform)
+            raise Exception('Platform not supported: {}'.format(sys.platform))
 
-        self.pdll = CDLL(os.path.join(pyssc_dir, f_ssc))
+        self.pdll = CDLL(os.path.join(pyssc_dir, sub_dir, f_ssc))
 
         self.INVALID = 0
         self.STRING = 1

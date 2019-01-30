@@ -15,11 +15,12 @@ import numpy as np
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
 from reV import __testdatadir__ as TESTDATADIR
-from reV.handlers.capacity_factor import CapacityFactor
+from reV.handlers.outputs import Outputs
 
 
 RTOL = 0.0
 ATOL = 0.04
+PURGE_OUT = True
 
 
 class pv_results:
@@ -163,6 +164,7 @@ def test_pv_gen_profiles(year):
 
     # run reV 2.0 generation and write to disk
     Gen.run_direct('pv', points, sam_files, res_file, fout=rev2_out,
+                   output_request=('cf_profile',),
                    n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
                    return_obj=False)
 
@@ -170,7 +172,7 @@ def test_pv_gen_profiles(year):
     flist = os.listdir(rev2_out_dir)
     for fname in flist:
         if rev2_out.strip('.h5') in fname:
-            with CapacityFactor(os.path.join(rev2_out_dir, fname), 'r') as cf:
+            with Outputs(os.path.join(rev2_out_dir, fname), 'r') as cf:
                 rev2_profiles = cf['cf_profiles']
             break
 
@@ -179,7 +181,7 @@ def test_pv_gen_profiles(year):
     rev1_profiles = rev1_profiles[:, points]
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if result:
+    if result and PURGE_OUT:
         # remove output files if test passes.
         flist = os.listdir(rev2_out_dir)
         for fname in flist:
@@ -200,13 +202,14 @@ def test_smart(year):
 
     # run reV 2.0 generation and write to disk
     Gen.run_smart('pv', points, sam_files, res_file, fout=rev2_out,
-                  n_workers=2, sites_per_split=50, dirout=rev2_out_dir)
+                  n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
+                  output_request=('cf_profile',))
 
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(rev2_out_dir)
     for fname in flist:
         if rev2_out.strip('.h5') in fname:
-            with CapacityFactor(os.path.join(rev2_out_dir, fname), 'r') as cf:
+            with Outputs(os.path.join(rev2_out_dir, fname), 'r') as cf:
                 rev2_profiles = cf['cf_profiles']
             break
 
@@ -215,7 +218,7 @@ def test_smart(year):
     rev1_profiles = rev1_profiles[:, points]
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-    if result:
+    if result and PURGE_OUT:
         # remove output files if test passes.
         flist = os.listdir(rev2_out_dir)
         for fname in flist:
@@ -228,7 +231,7 @@ def get_r1_profiles(year=2012):
     """Get the first 100 reV 1.0 ri pv generation profiles."""
     rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
                         'pv_{}_0.h5'.format(year))
-    with CapacityFactor(rev1) as cf:
+    with Outputs(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
     return data
 

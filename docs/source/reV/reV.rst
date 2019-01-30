@@ -8,10 +8,10 @@ Subpackages
 
     reV.SAM
     reV.config
+    reV.econ
     reV.exclusions
     reV.generation
     reV.handlers
-    reV.lcoe
     reV.supply_curve
     reV.utilities
 

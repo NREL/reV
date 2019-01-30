@@ -1,6 +1,7 @@
 """
 Generation
 """
+from copy import deepcopy
 import logging
 import numpy as np
 import os
@@ -8,11 +9,11 @@ import pprint
 import re
 from warnings import warn
 
-from reV.SAM.SAM import PV, CSP, LandBasedWind, OffshoreWind
+from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
-from reV.handlers.capacity_factor import CapacityFactor
+from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource
 
 
@@ -23,11 +24,18 @@ class Gen:
     """Base class for generation"""
 
     # Mapping of reV technology strings to SAM generation functions
-    REVTECHS = {'pv': PV.reV_run,
-                'csp': CSP.reV_run,
-                'landbasedwind': LandBasedWind.reV_run,
-                'offshorewind': OffshoreWind.reV_run,
-                }
+    OPTIONS = {'pv': PV.reV_run,
+               'csp': CSP.reV_run,
+               'wind': LandBasedWind.reV_run,
+               'landbasedwind': LandBasedWind.reV_run,
+               'offshorewind': OffshoreWind.reV_run,
+               }
+
+    OUT_ATTRS = {'cf_means': {'scale_factor': 1000, 'units': 'unitless',
+                              'dtype': 'uint16'},
+                 'cf_profiles': {'scale_factor': 1000, 'units': 'unitless',
+                                 'dtype': 'uint16'},
+                 }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out'):
@@ -35,7 +43,7 @@ class Gen:
 
         Parameters
         ----------
-        points_control : reV.config.PointsControl
+        points_control : reV.config.project_points.PointsControl
             Project points control instance for site and SAM config spec.
         res_file : str
             Resource file with path.
@@ -54,50 +62,99 @@ class Gen:
         self._fout = fout
         self._dirout = dirout
 
-        if self.tech not in self.REVTECHS:
+        if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
                            'reV generation can analyze the following '
                            'technologies: {}'
-                           .format(self.tech, list(self.REVTECHS.keys())))
+                           .format(self.tech, list(self.OPTIONS.keys())))
 
     @property
     def output_request(self):
-        """Get the list of output variables requested from generation."""
+        """Get the list of output variables requested from generation.
+
+        Returns
+        -------
+        output_request : list | tuple
+            Output variables requested from SAM.
+        """
         return self._output_request
 
     @property
     def points_control(self):
-        """Get project points controller."""
+        """Get project points controller.
+
+        Returns
+        -------
+        points_control : reV.config.project_points.PointsControl
+            Project points control instance for site and SAM config spec.
+        """
         return self._points_control
 
     @property
     def project_points(self):
-        """Get project points"""
+        """Get project points
+
+        Returns
+        -------
+        project_points : reV.config.project_points.ProjectPoints
+            Project points from the points control instance.
+        """
         return self._points_control.project_points
 
     @property
     def sam_configs(self):
-        """Get the sam config dictionary."""
+        """Get the sam config dictionary.
+
+        Returns
+        -------
+        sam_configs : reV.config.sam.SAMGenConfig
+            SAM config from the project points instance.
+        """
         return self.project_points.sam_configs
 
     @property
     def tech(self):
-        """Get the reV technology string."""
+        """Get the reV technology string.
+
+        Returns
+        -------
+        tech : str
+            reV technology being executed (e.g. pv, csp, wind).
+        """
         return self.project_points.tech
 
     @property
     def res_file(self):
-        """Get the resource filename and path."""
+        """Get the resource filename and path.
+
+        Returns
+        -------
+        res_file : str
+            Resource file with path.
+        """
         return self._res_file
 
     @property
     def fout(self):
-        """Get the target file output."""
+        """Get the target file output.
+
+        Returns
+        -------
+        fout : str | None
+            Optional .h5 output file specification.
+        """
         return self._fout
 
     @property
     def dirout(self):
-        """Get the target output directory."""
+        """Get the target output directory.
+
+        Returns
+        -------
+        dirout : str | None
+            Optional output directory specification. The directory will be
+            created if it does not already exist.
+        """
         return self._dirout
 
     @property
@@ -163,7 +220,18 @@ class Gen:
 
     @property
     def time_index(self, drop_leap=True):
-        """Get the generation resource time index data."""
+        """Get the generation resource time index data.
+
+        Parameters
+        ----------
+        drop_leap : bool
+            Option to drop the leap day from the time_index.
+
+        Returns
+        -------
+        _time_index : pd.DatetimeIndex
+            Time index objects from the resource data (self.res_file).
+        """
         if not hasattr(self, '_time_index'):
             with Resource(self.res_file) as res:
                 self._time_index = res.time_index
@@ -173,6 +241,57 @@ class Gen:
                 self._time_index = self._time_index.drop(
                     self._time_index[leap_day])
         return self._time_index
+
+    @staticmethod
+    def get_pc(points, points_range, sam_files, tech, sites_per_split=None,
+               res_file=None):
+        """Get a PointsControl instance.
+
+        Parameters
+        ----------
+        points : slice | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
+        sam_files : dict | str | list
+            Dict contains SAM input configuration ID(s) and file path(s).
+            Keys are the SAM config ID(s), top level value is the SAM path.
+            Can also be a single config file str. If it's a list, it is mapped
+            to the sorted list of unique configs requested by points csv.
+        tech : str
+            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+        sites_per_split : int
+            Number of sites to run in series on a core. None defaults to the
+            resource file chunk size.
+        res_file : str
+            Single resource file with path.
+
+        Returns
+        -------
+        pc : reV.config.project_points.PointsControl
+            PointsControl object instance.
+        """
+
+        if sites_per_split is None:
+            sites_per_split = Gen.sites_per_core(res_file)
+
+        if isinstance(points, (slice, str)):
+            # make Project Points and Points Control instances
+            pp = ProjectPoints(points, sam_files, tech=tech, res_file=res_file)
+            if points_range is None:
+                pc = PointsControl(pp, sites_per_split=sites_per_split)
+            else:
+                pc = PointsControl.split(points_range[0], points_range[1], pp,
+                                         sites_per_split=sites_per_split)
+        elif isinstance(points, PointsControl):
+            pc = points
+        else:
+            raise TypeError('Points input type is unrecognized: '
+                            '"{}"'.format(type(points)))
+        return pc
 
     @staticmethod
     def sites_per_core(res_file, default=100):
@@ -198,6 +317,8 @@ class Gen:
             chunk size for windspeed and dni datasets for the WTK and NSRDB
             data, respectively.
         """
+        if not res_file:
+            return default
 
         with Resource(res_file) as res:
             if 'wtk' in res_file.lower():
@@ -210,8 +331,10 @@ class Gen:
                 # take nominal NSRDB chunks from dni
                 chunks = res._h5['dni'].chunks
             else:
-                raise Exception('Expected "nsrdb" or "wtk" to be in resource '
-                                'filename: {}'.format(res_file))
+                warn('Expected "nsrdb" or "wtk" to be in resource filename: {}'
+                     .format(res_file))
+                chunks = None
+
         if chunks is None:
             # if chunks not set, go to default
             sites_per_core = default
@@ -244,62 +367,105 @@ class Gen:
         return out
 
     @staticmethod
-    def unpack_cf_means(gen_out):
-        """Unpack a numpy means 1darray from a gen output dictionary.
+    def unpack_scalars(gen_out, sam_var='cf_mean'):
+        """Unpack a numpy 1darray of scalars from a gen output dictionary.
 
         Parameters
         ----------
         gen_out : dict
             Nested dictionary of SAM results. Top level key is site number,
-            Next level key should include 'cf_mean'.
+            Next level key should include the target sam_var.
+        sam_var : str
+            SAM variable name to be unpacked from gen_out. The SAM outputs
+            associated with this variable must be scalar values.
 
         Returns
         -------
         out : np.array
-            1D array of capacity factor means sorted by site number.
+            1D array of scalar values sorted by site number.
         """
 
         sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k]['cf_mean'] for k in sorted_keys])
+        out = np.array([gen_out[k][sam_var] for k in sorted_keys])
         return out
 
     @staticmethod
-    def unpack_cf_profiles(gen_out):
-        """Unpack a numpy profiles 2darray from a gen output dictionary.
+    def unpack_profiles(gen_out, sam_var='cf_profile'):
+        """Unpack a numpy 2darray of profiles from a gen output dictionary.
 
         Parameters
         ----------
         gen_out : dict
             Nested dictionary of SAM results. Top level key is site number,
-            Next level key should include 'cf_profile'.
+            Next level key should include the target sam_var.
+        sam_var : str
+            SAM variable name to be unpacked from gen_out. The SAM outputs
+            associated with this variable must be profiles.
 
         Returns
         -------
         out : np.ndarray
-            2D array of capacity factor profiles. Columns are sorted by site
+            2D array of profiles. Columns are sorted by site
             number. Rows correspond to the profile timeseries.
         """
 
         sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k]['cf_profile'] for k in sorted_keys])
+        out = np.array([gen_out[k][sam_var] for k in sorted_keys])
         return out.transpose()
 
     def means_to_disk(self, fout='gen_out.h5', mode='w'):
-        """Save capacity factor means to disk."""
-        cf_means = self.unpack_cf_means(self.out)
+        """Save capacity factor means to disk.
+
+        Parameters
+        ----------
+        fout : str
+            Target .h5 output file (with path).
+        mode : str
+            .h5 file write mode (e.g. 'w', 'w-', 'a').
+        """
+        cf_means = self.unpack_scalars(self.out, sam_var='cf_mean')
         meta = self.meta
         meta.loc[:, 'cf_means'] = cf_means
-        CapacityFactor.write_means(fout, meta, cf_means, self.sam_configs,
-                                   **{'mode': mode})
+        # get LCOE if in output request, otherwise default to None
+        lcoe = None
+        if 'lcoe' in str(self.output_request):
+            lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
+
+        # get dset attributes
+        attrs = deepcopy(self.OUT_ATTRS['cf_means'])
+        dtype = attrs['dtype']
+        del attrs['dtype']
+
+        Outputs.write_means(fout, meta, 'cf', cf_means, attrs, dtype,
+                            self.sam_configs, lcoe=lcoe, **{'mode': mode})
 
     def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
-        """Save capacity factor profiles to disk."""
-        cf_profiles = self.unpack_cf_profiles(self.out)
+        """Save capacity factor profiles to disk.
+
+        Parameters
+        ----------
+        fout : str
+            Target .h5 output file (with path).
+        mode : str
+            .h5 file write mode (e.g. 'w', 'w-', 'a').
+        """
+        cf_profiles = self.unpack_profiles(self.out, sam_var='cf_profile')
         meta = self.meta
-        meta.loc[:, 'cf_means'] = self.unpack_cf_means(self.out)
-        CapacityFactor.write_profiles(fout, meta, self.time_index,
-                                      cf_profiles, self.sam_configs,
-                                      **{'mode': mode})
+        meta.loc[:, 'cf_means'] = self.unpack_scalars(self.out,
+                                                      sam_var='cf_mean')
+        # get LCOE if in output request, otherwise default to None
+        lcoe = None
+        if 'lcoe' in str(self.output_request):
+            lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
+
+        # get dset attributes
+        attrs = deepcopy(self.OUT_ATTRS['cf_profiles'])
+        dtype = attrs['dtype']
+        del attrs['dtype']
+
+        Outputs.write_profiles(fout, meta, self.time_index, 'cf_profiles',
+                               cf_profiles, attrs, dtype, self.sam_configs,
+                               lcoe=lcoe, **{'mode': mode})
 
     @staticmethod
     def get_unique_fout(fout):
@@ -347,21 +513,41 @@ class Gen:
             creates a unique filename in the output directory.
         """
 
-        if not fout.endswith('.h5'):
-            fout += '.h5'
-            warn('Generation output file request must be .h5, '
-                 'set to: "{}"'.format(fout))
-        # create and use optional output dir
-        if dirout:
-            if not os.path.exists(dirout):
-                os.makedirs(dirout)
-            # Add output dir to fout string
-            fout = os.path.join(dirout, fout)
+        # combine filename and path
+        fout = Gen.make_h5_fpath(fout, dirout)
 
         # check to see if target already exists. If so, assign unique ID.
         fout = fout.replace('.h5', '_x000.h5')
         fout = Gen.get_unique_fout(fout)
 
+        return fout
+
+    @staticmethod
+    def make_h5_fpath(fout, dirout):
+        """Combine directory and filename and ensure .h5 extension.
+
+        Parameters
+        ----------
+        fout : str
+            Target filename (with or without .h5 extension).
+        dirout : str
+            Target output directory.
+
+        Returns
+        -------
+        fout : str
+            Target output directory joined with the target filename
+            ending in .h5.
+        """
+
+        if not fout.endswith('.h5'):
+            fout += '.h5'
+        # create and use optional LCOE output dir
+        if dirout:
+            if not os.path.exists(dirout):
+                os.makedirs(dirout)
+            # Add output dir to LCOE fout string
+            fout = os.path.join(dirout, fout)
         return fout
 
     def flush(self, mode='w'):
@@ -407,6 +593,12 @@ class Gen:
             instead of an instance attribute so that the execute_futures
             can pass in a split instance of points_control. This is a
             @staticmethod to expedite submission to Dask client.
+        tech : str
+            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+        res_file : str
+            Single resource file with path.
+        output_request : list | tuple
+            Output variables requested from SAM.
 
         Returns
         -------
@@ -415,19 +607,19 @@ class Gen:
         """
 
         try:
-            out = Gen.REVTECHS[tech](points_control, res_file,
-                                     output_request=output_request)
-        except Exception:
+            out = Gen.OPTIONS[tech](points_control, res_file, output_request)
+        except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
+            raise e
 
         return out
 
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-                   cf_profiles=True, n_workers=1, sites_per_split=100,
-                   points_range=None, fout=None, dirout='./gen_out',
-                   return_obj=True):
+                   output_request=('cf_mean',), n_workers=1,
+                   sites_per_split=None, points_range=None, fout=None,
+                   dirout='./gen_out', return_obj=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -444,13 +636,13 @@ class Gen:
             to the sorted list of unique configs requested by points csv.
         res_file : str
             Single resource file with path.
-        cf_profiles : bool
-            Enables capacity factor annual profile output. Capacity factor
-            means output if this is False.
+        output_request : list | tuple
+            Output variables requested from SAM.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
-            Number of sites to run in series on a core.
+            Number of sites to run in series on a core. None defaults to the
+            resource file chunk size.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -470,24 +662,14 @@ class Gen:
             Only returned if return_obj is True.
         """
 
-        # create the output request tuple
-        output_request = ('cf_mean',)
-        if cf_profiles:
-            output_request += ('cf_profile',)
+        # always extract cf mean
+        if 'cf_mean' not in output_request:
+            output_request += ('cf_mean',)
 
-        if isinstance(points, (slice, str)):
-            # make Project Points and Points Control instances
-            pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-            if points_range is None:
-                pc = PointsControl(pp, sites_per_split=sites_per_split)
-            else:
-                pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                         sites_per_split=sites_per_split)
-        elif isinstance(points, PointsControl):
-            pc = points
-        else:
-            raise TypeError('Generation Points input type is unrecognized: '
-                            '"{}"'.format(type(points)))
+        # get a points control instance
+        pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
+                        res_file=res_file)
+
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout)
@@ -516,9 +698,9 @@ class Gen:
 
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  cf_profiles=True, n_workers=1, sites_per_split=None,
-                  points_range=None, fout=None, dirout='./gen_out',
-                  mem_util_lim=0.7):
+                  output_request=('cf_mean',), n_workers=1,
+                  sites_per_split=None, points_range=None, fout=None,
+                  dirout='./gen_out', mem_util_lim=0.7):
         """Execute a generation run with smart data flushing.
 
         Parameters
@@ -535,9 +717,8 @@ class Gen:
             to the sorted list of unique configs requested by points csv.
         res_file : str
             Single resource file with path.
-        cf_profiles : bool
-            Enables capacity factor annual profile output. Capacity factor
-            means output if this is False.
+        output_request : list | tuple
+            Output variables requested from SAM.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int | None
@@ -558,27 +739,13 @@ class Gen:
             be flushed and the local node memory will be cleared.
         """
 
-        # create the output request tuple
-        output_request = ('cf_mean',)
-        if cf_profiles:
-            output_request += ('cf_profile',)
+        # always extract cf mean
+        if 'cf_mean' not in output_request:
+            output_request += ('cf_mean',)
 
-        if sites_per_split is None:
-            sites_per_split = Gen.sites_per_core(res_file)
-
-        if isinstance(points, (slice, str)):
-            # make Project Points and Points Control instances
-            pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
-            if points_range is None:
-                pc = PointsControl(pp, sites_per_split=sites_per_split)
-            else:
-                pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                         sites_per_split=sites_per_split)
-        elif isinstance(points, PointsControl):
-            pc = points
-        else:
-            raise TypeError('Generation Points input type is unrecognized: '
-                            '"{}"'.format(type(points)))
+        # get a points control instance
+        pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
+                        res_file=res_file)
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
@@ -593,10 +760,13 @@ class Gen:
                      .format(points))
         logger.debug('The following SAM configs are available to this run:\n{}'
                      .format(pprint.pformat(sam_files, indent=4)))
+        logger.debug('The SAM output variables have been requested:\n{}'
+                     .format(output_request))
         try:
             SmartParallelJob.execute(gen, pc, n_workers=n_workers,
                                      loggers=['reV.generation',
                                               'reV.utilities'],
                                      mem_util_lim=mem_util_lim, **kwargs)
-        except Exception:
+        except Exception as e:
             logger.exception('SmartParallelJob.execute() failed.')
+            raise e
