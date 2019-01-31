@@ -448,8 +448,8 @@ class Resource:
         shape : tuple
             Shape of resource variable arrays (timesteps, sites)
         """
-        shape = (self._h5['time_index'].shape[0], self._h5['meta'].shape[0])
-        return shape
+        _shape = (self._h5['time_index'].shape[0], self._h5['meta'].shape[0])
+        return _shape
 
     @property
     def meta(self):
