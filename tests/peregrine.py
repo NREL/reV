@@ -16,7 +16,7 @@ import pytest
 import numpy as np
 import time
 
-from reV import __testdatadir__ as TESTDATADIR
+from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 from reV.utilities.execution import PBS
 from reV.utilities.loggers import init_logger

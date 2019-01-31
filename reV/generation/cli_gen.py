@@ -10,7 +10,6 @@ import re
 import time
 from warnings import warn
 
-from reV import __testdatadir__
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.analysis_configs import GenConfig
 from reV.generation.generation import Gen
@@ -382,12 +381,9 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
     return node_name, fout_node
 
 
-def get_node_cmd(name='reV', tech='pv',
-                 points=slice(0, 100), points_range=None,
-                 sam_files=__testdatadir__ + '/SAM/naris_pv_1axis_inv13.json',
-                 res_file=__testdatadir__ + '/nsrdb/ri_100_nsrdb_2012.h5',
-                 sites_per_core=None, n_workers=None, fout='reV.h5',
-                 dirout='./out/gen_out', logdir='./out/log_gen',
+def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
+                 points_range=None, sites_per_core=None, n_workers=None,
+                 fout='reV.h5', dirout='./out/gen_out', logdir='./out/log_gen',
                  output_request=('cf_mean',), verbose=False):
     """Made a reV geneneration direct-local command line interface call string.
 
@@ -398,10 +394,6 @@ def get_node_cmd(name='reV', tech='pv',
     tech : str
         Name of the reV technology to be analyzed.
         (e.g. pv, csp, landbasedwind, offshorewind).
-    points : slice | str | list | tuple
-        Slice/list specifying project points, string pointing to a project
-    points_range : list | None
-        Optional range list to run a subset of sites
     sam_files : dict | str | list
         SAM input configuration ID(s) and file path(s). Keys are the SAM
         config ID(s), top level value is the SAM path. Can also be a single
@@ -409,6 +401,10 @@ def get_node_cmd(name='reV', tech='pv',
         of unique configs requested by points csv.
     res_file : str
         WTK or NSRDB resource file name + path.
+    points : slice | str | list | tuple
+        Slice/list specifying project points, string pointing to a project
+    points_range : list | None
+        Optional range list to run a subset of sites
     sites_per_core : int | None
         Number of sites to be analyzed in serial on a single local core.
     n_workers : int | None
@@ -514,9 +510,8 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     for i, split in enumerate(pc):
         node_name, fout_node = get_node_name_fout(name, fout, i, hpc='pbs')
 
-        cmd = get_node_cmd(name=node_name, tech=tech,
+        cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
-                           sam_files=sam_files, res_file=res_file,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
                            output_request=output_request, verbose=verbose)
@@ -581,9 +576,8 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     for i, split in enumerate(pc):
         node_name, fout_node = get_node_name_fout(name, fout, i, hpc='slurm')
 
-        cmd = get_node_cmd(name=node_name, tech=tech,
+        cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
-                           sam_files=sam_files, res_file=res_file,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
                            output_request=output_request, verbose=verbose)

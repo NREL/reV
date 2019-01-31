@@ -15,7 +15,7 @@ from subprocess import Popen, PIPE
 import shlex
 
 from reV.config.analysis_configs import GenConfig
-from reV import __testdatadir__ as TESTDATADIR
+from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 
 

@@ -11,8 +11,7 @@ from math import ceil
 import os
 from warnings import warn
 
-from reV import __dir__ as REVDIR
-from reV import __testdatadir__ as TESTDATADIR
+from reV import REVDIR, TESTDATADIR
 from reV.config.base_config import BaseConfig
 from reV.config.execution import (BaseExecutionConfig, PeregrineConfig,
                                   EagleConfig)

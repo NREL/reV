@@ -14,7 +14,7 @@ import numpy as np
 
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
-from reV import __testdatadir__ as TESTDATADIR
+from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 
 

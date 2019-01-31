@@ -13,7 +13,7 @@ import pytest
 import numpy as np
 
 from reV.econ.econ import Econ
-from reV import __testdatadir__ as TESTDATADIR
+from reV import TESTDATADIR
 
 
 RTOL = 0.0
