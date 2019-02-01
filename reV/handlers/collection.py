@@ -5,10 +5,13 @@ import logging
 import numpy as np
 import os
 import pandas as pd
+import time
+from warnings import warn
 
 from reV.utilities.execution import SuperParallelJob
 from rev.handler.outputs import Outputs
-from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError)
+from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
+                                      HandlerWarning)
 from reV.utilities.execution import execute_futures
 
 logger = logging.getLogger(__name__)
@@ -171,6 +174,8 @@ class Collector(Outputs):
         """
         Parameters
         ----------
+        h5_file : str
+            Path to .h5 file into which data will be collected
         h5_dir : str
             Root directory containing .h5 files to combine
         project_points : str | slice | list | pandas.DataFrame
@@ -180,14 +185,15 @@ class Collector(Outputs):
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
             Option to run in parallel using dask
-        handler_cls : Resource class or sub-class
-            Class to handle loading of .h5 data
         """
         super().__init__(self, h5_file, mode='a')
         self._h5_files = self.find_h5_files(h5_dir, file_prefix=file_prefix)
         self._gids = self.parse_project_points(project_points)
         self._parallel = parallel
-        self.combine_meta()
+        if 'meta' in self.dsets:
+            self._check_meta(self.meta)
+        else:
+            self.combine_meta()
 
     @staticmethod
     def find_h5_files(h5_dir, file_prefix=None):
@@ -309,21 +315,10 @@ class Collector(Outputs):
             if 'time_index' in f.dsets:
                 time_index = f.time_index
                 self.time_index = time_index
-
-    @property
-    def time_index(self):
-        """
-        Extract time_index, None if not present in .h5 files
-
-        Returns
-        -------
-        _time_index : pandas.DatetimeIndex
-            Datetimestamps associated with profiles to be combined
-        """
-        with Outputs(self._h5_files[0], mode='r') as f:
-            if 'time_index' in f.dsets:
-                time_index = f.time_index
-                self.time_index = time_index
+            else:
+                warn("'time_index' was not processed as it is not "
+                     "present in .h5 files to be combined.",
+                     HandlerWarning)
 
     def _check_meta(self, meta):
         """
@@ -335,7 +330,7 @@ class Collector(Outputs):
         meta : pandas.DataFrame
             DataFrame of combined meta from all files in self._h5_files
         """
-        meta_gids = meta['gids'].values
+        meta_gids = meta['gid'].values
         if not np.array_equal(meta_gids, self.gids):
             gids = np.array(self.gids)
             missing = gids[~np.in1d(gids, meta_gids)]
@@ -362,7 +357,7 @@ class Collector(Outputs):
 
         return meta
 
-    def combine_dset(self, dset, dset_shape, dset_out=None):
+    def combine_dset(self, dset, dset_out=None):
         """
         Collect, combine and save dset to disk
 
@@ -370,14 +365,22 @@ class Collector(Outputs):
         ----------
         dset : str
             dataset to collect
-        dset_shape : tuple
-            Shape of final collected dset array
         dset_out : str
             name of dataset to be saved to disk, if None use dset
         """
         with Outputs(self.h5_files[0], mode='r') as f:
             _, dtype, chunks = f.get_dset_properties(dset)
             attrs = f.get_attrs(dset)
+            axis = len(f[dset].shape)
+
+        if axis == 1:
+            dset_shape = len(self)
+        else:
+            if 'time_index' in self.dsets:
+                dset_shape = self.shape
+            else:
+                raise HandlerRuntimeError("'time_index' must be combined "
+                                          "before profiles can be combined.")
 
         self._h5.create_ds(dset, dset_shape, dtype, chunks=chunks,
                            attrs=attrs)
@@ -388,3 +391,130 @@ class Collector(Outputs):
         else:
             DatasetCollector.collect(self._h5, self.gids, dset, self.h5_files,
                                      dset_out=dset_out)
+
+    @classmethod
+    def collect_profiles(cls, h5_file, h5_dir, project_points, dset_name,
+                         dset_out=None, file_prefix=None, parallel=True):
+        """
+        Collect profiles from h5_dir to h5_file
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file into which data will be collected
+        h5_dir : str
+            Root directory containing .h5 files to combine
+        project_points : str | slice | list | pandas.DataFrame
+            Project points that correspond to the full collection of points
+            contained in the .h5 files to be collected
+        dset_name : str
+            Dataset containing profiles
+        dset_out : str
+            Dataset to collect profiles into
+        file_prefix : str
+            .h5 file prefix, if None collect all files on h5_dir
+        parallel : bool
+            Option to run in parallel using dask
+        """
+        if file_prefix is None:
+            h5_files = "*.h5"
+        else:
+            h5_files = "{}*.h5".format(file_prefix)
+
+        logger.info('Collecting profiles ({}) from {} files in {} to {}'
+                    .format(dset_name, h5_files, h5_dir, h5_file))
+        ts = time.time()
+        with cls(h5_file, h5_dir, project_points, file_prefix, parallel) as f:
+            logger.debug("\t- 'meta' collected")
+            f.combine_time_index()
+            logger.debug("\t- 'time_index' collected")
+            f.combine_dset(dset_name, dset_out=dset_out)
+            logger.debug("\t- '{}' collected".format(dset_name))
+
+        tt = (time.time() - ts) / 60
+        logger.info('Collection complete')
+        logger.debug('\t- Colletion took {:.4f} minutes'
+                     .format(tt))
+
+    @classmethod
+    def collect_means(cls, h5_file, h5_dir, project_points, dset_name,
+                      dset_out=None, file_prefix=None, parallel=True):
+        """
+        Collect means from h5_dir to h5_file
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file into which data will be collected
+        h5_dir : str
+            Root directory containing .h5 files to combine
+        project_points : str | slice | list | pandas.DataFrame
+            Project points that correspond to the full collection of points
+            contained in the .h5 files to be collected
+        dset_name : str
+            Dataset containing means
+        dset_out : str
+            Dataset to collect means into
+        file_prefix : str
+            .h5 file prefix, if None collect all files on h5_dir
+        parallel : bool
+            Option to run in parallel using dask
+        """
+        if file_prefix is None:
+            h5_files = "*.h5"
+        else:
+            h5_files = "{}*.h5".format(file_prefix)
+
+        logger.info('Collecting means ({}) from {} files in {} to {}'
+                    .format(dset_name, h5_files, h5_dir, h5_file))
+        ts = time.time()
+        with cls(h5_file, h5_dir, project_points, file_prefix, parallel) as f:
+            logger.debug("\t- 'meta' collected")
+            f.combine_dset(dset_name, dset_out=dset_out)
+            logger.debug("\t- '{}' collected".format(dset_name))
+
+        tt = (time.time() - ts) / 60
+        logger.info('Collection complete')
+        logger.debug('\t- Colletion took {:.4f} minutes'
+                     .format(tt))
+
+    @classmethod
+    def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
+                    file_prefix=None, parallel=True):
+        """
+        Collect means from h5_dir to h5_file
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file into which data will be collected
+        h5_dir : str
+            Root directory containing .h5 files to combine
+        dset_name : str
+            Dataset containing means
+        dset_out : str
+            Dataset to collect means into
+        file_prefix : str
+            .h5 file prefix, if None collect all files on h5_dir
+        parallel : bool
+            Option to run in parallel using dask
+        """
+        if file_prefix is None:
+            h5_files = "*.h5"
+        else:
+            h5_files = "{}*.h5".format(file_prefix)
+
+        logger.info('Collecting {} from {} files in {} and adding to {}'
+                    .format(dset_name, h5_files, h5_dir, h5_file))
+        ts = time.time()
+        with Outputs(h5_file, mode='a') as f:
+            points = f.meta
+
+        with cls(h5_file, h5_dir, points, file_prefix, parallel) as f:
+            f.combine_dset(dset_name, dset_out=dset_out)
+            logger.debug("\t- '{}' collected".format(dset_name))
+
+        tt = (time.time() - ts) / 60
+        logger.info('{} collected')
+        logger.debug('\t- Collection took {:.4f} minutes'
+                     .format(tt))

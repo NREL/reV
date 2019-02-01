@@ -71,3 +71,10 @@ class SAMInputWarning(Warning):
     Warning for bad SAM inputs
     """
     pass
+
+
+class HandlerWarning(Warning):
+    """
+    Warning during .h5 handling
+    """
+    pass

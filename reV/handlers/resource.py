@@ -4,9 +4,10 @@ Classes to handle resource data
 import h5py
 import numpy as np
 import pandas as pd
+import warnings
+
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
                                       HandlerValueError, ExtrapolationWarning)
-import warnings
 
 
 def parse_keys(keys):
@@ -404,7 +405,7 @@ class Resource:
             raise
 
     def __len__(self):
-        return self._h5['time_index'].shape[0]
+        return self._h5['meta'].shape[0]
 
     def __getitem__(self, keys):
         ds, ds_slice = parse_keys(keys)
