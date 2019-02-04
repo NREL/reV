@@ -8,7 +8,7 @@ import pandas as pd
 import time
 from warnings import warn
 
-from reV.utilities.execution import SuperParallelJob
+from reV.utilities.execution import SmartParallelJob
 from rev.handler.outputs import Outputs
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
                                       HandlerWarning)
@@ -382,12 +382,12 @@ class Collector(Outputs):
                 raise HandlerRuntimeError("'time_index' must be combined "
                                           "before profiles can be combined.")
 
-        self._h5.create_ds(dset, dset_shape, dtype, chunks=chunks,
-                           attrs=attrs)
+        self._h5.create_dset(dset, dset_shape, dtype, chunks=chunks,
+                             attrs=attrs)
         if self._parallel:
             dset_collector = DatasetCollector(self._h5, self.gids, dset,
                                               dset_out=dset_out)
-            SuperParallelJob.execute(dset_collector, self.h5_files)
+            SmartParallelJob.execute(dset_collector, self.h5_files)
         else:
             DatasetCollector.collect(self._h5, self.gids, dset, self.h5_files,
                                      dset_out=dset_out)
@@ -482,7 +482,7 @@ class Collector(Outputs):
     def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
                     file_prefix=None, parallel=True):
         """
-        Collect means from h5_dir to h5_file
+        Collect and add dataset to h5_file from h5_dir
 
         Parameters
         ----------
