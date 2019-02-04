@@ -3,13 +3,18 @@ Classes to handle capacity factor profiles and annual averages
 """
 import h5py
 import json
+import logging
 import numpy as np
 import pandas as pd
 import re
+import time
 from warnings import warn
+
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
-                                      HandlerValueError)
+                                      HandlerValueError, HandlerWarning)
 from reV.handlers.resource import Resource, parse_keys
+
+logger = logging.getLogger(__name__)
 
 
 def parse_year(f_name):
@@ -31,7 +36,7 @@ def parse_year(f_name):
     if match:
         year = int(match.group(1))
     else:
-        warn('Cannot parse year from {}'.format(f_name))
+        warn('Cannot parse year from {}'.format(f_name), HandlerWarning)
         year = None
 
     return year
@@ -59,7 +64,7 @@ class Outputs(Resource):
 
     def __len__(self):
         _len = 0
-        if 'time_index' in self.dsets:
+        if 'meta' in self.dsets:
             _len = super().__len__()
 
         return _len
@@ -395,9 +400,38 @@ class Outputs(Resource):
             if data is not None:
                 ds[...] = data
 
+    def _check_dset_shape(self, dset_data):
+        """
+        Check to ensure that dataset array is of the proper shape
+
+        Parameters
+        ----------
+        dset_data : ndarray
+            Dataset data array
+        """
+        dset_shape = dset_data.shape
+        if len(dset_shape) == 1:
+            shape = len(self)
+            if shape:
+                shape = (shape,)
+                if dset_shape != shape:
+                    raise HandlerValueError("data is not of the proper shape:"
+                                            " {}".format(shape))
+            else:
+                raise HandlerRuntimeError("'meta' has not been loaded")
+        else:
+            shape = self.shape
+            if shape:
+                if dset_shape != shape:
+                    raise HandlerValueError("data is not of the proper shape:"
+                                            " {}".format(shape))
+            else:
+                raise HandlerRuntimeError("'meta' and 'time_index' have not "
+                                          "been loaded")
+
     def _add_dset(self, dset_name, data, dtype, chunks=None, attrs=None):
         """
-        Write dataset to disk. Dataset is created in .h5 file and data is
+        Write dataset to disk. Dataset it created in .h5 file and data is
         scaled if needed.
 
         Parameters
@@ -413,7 +447,7 @@ class Outputs(Resource):
         attrs : dict
             Attributes to be set. May include 'scale_factor'.
         """
-        # TODO: check dset shape against self.shape
+        self._check_dset_shape(data)
 
         if not np.issubdtype(data.dtype, np.dtype(dtype)):
             if 'scale_factor' in attrs:
@@ -424,8 +458,8 @@ class Outputs(Resource):
                 raise HandlerRuntimeError("A scale_factor is needed to"
                                           "scale data to {}.".format(dtype))
 
-        self._create_dset(dset_name, data.shape, dtype, chunks=chunks,
-                          attrs=attrs, data=data)
+        self._create_dset(dset_name, data.shape, dtype,
+                          chunks=chunks, attrs=attrs, data=data)
 
     @classmethod
     def write_profiles(cls, h5_file, meta, time_index, dset_name, profiles,
@@ -455,22 +489,33 @@ class Outputs(Resource):
         chunks : tuple
             Chunk size for profiles dataset
         """
+        logger.info("Saving profiles ({}) to {}".format(dset_name, h5_file))
         if profiles.shape != (len(time_index), len(meta)):
-            msg = 'Profile dimensions does not match time index and meta'
-            raise HandlerValueError(msg)
-
+            raise HandlerValueError("Profile dimensions does not match"
+                                    "'time_index' and 'meta'")
+        ts = time.time()
         with cls(h5_file, mode=kwargs.get('mode', 'w-')) as f:
             # Save time index
             f['time_index'] = time_index
+            logger.debug("\t- 'time_index' saved to disc")
             # Save meta
             f['meta'] = meta
+            logger.debug("\t- 'meta' saved to disc")
             # Add SAM configurations as attributes to meta
             if SAM_configs is not None:
                 f.set_configs(SAM_configs)
+                logger.debug("\t- SAM configurations saved as attributes "
+                             "on 'meta'")
 
             # Write dset to disk
             f._add_dset(dset_name, profiles, dtype,
                         chunks=chunks, attrs=attrs)
+            logger.debug("\t- '{}' saved to disc".format(dset_name))
+
+        tt = (time.time() - ts) / 60
+        logger.info('{} is complete'.format(h5_file))
+        logger.debug('\t- Saving to disc took {:.4f} minutes'
+                     .format(tt))
 
     @classmethod
     def write_means(cls, h5_file, meta, dset_name, means, attrs, dtype,
@@ -497,20 +542,31 @@ class Outputs(Resource):
         chunks : tuple
             Chunk size for capacity factor means dataset
         """
+        logger.info("Saving means ({}) to {}".format(dset_name, h5_file))
         if len(means) != len(meta):
             msg = 'Number of means does not match meta'
             raise HandlerValueError(msg)
 
+        ts = time.time()
         with cls(h5_file, mode=kwargs.get('mode', 'w-')) as f:
             # Save meta
             f['meta'] = meta
+            logger.debug("\t- 'meta' saved to disc")
             # Add SAM configurations as attributes to meta
             if SAM_configs is not None:
                 f.set_configs(SAM_configs)
+                logger.debug("\t- SAM configurations saved as attributes "
+                             "on 'meta'")
 
             # Write dset to disk
             f._add_dset(dset_name, means, dtype,
                         chunks=chunks, attrs=attrs)
+            logger.debug("\t- '{}' saved to disc".format(dset_name))
+
+        tt = (time.time() - ts) / 60
+        logger.info('{} is complete'.format(h5_file))
+        logger.debug('\t- Saving to disc took {:.4f} minutes'
+                     .format(tt))
 
     @classmethod
     def add_dataset(cls, h5_file, dset_name, dset_data, attrs, dtype,
@@ -531,6 +587,13 @@ class Outputs(Resource):
         dtype : str
             Intended dataset datatype after scaling.
         """
+        logger.info("Adding {} to {}".format(dset_name, h5_file))
+        ts = time.time()
         with cls(h5_file, mode=kwargs.get('mode', 'a')) as f:
             f._add_dset(dset_name, dset_data, dtype,
                         chunks=chunks, attrs=attrs)
+
+        tt = (time.time() - ts) / 60
+        logger.info('{} added'.format(dset_name))
+        logger.debug('\t- Saving to disc took {:.4f} minutes'
+                     .format(tt))
