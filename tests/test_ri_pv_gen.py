@@ -173,7 +173,7 @@ def test_pv_gen_profiles(year):
     for fname in flist:
         if rev2_out.strip('.h5') in fname:
             with Outputs(os.path.join(rev2_out_dir, fname), 'r') as cf:
-                rev2_profiles = cf['cf_profiles']
+                rev2_profiles = cf['cf_profile']
             break
 
     # get reV 1.0 generation profiles
@@ -210,7 +210,7 @@ def test_smart(year):
     for fname in flist:
         if rev2_out.strip('.h5') in fname:
             with Outputs(os.path.join(rev2_out_dir, fname), 'r') as cf:
-                rev2_profiles = cf['cf_profiles']
+                rev2_profiles = cf['cf_profile']
             break
 
     # get reV 1.0 generation profiles
