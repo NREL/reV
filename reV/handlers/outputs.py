@@ -73,9 +73,9 @@ class Outputs(Resource):
         ds, ds_slice = parse_keys(keys)
         if ds in self.dsets:
             if ds == 'time_index':
-                out = self._time_index(*ds_slice)
+                out = self._get_time_index(*ds_slice)
             elif ds == 'meta':
-                out = self._meta(*ds_slice)
+                out = self._get_meta(*ds_slice)
             else:
                 out = self._get_ds(ds, *ds_slice)
         else:

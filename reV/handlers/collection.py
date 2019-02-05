@@ -9,7 +9,7 @@ import time
 from warnings import warn
 
 from reV.utilities.execution import SmartParallelJob
-from rev.handler.outputs import Outputs
+from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
                                       HandlerWarning)
 from reV.utilities.execution import execute_futures
@@ -22,12 +22,12 @@ class DatasetCollector:
     Class to use with SmartParallelJob to handle dataset collection from
     .h5 files
     """
-    def __init__(self, handler, gids, dset_in, dset_out=None):
+    def __init__(self, h5_file, gids, dset_in, dset_out=None):
         """
         Parameters
         ----------
-        handler : Instance of Outputs
-            Resource class to handle writing of collected dataset
+        h5_file : str
+            Path to h5_file into wich dataset is to be collected
         gids : list
             list of gids to be collected
         dset_in : str
@@ -35,7 +35,7 @@ class DatasetCollector:
         dset_out : str
             Dataset into which collected data is to be written
         """
-        self._handler = handler
+        self._h5_file = h5_file
         self._gids = gids
         self._dset_in = dset_in
         if dset_out is None:
@@ -57,14 +57,15 @@ class DatasetCollector:
             Array of collected output for dset_in
         """
         out = None
+        out_slice = None
         if self._out is not None:
             gids = []
             out = []
-            for ids, out in self._out:
+            for ids, arr in self._out:
                 gids.extend(ids)
-                out.append(out)
+                out.append(arr)
 
-            out = np.concatenate(out)
+            out = np.hstack(out)
             out_slice = self._get_slice(gids, axis=len(out.shape))
 
         return out_slice, out
@@ -126,7 +127,7 @@ class DatasetCollector:
             .h5 file path for file to be run
         """
         with Outputs(h5_file, mode='r', unscale=False) as f:
-            gids = f.meta['gids'].values
+            gids = f.meta['gid'].values
             dset_out = f[self._dset_in]
 
         return gids, dset_out
@@ -137,7 +138,8 @@ class DatasetCollector:
         """
         dset_slice, dset_arr = self.out
         keys = (self._dset_out,) + dset_slice
-        self._handler.__setitem__(keys, dset_arr)
+        with Outputs(self._h5_file, mode='a') as f:
+            f.__setitem__(keys, dset_arr)
 
     @classmethod
     def collect(cls, handler, gids, dset_in, h5_files, dset_out=None):
@@ -162,15 +164,16 @@ class DatasetCollector:
         for file in h5_files:
             futures.append(dset_cls.run(file))
 
+        dset_cls.out = futures
         dset_cls.flush()
 
 
-class Collector(Outputs):
+class Collector:
     """
     Class to handle the collection and combination of .h5 files
     """
     def __init__(self, h5_file, h5_dir, project_points, file_prefix=None,
-                 parallel=False):
+                 parallel=False, clobber=False):
         """
         Parameters
         ----------
@@ -185,15 +188,20 @@ class Collector(Outputs):
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
             Option to run in parallel using dask
+        clobber : bool
+            Flag to purge .h5 file if it already exists
         """
-        super().__init__(self, h5_file, mode='a')
+        if clobber:
+            if os.path.isfile(h5_file):
+                warn('{} already exists and is being replaced'.format(h5_file),
+                     HandlerWarning)
+                os.remove(h5_file)
+
+        self._h5_out = h5_file
         self._h5_files = self.find_h5_files(h5_dir, file_prefix=file_prefix)
         self._gids = self.parse_project_points(project_points)
         self._parallel = parallel
-        if 'meta' in self.dsets:
-            self._check_meta(self.meta)
-        else:
-            self.combine_meta()
+        self.combine_meta()
 
     @staticmethod
     def find_h5_files(h5_dir, file_prefix=None):
@@ -305,20 +313,19 @@ class Collector(Outputs):
     def combine_time_index(self):
         """
         Extract time_index, None if not present in .h5 files
-
-        Returns
-        -------
-        _time_index : pandas.DatetimeIndex
-            Datetimestamps associated with profiles to be combined
         """
         with Outputs(self.h5_files[0], mode='r') as f:
             if 'time_index' in f.dsets:
                 time_index = f.time_index
-                self.time_index = time_index
             else:
+                time_index = None
                 warn("'time_index' was not processed as it is not "
                      "present in .h5 files to be combined.",
                      HandlerWarning)
+
+        if time_index is not None:
+            with Outputs(self._h5_out, mode='a') as f:
+                f.time_index = time_index
 
     def _check_meta(self, meta):
         """
@@ -342,22 +349,19 @@ class Collector(Outputs):
     def combine_meta(self):
         """
         Load and combine meta data from .h5
-
-        Returns
-        -------
-        meta : pandas.DataFrame
-            DataFrame of combined meta
         """
-        if self._parallel:
-            meta = execute_futures(self.parse_meta, self.h5_files)
-        else:
-            meta = [self.parse_meta(file) for file in self.h5_files]
+        with Outputs(self._h5_out, mode='a') as f:
+            if 'meta' in f.dsets:
+                self._check_meta(f.meta)
+            else:
+                if self._parallel:
+                    meta = execute_futures(self.parse_meta, self.h5_files)
+                else:
+                    meta = [self.parse_meta(file) for file in self.h5_files]
 
-        meta = pd.concat(meta, axis=0)
-        self._check_meta(meta)
-        self.meta = meta
-
-        return meta
+                meta = pd.concat(meta, axis=0)
+                self._check_meta(meta)
+                f.meta = meta
 
     def combine_dset(self, dset, dset_out=None):
         """
@@ -370,29 +374,36 @@ class Collector(Outputs):
         dset_out : str
             name of dataset to be saved to disk, if None use dset
         """
+        if dset_out is None:
+            dset_out = dset
+
         with Outputs(self.h5_files[0], mode='r') as f:
             _, dtype, chunks = f.get_dset_properties(dset)
             attrs = f.get_attrs(dset)
             axis = len(f[dset].shape)
 
-        if axis == 1:
-            dset_shape = len(self)
-        else:
-            if 'time_index' in self.dsets:
-                dset_shape = self.shape
+        with Outputs(self._h5_out, mode='a') as f:
+            if axis == 1:
+                dset_shape = (len(f),)
             else:
-                raise HandlerRuntimeError("'time_index' must be combined "
-                                          "before profiles can be combined.")
+                if 'time_index' in f.dsets:
+                    dset_shape = f.shape
+                else:
+                    raise HandlerRuntimeError("'time_index' must be combined "
+                                              "before profiles can be "
+                                              "combined.")
+            if dset_out not in f.dsets:
+                f._create_dset(dset_out, dset_shape, dtype, chunks=chunks,
+                               attrs=attrs)
 
-        self._h5.create_dset(dset, dset_shape, dtype, chunks=chunks,
-                             attrs=attrs)
         if self._parallel:
-            dset_collector = DatasetCollector(self._h5, self.gids, dset,
+            dset_collector = DatasetCollector(self._h5_out, self.gids, dset,
                                               dset_out=dset_out)
-            SmartParallelJob.execute(dset_collector, self.h5_files)
+            SmartParallelJob.execute(dset_collector, self.h5_files,
+                                     loggers=(__name__, ))
         else:
-            DatasetCollector.collect(self._h5, self.gids, dset, self.h5_files,
-                                     dset_out=dset_out)
+            DatasetCollector.collect(self._h5_out, self.gids, dset,
+                                     self.h5_files, dset_out=dset_out)
 
     @classmethod
     def collect_profiles(cls, h5_file, h5_dir, project_points, dset_name,
@@ -426,12 +437,13 @@ class Collector(Outputs):
         logger.info('Collecting profiles ({}) from {} files in {} to {}'
                     .format(dset_name, h5_files, h5_dir, h5_file))
         ts = time.time()
-        with cls(h5_file, h5_dir, project_points, file_prefix, parallel) as f:
-            logger.debug("\t- 'meta' collected")
-            f.combine_time_index()
-            logger.debug("\t- 'time_index' collected")
-            f.combine_dset(dset_name, dset_out=dset_out)
-            logger.debug("\t- '{}' collected".format(dset_name))
+        clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix,
+                  parallel=parallel, clobber=True)
+        logger.debug("\t- 'meta' collected")
+        clt.combine_time_index()
+        logger.debug("\t- 'time_index' collected")
+        clt.combine_dset(dset_name, dset_out=dset_out)
+        logger.debug("\t- '{}' collected".format(dset_name))
 
         tt = (time.time() - ts) / 60
         logger.info('Collection complete')
@@ -470,10 +482,11 @@ class Collector(Outputs):
         logger.info('Collecting means ({}) from {} files in {} to {}'
                     .format(dset_name, h5_files, h5_dir, h5_file))
         ts = time.time()
-        with cls(h5_file, h5_dir, project_points, file_prefix, parallel) as f:
-            logger.debug("\t- 'meta' collected")
-            f.combine_dset(dset_name, dset_out=dset_out)
-            logger.debug("\t- '{}' collected".format(dset_name))
+        clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix,
+                  parallel=parallel, clobber=True)
+        logger.debug("\t- 'meta' collected")
+        clt.combine_dset(dset_name, dset_out=dset_out)
+        logger.debug("\t- '{}' collected".format(dset_name))
 
         tt = (time.time() - ts) / 60
         logger.info('Collection complete')
@@ -512,9 +525,10 @@ class Collector(Outputs):
         with Outputs(h5_file, mode='a') as f:
             points = f.meta
 
-        with cls(h5_file, h5_dir, points, file_prefix, parallel) as f:
-            f.combine_dset(dset_name, dset_out=dset_out)
-            logger.debug("\t- '{}' collected".format(dset_name))
+        clt = cls(h5_file, h5_dir, points, file_prefix=file_prefix,
+                  parallel=parallel)
+        clt.combine_dset(dset_name, dset_out=dset_out)
+        logger.debug("\t- '{}' collected".format(dset_name))
 
         tt = (time.time() - ts) / 60
         logger.info('{} collected')
