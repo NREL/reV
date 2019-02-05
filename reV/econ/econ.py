@@ -25,9 +25,9 @@ class Econ(Gen):
 
     # Mapping of reV econ outputs to scale factors and units
     OUT_ATTRS = {'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32'},
+                              'dtype': 'float32', 'chunks': None},
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32'},
+                               'dtype': 'float32', 'chunks': None},
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
@@ -62,13 +62,13 @@ class Econ(Gen):
         self._cf_year = cf_year
         self._fout = fout
         self._dirout = dirout
-        self._output_request = output_request
+        self.output_request = output_request
         if site_data:
             self.site_data = site_data
 
     @Gen.output_request.setter  # pylint: disable-msg=E1101
     def output_request(self, req):
-        """Set the output variable requested from econ.
+        """Set the single output variable requested from econ.
 
         Parameters
         ----------
@@ -212,18 +212,21 @@ class Econ(Gen):
         if not hasattr(self, '_site_df'):
             site_gids = self.meta['gid']
             with Outputs(self.cf_file) as cfh:
-                if 'cf_{}'.format(self.cf_year) in str(list(cfh.dsets)):
-                    cf_arr = cfh['cf_{}'.format(self.cf_year)]
-                elif 'cf_mean' in str(list(cfh.dsets)):
+                if 'cf_mean' in cfh.dsets:
                     cf_arr = cfh['cf_mean']
+                elif 'cf' in cfh.dsets:
+                    cf_arr = cfh['cf']
+                elif 'cf_{}'.format(self.cf_year) in cfh.dsets:
+                    cf_arr = cfh['cf_{}'.format(self.cf_year)]
                 elif 'cf_mean' in self.meta:
                     cf_arr = self.meta['cf_mean']
                 else:
-                    raise KeyError('Could not find "cf_mean" or "{}" dataset '
-                                   'in {}. Looked in both the h5 datasets and '
-                                   'the meta data.'
+                    raise KeyError('Could not find "cf_mean", "cf", or "{}" '
+                                   'dataset in {}. Looked in both the h5 '
+                                   'datasets and the meta data. The following '
+                                   'dsets were available: {}.'
                                    .format('cf_{}'.format(self.cf_year),
-                                           self.cf_file))
+                                           self.cf_file, cfh.dsets))
 
             # set site-specific values in dataframe with
             # columns -> variables, rows -> sites
@@ -276,12 +279,14 @@ class Econ(Gen):
         fout : str
             Target .h5 output file (with path).
         """
-        Outputs.write_means(
-            h5_file=fout, meta=self.meta, dset_name=self.output_request,
-            means=self.unpack_scalars(self.out, sam_var=self.output_request),
-            attrs=self.OUT_ATTRS[self.output_request],
-            dtype=self.OUT_ATTRS[self.output_request].get('dtype', 'float32'),
-            sam_configs=self.sam_configs)
+
+        # retrieve the dataset with associated attributes
+        data, dtype, chunks, attrs = self.get_dset_attrs(self.output_request)
+        # write econ results means to disk
+        Outputs.write_means(h5_file=fout, meta=self.meta,
+                            dset_name=self.output_request, means=data,
+                            attrs=attrs, dtype=dtype, chunks=chunks,
+                            sam_configs=self.sam_configs)
 
     def flush(self):
         """Flush econ data in self.out attribute to disk in .h5 format.

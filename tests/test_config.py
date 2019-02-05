@@ -91,6 +91,11 @@ def test_config():
 
     config_obj = GenConfig(config)
 
+    if stderr:
+        ferr = os.path.join(config_obj.dirout, 'test_config.e')
+        with open(ferr, 'w') as f:
+            f.write(stderr)
+
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(config_obj.dirout)
     for fname in flist:

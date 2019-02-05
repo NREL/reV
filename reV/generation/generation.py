@@ -31,19 +31,19 @@ class Gen:
                }
 
     OUT_ATTRS = {'cf_mean': {'scale_factor': 1000, 'units': 'unitless',
-                             'dtype': 'uint16'},
+                             'dtype': 'uint16', 'chunks': None},
                  'cf_profile': {'scale_factor': 1000, 'units': 'unitless',
-                                'dtype': 'uint16'},
+                                'dtype': 'uint16', 'chunks': (None, 100)},
                  'annual_energy': {'scale_factor': 1, 'units': 'kWh',
-                                   'dtype': 'float32'},
+                                   'dtype': 'float32', 'chunks': None},
                  'energy_yield': {'scale_factor': 1, 'units': 'kWh/kW',
-                                  'dtype': 'float32'},
+                                  'dtype': 'float32', 'chunks': None},
                  'gen_profile': {'scale_factor': 1, 'units': 'kW',
-                                 'dtype': 'float32'},
+                                 'dtype': 'float32', 'chunks': (None, 100)},
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32'},
+                               'dtype': 'float32', 'chunks': None},
                  'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32'},
+                              'dtype': 'float32', 'chunks': None},
                  }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
@@ -69,7 +69,7 @@ class Gen:
 
         self._points_control = points_control
         self._res_file = res_file
-        self._output_request = output_request
+        self.output_request = output_request
         self._fout = fout
         self._dirout = dirout
         self._drop_leap = drop_leap
@@ -396,51 +396,62 @@ class Gen:
         return out
 
     @staticmethod
-    def unpack_scalars(gen_out, sam_var='cf_mean'):
-        """Unpack a numpy 1darray of scalars from a gen output dictionary.
+    def unpack_output(gen_out, var):
+        """Unpack a numpy array of outputs from a SAM output dictionary.
 
         Parameters
         ----------
         gen_out : dict
             Nested dictionary of SAM results. Top level key is site number,
             Next level key should include the target sam_var.
-        sam_var : str
-            SAM variable name to be unpacked from gen_out. The SAM outputs
-            associated with this variable must be scalar values.
+        var : str
+            SAM variable name to be unpacked from gen_out.
 
         Returns
         -------
         out : np.array
-            1D array of scalar values sorted by site number.
+            1D array of scalar values sorted by site number or 2D array of
+            profile outputs with rows matching the time series and columns
+            matching sorted rows.
         """
 
         sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k][sam_var] for k in sorted_keys])
+        out = np.array([gen_out[k][var] for k in sorted_keys])
+        if len(out.shape) > 1:
+            # profile outputs need to be transposed to make
+            # rows correspond to the timeseries
+            out = out.transpose()
         return out
 
-    @staticmethod
-    def unpack_profiles(gen_out, sam_var='cf_profile'):
-        """Unpack a numpy 2darray of profiles from a gen output dictionary.
+    def get_dset_attrs(self, var):
+        """Get dataset attributes associated with output variable.
 
         Parameters
         ----------
-        gen_out : dict
-            Nested dictionary of SAM results. Top level key is site number,
-            Next level key should include the target sam_var.
-        sam_var : str
-            SAM variable name to be unpacked from gen_out. The SAM outputs
-            associated with this variable must be profiles.
+        var : str
+            SAM variable name to be unpacked from gen_out, also the intended
+            dataset name that will be written to disk.
 
         Returns
         -------
-        out : np.ndarray
-            2D array of profiles. Columns are sorted by site
-            number. Rows correspond to the profile timeseries.
+        data : np.ndarray
+            1D array of scalar values sorted by site number or 2D array of
+            profile outputs with rows matching the time series and columns
+            matching sorted rows.
+        dtype : str
+            Target dataset datatype. Defaults to float32.
+        chunks : list | tuple | NoneType
+            Chunk shape for target dataset. Defaults to None.
+        attrs : dict
+            Additional dataset attributes including scale_factor and units.
         """
 
-        sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k][sam_var] for k in sorted_keys])
-        return out.transpose()
+        data = self.unpack_output(self.out, var)
+        dtype = self.OUT_ATTRS[var].get('dtype', 'float32')
+        chunks = self.OUT_ATTRS[var].get('chunks', None)
+        attrs = {k: self.OUT_ATTRS[var].get(k, 'None') for
+                 k in ['scale_factor', 'units']}
+        return data, dtype, chunks, attrs
 
     def gen_to_disk(self, fout='gen_out.h5'):
         """Save generation outputs to disk (all vars in self.output_request).
@@ -467,22 +478,11 @@ class Gen:
 
             # iterate through all output requests writing each as a dataset
             for dset in self.output_request:
-                if 'profile' in dset:
-                    # Write profile 2D array to disk
-                    f._add_dset(
-                        dset_name=dset,
-                        data=self.unpack_profiles(self.out, sam_var=dset),
-                        dtype=self.OUT_ATTRS[dset].get('dtype', 'float32'),
-                        chunks=(None, 100),
-                        attrs=self.OUT_ATTRS[dset])
-                else:
-                    # Write scalar array to disk
-                    f._add_dset(
-                        dset_name=dset,
-                        data=self.unpack_scalars(self.out, sam_var=dset),
-                        dtype=self.OUT_ATTRS[dset].get('dtype', 'float32'),
-                        chunks=None,
-                        attrs=self.OUT_ATTRS[dset])
+                # retrieve the dataset with associated attributes
+                data, dtype, chunks, attrs = self.get_dset_attrs(dset)
+                # Write output dataset to disk
+                f._add_dset(dset_name=dset, data=data, dtype=dtype,
+                            chunks=chunks, attrs=attrs)
 
     @staticmethod
     def get_unique_fout(fout):
