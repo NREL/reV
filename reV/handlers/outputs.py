@@ -79,7 +79,7 @@ class Outputs(Resource):
             else:
                 out = self._get_ds(ds, *ds_slice)
         else:
-            msg = '{} is not a valid Dataset'
+            msg = '{} is not a valid Dataset'.format(ds)
             raise HandlerKeyError(msg)
 
         return out

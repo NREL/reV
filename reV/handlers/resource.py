@@ -411,9 +411,9 @@ class Resource:
         ds, ds_slice = parse_keys(keys)
 
         if ds == 'time_index':
-            out = self._time_index(*ds_slice)
+            out = self._get_time_index(*ds_slice)
         elif ds == 'meta':
-            out = self._meta(*ds_slice)
+            out = self._get_meta(*ds_slice)
         elif 'SAM' in ds:
             site = ds_slice[0]
             if isinstance(site, int):
@@ -557,7 +557,7 @@ class Resource:
         """
         return self._h5[dset].attrs.get(self.UNIT_ATTR, None)
 
-    def _time_index(self, *ds_slice):
+    def _get_time_index(self, *ds_slice):
         """
         Extract and convert time_index to pandas Datetime Index
 
@@ -584,7 +584,7 @@ class Resource:
         time_index: np.array
         return pd.to_datetime(time_index.astype(str))
 
-    def _meta(self, *ds_slice):
+    def _get_meta(self, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
 
@@ -723,7 +723,7 @@ class SolarResource(Resource):
             time-series DataFrame of resource variables needed to run SAM
         """
         if self._unscale:
-            res_df = pd.DataFrame(index=self._time_index)
+            res_df = pd.DataFrame(index=self.time_index)
             res_df.name = "{}-{}".format(ds_name, site)
             for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
                 var_array = self._get_ds(var, slice(None, None, None), site)
@@ -1076,7 +1076,7 @@ class WindResource(Resource):
         """
         if self._unscale:
             _, h = self._parse_name(ds_name)
-            res_df = pd.DataFrame(index=self._time_index)
+            res_df = pd.DataFrame(index=self.time_index)
             res_df.name = site
             variables = ['pressure', 'temperature', 'winddirection',
                          'windspeed']

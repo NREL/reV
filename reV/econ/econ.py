@@ -1,7 +1,6 @@
 """
 Levelized Cost of Energy
 """
-from copy import deepcopy
 import logging
 import pandas as pd
 from warnings import warn
@@ -26,9 +25,9 @@ class Econ(Gen):
 
     # Mapping of reV econ outputs to scale factors and units
     OUT_ATTRS = {'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32'},
+                              'dtype': 'float32', 'chunks': None},
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32'},
+                               'dtype': 'float32', 'chunks': None},
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
@@ -63,13 +62,31 @@ class Econ(Gen):
         self._cf_year = cf_year
         self._fout = fout
         self._dirout = dirout
-        if output_request not in self.OPTIONS:
-            raise KeyError('Requested econ variable "{}" is not available. '
-                           'reV econ can analyze the following: {}'
-                           .format(output_request, list(self.OPTIONS.keys())))
-        self._output_request = output_request
+        self.output_request = output_request
         if site_data:
             self.site_data = site_data
+
+    @Gen.output_request.setter  # pylint: disable-msg=E1101
+    def output_request(self, req):
+        """Set the single output variable requested from econ.
+
+        Parameters
+        ----------
+        req : str
+            Single econ output variable requested from SAM.
+        """
+
+        if isinstance(req, (list, tuple)) and len(req) == 1:
+            # ensure single string output request
+            self._output_request = req[0]
+        elif isinstance(req, str):
+            self._output_request = req
+
+        if self._output_request not in self.OPTIONS:
+            raise KeyError('Requested econ variable "{}" is not available. '
+                           'reV econ can analyze the following: {}'
+                           .format(self._output_request,
+                                   list(self.OPTIONS.keys())))
 
     @property
     def cf_file(self):
@@ -195,18 +212,21 @@ class Econ(Gen):
         if not hasattr(self, '_site_df'):
             site_gids = self.meta['gid']
             with Outputs(self.cf_file) as cfh:
-                if 'cf_{}'.format(self.cf_year) in str(list(cfh.dsets)):
+                if 'cf_mean' in cfh.dsets:
+                    cf_arr = cfh['cf_mean']
+                elif 'cf' in cfh.dsets:
+                    cf_arr = cfh['cf']
+                elif 'cf_{}'.format(self.cf_year) in cfh.dsets:
                     cf_arr = cfh['cf_{}'.format(self.cf_year)]
-                elif 'cf_means' in str(list(cfh.dsets)):
-                    cf_arr = cfh['cf_means']
-                elif 'cf_means' in self.meta:
-                    cf_arr = self.meta['cf_means']
+                elif 'cf_mean' in self.meta:
+                    cf_arr = self.meta['cf_mean']
                 else:
-                    raise KeyError('Could not find "cf_means" or "{}" dataset '
-                                   'in {}. Looked in both the h5 datasets and '
-                                   'the meta data.'
+                    raise KeyError('Could not find "cf_mean", "cf", or "{}" '
+                                   'dataset in {}. Looked in both the h5 '
+                                   'datasets and the meta data. The following '
+                                   'dsets were available: {}.'
                                    .format('cf_{}'.format(self.cf_year),
-                                           self.cf_file))
+                                           self.cf_file, cfh.dsets))
 
             # set site-specific values in dataframe with
             # columns -> variables, rows -> sites
@@ -251,27 +271,24 @@ class Econ(Gen):
                                                  suffixes=['', '_site'],
                                                  copy=False, validate='1:1')
 
-    def econ_results_to_disk(self, fout='econ_out.h5', mode='w'):
+    def econ_to_disk(self, fout='econ_out.h5'):
         """Save econ results to disk.
 
         Parameters
         ----------
         fout : str
             Target .h5 output file (with path).
-        mode : str
-            .h5 file write mode (e.g. 'w', 'w-', 'a').
         """
 
-        arr = self.unpack_scalars(self.out, sam_var=self.output_request)
-        # get dset attributes
-        attrs = deepcopy(self.OUT_ATTRS[self.output_request])
-        dtype = attrs['dtype']
-        del attrs['dtype']
-        # write means to disk using Outputs handler class
-        Outputs.write_means(fout, self.meta, self.output_request, arr,
-                            attrs, dtype, self.sam_configs, {'mode': mode})
+        # retrieve the dataset with associated attributes
+        data, dtype, chunks, attrs = self.get_dset_attrs(self.output_request)
+        # write econ results means to disk
+        Outputs.write_means(h5_file=fout, meta=self.meta,
+                            dset_name=self.output_request, means=data,
+                            attrs=attrs, dtype=dtype, chunks=chunks,
+                            sam_configs=self.sam_configs)
 
-    def flush(self, mode='w'):
+    def flush(self):
         """Flush econ data in self.out attribute to disk in .h5 format.
 
         The data to be flushed is accessed from the instance attribute
@@ -279,11 +296,6 @@ class Econ(Gen):
         "self.fout" and "self.dirout". The flushed file is ensured to have a
         unique filename. Data is not flushed if fout is None or if .out is
         empty.
-
-        Parameters
-        ----------
-        mode : str
-            .h5 file write mode (e.g. 'w', 'w-', 'a').
         """
 
         # use mutable copies of the properties
@@ -296,7 +308,7 @@ class Econ(Gen):
 
             logger.info('Flushing econ outputs to disk, target file: {}'
                         .format(fout))
-            self.econ_results_to_disk(fout=fout, mode=mode)
+            self.econ_to_disk(fout=fout)
             logger.debug('Flushed econ output successfully to disk.')
 
     @staticmethod
