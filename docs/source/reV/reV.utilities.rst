@@ -36,6 +36,14 @@ reV.utilities.loggers module
     :undoc-members:
     :show-inheritance:
 
+reV.utilities.utilities module
+------------------------------
+
+.. automodule:: reV.utilities.utilities
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

@@ -1,5 +1,5 @@
-git_reV2
-========
+reV2
+====
 
 .. toctree::
    :maxdepth: 4
