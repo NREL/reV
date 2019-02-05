@@ -1,7 +1,6 @@
 """
 Generation
 """
-from copy import deepcopy
 import logging
 import numpy as np
 import os
@@ -31,14 +30,24 @@ class Gen:
                'offshorewind': OffshoreWind.reV_run,
                }
 
-    OUT_ATTRS = {'cf_means': {'scale_factor': 1000, 'units': 'unitless',
-                              'dtype': 'uint16'},
-                 'cf_profiles': {'scale_factor': 1000, 'units': 'unitless',
-                                 'dtype': 'uint16'},
+    OUT_ATTRS = {'cf_mean': {'scale_factor': 1000, 'units': 'unitless',
+                             'dtype': 'uint16', 'chunks': None},
+                 'cf_profile': {'scale_factor': 1000, 'units': 'unitless',
+                                'dtype': 'uint16', 'chunks': (None, 100)},
+                 'annual_energy': {'scale_factor': 1, 'units': 'kWh',
+                                   'dtype': 'float32', 'chunks': None},
+                 'energy_yield': {'scale_factor': 1, 'units': 'kWh/kW',
+                                  'dtype': 'float32', 'chunks': None},
+                 'gen_profile': {'scale_factor': 1, 'units': 'kW',
+                                 'dtype': 'float32', 'chunks': (None, 100)},
+                 'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
+                               'dtype': 'float32', 'chunks': None},
+                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
+                              'dtype': 'float32', 'chunks': None},
                  }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
-                 fout=None, dirout='./gen_out'):
+                 fout=None, dirout='./gen_out', drop_leap=True):
         """Initialize a generation instance.
 
         Parameters
@@ -54,13 +63,16 @@ class Gen:
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
+        drop_leap : bool
+            Drop leap day instead of final day of year during leap years
         """
 
         self._points_control = points_control
         self._res_file = res_file
-        self._output_request = output_request
+        self.output_request = output_request
         self._fout = fout
         self._dirout = dirout
+        self._drop_leap = drop_leap
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -70,14 +82,40 @@ class Gen:
 
     @property
     def output_request(self):
-        """Get the list of output variables requested from generation.
+        """Get the output variables requested from generation.
 
         Returns
         -------
-        output_request : list | tuple
+        output_request : tuple
             Output variables requested from SAM.
         """
         return self._output_request
+
+    @output_request.setter
+    def output_request(self, req):
+        """Set the output variables requested from generation.
+
+        Parameters
+        ----------
+        req : list | tuple
+            Output variables requested from SAM.
+        """
+
+        if 'cf_mean' not in req:
+            # ensure that cf_mean is requested from output
+            if isinstance(req, list):
+                req += ['cf_mean']
+            elif isinstance(req, tuple):
+                req += ('cf_mean',)
+
+        if isinstance(req, list):
+            # ensure output request is tuple
+            self._output_request = tuple(req)
+        elif isinstance(req, tuple):
+            self._output_request = req
+        else:
+            raise TypeError('Output request must be list or tuple but '
+                            'received: {}'.format(type(req)))
 
     @property
     def points_control(self):
@@ -219,23 +257,12 @@ class Gen:
                             'list, dict or None.'.format(type(result)))
 
     @property
-    def time_index(self, drop_leap=True):
-        """Get the generation resource time index data.
-
-        Parameters
-        ----------
-        drop_leap : bool
-            Option to drop the leap day from the time_index.
-
-        Returns
-        -------
-        _time_index : pd.DatetimeIndex
-            Time index objects from the resource data (self.res_file).
-        """
+    def time_index(self):
+        """Get the generation resource time index data."""
         if not hasattr(self, '_time_index'):
             with Resource(self.res_file) as res:
                 self._time_index = res.time_index
-            if drop_leap:
+            if self._drop_leap:
                 leap_day = ((self._time_index.month == 2) &
                             (self._time_index.day == 29))
                 self._time_index = self._time_index.drop(
@@ -363,109 +390,99 @@ class Gen:
         """
 
         out = {}
-        {out.update(x) for x in futures}
+        for x in futures:
+            out.update(x)
+
         return out
 
     @staticmethod
-    def unpack_scalars(gen_out, sam_var='cf_mean'):
-        """Unpack a numpy 1darray of scalars from a gen output dictionary.
+    def unpack_output(gen_out, var):
+        """Unpack a numpy array of outputs from a SAM output dictionary.
 
         Parameters
         ----------
         gen_out : dict
             Nested dictionary of SAM results. Top level key is site number,
             Next level key should include the target sam_var.
-        sam_var : str
-            SAM variable name to be unpacked from gen_out. The SAM outputs
-            associated with this variable must be scalar values.
+        var : str
+            SAM variable name to be unpacked from gen_out.
 
         Returns
         -------
         out : np.array
-            1D array of scalar values sorted by site number.
+            1D array of scalar values sorted by site number or 2D array of
+            profile outputs with rows matching the time series and columns
+            matching sorted rows.
         """
 
         sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k][sam_var] for k in sorted_keys])
+        out = np.array([gen_out[k][var] for k in sorted_keys])
+        if len(out.shape) > 1:
+            # profile outputs need to be transposed to make
+            # rows correspond to the timeseries
+            out = out.transpose()
         return out
 
-    @staticmethod
-    def unpack_profiles(gen_out, sam_var='cf_profile'):
-        """Unpack a numpy 2darray of profiles from a gen output dictionary.
+    def get_dset_attrs(self, var):
+        """Get dataset attributes associated with output variable.
 
         Parameters
         ----------
-        gen_out : dict
-            Nested dictionary of SAM results. Top level key is site number,
-            Next level key should include the target sam_var.
-        sam_var : str
-            SAM variable name to be unpacked from gen_out. The SAM outputs
-            associated with this variable must be profiles.
+        var : str
+            SAM variable name to be unpacked from gen_out, also the intended
+            dataset name that will be written to disk.
 
         Returns
         -------
-        out : np.ndarray
-            2D array of profiles. Columns are sorted by site
-            number. Rows correspond to the profile timeseries.
+        data : np.ndarray
+            1D array of scalar values sorted by site number or 2D array of
+            profile outputs with rows matching the time series and columns
+            matching sorted rows.
+        dtype : str
+            Target dataset datatype. Defaults to float32.
+        chunks : list | tuple | NoneType
+            Chunk shape for target dataset. Defaults to None.
+        attrs : dict
+            Additional dataset attributes including scale_factor and units.
         """
 
-        sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k][sam_var] for k in sorted_keys])
-        return out.transpose()
+        data = self.unpack_output(self.out, var)
+        dtype = self.OUT_ATTRS[var].get('dtype', 'float32')
+        chunks = self.OUT_ATTRS[var].get('chunks', None)
+        attrs = {k: self.OUT_ATTRS[var].get(k, 'None') for
+                 k in ['scale_factor', 'units']}
+        return data, dtype, chunks, attrs
 
-    def means_to_disk(self, fout='gen_out.h5', mode='w'):
-        """Save capacity factor means to disk.
+    def gen_to_disk(self, fout='gen_out.h5'):
+        """Save generation outputs to disk (all vars in self.output_request).
 
         Parameters
         ----------
         fout : str
             Target .h5 output file (with path).
-        mode : str
-            .h5 file write mode (e.g. 'w', 'w-', 'a').
         """
-        cf_means = self.unpack_scalars(self.out, sam_var='cf_mean')
-        meta = self.meta
-        meta.loc[:, 'cf_means'] = cf_means
-        # get LCOE if in output request, otherwise default to None
-        lcoe = None
-        if 'lcoe' in str(self.output_request):
-            lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
 
-        # get dset attributes
-        attrs = deepcopy(self.OUT_ATTRS['cf_means'])
-        dtype = attrs['dtype']
-        del attrs['dtype']
+        with Outputs(fout, mode='w-') as f:
+            # Save meta
+            f['meta'] = self.meta
+            logger.debug("\t- 'meta' saved to disc")
 
-        Outputs.write_means(fout, meta, 'cf', cf_means, attrs, dtype,
-                            self.sam_configs, lcoe=lcoe, **{'mode': mode})
+            if 'profile' in str(self.output_request):
+                f['time_index'] = self.time_index
+                logger.debug("\t- 'time_index' saved to disc")
 
-    def profiles_to_disk(self, fout='gen_out.h5', mode='w'):
-        """Save capacity factor profiles to disk.
+            if self.sam_configs is not None:
+                f.set_configs(self.sam_configs)
+                logger.debug("\t- SAM configurations saved as attributes "
+                             "on 'meta'")
 
-        Parameters
-        ----------
-        fout : str
-            Target .h5 output file (with path).
-        mode : str
-            .h5 file write mode (e.g. 'w', 'w-', 'a').
-        """
-        cf_profiles = self.unpack_profiles(self.out, sam_var='cf_profile')
-        meta = self.meta
-        meta.loc[:, 'cf_means'] = self.unpack_scalars(self.out,
-                                                      sam_var='cf_mean')
-        # get LCOE if in output request, otherwise default to None
-        lcoe = None
-        if 'lcoe' in str(self.output_request):
-            lcoe = self.unpack_scalars(self.out, sam_var='lcoe_fcr')
-
-        # get dset attributes
-        attrs = deepcopy(self.OUT_ATTRS['cf_profiles'])
-        dtype = attrs['dtype']
-        del attrs['dtype']
-
-        Outputs.write_profiles(fout, meta, self.time_index, 'cf_profiles',
-                               cf_profiles, attrs, dtype, self.sam_configs,
-                               lcoe=lcoe, **{'mode': mode})
+            # iterate through all output requests writing each as a dataset
+            for dset in self.output_request:
+                # retrieve the dataset with associated attributes
+                data, dtype, chunks, attrs = self.get_dset_attrs(dset)
+                # Write output dataset to disk
+                f._add_dset(dset_name=dset, data=data, dtype=dtype,
+                            chunks=chunks, attrs=attrs)
 
     @staticmethod
     def get_unique_fout(fout):
@@ -550,7 +567,7 @@ class Gen:
             fout = os.path.join(dirout, fout)
         return fout
 
-    def flush(self, mode='w'):
+    def flush(self):
         """Flush generation data in self.out attribute to disk in .h5 format.
 
         The data to be flushed is accessed from the instance attribute
@@ -558,11 +575,6 @@ class Gen:
         "self.fout" and "self.dirout". The flushed file is ensured to have a
         unique filename. Data is not flushed if fout is None or if .out is
         empty.
-
-        Parameters
-        ----------
-        mode : str
-            .h5 file write mode (e.g. 'w', 'a').
         """
 
         # use mutable copies of the properties
@@ -575,10 +587,8 @@ class Gen:
 
             logger.info('Flushing generation outputs to disk, target file: {}'
                         .format(fout))
-            if 'profile' in str(self.output_request):
-                self.profiles_to_disk(fout=fout, mode=mode)
-            else:
-                self.means_to_disk(fout=fout, mode=mode)
+            self.gen_to_disk(fout)
+
             logger.debug('Flushed generation output successfully to disk.')
 
     @staticmethod
@@ -662,10 +672,6 @@ class Gen:
             Only returned if return_obj is True.
         """
 
-        # always extract cf mean
-        if 'cf_mean' not in output_request:
-            output_request += ('cf_mean',)
-
         # get a points control instance
         pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
                         res_file=res_file)
@@ -738,10 +744,6 @@ class Gen:
             by the total memory is greater than this value, the obj.out will
             be flushed and the local node memory will be cleared.
         """
-
-        # always extract cf mean
-        if 'cf_mean' not in output_request:
-            output_request += ('cf_mean',)
 
         # get a points control instance
         pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,

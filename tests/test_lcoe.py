@@ -16,8 +16,8 @@ from reV.econ.econ import Econ
 from reV import TESTDATADIR
 
 
-RTOL = 0.0
-ATOL = 0.02
+RTOL = 0.01
+ATOL = 0.001
 PURGE_OUT = True
 
 
@@ -27,14 +27,11 @@ def test_lcoe(year):
     cf_file = TESTDATADIR + '/gen_out/gen_ri_pv_{}_x000.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_lcoe_naris_pv_1axis_inv13.json'
     r1f = TESTDATADIR + '/ri_pv/scalar_outputs/project_outputs.h5'
-    dirout = os.path.join(TESTDATADIR, 'lcoe_out')
-    fout = 'lcoe_ri_pv_{}.h5'.format(year)
     points = slice(0, 100)
     obj = Econ.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
                           cf_year=year, output_request='lcoe_fcr',
                           n_workers=1, sites_per_split=25,
-                          points_range=None, fout=fout, dirout=dirout,
-                          return_obj=True)
+                          points_range=None, fout=None, return_obj=True)
     lcoe = [c['lcoe_fcr'] for c in obj.out.values()]
 
     with h5py.File(r1f) as f:
@@ -42,11 +39,6 @@ def test_lcoe(year):
         r1_lcoe = f['pv']['lcoefcr'][year_rows[str(year)], 0:100] * 1000
 
     result = np.allclose(lcoe, r1_lcoe, rtol=RTOL, atol=ATOL)
-    if result and PURGE_OUT:
-        # remove output files if test passes.
-        flist = os.listdir(dirout)
-        for fname in flist:
-            os.remove(os.path.join(dirout, fname))
 
     assert result
 
@@ -80,6 +72,7 @@ def test_ORCA(rut_id):
 
     lcoe = [c['lcoe_fcr'] for c in obj.out.values()]
     result = np.allclose(lcoe, baseline[rut_id], rtol=RTOL, atol=ATOL)
+
     assert result
 
 

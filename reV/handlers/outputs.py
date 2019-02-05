@@ -3,14 +3,43 @@ Classes to handle capacity factor profiles and annual averages
 """
 import h5py
 import json
+import logging
 import numpy as np
-import os
 import pandas as pd
 import re
+import time
 from warnings import warn
-from reV.utilities.exceptions import (ResourceRuntimeError, ResourceKeyError,
-                                      ResourceValueError)
+
+from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
+                                      HandlerValueError, HandlerWarning)
 from reV.handlers.resource import Resource, parse_keys
+
+logger = logging.getLogger(__name__)
+
+
+def parse_year(f_name):
+    """
+    Attempt to parse year from file name
+
+    Parameters
+    ----------
+    f_name : str
+        File name from which year is to be parsed
+
+    Results
+    -------
+    year : int
+        Year parsed from file name, None if not present in file name
+    """
+    # Attempt to parse year from file name
+    match = re.match(r'.*([1-3][0-9]{3})', f_name)
+    if match:
+        year = int(match.group(1))
+    else:
+        warn('Cannot parse year from {}'.format(f_name), HandlerWarning)
+        year = None
+
+    return year
 
 
 class Outputs(Resource):
@@ -35,7 +64,7 @@ class Outputs(Resource):
 
     def __len__(self):
         _len = 0
-        if 'time_index' in self.dsets:
+        if 'meta' in self.dsets:
             _len = super().__len__()
 
         return _len
@@ -44,14 +73,14 @@ class Outputs(Resource):
         ds, ds_slice = parse_keys(keys)
         if ds in self.dsets:
             if ds == 'time_index':
-                out = self._time_index(*ds_slice)
+                out = self._get_time_index(*ds_slice)
             elif ds == 'meta':
-                out = self._meta(*ds_slice)
+                out = self._get_meta(*ds_slice)
             else:
                 out = self._get_ds(ds, *ds_slice)
         else:
-            msg = '{} is not a valid Dataset'
-            raise ResourceKeyError(msg)
+            msg = '{} is not a valid Dataset'.format(ds)
+            raise HandlerKeyError(msg)
 
         return out
 
@@ -78,8 +107,10 @@ class Outputs(Resource):
         """
         _shape = None
         dsets = self.dsets
-        if 'time_index' in dsets and 'meta' in dsets:
-            _shape = super().shape
+        if 'meta' in dsets:
+            _shape = self._h5['meta'].shape
+            if 'time_index' in dsets:
+                _shape = self._h5['time_index'].shape + _shape
 
         return _shape
 
@@ -96,9 +127,32 @@ class Outputs(Resource):
         mode = ['a', 'w', 'w-', 'x']
         if self._mode not in mode:
             msg = 'mode must be writable: {}'.format(mode)
-            raise ResourceRuntimeError(msg)
+            raise HandlerRuntimeError(msg)
 
         return True
+
+    def update_dset(self, dset, dset_array, dset_slice=None):
+        """
+        Check to see if dset needs to be updated on disk
+        If so write dset_array to disk
+
+        Parameters
+        ----------
+        dset : str
+            dataset to update
+        dset_array : ndarray
+            dataset array
+        dset_slice : tuple
+            slice of dataset to update, it None update all
+        """
+        if dset_slice is None:
+            dset_slice = (slice(None, None, None), )
+
+        keys = (dset, ) + dset_slice
+
+        arr = self.__getitem__(keys)
+        if not np.array_equal(arr, dset_array):
+            self._set_ds_array(dset, dset_array, *dset_slice)
 
     @Resource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
@@ -114,10 +168,11 @@ class Outputs(Resource):
             meta = self.to_records_array(meta)
 
         if 'meta' in self.dsets:
-            ds_slice = slice(None, None, None)
-            self._set_ds_array('meta', meta, ds_slice)
+            self.update_dset('meta', meta)
         else:
-            self.create_ds('meta', meta.shape, meta.dtype, data=meta)
+            self._create_dset('meta', meta.shape, meta.dtype, data=meta)
+
+        self._meta = meta
 
     @Resource.time_index.setter  # pylint: disable-msg=E1101
     def time_index(self, time_index):
@@ -133,11 +188,12 @@ class Outputs(Resource):
             time_index = np.array(time_index.astype(str), dtype='S20')
 
         if 'time_index' in self.dsets:
-            ds_slice = slice(None, None, None)
-            self._set_ds_array('time_index', time_index, ds_slice)
+            self.update_dset('time_index', time_index)
         else:
-            self.create_ds('time_index', time_index.shape, time_index.dtype,
-                           data=time_index)
+            self._create_dset('time_index', time_index.shape, time_index.dtype,
+                              data=time_index)
+
+        self._time_index = time_index
 
     @property
     def SAM_configs(self):
@@ -276,7 +332,7 @@ class Outputs(Resource):
         """
         if ds_name not in self._h5:
             msg = '{} must be initialized!'.format(ds_name)
-            raise ResourceRuntimeError(msg)
+            raise HandlerRuntimeError(msg)
 
         self._h5[ds_name][ds_slice] = arr
 
@@ -313,8 +369,8 @@ class Outputs(Resource):
 
         return ds_chunks
 
-    def create_ds(self, ds_name, shape, dtype, chunks=None, attrs=None,
-                  data=None):
+    def _create_dset(self, ds_name, shape, dtype, chunks=None, attrs=None,
+                     data=None):
         """
         Initialize dataset
 
@@ -344,10 +400,71 @@ class Outputs(Resource):
             if data is not None:
                 ds[...] = data
 
+    def _check_dset_shape(self, dset_data):
+        """
+        Check to ensure that dataset array is of the proper shape
+
+        Parameters
+        ----------
+        dset_data : ndarray
+            Dataset data array
+        """
+        dset_shape = dset_data.shape
+        if len(dset_shape) == 1:
+            shape = len(self)
+            if shape:
+                shape = (shape,)
+                if dset_shape != shape:
+                    raise HandlerValueError("data is not of the proper shape:"
+                                            " {}".format(shape))
+            else:
+                raise HandlerRuntimeError("'meta' has not been loaded")
+        else:
+            shape = self.shape
+            if shape:
+                if dset_shape != shape:
+                    raise HandlerValueError("data is not of the proper shape:"
+                                            " {}".format(shape))
+            else:
+                raise HandlerRuntimeError("'meta' and 'time_index' have not "
+                                          "been loaded")
+
+    def _add_dset(self, dset_name, data, dtype, chunks=None, attrs=None):
+        """
+        Write dataset to disk. Dataset it created in .h5 file and data is
+        scaled if needed.
+
+        Parameters
+        ----------
+        dset_name : str
+            Name of dataset to be added to h5 file.
+        data : ndarray
+            Data to be added to h5 file.
+        dtype : str
+            Intended dataset datatype after scaling.
+        chunks : tuple
+            Chunk size for capacity factor means dataset.
+        attrs : dict
+            Attributes to be set. May include 'scale_factor'.
+        """
+        self._check_dset_shape(data)
+
+        if not np.issubdtype(data.dtype, np.dtype(dtype)):
+            if 'scale_factor' in attrs:
+                scale_factor = attrs['scale_factor']
+                # apply scale factor and dtype
+                data = (data * scale_factor).astype(dtype)
+            else:
+                raise HandlerRuntimeError("A scale_factor is needed to"
+                                          "scale data to {}.".format(dtype))
+
+        self._create_dset(dset_name, data.shape, dtype,
+                          chunks=chunks, attrs=attrs, data=data)
+
     @classmethod
     def write_profiles(cls, h5_file, meta, time_index, dset_name, profiles,
-                       attrs, dtype, SAM_configs, year=None,
-                       chunks=(None, 100), lcoe=None, **kwargs):
+                       attrs, dtype, SAM_configs=None, chunks=(None, 100),
+                       **kwargs):
         """
         Write profiles to disk
 
@@ -369,59 +486,40 @@ class Outputs(Resource):
             Intended dataset datatype after scaling.
         SAM_configs : dict
             Dictionary of SAM configuration JSONs used to compute cf profiles
-        year : int | str
-            Year for which cf means were computed
-            If None, inferred from h5_file name
         chunks : tuple
             Chunk size for profiles dataset
-        lcoe : ndarray | NoneType
-            Optional LCOE scalar array.
         """
+        logger.info("Saving profiles ({}) to {}".format(dset_name, h5_file))
         if profiles.shape != (len(time_index), len(meta)):
-            msg = 'Profile dimensions does not match time index and meta'
-            raise ResourceValueError(msg)
-
-        if year is None:
-            # Attempt to parse year from file name
-            f_name = os.path.basename(h5_file)
-            match = re.match(r'.*([1-3][0-9]{3})', f_name)
-            if match:
-                year = '_{}'.format(int(match.group(1)))
-            else:
-                warn('Cannot parse year from {}'.format(f_name))
-                year = ''
-
+            raise HandlerValueError("Profile dimensions does not match"
+                                    "'time_index' and 'meta'")
+        ts = time.time()
         with cls(h5_file, mode=kwargs.get('mode', 'w-')) as f:
             # Save time index
             f['time_index'] = time_index
+            logger.debug("\t- 'time_index' saved to disc")
             # Save meta
             f['meta'] = meta
+            logger.debug("\t- 'meta' saved to disc")
             # Add SAM configurations as attributes to meta
-            f.set_configs(SAM_configs)
+            if SAM_configs is not None:
+                f.set_configs(SAM_configs)
+                logger.debug("\t- SAM configurations saved as attributes "
+                             "on 'meta'")
 
-            # Get scale factor or default to 1 (no scaling)
-            scale_factor = 1
-            if 'scale_factor' in attrs:
-                scale_factor = attrs['scale_factor']
+            # Write dset to disk
+            f._add_dset(dset_name, profiles, dtype,
+                        chunks=chunks, attrs=attrs)
+            logger.debug("\t- '{}' saved to disc".format(dset_name))
 
-            # apply scale factor and dtype
-            profiles = (profiles * scale_factor).astype(dtype)
-
-            f.create_ds(dset_name, profiles.shape, profiles.dtype,
-                        chunks=chunks, attrs=attrs,
-                        data=profiles)
-            if lcoe is not None:
-                # create an LCOE dataset if passed to this method
-                lcoe_attrs = {'scale_factor': 1, 'units': 'dol/MWh'}
-                lcoe = lcoe.astype('float32')
-
-                f.create_ds('lcoe{}'.format(year), lcoe.shape, lcoe.dtype,
-                            chunks=None, attrs=lcoe_attrs, data=lcoe)
+        tt = (time.time() - ts) / 60
+        logger.info('{} is complete'.format(h5_file))
+        logger.debug('\t- Saving to disc took {:.4f} minutes'
+                     .format(tt))
 
     @classmethod
     def write_means(cls, h5_file, meta, dset_name, means, attrs, dtype,
-                    SAM_configs, year=None, cf_chunks=None, lcoe=None,
-                    **kwargs):
+                    SAM_configs=None, chunks=None, **kwargs):
         """
         Write means array to disk
 
@@ -441,50 +539,61 @@ class Outputs(Resource):
             Intended dataset datatype after scaling.
         SAM_configs : dict
             Dictionary of SAM configuration JSONs used to compute cf means
-        year : int | str
-            Year for which cf means were computed
-            If None, inferred from h5_file name
-        cf_chunks : tuple
+        chunks : tuple
             Chunk size for capacity factor means dataset
-        lcoe : ndarray | NoneType
-            Optional LCOE scalar array.
         """
+        logger.info("Saving means ({}) to {}".format(dset_name, h5_file))
         if len(means) != len(meta):
             msg = 'Number of means does not match meta'
-            raise ResourceValueError(msg)
+            raise HandlerValueError(msg)
 
-        if year is None:
-            # Attempt to parse year from file name
-            f_name = os.path.basename(h5_file)
-            match = re.match(r'.*([1-3][0-9]{3})', f_name)
-            if match:
-                year = '_{}'.format(int(match.group(1)))
-            else:
-                warn('Cannot parse year from {}'.format(f_name))
-                year = ''
-
+        ts = time.time()
         with cls(h5_file, mode=kwargs.get('mode', 'w-')) as f:
             # Save meta
             f['meta'] = meta
+            logger.debug("\t- 'meta' saved to disc")
             # Add SAM configurations as attributes to meta
-            f.set_configs(SAM_configs)
+            if SAM_configs is not None:
+                f.set_configs(SAM_configs)
+                logger.debug("\t- SAM configurations saved as attributes "
+                             "on 'meta'")
 
-            # Get scale factor or default to 1 (no scaling)
-            scale_factor = 1
-            if 'scale_factor' in attrs:
-                scale_factor = attrs['scale_factor']
+            # Write dset to disk
+            f._add_dset(dset_name, means, dtype,
+                        chunks=chunks, attrs=attrs)
+            logger.debug("\t- '{}' saved to disc".format(dset_name))
 
-            # apply scale factor and dtype
-            means = (means * scale_factor).astype(dtype)
+        tt = (time.time() - ts) / 60
+        logger.info('{} is complete'.format(h5_file))
+        logger.debug('\t- Saving to disc took {:.4f} minutes'
+                     .format(tt))
 
-            f.create_ds('{}{}'.format(dset_name, year), means.shape,
-                        means.dtype, chunks=cf_chunks, attrs=attrs,
-                        data=means)
-            if lcoe is not None:
-                # create an LCOE dataset if passed to this method
-                # units fixed as per reV SAM outputs
-                lcoe_attrs = {'scale_factor': 1, 'units': 'dol/MWh'}
-                lcoe = lcoe.astype('float32')
+    @classmethod
+    def add_dataset(cls, h5_file, dset_name, dset_data, attrs, dtype,
+                    chunks=None, **kwargs):
+        """
+        Add dataset to h5_file
 
-                f.create_ds('lcoe{}'.format(year), lcoe.shape, lcoe.dtype,
-                            chunks=cf_chunks, attrs=lcoe_attrs, data=lcoe)
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        dset_name : str
+            Name of dataset to be added to h5 file
+        dset_data : ndarray
+            Data to be added to h5 file
+        attrs : dict
+            Attributes to be set. May include 'scale_factor'.
+        dtype : str
+            Intended dataset datatype after scaling.
+        """
+        logger.info("Adding {} to {}".format(dset_name, h5_file))
+        ts = time.time()
+        with cls(h5_file, mode=kwargs.get('mode', 'a')) as f:
+            f._add_dset(dset_name, dset_data, dtype,
+                        chunks=chunks, attrs=attrs)
+
+        tt = (time.time() - ts) / 60
+        logger.info('{} added'.format(dset_name))
+        logger.debug('\t- Saving to disc took {:.4f} minutes'
+                     .format(tt))

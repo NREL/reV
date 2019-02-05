@@ -91,12 +91,17 @@ def test_config():
 
     config_obj = GenConfig(config)
 
+    if stderr:
+        ferr = os.path.join(config_obj.dirout, 'test_config.e')
+        with open(ferr, 'w') as f:
+            f.write(stderr)
+
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(config_obj.dirout)
     for fname in flist:
         if job_name in fname and fname.endswith('.h5'):
             with Outputs(os.path.join(config_obj.dirout, fname), 'r') as cf:
-                rev2_profiles = cf['cf_profiles']
+                rev2_profiles = cf['cf_profile']
             break
 
     # get reV 1.0 generation profiles

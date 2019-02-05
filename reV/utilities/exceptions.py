@@ -24,23 +24,23 @@ class ExecutionError(Exception):
     pass
 
 
-class ResourceKeyError(Exception):
+class HandlerKeyError(Exception):
     """
-    KeyError for Resource Handlers
-    """
-    pass
-
-
-class ResourceRuntimeError(Exception):
-    """
-    RuntimeError for Resource Handlers
+    KeyError for Handlers
     """
     pass
 
 
-class ResourceValueError(Exception):
+class HandlerRuntimeError(Exception):
     """
-    ValueError for Resource Handlers
+    RuntimeError for Handlers
+    """
+    pass
+
+
+class HandlerValueError(Exception):
+    """
+    ValueError for Handlers
     """
     pass
 
@@ -69,5 +69,12 @@ class ConfigWarning(Warning):
 class SAMInputWarning(Warning):
     """
     Warning for bad SAM inputs
+    """
+    pass
+
+
+class HandlerWarning(Warning):
+    """
+    Warning during .h5 handling
     """
     pass

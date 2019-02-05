@@ -3,9 +3,11 @@ pytests for resource handlers
 """
 from datetime import datetime
 import numpy as np
+import os
 import pandas as pd
 import pytest
 from reV.handlers.resource import NSRDB, WindResource
+from reV import TESTDATADIR
 
 
 @pytest.fixture
@@ -13,7 +15,8 @@ def NSRDB_res():
     """
     Init NSRDB resource handler
     """
-    return NSRDB('./data/nsrdb/ri_100_nsrdb_2012.h5')
+    path = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
+    return NSRDB(path)
 
 
 @pytest.fixture
@@ -21,7 +24,8 @@ def WindResource_res():
     """
     Init WindResource resource handler
     """
-    return WindResource('./data/wtk/ri_100_wtk_2012.h5')
+    path = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    return WindResource(path)
 
 
 def check_res(res_cls):
@@ -32,7 +36,7 @@ def check_res(res_cls):
     meta = res_cls['meta']
     res_shape = (len(time_index), len(meta))
 
-    assert len(res_cls) == len(time_index)
+    assert len(res_cls) == len(meta)
     assert res_cls.shape == res_shape
 
 
