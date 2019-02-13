@@ -59,7 +59,7 @@ setup(
     packages=find_packages(),
     package_dir={"rev": "rev"},
     entry_points={
-        "console_scripts": ["rev=rev.cli:cli", ],
+        "console_scripts": ["rev=reV.cli:main", ],
     },
     include_package_data=True,
     license="BSD license",
