@@ -378,7 +378,7 @@ class Resource:
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
 
-    def __init__(self, h5_file, unscale=True):
+    def __init__(self, h5_file, unscale=True, hsds=False):
         """
         Parameters
         ----------
@@ -388,7 +388,12 @@ class Resource:
             Boolean flag to automatically unscale variables on extraction
         """
         self._h5_file = h5_file
-        self._h5 = h5py.File(self._h5_file, 'r')
+        if hsds:
+            import h5pyd
+            self._h5 = h5pyd.File(self._h5_file, 'r')
+        else:
+            self._h5 = h5py.File(self._h5_file, 'r')
+
         self._unscale = unscale
 
     def __repr__(self):
@@ -773,9 +778,6 @@ class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
-    def __init__(self, h5_file, unscale=True):
-        super().__init__(h5_file, unscale=unscale)
-
     @staticmethod
     def _parse_name(ds_name):
         """
