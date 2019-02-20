@@ -7,7 +7,9 @@ SAM software development kit (SDK).
 import gc
 import logging
 import numpy as np
+from warnings import warn
 
+from reV.utilities.exceptions import SAMInputWarning
 from reV.SAM.SAM import SAM
 from reV.SAM.econ import LCOE, SingleOwner
 
@@ -131,6 +133,9 @@ class Solar(Generation):
         if drop_leap:
             resource = self.drop_leap(resource)
 
+        # set PV tilt to latitude if applicable
+        parameters = self.set_latitude_tilt_az(parameters, meta)
+
         # don't pass resource to base class, set in set_nsrdb instead.
         super().__init__(resource=None, meta=meta, parameters=parameters,
                          output_request=output_request)
@@ -144,6 +149,51 @@ class Solar(Generation):
 
         elif resource is not None and meta is not None:
             self.set_nsrdb(resource)
+
+    def set_latitude_tilt_az(self, parameters, meta):
+        """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0
+
+        Parameters
+        ----------
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict
+            SAM model input parameters.
+
+        Returns
+        -------
+        parameters : dict
+            SAM model input parameters. If for a pv simulation the "tilt"
+            parameter was originally not present or set to 'lat' or 'latitude',
+            the tilt will be set to the absolute value of the latitude found
+            in meta and the azimuth will be 180 if lat>0, 0 if lat<0.
+        """
+
+        set_tilt = False
+        if 'pv' in self.MODULE:
+            if parameters is not None and meta is not None:
+                if 'tilt' not in parameters:
+                    warn('No tilt specified, setting at latitude.',
+                         SAMInputWarning)
+                    set_tilt = True
+                else:
+                    if (parameters['tilt'] == 'lat' or
+                            parameters['tilt'] == 'latitude'):
+                        set_tilt = True
+
+        if set_tilt:
+            # set tilt to abs(latitude)
+            parameters['tilt'] = np.abs(meta['latitude'])
+            if meta['latitude'] > 0:
+                # above the equator, az = 180
+                parameters['azimuth'] = 180
+            else:
+                # below the equator, az = 0
+                parameters['azimuth'] = 0
+            logger.debug('Tilt specified at "latitude", setting tilt to: {}, '
+                         'azimuth to: {}'
+                         .format(parameters['tilt'], parameters['azimuth']))
+        return parameters
 
     def set_nsrdb(self, resource):
         """Set SSC NSRDB resource data arrays.

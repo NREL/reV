@@ -768,7 +768,7 @@ class Gen:
                      .format(output_request))
         try:
             SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                     loggers=['reV.generation',
+                                     loggers=['reV.generation', 'reV.SAM',
                                               'reV.utilities'],
                                      mem_util_lim=mem_util_lim, **kwargs)
         except Exception as e:
