@@ -40,6 +40,8 @@ class Gen:
                                   'dtype': 'float32', 'chunks': None},
                  'gen_profile': {'scale_factor': 1, 'units': 'kW',
                                  'dtype': 'float32', 'chunks': (None, 100)},
+                 'poa': {'scale_factor': 1, 'units': 'W/m2',
+                         'dtype': 'float32', 'chunks': (None, 100)},
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
                                'dtype': 'float32', 'chunks': None},
                  'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',

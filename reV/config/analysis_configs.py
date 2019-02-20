@@ -198,6 +198,8 @@ class SAMAnalysisConfig(AnalysisConfig):
                        'yield': 'energy_yield',
                        'generation_profile': 'gen_profile',
                        'generation_profiles': 'gen_profile',
+                       'plane_of_array': 'poa',
+                       'plane_of_array_irradiance': 'poa',
                        'gen_profiles': 'gen_profile',
                        'lcoe': 'lcoe_fcr',
                        'ppa': 'ppa_price',
