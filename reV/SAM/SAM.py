@@ -457,9 +457,23 @@ class SAM:
 
     @staticmethod
     def drop_leap(resource):
-        """Drop Feb 29th from all dataframes in resource dict."""
+        """Drop Feb 29th from resource df with time index.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Resource dataframe with an index containing a pandas
+            time index object with month and day attributes.
+
+        Returns
+        -------
+        resource : pd.DataFrame
+            Resource dataframe with all February 29th timesteps removed.
+        """
+
         if hasattr(resource, 'index'):
-            if hasattr(resource.index, 'month') and hasattr(resource, 'day'):
+            if (hasattr(resource.index, 'month') and
+                    hasattr(resource.index, 'day')):
                 leap_day = ((resource.index.month == 2) &
                             (resource.index.day == 29))
                 resource = resource.drop(resource.index[leap_day])
