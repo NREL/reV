@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def init_gen_loggers(verbose, name, node=False, logdir='./out/log',
                      modules=[__name__, 'reV.generation.generation',
-                              'reV.config', 'reV.utilities']):
+                              'reV.config', 'reV.utilities', 'reV.SAM']):
     """Init multiple loggers to a single file or stdout for the gen compute.
 
     Parameters

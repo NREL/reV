@@ -19,6 +19,7 @@
     "output_request": [
       "cf_mean",
       "cf_profile",
+      "poa",
       "lcoe"
     ],
     "technology": "pv"

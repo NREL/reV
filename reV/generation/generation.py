@@ -40,6 +40,8 @@ class Gen:
                                   'dtype': 'float32', 'chunks': None},
                  'gen_profile': {'scale_factor': 1, 'units': 'kW',
                                  'dtype': 'float32', 'chunks': (None, 100)},
+                 'poa': {'scale_factor': 1, 'units': 'W/m2',
+                         'dtype': 'float32', 'chunks': (None, 100)},
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
                                'dtype': 'float32', 'chunks': None},
                  'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
@@ -766,7 +768,7 @@ class Gen:
                      .format(output_request))
         try:
             SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                     loggers=['reV.generation',
+                                     loggers=['reV.generation', 'reV.SAM',
                                               'reV.utilities'],
                                      mem_util_lim=mem_util_lim, **kwargs)
         except Exception as e:

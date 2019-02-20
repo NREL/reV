@@ -457,9 +457,23 @@ class SAM:
 
     @staticmethod
     def drop_leap(resource):
-        """Drop Feb 29th from all dataframes in resource dict."""
+        """Drop Feb 29th from resource df with time index.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            Resource dataframe with an index containing a pandas
+            time index object with month and day attributes.
+
+        Returns
+        -------
+        resource : pd.DataFrame
+            Resource dataframe with all February 29th timesteps removed.
+        """
+
         if hasattr(resource, 'index'):
-            if hasattr(resource.index, 'month') and hasattr(resource, 'day'):
+            if (hasattr(resource.index, 'month') and
+                    hasattr(resource.index, 'day')):
                 leap_day = ((resource.index.month == 2) &
                             (resource.index.day == 29))
                 resource = resource.drop(resource.index[leap_day])
@@ -617,6 +631,26 @@ class SAM:
         return gen
 
     @property
+    def poa(self):
+        """Get plane-of-array irradiance profile (orig timezone) in W/m2.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of plane-of-array irradiance in W/m2.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        poa = np.array(self.ssc.data_get_array(self.data, 'poa'),
+                       dtype=np.float32)
+        # Roll back to native timezone if resource meta has a timezone
+        if hasattr(self, '_meta'):
+            if self._meta is not None:
+                if 'timezone' in self.meta:
+                    poa = np.roll(poa, -1 * int(self.meta['timezone'] *
+                                                self.time_interval))
+        return poa
+
+    @property
     def ppa_price(self):
         """Get PPA price ($/MWh). Native units are cents/kWh."""
         return self.ssc.data_get_number(self.data, 'ppa') * 10
@@ -674,6 +708,7 @@ class SAM:
             Zipped list of output requests (self.output_request) and SAM
             numerical results from the respective result functions.
         """
+
         results = {}
         for request in self.output_request:
             if request == 'cf_mean':
@@ -686,6 +721,8 @@ class SAM:
                 results[request] = self.energy_yield
             elif request == 'gen_profile':
                 results[request] = self.gen_profile
+            elif request == 'poa':
+                results[request] = self.poa
             elif request == 'ppa_price':
                 results[request] = self.ppa_price
             elif request == 'lcoe_fcr':
