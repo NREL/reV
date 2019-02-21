@@ -1,5 +1,7 @@
 """
 pytests for HSDS resource handling
+requires installing and configuring h5pyd:
+https://github.com/NREL/hsds-examples
 """
 from datetime import datetime
 import numpy as np
