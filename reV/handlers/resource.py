@@ -386,6 +386,9 @@ class Resource:
             Path to .h5 resource file
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
         """
         self._h5_file = h5_file
         if hsds:

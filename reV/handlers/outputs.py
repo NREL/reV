@@ -453,7 +453,7 @@ class Outputs(Resource):
             if 'scale_factor' in attrs:
                 scale_factor = attrs['scale_factor']
                 # apply scale factor and dtype
-                data = (data * scale_factor)
+                data *= scale_factor
                 if np.issubdtype(dtype, np.integer):
                     data = np.round(data)
 
