@@ -378,7 +378,7 @@ class Resource:
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
 
-    def __init__(self, h5_file, unscale=True):
+    def __init__(self, h5_file, unscale=True, hsds=False):
         """
         Parameters
         ----------
@@ -386,9 +386,17 @@ class Resource:
             Path to .h5 resource file
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
         """
         self._h5_file = h5_file
-        self._h5 = h5py.File(self._h5_file, 'r')
+        if hsds:
+            import h5pyd
+            self._h5 = h5pyd.File(self._h5_file, 'r')
+        else:
+            self._h5 = h5py.File(self._h5_file, 'r')
+
         self._unscale = unscale
 
     def __repr__(self):
@@ -734,7 +742,7 @@ class SolarResource(Resource):
             raise HandlerValueError("SAM requires unscaled values")
 
     @classmethod
-    def preload_SAM(cls, h5_file, project_points):
+    def preload_SAM(cls, h5_file, project_points, **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -744,6 +752,8 @@ class SolarResource(Resource):
             h5_file to extract resource from
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
+        kwargs : dict
+            Kwargs to pass to cls
 
         Returns
         -------
@@ -751,7 +761,7 @@ class SolarResource(Resource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        with cls(h5_file) as res:
+        with cls(h5_file, **kwargs) as res:
             SAM_res = SAMResource(project_points, res['time_index'])
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
@@ -773,9 +783,6 @@ class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
-    def __init__(self, h5_file, unscale=True):
-        super().__init__(h5_file, unscale=unscale)
-
     @staticmethod
     def _parse_name(ds_name):
         """
@@ -1091,7 +1098,8 @@ class WindResource(Resource):
             raise HandlerValueError("SAM requires unscaled values")
 
     @classmethod
-    def preload_SAM(cls, h5_file, project_points, require_wind_dir=False):
+    def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
+                    **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -1101,6 +1109,8 @@ class WindResource(Resource):
             h5_file to extract resource from
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
+        kwargs : dict
+            Kwargs to pass to cls
 
         Returns
         -------
@@ -1108,7 +1118,7 @@ class WindResource(Resource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        with cls(h5_file) as res:
+        with cls(h5_file, **kwargs) as res:
             SAM_res = SAMResource(project_points, res['time_index'],
                                   require_wind_dir=require_wind_dir)
             sites_slice = project_points.sites_as_slice
