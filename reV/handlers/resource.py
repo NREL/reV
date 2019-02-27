@@ -408,12 +408,12 @@ class SolarResource(Resource):
             SAM_res = SAMResource(project_points, res['time_index'])
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
-            for ds in SAM_res.var_list:
-                var = ds
-                if clearsky and ds in ['dni', 'dhi']:
-                    var = 'clearsky_{}'.format(ds)
+            for var in SAM_res.var_list:
+                ds = var
+                if clearsky and var in ['dni', 'dhi']:
+                    ds = 'clearsky_{}'.format(var)
 
-                SAM_res[ds] = res[var, :, sites_slice]
+                SAM_res[var] = res[ds, :, sites_slice]
 
         return SAM_res
 
