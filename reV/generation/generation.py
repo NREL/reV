@@ -324,7 +324,7 @@ class Gen:
 
     @staticmethod
     def get_pc(points, points_range, sam_files, tech, sites_per_split=None,
-               res_file=None):
+               res_file=None, curtailment=None):
         """Get a PointsControl instance.
 
         Parameters
@@ -348,6 +348,13 @@ class Gen:
             resource file chunk size.
         res_file : str
             Single resource file with path.
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
 
         Returns
         -------
@@ -356,17 +363,27 @@ class Gen:
         """
 
         if sites_per_split is None:
+            # get the optimal sites per split based on res file chunk size
             sites_per_split = Gen.sites_per_core(res_file)
 
         if isinstance(points, (slice, str)):
-            # make Project Points and Points Control instances
-            pp = ProjectPoints(points, sam_files, tech=tech, res_file=res_file)
+            # make Project Points instance
+            pp = ProjectPoints(points, sam_files, tech=tech, res_file=res_file,
+                               curtailment=curtailment)
+
+            #  make Points Control instance
             if points_range is None:
+                # PointsControl is for all of the project points
                 pc = PointsControl(pp, sites_per_split=sites_per_split)
             else:
+                # PointsControl is for just a subset of the projec points...
+                # this is the case if generation is being initialized on one
+                # of many HPC nodes in a large project
                 pc = PointsControl.split(points_range[0], points_range[1], pp,
                                          sites_per_split=sites_per_split)
+
         elif isinstance(points, PointsControl):
+            # received a pre-intialized instance of pointscontrol
             pc = points
         else:
             raise TypeError('Points input type is unrecognized: '
@@ -856,7 +873,7 @@ class Gen:
 
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-                   output_request=('cf_mean',), n_workers=1,
+                   output_request=('cf_mean',), curtailment=None, n_workers=1,
                    sites_per_split=None, points_range=None, fout=None,
                    dirout='./gen_out', return_obj=True, scale_outputs=True):
         """Execute a generation run directly from source files without config.
@@ -877,6 +894,13 @@ class Gen:
             Single resource file with path.
         output_request : list | tuple
             Output variables requested from SAM.
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -905,7 +929,7 @@ class Gen:
 
         # get a points control instance
         pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
-                        res_file=res_file)
+                        res_file=res_file, curtailment=curtailment)
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
@@ -936,7 +960,7 @@ class Gen:
 
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  output_request=('cf_mean',), n_workers=1,
+                  output_request=('cf_mean',), curtailment=None, n_workers=1,
                   sites_per_split=None, points_range=None, fout=None,
                   dirout='./gen_out', mem_util_lim=0.7, scale_outputs=True):
         """Execute a generation run with smart data flushing.
@@ -957,6 +981,13 @@ class Gen:
             Single resource file with path.
         output_request : list | tuple
             Output variables requested from SAM.
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int | None
@@ -980,7 +1011,7 @@ class Gen:
 
         # get a points control instance
         pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
-                        res_file=res_file)
+                        res_file=res_file, curtailment=curtailment)
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,

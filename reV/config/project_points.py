@@ -10,6 +10,7 @@ from math import ceil
 from reV.utilities.exceptions import ConfigWarning
 from reV.handlers.resource import Resource
 from reV.config.sam_config import SAMConfig
+from reV.config.curtailment import Curtailment
 
 
 logger = logging.getLogger(__name__)
@@ -174,11 +175,7 @@ class PointsControl:
         """
         i0 = int(i0)
         i1 = int(i1)
-        new_points = ProjectPoints.split(i0, i1,
-                                         project_points.df,
-                                         project_points.sam_files,
-                                         project_points.tech,
-                                         project_points.res_file)
+        new_points = ProjectPoints.split(i0, i1, project_points)
         sub = cls(new_points, sites_per_split=sites_per_split)
         return sub
 
@@ -191,11 +188,12 @@ class ProjectPoints:
     config_id@site0, SAM_config_dict@site0 = ProjectPoints[0]
     site_list_or_slice = ProjectPoints.sites
     site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
-    ProjectPoints_sub = ProjectPoints.split(0, 10, ...)
+    ProjectPoints_sub = ProjectPoints.split(0, 10, project_points)
     h_list = ProjectPoints.h
     """
 
-    def __init__(self, points, sam_files, tech, res_file=None):
+    def __init__(self, points, sam_files, tech, res_file=None,
+                 curtailment=None):
         """Init project points containing sites and corresponding SAM configs.
 
         Parameters
@@ -213,12 +211,20 @@ class ProjectPoints:
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
         """
 
         # set protected attributes
         self._points = points
         self._res_file = res_file
         self._tech = tech
+        self.curtailment = curtailment
 
         # if sam files is a dict or string, set first.
         if isinstance(sam_files, (dict, str)):
@@ -266,6 +272,49 @@ class ProjectPoints:
     def __len__(self):
         """Length of this object is the number of sites."""
         return len(self.sites)
+
+    @property
+    def curtailment(self):
+        """Get the curtailment config object.
+
+        Returns
+        -------
+        _curtailment : NoneType | reV.config.curtailment.Curtailment
+            None if no curtailment, reV curtailment config object if
+            curtailment is being assessed.
+        """
+        return self._curtailment
+
+    @curtailment.setter
+    def curtailment(self, curtailment_input):
+        """Set the curtailment config object.
+
+        Parameters
+        ----------
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
+        """
+
+        if isinstance(curtailment_input, (str, dict)):
+            # pointer to config file or explicit input namespace,
+            # instantiate curtailment config object
+            self._curtailment = Curtailment(curtailment_input)
+
+        elif isinstance(curtailment_input, (Curtailment, type(None))):
+            # pre-initialized curtailment object or no curtailment (None)
+            self._curtailment = curtailment_input
+
+        else:
+            self._curtailment = None
+            warn('Curtailment inputs not recognized. Received curtailment '
+                 'input of type: "{}". Expected None, dict, str, or '
+                 'Curtailment object. Defaulting to no curtailment.',
+                 ConfigWarning)
 
     @property
     def df(self):
@@ -628,8 +677,8 @@ class ProjectPoints:
         self.df = site_config_dict
 
     @classmethod
-    def split(cls, i0, i1, points_df, sam_files, tech, res_file):
-        """Return split instance of this ProjectPoints w/ site subset.
+    def split(cls, i0, i1, project_points):
+        """Return split instance of a ProjectPoints instance w/ site subset.
 
         Parameters
         ----------
@@ -643,17 +692,8 @@ class ProjectPoints:
             attribute to include in the split instance. This is not necessarily
             the same as the final site number, for instance if ProjectPoints is
             sites 20:100, i0=0 i1=10 will result in sites 20:30.
-        points_df : pd.DataFrame
-            Upstream project points dataframe to be split.
-        sam_files : dict | str
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str.
-        tech : str
-            reV technology being executed.
-        res_file : str
-            Optional resource file to find maximum length of project points if
-            points slice stop is None.
+        project_points: ProjectPoints
+            Instance of project points to split.
 
         Returns
         -------
@@ -662,10 +702,14 @@ class ProjectPoints:
             attributes: sites, project points df, and the self dictionary data
             struct.
         """
+
         # Extract DF subset with only index values between i0 and i1
-        points_df = points_df[points_df.index.isin(list(range(i0, i1)))]
+        mask = project_points.df.index.isin(list(range(i0, i1)))
+        points_df = project_points.df[mask]
 
         # make a new instance of ProjectPoints with subset DF
-        sub = cls(points_df, sam_files, tech, res_file=res_file)
+        sub = cls(points_df, project_points.sam_files, project_points.tech,
+                  res_file=project_points.res_file,
+                  curtailment=project_points.curtailment)
 
         return sub

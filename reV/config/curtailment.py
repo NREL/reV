@@ -16,17 +16,23 @@ logger = logging.getLogger(__name__)
 class Curtailment(BaseConfig):
     """Config for generation curtailment."""
 
-    def __init__(self, curtailment_json):
+    def __init__(self, curtailment_parameters):
         """
         Parameters
         ----------
-        curtailment_json : str
+        curtailment_parameters : str | dict
             Configuration json file (with path) containing curtailment
-            information.
+            information. Could also be a pre-extracted curtailment config
+            dictionary (the contents of the curtailment json).
         """
 
-        config_dict = self.get_file(curtailment_json)
-        super().__init__(config_dict)
+        if isinstance(curtailment_parameters, str):
+            # received json, extract to dictionary
+            self.file = curtailment_parameters
+            curtailment_parameters = self.get_file(self.file)
+
+        # intialize config object with curtailment parameters
+        super().__init__(curtailment_parameters)
 
     @property
     def wind_speed(self):

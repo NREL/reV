@@ -88,7 +88,7 @@ class ProjectPointsType(click.ParamType):
 
 
 class IntType(click.ParamType):
-    """Integer click input argument type."""
+    """Integer click input argument type with option for None."""
     name = 'int'
 
     @staticmethod
@@ -107,7 +107,7 @@ class IntType(click.ParamType):
 
 
 class StrType(click.ParamType):
-    """String click input argument type."""
+    """String click input argument type with option for None."""
     name = 'str'
 
     @staticmethod
@@ -124,7 +124,7 @@ class StrType(click.ParamType):
 
 
 class ListType(click.ParamType):
-    """Base list click input argument type."""
+    """Base list click input argument type with option for None."""
     name = 'list'
 
     def convert(self, value, param, ctx):
