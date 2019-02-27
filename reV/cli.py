@@ -9,6 +9,7 @@ from reV.econ.cli_econ import from_config as run_econ_from_config
 from reV.handlers.cli_collect import from_config as run_collect_from_config
 from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
 from reV.batch.cli_batch import from_config as run_batch_from_config
+from reV.exclusions.cli_excl import from_config as run_excl_from_config
 
 
 @click.group()
@@ -92,6 +93,17 @@ def batch(ctx, dry_run, cancel, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_batch_from_config, config_file=config_file,
                dry_run=dry_run, cancel=cancel, verbose=verbose)
+
+
+@main.command()
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def exclusions(ctx, verbose):
+    """Run reV 2.0 exclusions using the config file."""
+    config_file = ctx.obj['CONFIG_FILE']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.invoke(run_excl_from_config, config_file=config_file, verbose=verbose)
 
 
 if __name__ == '__main__':
