@@ -1,0 +1,13 @@
+{
+  "dawn_dusk": "nautical",
+  "months": [
+    4,
+    5,
+    6,
+    7
+  ],
+  "precipitation": 1000,
+  "probability": 1,
+  "temperature": -1000,
+  "wind_speed": 5.0
+}

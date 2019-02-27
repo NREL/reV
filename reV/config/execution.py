@@ -26,10 +26,9 @@ class BaseExecutionConfig(BaseConfig):
             Execution control option, e.g. local, peregrine, eagle...
         """
 
-        default = 'local'
         if not hasattr(self, '_option'):
             # default option if not specified
-            self._option = default
+            self._option = 'local'
             if 'option' in self:
                 if self['option']:
                     # config-specified, set to attribute
@@ -46,10 +45,10 @@ class BaseExecutionConfig(BaseConfig):
             Number of available nodes. Default is 1 node.
         """
         if not hasattr(self, '_nodes'):
+            # set default option if not specified
+            self._nodes = 1
             if 'nodes' in self:
                 self._nodes = self['nodes']
-            else:
-                self._nodes = 1
         return self._nodes
 
     @property
@@ -62,10 +61,10 @@ class BaseExecutionConfig(BaseConfig):
             Processes per node. Default is 1 ppn.
         """
         if not hasattr(self, '_ppn'):
+            # set default option if not specified
+            self._ppn = 1
             if 'ppn' in self:
                 self._ppn = self['ppn']
-            else:
-                self._ppn = 1
         return self._ppn
 
     @property
@@ -102,10 +101,9 @@ class HPCConfig(BaseExecutionConfig):
         _hpc_alloc : str
             Name of the HPC allocation account for the specified job.
         """
-        default = 'rev'
         if not hasattr(self, '_hpc_alloc'):
             # default option if not specified
-            self._hpc_alloc = default
+            self._hpc_alloc = 'rev'
             if 'allocation' in self:
                 if self['allocation']:
                     # config-specified, set to attribute
@@ -180,10 +178,9 @@ class PeregrineConfig(HPCConfig):
         _hpc_queue : str
             Peregrine queue request, e.g. 'short' or 'long'.
         """
-        default = 'short'
         if not hasattr(self, '_hpc_queue'):
             # default option if not specified
-            self._hpc_queue = default
+            self._hpc_queue = 'short'
             if 'queue' in self:
                 if self['queue']:
                     # config-specified, set to attribute
@@ -227,11 +224,9 @@ class EagleConfig(HPCConfig):
         _hpc_node_mem : int
             Requested node memory in GB.
         """
-        # Eagle default is 96 GB
-        default = 96
         if not hasattr(self, '_hpc_node_mem'):
             # default option if not specified
-            self._hpc_node_mem = default
+            self._hpc_node_mem = 96
             if 'memory' in self:
                 if self['memory']:
                     # config-specified, set to attribute
@@ -247,11 +242,9 @@ class EagleConfig(HPCConfig):
         _hpc_walltime : int
             Requested single node job time in hours.
         """
-        # Eagle default is one hour
-        default = 1
         if not hasattr(self, '_hpc_walltime'):
             # default option if not specified
-            self._hpc_walltime = default
+            self._hpc_walltime = 1
             if 'walltime' in self:
                 if self['walltime']:
                     # config-specified, set to attribute
