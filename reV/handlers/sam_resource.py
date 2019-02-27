@@ -368,3 +368,30 @@ class SAMResource:
                                                 var_array[:, idx])
 
         return res_df, site_meta
+
+    def curtail_windspeed(self, gids, curtailment):
+        """
+        Apply temporal curtailment mask to windspeed resource at given sites
+
+        Parameters
+        ----------
+        gids : int | list
+            gids for site or list of sites to curtail
+        curtailment : ndarray
+            Temporal multiplier for curtailment
+        """
+        shape = (self.shape[0],)
+        if isinstance(gids, int):
+            site_pos = self.sites.index(gids)
+        else:
+            shape += (len(gids),)
+            site_pos = [self.sites.index(id) for id in gids]
+
+        if curtailment.shape != shape:
+            raise HandlerValueError("curtailment must be of shape: {}"
+                                    .format(shape))
+
+        if 'windspeed' in self._res_arrays:
+            self._res_arrays['windspeed'][:, site_pos] *= curtailment
+        else:
+            raise HandlerRuntimeError('windspeed has not be loaded!')
