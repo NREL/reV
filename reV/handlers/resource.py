@@ -382,7 +382,8 @@ class SolarResource(Resource):
             raise HandlerValueError("SAM requires unscaled values")
 
     @classmethod
-    def preload_SAM(cls, h5_file, project_points, **kwargs):
+    def preload_SAM(cls, h5_file, project_points, clearsky=False,
+                    **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -392,6 +393,8 @@ class SolarResource(Resource):
             h5_file to extract resource from
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
+        clearsky : bool
+            Boolean flag to pull clearsky instead of real irradiance
         kwargs : dict
             Kwargs to pass to cls
 
@@ -406,7 +409,11 @@ class SolarResource(Resource):
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
             for ds in SAM_res.var_list:
-                SAM_res[ds] = res[ds, :, sites_slice]
+                var = ds
+                if clearsky and ds in ['dni', 'dhi']:
+                    var = 'clearsky_{}'.format(ds)
+
+                SAM_res[ds] = res[var, :, sites_slice]
 
         return SAM_res
 

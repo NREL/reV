@@ -47,6 +47,8 @@ class SAMResource:
             Instance of ProjectPoints
         time_index : pandas.DatetimeIndex
             Time-series datetime index
+        require_wind_dir : bool
+            Boolean flag indicating that wind direction is required
         """
         self._project_points = project_points
         self._time_index = time_index
