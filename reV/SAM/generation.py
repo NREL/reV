@@ -229,6 +229,13 @@ class Solar(Generation):
                 res_arr = self.ensure_res_len(np.roll(resource[var],
                                               int(self.meta['timezone'] *
                                                   self.time_interval)))
+                if var in ['dni', 'dhi', 'ghi']:
+                    if np.min(res_arr) < 0:
+                        warn('Solar irradiance variable "{}" has a minimum '
+                             'value of {}. Truncating to zero.'
+                             .format(var, np.min(res_arr)), SAMInputWarning)
+                        res_arr = np.where(res_arr < 0, 0, res_arr)
+
                 self.ssc.data_set_array(self.res_data, var_map[var], res_arr)
 
         # add resource data to self.data and clear
