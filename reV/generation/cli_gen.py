@@ -478,7 +478,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 @click.option('--queue', '-q', default='short', type=STR,
               help='Peregrine target job queue. Default is "short".')
 @click.option('--feature', '-l', default=None, type=STR,
-              help=('Feature request. Format is "64GB" or "24core". '
+              help=('Feature request. Format is "feature=64GB" or "qos=high". '
                     'Default is None.'))
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               help='Subprocess standard output path. Default is ./out/stdout')
