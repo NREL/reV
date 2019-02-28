@@ -394,7 +394,6 @@ class Gen:
         out = {}
         for x in futures:
             out.update(x)
-
         return out
 
     @staticmethod
@@ -594,7 +593,8 @@ class Gen:
             logger.debug('Flushed generation output successfully to disk.')
 
     @staticmethod
-    def run(points_control, tech=None, res_file=None, output_request=None):
+    def run(points_control, tech=None, res_file=None, output_request=None,
+            scale_outputs=True):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -611,13 +611,17 @@ class Gen:
             Single resource file with path.
         output_request : list | tuple
             Output variables requested from SAM.
+        scale_outputs : bool
+            Flag to scale outputs in-place immediately upon Gen returning data.
 
         Returns
         -------
         out : dict
-            Output dictionary from the SAM reV_run function.
+            Output dictionary from the SAM reV_run function. Data is scaled
+            within this function to the datatype specified in Gen.OUT_ATTRS.
         """
 
+        # run generation method for specified technology
         try:
             out = Gen.OPTIONS[tech](points_control, res_file, output_request)
         except Exception as e:
@@ -625,13 +629,37 @@ class Gen:
             logger.exception('Worker failed for PC: {}'.format(points_control))
             raise e
 
+        if scale_outputs:
+            # dtype convert in-place so no float data is stored unnecessarily
+            for site, site_output in out.items():
+                for k in site_output.keys():
+                    # iterate through variable names in each site's output dict
+                    if k in Gen.OUT_ATTRS:
+                        # get dtype and scale for output variable name
+                        dtype = Gen.OUT_ATTRS[k].get('dtype', 'float32')
+                        scale_factor = Gen.OUT_ATTRS[k].get('scale_factor', 1)
+
+                        # apply scale factor and dtype
+                        out[site][k] *= scale_factor
+                        if np.issubdtype(dtype, np.integer):
+                            # round after scaling if integer dtype
+                            out[site][k] = np.round(out[site][k])
+
+                        if isinstance(out[site][k], (list, np.ndarray)):
+                            # simple astype for arrays
+                            out[site][k] = out[site][k].astype(dtype)
+                        else:
+                            # use numpy array conversion for scalar values
+                            out[site][k] = np.array([out[site][k]],
+                                                    dtype=dtype)[0]
+
         return out
 
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
                    output_request=('cf_mean',), n_workers=1,
                    sites_per_split=None, points_range=None, fout=None,
-                   dirout='./gen_out', return_obj=True):
+                   dirout='./gen_out', return_obj=True, scale_outputs=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -666,6 +694,8 @@ class Gen:
             created if it does not already exist.
         return_obj : bool
             Option to return the Gen object instance.
+        scale_outputs : bool
+            Flag to scale outputs in-place immediately upon Gen returning data.
 
         Returns
         -------
@@ -683,7 +713,8 @@ class Gen:
                   dirout=dirout)
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
-                  'output_request': gen.output_request}
+                  'output_request': gen.output_request,
+                  'scale_outputs': scale_outputs}
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
@@ -708,7 +739,7 @@ class Gen:
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
                   output_request=('cf_mean',), n_workers=1,
                   sites_per_split=None, points_range=None, fout=None,
-                  dirout='./gen_out', mem_util_lim=0.7):
+                  dirout='./gen_out', mem_util_lim=0.7, scale_outputs=True):
         """Execute a generation run with smart data flushing.
 
         Parameters
@@ -745,6 +776,8 @@ class Gen:
             Memory utilization limit (fractional). If the used memory divided
             by the total memory is greater than this value, the obj.out will
             be flushed and the local node memory will be cleared.
+        scale_outputs : bool
+            Flag to scale outputs in-place immediately upon Gen returning data.
         """
 
         # get a points control instance
@@ -756,7 +789,8 @@ class Gen:
                   dirout=dirout)
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
-                  'output_request': gen.output_request}
+                  'output_request': gen.output_request,
+                  'scale_outputs': scale_outputs}
 
         logger.info('Running parallel generation with smart data flushing '
                     'for: {}'.format(pc))
