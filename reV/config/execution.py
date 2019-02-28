@@ -174,24 +174,23 @@ class PeregrineConfig(HPCConfig):
 
     @property
     def feature(self):
-        """Get feature request str. Cores or memory. Mem is prioritized.
+        """Get feature request str.
 
         Returns
         -------
         _feature : str | NoneType
-            Memory or cores feature request for the -l peregrine arg.
+            Feature request string. Everything following the -l flag.
+            Config should look like:
+                "feature": "qos=high"
+                "feature": "feature=256GB"
         """
         if not hasattr(self, '_feature'):
             # default option if not specified
             self._feature = None
-            if 'memory' in self:
-                if self['memory']:
+            if 'feature' in self:
+                if self['feature']:
                     # config-specified, set to attribute
-                    self._feature = self['memory']
-            elif 'ppn' in self:
-                if self['ppn']:
-                    # config-specified, set to attribute
-                    self._feature = '{}core'.format(self['ppn'])
+                    self._feature = self['feature']
         return self._feature
 
 
