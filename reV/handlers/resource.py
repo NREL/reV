@@ -756,6 +756,11 @@ class WindResource(Resource):
             h5_file to extract resource from
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
+        require_wind_dir : bool
+            Boolean flag as to whether wind direction will be loaded from
+            WindResource or will be filled with zeros
+        precip_rate : bool
+            Boolean flag as to whether precipitationrate_0m will be preloaded
         kwargs : dict
             Kwargs to pass to cls
 
