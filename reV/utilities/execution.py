@@ -777,20 +777,20 @@ class SmartParallelJob:
 
         wait(futures)
         mem = psutil.virtual_memory()
-        logger.debug('Parallel run at iteration {0}. '
-                     'Results are stored in memory for {1} futures '
-                     'and memory usage is {2:.3f} GB out of {3:.3f} GB '
-                     'total ({4:.1f}% used)'
-                     .format(i, len(futures),
-                             mem.used / 1e9,
-                             mem.total / 1e9,
-                             100 * mem.used / mem.total))
+        logger.info('Parallel run at iteration {0}. '
+                    'Results are stored in memory for {1} futures '
+                    'and memory usage is {2:.3f} GB out of {3:.3f} GB '
+                    'total ({4:.1f}% used)'
+                    .format(i, len(futures),
+                            mem.used / 1e9,
+                            mem.total / 1e9,
+                            100 * mem.used / mem.total))
 
         if ((mem.used / mem.total) >= self.mem_util_lim) or force_flush:
-            logger.debug('Flushing memory to disk. The memory utilization is '
-                         '{0:.2f}% and the limit is {1:.2f}%.'
-                         .format(100 * (mem.used / mem.total),
-                                 100 * self.mem_util_lim))
+            logger.info('Flushing memory to disk. The memory utilization is '
+                        '{0:.2f}% and the limit is {1:.2f}%.'
+                        .format(100 * (mem.used / mem.total),
+                                100 * self.mem_util_lim))
             # send gathered futures to object output
             # (obj.out should be a property setter that will append new data.)
             self.obj.out = client.gather(futures)
@@ -828,8 +828,10 @@ class SmartParallelJob:
             Keyword arguments to be passed to obj.run(). Makes it easier to
             have obj.run() as a @staticmethod.
         """
-        logger.info('Executing parallel run on cluster with {0} workers. '
-                    .format(self.n_workers))
+
+        logger.info('Executing parallel run on a local cluster with '
+                    '"{0}" workers over {1} total iterations.'
+                    .format(self.n_workers, 1 + len(self.execution_iter)))
         log_mem()
 
         # initialize a client based on the input cluster.
