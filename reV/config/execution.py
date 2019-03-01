@@ -68,6 +68,24 @@ class BaseExecutionConfig(BaseConfig):
                 self._ppn = 1
         return self._ppn
 
+    @property
+    def mem_util_lim(self):
+        """Get the node memory utilization limit property.
+
+        Returns
+        -------
+        _mem_util_lim : float
+            Memory utilization limit (fractional). Key in the config json is
+            "memory_utilization_limit".
+        """
+
+        if not hasattr(self, '_mem_util_lim'):
+            if 'memory_utilization_limit' in self:
+                self._mem_util_lim = self['memory_utilization_limit']
+            else:
+                self._mem_util_lim = 0.7
+        return self._mem_util_lim
+
 
 class HPCConfig(BaseExecutionConfig):
     """Class to handle HPC configuration inputs."""

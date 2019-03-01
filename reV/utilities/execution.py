@@ -512,8 +512,9 @@ def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
     """
 
     # start a local cluster on a personal comp or HPC single node
+    # Set worker memory limit to zero to not kill workers on high mem util
     try:
-        cluster = LocalCluster(n_workers=n_workers)
+        cluster = LocalCluster(n_workers=n_workers, memory_limit=0)
     except Exception as e:
         logger.exception('Failed to start Dask LocalCluster: {}'
                          .format(e))
@@ -633,7 +634,8 @@ class SmartParallelJob:
 
     @property
     def cluster(self):
-        """Get a Dask LocalCluster object.
+        """Get a Dask LocalCluster object. Workers will start with no memory
+        limit to avoid killed workers on high memory utilization.
 
         Returns
         -------
@@ -646,7 +648,8 @@ class SmartParallelJob:
             # start a local cluster on a personal comp or HPC single node
             if self._n_workers is None:
                 try:
-                    self._cluster = LocalCluster(n_workers=None)
+                    self._cluster = LocalCluster(n_workers=None,
+                                                 memory_limit=0)
                 except Exception as e:
                     logger.exception('Failed to start Dask LocalCluster: {}'
                                      .format(e))
@@ -654,7 +657,8 @@ class SmartParallelJob:
 
             elif isinstance(self._n_workers, int):
                 try:
-                    self._cluster = LocalCluster(n_workers=self._n_workers)
+                    self._cluster = LocalCluster(n_workers=self._n_workers,
+                                                 memory_limit=0)
                 except Exception as e:
                     logger.exception('Failed to start Dask LocalCluster: {}'
                                      .format(e))
