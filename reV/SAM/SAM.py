@@ -249,6 +249,88 @@ class ParametersManager:
                      SAMInputWarning)
 
 
+class SiteOutput:
+    """Slotted memory dictionary emulator for SAM single-site outputs."""
+
+    # make attribute slots for all SAM output variable names
+    __slots__ = ['cf_mean', 'cf_profile', 'annual_energy', 'energy_yield',
+                 'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr', 'var_list']
+
+    def __init__(self):
+        self.var_list = []
+
+    def __setitem__(self, key, value):
+        """Send data to a slot. Raise KeyError if key is not recognized"""
+        if key in self.__slots__:
+            if key not in self.var_list:
+                self.var_list.append(key)
+            setattr(self, key, value)
+        else:
+            raise KeyError('Could not save "{}" to a SAM site output. '
+                           'The following output variable slots are '
+                           'available: {}'.format(key, self.__slots__))
+
+    def __getitem__(self, key):
+        """Retrieve data from slot. Raise KeyError if key is not recognized"""
+        if key in self.var_list:
+            return getattr(self, key)
+        else:
+            raise KeyError('SAM output variable "{}" has not been saved to '
+                           'this SiteOutput instance. Saved variables are: {}'
+                           .format(key, self.keys()))
+
+    def update(self, site_output_instance):
+        """Add output variables from another instance into this instance.
+
+        Parameters
+        ----------
+        site_output_instance : SiteOutput
+            An different instance of this class (SiteOutput class) to merge
+            into this instance. Variable data in this instance could be
+            overwritten by the new data.
+        """
+
+        attrs = site_output_instance.var_list
+        for attr in attrs:
+            if attr in self.__slots__:
+                value = getattr(site_output_instance, attr, None)
+                if value is not None:
+                    self[attr] = value
+
+    def items(self):
+        """Get an items iterator similar to a dictionary.
+
+        Parameters
+        ----------
+        items : iterator
+            [key, value] iterator similar to the output of dict.items()
+        """
+
+        keys = self.keys()
+        values = self.values()
+        return zip(keys, values)
+
+    def keys(self):
+        """Get a keys list similar to a dictionary.
+
+        Parameters
+        ----------
+        key : list
+            List of slotted variable names that have been set.
+        """
+        return [k for k in self.var_list]
+
+    def values(self):
+        """Get a values list similar to a dictionary.
+
+        Parameters
+        ----------
+        values : list
+            List of slotted variable values that have been set.
+        """
+        return [self[k] for k in self.var_list]
+
+
 class SAM:
     """Base class for SAM simulations (generation and econ)."""
 
@@ -718,7 +800,8 @@ class SAM:
             numerical results from the respective result functions.
         """
 
-        results = {}
+        # results = {}
+        results = SiteOutput()
         for request in self.output_request:
             if request == 'cf_mean':
                 results[request] = self.cf_mean
