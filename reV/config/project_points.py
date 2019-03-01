@@ -415,6 +415,20 @@ class ProjectPoints:
                                      .format(ids, files))
 
     @property
+    def sam_config_obj(self):
+        """Get the SAM config object.
+
+        Returns
+        -------
+        _sam_config_obj : reV.config.sam_config.SAMConfig
+            SAM configuration object.
+        """
+
+        if not hasattr(self, '_sam_config_obj'):
+            self._sam_config_obj = SAMConfig(self.sam_files)
+        return self._sam_config_obj
+
+    @property
     def sam_configs(self):
         """Get the SAM configs dictionary property.
 
@@ -427,9 +441,7 @@ class ProjectPoints:
             equal to input names, values equal to the actual inputs.
         """
 
-        if not hasattr(self, '_sam_configs'):
-            self._sam_configs = SAMConfig(self.sam_files).inputs
-        return self._sam_configs
+        return self.sam_config_obj.inputs
 
     @property
     def sites(self):

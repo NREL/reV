@@ -347,7 +347,7 @@ class SAM:
                 self._site = 'N/A'
 
     @staticmethod
-    def get_sam_res(res_file, project_points, module):
+    def get_sam_res(res_file, project_points, module, clearsky=False):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -363,6 +363,9 @@ class SAM:
             Example: module set to 'pvwatts' or 'tcsmolten' means that this
             expects a SolarResource file. If 'nsrdb' is in the res_file name,
             the NSRDB handler will be used.
+        clearsky : bool
+            Boolean flag to pull clearsky instead of real irradiance
+            (solar only).
 
         Returns
         -------
@@ -379,13 +382,19 @@ class SAM:
                    .format(module, list(SAM.RESOURCE_TYPES.keys())))
             raise SAMExecutionError(msg)
 
-        if (isinstance(res_handler, SolarResource) and
-                'nsrdb' in res_file.lower()):
+        if res_handler == SolarResource and 'nsrdb' in res_file.lower():
             # Use NSRDB handler if definitely an NSRDB file
             res_handler = NSRDB
 
         # use resource handler to preload the SAM resource data
-        res = res_handler.preload_SAM(res_file, project_points)
+        if res_handler == SolarResource or res_handler == NSRDB:
+            # option for clearsky irradiance if solar resource
+            res = res_handler.preload_SAM(res_file, project_points,
+                                          clearsky=clearsky)
+        else:
+            # load wind resource
+            res = res_handler.preload_SAM(res_file, project_points)
+
         return res
 
     def set_resource(self, resource=None):

@@ -4,7 +4,9 @@ reV Base Configuration Frameworks
 import json
 import logging
 import os
+from warnings import warn
 
+from reV.utilities.exceptions import ConfigWarning
 from reV.config.base_config import BaseConfig
 
 
@@ -24,6 +26,28 @@ class SAMConfig(BaseConfig):
 
         # Initialize the SAM config section as a dictionary.
         self.set_self_dict(SAM_configs)
+
+    @property
+    def clearsky(self):
+        """Get a boolean for whether solar resource requires clearsky irrad.
+
+        Returns
+        -------
+        _clearsky : bool
+            Flag set in the SAM config input with key "clearsky" for solar
+            analysis to process generation for clearsky irradiance.
+            Defaults to False (normal all-sky irradiance).
+        """
+
+        if not hasattr(self, '_clearsky'):
+            self._clearsky = False
+            for v in self.inputs.values():
+                self._clearsky = any((self._clearsky,
+                                      bool(v.get('clearsky', False))))
+            if self._clearsky:
+                warn('Solar analysis being performed on clearsky irradiance.',
+                     ConfigWarning)
+        return self._clearsky
 
     @property
     def inputs(self):
@@ -48,9 +72,9 @@ class SAMConfig(BaseConfig):
                             # get unit test inputs
                             self._inputs[key] = json.load(f)
                     else:
-                        raise IOError('SAM inputs file does not exist: {}'
+                        raise IOError('SAM inputs file does not exist: "{}"'
                                       .format(fname))
                 else:
-                    raise IOError('SAM inputs file must be a JSON: {}'
+                    raise IOError('SAM inputs file must be a JSON: "{}"'
                                   .format(fname))
         return self._inputs
