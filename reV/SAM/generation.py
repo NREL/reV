@@ -10,6 +10,7 @@ import numpy as np
 from warnings import warn
 
 from reV.utilities.exceptions import SAMInputWarning
+from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import SAM
 from reV.SAM.econ import LCOE, SingleOwner
 
@@ -85,13 +86,15 @@ class Generation(SAM):
         # initialize output dictionary
         out = {}
 
-        # Get solar option for clearsky-irradiance analysis
-        clearsky = points_control.project_points.sam_config_obj.clearsky
-
         # Get the SAM resource object
-        resources = SAM.get_sam_res(res_file, points_control.project_points,
-                                    points_control.project_points.tech,
-                                    clearsky=clearsky)
+        resources = SAM.get_sam_res(res_file,
+                                    points_control.project_points,
+                                    points_control.project_points.tech)
+
+        # run resource through curtailment filter if applicable
+        curtailment = points_control.project_points.curtailment
+        if curtailment is not None:
+            resources = curtail(resources, curtailment)
 
         # Use resource object iterator
         for res_df, meta in resources:
