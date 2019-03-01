@@ -112,6 +112,10 @@ def from_config(ctx, config_file, verbose):
     if config.logging_level == logging.DEBUG:
         verbose = True
 
+    # make output directory if does not exist
+    if not os.path.exists(config.dirout):
+        os.makedirs(config.dirout)
+
     # initialize loggers. Not SAM (will be logged in the invoked processes).
     init_gen_loggers(verbose, name, logdir=config.logdir)
 
