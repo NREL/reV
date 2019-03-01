@@ -40,17 +40,13 @@ class Curtailment(BaseConfig):
 
         Returns
         -------
-        _wind_speed : int | float
+        _wind_speed : float
             Wind speed threshold below which curtailment is possible. Will
             default to 5.0 m/s (curtailment when wspd < 5.0 m/s).
         """
 
         if not hasattr(self, '_wind_speed'):
-            # set a default value
-            self._wind_speed = 5.0
-            if 'wind_speed' in self:
-                if self['wind_speed']:
-                    self._wind_speed = self['wind_speed']
+            self._wind_speed = float(self.get('wind_speed', 5.0))
         return self._wind_speed
 
     @property
@@ -59,7 +55,7 @@ class Curtailment(BaseConfig):
 
         Returns
         -------
-        _dawn_dusk : int | float
+        _dawn_dusk : float
             Solar zenith angle at dawn and dusk. Default is nautical, 12
             degrees below the horizon (sza=102).
         """
@@ -78,7 +74,7 @@ class Curtailment(BaseConfig):
                     self._dawn_dusk = presets[self['dawn_dusk']]
                 if isinstance(self['dawn_dusk'], (int, float)):
                     # Use an explicit solar zenith angle
-                    self._dawn_dusk = self['dawn_dusk']
+                    self._dawn_dusk = float(self['dawn_dusk'])
         return self._dawn_dusk
 
     @property
@@ -93,11 +89,7 @@ class Curtailment(BaseConfig):
         """
 
         if not hasattr(self, '_months'):
-            # set a default value
-            self._months = (4, 5, 6, 7)
-            if 'months' in self:
-                if self['months']:
-                    self._months = tuple(self['months'])
+            self._months = tuple(self.get('months', (4, 5, 6, 7)))
         return self._months
 
     @property
@@ -106,17 +98,13 @@ class Curtailment(BaseConfig):
 
         Returns
         -------
-        _temperature : int | float
+        _temperature : float
             Temperature over which curtailment is possible. Defaults to a low
             value so that this screening metric is not used by default.
         """
 
         if not hasattr(self, '_temperature'):
-            # set a default value
-            self._temperature = -1000.0
-            if 'temperature' in self:
-                if self['temperature']:
-                    self._temperature = self['temperature']
+            self._temperature = float(self.get('temperature', -1000.0))
         return self._temperature
 
     @property
@@ -125,17 +113,13 @@ class Curtailment(BaseConfig):
 
         Returns
         -------
-        _precipitation : int | float
+        _precipitation : float
             Precipitation under which curtailment is possible. Defaults to a
             high value so that this screening metric is not used by default.
         """
 
         if not hasattr(self, '_precipitation'):
-            # set a default value
-            self._precipitation = 1000.0
-            if 'precipitation' in self:
-                if self['precipitation']:
-                    self._precipitation = self['precipitation']
+            self._precipitation = float(self.get('precipitation', 1000.0))
         return self._precipitation
 
     @property
@@ -152,9 +136,5 @@ class Curtailment(BaseConfig):
         """
 
         if not hasattr(self, '_probability'):
-            # set a default value
-            self._probability = 1.0
-            if 'probability' in self:
-                if self['probability']:
-                    self._probability = self['probability']
+            self._probability = float(self.get('probability', 1.0))
         return self._probability
