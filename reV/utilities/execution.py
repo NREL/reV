@@ -789,13 +789,11 @@ class SmartParallelJob:
         # useful log statements
         mem = psutil.virtual_memory()
         logger.info('Parallel run at iteration {0}. '
-                    'Results are stored in memory for {1} futures '
-                    'and memory usage is {2:.3f} GB out of {3:.3f} GB '
-                    'total ({4:.1f}% used)'
-                    .format(i, len(futures),
-                            mem.used / 1e9,
-                            mem.total / 1e9,
-                            100 * mem.used / mem.total))
+                    'Memory utilization is {1:.3f} GB out of {2:.3f} GB '
+                    'total ({3:.1f}% used, limit of {4:.1f}%)'
+                    .format(i, mem.used / 1e9, mem.total / 1e9,
+                            100 * mem.used / mem.total,
+                            100 * self.mem_util_lim))
 
         # check memory utilization against the limit
         if ((mem.used / mem.total) >= self.mem_util_lim) or force_flush:
