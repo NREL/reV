@@ -1,7 +1,7 @@
 """
 Execution utilities.
 """
-from dask.distributed import Client, LocalCluster, wait
+from dask.distributed import Client, LocalCluster
 from subprocess import Popen, PIPE
 import logging
 import gc
@@ -779,7 +779,14 @@ class SmartParallelJob:
             before returning: client.restart()
         """
 
-        wait(futures)
+        # gather on each iteration so there is no big mem spike during flush
+        # (obj.out should be a property setter that will append new data.)
+        self.obj.out = client.gather(futures)
+        futures.clear()
+        client.restart()
+        logger.debug('Restarted Dask client.')
+
+        # useful log statements
         mem = psutil.virtual_memory()
         logger.info('Parallel run at iteration {0}. '
                     'Results are stored in memory for {1} futures '
@@ -790,17 +797,13 @@ class SmartParallelJob:
                             mem.total / 1e9,
                             100 * mem.used / mem.total))
 
+        # check memory utilization against the limit
         if ((mem.used / mem.total) >= self.mem_util_lim) or force_flush:
             logger.info('Flushing memory to disk. The memory utilization is '
                         '{0:.2f}% and the limit is {1:.2f}%.'
                         .format(100 * (mem.used / mem.total),
                                 100 * self.mem_util_lim))
-            # send gathered futures to object output
-            # (obj.out should be a property setter that will append new data.)
-            self.obj.out = client.gather(futures)
-            futures.clear()
-            client.restart()
-            logger.debug('Restarted Dask client.')
+            # flush data to disk
             self.flush()
         return futures, client
 
