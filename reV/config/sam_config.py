@@ -72,9 +72,9 @@ class SAMConfig(BaseConfig):
                             # get unit test inputs
                             self._inputs[key] = json.load(f)
                     else:
-                        raise IOError('SAM inputs file does not exist: {}'
+                        raise IOError('SAM inputs file does not exist: "{}"'
                                       .format(fname))
                 else:
-                    raise IOError('SAM inputs file must be a JSON: {}'
+                    raise IOError('SAM inputs file must be a JSON: "{}"'
                                   .format(fname))
         return self._inputs

@@ -382,18 +382,17 @@ class SAM:
                    .format(module, list(SAM.RESOURCE_TYPES.keys())))
             raise SAMExecutionError(msg)
 
-        if (isinstance(res_handler, SolarResource) and
-                'nsrdb' in res_file.lower()):
+        if res_handler == SolarResource and 'nsrdb' in res_file.lower():
             # Use NSRDB handler if definitely an NSRDB file
             res_handler = NSRDB
 
         # use resource handler to preload the SAM resource data
-        if isinstance(res_handler, (SolarResource, NSRDB)):
+        if res_handler == SolarResource or res_handler == NSRDB:
             # option for clearsky irradiance if solar resource
             res = res_handler.preload_SAM(res_file, project_points,
                                           clearsky=clearsky)
         else:
-            # option for precip rate data if wind resource
+            # load wind resource
             res = res_handler.preload_SAM(res_file, project_points)
 
         return res

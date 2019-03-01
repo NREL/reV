@@ -14,6 +14,10 @@ import numpy as np
 from subprocess import Popen, PIPE
 import shlex
 
+from reV.utilities.exceptions import HandlerKeyError
+from reV.handlers.resource import NSRDB
+from reV.SAM.SAM import SAM
+from reV.config.project_points import ProjectPoints
 from reV.config.analysis_configs import GenConfig
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
@@ -72,6 +76,21 @@ def to_list(gen_out):
         out = [c['cf_mean'] for c in gen_out.values()]
 
     return out
+
+
+def test_clearsky():
+    res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
+    sam_config_dict = {0: os.path.join(TESTDATADIR, 'SAM/'
+                                       'naris_pv_1axis_inv13_cs.json')}
+    pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pv', res_file=res_file)
+    try:
+        # Get the SAM resource object
+        SAM.get_sam_res(res_file, pp, pp.tech,
+                        clearsky=pp.sam_config_obj.clearsky)
+        assert False
+    except HandlerKeyError as e:
+        # Should look for clearsky_dni and not find it in RI data
+        assert True
 
 
 def test_config():
