@@ -209,11 +209,9 @@ class Gen:
             does not indicate the site number, so a 'gid' column is added.
         """
 
-        if hasattr(self, '_out'):
-            finished_sites = sorted(list(self._out.keys()))
         with Resource(self.res_file) as res:
-            self._meta = res['meta', finished_sites]
-            self._meta.loc[:, 'gid'] = finished_sites
+            self._meta = res['meta', self.finished_sites]
+            self._meta.loc[:, 'gid'] = self.finished_sites
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
         return self._meta
 
@@ -246,13 +244,33 @@ class Gen:
         """
 
         if not hasattr(self, '_out'):
+            # initialize output dict and list of finished sites
             self._out = {}
+            self.finished_sites = []
+
         if isinstance(result, list):
-            self._out.update(self.unpack_futures(result))
-        elif isinstance(result, dict):
-            self._out.update(result)
+            # unpack futures list to dictionary first
+            result = self.unpack_futures(result)
+
+        if isinstance(result, dict):
+
+            # iterate through dict where sites are keys and values are
+            # corresponding results
+            for site, site_output in result.items():
+
+                # check that the sites are stored sequentially then add to
+                # the finished site list
+                if self.finished_sites:
+                    if int(site) < np.max(self.finished_sites):
+                        raise Exception('Sites are non sequential!')
+                self.finished_sites.append(site)
+
+                # unpack site output object
+                self.unpack_output(site_output)
+
         elif isinstance(result, type(None)):
             self._out.clear()
+            self.finished_sites.clear()
         else:
             raise TypeError('Did not recognize the type of generation output. '
                             'Tried to set output type "{}", but requires '
@@ -396,33 +414,26 @@ class Gen:
             out.update(x)
         return out
 
-    @staticmethod
-    def unpack_output(gen_out, var):
-        """Unpack a numpy array of outputs from a SAM output dictionary.
+    def unpack_output(self, site_output):
+        """Unpack a SAM SiteOutput object to the output attribute.
 
         Parameters
         ----------
-        gen_out : dict
-            Nested dictionary of SAM results. Top level key is site number,
-            Next level key should include the target sam_var.
-        var : str
-            SAM variable name to be unpacked from gen_out.
-
-        Returns
-        -------
-        out : np.array
-            1D array of scalar values sorted by site number or 2D array of
-            profile outputs with rows matching the time series and columns
-            matching sorted rows.
+        site_output : SAM.SiteOutput
+            SAM site output object.
         """
 
-        sorted_keys = sorted(list(gen_out.keys()), key=float)
-        out = np.array([gen_out[k][var] for k in sorted_keys])
-        if len(out.shape) > 1:
-            # profile outputs need to be transposed to make
-            # rows correspond to the timeseries
-            out = out.transpose()
-        return out
+        # iterate through the site results
+        for var, value in site_output.items():
+            if var not in self._out:
+                # initialze the output as a list
+                self._out[var] = []
+            if isinstance(value, np.ndarray):
+                # append the new timeseries to the 2D array
+                self._out[var].append(np.expand_dims(value.T, axis=1))
+            else:
+                # append a scalar result to the list (1D array)
+                self._out[var].append(value)
 
     def get_dset_attrs(self, var):
         """Get dataset attributes associated with output variable.
@@ -447,12 +458,21 @@ class Gen:
             Additional dataset attributes including scale_factor and units.
         """
 
-        data = self.unpack_output(self.out, var)
+        data = self.out[var]
         dtype = self.OUT_ATTRS[var].get('dtype', 'float32')
         chunks = self.OUT_ATTRS[var].get('chunks', None)
         attrs = {k: self.OUT_ATTRS[var].get(k, 'None') for
                  k in ['scale_factor', 'units']}
         return data, dtype, chunks, attrs
+
+    def convert_out_arrays(self):
+        """Convert the output lists to numpy arrays for writing to disk."""
+        for var in self._out:
+            if isinstance(self._out[var], list):
+                ax = 0
+                if isinstance(self._out[var][0], np.ndarray):
+                    ax = 1
+                self._out[var] = np.squeeze(np.stack(self._out[var], axis=ax))
 
     def gen_to_disk(self, fout='gen_out.h5'):
         """Save generation outputs to disk (all vars in self.output_request).
@@ -462,6 +482,9 @@ class Gen:
         fout : str
             Target .h5 output file (with path).
         """
+
+        # convert output arrays before writing to disk
+        self.convert_out_arrays()
 
         with Outputs(fout, mode='w-') as f:
             # Save meta
@@ -645,7 +668,7 @@ class Gen:
                             # round after scaling if integer dtype
                             out[site][k] = np.round(out[site][k])
 
-                        if isinstance(out[site][k], (list, np.ndarray)):
+                        if isinstance(out[site][k], np.ndarray):
                             # simple astype for arrays
                             out[site][k] = out[site][k].astype(dtype)
                         else:

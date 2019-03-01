@@ -92,7 +92,7 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
                          n_workers=n_workers, sites_per_split=3, fout=None,
                          return_obj=True, scale_outputs=False)
 
-    gen_outs = to_list(gen.out)
+    gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
@@ -117,7 +117,7 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
     # run reV 2.0 generation
     gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
                          return_obj=True, scale_outputs=False)
-    gen_outs = to_list(gen.out)
+    gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
@@ -140,7 +140,7 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
     gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
                          return_obj=True, scale_outputs=False)
-    gen_outs = to_list(gen.out)
+    gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
