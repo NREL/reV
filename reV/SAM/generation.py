@@ -82,11 +82,18 @@ class Generation(SAM):
             the output variable value.
         """
 
+        # initialize output dictionary
         out = {}
 
-        resources = SAM.get_sam_res(res_file, points_control.project_points,
-                                    points_control.project_points.tech)
+        # Get solar option for clearsky-irradiance analysis
+        clearsky = points_control.project_points.sam_config_obj.clearsky
 
+        # Get the SAM resource object
+        resources = SAM.get_sam_res(res_file, points_control.project_points,
+                                    points_control.project_points.tech,
+                                    clearsky=clearsky)
+
+        # Use resource object iterator
         for res_df, meta in resources:
             # get SAM inputs from project_points based on the current site
             site = res_df.name
