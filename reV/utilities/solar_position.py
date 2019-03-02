@@ -208,6 +208,31 @@ class SolarPosition:
         return elv
 
     @staticmethod
+    def _elevation(time_index, lat, lon):
+        """
+        Compute solar elevation angle from time_index and location
+
+        Parameters
+        ----------
+        time_index : pandas.DatetimeIndex
+            Datetime stamp(s) of interest
+        lat : ndarray
+            Latitude of site(s) of interest
+        lon : ndarray
+            Longitude of site(s) of interest
+
+        Returns
+        -------
+        elevation : ndarray
+            Solar elevation angle in radians
+        """
+        n, zulu = SolarPosition._parse_time(time_index)
+        ra, dec = SolarPosition._calc_sun_pos(n)
+        ha = SolarPosition._calc_hour_angle(n, zulu, ra, lon)
+        elevation = SolarPosition._calc_elevation(dec, ha, lat)
+        return elevation
+
+    @staticmethod
     def _atm_correction(elv):
         """
         Apply atmospheric correction to elevation
@@ -251,8 +276,8 @@ class SolarPosition:
         azm : ndarray
             Solar azimuth in radians
         """
-        lat = np.radians(lat)
         elv = SolarPosition._calc_elevation(dec, ha, lat)
+        lat = np.radians(lat)
         arg = ((np.sin(elv) * np.sin(lat) - np.sin(dec)) /
                (np.cos(elv) * np.cos(lat)))
 
@@ -263,6 +288,31 @@ class SolarPosition:
         azm[arg < -1] = np.pi
 
         return azm
+
+    @staticmethod
+    def _azimuth(time_index, lat, lon):
+        """
+        Compute solar azimuth angle from time_index and location
+
+        Parameters
+        ----------
+        time_index : pandas.DatetimeIndex
+            Datetime stamp(s) of interest
+        lat : ndarray
+            Latitude of site(s) of interest
+        lon : ndarray
+            Longitude of site(s) of interest
+
+        Returns
+        -------
+        azimuth : ndarray
+            Solar azimuth angle in radians
+        """
+        n, zulu = SolarPosition._parse_time(time_index)
+        ra, dec = SolarPosition._calc_sun_pos(n)
+        ha = SolarPosition._calc_hour_angle(n, zulu, ra, lon)
+        azimuth = SolarPosition._calc_azimuth(dec, ha, lat)
+        return azimuth
 
     @staticmethod
     def _calc_zenith(dec, ha, lat):
@@ -283,7 +333,6 @@ class SolarPosition:
         zen : ndarray
             Solar azimuth in radians
         """
-        lat = np.radians(lat)
         elv = SolarPosition._calc_elevation(dec, ha, lat)
         # Atmospheric correct elevation
         elv = SolarPosition._atm_correction(elv)
@@ -291,6 +340,54 @@ class SolarPosition:
         zen = np.pi / 2 - elv
 
         return zen
+
+    @staticmethod
+    def _zenith(time_index, lat, lon):
+        """
+        Compute solar zenith angle from time_index and location
+
+        Parameters
+        ----------
+        time_index : pandas.DatetimeIndex
+            Datetime stamp(s) of interest
+        lat : ndarray
+            Latitude of site(s) of interest
+        lon : ndarray
+            Longitude of site(s) of interest
+
+        Returns
+        -------
+        zenith : ndarray
+            Solar zenith angle in radians
+        """
+        n, zulu = SolarPosition._parse_time(time_index)
+        ra, dec = SolarPosition._calc_sun_pos(n)
+        ha = SolarPosition._calc_hour_angle(n, zulu, ra, lon)
+        zenith = SolarPosition._calc_zenith(dec, ha, lat)
+        return zenith
+
+    def _format_output(self, arr):
+        """
+        Format radians array for output:
+        - Convert to degrees
+        - Transpose if needed
+
+        Parameters
+        ----------
+        arr : ndarray
+            Data array in radians
+
+        Returns
+        -------
+        arr : ndarray
+            Data array in degrees and formatted as (time x sites)
+        """
+        arr = np.degrees(arr)
+
+        if arr.shape[0] != len(self._time_index):
+            arr = arr.T
+
+        return arr
 
     @property
     def azimuth(self):
@@ -302,12 +399,9 @@ class SolarPosition:
         azimuth : ndarray
             Solar azimuth angle in degrees
         """
-        n, zulu = self._parse_time(self.time_index)
-        ra, dec = self._calc_sun_pos(n)
-        ha = self._calc_hour_angle(n, zulu, ra, self.longitude)
-        azimuth = self._calc_azimuth(dec, ha, self.latitude)
+        azimuth = self._azimuth(self.time_index, self.latitude, self.longitude)
 
-        return np.degrees(azimuth)
+        return self._format_output(azimuth)
 
     @property
     def elevation(self):
@@ -319,12 +413,10 @@ class SolarPosition:
         elevation : ndarray
             Solar elevation angle in degrees
         """
-        n, zulu = self._parse_time(self.time_index)
-        ra, dec = self._calc_sun_pos(n)
-        ha = self._calc_hour_angle(n, zulu, ra, self.longitude)
-        elevation = self._calc_elevation(dec, ha, self.latitude)
+        elevation = self._elevation(self.time_index, self.latitude,
+                                    self.longitude)
 
-        return np.degrees(elevation)
+        return self._format_output(elevation)
 
     @property
     def apparent_elevation(self):
@@ -336,10 +428,11 @@ class SolarPosition:
         elevation : ndarray
             Solar elevation angle in degrees
         """
-        elevation = self.elevation
+        elevation = self._elevation(self.time_index, self.latitude,
+                                    self.longitude)
         elevation = self._atm_correction(elevation)
 
-        return np.degrees(elevation)
+        return self._format_output(elevation)
 
     @property
     def zenith(self):
@@ -349,9 +442,8 @@ class SolarPosition:
         Returns
         -------
         zenith : ndarray
-            Solar zenith Angle in degrees
+            Solar zenith angle in degrees
         """
-        elevation = self.apparent_elevation
-        zenith = np.pi / 2 - elevation
+        zenith = self._zenith(self.time_index, self.latitude, self.longitude)
 
-        return np.degrees(zenith)
+        return self._format_output(zenith)
