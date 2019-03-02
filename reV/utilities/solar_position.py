@@ -109,11 +109,7 @@ class SolarPosition:
         """
         num = np.cos(oblqec) * np.sin(eclong)
         den = np.cos(eclong)
-        ra = np.arctan(num / den)
-
-        num[den < 0] = 0
-        ra[den < 0] += np.pi
-        ra[num < 0] += 2 * np.pi
+        ra = np.arctan2(num, den)
         return ra
 
     @staticmethod
@@ -170,11 +166,10 @@ class SolarPosition:
         ha : ndarray
             Hour angle in radians between -pi and pi
         """
-        # Greenwich mean sidreal time in hours
-        gmst = np.remainder(6.697375 + 0.0657098242 * n + 1.0027379094 * zulu,
-                            24)
+        # Greenwich mean sidereal time in degrees
+        gmst = (6.697375 + 0.06570982441908 * n + 1.00273790935 * zulu) * 15
         # Local mean sidereal time in radians
-        lmst = np.radians(np.remainder(gmst + lon / 15, 24) * 15)
+        lmst = np.radians(np.remainder(gmst + lon, 360))
         # Hour angle in radians
         ha = lmst - ra
         # Ensure hour angle falls between -pi and pi
@@ -298,23 +293,6 @@ class SolarPosition:
         return zen
 
     @property
-    def zenith(self):
-        """
-        Compute solar zenith angle
-
-        Returns
-        -------
-        zenith : ndarray
-            Solar zenith Angle in degrees
-        """
-        n, zulu = self._parse_time(self.time_index)
-        ra, dec = self._calc_sun_pos(n)
-        ha = self._calc_hour_angle(n, zulu, ra, self.longitude)
-        zenith = self._calc_zenith(dec, ha, self.latitude)
-
-        return np.degrees(zenith)
-
-    @property
     def azimuth(self):
         """
         Compute solar azimuth angle
@@ -362,3 +340,18 @@ class SolarPosition:
         elevation = self._atm_correction(elevation)
 
         return np.degrees(elevation)
+
+    @property
+    def zenith(self):
+        """
+        Compute solar zenith angle
+
+        Returns
+        -------
+        zenith : ndarray
+            Solar zenith Angle in degrees
+        """
+        elevation = self.apparent_elevation
+        zenith = np.pi / 2 - elevation
+
+        return np.degrees(zenith)
