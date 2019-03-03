@@ -49,7 +49,7 @@ class Gen:
                  }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
-                 fout=None, dirout='./gen_out', drop_leap=True):
+                 fout=None, dirout='./gen_out', drop_leap=False):
         """Initialize a generation instance.
 
         Parameters
@@ -282,11 +282,19 @@ class Gen:
         if not hasattr(self, '_time_index'):
             with Resource(self.res_file) as res:
                 self._time_index = res.time_index
+
+            # drop leap day or last day
+            leap_day = ((self._time_index.month == 2) &
+                        (self._time_index.day == 29))
+            last_day = ((self._time_index.month == 12) &
+                        (self._time_index.day == 31))
             if self._drop_leap:
-                leap_day = ((self._time_index.month == 2) &
-                            (self._time_index.day == 29))
                 self._time_index = self._time_index.drop(
                     self._time_index[leap_day])
+            elif any(leap_day):
+                self._time_index = self._time_index.drop(
+                    self._time_index[last_day])
+
         return self._time_index
 
     @staticmethod
