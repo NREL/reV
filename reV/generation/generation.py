@@ -98,6 +98,8 @@ class Gen:
                            'technologies: {}'
                            .format(self.tech, list(self.OPTIONS.keys())))
 
+        self.initialize_output_arrays()
+
     @property
     def output_request(self):
         """Get the output variables requested from generation.
@@ -189,7 +191,7 @@ class Gen:
                     shape = (n, )
                 self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
             self._site_mem = self._site_mem / 1e6 / n
-            logger.info('Output results from a single site is calculated to '
+            logger.info('Output results from a single site are calculated to '
                         'use {0:.3f} MB of memory.'
                         .format(self._site_mem))
         return self._site_mem
@@ -507,6 +509,9 @@ class Gen:
                 # add site gid to the finished list after outputs are unpacked
                 self.finished_sites.append(site_gid)
 
+            # try to clear some memory
+            del result
+
         elif isinstance(result, type(None)):
             self._out.clear()
             self.finished_sites.clear()
@@ -570,6 +575,9 @@ class Gen:
             else:
                 # set a scalar result to the list (1D array)
                 self._out[var][i] = value
+
+        # try to clear some memory
+        del site_output
 
     def global_site_index(self, site_gid):
         """Get the global project points index for a given site gid.
@@ -635,15 +643,6 @@ class Gen:
                  k in ['scale_factor', 'units']}
         return data, dtype, chunks, attrs
 
-    def convert_out_arrays(self):
-        """Convert the output lists to numpy arrays for writing to disk."""
-        for var in self._out:
-            if isinstance(self._out[var], list):
-                ax = 0
-                if isinstance(self._out[var][0], np.ndarray):
-                    ax = 1
-                self._out[var] = np.squeeze(np.stack(self._out[var], axis=ax))
-
     def gen_to_disk(self, fout='gen_out.h5'):
         """Save generation outputs to disk (all vars in self.output_request).
 
@@ -652,9 +651,6 @@ class Gen:
         fout : str
             Target .h5 output file (with path).
         """
-
-        # convert output arrays before writing to disk
-        self.convert_out_arrays()
 
         with Outputs(fout, mode='w-') as f:
             # Save meta
