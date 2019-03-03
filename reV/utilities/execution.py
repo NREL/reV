@@ -284,7 +284,7 @@ class PBS(SubprocessManager):
             out = None
             err = 'already_running'
         else:
-            feature_str = '#PBS -l {}\n'.format(feature.replace(' ', ''))
+            feature_str = '#PBS -l {}\n'.format(str(feature).replace(' ', ''))
             fname = '{}.sh'.format(name)
             script = ('#!/bin/bash\n'
                       '#PBS -N {n} # job name\n'
