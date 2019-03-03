@@ -6,6 +6,8 @@ import numpy as np
 import os
 import pprint
 import re
+import sys
+import psutil
 from warnings import warn
 
 from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
@@ -31,25 +33,34 @@ class Gen:
                }
 
     OUT_ATTRS = {'cf_mean': {'scale_factor': 1000, 'units': 'unitless',
-                             'dtype': 'uint16', 'chunks': None},
+                             'dtype': 'uint16', 'chunks': None,
+                             'type': 'scalar'},
                  'cf_profile': {'scale_factor': 1000, 'units': 'unitless',
-                                'dtype': 'uint16', 'chunks': (None, 100)},
+                                'dtype': 'uint16', 'chunks': (None, 100),
+                                'type': 'array'},
                  'annual_energy': {'scale_factor': 1, 'units': 'kWh',
-                                   'dtype': 'float32', 'chunks': None},
+                                   'dtype': 'float32', 'chunks': None,
+                                   'type': 'scalar'},
                  'energy_yield': {'scale_factor': 1, 'units': 'kWh/kW',
-                                  'dtype': 'float32', 'chunks': None},
+                                  'dtype': 'float32', 'chunks': None,
+                                  'type': 'scalar'},
                  'gen_profile': {'scale_factor': 1, 'units': 'kW',
-                                 'dtype': 'float32', 'chunks': (None, 100)},
+                                 'dtype': 'float32', 'chunks': (None, 100),
+                                 'type': 'array'},
                  'poa': {'scale_factor': 1, 'units': 'W/m2',
-                         'dtype': 'float32', 'chunks': (None, 100)},
+                         'dtype': 'float32', 'chunks': (None, 100),
+                         'type': 'array'},
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None},
+                               'dtype': 'float32', 'chunks': None,
+                               'type': 'scalar'},
                  'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None},
+                              'dtype': 'float32', 'chunks': None,
+                              'type': 'scalar'},
                  }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
-                 fout=None, dirout='./gen_out', drop_leap=False):
+                 fout=None, dirout='./gen_out', drop_leap=False,
+                 mem_util_lim=0.7):
         """Initialize a generation instance.
 
         Parameters
@@ -67,6 +78,10 @@ class Gen:
             created if it does not already exist.
         drop_leap : bool
             Drop leap day instead of final day of year during leap years
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many site
+            results will be stored in-memory at any given time before flushing
+            to disk.
         """
 
         self._points_control = points_control
@@ -75,6 +90,7 @@ class Gen:
         self._fout = fout
         self._dirout = dirout
         self._drop_leap = drop_leap
+        self.mem_util_lim = mem_util_lim
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -118,6 +134,65 @@ class Gen:
         else:
             raise TypeError('Output request must be list or tuple but '
                             'received: {}'.format(type(req)))
+
+        for request in self._output_request:
+            if request not in self.OUT_ATTRS:
+                raise ValueError('User output request "{}" not recognized. '
+                                 'The following output requests are available:'
+                                 ' "{}"'
+                                 .format(request, list(self.OUT_ATTRS.keys())))
+
+    @property
+    def site_limit(self):
+        """Get the number of sites results that can be stored in memory at once
+
+        Returns
+        -------
+        _site_limit : int
+            Number of site result sets that can be stored in memory at once
+            without violating memory limits.
+        """
+
+        if not hasattr(self, '_site_limit'):
+            tot_mem = psutil.virtual_memory().total / 1e6
+            avail_mem = self.mem_util_lim * tot_mem
+            self._site_limit = int(np.floor(avail_mem / self.site_mem))
+            logger.info('Generation limited to storing {0} sites in memory '
+                        '({1:.1f} GB total hardware, {2:.1f} GB available '
+                        'with {3:.1f}% utilization).'
+                        .format(self._site_limit, tot_mem / 1e3,
+                                avail_mem / 1e3, self.mem_util_lim * 100))
+        return self._site_limit
+
+    @property
+    def site_mem(self):
+        """Get the memory (MB) required to store all results for a single site.
+
+        Returns
+        -------
+        _site_mem : float
+            Memory (MB) required to store all results in requested in
+            output_request for a single site.
+        """
+
+        if not hasattr(self, '_site_mem'):
+            # average the memory usage over n sites
+            # (for better understanding of array overhead)
+            n = 100
+            self._site_mem = 0
+            for request in self._output_request:
+                dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+                if self.OUT_ATTRS[request].get('type', 'array') == 'array':
+                    ti_len = len(self.time_index)
+                    shape = (ti_len, n)
+                else:
+                    shape = (n, )
+                self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
+            self._site_mem = self._site_mem / 1e6 / n
+            logger.info('Output results from a single site is calculated to '
+                        'use {0:.3f} MB of memory.'
+                        .format(self._site_mem))
+        return self._site_mem
 
     @property
     def points_control(self):
@@ -214,67 +289,6 @@ class Gen:
             self._meta.loc[:, 'gid'] = self.finished_sites
             self._meta.loc[:, 'reV_tech'] = self.project_points.tech
         return self._meta
-
-    @property
-    def out(self):
-        """Get the generation output results.
-
-        Returns
-        -------
-        out : dict
-            Dictionary of generation results from SAM.
-        """
-
-        if not hasattr(self, '_out'):
-            self._out = {}
-        return self._out
-
-    @out.setter
-    def out(self, result):
-        """Set the output attribute, unpack futures, clear output from mem.
-
-        Parameters
-        ----------
-        result : list | dict | None
-            Generation results to set to output dictionary. Use cases:
-             - List input is interpreted as a futures list, which is unpacked
-               before setting to the output dict.
-             - Dictionary input is interpreted as an already unpacked result.
-             - None is interpreted as a signal to clear the output dictionary.
-        """
-
-        if not hasattr(self, '_out'):
-            # initialize output dict and list of finished sites
-            self._out = {}
-            self.finished_sites = []
-
-        if isinstance(result, list):
-            # unpack futures list to dictionary first
-            result = self.unpack_futures(result)
-
-        if isinstance(result, dict):
-
-            # iterate through dict where sites are keys and values are
-            # corresponding results
-            for site, site_output in result.items():
-
-                # check that the sites are stored sequentially then add to
-                # the finished site list
-                if self.finished_sites:
-                    if int(site) < np.max(self.finished_sites):
-                        raise Exception('Sites are non sequential!')
-                self.finished_sites.append(site)
-
-                # unpack site output object
-                self.unpack_output(site_output)
-
-        elif isinstance(result, type(None)):
-            self._out.clear()
-            self.finished_sites.clear()
-        else:
-            raise TypeError('Did not recognize the type of generation output. '
-                            'Tried to set output type "{}", but requires '
-                            'list, dict or None.'.format(type(result)))
 
     @property
     def time_index(self):
@@ -402,6 +416,105 @@ class Gen:
                          'of {}.'.format(sites_per_core, res_file))
         return sites_per_core
 
+    def initialize_output_arrays(self, index_0=0):
+        """Initialize output arrays based on the number of sites that can be
+        stored in memory safely.
+
+        Parameters
+        ----------
+        index_0 : int
+            This is the site list index (not gid) for the first site in the
+            output data. If multiple outputs sets are used, this will segment.
+        """
+
+        self._out = {}
+        self.finished_sites = []
+
+        # Output chunk is the index range (inclusive) of this set of site outs
+        self.output_chunk = (index_0, np.min((index_0 + self.site_limit,
+                                              len(self.project_points) - 1)))
+        self.out_n_sites = int(self.output_chunk[1] - self.output_chunk[0]) + 1
+
+        logger.info('Initializing generation outputs for {} sites with gids '
+                    '{} through {} inclusive (site list index {} through {})'
+                    .format(self.out_n_sites,
+                            self.project_points.sites[self.output_chunk[0]],
+                            self.project_points.sites[self.output_chunk[1]],
+                            self.output_chunk[0], self.output_chunk[1]))
+
+        for request in self.output_request:
+            dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+            if self.OUT_ATTRS[request].get('type', 'array') == 'array':
+                ti_len = len(self.time_index)
+                shape = (ti_len, self.out_n_sites)
+            else:
+                shape = (self.out_n_sites, )
+
+            # initialize the output request as an array of zeros
+            self._out[request] = np.zeros(shape, dtype=dtype)
+
+    @property
+    def out(self):
+        """Get the generation output results.
+
+        Returns
+        -------
+        out : dict
+            Dictionary of generation results from SAM.
+        """
+
+        if not hasattr(self, '_out'):
+            self.initialize_output_arrays()
+        return self._out
+
+    @out.setter
+    def out(self, result):
+        """Set the output attribute, unpack futures, clear output from mem.
+
+        Parameters
+        ----------
+        result : list | dict | None
+            Generation results to set to output dictionary. Use cases:
+             - List input is interpreted as a futures list, which is unpacked
+               before setting to the output dict.
+             - Dictionary input is interpreted as an already unpacked result.
+             - None is interpreted as a signal to clear the output dictionary.
+        """
+
+        if not hasattr(self, '_out'):
+            # initialize output dict and list of finished sites
+            self.initialize_output_arrays()
+
+        if isinstance(result, list):
+            # unpack futures list to dictionary first
+            result = self.unpack_futures(result)
+
+        if isinstance(result, dict):
+
+            # iterate through dict where sites are keys and values are
+            # corresponding results
+            for site_gid, site_output in result.items():
+
+                # check that the sites are stored sequentially then add to
+                # the finished site list
+                if self.finished_sites:
+                    if int(site_gid) < np.max(self.finished_sites):
+                        raise Exception('Site results are non sequential!')
+
+                # unpack site output object
+                self.unpack_output(site_gid, site_output)
+
+                # add site gid to the finished list after outputs are unpacked
+                self.finished_sites.append(site_gid)
+
+        elif isinstance(result, type(None)):
+            self._out.clear()
+            self.finished_sites.clear()
+        else:
+            raise TypeError('Did not recognize the type of generation output. '
+                            'Tried to set output type "{}", but requires '
+                            'list, dict or None.'.format(type(result)))
+
     @staticmethod
     def unpack_futures(futures):
         """Combine list of futures results into their native dict format/type.
@@ -422,11 +535,13 @@ class Gen:
             out.update(x)
         return out
 
-    def unpack_output(self, site_output):
+    def unpack_output(self, site_gid, site_output):
         """Unpack a SAM SiteOutput object to the output attribute.
 
         Parameters
         ----------
+        site_gid : int
+            Resource-native site gid (index).
         site_output : SAM.SiteOutput
             SAM site output object.
         """
@@ -434,14 +549,61 @@ class Gen:
         # iterate through the site results
         for var, value in site_output.items():
             if var not in self._out:
-                # initialze the output as a list
-                self._out[var] = []
+                raise KeyError('Tried to collect output variable "{}", but it '
+                               'was not yet initialized in the output '
+                               'dictionary.')
+
+            # get the index in the output array for the current site
+            i = self.site_output_index(site_gid)
+
+            # check to see if we have exceeded the current output chunk.
+            # If so, flush data to disk and reset the output initialization
+            if i + 1 > self.out_n_sites:
+                self.flush()
+                global_site_index = self.global_site_index(site_gid)
+                self.initialize_output_arrays(index_0=global_site_index)
+                i = self.site_output_index(site_gid)
+
             if isinstance(value, np.ndarray):
-                # append the new timeseries to the 2D array
-                self._out[var].append(np.expand_dims(value.T, axis=1))
+                # set the new timeseries to the 2D array
+                self._out[var][:, i] = value.T
             else:
-                # append a scalar result to the list (1D array)
-                self._out[var].append(value)
+                # set a scalar result to the list (1D array)
+                self._out[var][i] = value
+
+    def global_site_index(self, site_gid):
+        """Get the global project points index for a given site gid.
+
+        Returns
+        -------
+        global_site_index : int
+            Index for the site_gid in the project points site list.
+        """
+        return self.project_points.sites.index(site_gid)
+
+    def site_output_index(self, site_gid):
+        """Get the index in the output array for the current site.
+
+        Parameters
+        ----------
+        site_gid : int
+            Resource-native site index (gid).
+
+        Returns
+        -------
+        output_index : int
+            Column index in the output array that the results belong to.
+        """
+
+        global_site_index = self.global_site_index(site_gid)
+        output_index = global_site_index - self.output_chunk[0]
+        if output_index < 0:
+            raise ValueError('Attempting to set output data for site with gid '
+                             '{} to global site index {}, which was already '
+                             'set based on the current output index chunk of '
+                             '{}'.format(site_gid, global_site_index,
+                                         self.output_chunk))
+        return output_index
 
     def get_dset_attrs(self, var):
         """Get dataset attributes associated with output variable.
@@ -804,9 +966,8 @@ class Gen:
             Optional output directory specification. The directory will be
             created if it does not already exist.
         mem_util_lim : float
-            Memory utilization limit (fractional). If the used memory divided
-            by the total memory is greater than this value, the obj.out will
-            be flushed and the local node memory will be cleared.
+            Memory utilization limit (fractional). This will determine how many
+            site results are stored in memory at any given time.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
         """
@@ -817,7 +978,7 @@ class Gen:
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout)
+                  dirout=dirout, mem_util_lim=mem_util_lim)
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
                   'output_request': gen.output_request,
@@ -835,7 +996,7 @@ class Gen:
             SmartParallelJob.execute(gen, pc, n_workers=n_workers,
                                      loggers=['reV.generation', 'reV.SAM',
                                               'reV.utilities'],
-                                     mem_util_lim=mem_util_lim, **kwargs)
+                                     mem_util_lim=1.0, **kwargs)
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed.')
             raise e

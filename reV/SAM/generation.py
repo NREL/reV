@@ -97,16 +97,15 @@ class Generation(SAM):
         for res_df, meta in resources:
             # get SAM inputs from project_points based on the current site
             site = res_df.name
-            config, inputs = points_control.project_points[site]
+            _, inputs = points_control.project_points[site]
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
                       output_request=output_request)
             sim.gen_exec(cls.MODULE)
             out[site] = sim.outputs
 
-            logger.debug('Outputs for site {} with config "{}", \n\t{}...'
-                         .format(site, config, str(out[site])[:100]))
             del res_df, meta, sim
+
         del resources
         gc.collect()
         return out

@@ -90,9 +90,8 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
     gen = Gen.run_direct('pv', rev2_points, sam_files, res_file,
                          n_workers=n_workers, sites_per_split=3, fout=None,
-                         return_obj=True, scale_outputs=False)
-
-    gen_outs = list(gen.out['cf_mean'])
+                         return_obj=True)
+    gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
@@ -116,8 +115,8 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
 
     # run reV 2.0 generation
     gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
-                         return_obj=True, scale_outputs=False)
-    gen_outs = list(gen.out['cf_mean'])
+                         return_obj=True)
+    gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
@@ -139,8 +138,8 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
                  TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json']
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
     gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
-                         return_obj=True, scale_outputs=False)
-    gen_outs = list(gen.out['cf_mean'])
+                         return_obj=True)
+    gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
@@ -166,7 +165,7 @@ def test_pv_gen_profiles(year):
     Gen.run_direct('pv', points, sam_files, res_file, fout=rev2_out,
                    output_request=('cf_profile',),
                    n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
-                   return_obj=False, scale_outputs=False)
+                   return_obj=False)
 
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(rev2_out_dir)
