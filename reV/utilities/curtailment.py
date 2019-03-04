@@ -8,7 +8,7 @@ import numpy as np
 from reV.utilities.solar_position import SolarPosition
 
 
-def curtail(resource, curtailment, random_seed=123):
+def curtail(resource, curtailment, random_seed=None):
     """Curtail the SAM wind resource object based on project points.
 
     Parameters
@@ -17,10 +17,11 @@ def curtail(resource, curtailment, random_seed=123):
         SAM resource object for WIND resource.
     curtailment : reV.config.curtailment.Curtailment
         Curtailment config object.
-    random_seed : int
+    random_seed : int | NoneType
         Number to seed the numpy random number generator. Used to generate
         reproducable psuedo-random results if the probability of curtailment
-        is not set to 1.
+        is not set to 1. Numpy random will be seeded with the system time if
+        this is None.
 
     Returns
     -------
@@ -76,7 +77,7 @@ def curtail(resource, curtailment, random_seed=123):
     # Apply probability mask when curtailment is possible.
     if curtailment.probability != 1:
         np.random.seed(seed=random_seed)
-        mask = np.random.rand(shape) < curtailment.probability
+        mask = np.random.rand(shape[0], shape[1]) < curtailment.probability
         curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Apply curtailment multiplier directly to resource
