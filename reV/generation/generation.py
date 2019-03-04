@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class Gen:
-    """Base class for generation"""
+    """Base class for reV generation."""
 
     # Mapping of reV technology strings to SAM generation functions
     OPTIONS = {'pv': PV.reV_run,
@@ -61,8 +61,7 @@ class Gen:
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
                  mem_util_lim=0.7):
-        """Initialize a generation instance.
-
+        """
         Parameters
         ----------
         points_control : reV.config.project_points.PointsControl
@@ -98,6 +97,7 @@ class Gen:
                            'technologies: {}'
                            .format(self.tech, list(self.OPTIONS.keys())))
 
+        # pre-initialize output arrays to store results when available.
         self.initialize_output_arrays()
 
     @property
@@ -276,12 +276,12 @@ class Gen:
 
     @property
     def meta(self):
-        """Get resource meta data for the analyzed sites stored in self._out.
+        """Get resource meta for sites with results (in self.finished_sites).
 
         Returns
         -------
         _meta : pd.DataFrame
-            Meta data df for sites that have completed results in self._out.
+            Meta data df for sites that have completed results.
             Column names are variables, rows are different sites. The row index
             does not indicate the site number, so a 'gid' column is added.
         """
@@ -294,7 +294,14 @@ class Gen:
 
     @property
     def time_index(self):
-        """Get the generation resource time index data."""
+        """Get the generation resource time index data.
+
+        Returns
+        -------
+        _time_index : pandas.DatetimeIndex
+            Time-series datetime index
+        """
+
         if not hasattr(self, '_time_index'):
             with Resource(self.res_file) as res:
                 self._time_index = res.time_index
@@ -426,7 +433,8 @@ class Gen:
         ----------
         index_0 : int
             This is the site list index (not gid) for the first site in the
-            output data. If multiple outputs sets are used, this will segment.
+            output data. If a node cannot process all sites in-memory at once,
+            this is used to segment the sites in the current output chunk.
         """
 
         self._out = {}
@@ -590,7 +598,7 @@ class Gen:
         return self.project_points.sites.index(site_gid)
 
     def site_output_index(self, site_gid):
-        """Get the index in the output array for the current site.
+        """Get the column index in the current output array for the site gid.
 
         Parameters
         ----------
@@ -989,6 +997,8 @@ class Gen:
         logger.debug('The SAM output variables have been requested:\n{}'
                      .format(output_request))
         try:
+            # use SmartParallelJob to manage runs, but set mem limit to 1
+            # because Gen() will manage the sites in-memory
             SmartParallelJob.execute(gen, pc, n_workers=n_workers,
                                      loggers=['reV.generation', 'reV.SAM',
                                               'reV.utilities'],
