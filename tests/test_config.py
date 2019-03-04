@@ -15,7 +15,6 @@ from subprocess import Popen, PIPE
 import shlex
 
 from reV.utilities.exceptions import HandlerKeyError
-from reV.handlers.resource import NSRDB
 from reV.SAM.SAM import SAM
 from reV.config.project_points import ProjectPoints
 from reV.config.analysis_configs import GenConfig
@@ -85,19 +84,26 @@ def test_clearsky():
     pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pv', res_file=res_file)
     try:
         # Get the SAM resource object
-        SAM.get_sam_res(res_file, pp, pp.tech,
-                        clearsky=pp.sam_config_obj.clearsky)
+        SAM.get_sam_res(res_file, pp, pp.tech)
         assert False
     except HandlerKeyError as e:
         # Should look for clearsky_dni and not find it in RI data
         assert True
 
 
-def test_config():
+@pytest.mark.parametrize('tech', ['pv', 'wind'])
+def test_gen_from_config(tech):
     """Gen PV CF profiles with write to disk and compare against rev1."""
 
     job_name = 'config_test'
-    config = os.path.join(TESTDATADIR, 'config/local.json').replace('\\', '/')
+
+    if tech == 'pv':
+        fconfig = 'local_pv.json'
+    elif tech == 'wind':
+        fconfig = 'local_wind.json'
+
+    config = os.path.join(TESTDATADIR, 'config/{}'.format(fconfig))\
+        .replace('\\', '/')
 
     cmd = 'python -m reV.cli -n "{}" -c {} generation'.format(job_name, config)
     cmd = shlex.split(cmd)
@@ -124,7 +130,7 @@ def test_config():
             break
 
     # get reV 1.0 generation profiles
-    rev1_profiles = get_r1_profiles(year=config_obj.years[0])
+    rev1_profiles = get_r1_profiles(year=config_obj.years[0], tech=tech)
     rev1_profiles = rev1_profiles[:, config_obj.points_control.sites]
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
@@ -138,10 +144,16 @@ def test_config():
     assert result is True
 
 
-def get_r1_profiles(year=2012):
-    """Get the first 100 reV 1.0 ri pv generation profiles."""
-    rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
-                        'pv_{}_0.h5'.format(year))
+def get_r1_profiles(year=2012, tech='pv'):
+    """Get the first 100 reV 1.0 ri generation profiles."""
+
+    if tech == 'pv':
+        rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
+                            'pv_{}_0.h5'.format(year))
+    elif tech == 'wind':
+        rev1 = os.path.join(TESTDATADIR, 'ri_wind', 'profile_outputs',
+                            'wind_{}_0.h5'.format(year))
+
     with Outputs(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
     return data
