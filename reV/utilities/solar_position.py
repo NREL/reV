@@ -8,6 +8,8 @@ import pandas as pd
 class SolarPosition:
     """
     Class to compute solar position for time(s) and site(s)
+    Based off of SAM Solar Position Function:
+    https://github.com/NREL/ssc/blob/develop/shared/lib_irradproc.cpp
     """
     def __init__(self, time_index, lat_lon):
         """
@@ -260,7 +262,7 @@ class SolarPosition:
     @staticmethod
     def _calc_azimuth(dec, ha, lat):
         """
-        Calculate the solar azimuth angle
+        Calculate the solar azimuth angle from solar position variables
 
         Parameters
         ----------
@@ -317,7 +319,7 @@ class SolarPosition:
     @staticmethod
     def _calc_zenith(dec, ha, lat):
         """
-        Calculate the solar zenith angle
+        Calculate the solar zenith angle from solar position variables
 
         Parameters
         ----------
@@ -392,7 +394,7 @@ class SolarPosition:
     @property
     def azimuth(self):
         """
-        Compute solar azimuth angle
+        Solar azimuth angle
 
         Returns
         -------
@@ -406,7 +408,7 @@ class SolarPosition:
     @property
     def elevation(self):
         """
-        Compute solar elevation angle
+        Solar elevation angle
 
         Returns
         -------
@@ -421,7 +423,7 @@ class SolarPosition:
     @property
     def apparent_elevation(self):
         """
-        Compute refracted solar elevation angle
+        Refracted solar elevation angle
 
         Returns
         -------
@@ -437,7 +439,7 @@ class SolarPosition:
     @property
     def zenith(self):
         """
-        Compute solar zenith angle
+        Solar zenith angle
 
         Returns
         -------
