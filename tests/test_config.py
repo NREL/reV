@@ -16,7 +16,7 @@ import shlex
 
 from reV.utilities.exceptions import HandlerKeyError
 from reV.SAM.SAM import SAM
-from reV.config.project_points import ProjectPoints
+from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.analysis_configs import GenConfig
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
@@ -91,6 +91,50 @@ def test_clearsky():
         assert True
 
 
+@pytest.mark.parametrize('start, interval',
+                         [[0, 1], [13, 1], [10, 2], [13, 3]])
+def test_proj_control_iter(start, interval):
+    """Test the iteration of the points control."""
+    n = 3
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/wind_gen_standard_losses_0.json')
+    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'wind',
+                       res_file=res_file)
+    pc = PointsControl(pp, sites_per_split=n)
+
+    for i, pp_split in enumerate(pc):
+        i0_nom = i * n
+        i1_nom = i * n + n
+        split = pp_split.project_points.df
+        target = pp.df.iloc[i0_nom:i1_nom, :]
+        msg = 'PointsControl iterator split did not function correctly!'
+        assert all(split == target), msg
+
+
+@pytest.mark.parametrize('start, interval',
+                         [[0, 1], [13, 1], [10, 2], [13, 3]])
+def test_proj_points_split(start, interval):
+    """Test the split operation of project points."""
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/wind_gen_standard_losses_0.json')
+    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'wind',
+                       res_file=res_file)
+
+    iter_interval = 5
+    for i0 in range(start, 100, iter_interval):
+        i1 = i0 + iter_interval
+        pp_0 = ProjectPoints.split(i0, i1, pp)
+
+        if not pp_0.sites:
+            break
+
+        msg = 'ProjectPoints split did not function correctly!'
+        assert pp_0.sites == pp.sites[i0:i1], msg
+        assert all(pp_0.df == pp.df.iloc[i0:i1, :]), msg
+
+
 @pytest.mark.parametrize('tech', ['pv', 'wind'])
 def test_gen_from_config(tech):
     """Gen PV CF profiles with write to disk and compare against rev1."""
@@ -141,7 +185,9 @@ def test_gen_from_config(tech):
         for fname in flist:
             os.remove(os.path.join(config_obj.dirout, fname))
 
-    assert result is True
+    msg = ('reV generation from config input failed for "{}" module!'
+           .format(tech))
+    assert result is True, msg
 
 
 def get_r1_profiles(year=2012, tech='pv'):

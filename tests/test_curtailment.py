@@ -65,18 +65,16 @@ def test_cf_curtailment(year, site):
                          n_workers=1, sites_per_split=50,
                          return_obj=True, scale_outputs=True)
     results, check_curtailment = test_res_curtailment(year, site=site)
-
-    results['cf_profile'] = gen.out[site]['cf_profile']
+    results['cf_profile'] = gen.out['cf_profile'].flatten()
 
     # was capacity factor NOT curtailed?
-    check_cf = (gen.out[site]['cf_profile'] != 0)
+    check_cf = (gen.out['cf_profile'].flatten() != 0)
 
     # Were all thresholds met and windspeed NOT curtailed?
     check = check_curtailment & check_cf
 
     msg = ('All curtailment thresholds were met and cf_profile '
            'was not curtailed!')
-
     assert np.sum(check) == 0, msg
 
     return results
@@ -114,7 +112,7 @@ def test_random(year, site):
                              n_workers=1, sites_per_split=50,
                              return_obj=True, scale_outputs=True)
 
-        results.append(gen.out[site]['cf_mean'])
+        results.append(gen.out['cf_mean'])
     assert results[0] > results[1], 'Curtailment did not decrease cf_mean!'
 
     expected = (results[0] + results[1]) / 2
@@ -208,3 +206,4 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 if __name__ == '__main__':
     execute_pytest()
+#    result = test_cf_curtailment(2012, 10)
