@@ -32,6 +32,8 @@ class Gen:
                'offshorewind': OffshoreWind.reV_run,
                }
 
+    # Mapping of reV generation outputs to scale factors and units.
+    # Type is scalar or array and corresponds to the SAM single-site output
     OUT_ATTRS = {'cf_mean': {'scale_factor': 1000, 'units': 'unitless',
                              'dtype': 'uint16', 'chunks': None,
                              'type': 'scalar'},
@@ -184,7 +186,7 @@ class Gen:
             self._site_mem = 0
             for request in self._output_request:
                 dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
-                if self.OUT_ATTRS[request].get('type', 'array') == 'array':
+                if self.OUT_ATTRS[request]['type'] == 'array':
                     ti_len = len(self.time_index)
                     shape = (ti_len, n)
                 else:
@@ -454,9 +456,8 @@ class Gen:
 
         for request in self.output_request:
             dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
-            if self.OUT_ATTRS[request].get('type', 'array') == 'array':
-                ti_len = len(self.time_index)
-                shape = (ti_len, self.out_n_sites)
+            if self.OUT_ATTRS[request]['type'] == 'array':
+                shape = (len(self.time_index), self.out_n_sites)
             else:
                 shape = (self.out_n_sites, )
 
@@ -567,15 +568,15 @@ class Gen:
                                'dictionary.')
 
             # get the index in the output array for the current site
-            i = self.site_output_index(site_gid)
+            i = self.site_index(site_gid, out_index=True)
 
             # check to see if we have exceeded the current output chunk.
             # If so, flush data to disk and reset the output initialization
             if i + 1 > self.out_n_sites:
                 self.flush()
-                global_site_index = self.global_site_index(site_gid)
+                global_site_index = self.site_index(site_gid)
                 self.initialize_output_arrays(index_0=global_site_index)
-                i = self.site_output_index(site_gid)
+                i = self.site_index(site_gid, out_index=True)
 
             if isinstance(value, np.ndarray):
                 # set the new timeseries to the 2D array
@@ -587,39 +588,40 @@ class Gen:
         # try to clear some memory
         del site_output
 
-    def global_site_index(self, site_gid):
-        """Get the global project points index for a given site gid.
-
-        Returns
-        -------
-        global_site_index : int
-            Index for the site_gid in the project points site list.
-        """
-        return self.project_points.sites.index(site_gid)
-
-    def site_output_index(self, site_gid):
-        """Get the column index in the current output array for the site gid.
+    def site_index(self, site_gid, out_index=False):
+        """Get the index corresponding to the site gid.
 
         Parameters
         ----------
         site_gid : int
             Resource-native site index (gid).
+        out_index : bool
+            Option to get output index (if true) which is the column index in
+            the current output array or the the global site index from the
+            project points site list (if false).
 
         Returns
         -------
-        output_index : int
-            Column index in the output array that the results belong to.
+        index : int
+            Global site index if out_index=False, otherwise column index in
+            the output array.
         """
 
-        global_site_index = self.global_site_index(site_gid)
-        output_index = global_site_index - self.output_chunk[0]
-        if output_index < 0:
-            raise ValueError('Attempting to set output data for site with gid '
-                             '{} to global site index {}, which was already '
-                             'set based on the current output index chunk of '
-                             '{}'.format(site_gid, global_site_index,
+        # get the index for site_gid in the (global) project points site list.
+        global_site_index = self.project_points.sites.index(site_gid)
+
+        if not out_index:
+            return global_site_index
+        else:
+            output_index = global_site_index - self.output_chunk[0]
+            if output_index < 0:
+                raise ValueError('Attempting to set output data for site with '
+                                 'gid {} to global site index {}, which was '
+                                 'already set based on the current output '
+                                 'index chunk of {}'
+                                 .format(site_gid, global_site_index,
                                          self.output_chunk))
-        return output_index
+            return output_index
 
     def get_dset_attrs(self, var):
         """Get dataset attributes associated with output variable.

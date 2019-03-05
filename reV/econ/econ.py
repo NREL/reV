@@ -23,7 +23,8 @@ class Econ(Gen):
                'ppa_price': SingleOwner.reV_run,
                }
 
-    # Mapping of reV econ outputs to scale factors and units
+    # Mapping of reV econ outputs to scale factors and units.
+    # Type is scalar or array and corresponds to the SAM single-site output
     OUT_ATTRS = {'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
