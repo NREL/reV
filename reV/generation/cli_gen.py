@@ -112,6 +112,10 @@ def from_config(ctx, config_file, verbose):
     if config.logging_level == logging.DEBUG:
         verbose = True
 
+    # make output directory if does not exist
+    if not os.path.exists(config.dirout):
+        os.makedirs(config.dirout)
+
     # initialize loggers. Not SAM (will be logged in the invoked processes).
     init_gen_loggers(verbose, name, logdir=config.logdir)
 
@@ -136,6 +140,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
+    ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
 
     for i, year in enumerate(config.years):
         submit_from_config(ctx, name, year, config, verbose, i)
@@ -234,11 +239,13 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 @click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
               help=('List of requested output variable names. '
                     'Default is ["cf_mean"].'))
+@click.option('-mem', '--mem_util_lim', type=float, default=0.7,
+              help='Fractional node memory utilization limit. Default is 0.7')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, sites_per_core,
-           fout, dirout, logdir, output_request, verbose):
+           fout, dirout, logdir, output_request, mem_util_lim, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['TECH'] = tech
@@ -250,6 +257,7 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_core,
     ctx.obj['DIROUT'] = dirout
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
+    ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
 
@@ -275,6 +283,7 @@ def local(ctx, n_workers, points_range, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     init_gen_loggers(verbose, name, node=True, logdir=logdir)
@@ -298,7 +307,8 @@ def local(ctx, n_workers, points_range, verbose):
                   sites_per_split=sites_per_core,
                   points_range=points_range,
                   fout=fout,
-                  dirout=dirout)
+                  dirout=dirout,
+                  mem_util_lim=mem_util_lim)
 
     tmp_str = ' with points range {}'.format(points_range)
     logger.info('Gen compute complete for project points "{0}"{1}. '
@@ -384,7 +394,7 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
 def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_core=None, n_workers=None,
                  fout='reV.h5', dirout='./out/gen_out', logdir='./out/log_gen',
-                 output_request=('cf_mean',), verbose=False):
+                 output_request=('cf_mean',), mem_util_lim=0.7, verbose=False):
     """Made a reV geneneration direct-local command line interface call string.
 
     Parameters
@@ -418,6 +428,8 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
         Target directory to save log files.
     output_request : list | tuple
         Output variables requested from SAM.
+    mem_util_lim : float
+        Memory utilization limit (fractional).
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -442,6 +454,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-do {dirout} '
                   '-lo {logdir} '
                   '-or {out_req} '
+                  '-mem {mem} '
                   .format(tech=SubprocessManager.s(tech),
                           points=SubprocessManager.s(points),
                           sam_files=SubprocessManager.s(sam_files),
@@ -451,6 +464,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                           dirout=SubprocessManager.s(dirout),
                           logdir=SubprocessManager.s(logdir),
                           out_req=SubprocessManager.s(output_request),
+                          mem=SubprocessManager.s(mem_util_lim),
                           ))
 
     # make a cli arg string for local() in this module
@@ -498,6 +512,7 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -514,7 +529,8 @@ def peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                            points=points, points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
-                           output_request=output_request, verbose=verbose)
+                           output_request=output_request,
+                           mem_util_lim=mem_util_lim, verbose=verbose)
 
         logger.info('Running reV generation on Peregrine with node name "{}" '
                     'for {} (points range: {}).'
@@ -564,6 +580,7 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -580,7 +597,8 @@ def eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
                            points=points, points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
-                           output_request=output_request, verbose=verbose)
+                           output_request=output_request,
+                           mem_util_lim=mem_util_lim, verbose=verbose)
 
         logger.info('Running reV generation on Eagle with node name "{}" for '
                     '{} (points range: {}).'

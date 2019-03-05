@@ -23,15 +23,19 @@ class Econ(Gen):
                'ppa_price': SingleOwner.reV_run,
                }
 
-    # Mapping of reV econ outputs to scale factors and units
+    # Mapping of reV econ outputs to scale factors and units.
+    # Type is scalar or array and corresponds to the SAM single-site output
     OUT_ATTRS = {'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None},
+                              'dtype': 'float32', 'chunks': None,
+                              'type': 'scalar'},
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None},
+                               'dtype': 'float32', 'chunks': None,
+                               'type': 'scalar'},
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
-                 output_request='lcoe_fcr', fout=None, dirout='./econ_out'):
+                 output_request='lcoe_fcr', fout=None, dirout='./econ_out',
+                 mem_util_lim=0.7):
         """Initialize an econ instance.
 
         Parameters
@@ -48,13 +52,17 @@ class Econ(Gen):
             DataFrame is pre-extracted data. Rows match sites, columns are
             variables. Input as None if the only site data required is present
             in the cf_file.
-        output_request : str
+        output_request : str | tuple
             Economic output variable requested from SAM (lcoe_fcr, ppa_price).
         fout : str | None
             Optional .h5 output file specification.
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many site
+            results will be stored in-memory at any given time before flushing
+            to disk.
         """
 
         self._points_control = points_control
@@ -63,6 +71,7 @@ class Econ(Gen):
         self._fout = fout
         self._dirout = dirout
         self.output_request = output_request
+        self.mem_util_lim = mem_util_lim
         if site_data:
             self.site_data = site_data
 
@@ -72,17 +81,21 @@ class Econ(Gen):
 
         Parameters
         ----------
-        req : str
+        req : str | tuple
             Single econ output variable requested from SAM.
         """
 
         if isinstance(req, (list, tuple)) and len(req) == 1:
             # ensure single string output request
-            self._output_request = req[0]
-        elif isinstance(req, str):
             self._output_request = req
+        elif isinstance(req, str):
+            self._output_request = (req, )
+        else:
+            raise TypeError('Econ output request must be a single variable '
+                            'string or single entry list, but received: {}'
+                            .format(req))
 
-        if self._output_request not in self.OPTIONS:
+        if self._output_request[0] not in self.OPTIONS:
             raise KeyError('Requested econ variable "{}" is not available. '
                            'reV econ can analyze the following: {}'
                            .format(self._output_request,
@@ -199,6 +212,18 @@ class Econ(Gen):
         return self._meta
 
     @property
+    def time_index(self):
+        """Get the generation resource time index data."""
+        if not hasattr(self, '_time_index'):
+            with Outputs(self.cf_file) as cfh:
+                if 'time_index' in cfh.dsets:
+                    self._time_index = cfh.time_index
+                else:
+                    self._time_index = None
+
+        return self._time_index
+
+    @property
     def site_df(self):
         """Get the dataframe of site-specific variables.
 
@@ -281,10 +306,11 @@ class Econ(Gen):
         """
 
         # retrieve the dataset with associated attributes
-        data, dtype, chunks, attrs = self.get_dset_attrs(self.output_request)
+        data, dtype, chunks, attrs = self.get_dset_attrs(
+            self.output_request[0])
         # write econ results means to disk
         Outputs.write_means(h5_file=fout, meta=self.meta,
-                            dset_name=self.output_request, means=data,
+                            dset_name=self.output_request[0], means=data,
                             attrs=attrs, dtype=dtype, chunks=chunks,
                             sam_configs=self.sam_configs)
 

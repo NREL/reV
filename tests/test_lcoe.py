@@ -32,7 +32,7 @@ def test_lcoe(year):
                           cf_year=year, output_request='lcoe_fcr',
                           n_workers=1, sites_per_split=25,
                           points_range=None, fout=None, return_obj=True)
-    lcoe = [c['lcoe_fcr'] for c in obj.out.values()]
+    lcoe = list(obj.out['lcoe_fcr'])
 
     with h5py.File(r1f) as f:
         year_rows = {'2012': 0, '2013': 1}
@@ -70,7 +70,7 @@ def test_ORCA(rut_id):
                           sites_per_split=25, points_range=None,
                           fout=None, dirout=None, return_obj=True)
 
-    lcoe = [c['lcoe_fcr'] for c in obj.out.values()]
+    lcoe = list(obj.out['lcoe_fcr'])
     result = np.allclose(lcoe, baseline[rut_id], rtol=RTOL, atol=ATOL)
 
     assert result

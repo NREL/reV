@@ -97,16 +97,15 @@ class Generation(SAM):
         for res_df, meta in resources:
             # get SAM inputs from project_points based on the current site
             site = res_df.name
-            config, inputs = points_control.project_points[site]
+            _, inputs = points_control.project_points[site]
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
                       output_request=output_request)
             sim.gen_exec(cls.MODULE)
             out[site] = sim.outputs
 
-            logger.debug('Outputs for site {} with config "{}", \n\t{}...'
-                         .format(site, config, str(out[site])[:100]))
             del res_df, meta, sim
+
         del resources
         gc.collect()
         return out
@@ -229,6 +228,13 @@ class Solar(Generation):
                 res_arr = self.ensure_res_len(np.roll(resource[var],
                                               int(self.meta['timezone'] *
                                                   self.time_interval)))
+                if var in ['dni', 'dhi', 'ghi']:
+                    if np.min(res_arr) < 0:
+                        warn('Solar irradiance variable "{}" has a minimum '
+                             'value of {}. Truncating to zero.'
+                             .format(var, np.min(res_arr)), SAMInputWarning)
+                        res_arr = np.where(res_arr < 0, 0, res_arr)
+
                 self.ssc.data_set_array(self.res_data, var_map[var], res_arr)
 
         # add resource data to self.data and clear

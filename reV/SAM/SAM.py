@@ -14,6 +14,7 @@ from warnings import warn
 from reV.handlers.resource import WindResource, SolarResource, NSRDB
 from reV.SAM.PySSC import PySSC
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
+from reV.utilities.slots import SlottedDict
 
 
 logger = logging.getLogger(__name__)
@@ -247,6 +248,17 @@ class ParametersManager:
                      'input. Cannot perform update operation. Proceeding '
                      'without additional inputs: {}'.format(more_parameters),
                      SAMInputWarning)
+
+
+class SiteOutput(SlottedDict):
+    """Slotted memory dictionary emulator for SAM single-site outputs."""
+
+    # make attribute slots for all SAM output variable names
+    __slots__ = ['cf_mean', 'cf_profile', 'annual_energy', 'energy_yield',
+                 'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr']
+
+    def __init__(self):
+        self.var_list = []
 
 
 class SAM:
@@ -718,7 +730,8 @@ class SAM:
             numerical results from the respective result functions.
         """
 
-        results = {}
+        # results = {}
+        results = SiteOutput()
         for request in self.output_request:
             if request == 'cf_mean':
                 results[request] = self.cf_mean

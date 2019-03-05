@@ -103,7 +103,8 @@ def test_eagle(year):
                        sam_files=sam_files, res_file=res_file,
                        sites_per_core=None, n_workers=None,
                        fout=rev2_out, dirout=rev2_out_dir, logdir=rev2_out_dir,
-                       output_request=('cf_profile',), verbose=verbose)
+                       output_request=('cf_profile', 'cf_mean'),
+                       verbose=verbose)
 
     # create and submit the SLURM job
     slurm = SLURM(cmd, alloc='rev', memory=96, walltime=0.1,
@@ -123,7 +124,7 @@ def test_eagle(year):
             if rev2_out.strip('.h5') in fname:
                 full_f = os.path.join(rev2_out_dir, fname)
                 with Outputs(full_f, 'r') as cf:
-                    rev2_profiles = cf['cf_profiles']
+                    rev2_profiles = cf['cf_profile']
                 break
 
     # get reV 1.0 generation profiles

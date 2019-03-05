@@ -9,7 +9,7 @@ import pandas as pd
 import json
 import warnings
 
-from reV.SAM.SAM import SAM, ParametersManager
+from reV.SAM.SAM import SAM, ParametersManager, SiteOutput
 from reV.SAM.generation import PV
 from reV.handlers.resource import NSRDB
 from reV import TESTDATADIR
@@ -42,6 +42,23 @@ def test_param_manager(module):
         defaults = json.load(f)
     for key in pm.keys():
         assert pm[key] == defaults[key]
+
+
+def test_site_output():
+    """Test the getter and setter methods of the custom site output class."""
+    so = SiteOutput()
+    try:
+        so['test']
+    except KeyError as e:
+        if '"test" has not been saved' not in str(e):
+            assert False
+    try:
+        so['test'] = 1
+    except KeyError as e:
+        if 'Could not save "test"' not in str(e):
+            assert False
+    so['cf_mean'] = 100.0
+    assert so['cf_mean'] == 100.0
 
 
 def test_res_length(res):

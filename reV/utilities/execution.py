@@ -1,7 +1,7 @@
 """
 Execution utilities.
 """
-from dask.distributed import Client, LocalCluster, wait
+from dask.distributed import Client, LocalCluster
 from subprocess import Popen, PIPE
 import logging
 import gc
@@ -284,7 +284,7 @@ class PBS(SubprocessManager):
             out = None
             err = 'already_running'
         else:
-            feature_str = '#PBS -l {}\n'.format(feature.replace(' ', ''))
+            feature_str = '#PBS -l {}\n'.format(str(feature).replace(' ', ''))
             fname = '{}.sh'.format(name)
             script = ('#!/bin/bash\n'
                       '#PBS -N {n} # job name\n'
@@ -512,8 +512,9 @@ def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
     """
 
     # start a local cluster on a personal comp or HPC single node
+    # Set worker memory limit to zero to not kill workers on high mem util
     try:
-        cluster = LocalCluster(n_workers=n_workers)
+        cluster = LocalCluster(n_workers=n_workers, memory_limit=0)
     except Exception as e:
         logger.exception('Failed to start Dask LocalCluster: {}'
                          .format(e))
@@ -633,7 +634,8 @@ class SmartParallelJob:
 
     @property
     def cluster(self):
-        """Get a Dask LocalCluster object.
+        """Get a Dask LocalCluster object. Workers will start with no memory
+        limit to avoid killed workers on high memory utilization.
 
         Returns
         -------
@@ -646,7 +648,8 @@ class SmartParallelJob:
             # start a local cluster on a personal comp or HPC single node
             if self._n_workers is None:
                 try:
-                    self._cluster = LocalCluster(n_workers=None)
+                    self._cluster = LocalCluster(n_workers=None,
+                                                 memory_limit=0)
                 except Exception as e:
                     logger.exception('Failed to start Dask LocalCluster: {}'
                                      .format(e))
@@ -654,7 +657,8 @@ class SmartParallelJob:
 
             elif isinstance(self._n_workers, int):
                 try:
-                    self._cluster = LocalCluster(n_workers=self._n_workers)
+                    self._cluster = LocalCluster(n_workers=self._n_workers,
+                                                 memory_limit=0)
                 except Exception as e:
                     logger.exception('Failed to start Dask LocalCluster: {}'
                                      .format(e))
@@ -775,28 +779,29 @@ class SmartParallelJob:
             before returning: client.restart()
         """
 
-        wait(futures)
+        # gather on each iteration so there is no big mem spike during flush
+        # (obj.out should be a property setter that will append new data.)
+        self.obj.out = client.gather(futures)
+        futures.clear()
+        client.restart()
+        logger.debug('Restarted Dask client.')
+
+        # useful log statements
         mem = psutil.virtual_memory()
         logger.info('Parallel run at iteration {0}. '
-                    'Results are stored in memory for {1} futures '
-                    'and memory usage is {2:.3f} GB out of {3:.3f} GB '
-                    'total ({4:.1f}% used)'
-                    .format(i, len(futures),
-                            mem.used / 1e9,
-                            mem.total / 1e9,
-                            100 * mem.used / mem.total))
+                    'Memory utilization is {1:.3f} GB out of {2:.3f} GB '
+                    'total ({3:.1f}% used, limit of {4:.1f}%)'
+                    .format(i, mem.used / 1e9, mem.total / 1e9,
+                            100 * mem.used / mem.total,
+                            100 * self.mem_util_lim))
 
+        # check memory utilization against the limit
         if ((mem.used / mem.total) >= self.mem_util_lim) or force_flush:
             logger.info('Flushing memory to disk. The memory utilization is '
                         '{0:.2f}% and the limit is {1:.2f}%.'
                         .format(100 * (mem.used / mem.total),
                                 100 * self.mem_util_lim))
-            # send gathered futures to object output
-            # (obj.out should be a property setter that will append new data.)
-            self.obj.out = client.gather(futures)
-            futures.clear()
-            client.restart()
-            logger.debug('Restarted Dask client.')
+            # flush data to disk
             self.flush()
         return futures, client
 
