@@ -5,6 +5,8 @@ Created on Fri Mar  1 13:47:30 2019
 @author: gbuster
 """
 import numpy as np
+from warnings import warn
+from reV.utilities.exceptions import HandlerWarning
 from reV.utilities.solar_position import SolarPosition
 
 
@@ -48,31 +50,30 @@ def curtail(resource, curtailment, random_seed=None):
     curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and not raining
-    for var in resource.var_list:
-        # look for dataset with precipitation (hub height agnostic)
-        if 'precip' in var:
-            mask = (resource._res_arrays[var] <
+    if curtailment.precipitation:
+        if 'precipitationrate' not in resource._res_arrays:
+            warn('Curtailment has a precipitation threshold of "{}", but '
+                 '"precipitationrate" was not found in the SAM resource '
+                 'variables. The following resource variables were '
+                 'available: {}.'
+                 .format(curtailment.precipitation,
+                         list(resource._res_arrays.keys())),
+                 HandlerWarning)
+        else:
+            mask = (resource._res_arrays['precipitationrate'] <
                     curtailment.precipitation)
             curtail_mult = np.where(mask, curtail_mult, 1)
-            break
 
     # Curtail resource when curtailment is possible and temperature is high
-    for var in resource.var_list:
-        # look for dataset with temperature (hub height agnostic)
-        if 'temp' in var:
-            mask = (resource._res_arrays[var] > curtailment.temperature)
-            curtail_mult = np.where(mask, curtail_mult, 1)
-            break
+    if curtailment.temperature:
+        mask = (resource._res_arrays['temperature'] >
+                curtailment.temperature)
+        curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and not that windy
-    for var in resource.var_list:
-        # look for dataset with wind speed (hub height agnostic)
-        if 'speed' in var:
-            wind_speed_var = var
-            mask = (resource._res_arrays[var] <
-                    curtailment.wind_speed)
-            curtail_mult = np.where(mask, curtail_mult, 1)
-            break
+    mask = (resource._res_arrays['windspeed'] <
+            curtailment.wind_speed)
+    curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Apply probability mask when curtailment is possible.
     if curtailment.probability != 1:
@@ -81,6 +82,6 @@ def curtail(resource, curtailment, random_seed=None):
         curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Apply curtailment multiplier directly to resource
-    resource._res_arrays[wind_speed_var] *= curtail_mult
+    resource.curtail_windspeed(resource.sites, curtail_mult)
 
     return resource

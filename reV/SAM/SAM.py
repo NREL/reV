@@ -403,7 +403,7 @@ class SAM:
 
         elif res_handler == WindResource:
             if project_points.curtailment is not None:
-                if project_points.curtailment.precipitation < 1000.0:
+                if project_points.curtailment.precipitation:
                     # make precip rate available for curtailment analysis
                     kwargs = {'precip_rate': True}
 

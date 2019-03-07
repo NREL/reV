@@ -98,13 +98,12 @@ class Curtailment(BaseConfig):
 
         Returns
         -------
-        _temperature : float
-            Temperature over which curtailment is possible. Defaults to a low
-            value so that this screening metric is not used by default.
+        _temperature : float | NoneType
+            Temperature over which curtailment is possible. Defaults to None.
         """
 
         if not hasattr(self, '_temperature'):
-            self._temperature = float(self.get('temperature', -1000.0))
+            self._temperature = self.get('temperature', None)
         return self._temperature
 
     @property
@@ -113,13 +112,12 @@ class Curtailment(BaseConfig):
 
         Returns
         -------
-        _precipitation : float
-            Precipitation under which curtailment is possible. Defaults to a
-            high value so that this screening metric is not used by default.
+        _precipitation : float | NoneType
+            Precipitation under which curtailment is possible. Defaults to None
         """
 
         if not hasattr(self, '_precipitation'):
-            self._precipitation = float(self.get('precipitation', 1000.0))
+            self._precipitation = self.get('precipitation', None)
         return self._precipitation
 
     @property

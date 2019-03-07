@@ -95,11 +95,11 @@ def test_random(year, site):
     results = []
     no_curtail = None
     curtailment = {"dawn_dusk": "nautical", "months": [4, 5, 6, 7],
-                   "precipitation": 1000, "probability": 1,
-                   "temperature": -1000, "wind_speed": 10.0}
+                   "precipitation": None, "probability": 1,
+                   "temperature": None, "wind_speed": 10.0}
     prob_curtail = {"dawn_dusk": "nautical", "months": [4, 5, 6, 7],
-                    "precipitation": 1000, "probability": 0.5,
-                    "temperature": -1000, "wind_speed": 10.0}
+                    "precipitation": None, "probability": 0.5,
+                    "temperature": None, "wind_speed": 10.0}
 
     for c in [no_curtail, curtailment, prob_curtail]:
 

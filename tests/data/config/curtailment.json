@@ -6,7 +6,7 @@
     6,
     7
   ],
-  "precipitation": 1000,
+  "precipitation": null,
   "probability": 1,
   "temperature": 5,
   "wind_speed": 5.0
