@@ -127,7 +127,7 @@ def from_config(ctx, config_file, verbose):
     logger.info('The following project points were specified: "{}"'
                 .format(config.get('project_points', None)))
     logger.info('The following SAM configs are available to this run:\n{}'
-                .format(pprint.pformat(config.get('sam_generation', None),
+                .format(pprint.pformat(config.get('sam_files', None),
                                        indent=4)))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
