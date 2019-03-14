@@ -90,7 +90,8 @@ def main(ctx, name, verbose):
 
 
 @main.command()
-@click.option('--config_file', '-c', required=True, type=STR,
+@click.option('--config_file', '-c', required=True,
+              type=click.Path(exists=True),
               help='reV generation configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
@@ -225,7 +226,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
               help='reV tech to analyze (required).')
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
               help='SAM config files (required) (str, dict, or list).')
-@click.option('--res_file', '-rf', required=True,
+@click.option('--res_file', '-rf', required=True, type=click.Path(exists=True),
               help='Single resource file (required) (str).')
 @click.option('--points', '-p', default=slice(0, 100), type=PROJECTPOINTS,
               help=('reV project points to analyze '
@@ -246,7 +247,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                     'Default is ["cf_mean"].'))
 @click.option('-mem', '--mem_util_lim', type=float, default=0.7,
               help='Fractional node memory utilization limit. Default is 0.7')
-@click.option('-curt', '--curtailment', type=STR, default=None,
+@click.option('-curt', '--curtailment', type=click.Path(exists=True),
+              default=None,
               help=('JSON file with curtailment inputs parameters. '
                     'Default is None (no curtailment).'))
 @click.option('-v', '--verbose', is_flag=True,
@@ -459,6 +461,9 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     # mark a cli arg string for main() in this module
     arg_main = ('-n {name} '.format(name=SubprocessManager.s(name)))
 
+    # make some strings only if specified
+    cstr = '-curt {} '.format(SubprocessManager.s(curtailment))
+
     # make a cli arg string for direct() in this module
     arg_direct = ('-t {tech} '
                   '-p {points} '
@@ -470,7 +475,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-lo {logdir} '
                   '-or {out_req} '
                   '-mem {mem} '
-                  '-curt {curt} '
+                  '{curt}'
                   .format(tech=SubprocessManager.s(tech),
                           points=SubprocessManager.s(points),
                           sam_files=SubprocessManager.s(sam_files),
@@ -481,7 +486,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                           logdir=SubprocessManager.s(logdir),
                           out_req=SubprocessManager.s(output_request),
                           mem=SubprocessManager.s(mem_util_lim),
-                          curt=SubprocessManager.s(curtailment),
+                          curt=cstr if curtailment else '',
                           ))
 
     # make a cli arg string for local() in this module

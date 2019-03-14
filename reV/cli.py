@@ -10,7 +10,8 @@ from reV.generation.cli_gen import from_config as run_gen_from_config
 @click.group()
 @click.option('--name', '-n', default='reV', type=STR,
               help='Job name. Default is "reV".')
-@click.option('--config_file', '-c', type=STR,
+@click.option('--config_file', '-c',
+              required=True, type=click.Path(exists=True),
               help='reV configuration file json for a single module.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')

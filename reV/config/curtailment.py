@@ -108,12 +108,14 @@ class Curtailment(BaseConfig):
 
     @property
     def precipitation(self):
-        """Get the precipitation under which curtailment is possible.
+        """Get the precip rate (mm/hour) under which curtailment is possible.
 
         Returns
         -------
         _precipitation : float | NoneType
-            Precipitation under which curtailment is possible. Defaults to None
+            Precipitation rate under which curtailment is possible. This is
+            compared to the WTK resource dataset "precipitationrate_0m" in
+            mm/hour. Defaults to None.
         """
 
         if not hasattr(self, '_precipitation'):
