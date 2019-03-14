@@ -359,7 +359,7 @@ class SAM:
                 self._site = 'N/A'
 
     @staticmethod
-    def get_sam_res(res_file, project_points, module, clearsky=False):
+    def get_sam_res(res_file, project_points, module):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -375,9 +375,6 @@ class SAM:
             Example: module set to 'pvwatts' or 'tcsmolten' means that this
             expects a SolarResource file. If 'nsrdb' is in the res_file name,
             the NSRDB handler will be used.
-        clearsky : bool
-            Boolean flag to pull clearsky instead of real irradiance
-            (solar only).
 
         Returns
         -------
@@ -398,14 +395,24 @@ class SAM:
             # Use NSRDB handler if definitely an NSRDB file
             res_handler = NSRDB
 
-        # use resource handler to preload the SAM resource data
+        # additional arguments for special cases.
+        kwargs = {}
         if res_handler == SolarResource or res_handler == NSRDB:
-            # option for clearsky irradiance if solar resource
-            res = res_handler.preload_SAM(res_file, project_points,
-                                          clearsky=clearsky)
+            # check for clearsky irradiation analysis for NSRDB
+            kwargs = {'clearsky': project_points.sam_config_obj.clearsky}
+
+        elif res_handler == WindResource:
+            if project_points.curtailment is not None:
+                if project_points.curtailment.precipitation:
+                    # make precip rate available for curtailment analysis
+                    kwargs = {'precip_rate': True}
+
         else:
-            # load wind resource
-            res = res_handler.preload_SAM(res_file, project_points)
+            raise TypeError('Did not recongize resource type "{}", '
+                            'must be Wind, Solar, or NSRDB resource class.'
+                            .format(res_handler))
+
+        res = res_handler.preload_SAM(res_file, project_points, **kwargs)
 
         return res
 

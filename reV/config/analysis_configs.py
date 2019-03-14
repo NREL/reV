@@ -16,6 +16,7 @@ from reV.config.base_config import BaseConfig
 from reV.config.execution import (BaseExecutionConfig, PeregrineConfig,
                                   EagleConfig)
 from reV.config.sam_config import SAMConfig
+from reV.config.curtailment import Curtailment
 from reV.config.project_points import PointsControl, ProjectPoints
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 
@@ -61,9 +62,9 @@ class AnalysisConfig(BaseConfig):
         _dirout : str
             Target path for reV output files.
         """
-        default = './out'
         if not hasattr(self, '_dirout'):
-            self._dirout = default
+            # set default value
+            self._dirout = './out'
             if 'output_directory' in self['directories']:
                 self._dirout = self['directories']['output_directory']
         return self._dirout
@@ -77,9 +78,9 @@ class AnalysisConfig(BaseConfig):
         _logdir : str
             Target path for reV log files.
         """
-        default = './logs'
         if not hasattr(self, '_logdir'):
-            self._logdir = default
+            # set default value
+            self._logdir = './logs'
             if 'logging_directory' in self['directories']:
                 self._logdir = self['directories']['logging_directory']
         return self._logdir
@@ -162,15 +163,26 @@ class SAMAnalysisConfig(AnalysisConfig):
             PointsControl object based on specified project points and
             execution control option.
         """
+
         if not hasattr(self, '_pc'):
+            # make an instance of project points
             pp = ProjectPoints(self['project_points'], self['sam_files'],
                                self.tech)
+
             if (self.execution_control.option == 'peregrine' or
                     self.execution_control.option == 'eagle'):
+                # sites per split on peregrine or eagle is the number of sites
+                # in project points / number of nodes. This is for the initial
+                # division of the project sites between HPC nodes (jobs)
                 sites_per_split = ceil(len(pp) / self.execution_control.nodes)
+
             elif self.execution_control.option == 'local':
+                # sites per split on local is number of sites / # of processes
                 sites_per_split = ceil(len(pp) / self.execution_control.ppn)
+
+            # make an instance of points control and set to protected attribute
             self._pc = PointsControl(pp, sites_per_split=sites_per_split)
+
         return self._pc
 
     @property
@@ -183,8 +195,6 @@ class SAMAnalysisConfig(AnalysisConfig):
             List of requested reV output variables corresponding to SAM
             variable names.
         """
-        # default output request if not specified
-        default = ['cf_mean']
 
         # map of commonly expected typos
         corrections = {'cf_means': 'cf_mean',
@@ -209,7 +219,8 @@ class SAMAnalysisConfig(AnalysisConfig):
 
         if not hasattr(self, '_output_request'):
             self._output_request = []
-            temp = default
+            # default output request if not specified
+            temp = ['cf_mean']
             if 'output_request' in self['project_control']:
                 temp = self['project_control']['output_request']
 
@@ -258,6 +269,25 @@ class GenConfig(SAMAnalysisConfig):
         # Get file, Perform string replacement, save config to self instance
         config = self.str_replace(self.get_file(fname), self.str_rep)
         self.set_self_dict(config)
+
+    @property
+    def curtailment(self):
+        """Get the curtailment config object that the gen config points to.
+
+        Returns
+        -------
+        _curtailment : NoneType | reV.config.curtailment.Curtailment
+            Returns None if no curtailment config is specified. If one is
+            specified, this returns the reV curtailment config object.
+        """
+
+        if not hasattr(self, '_curtailment'):
+            self._curtailment = None
+            if 'curtailment' in self:
+                if self['curtailment']:
+                    # curtailment was specified and is not None or False
+                    self._curtailment = Curtailment(self['curtailment'])
+        return self._curtailment
 
     @property
     def res_files(self):

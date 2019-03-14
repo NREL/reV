@@ -8,74 +8,12 @@ Created on Thu Nov 29 09:54:51 2018
 """
 
 import os
-import h5py
 import pytest
-import numpy as np
-from subprocess import Popen, PIPE
-import shlex
 
 from reV.utilities.exceptions import HandlerKeyError
-from reV.handlers.resource import NSRDB
 from reV.SAM.SAM import SAM
-from reV.config.project_points import ProjectPoints
-from reV.config.analysis_configs import GenConfig
+from reV.config.project_points import ProjectPoints, PointsControl
 from reV import TESTDATADIR
-from reV.handlers.outputs import Outputs
-
-
-RTOL = 0.0
-ATOL = 0.04
-PURGE_OUT = True
-
-
-class pv_results:
-    """Class to retrieve results from the rev 1.0 pv files"""
-
-    def __init__(self, f):
-        self._h5 = h5py.File(f, 'r')
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self._h5.close()
-
-        if type is not None:
-            raise
-
-    @property
-    def years(self):
-        """Get a list of year strings."""
-        if not hasattr(self, '_years'):
-            year_index = self._h5['pv']['year_index'][...]
-            self._years = [y.decode() for y in year_index]
-        return self._years
-
-    def get_cf_mean(self, site, year):
-        """Get a cf mean based on site and year"""
-        iy = self.years.index(year)
-        out = self._h5['pv']['cf_mean'][iy, site]
-        return out
-
-
-def is_num(n):
-    """Check if n is a number"""
-    try:
-        float(n)
-        return True
-    except Exception:
-        return False
-
-
-def to_list(gen_out):
-    """Generation output handler that converts to the rev 1.0 format."""
-    if isinstance(gen_out, list) and len(gen_out) == 1:
-        out = [c['cf_mean'] for c in gen_out[0].values()]
-
-    if isinstance(gen_out, dict):
-        out = [c['cf_mean'] for c in gen_out.values()]
-
-    return out
 
 
 def test_clearsky():
@@ -85,66 +23,55 @@ def test_clearsky():
     pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pv', res_file=res_file)
     try:
         # Get the SAM resource object
-        SAM.get_sam_res(res_file, pp, pp.tech,
-                        clearsky=pp.sam_config_obj.clearsky)
+        SAM.get_sam_res(res_file, pp, pp.tech)
         assert False
     except HandlerKeyError as e:
         # Should look for clearsky_dni and not find it in RI data
         assert True
 
 
-def test_config():
-    """Gen PV CF profiles with write to disk and compare against rev1."""
+@pytest.mark.parametrize('start, interval',
+                         [[0, 1], [13, 1], [10, 2], [13, 3]])
+def test_proj_control_iter(start, interval):
+    """Test the iteration of the points control."""
+    n = 3
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/wind_gen_standard_losses_0.json')
+    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'wind',
+                       res_file=res_file)
+    pc = PointsControl(pp, sites_per_split=n)
 
-    job_name = 'config_test'
-    config = os.path.join(TESTDATADIR, 'config/local.json').replace('\\', '/')
+    for i, pp_split in enumerate(pc):
+        i0_nom = i * n
+        i1_nom = i * n + n
+        split = pp_split.project_points.df
+        target = pp.df.iloc[i0_nom:i1_nom, :]
+        msg = 'PointsControl iterator split did not function correctly!'
+        assert all(split == target), msg
 
-    cmd = 'python -m reV.cli -n "{}" -c {} generation'.format(job_name, config)
-    cmd = shlex.split(cmd)
 
-    # use subprocess to submit command and get piped o/e
-    process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate()
-    stderr = stderr.decode('ascii').rstrip()
-    stdout = stdout.decode('ascii').rstrip()
+@pytest.mark.parametrize('start, interval',
+                         [[0, 1], [13, 1], [10, 2], [13, 3]])
+def test_proj_points_split(start, interval):
+    """Test the split operation of project points."""
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/wind_gen_standard_losses_0.json')
+    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'wind',
+                       res_file=res_file)
 
-    config_obj = GenConfig(config)
+    iter_interval = 5
+    for i0 in range(start, 100, iter_interval):
+        i1 = i0 + iter_interval
+        pp_0 = ProjectPoints.split(i0, i1, pp)
 
-    if stderr:
-        ferr = os.path.join(config_obj.dirout, 'test_config.e')
-        with open(ferr, 'w') as f:
-            f.write(stderr)
-
-    # get reV 2.0 generation profiles from disk
-    flist = os.listdir(config_obj.dirout)
-    for fname in flist:
-        if job_name in fname and fname.endswith('.h5'):
-            with Outputs(os.path.join(config_obj.dirout, fname), 'r') as cf:
-                rev2_profiles = cf['cf_profile']
+        if not pp_0.sites:
             break
 
-    # get reV 1.0 generation profiles
-    rev1_profiles = get_r1_profiles(year=config_obj.years[0])
-    rev1_profiles = rev1_profiles[:, config_obj.points_control.sites]
-
-    result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
-
-    if result and PURGE_OUT:
-        # remove output files if test passes.
-        flist = os.listdir(config_obj.dirout)
-        for fname in flist:
-            os.remove(os.path.join(config_obj.dirout, fname))
-
-    assert result is True
-
-
-def get_r1_profiles(year=2012):
-    """Get the first 100 reV 1.0 ri pv generation profiles."""
-    rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
-                        'pv_{}_0.h5'.format(year))
-    with Outputs(rev1) as cf:
-        data = cf['cf_profile'][...] / 10000
-    return data
+        msg = 'ProjectPoints split did not function correctly!'
+        assert pp_0.sites == pp.sites[i0:i1], msg
+        assert all(pp_0.df == pp.df.iloc[i0:i1, :]), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):

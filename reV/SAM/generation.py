@@ -10,6 +10,7 @@ import numpy as np
 from warnings import warn
 
 from reV.utilities.exceptions import SAMInputWarning
+from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import SAM
 from reV.SAM.econ import LCOE, SingleOwner
 
@@ -85,13 +86,15 @@ class Generation(SAM):
         # initialize output dictionary
         out = {}
 
-        # Get solar option for clearsky-irradiance analysis
-        clearsky = points_control.project_points.sam_config_obj.clearsky
-
         # Get the SAM resource object
-        resources = SAM.get_sam_res(res_file, points_control.project_points,
-                                    points_control.project_points.tech,
-                                    clearsky=clearsky)
+        resources = SAM.get_sam_res(res_file,
+                                    points_control.project_points,
+                                    points_control.project_points.tech)
+
+        # run resource through curtailment filter if applicable
+        curtailment = points_control.project_points.curtailment
+        if curtailment is not None:
+            resources = curtail(resources, curtailment)
 
         # Use resource object iterator
         for res_df, meta in resources:
@@ -225,9 +228,9 @@ class Solar(Generation):
         for var in resource.columns.values:
             if var != 'time_index':
                 # ensure that resource array length is multiple of 8760
-                res_arr = self.ensure_res_len(np.roll(resource[var],
-                                              int(self.meta['timezone'] *
-                                                  self.time_interval)))
+                res_arr = np.roll(
+                    self.ensure_res_len(resource[var]),
+                    int(self.meta['timezone'] * self.time_interval))
                 if var in ['dni', 'dhi', 'ghi']:
                     if np.min(res_arr) < 0:
                         warn('Solar irradiance variable "{}" has a minimum '
@@ -342,9 +345,12 @@ class Wind(Generation):
 
         # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760
-        temp = self.ensure_res_len(resource[['temperature', 'pressure',
-                                             'windspeed',
-                                             'winddirection']].values)
+        # roll the truncated resource array to local timezone
+        temp = np.roll(
+            self.ensure_res_len(resource[['temperature', 'pressure',
+                                          'windspeed',
+                                          'winddirection']].values),
+            int(self.meta['timezone'] * self.time_interval), axis=0)
         self.ssc.data_set_matrix(self.res_data, 'data', temp)
 
         # add resource data to self.data and clear

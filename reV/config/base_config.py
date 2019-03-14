@@ -130,7 +130,6 @@ class BaseConfig(dict):
             config-specified logging level string.
         """
 
-        default = 'INFO'
         if not hasattr(self, '_logging_level'):
             levels = {'DEBUG': logging.DEBUG,
                       'INFO': logging.INFO,
@@ -138,7 +137,8 @@ class BaseConfig(dict):
                       'ERROR': logging.ERROR,
                       'CRITICAL': logging.CRITICAL,
                       }
-            self._logging_level = levels[default]
+            # set default value
+            self._logging_level = logging.INFO
             if 'logging_level' in self['project_control']:
                 x = self['project_control']['logging_level']
                 self._logging_level = levels[x.upper()]
@@ -154,9 +154,9 @@ class BaseConfig(dict):
             Config-specified project control name.
         """
 
-        default = 'rev'
         if not hasattr(self, '_name'):
-            self._name = default
+            # set default value
+            self._name = 'rev'
             if 'name' in self['project_control']:
                 if self['project_control']['name']:
                     self._name = self['project_control']['name']
