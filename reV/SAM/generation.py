@@ -24,8 +24,38 @@ class Generation(SAM):
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
         """Initialize a SAM generation object."""
+
+        # set missing timezone from json if necessary
+        meta = self.tz_from_json(parameters, meta)
+
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
+
+    def tz_from_json(self, parameters, meta):
+        """Use timezone input from json config if not in meta from resource h5.
+
+        Parameters
+        ----------
+        parameters : dict
+            SAM model input parameters.
+        meta : pd.DataFrame
+            1D table with resource meta data.
+
+        Returns
+        -------
+        meta : pd.DataFrame
+            1D table with resource meta data. If meta was not originally set in
+            the resource meta data, but was set as "tz" or "timezone" in the
+            SAM model input parameters json file, timezone will be added to
+            this instance of meta.
+        """
+
+        if 'timezone' not in meta:
+            if 'tz' in parameters:
+                meta['timezone'] = int(parameters['tz'])
+            elif 'timezone' in parameters:
+                meta['timezone'] = int(parameters['timezone'])
+        return meta
 
     def gen_exec(self, module_to_run):
         """Run SAM generation with possibility for follow on econ analysis.
@@ -164,10 +194,10 @@ class Solar(Generation):
 
         Parameters
         ----------
-        meta : pd.DataFrame
-            1D table with resource meta data.
         parameters : dict
             SAM model input parameters.
+        meta : pd.DataFrame
+            1D table with resource meta data.
 
         Returns
         -------
