@@ -9,7 +9,7 @@ import logging
 import numpy as np
 from warnings import warn
 
-from reV.utilities.exceptions import SAMInputWarning
+from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import SAM
 from reV.SAM.econ import LCOE, SingleOwner
@@ -25,14 +25,15 @@ class Generation(SAM):
                  output_request=None):
         """Initialize a SAM generation object."""
 
-        # set missing timezone from json if necessary
-        meta = self.tz_from_json(parameters, meta)
+        # check timezone input and set missing timezone from json if necessary
+        meta = self.tz_check(parameters, meta)
 
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
-    def tz_from_json(self, parameters, meta):
-        """Use timezone input from json config if not in meta from resource h5.
+    @staticmethod
+    def tz_check(parameters, meta):
+        """Check timezone input and use json config tz if not in resource meta.
 
         Parameters
         ----------
@@ -55,6 +56,10 @@ class Generation(SAM):
                 meta['timezone'] = int(parameters['tz'])
             elif 'timezone' in parameters:
                 meta['timezone'] = int(parameters['timezone'])
+            else:
+                msg = ('Need timezone input to run SAM generation. Not found '
+                       'in resource meta or technology json input config.')
+                raise SAMExecutionError(msg)
         return meta
 
     def gen_exec(self, module_to_run):
