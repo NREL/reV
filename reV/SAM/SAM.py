@@ -415,7 +415,7 @@ class SAM:
         return self._site
 
     @staticmethod
-    def get_sam_res(res_file, project_points, module):
+    def get_sam_res(res_file, project_points, module, downscale=None):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -431,6 +431,10 @@ class SAM:
             Example: module set to 'pvwatts' or 'tcsmolten' means that this
             expects a SolarResource file. If 'nsrdb' is in the res_file name,
             the NSRDB handler will be used.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
 
         Returns
         -------
@@ -467,6 +471,19 @@ class SAM:
             raise TypeError('Did not recongize resource type "{}", '
                             'must be Wind, Solar, or NSRDB resource class.'
                             .format(res_handler))
+
+        # check for downscaling request
+        if downscale is not None:
+            # make sure that downscaling is only requested for NSRDB resource
+            if res_handler != NSRDB:
+                msg = ('Downscaling was requestd for a non-NSRDB '
+                       'resource file. reV does not have this capability at '
+                       'the current time. Please contact a developer for '
+                       'more information on this feature.')
+                raise SAMInputWarning(msg)
+            else:
+                # pass through the downscaling request
+                kwargs['downscale'] = downscale
 
         res = res_handler.preload_SAM(res_file, project_points, **kwargs)
 

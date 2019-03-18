@@ -301,6 +301,26 @@ class GenConfig(SAMAnalysisConfig):
         return self._curtailment
 
     @property
+    def downscale(self):
+        """Get the resource downscale request (nsrdb only!).
+
+        Returns
+        -------
+        _downscale : NoneType | str
+            Returns None if no downscaling is requested. Otherwise, expects a
+            downscale variable in the project_control section in the Pandas
+            frequency format, e.g. '5min'.
+        """
+
+        if not hasattr(self, '_downscale'):
+            self._downscale = None
+            if 'downscale' in self['project_control']:
+                if self['project_control']['downscale']:
+                    # downscaling was requested and is not None or False
+                    self._downscale = str(self['project_control']['downscale'])
+        return self._downscale
+
+    @property
     def res_files(self):
         """Get a list of the resource files with years filled in.
 

@@ -25,11 +25,11 @@ class Gen:
     """Base class for reV generation."""
 
     # Mapping of reV technology strings to SAM generation functions
-    OPTIONS = {'pv': PV.reV_run,
-               'csp': CSP.reV_run,
-               'wind': LandBasedWind.reV_run,
-               'landbasedwind': LandBasedWind.reV_run,
-               'offshorewind': OffshoreWind.reV_run,
+    OPTIONS = {'pv': PV,
+               'csp': CSP,
+               'wind': LandBasedWind,
+               'landbasedwind': LandBasedWind,
+               'offshorewind': OffshoreWind,
                }
 
     # Mapping of reV generation outputs to scale factors and units.
@@ -817,7 +817,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True):
+            scale_outputs=True, downscale=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -836,6 +836,10 @@ class Gen:
             Output variables requested from SAM.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
 
         Returns
         -------
@@ -846,7 +850,8 @@ class Gen:
 
         # run generation method for specified technology
         try:
-            out = Gen.OPTIONS[tech](points_control, res_file, output_request)
+            out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
+                                            output_request, downscale)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -880,9 +885,10 @@ class Gen:
 
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-                   output_request=('cf_mean',), curtailment=None, n_workers=1,
-                   sites_per_split=None, points_range=None, fout=None,
-                   dirout='./gen_out', return_obj=True, scale_outputs=True):
+                   output_request=('cf_mean',), curtailment=None,
+                   downscale=None, n_workers=1, sites_per_split=None,
+                   points_range=None, fout=None, dirout='./gen_out',
+                   return_obj=True, scale_outputs=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -908,6 +914,10 @@ class Gen:
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -944,7 +954,8 @@ class Gen:
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
                   'output_request': gen.output_request,
-                  'scale_outputs': scale_outputs}
+                  'scale_outputs': scale_outputs,
+                  'downscale': downscale}
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
@@ -967,9 +978,10 @@ class Gen:
 
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  output_request=('cf_mean',), curtailment=None, n_workers=1,
-                  sites_per_split=None, points_range=None, fout=None,
-                  dirout='./gen_out', mem_util_lim=0.7, scale_outputs=True):
+                  output_request=('cf_mean',), curtailment=None,
+                  downscale=None, n_workers=1, sites_per_split=None,
+                  points_range=None, fout=None, dirout='./gen_out',
+                  mem_util_lim=0.7, scale_outputs=True):
         """Execute a generation run with smart data flushing.
 
         Parameters
@@ -995,6 +1007,10 @@ class Gen:
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int | None
@@ -1026,7 +1042,8 @@ class Gen:
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
                   'output_request': gen.output_request,
-                  'scale_outputs': scale_outputs}
+                  'scale_outputs': scale_outputs,
+                  'downscale': downscale}
 
         logger.info('Running parallel generation with smart data flushing '
                     'for: {}'.format(pc))
