@@ -539,3 +539,9 @@ class Collector:
         logger.info('{} collected')
         logger.debug('\t- Collection took {:.4f} minutes'
                      .format(tt))
+
+
+class MultiYear(Outputs):
+    """
+    Class to handle multiple years of data
+    """
