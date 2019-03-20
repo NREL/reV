@@ -126,8 +126,8 @@ class Outputs(Resource):
         """
         mode = ['a', 'w', 'w-', 'x']
         if self._mode not in mode:
-            msg = 'mode must be writable: {}'.format(mode)
-            raise HandlerRuntimeError(msg)
+            raise HandlerRuntimeError('mode must be writable: {}'
+                                      .format(mode))
 
         return True
 
