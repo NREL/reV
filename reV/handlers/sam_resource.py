@@ -154,19 +154,35 @@ class SAMResource:
 
         Returns
         -------
-        var_list : list
+        _var_list : list
             List of resource variables associated with resource type
             ('solar' or 'wind')
         """
-        if self._res_type == 'solar':
-            var_list = ['dni', 'dhi', 'wind_speed', 'air_temperature']
-        elif self._res_type == 'wind':
-            var_list = ['pressure', 'temperature', 'winddirection',
-                        'windspeed']
-        else:
-            raise HandlerValueError("Resource type is invalid!")
 
-        return var_list
+        if not hasattr(self, '_var_list'):
+            if self._res_type == 'solar':
+                self._var_list = ['dni', 'dhi', 'wind_speed',
+                                  'air_temperature']
+            elif self._res_type == 'wind':
+                self._var_list = ['pressure', 'temperature', 'winddirection',
+                                  'windspeed']
+            else:
+                raise HandlerValueError("Resource type is invalid!")
+
+        return self._var_list
+
+    def append_var_list(self, var):
+        """
+        Append a new variable to the SAM resource protected var_list.
+
+        Parameters
+        ----------
+        var : str
+            New resource variable to be added to the protected var_list
+            property.
+        """
+
+        self.var_list.append(var)
 
     @property
     def time_index(self):
