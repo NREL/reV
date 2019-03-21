@@ -2,7 +2,9 @@
 Classes to handle capacity factor profiles and annual averages
 """
 import logging
+import numpy as np
 import os
+import pandas as pd
 
 from reV.utilities.exceptions import HandlerRuntimeError
 from reV.handlers.outputs import Outputs, parse_year
@@ -102,12 +104,184 @@ class MultiYear(Outputs):
             Boolean flag to indicate if profiles are being collected
             If True also collect time_index
         """
-        meta = None
+        with Outputs(h5_files[0], mode='r') as f_in:
+            meta = f_in._h5['time_index'][...]
+
+        self._create_dset('meta', meta.shape, meta.dtype,
+                          data=meta)
+
+        meta = pd.DataFrame(meta)
         for year_h5 in h5_files:
             self._copy_dset(year_h5, dset, meta=meta)
             if profiles:
                 self._copy_time_index(year_h5)
 
-            if meta is None:
-                with Outputs(year_h5, mode='r') as f:
-                    meta = f.meta
+    def _get_source_dsets(self, dset_out):
+        """
+        Extract all available annual datasets associated with dset
+
+        Parameters
+        ----------
+        dset_out : str
+            Output dataset to find source datasets for
+
+        Returns
+        -------
+        source_dsets : list
+            List of annual datasets
+        """
+        dset = dset_out.split("_")[0]
+        source_dsets = [ds for ds in self.dsets if dset in ds]
+        if dset_out in source_dsets:
+            source_dsets.remove(dset_out)
+
+        return source_dsets
+
+    def _update_dset(self, dset_out, dset_data):
+        """
+        Update dataset, create if needed
+
+        Parameters
+        ----------
+        dset_out : str
+            Dataset name
+        dset_data : ndarray
+            Dataset data to write to disc
+        """
+        if dset_out in self.dsets:
+            self[dset_out] = dset_data
+        else:
+            source_dset = self._get_source_dsets(dset_out)[0]
+            _, ds_dtype, ds_chunks = self.get_dset_properties(source_dset)
+            ds_attrs = self.get_attrs(dset=source_dset)
+            self._add_dset(dset_out, dset_data, ds_dtype,
+                           chunks=ds_chunks, attrs=ds_attrs)
+
+    def _compute_means(self, dset_out):
+        """
+        Compute multi-year means for given dataset
+
+        Parameters
+        ----------
+        dset_out : str
+            Multi-year means dataset name
+
+        Returns
+        -------
+        my_means : ndarray
+            Array of multi-year means
+        """
+        source_dsets = self._get_source_dsets(dset_out)
+
+        MY_means = np.zeros(len(self))
+        for ds in source_dsets:
+            if self._h5[ds].shape == MY_means.shape:
+                MY_means += self[ds]
+            else:
+                raise HandlerRuntimeError("{} shape {} should be {}"
+                                          .format(ds, self._h5[ds].shape,
+                                                  MY_means.shape))
+        MY_means /= len(source_dsets)
+        self._update_dset(dset_out, MY_means)
+
+        return MY_means
+
+    def means(self, dset):
+        """
+        Extract or compute multi-year means for given source dset
+
+        Parameters
+        ----------
+        dset : str
+            Dataset of interest
+
+        Returns
+        -------
+        MY_means : ndarray
+            Array of multi-year means for dataset of interest
+        """
+        my_dset = "{}_means".format(dset)
+        if my_dset in self.dsets:
+            MY_means = self[my_dset]
+        else:
+            MY_means = self._compute_means(my_dset)
+
+        return MY_means
+
+    def _compute_stdev(self, dset_out, means=None):
+        """
+        Compute multi-year standard deviation for given dataset
+
+        Parameters
+        ----------
+        dset_out : str
+            Multi-year stdev dataset name
+        means : ndarray
+            Array of pre-computed means
+
+        Returns
+        -------
+        my_stdev : ndarray
+            Array of multi-year standard deviations
+        """
+        if not means:
+            means_dset = "{}_means".format(dset_out.split("_")[0])
+            means = self._compute_means(means_dset)
+
+        source_dsets = self._get_source_dsets(dset_out)
+
+        MY_stdev = np.zeros(means.shape)
+        for ds in source_dsets:
+            if self._h5[ds].shape == MY_stdev.shape:
+                MY_stdev += (self[ds] - means)**2
+            else:
+                raise HandlerRuntimeError("{} shape {} should be {}"
+                                          .format(ds, self._h5[ds].shape,
+                                                  MY_stdev.shape))
+
+        MY_stdev = np.sqrt(MY_stdev / len(source_dsets))
+        self._update_dset(dset_out, MY_stdev)
+
+        return MY_stdev
+
+    def stdev(self, dset):
+        """
+        Extract or compute multi-year standard deviation for given source dset
+
+        Parameters
+        ----------
+        dset : str
+            Dataset of interest
+
+        Returns
+        -------
+        MY_stdev : ndarray
+            Array of multi-year standard deviation for dataset of interest
+        """
+        my_dset = "{}_stdev".format(dset)
+        if my_dset in self.dsets:
+            MY_stdev = self[my_dset]
+        else:
+            MY_means = self.means(dset)
+            MY_stdev = self._compute_stdev(my_dset, means=MY_means)
+
+        return MY_stdev
+
+    def CV(self, dset):
+        """
+        Extract or compute multi-year coefficient of variation for given
+        source dset
+
+        Parameters
+        ----------
+        dset : str
+            Dataset of interest
+
+        Returns
+        -------
+        MY_cv : ndarray
+            Array of multi-year coefficient of variation for
+            dataset of interest
+        """
+        MY_cv = self.stdev(dset) / self.means(dset)
+        return MY_cv
