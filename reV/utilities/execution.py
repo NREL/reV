@@ -1,6 +1,7 @@
 """
 Execution utilities.
 """
+import dask
 from dask.distributed import Client, LocalCluster
 from subprocess import Popen, PIPE
 import logging
@@ -629,7 +630,7 @@ class SmartParallelJob:
 
         self.obj = obj
         self._execution_iter = execution_iter
-        self._n_workers = n_workers
+        self.n_workers = n_workers
         self._mem_util_lim = mem_util_lim
 
     @property
@@ -640,32 +641,24 @@ class SmartParallelJob:
         Returns
         -------
         _cluster : dask.distributed.LocalCluster
-            Local cluster object with all available workers or  self._n_workers
-            (if specified).
+            Local cluster object with self.n_workers.
         """
 
         if not hasattr(self, '_cluster'):
-            # start a local cluster on a personal comp or HPC single node
-            if self._n_workers is None:
-                try:
-                    self._cluster = LocalCluster(n_workers=None,
-                                                 memory_limit=0)
-                except Exception as e:
-                    logger.exception('Failed to start Dask LocalCluster: {}'
-                                     .format(e))
-                    raise e
+            # Spawn processes instead of fork (seems to be more robust)
+            dask.config.set({'distributed.worker.multiprocessing-method':
+                             'spawn'})
 
-            elif isinstance(self._n_workers, int):
-                try:
-                    self._cluster = LocalCluster(n_workers=self._n_workers,
-                                                 memory_limit=0)
-                except Exception as e:
-                    logger.exception('Failed to start Dask LocalCluster: {}'
-                                     .format(e))
-                    raise e
-            else:
-                raise ExecutionError('Bad number of workers: {}'
-                                     .format(self._n_workers))
+            # start a local cluster on a personal comp or HPC single node
+            try:
+                self._cluster = LocalCluster(n_workers=self.n_workers,
+                                             threads_per_worker=1,
+                                             memory_limit=0)
+            except Exception as e:
+                logger.exception('Failed to start Dask LocalCluster: {}'
+                                 .format(e))
+                raise e
+
         return self._cluster
 
     @property
@@ -698,14 +691,27 @@ class SmartParallelJob:
 
         Returns
         -------
-        _n_workers : int | NoneType
-            Number of workers. Will be calculated based on the local cluster if
-            self._cluster is an attribute.
+        _n_workers : int
+            Number of workers.
         """
 
-        if hasattr(self, '_cluster') and self._n_workers is None:
-            self._n_workers = len(self.cluster.workers)
         return self._n_workers
+
+    @n_workers.setter
+    def n_workers(self, n_workers):
+        """Set the number of workers to utilize.
+
+        Parameters
+        ----------
+        n_workers : int | NoneType
+            Number of workers to scale the cluster to. None will use all
+            available workers in a local cluster.
+        """
+
+        if n_workers:
+            self._n_workers = n_workers
+        else:
+            self._n_workers = os.cpu_count()
 
     @property
     def obj(self):
@@ -774,17 +780,12 @@ class SmartParallelJob:
         futures : list
             List of Dask futures. If the memory was flushed, this is a
             cleared list: futures.clear()
-        client : dask.distributed.Client
-            Dask client. If the memory was flushed, the client is restarted
-            before returning: client.restart()
         """
 
         # gather on each iteration so there is no big mem spike during flush
         # (obj.out should be a property setter that will append new data.)
         self.obj.out = client.gather(futures)
         futures.clear()
-        client.restart()
-        logger.debug('Restarted Dask client.')
 
         # useful log statements
         mem = psutil.virtual_memory()
@@ -797,13 +798,20 @@ class SmartParallelJob:
 
         # check memory utilization against the limit
         if ((mem.used / mem.total) >= self.mem_util_lim) or force_flush:
+
+            # restart client to free up memory
+            # also seems to sync stderr messages (including warnings)
+            logger.info('Dask client restarted.')
+            client.restart()
+
+            # flush data to disk
             logger.info('Flushing memory to disk. The memory utilization is '
                         '{0:.2f}% and the limit is {1:.2f}%.'
                         .format(100 * (mem.used / mem.total),
                                 100 * self.mem_util_lim))
-            # flush data to disk
             self.flush()
-        return futures, client
+
+        return futures
 
     @staticmethod
     def init_loggers(client, loggers):
@@ -835,7 +843,7 @@ class SmartParallelJob:
         """
 
         logger.info('Executing parallel run on a local cluster with '
-                    '"{0}" workers over {1} total iterations.'
+                    '{0} workers over {1} total iterations.'
                     .format(self.n_workers, 1 + len(self.execution_iter)))
         log_mem()
 
@@ -856,14 +864,13 @@ class SmartParallelJob:
 
                 # Take a pause after one complete set of workers
                 if (i + 1) % self.n_workers == 0:
-                    futures, client = self.gather_and_flush(i, client, futures)
+                    futures = self.gather_and_flush(i, client, futures)
 
             # All futures complete
             self.gather_and_flush('END', client, futures, force_flush=True)
             logger.debug('Smart parallel job complete. Returning execution '
                          'control to higher level processes.')
             log_mem()
-        self.cluster.close()
 
     @classmethod
     def execute(cls, obj, execution_iter, n_workers=None,
