@@ -3,12 +3,14 @@ Levelized Cost of Energy
 """
 import logging
 import pandas as pd
+import pprint
 from warnings import warn
 
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.handlers.outputs import Outputs
-from reV.utilities.execution import execute_parallel, execute_single
+from reV.utilities.execution import (execute_parallel, execute_single,
+                                     SmartParallelJob)
 from reV.generation.generation import Gen
 
 
@@ -21,6 +23,9 @@ class Econ(Gen):
     # Mapping of reV econ output strings to SAM econ functions
     OPTIONS = {'lcoe_fcr': SAM_LCOE.reV_run,
                'ppa_price': SingleOwner.reV_run,
+               'npv': SingleOwner.reV_run,
+               'lcoe_real': SingleOwner.reV_run,
+               'lcoe_nom': SingleOwner.reV_run,
                }
 
     # Mapping of reV econ outputs to scale factors and units.
@@ -31,11 +36,19 @@ class Econ(Gen):
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
                                'dtype': 'float32', 'chunks': None,
                                'type': 'scalar'},
+                 'npv': {'scale_factor': 1, 'units': 'dol',
+                         'dtype': 'float32', 'chunks': None,
+                         'type': 'scalar'},
+                 'lcoe_real': {'scale_factor': 1, 'units': 'dol/MWh',
+                               'dtype': 'float32', 'chunks': None,
+                               'type': 'scalar'},
+                 'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
+                              'dtype': 'float32', 'chunks': None,
+                              'type': 'scalar'},
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
-                 output_request='lcoe_fcr', fout=None, dirout='./econ_out',
-                 mem_util_lim=0.7):
+                 output_request='lcoe_fcr', fout=None, dirout='./econ_out'):
         """Initialize an econ instance.
 
         Parameters
@@ -52,17 +65,13 @@ class Econ(Gen):
             DataFrame is pre-extracted data. Rows match sites, columns are
             variables. Input as None if the only site data required is present
             in the cf_file.
-        output_request : str | tuple
-            Economic output variable requested from SAM (lcoe_fcr, ppa_price).
+        output_request : str | list | tuple
+            Economic output variable(s) requested from SAM.
         fout : str | None
             Optional .h5 output file specification.
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
-        mem_util_lim : float
-            Memory utilization limit (fractional). This sets how many site
-            results will be stored in-memory at any given time before flushing
-            to disk.
         """
 
         self._points_control = points_control
@@ -71,35 +80,47 @@ class Econ(Gen):
         self._fout = fout
         self._dirout = dirout
         self.output_request = output_request
-        self.mem_util_lim = mem_util_lim
         if site_data:
             self.site_data = site_data
 
+        # set memory utilization limit as static (not as important as for gen)
+        self.mem_util_lim = 0.7
+
     @Gen.output_request.setter  # pylint: disable-msg=E1101
     def output_request(self, req):
-        """Set the single output variable requested from econ.
+        """Set the output variables requested from econ.
 
         Parameters
         ----------
-        req : str | tuple
-            Single econ output variable requested from SAM.
+        req : str | list | tuple
+            Output variable(s) requested from SAM.
         """
 
-        if isinstance(req, (list, tuple)) and len(req) == 1:
-            # ensure single string output request
-            self._output_request = req
-        elif isinstance(req, str):
-            self._output_request = (req, )
+        if isinstance(req, str):
+            # single output request, make tuple
+            self._output_request = (req,)
+        elif isinstance(req, (list, tuple)):
+            # ensure output request is tuple
+            self._output_request = tuple(req)
         else:
-            raise TypeError('Econ output request must be a single variable '
-                            'string or single entry list, but received: {}'
-                            .format(req))
+            raise TypeError('Output request must be str, list, or tuple but '
+                            'received: {}'.format(type(req)))
 
-        if self._output_request[0] not in self.OPTIONS:
-            raise KeyError('Requested econ variable "{}" is not available. '
-                           'reV econ can analyze the following: {}'
-                           .format(self._output_request,
-                                   list(self.OPTIONS.keys())))
+        for request in self._output_request:
+            if request not in self.OUT_ATTRS:
+                raise ValueError('User output request "{}" not recognized. '
+                                 'The following output requests are available '
+                                 'in "{}": "{}"'
+                                 .format(request, self.__class__,
+                                         list(self.OUT_ATTRS.keys())))
+            if self.OPTIONS[request] != self.OPTIONS[self._output_request[0]]:
+                msg = ('Econ outputs requested from different SAM modules not '
+                       'currently supported. Output request variables "{}" '
+                       'and "{}" require SAM modules "{}" and "{}".'
+                       .format(request, self._output_request[0],
+                               self.OPTIONS[request],
+                               self.OPTIONS[self._output_request[0]]))
+                raise ValueError(msg)
 
     @property
     def cf_file(self):
@@ -197,6 +218,17 @@ class Econ(Gen):
         return fout
 
     @property
+    def sam_module(self):
+        """Get the SAM econ module associated with this econ analysis.
+
+        Returns
+        -------
+        module : str
+            String representation of the SAM module to be run.
+        """
+        return str(self.OPTIONS[self.output_request[0]])
+
+    @property
     def meta(self):
         """Get meta data from the source capacity factors file.
 
@@ -239,10 +271,10 @@ class Econ(Gen):
             with Outputs(self.cf_file) as cfh:
                 if 'cf_mean' in cfh.dsets:
                     cf_arr = cfh['cf_mean']
+                elif 'cf_mean_{}'.format(self.cf_year) in cfh.dsets:
+                    cf_arr = cfh['cf_mean_{}'.format(self.cf_year)]
                 elif 'cf' in cfh.dsets:
                     cf_arr = cfh['cf']
-                elif 'cf_{}'.format(self.cf_year) in cfh.dsets:
-                    cf_arr = cfh['cf_{}'.format(self.cf_year)]
                 elif 'cf_mean' in self.meta:
                     cf_arr = self.meta['cf_mean']
                 else:
@@ -250,7 +282,7 @@ class Econ(Gen):
                                    'dataset in {}. Looked in both the h5 '
                                    'datasets and the meta data. The following '
                                    'dsets were available: {}.'
-                                   .format('cf_{}'.format(self.cf_year),
+                                   .format('cf_mean_{}'.format(self.cf_year),
                                            self.cf_file, cfh.dsets))
 
             # set site-specific values in dataframe with
@@ -305,14 +337,23 @@ class Econ(Gen):
             Target .h5 output file (with path).
         """
 
-        # retrieve the dataset with associated attributes
-        data, dtype, chunks, attrs = self.get_dset_attrs(
-            self.output_request[0])
-        # write econ results means to disk
-        Outputs.write_means(h5_file=fout, meta=self.meta,
-                            dset_name=self.output_request[0], means=data,
-                            attrs=attrs, dtype=dtype, chunks=chunks,
-                            sam_configs=self.sam_configs)
+        with Outputs(fout, mode='w-') as f:
+            # Save meta
+            f['meta'] = self.meta
+            logger.debug("\t- 'meta' saved to disc")
+
+            if self.sam_configs is not None:
+                f.set_configs(self.sam_configs)
+                logger.debug("\t- SAM configurations saved as attributes "
+                             "on 'meta'")
+
+            # iterate through all output requests writing each as a dataset
+            for dset in self.output_request:
+                # retrieve the dataset with associated attributes
+                data, dtype, chunks, attrs = self.get_dset_attrs(dset)
+                # Write output dataset to disk
+                f._add_dset(dset_name=dset, data=data, dtype=dtype,
+                            chunks=chunks, attrs=attrs)
 
     def flush(self):
         """Flush econ data in self.out attribute to disk in .h5 format.
@@ -338,7 +379,7 @@ class Econ(Gen):
             logger.debug('Flushed econ output successfully to disk.')
 
     @staticmethod
-    def run(pc, output_request):
+    def run(pc, output_request, **kwargs):
         """Run the SAM econ calculation.
 
         Parameters
@@ -349,7 +390,15 @@ class Econ(Gen):
             site-specific inputs and a 'gid' column. By passing site-specific
             inputs in this dataframe, which was split using points_control,
             only the data relevant to the current sites should be passed here.
+        output_request : str | list | tuple
+            Economic output variable(s) requested from SAM.
+        kwargs : dict
+            Additional input parameters for the SAM run module.
         """
+
+        # make sure output request is a tuple
+        if isinstance(output_request, str):
+            output_request = (output_request,)
 
         # Extract the site df from the project points df.
         site_df = pc.project_points.df
@@ -364,13 +413,14 @@ class Econ(Gen):
             site_df = site_df.set_index('gid', drop=True)
 
         # SAM execute econ analysis based on output request
-        out = Econ.OPTIONS[output_request](pc, site_df,
-                                           output_request=output_request)
+        out = Econ.OPTIONS[output_request[0]](pc, site_df,
+                                              output_request=output_request,
+                                              **kwargs)
         return out
 
     @classmethod
     def run_direct(cls, points=None, sam_files=None, cf_file=None,
-                   cf_year=None, site_data=None, output_request='lcoe_fcr',
+                   cf_year=None, site_data=None, output_request=('lcoe_fcr',),
                    n_workers=1, sites_per_split=100, points_range=None,
                    fout=None, dirout='./econ_out', return_obj=True):
         """Execute a econ run directly from source files without config.
@@ -396,8 +446,8 @@ class Econ(Gen):
             DataFrame is pre-extracted data. Rows match sites, columns are
             variables. Input as None if the only site data required is present
             in the cf_file.
-        output_request : str
-            Economic output variable requested from SAM (lcoe_fcr, ppa_price).
+        output_request : str | list | tuple
+            Economic output variable(s) requested from SAM.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -438,6 +488,11 @@ class Econ(Gen):
         # make a kwarg dict
         kwargs = {'output_request': output_request}
 
+        # additional kword inputs for single owner analysis
+        if 'SingleOwner' in econ.sam_module:
+            kwargs['cf_file'] = cf_file
+            kwargs['cf_year'] = cf_year
+
         # add site_df to project points dataframe
         econ.add_site_df()
 
@@ -459,3 +514,99 @@ class Econ(Gen):
         # optionally return Gen object (useful for debugging and hacking)
         if return_obj:
             return econ
+
+    @classmethod
+    def run_smart(cls, points=None, sam_files=None, cf_file=None,
+                  cf_year=None, site_data=None, output_request=('lcoe_fcr',),
+                  n_workers=1, sites_per_split=100, points_range=None,
+                  fout=None, dirout='./econ_out'):
+        """Execute a econ run directly from source files without config.
+
+        Parameters
+        ----------
+        points : slice | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        sam_files : dict | str | list
+            Site-agnostic input data.
+            Dict contains SAM input configuration ID(s) and file path(s).
+            Keys are the SAM config ID(s), top level value is the SAM path.
+            Can also be a single config file str. If it's a list, it is mapped
+            to the sorted list of unique configs requested by points csv.
+        cf_file : str
+            reV generation capacity factor output file with path.
+        cf_year : int | str
+            reV generation year to calculate econ for. cf_year='my' will look
+            for the multi-year mean generation results.
+        site_data : str | pd.DataFrame | None
+            Site-specific data for econ calculation. Str points to csv,
+            DataFrame is pre-extracted data. Rows match sites, columns are
+            variables. Input as None if the only site data required is present
+            in the cf_file.
+        output_request : str | list | tuple
+            Economic output variable(s) requested from SAM.
+        n_workers : int
+            Number of local workers to run on.
+        sites_per_split : int
+            Number of sites to run in series on a core.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
+        fout : str | None
+            Optional .h5 output file specification.
+        dirout : str | None
+            Optional output directory specification. The directory will be
+            created if it does not already exist.
+
+        Returns
+        -------
+        econ : reV.econ.Econ
+            Econ object instance with outputs stored in .out attribute.
+            Only returned if return_obj is True.
+        """
+
+        # get a points control instance
+        pc = cls.get_pc(points, points_range, sam_files, tech=None)
+
+        # make a Gen class instance to operate with
+        econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
+                   output_request=output_request, fout=fout, dirout=dirout)
+
+        diff = set(pc.sites) - set(econ.meta['gid'].values)
+        if diff:
+            raise Exception('The following analysis sites were requested '
+                            'through project points for econ but are not '
+                            'found in the CF file ("{}"): {}'
+                            .format(econ.cf_file, diff))
+
+        # make a kwarg dict
+        kwargs = {'output_request': output_request}
+
+        # additional kword inputs for single owner analysis
+        if 'SingleOwner' in econ.sam_module:
+            kwargs['cf_file'] = cf_file
+            kwargs['cf_year'] = cf_year
+
+        # add site_df to project points dataframe
+        econ.add_site_df()
+
+        logger.info('Running parallel econ with smart data flushing '
+                    'for: {}'.format(pc))
+        logger.debug('The following project points were specified: "{}"'
+                     .format(points))
+        logger.debug('The following SAM configs are available to this run:\n{}'
+                     .format(pprint.pformat(sam_files, indent=4)))
+        logger.debug('The SAM output variables have been requested:\n{}'
+                     .format(output_request))
+
+        try:
+            # use SmartParallelJob to manage runs, but set mem limit to 1
+            # because Econ() will manage the sites in-memory
+            SmartParallelJob.execute(econ, pc, n_workers=n_workers,
+                                     loggers=['reV.econ', 'reV.SAM',
+                                              'reV.utilities'],
+                                     mem_util_lim=1.0, **kwargs)
+        except Exception as e:
+            logger.exception('SmartParallelJob.execute() failed.')
+            raise e

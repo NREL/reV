@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
+from reV.handlers.outputs import Outputs
 from reV.SAM.PySSC import PySSC
 from reV.SAM.SAM import SAM, ParametersManager
 from reV.utilities.exceptions import SAMExecutionError
@@ -141,9 +142,40 @@ class Economic(SAM):
 
         return sys_cap
 
+
+class LCOE(Economic):
+    """SAM LCOE model.
+    """
+    MODULE = 'lcoefcr'
+
+    def __init__(self, ssc, data, parameters, site_parameters=None,
+                 output_request=('lcoe_fcr',)):
+        """Initialize a SAM LCOE economic model object.
+        """
+        super().__init__(ssc, data, parameters,
+                         site_parameters=site_parameters,
+                         output_request=output_request)
+
+    def execute(self, module_to_run, close=True):
+        """Execute a SAM economic model calculation.
+        """
+        # check to see if there is an offshore flag and set for this run
+        offshore = False
+        if hasattr(self, '_site_parameters'):
+            if 'offshore' in self._site_parameters:
+                offshore = bool(self._site_parameters['offshore'])
+
+        if offshore:
+            # execute ORCA here for offshore wind LCOE
+            orca = ORCA_LCOE(self.parameters, self._site_parameters)
+            self.outputs = {'lcoe_fcr': orca.lcoe}
+        else:
+            # run SAM LCOE normally for non-offshore technologies
+            super().execute(module_to_run, close=close)
+
     @classmethod
-    def reV_run(cls, points_control, site_df, output_request='lcoe_fcr'):
-        """Execute SAM simulations based on a reV points control instance.
+    def reV_run(cls, points_control, site_df, output_request=('lcoe_fcr',)):
+        """Execute SAM LCOE simulations based on a reV points control instance.
 
         Parameters
         ----------
@@ -210,37 +242,6 @@ class Economic(SAM):
             logger.debug('Outputs for site {} with config "{}", \n\t{}...'
                          .format(site, config, str(out[site])[:100]))
         return out
-
-
-class LCOE(Economic):
-    """SAM LCOE model.
-    """
-    MODULE = 'lcoefcr'
-
-    def __init__(self, ssc, data, parameters, site_parameters=None,
-                 output_request=('lcoe_fcr',)):
-        """Initialize a SAM LCOE economic model object.
-        """
-        super().__init__(ssc, data, parameters,
-                         site_parameters=site_parameters,
-                         output_request=output_request)
-
-    def execute(self, module_to_run, close=True):
-        """Execute a SAM economic model calculation.
-        """
-        # check to see if there is an offshore flag and set for this run
-        offshore = False
-        if hasattr(self, '_site_parameters'):
-            if 'offshore' in self._site_parameters:
-                offshore = bool(self._site_parameters['offshore'])
-
-        if offshore:
-            # execute ORCA here for offshore wind LCOE
-            orca = ORCA_LCOE(self.parameters, self._site_parameters)
-            self.outputs = {'lcoe_fcr': orca.lcoe}
-        else:
-            # run SAM LCOE normally for non-offshore technologies
-            super().execute(module_to_run, close=close)
 
 
 class ORCA_LCOE:
@@ -347,3 +348,74 @@ class SingleOwner(Economic):
         super().__init__(ssc, data, parameters,
                          site_parameters=site_parameters,
                          output_request=output_request)
+
+    def set_gen(self, gen):
+        """Set the generation profile (kW) for single owner calculation.
+
+        Parameters
+        ----------
+        gen : np.ndarray
+            Generation profile (8760) in kW.
+        """
+        self.ssc.data_set_array(self.data, 'gen', gen)
+
+    @classmethod
+    def reV_run(cls, points_control, site_df, cf_file,
+                output_request=('ppa_price',)):
+        """Execute SAM SingleOwner simulations based on reV points control.
+
+        Parameters
+        ----------
+        points_control : config.PointsControl
+            PointsControl instance containing project points site and SAM
+            config info.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
+        cf_file : str
+            reV generation h5 output file with path. Generation profiles must
+            be included in this file for SingleOwner calculation.
+        output_request : list | tuple | str
+            Output(s) to retrieve from SAM.
+
+        Returns
+        -------
+        out : dict
+            Nested dictionaries where the top level key is the site index,
+            the second level key is the variable name, second level value is
+            the output variable value.
+        """
+
+        out = {}
+
+        # get the cf_file meta data gid's to use as indexing tools
+        with Outputs(cf_file) as cfh:
+            site_gids = list(cfh.meta['gid'])
+
+        for site in points_control.sites:
+            # get SAM inputs from project_points based on the current site
+            config, inputs = points_control.project_points[site]
+
+            # get the system capacity
+            sys_cap = cls.parse_sys_cap(site, inputs, site_df)
+
+            # get the index location of the site in question
+            isite = site_gids.index(site)
+
+            # Calc generation profile for single owner input
+            with Outputs(cf_file) as cfh:
+                if 'cf_profile' in cfh.dsets:
+                    gen = cfh['cf_profile', :, isite] * sys_cap
+
+            # Create SAM econ instance and calculate requested output.
+            sim = cls(ssc=None, data=None, parameters=inputs,
+                      site_parameters=dict(site_df.loc[site, :]),
+                      output_request=output_request)
+            sim.set_gen(gen)
+            sim.execute(cls.MODULE)
+            out[site] = sim.outputs
+
+            logger.debug('Outputs for site {} with config "{}", \n\t{}...'
+                         .format(site, config, str(out[site])[:100]))
+        return out
