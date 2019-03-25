@@ -198,7 +198,7 @@ class Collector:
                 os.remove(h5_file)
 
         self._h5_out = h5_file
-        ignore = [os.path.basename(self._h5_out)]
+        ignore = os.path.basename(self._h5_out)
         self._h5_files = self.find_h5_files(h5_dir, file_prefix=file_prefix,
                                             ignore=ignore)
         self._gids = self.parse_project_points(project_points)
@@ -206,7 +206,7 @@ class Collector:
         self.combine_meta()
 
     @staticmethod
-    def find_h5_files(h5_dir, file_prefix=None, ignore=[]):
+    def find_h5_files(h5_dir, file_prefix=None, ignore=None):
         """
         Search h5_dir for .h5 file, return sorted
         If file_prefix is not None, only return .h5 files with given prefix
@@ -217,9 +217,11 @@ class Collector:
             Root directory to search
         file_prefix : str
             Prefix for .h5 file in h5_dir, if None return all .h5 files
-        ignore : list
-            List of file names to ignore.
+        ignore : str | list | NoneType
+            File name(s) to ignore.
         """
+        if not isinstance(ignore, list):
+            ignore = [ignore]
         h5_files = []
         for file in os.listdir(h5_dir):
             if file.endswith('.h5'):
