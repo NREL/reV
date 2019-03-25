@@ -51,15 +51,16 @@ class Generation(SAM):
             this instance of meta.
         """
 
-        if 'timezone' not in meta:
-            if 'tz' in parameters:
-                meta['timezone'] = int(parameters['tz'])
-            elif 'timezone' in parameters:
-                meta['timezone'] = int(parameters['timezone'])
-            else:
-                msg = ('Need timezone input to run SAM generation. Not found '
-                       'in resource meta or technology json input config.')
-                raise SAMExecutionError(msg)
+        if meta is not None:
+            if 'timezone' not in meta:
+                if 'tz' in parameters:
+                    meta['timezone'] = int(parameters['tz'])
+                elif 'timezone' in parameters:
+                    meta['timezone'] = int(parameters['timezone'])
+                else:
+                    msg = ('Need timezone input to run SAM gen. Not found in '
+                           'resource meta or technology json input config.')
+                    raise SAMExecutionError(msg)
         return meta
 
     def gen_exec(self, module_to_run):

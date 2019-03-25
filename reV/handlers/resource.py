@@ -463,7 +463,7 @@ class WindResource(Resource):
     @property
     def heights(self):
         """
-        Extract available heights for pressure, temperature, windspeed
+        Extract available heights for pressure, temperature, windspeed, precip,
         and winddirection variables. Used for interpolation/extrapolation.
 
         Returns
