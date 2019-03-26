@@ -491,7 +491,6 @@ class Econ(Gen):
         # additional kword inputs for single owner analysis
         if 'SingleOwner' in econ.sam_module:
             kwargs['cf_file'] = cf_file
-            kwargs['cf_year'] = cf_year
 
         # add site_df to project points dataframe
         econ.add_site_df()
@@ -586,7 +585,6 @@ class Econ(Gen):
         # additional kword inputs for single owner analysis
         if 'SingleOwner' in econ.sam_module:
             kwargs['cf_file'] = cf_file
-            kwargs['cf_year'] = cf_year
 
         # add site_df to project points dataframe
         econ.add_site_df()

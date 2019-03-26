@@ -255,7 +255,8 @@ class SiteOutput(SlottedDict):
 
     # make attribute slots for all SAM output variable names
     __slots__ = ['cf_mean', 'cf_profile', 'annual_energy', 'energy_yield',
-                 'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr']
+                 'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr', 'npv',
+                 'lcoe_nom', 'lcoe_real']
 
     def __init__(self):
         self.var_list = []
@@ -769,7 +770,6 @@ class SAM:
                    'lcoe_real': self.lcoe_real,
                    }
 
-        # results = {}
         results = SiteOutput()
         for request in self.output_request:
             if request in OUTPUTS:
