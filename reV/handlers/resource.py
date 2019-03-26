@@ -463,7 +463,7 @@ class WindResource(Resource):
     @property
     def heights(self):
         """
-        Extract available heights for pressure, temperature, windspeed
+        Extract available heights for pressure, temperature, windspeed, precip,
         and winddirection variables. Used for interpolation/extrapolation.
 
         Returns
@@ -477,7 +477,8 @@ class WindResource(Resource):
             heights = {'pressure': [],
                        'temperature': [],
                        'windspeed': [],
-                       'winddirection': []}
+                       'winddirection': [],
+                       'precipitationrate': []}
             for ds in dsets:
                 ds_name, h = self._parse_name(ds)
                 if ds_name in heights.keys():
@@ -802,6 +803,7 @@ class WindResource(Resource):
             if precip_rate:
                 var = 'precipitationrate'
                 ds_name = '{}_0m'.format(var)
+                SAM_res.append_var_list(var)
                 SAM_res[var] = res[ds_name, :, sites_slice]
 
         return SAM_res

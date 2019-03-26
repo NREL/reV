@@ -282,7 +282,7 @@ class TestWindResource:
         test variable interpolation
         """
         for var in WindResource_res.heights.keys():
-            if 'winddirection' not in var:
+            if 'winddirection' not in var and 'precip' not in var:
                 check_interp(WindResource_res, var, h)
 
         WindResource_res.close()

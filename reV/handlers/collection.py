@@ -198,13 +198,15 @@ class Collector:
                 os.remove(h5_file)
 
         self._h5_out = h5_file
-        self._h5_files = self.find_h5_files(h5_dir, file_prefix=file_prefix)
+        ignore = os.path.basename(self._h5_out)
+        self._h5_files = self.find_h5_files(h5_dir, file_prefix=file_prefix,
+                                            ignore=ignore)
         self._gids = self.parse_project_points(project_points)
         self._parallel = parallel
         self.combine_meta()
 
     @staticmethod
-    def find_h5_files(h5_dir, file_prefix=None):
+    def find_h5_files(h5_dir, file_prefix=None, ignore=None):
         """
         Search h5_dir for .h5 file, return sorted
         If file_prefix is not None, only return .h5 files with given prefix
@@ -215,14 +217,18 @@ class Collector:
             Root directory to search
         file_prefix : str
             Prefix for .h5 file in h5_dir, if None return all .h5 files
+        ignore : str | list | NoneType
+            File name(s) to ignore.
         """
+        if not isinstance(ignore, list):
+            ignore = [ignore]
         h5_files = []
         for file in os.listdir(h5_dir):
             if file.endswith('.h5'):
                 if file_prefix is not None:
-                    if file.startswith(file_prefix):
+                    if file.startswith(file_prefix) and file not in ignore:
                         h5_files.append(os.path.join(h5_dir, file))
-                else:
+                elif file not in ignore:
                     h5_files.append(os.path.join(h5_dir, file))
 
         return sorted(h5_files)
@@ -376,7 +382,6 @@ class Collector:
         """
         if dset_out is None:
             dset_out = dset
-
         with Outputs(self.h5_files[0], mode='r') as f:
             _, dtype, chunks = f.get_dset_properties(dset)
             attrs = f.get_attrs(dset)
