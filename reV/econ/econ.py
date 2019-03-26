@@ -57,9 +57,10 @@ class Econ(Gen):
             Project points control instance for site and SAM config spec.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str
-            reV generation year to calculate econ for. cf_year='my' will look
-            for the multi-year mean generation results.
+        cf_year : int | str | None
+            reV generation year to calculate econ for. Looks for cf_mean_{year}
+            or cf_profile_{year}. None will default to a non-year-specific cf
+            dataset (cf_mean, cf_profile).
         site_data : str | pd.DataFrame | None
             Site-specific data for econ calculation. Str points to csv,
             DataFrame is pre-extracted data. Rows match sites, columns are
@@ -80,8 +81,7 @@ class Econ(Gen):
         self._fout = fout
         self._dirout = dirout
         self.output_request = output_request
-        if site_data:
-            self.site_data = site_data
+        self.site_data = site_data
 
         # set memory utilization limit as static (not as important as for gen)
         self.mem_util_lim = 0.7
@@ -151,31 +151,68 @@ class Econ(Gen):
 
         Parameters
         ----------
-        inp : str | pd.DataFrame
-            Site data in .csv or pre-extracted dataframe format.
+        inp : str | pd.DataFrame | None
+            Site data in .csv or pre-extracted dataframe format. None signifies
+            that everything will be taken from the cf_file (generation outputs)
         """
 
-        if isinstance(inp, str):
-            if inp.endswith('.csv'):
-                self._site_data = pd.read_csv(inp)
-        elif isinstance(inp, pd.DataFrame):
-            self._site_data = inp
+        if not inp:
+            # no input, just initialize dataframe with site gids as index
+            self._site_data = pd.DataFrame(index=self.project_points.sites)
+        else:
+            # explicit input, initialize df
+            if isinstance(inp, str):
+                if inp.endswith('.csv'):
+                    self._site_data = pd.read_csv(inp)
+            elif isinstance(inp, pd.DataFrame):
+                self._site_data = inp
 
-        if not hasattr(self, '_site_data'):
-            # site data was not able to be set. Raise error.
-            raise Exception('Site data input must be .csv or '
-                            'dataframe, but received: {}'.format(inp))
+            if not hasattr(self, '_site_data'):
+                # site data was not able to be set. Raise error.
+                raise Exception('Site data input must be .csv or '
+                                'dataframe, but received: {}'.format(inp))
 
-        if ('gid' not in self._site_data and
-                self._site_data.index.name != 'gid'):
-            # require gid as column label or index
-            raise KeyError('Site data input must have "gid" column to match '
-                           'reV site index.')
+            if ('gid' not in self._site_data and
+                    self._site_data.index.name != 'gid'):
+                # require gid as column label or index
+                raise KeyError('Site data input must have "gid" column '
+                               'to match reV site index.')
 
-        if self._site_data.index.name != 'gid':
-            # make gid index if not already
-            self._site_data = self._site_data.\
-                set_index('gid', drop=True)
+            if self._site_data.index.name != 'gid':
+                # make gid index if not already
+                self._site_data = self._site_data.\
+                    set_index('gid', drop=True)
+
+        # add offshore if necessary
+        self.check_offshore()
+
+    def add_site_data_to_pp(self):
+        """Add the site df (site-specific inputs) to project points dataframe.
+
+        This ensures that only the relevant site's data will be passed through
+        to dask workers when points_control is iterated and split.
+        """
+        self.project_points.join_df(self.site_data, key=self.site_data.index)
+
+    def check_offshore(self):
+        """Ensure offshore boolean flag in site data df if available."""
+        # only run this once site_df has been set
+        if hasattr(self, '_site_data'):
+
+            if 'offshore' in self._site_data:
+                # offshore is already in site data df, just make sure boolean
+                self._site_data['offshore'] = self._site_data['offshore']\
+                    .astype(bool)
+
+            else:
+                # offshore not yet in site data df, check to see if in meta
+                if 'offshore' in self.meta:
+                    logger.info('Found "offshore" data in meta. Interpreting '
+                                'as wind sites that may be analyzed using '
+                                'ORCA.')
+                    # save offshore flags as boolean array
+                    self._site_data['offshore'] = self.meta['offshore']\
+                        .astype(bool)
 
     @property
     def cf_year(self):
@@ -183,9 +220,10 @@ class Econ(Gen):
 
         Returns
         -------
-        cf_year : int | str
-            reV generation year to calculate econ for. cf_year='my' will look
-            for the multi-year mean generation results.
+        cf_year : int | str | None
+            reV generation year to calculate econ for. Looks for cf_mean_{year}
+            or cf_profile_{year}. None will default to a non-year-specific cf
+            dataset (cf_mean, cf_profile).
         """
         return self._cf_year
 
@@ -218,17 +256,6 @@ class Econ(Gen):
         return fout
 
     @property
-    def sam_module(self):
-        """Get the SAM econ module associated with this econ analysis.
-
-        Returns
-        -------
-        module : str
-            String representation of the SAM module to be run.
-        """
-        return str(self.OPTIONS[self.output_request[0]])
-
-    @property
     def meta(self):
         """Get meta data from the source capacity factors file.
 
@@ -240,7 +267,10 @@ class Econ(Gen):
 
         if not hasattr(self, '_meta'):
             with Outputs(self.cf_file) as cfh:
-                self._meta = cfh.meta
+                # only take meta that belongs to this project's site list
+                self._meta = cfh.meta[
+                    cfh.meta['gid'].isin(self.points_control.sites)]
+            logger.debug('Meta shape is {}'.format(self._meta.shape))
         return self._meta
 
     @property
@@ -254,79 +284,6 @@ class Econ(Gen):
                     self._time_index = None
 
         return self._time_index
-
-    @property
-    def site_df(self):
-        """Get the dataframe of site-specific variables.
-
-        Returns
-        -------
-        _site_df : pd.DataFrame
-            Dataframe of site-specific input variables. Number of rows should
-            match the number of sites, column labels are the variable keys
-            that will be passed forward as SAM parameters.
-        """
-        if not hasattr(self, '_site_df'):
-            site_gids = self.meta['gid']
-            with Outputs(self.cf_file) as cfh:
-                if 'cf_mean' in cfh.dsets:
-                    cf_arr = cfh['cf_mean']
-                elif 'cf_mean_{}'.format(self.cf_year) in cfh.dsets:
-                    cf_arr = cfh['cf_mean_{}'.format(self.cf_year)]
-                elif 'cf' in cfh.dsets:
-                    cf_arr = cfh['cf']
-                elif 'cf_mean' in self.meta:
-                    cf_arr = self.meta['cf_mean']
-                else:
-                    raise KeyError('Could not find "cf_mean", "cf", or "{}" '
-                                   'dataset in {}. Looked in both the h5 '
-                                   'datasets and the meta data. The following '
-                                   'dsets were available: {}.'
-                                   .format('cf_mean_{}'.format(self.cf_year),
-                                           self.cf_file, cfh.dsets))
-
-            # set site-specific values in dataframe with
-            # columns -> variables, rows -> sites
-            self._site_df = pd.DataFrame({'capacity_factor': cf_arr},
-                                         index=site_gids)
-
-        # check for offshore flag and add to site_df before returning
-        if 'offshore' not in str(self._site_df.columns.values):
-            self.check_offshore()
-
-        return self._site_df
-
-    def add_site_df(self):
-        """Add the site df (site-specific inputs) to project points dataframe.
-
-        This ensures that only the relevant site's data will be passed through
-        to dask workers when points_control is iterated and split.
-        """
-        self.project_points.join_df(self.site_df, key=self.site_df.index)
-
-    def check_offshore(self):
-        """Check if input cf data has offshore flags then add to site_df."""
-        # only run this once site_df has been set
-        if hasattr(self, '_site_df'):
-            # only run this if offshore has not yet been added to site_df
-            if 'offshore' not in self._site_df:
-                # check for offshore flags for wind data
-                if 'offshore' in self.meta:
-                    logger.info('Found "offshore" data in meta. Interpreting '
-                                'as wind sites that may be analyzed using '
-                                'ORCA.')
-                    # save offshore flags as boolean array
-                    self._site_df['offshore'] = self.meta['offshore']\
-                        .astype(bool)
-
-                    # if available, merge site data into site_df
-                    if hasattr(self, '_site_data'):
-                        self._site_df = pd.merge(self._site_df,
-                                                 self.site_data,
-                                                 how='left', left_index=True,
-                                                 right_index=True,
-                                                 suffixes=['', '_site'],
-                                                 copy=False, validate='1:1')
 
     def econ_to_disk(self, fout='econ_out.h5'):
         """Save econ results to disk.
@@ -438,9 +395,10 @@ class Econ(Gen):
             to the sorted list of unique configs requested by points csv.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str
-            reV generation year to calculate econ for. cf_year='my' will look
-            for the multi-year mean generation results.
+        cf_year : int | str | None
+            reV generation year to calculate econ for. Looks for cf_mean_{year}
+            or cf_profile_{year}. None will default to a non-year-specific cf
+            dataset (cf_mean, cf_profile).
         site_data : str | pd.DataFrame | None
             Site-specific data for econ calculation. Str points to csv,
             DataFrame is pre-extracted data. Rows match sites, columns are
@@ -486,14 +444,12 @@ class Econ(Gen):
                             .format(econ.cf_file, diff))
 
         # make a kwarg dict
-        kwargs = {'output_request': output_request}
-
-        # additional kword inputs for single owner analysis
-        if 'SingleOwner' in econ.sam_module:
-            kwargs['cf_file'] = cf_file
+        kwargs = {'output_request': output_request,
+                  'cf_file': cf_file,
+                  'cf_year': cf_year}
 
         # add site_df to project points dataframe
-        econ.add_site_df()
+        econ.add_site_data_to_pp()
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
@@ -502,7 +458,9 @@ class Econ(Gen):
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
             out = execute_parallel(econ.run, pc, n_workers=n_workers,
-                                   loggers=[__name__, 'reV.SAM'], **kwargs)
+                                   loggers=[__name__, 'reV.econ',
+                                            'reV.generation', 'reV.SAM',
+                                            'reV.utilities'], **kwargs)
 
         # save output data to object attribute
         econ.out = out
@@ -534,9 +492,10 @@ class Econ(Gen):
             to the sorted list of unique configs requested by points csv.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str
-            reV generation year to calculate econ for. cf_year='my' will look
-            for the multi-year mean generation results.
+        cf_year : int | str | None
+            reV generation year to calculate econ for. Looks for cf_mean_{year}
+            or cf_profile_{year}. None will default to a non-year-specific cf
+            dataset (cf_mean, cf_profile).
         site_data : str | pd.DataFrame | None
             Site-specific data for econ calculation. Str points to csv,
             DataFrame is pre-extracted data. Rows match sites, columns are
@@ -580,14 +539,12 @@ class Econ(Gen):
                             .format(econ.cf_file, diff))
 
         # make a kwarg dict
-        kwargs = {'output_request': output_request}
-
-        # additional kword inputs for single owner analysis
-        if 'SingleOwner' in econ.sam_module:
-            kwargs['cf_file'] = cf_file
+        kwargs = {'output_request': output_request,
+                  'cf_file': cf_file,
+                  'cf_year': cf_year}
 
         # add site_df to project points dataframe
-        econ.add_site_df()
+        econ.add_site_data_to_pp()
 
         logger.info('Running parallel econ with smart data flushing '
                     'for: {}'.format(pc))
@@ -602,7 +559,8 @@ class Econ(Gen):
             # use SmartParallelJob to manage runs, but set mem limit to 1
             # because Econ() will manage the sites in-memory
             SmartParallelJob.execute(econ, pc, n_workers=n_workers,
-                                     loggers=['reV.econ', 'reV.SAM',
+                                     loggers=[__name__, 'reV.econ',
+                                              'reV.generation', 'reV.SAM',
                                               'reV.utilities'],
                                      mem_util_lim=1.0, **kwargs)
         except Exception as e:

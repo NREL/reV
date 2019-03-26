@@ -344,20 +344,19 @@ class SAM:
     @property
     def site(self):
         """Get the site number for this SAM simulation."""
+        if not hasattr(self, '_site'):
+            self._site = 'N/A'
         return self._site
 
     @site.setter
     def site(self, inp):
         """Set the site number based on resource input or integer."""
-        if not hasattr(self, '_site'):
-            if hasattr(inp, 'name'):
-                # Set the protected property with the site number from resource
-                self._site = inp.name
-            elif isinstance(inp, int):
-                self._site = inp
-            else:
-                # resource site number not found, set as N/A
-                self._site = 'N/A'
+        if hasattr(inp, 'name'):
+            # Set the protected property with the site number from resource
+            self._site = inp.name
+        else:
+            # resource site number not found, set as N/A
+            self._site = inp
 
     @staticmethod
     def get_sam_res(res_file, project_points, module):
@@ -735,9 +734,9 @@ class SAM:
             idx = 0
             while msg is not None:
                 msg = self.ssc.module_log(module, idx)
+                logger.exception(msg)
                 raise SAMExecutionError('SAM error message: "{}"'
                                         .format(msg.decode('utf-8')))
-                logger.exception(msg)
                 idx = idx + 1
             raise Exception(msg)
         self.ssc.module_free(module)

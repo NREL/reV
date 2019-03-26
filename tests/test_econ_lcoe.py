@@ -71,9 +71,11 @@ def test_ORCA(rut_id):
                           fout=None, dirout=None, return_obj=True)
 
     lcoe = list(obj.out['lcoe_fcr'])
+    msg = ('LCOE does not match (new, baseline): \n{} \n{}'
+           .format(lcoe, baseline[rut_id]))
     result = np.allclose(lcoe, baseline[rut_id], rtol=RTOL, atol=ATOL)
 
-    assert result
+    assert result, msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):
