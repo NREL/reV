@@ -40,7 +40,7 @@ class MultiYear(Outputs):
             raise HandlerRuntimeError("Cannot parse year from {}"
                                       .format(f_name))
 
-        dset_out = "{}_{}".format(dset, year)
+        dset_out = "{}-{}".format(dset, year)
         return dset_out
 
     def _copy_time_index(self, source_h5):
@@ -86,8 +86,8 @@ class MultiYear(Outputs):
             ds_attrs = f_in.get_attrs(dset=dset)
             ds_data = f_in[dset]
 
-        self._add_dset(dset_out, ds_data, ds_dtype,
-                       chunks=ds_chunks, attrs=ds_attrs)
+        self._create_dset(dset_out, ds_data.shape, ds_dtype,
+                          chunks=ds_chunks, attrs=ds_attrs, data=ds_data)
 
     def collect(self, h5_files, dset, profiles=False):
         """
@@ -105,16 +105,18 @@ class MultiYear(Outputs):
             If True also collect time_index
         """
         with Outputs(h5_files[0], mode='r') as f_in:
-            meta = f_in._h5['time_index'][...]
+            meta = f_in._h5['meta'][...]
 
-        self._create_dset('meta', meta.shape, meta.dtype,
-                          data=meta)
+        if 'meta' not in self.dsets:
+            self._create_dset('meta', meta.shape, meta.dtype,
+                              data=meta)
 
         meta = pd.DataFrame(meta)
         for year_h5 in h5_files:
-            self._copy_dset(year_h5, dset, meta=meta)
             if profiles:
                 self._copy_time_index(year_h5)
+
+            self._copy_dset(year_h5, dset, meta=meta)
 
     def _get_source_dsets(self, dset_out):
         """
@@ -130,7 +132,7 @@ class MultiYear(Outputs):
         source_dsets : list
             List of annual datasets
         """
-        dset = dset_out.split("_")[0]
+        dset = dset_out.split("-")[0]
         source_dsets = [ds for ds in self.dsets if dset in ds]
         if dset_out in source_dsets:
             source_dsets.remove(dset_out)
@@ -200,7 +202,7 @@ class MultiYear(Outputs):
         MY_means : ndarray
             Array of multi-year means for dataset of interest
         """
-        my_dset = "{}_means".format(dset)
+        my_dset = "{}-means".format(dset)
         if my_dset in self.dsets:
             MY_means = self[my_dset]
         else:
@@ -224,9 +226,8 @@ class MultiYear(Outputs):
         my_stdev : ndarray
             Array of multi-year standard deviations
         """
-        if not means:
-            means_dset = "{}_means".format(dset_out.split("_")[0])
-            means = self._compute_means(means_dset)
+        if means is None:
+            means = self._compute_means("{}-means".format(dset_out))
 
         source_dsets = self._get_source_dsets(dset_out)
 
@@ -258,7 +259,7 @@ class MultiYear(Outputs):
         MY_stdev : ndarray
             Array of multi-year standard deviation for dataset of interest
         """
-        my_dset = "{}_stdev".format(dset)
+        my_dset = "{}-stdev".format(dset)
         if my_dset in self.dsets:
             MY_stdev = self[my_dset]
         else:
