@@ -54,11 +54,12 @@ class MultiYear(Outputs):
         """
         dset = 'time_index'
         dset_out = self.create_dset_out(source_h5, dset)
-        with Outputs(source_h5, mode='r') as f_in:
-            time_index = f_in._h5['time_index'][...]
+        if dset_out not in self.dsets:
+            with Outputs(source_h5, mode='r') as f_in:
+                time_index = f_in._h5['time_index'][...]
 
-        self._create_dset(dset_out, time_index.shape, time_index.dtype,
-                          data=time_index)
+            self._create_dset(dset_out, time_index.shape, time_index.dtype,
+                              data=time_index)
 
     def _copy_dset(self, source_h5, dset, meta=None):
         """
@@ -74,20 +75,20 @@ class MultiYear(Outputs):
             If provided confirm that source meta matches given meta
         """
         dset_out = self.create_dset_out(source_h5, dset)
+        if dset_out not in self.dsets:
+            with Outputs(source_h5, unscale=False, mode='r') as f_in:
+                if meta is not None:
+                    cols = ['latitude', 'longitude']
+                    source_meta = f_in.meta
+                    if not meta[cols].equals(source_meta[cols]):
+                        raise HandlerRuntimeError('Coordinates do not match')
 
-        with Outputs(source_h5, unscale=False, mode='r') as f_in:
-            if meta is not None:
-                cols = ['latitude', 'longitude']
-                source_meta = f_in.meta
-                if not meta[cols].equals(source_meta[cols]):
-                    raise HandlerRuntimeError('Coordinates do not match')
+                _, ds_dtype, ds_chunks = f_in.get_dset_properties(dset)
+                ds_attrs = f_in.get_attrs(dset=dset)
+                ds_data = f_in[dset]
 
-            _, ds_dtype, ds_chunks = f_in.get_dset_properties(dset)
-            ds_attrs = f_in.get_attrs(dset=dset)
-            ds_data = f_in[dset]
-
-        self._create_dset(dset_out, ds_data.shape, ds_dtype,
-                          chunks=ds_chunks, attrs=ds_attrs, data=ds_data)
+            self._create_dset(dset_out, ds_data.shape, ds_dtype,
+                              chunks=ds_chunks, attrs=ds_attrs, data=ds_data)
 
     def collect(self, h5_files, dset, profiles=False):
         """
@@ -286,3 +287,39 @@ class MultiYear(Outputs):
         """
         MY_cv = self.stdev(dset) / self.means(dset)
         return MY_cv
+
+    @classmethod
+    def collect_means(cls, h5_file, h5_files, dset):
+        """
+        Collect and compute multi-year means for given dataset
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        h5_files : list
+            List of .h5 files to collect datasets from
+        dset : str
+            Dataset to collect
+        """
+        with cls(h5_file, mode='a') as my:
+            my.collect(h5_files, dset)
+            my.means(dset)
+            my.stdev(dset)
+
+    @classmethod
+    def collect_profiles(cls, h5_file, h5_files, dset):
+        """
+        Collect multi-year profiles associated with given dataset
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        h5_files : list
+            List of .h5 files to collect datasets from
+        dset : str
+            Profiles dataset to collect
+        """
+        with cls(h5_file, mode='a') as my:
+            my.collect(h5_files, dset, profiles=True)
