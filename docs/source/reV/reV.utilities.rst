@@ -12,6 +12,14 @@ reV.utilities.cli\_dtypes module
     :undoc-members:
     :show-inheritance:
 
+reV.utilities.curtailment module
+--------------------------------
+
+.. automodule:: reV.utilities.curtailment
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.utilities.exceptions module
 -------------------------------
 

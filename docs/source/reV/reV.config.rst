@@ -20,6 +20,14 @@ reV.config.base\_config module
     :undoc-members:
     :show-inheritance:
 
+reV.config.curtailment module
+-----------------------------
+
+.. automodule:: reV.config.curtailment
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.config.execution module
 ---------------------------
 
