@@ -134,17 +134,55 @@ def test_my_means(dset='cf_mean'):
 
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
     with MultiYear(my_out, mode='w') as my:
-        assert my._unscale, 'Unscale must be True'
         my.collect(H5_FILES, dset)
         dset_means = my.means(dset)
 
     compare_arrays(my_means, dset_means, "Computed Means")
 
     with MultiYear(my_out, mode='r') as my:
-        assert my._unscale, 'Unscale must be True'
         dset_means = my.means(dset)
 
     compare_arrays(my_means, dset_means, "Saved Means")
+
+    if PURGE_OUT:
+        os.remove(my_out)
+
+
+def test_update(dset='cf_mean'):
+    """
+    Test computation of multi-year means
+
+    Parameters
+    ----------
+    dset : str
+        dset to compute means from
+    """
+    init_logger('reV.handlers.multi_year')
+
+    my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
+    # Collect 2012 and compute 'means'
+    files = H5_FILES[:1]
+    MultiYear.collect_means(my_out, files, dset)
+    my_means = manual_means(files, dset)
+    my_std = manual_std(files, dset)
+    with MultiYear(my_out, mode='r') as my:
+        dset_means = my.means(dset)
+        dset_std = my.std(dset)
+
+    compare_arrays(my_means, dset_means, "2012 Means")
+    compare_arrays(my_std, dset_std, "2013 STD")
+
+    # Add 2013
+    files = H5_FILES
+    MultiYear.collect_means(my_out, files, dset)
+    my_means = manual_means(files, dset)
+    my_std = manual_std(files, dset)
+    with MultiYear(my_out, mode='r') as my:
+        dset_means = my.means(dset)
+        dset_std = my.std(dset)
+
+    compare_arrays(my_means, dset_means, "Updated Means")
+    compare_arrays(my_std, dset_std, "Updated STD")
 
     if PURGE_OUT:
         os.remove(my_out)

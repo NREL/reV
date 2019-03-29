@@ -55,6 +55,8 @@ class MultiYear(Outputs):
         dset = 'time_index'
         dset_out = self.create_dset_out(source_h5, dset)
         if dset_out not in self.dsets:
+            logger.debug("- Collecting time_index from {}"
+                         .format(os.path.basename(source_h5)))
             with Outputs(source_h5, mode='r') as f_in:
                 time_index = f_in._h5['time_index'][...]
 
@@ -76,6 +78,8 @@ class MultiYear(Outputs):
         """
         dset_out = self.create_dset_out(source_h5, dset)
         if dset_out not in self.dsets:
+            logger.debug("- Collecting {} from {}"
+                         .format(dset, os.path.basename(source_h5)))
             with Outputs(source_h5, unscale=False, mode='r') as f_in:
                 if meta is not None:
                     cols = ['latitude', 'longitude']
@@ -109,19 +113,15 @@ class MultiYear(Outputs):
             meta = f_in._h5['meta'][...]
 
         if 'meta' not in self.dsets:
+            logger.debug("Copying meta")
             self._create_dset('meta', meta.shape, meta.dtype,
                               data=meta)
 
         meta = pd.DataFrame(meta)
         for year_h5 in h5_files:
-            file_name = os.path.basename(year_h5)
             if profiles:
-                logger.debug("- Collecting 'time_index' from {}"
-                             .format(file_name))
                 self._copy_time_index(year_h5)
 
-            logger.debug("- Collecting {} from {}"
-                         .format(dset, file_name))
             self._copy_dset(year_h5, dset, meta=meta)
 
     def _get_source_dsets(self, dset_out):
@@ -139,7 +139,9 @@ class MultiYear(Outputs):
             List of annual datasets
         """
         dset = dset_out.split("-")[0]
-        source_dsets = [ds for ds in self.dsets if dset in ds]
+        my_dset = ["{}-{}".format(dset, val) for val in ['means', 'std']]
+        source_dsets = [ds for ds in self.dsets if dset in ds and
+                        ds not in my_dset]
         if dset_out in source_dsets:
             source_dsets.remove(dset_out)
 
@@ -313,8 +315,8 @@ class MultiYear(Outputs):
                     'and computing multi-year means and standard deviation.')
         with cls(my_file, mode='a') as my:
             my.collect(h5_files, dset)
-            my.means(dset)
-            my.std(dset)
+            means = my._compute_means("{}-means".format(dset))
+            my._compute_std("{}-std".format(dset), means=means)
 
     @classmethod
     def collect_profiles(cls, my_file, h5_files, dset):
