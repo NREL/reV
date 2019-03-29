@@ -116,10 +116,11 @@ class MultiYear(Outputs):
         for year_h5 in h5_files:
             file_name = os.path.basename(year_h5)
             if profiles:
-                logger.debug("- Collecting 'time_index' from {}")
-                self._copy_time_index(year_h5, file_name)
+                logger.debug("- Collecting 'time_index' from {}"
+                             .format(file_name))
+                self._copy_time_index(year_h5)
 
-            logger.debut("- Collecting {} from {}"
+            logger.debug("- Collecting {} from {}"
                          .format(dset, file_name))
             self._copy_dset(year_h5, dset, meta=meta)
 
@@ -159,7 +160,7 @@ class MultiYear(Outputs):
             logger.debug("- Updating {}".format(dset_out))
             self[dset_out] = dset_data
         else:
-            logger.debu("- Creating {}".format(dset_out))
+            logger.debug("- Creating {}".format(dset_out))
             source_dset = self._get_source_dsets(dset_out)[0]
             _, ds_dtype, ds_chunks = self.get_dset_properties(source_dset)
             ds_attrs = self.get_attrs(dset=source_dset)
@@ -182,7 +183,7 @@ class MultiYear(Outputs):
         """
         source_dsets = self._get_source_dsets(dset_out)
 
-        MY_means = np.zeros(len(self))
+        MY_means = np.zeros(len(self), dtype='float32')
         for ds in source_dsets:
             if self._h5[ds].shape == MY_means.shape:
                 MY_means += self[ds]
@@ -191,7 +192,7 @@ class MultiYear(Outputs):
                                           .format(ds, self._h5[ds].shape,
                                                   MY_means.shape))
         MY_means /= len(source_dsets)
-        self._update_dset(dset_out, MY_means)
+        self._update_dset(dset_out, MY_means.copy())
 
         return MY_means
 
@@ -217,20 +218,20 @@ class MultiYear(Outputs):
 
         return MY_means
 
-    def _compute_stdev(self, dset_out, means=None):
+    def _compute_std(self, dset_out, means=None):
         """
         Compute multi-year standard deviation for given dataset
 
         Parameters
         ----------
         dset_out : str
-            Multi-year stdev dataset name
+            Multi-year std dataset name
         means : ndarray
             Array of pre-computed means
 
         Returns
         -------
-        my_stdev : ndarray
+        my_std : ndarray
             Array of multi-year standard deviations
         """
         if means is None:
@@ -238,21 +239,21 @@ class MultiYear(Outputs):
 
         source_dsets = self._get_source_dsets(dset_out)
 
-        MY_stdev = np.zeros(means.shape)
+        MY_std = np.zeros(means.shape, dtype='float32')
         for ds in source_dsets:
-            if self._h5[ds].shape == MY_stdev.shape:
-                MY_stdev += (self[ds] - means)**2
+            if self._h5[ds].shape == MY_std.shape:
+                MY_std += (self[ds] - means)**2
             else:
                 raise HandlerRuntimeError("{} shape {} should be {}"
                                           .format(ds, self._h5[ds].shape,
-                                                  MY_stdev.shape))
+                                                  MY_std.shape))
 
-        MY_stdev = np.sqrt(MY_stdev / len(source_dsets))
-        self._update_dset(dset_out, MY_stdev)
+        MY_std = np.sqrt(MY_std / len(source_dsets))
+        self._update_dset(dset_out, MY_std.copy())
 
-        return MY_stdev
+        return MY_std
 
-    def stdev(self, dset):
+    def std(self, dset):
         """
         Extract or compute multi-year standard deviation for given source dset
 
@@ -263,17 +264,17 @@ class MultiYear(Outputs):
 
         Returns
         -------
-        MY_stdev : ndarray
+        MY_std : ndarray
             Array of multi-year standard deviation for dataset of interest
         """
-        my_dset = "{}-stdev".format(dset)
+        my_dset = "{}-std".format(dset)
         if my_dset in self.dsets:
-            MY_stdev = self[my_dset]
+            MY_std = self[my_dset]
         else:
             MY_means = self.means(dset)
-            MY_stdev = self._compute_stdev(my_dset, means=MY_means)
+            MY_std = self._compute_std(my_dset, means=MY_means)
 
-        return MY_stdev
+        return MY_std
 
     def CV(self, dset):
         """
@@ -291,7 +292,7 @@ class MultiYear(Outputs):
             Array of multi-year coefficient of variation for
             dataset of interest
         """
-        MY_cv = self.stdev(dset) / self.means(dset)
+        MY_cv = self.std(dset) / self.means(dset)
         return MY_cv
 
     @classmethod
@@ -313,7 +314,7 @@ class MultiYear(Outputs):
         with cls(my_file, mode='a') as my:
             my.collect(h5_files, dset)
             my.means(dset)
-            my.stdev(dset)
+            my.std(dset)
 
     @classmethod
     def collect_profiles(cls, my_file, h5_files, dset):

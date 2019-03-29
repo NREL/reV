@@ -317,6 +317,36 @@ class Outputs(Resource):
 
         return np.core.records.fromarrays(meta_arrays, dtype=dtypes)
 
+    @staticmethod
+    def _check_data_dtype(data, dtype, scale_factor):
+        """
+        Check data dtype and scale if needed
+
+        Parameters
+        ----------
+        data : ndarray
+            Data to be written to disc
+        dtype : str
+            dtype of data on disc
+        scale_factor : int
+            Scale factor to scale data to integer (if needed)
+
+        Returns
+        -------
+        data : ndarray
+            Data ready for writing to disc:
+            - Scaled and converted to dtype
+        """
+        if not np.issubdtype(data.dtype, np.dtype(dtype)):
+            # apply scale factor and dtype
+            data *= scale_factor
+            if np.issubdtype(dtype, np.integer):
+                data = np.round(data)
+
+            data = data.astype(dtype)
+
+        return data
+
     def _set_ds_array(self, ds_name, arr, *ds_slice):
         """
         Write ds to disk
@@ -334,7 +364,11 @@ class Outputs(Resource):
             msg = '{} must be initialized!'.format(ds_name)
             raise HandlerRuntimeError(msg)
 
-        self._h5[ds_name][ds_slice] = arr
+        dtype = self._h5[ds_name].dtype
+        scale_factor = self.get_scale(ds_name)
+
+        self._h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
+                                                             scale_factor)
 
     def _chunks(self, chunks):
         """
@@ -356,12 +390,12 @@ class Outputs(Resource):
             if chunks[0] is None:
                 chunk_0 = shape[0]
             else:
-                chunk_0 = np.min((shape[0], chunks[0]))
+                chunk_0 = chunks[0]
 
             if chunks[1] is None:
                 chunk_1 = shape[1]
             else:
-                chunk_1 = np.min((shape[1], chunks[1]))
+                chunk_1 = chunks[1]
 
             ds_chunks = (chunk_0, chunk_1)
         else:
@@ -449,18 +483,12 @@ class Outputs(Resource):
         """
         self._check_dset_shape(data)
 
-        if not np.issubdtype(data.dtype, np.dtype(dtype)):
-            if 'scale_factor' in attrs:
-                scale_factor = attrs['scale_factor']
-                # apply scale factor and dtype
-                data *= scale_factor
-                if np.issubdtype(dtype, np.integer):
-                    data = np.round(data)
-
-                data = data.astype(dtype)
-            else:
-                raise HandlerRuntimeError("A scale_factor is needed to"
-                                          "scale data to {}.".format(dtype))
+        if 'scale_factor' in attrs:
+            scale_factor = attrs['scale_factor']
+            data = self._check_data_dtype(data, dtype, scale_factor)
+        else:
+            raise HandlerRuntimeError("A scale_factor is needed to"
+                                      "scale data to {}.".format(dtype))
 
         self._create_dset(dset_name, data.shape, dtype,
                           chunks=chunks, attrs=attrs, data=data)
