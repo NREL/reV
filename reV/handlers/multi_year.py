@@ -114,9 +114,13 @@ class MultiYear(Outputs):
 
         meta = pd.DataFrame(meta)
         for year_h5 in h5_files:
+            file_name = os.path.basename(year_h5)
             if profiles:
-                self._copy_time_index(year_h5)
+                logger.debug("- Collecting 'time_index' from {}")
+                self._copy_time_index(year_h5, file_name)
 
+            logger.debut("- Collecting {} from {}"
+                         .format(dset, file_name))
             self._copy_dset(year_h5, dset, meta=meta)
 
     def _get_source_dsets(self, dset_out):
@@ -152,8 +156,10 @@ class MultiYear(Outputs):
             Dataset data to write to disc
         """
         if dset_out in self.dsets:
+            logger.debug("- Updating {}".format(dset_out))
             self[dset_out] = dset_data
         else:
+            logger.debu("- Creating {}".format(dset_out))
             source_dset = self._get_source_dsets(dset_out)[0]
             _, ds_dtype, ds_chunks = self.get_dset_properties(source_dset)
             ds_attrs = self.get_attrs(dset=source_dset)
@@ -289,37 +295,40 @@ class MultiYear(Outputs):
         return MY_cv
 
     @classmethod
-    def collect_means(cls, h5_file, h5_files, dset):
+    def collect_means(cls, my_file, h5_files, dset):
         """
         Collect and compute multi-year means for given dataset
 
         Parameters
         ----------
-        h5_file : str
+        my_file : str
             Path to .h5 resource file
         h5_files : list
             List of .h5 files to collect datasets from
         dset : str
             Dataset to collect
         """
-        with cls(h5_file, mode='a') as my:
+        logger.info('Collecting {} into {} '.format(dset, my_file),
+                    'and computing multi-year means and standard deviation.')
+        with cls(my_file, mode='a') as my:
             my.collect(h5_files, dset)
             my.means(dset)
             my.stdev(dset)
 
     @classmethod
-    def collect_profiles(cls, h5_file, h5_files, dset):
+    def collect_profiles(cls, my_file, h5_files, dset):
         """
         Collect multi-year profiles associated with given dataset
 
         Parameters
         ----------
-        h5_file : str
+        my_file : str
             Path to .h5 resource file
         h5_files : list
             List of .h5 files to collect datasets from
         dset : str
             Profiles dataset to collect
         """
-        with cls(h5_file, mode='a') as my:
+        logger.info('Collecting {} into {}'.format(dset, my_file))
+        with cls(my_file, mode='a') as my:
             my.collect(h5_files, dset, profiles=True)
