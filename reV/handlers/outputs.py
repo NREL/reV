@@ -339,7 +339,7 @@ class Outputs(Resource):
         """
         if not np.issubdtype(data.dtype, np.dtype(dtype)):
             # apply scale factor and dtype
-            data *= scale_factor
+            data = np.multiply(data, scale_factor)
             if np.issubdtype(dtype, np.integer):
                 data = np.round(data)
 

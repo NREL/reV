@@ -194,7 +194,7 @@ class MultiYear(Outputs):
                                           .format(ds, self._h5[ds].shape,
                                                   MY_means.shape))
         MY_means /= len(source_dsets)
-        self._update_dset(dset_out, MY_means.copy())
+        self._update_dset(dset_out, MY_means)
 
         return MY_means
 
@@ -251,7 +251,7 @@ class MultiYear(Outputs):
                                                   MY_std.shape))
 
         MY_std = np.sqrt(MY_std / len(source_dsets))
-        self._update_dset(dset_out, MY_std.copy())
+        self._update_dset(dset_out, MY_std)
 
         return MY_std
 
