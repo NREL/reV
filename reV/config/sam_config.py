@@ -23,9 +23,9 @@ class SAMConfig(BaseConfig):
         SAM_config : dict
             Keys are config ID's, values are filepaths to the SAM configs.
         """
-
-        # Initialize the SAM config section as a dictionary.
-        self.set_self_dict(SAM_configs)
+        self._clearsky = None
+        self._inputs = None
+        super().__init__(SAM_configs)
 
     @property
     def clearsky(self):
@@ -39,7 +39,7 @@ class SAMConfig(BaseConfig):
             Defaults to False (normal all-sky irradiance).
         """
 
-        if not hasattr(self, '_clearsky'):
+        if self._clearsky is None:
             self._clearsky = False
             for v in self.inputs.values():
                 self._clearsky = any((self._clearsky,
@@ -60,7 +60,7 @@ class SAMConfig(BaseConfig):
             The values are the imported json SAM input dictionaries.
         """
 
-        if not hasattr(self, '_inputs'):
+        if self._inputs is None:
             self._inputs = {}
             for key, fname in self.items():
                 # key is ID (i.e. sam_param_0) that matches project points json
