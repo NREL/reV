@@ -38,6 +38,9 @@ class Resource:
             self._h5 = h5py.File(self._h5_file, 'r')
 
         self._unscale = unscale
+        self._meta = None
+        self._time_index = None
+        self._heights = None
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
@@ -110,7 +113,7 @@ class Resource:
         meta : pandas.DataFrame
             Resource Meta Data
         """
-        if not hasattr(self, '_meta'):
+        if self._meta is None:
             self._meta = pd.DataFrame(self._h5['meta'][...])
 
         return self._meta
@@ -125,7 +128,7 @@ class Resource:
         time_index : pandas.DatetimeIndex
             Resource datetime index
         """
-        if not hasattr(self, '_time_index'):
+        if self._time_index is None:
             ti = self._h5['time_index'][...].astype(str)
             self._time_index = pd.to_datetime(ti)
 
@@ -288,7 +291,6 @@ class Resource:
         site : int
             Site to extract SAM DataFrame for
         """
-        pass
 
     def _get_ds(self, ds_name, *ds_slice):
         """
@@ -348,7 +350,6 @@ class Resource:
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
         """
-        pass
 
 
 class SolarResource(Resource):
@@ -473,7 +474,7 @@ class WindResource(Resource):
             List of available heights for:
             windspeed, winddirection, temperature, and pressure
         """
-        if not hasattr(self, '_heights'):
+        if self._heights is None:
             dsets = list(self._h5)
             heights = {'pressure': [],
                        'temperature': [],
