@@ -18,7 +18,7 @@ class Resource:
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
 
-    def __init__(self, h5_file, unscale=True, hsds=False):
+    def __init__(self, h5_file, unscale=True):
         """
         Parameters
         ----------
@@ -26,21 +26,13 @@ class Resource:
             Path to .h5 resource file
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
         """
         self._h5_file = h5_file
-        if hsds:
-            import h5pyd
-            self._h5 = h5pyd.File(self._h5_file, 'r')
-        else:
-            self._h5 = h5py.File(self._h5_file, 'r')
+        self._h5 = h5py.File(self._h5_file, 'r')
 
         self._unscale = unscale
         self._meta = None
         self._time_index = None
-        self._heights = None
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
@@ -427,11 +419,40 @@ class NSRDB(SolarResource):
     SCALE_ATTR = 'psm_scale_factor'
     UNIT_ATTRS = 'psm_units'
 
+    def __init__(self, h5_file, unscale=True, hsds=False):
+        """
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        """
+        super().__init__(h5_file, unscale=unscale)
+        if hsds:
+            import h5pyd
+            self._h5 = h5pyd.File(self._h5_file, 'r')
+
 
 class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
+    def __init__(self, h5_file, unscale=True):
+        """
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        """
+        self._heights = None
+        super().__init__(h5_file, unscale=unscale)
+
     @staticmethod
     def _parse_name(ds_name):
         """
