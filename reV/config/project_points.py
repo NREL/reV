@@ -233,17 +233,16 @@ class ProjectPoints:
         self._points = points
         self._res_file = res_file
         self._tech = tech
-        self._curtailment = self._parse_curtailment(curtailment)
+        self._sam_config_obj = None
         self._sites_as_slice = None
         self._h = None
-
         self._df = None
         self._sites = None
+        self._curtailment = self._parse_curtailment(curtailment)
+        self._sam_files = self._create_sam_dict(sam_files)
+
         # create the project points from the raw configuration dict
         self.parse_project_points(points)
-
-        self._sam_config_obj = None
-        self._sam_files = self._create_sam_dict(sam_files)
 
     def __getitem__(self, site):
         """Get the SAM config ID and dictionary for the requested site.
