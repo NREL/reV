@@ -20,7 +20,7 @@ class SAMConfig(BaseConfig):
 
         Parameters
         ----------
-        SAM_config : dict
+        SAM_configs : dict
             Keys are config ID's, values are filepaths to the SAM configs.
         """
         self._clearsky = None

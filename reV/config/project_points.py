@@ -34,25 +34,25 @@ class PointsControl:
         self._sites_per_split = sites_per_split
         self._split_range = []
         self._i = 0
-        # _last_site attribute is the starting index of the next
-        # iteration. This is taken from the first index of the pp dataframe.
-        self._last_site = self.project_points.df.index[0]
-
-        # _ilim is the maximum index value
-        self._ilim = self.project_points.df.index[-1] + 1
         self._iter_list = []
 
     def __iter__(self):
         """Initialize the iterator by pre-splitting into a list attribute."""
+        # _last_site attribute is the starting index of the next
+        # iteration. This is taken from the first index of the pp dataframe.
+        last_site = self.project_points.df.index[0]
+
+        # _ilim is the maximum index value
+        ilim = self.project_points.df.index[-1] + 1
+
         logger.debug('PointsControl iterator initializing with site indices '
-                     '{} through {}'
-                     .format(self._last_site, self._ilim))
+                     '{} through {}'.format(last_site, ilim))
 
         # pre-initialize all iter objects
         while True:
-            i0 = self._last_site
-            i1 = np.min([i0 + self.sites_per_split, self._ilim])
-            self._last_site = i1
+            i0 = last_site
+            i1 = np.min([i0 + self.sites_per_split, ilim])
+            last_site = i1
 
             new = PointsControl.split(i0, i1, self.project_points,
                                       sites_per_split=self.sites_per_split)
@@ -63,7 +63,6 @@ class PointsControl:
                 break
             else:
                 self._iter_list.append(new)
-        # pre-init iter limit as length of iter list
         logger.debug('PointsControl stopped iteration at attempted '
                      'index of {}. Length of iterator is: {}'
                      .format(i1, len(self)))
@@ -210,7 +209,7 @@ class ProjectPoints:
         points : slice | str | pd.DataFrame
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
-        sam_files : dict | str | list
+        sam_files : dict | str
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s), top level value is the SAM path. Can also be a single
             config file str. If it's a list, it is mapped to the sorted list
@@ -327,23 +326,8 @@ class ProjectPoints:
                  'input of type: "{}". Expected None, dict, str, or '
                  'Curtailment object. Defaulting to no curtailment.',
                  ConfigWarning)
+
         return curtailment
-
-    @curtailment.setter
-    def curtailment(self, curtailment_input):
-        """Set the curtailment config object.
-
-        Parameters
-        ----------
-        curtailment : NoneType | dict | str | config.curtailment.Curtailment
-            Inputs for curtailment parameters. If not None, curtailment inputs
-            are expected. Can be:
-                - Explicit namespace of curtailment variables (dict)
-                - Pointer to curtailment config json file with path (str)
-                - Instance of curtailment config object
-                  (config.curtailment.Curtailment)
-        """
-        self._curtailment = self._parse_curtailment(curtailment_input)
 
     @property
     def df(self):
@@ -397,18 +381,6 @@ class ProjectPoints:
                             'dictionary but received: {}'.format(type(data)))
 
         return df
-
-    @df.setter
-    def df(self, data):
-        """Set the project points dataframe property.
-
-        Parameters
-        ----------
-        data : str | dict | pd.DataFrame
-            Either a csv filename, dict with sites and configs keys, or full
-            dataframe.
-        """
-        self._df = self._create_df(data)
 
     def join_df(self, df2, key='gid'):
         """Join new df2 to the _df attribute using the _df's gid as pkey.
@@ -515,20 +487,6 @@ class ProjectPoints:
 
         return sam_files
 
-    @sam_files.setter
-    def sam_files(self, files):
-        """Set the SAM files dictionary.
-
-        Parameters
-        ----------
-        files : dict | str | list
-            SAM input configuration ID(s) and file path(s). Keys are the SAM
-            config ID(s), top level value is the SAM path. Can also be a single
-            config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv.
-        """
-        self._sam_files = self._create_sam_dict(files)
-
     @property
     def sam_config_obj(self):
         """Get the SAM config object.
@@ -605,20 +563,6 @@ class ProjectPoints:
                             .format(type(sites)))
 
         return p_sites
-
-    @sites.setter
-    def sites(self, sites):
-        """Set the sites property.
-
-        Parameters
-        ----------
-        sites : list | tuple | slice
-            Data to be interpreted as the site list. Can be an explicit site
-            list (list or tuple) or a slice that will be converted to a list.
-            If slice stop is None, the length of the first resource meta
-            dataset is taken as the stop value.
-        """
-        self._sites = self._parse_sites(sites)
 
     @property
     def sites_as_slice(self):
