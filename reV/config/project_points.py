@@ -53,6 +53,9 @@ class PointsControl:
         while True:
             i0 = last_site
             i1 = np.min([i0 + self.sites_per_split, ilim])
+            if i0 == i1:
+                break
+
             last_site = i1
 
             new = PointsControl.split(i0, i1, self.project_points,
@@ -297,6 +300,11 @@ class ProjectPoints:
             df = pd.DataFrame(points)
         elif isinstance(points, (slice, list, tuple)):
             df = ProjectPoints._parse_sites(points, res_file=res_file)
+        elif isinstance(points, pd.DataFrame):
+            df = points
+        else:
+            raise ValueError('Cannot parse Project points data from {}'
+                             .format(type(points)))
 
         if ('gid' not in df.columns or 'config' not in df.columns):
             raise KeyError('Project points data must contain "gid" and '
@@ -401,7 +409,7 @@ class ProjectPoints:
         elif isinstance(sam_config, str):
             config_dict = {os.path.basename(sam_config): sam_config}
 
-        for key, value in config_dict:
+        for key, value in config_dict.items():
             if not os.path.isfile(value):
                 raise ConfigError('Invalid SAM config {}: {} does not exist'
                                   .format(key, value))
@@ -667,11 +675,10 @@ class ProjectPoints:
 
         # Extract DF subset with only index values between i0 and i1
         mask = project_points.df.index.isin(list(range(i0, i1)))
-        points_df = project_points.df[mask]
+        points_df = project_points.df.loc[mask]
 
         # make a new instance of ProjectPoints with subset DF
         sub = cls(points_df, project_points.sam_files, project_points.tech,
-                  res_file=project_points.res_file,
                   curtailment=project_points.curtailment)
 
         return sub

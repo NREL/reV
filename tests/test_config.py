@@ -64,6 +64,7 @@ def test_proj_points_split(start, interval):
     iter_interval = 5
     for i0 in range(start, 100, iter_interval):
         i1 = i0 + iter_interval
+
         pp_0 = ProjectPoints.split(i0, i1, pp)
 
         if not pp_0.sites:
