@@ -24,6 +24,8 @@ def res():
 
     sam_files = [TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
                  TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json']
+    sam_files = {'sam_param_{}'.format(i): k for i, k in
+                 enumerate(sam_files)}
 
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
     res = NSRDB.preload_SAM(res_file, pp)
@@ -89,6 +91,8 @@ def test_PV_lat_tilt(res, site_index):
     rev2_points = TESTDATADIR + '/project_points/ri.csv'
     sam_files = [TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
                  TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json']
+    sam_files = {'sam_param_{}'.format(i): k for i, k in
+                 enumerate(sam_files)}
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
 
     for i, [res_df, meta] in enumerate(res):

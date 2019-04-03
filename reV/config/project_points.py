@@ -13,7 +13,6 @@ from reV.handlers.resource import Resource
 from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,13 +38,7 @@ class PointsControl:
 
     def __iter__(self):
         """Initialize the iterator by pre-splitting into a list attribute."""
-        # last_site attribute is the starting index of the next
-        # iteration. This is taken from the first index of the pp dataframe.
-        # # last_site = self.project_points.df.index[0]
         last_site = 0
-
-        # ilim is the maximum index value
-        # # ilim = self.project_points.df.index[-1] + 1
         ilim = len(self.project_points)
 
         logger.debug('PointsControl iterator initializing with site indices '
@@ -409,7 +402,10 @@ class ProjectPoints:
         if isinstance(sam_config, dict):
             config_dict = sam_config
         elif isinstance(sam_config, str):
-            config_dict = {os.path.basename(sam_config): sam_config}
+            config_dict = {sam_config: sam_config}
+        else:
+            raise ValueError('Cannot parse SAM configs from {}'
+                             .format(type(sam_config)))
 
         for key, value in config_dict.items():
             if not os.path.isfile(value):
@@ -473,12 +469,13 @@ class ProjectPoints:
         if len(df_configs) == 1:
             if df_configs[0] is None:
                 self._df['config'] = list(sam_configs.values())[0]
+
                 df_configs = self.df['config'].unique()
 
         configs = {}
         for config in df_configs:
             if os.path.isfile(config):
-                configs[os.path.basename(config)] = config
+                configs[config] = config
             elif config in sam_configs:
                 configs[config] = sam_configs[config]
             else:

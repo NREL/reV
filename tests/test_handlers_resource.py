@@ -107,7 +107,7 @@ def check_dset(res_cls, ds_name):
     assert ds.shape == (ds_shape[1],)
     # single value
     ds = res_cls[ds_name, 10, 10]
-    assert isinstance(ds, (int, float))
+    assert isinstance(ds, (np.integer, np.floating))
     # site slice
     ds = res_cls[ds_name, :, 10:20]
     assert isinstance(ds, np.ndarray)
