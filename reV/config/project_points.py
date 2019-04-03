@@ -39,12 +39,14 @@ class PointsControl:
 
     def __iter__(self):
         """Initialize the iterator by pre-splitting into a list attribute."""
-        # _last_site attribute is the starting index of the next
+        # last_site attribute is the starting index of the next
         # iteration. This is taken from the first index of the pp dataframe.
-        last_site = self.project_points.df.index[0]
+        # # last_site = self.project_points.df.index[0]
+        last_site = 0
 
-        # _ilim is the maximum index value
-        ilim = self.project_points.df.index[-1] + 1
+        # ilim is the maximum index value
+        # # ilim = self.project_points.df.index[-1] + 1
+        ilim = len(self.project_points)
 
         logger.debug('PointsControl iterator initializing with site indices '
                      '{} through {}'.format(last_site, ilim))
