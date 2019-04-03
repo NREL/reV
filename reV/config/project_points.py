@@ -672,10 +672,13 @@ class ProjectPoints:
             attributes: sites, project points df, and the self dictionary data
             struct.
         """
-
         # Extract DF subset with only index values between i0 and i1
-        mask = project_points.df.index.isin(list(range(i0, i1)))
-        points_df = project_points.df.loc[mask]
+        n = len(project_points)
+        if i0 > n or i1 > n:
+            raise ValueError('{} and {} must be within the range of '
+                             'project_points (0 - {})'.format(i0, i1, n - 1))
+
+        points_df = project_points.df.iloc[i0:i1]
 
         # make a new instance of ProjectPoints with subset DF
         sub = cls(points_df, project_points.sam_files, project_points.tech,

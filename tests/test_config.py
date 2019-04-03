@@ -62,17 +62,16 @@ def test_proj_points_split(start, interval):
                        res_file=res_file)
 
     iter_interval = 5
-    for i0 in range(start, 100, iter_interval):
+    for i0 in range(0, len(pp), iter_interval):
         i1 = i0 + iter_interval
+        if i1 > len(pp):
+            break
 
         pp_0 = ProjectPoints.split(i0, i1, pp)
 
-        if not pp_0.sites:
-            break
-
         msg = 'ProjectPoints split did not function correctly!'
         assert pp_0.sites == pp.sites[i0:i1], msg
-        assert all(pp_0.df == pp.df.iloc[i0:i1, :]), msg
+        assert all(pp_0.df == pp.df.iloc[i0:i1]), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):
