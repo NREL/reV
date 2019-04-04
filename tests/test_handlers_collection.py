@@ -1,5 +1,5 @@
 """
-pytests for resource handlers
+pytests for output collection
 """
 import h5py
 import numpy as np

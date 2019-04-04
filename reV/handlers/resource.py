@@ -317,17 +317,18 @@ class Resource:
             ndarray of variable timeseries data
             If unscale, returned in native units else in scaled units
         """
-        if ds_name in self.dsets:
-            ds = self._h5[ds_name]
-            if self._unscale:
-                scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
-            else:
-                scale_factor = 1
-
-            return ds[ds_slice] / scale_factor
-        else:
+        if ds_name not in self.dsets:
             raise HandlerKeyError('{} not in {}'
                                   .format(ds_name, self.dsets))
+
+        ds = self._h5[ds_name]
+        out = ds[ds_slice]
+        if self._unscale:
+            scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
+            out = out.astype('float32')
+            out /= scale_factor
+
+        return out
 
     def close(self):
         """

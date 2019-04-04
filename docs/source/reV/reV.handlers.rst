@@ -12,6 +12,14 @@ reV.handlers.collection module
     :undoc-members:
     :show-inheritance:
 
+reV.handlers.multi\_year module
+-------------------------------
+
+.. automodule:: reV.handlers.multi_year
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.handlers.outputs module
 ---------------------------
 

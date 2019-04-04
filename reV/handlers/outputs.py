@@ -126,8 +126,8 @@ class Outputs(Resource):
         """
         mode = ['a', 'w', 'w-', 'x']
         if self._mode not in mode:
-            msg = 'mode must be writable: {}'.format(mode)
-            raise HandlerRuntimeError(msg)
+            raise HandlerRuntimeError('mode must be writable: {}'
+                                      .format(mode))
 
         return True
 
@@ -317,6 +317,36 @@ class Outputs(Resource):
 
         return np.core.records.fromarrays(meta_arrays, dtype=dtypes)
 
+    @staticmethod
+    def _check_data_dtype(data, dtype, scale_factor):
+        """
+        Check data dtype and scale if needed
+
+        Parameters
+        ----------
+        data : ndarray
+            Data to be written to disc
+        dtype : str
+            dtype of data on disc
+        scale_factor : int
+            Scale factor to scale data to integer (if needed)
+
+        Returns
+        -------
+        data : ndarray
+            Data ready for writing to disc:
+            - Scaled and converted to dtype
+        """
+        if not np.issubdtype(data.dtype, np.dtype(dtype)):
+            # apply scale factor and dtype
+            data = np.multiply(data, scale_factor)
+            if np.issubdtype(dtype, np.integer):
+                data = np.round(data)
+
+            data = data.astype(dtype)
+
+        return data
+
     def _set_ds_array(self, ds_name, arr, *ds_slice):
         """
         Write ds to disk
@@ -334,17 +364,22 @@ class Outputs(Resource):
             msg = '{} must be initialized!'.format(ds_name)
             raise HandlerRuntimeError(msg)
 
-        self._h5[ds_name][ds_slice] = arr
+        dtype = self._h5[ds_name].dtype
+        scale_factor = self.get_scale(ds_name)
 
-    def _chunks(self, chunks):
+        self._h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
+                                                             scale_factor)
+
+    def _check_chunks(self, chunks, data=None):
         """
         Convert dataset chunk size into valid tuple based on variable array
         shape
-
         Parameters
         ----------
         chunks : tuple
             Desired dataset chunk size
+        data : ndarray
+            Dataset array being chunked
 
         Returns
         -------
@@ -352,7 +387,11 @@ class Outputs(Resource):
             dataset chunk size
         """
         if chunks is not None:
-            shape = self.shape
+            if data is not None:
+                shape = data.shape
+            else:
+                shape = self.shape
+
             if chunks[0] is None:
                 chunk_0 = shape[0]
             else:
@@ -390,7 +429,7 @@ class Outputs(Resource):
             Dataset data array
         """
         if self.writable:
-            chunks = self._chunks(chunks)
+            chunks = self._check_chunks(chunks, data=data)
             ds = self._h5.create_dataset(ds_name, shape=shape, dtype=dtype,
                                          chunks=chunks)
             if attrs is not None:
@@ -449,18 +488,12 @@ class Outputs(Resource):
         """
         self._check_dset_shape(data)
 
-        if not np.issubdtype(data.dtype, np.dtype(dtype)):
-            if 'scale_factor' in attrs:
-                scale_factor = attrs['scale_factor']
-                # apply scale factor and dtype
-                data *= scale_factor
-                if np.issubdtype(dtype, np.integer):
-                    data = np.round(data)
-
-                data = data.astype(dtype)
-            else:
-                raise HandlerRuntimeError("A scale_factor is needed to"
-                                          "scale data to {}.".format(dtype))
+        if 'scale_factor' in attrs:
+            scale_factor = attrs['scale_factor']
+            data = self._check_data_dtype(data, dtype, scale_factor)
+        else:
+            raise HandlerRuntimeError("A scale_factor is needed to"
+                                      "scale data to {}.".format(dtype))
 
         self._create_dset(dset_name, data.shape, dtype,
                           chunks=chunks, attrs=attrs, data=data)
