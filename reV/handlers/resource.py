@@ -424,7 +424,7 @@ class NSRDB(SolarResource):
     Class to handle NSRDB .h5 files
     """
     SCALE_ATTR = 'psm_scale_factor'
-    UNIT_ATTRS = 'psm_units'
+    UNIT_ATTR = 'psm_units'
 
 
 class WindResource(Resource):
