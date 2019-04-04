@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class Economic(SAM):
-    """Base class for SAM economic models.
-    """
+    """Base class for SAM economic models."""
     MODULE = None
 
     def __init__(self, ssc, data, parameters, site_parameters=None,
@@ -140,6 +139,152 @@ class Economic(SAM):
 
         return sys_cap
 
+    @staticmethod
+    def get_annual_energy(site, site_df, site_gids, cf_arr, inputs, calc_aey):
+        """Get the single-site cf and annual energy and add to site_df.
+
+        Parameters
+        ----------
+        site : int
+            Site gid.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
+        site_gids : list
+            List of all site gid values from the cf_file.
+        cf_arr : np.ndarray
+            Array of cf_mean values for all sites in the cf_file for the
+            given year.
+        inputs : dict
+            Dictionary of SAM input parameters.
+        calc_aey : bool
+            Flag to add annual_energy to df (should be false for ORCA).
+
+        Returns
+        -------
+        site_df : pd.DataFrame
+            Same as input but with added labels "capacity_factor" and
+            "annual_energy" (latter is dependent on calc_aey flag).
+        """
+
+        # check to see if this site is offshore
+        offshore = False
+        if 'offshore' in site_df:
+            offshore = (bool(site_df.loc[site, 'offshore']) and
+                        not np.isnan(site_df.loc[site, 'offshore']))
+
+        # get the index location of the site in question
+        isite = site_gids.index(site)
+
+        # calculate the capacity factor
+        cf = cf_arr[isite]
+        if cf > 1:
+            warn('Capacity factor > 1. Dividing by 100.')
+            cf /= 100
+        site_df.loc[site, 'capacity_factor'] = cf
+
+        # calculate the annual energy yield if not input;
+        # offshore requires that ORCA does the aey calc
+        if calc_aey and not offshore:
+            # get the system capacity
+            sys_cap = Economic.parse_sys_cap(site, inputs, site_df)
+
+            # Calc annual energy, mult by 8760 to convert kW to kWh
+            aey = sys_cap * cf * 8760
+
+            # add aey to site-specific inputs
+            site_df.loc[site, 'annual_energy'] = aey
+        return site_df
+
+    @staticmethod
+    def get_gen_profile(site, site_df, cf_file, cf_year, inputs):
+        """Get the single-site generation time series and add to inputs dict.
+
+        Parameters
+        ----------
+        site : int
+            Site gid.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
+        cf_file : str
+            reV generation capacity factor output file with path.
+        cf_year : int | str | None
+            reV generation year to calculate econ for. Looks for cf_mean_{year}
+            or cf_profile_{year}. None will default to a non-year-specific cf
+            dataset (cf_mean, cf_profile).
+        inputs : dict
+            Dictionary of SAM input parameters.
+
+        Returns
+        -------
+        inputs : dict
+            Dictionary of SAM input parameters with the generation profile
+            added.
+        """
+
+        # get the system capacity
+        sys_cap = Economic.parse_sys_cap(site, inputs, site_df)
+
+        # Retrieve the generation profile for single owner input
+        with Outputs(cf_file) as cfh:
+
+            # get the index location of the site in question
+            site_gids = list(cfh.meta['gid'])
+            isite = site_gids.index(site)
+
+            # look for the cf_profile dataset
+            if 'cf_profile' in cfh.dsets:
+                gen = cfh['cf_profile', :, isite] * sys_cap
+            elif 'cf_profile-{}'.format(cf_year) in cfh.dsets:
+                gen = (cfh['cf_profile-{}'.format(cf_year), :, isite] *
+                       sys_cap)
+            elif 'cf_profile_{}'.format(cf_year) in cfh.dsets:
+                gen = (cfh['cf_profile_{}'.format(cf_year), :, isite] *
+                       sys_cap)
+            else:
+                raise KeyError('Could not find cf_profile values for '
+                               'SingleOwner. Available datasets: {}'
+                               .format(cfh.dsets))
+        # add to input dict
+        inputs['gen'] = gen
+
+        return inputs
+
+    @classmethod
+    def reV_run(cls, site, site_df, inputs, output_request):
+        """Run the SAM econ model for a single site.
+
+        Parameters
+        ----------
+        site : int
+            Site gid.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
+        inputs : dict
+            Dictionary of SAM input parameters.
+        output_request : list | tuple | str
+            Requested SAM output(s) (e.g., 'ppa_price', 'lcoe_fcr').
+
+        Returns
+        -------
+        sim.outputs : SAM.SiteOutput
+            Slotted dictionary emulator keyed by SAM variable names with SAM
+            numerical results.
+        """
+
+        # Create SAM econ instance and calculate requested output.
+        sim = cls(ssc=None, data=None, parameters=inputs,
+                  site_parameters=dict(site_df.loc[site, :]),
+                  output_request=output_request)
+        sim.site = site
+        sim.execute(cls.MODULE)
+        return sim.outputs
+
 
 class LCOE(Economic):
     """SAM LCOE model.
@@ -152,6 +297,64 @@ class LCOE(Economic):
         super().__init__(ssc, data, parameters,
                          site_parameters=site_parameters,
                          output_request=output_request)
+
+    @staticmethod
+    def _parse_lcoe_inputs(site_df, cf_file, cf_year):
+        """Parse for non-site-specific LCOE inputs.
+
+        Parameters
+        ----------
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
+        cf_file : str
+            reV generation capacity factor output file with path.
+        cf_year : int | str | None
+            reV generation year to calculate econ for. Looks for cf_mean_{year}
+            or cf_profile_{year}. None will default to a non-year-specific cf
+            dataset (cf_mean, cf_profile).
+
+        Returns
+        -------
+        site_gids : list
+            List of all site gid values from the cf_file.
+        calc_aey : bool
+            Flag to require calculation of the annual energy yield before
+            running LCOE.
+        cf_arr : np.ndarray
+            Array of cf_mean values for all sites in the cf_file for the
+            given year.
+        """
+
+        # get the cf_file meta data gid's to use as indexing tools
+        with Outputs(cf_file) as cfh:
+            site_gids = list(cfh.meta['gid'])
+
+        calc_aey = False
+        if 'annual_energy' not in site_df:
+            # annual energy yield has not been input, flag to calculate
+            site_df.loc[:, 'annual_energy'] = np.nan
+            calc_aey = True
+
+        # make sure capacity factor is present in site-specific data
+        if 'capacity_factor' not in site_df:
+            site_df.loc[:, 'capacity_factor'] = np.nan
+
+        # pull all cf mean values for LCOE calc
+        with Outputs(cf_file) as cfh:
+            if 'cf_mean' in cfh.dsets:
+                cf_arr = cfh['cf_mean']
+            elif 'cf_mean-{}'.format(cf_year) in cfh.dsets:
+                cf_arr = cfh['cf_mean-{}'.format(cf_year)]
+            elif 'cf_mean_{}'.format(cf_year) in cfh.dsets:
+                cf_arr = cfh['cf_mean_{}'.format(cf_year)]
+            elif 'cf' in cfh.dsets:
+                cf_arr = cfh['cf']
+            else:
+                raise KeyError('Could not find cf_mean values for LCOE. '
+                               'Available datasets: {}'.format(cfh.dsets))
+        return site_gids, calc_aey, cf_arr
 
     def execute(self, module_to_run, close=True):
         """Execute a SAM economic model calculation."""
@@ -202,71 +405,17 @@ class LCOE(Economic):
 
         out = {}
 
-        # get the cf_file meta data gid's to use as indexing tools
-        with Outputs(cf_file) as cfh:
-            site_gids = list(cfh.meta['gid'])
-
-        calc_aey = False
-        if 'annual_energy' not in site_df:
-            # annual energy yield has not been input, flag to calculate
-            site_df.loc[:, 'annual_energy'] = np.nan
-            calc_aey = True
-
-        # make sure capacity factor is present in site-specific data
-        if 'capacity_factor' not in site_df:
-            site_df.loc[:, 'capacity_factor'] = np.nan
-
-        # pull all cf mean values for LCOE calc
-        with Outputs(cf_file) as cfh:
-            if 'cf_mean' in cfh.dsets:
-                cf_arr = cfh['cf_mean']
-            elif 'cf_mean_{}'.format(cf_year) in cfh.dsets:
-                cf_arr = cfh['cf_mean_{}'.format(cf_year)]
-            elif 'cf' in cfh.dsets:
-                cf_arr = cfh['cf']
-            else:
-                raise KeyError('Could not find cf_mean values for LCOE. '
-                               'Available datasets: {}'.format(cfh.dsets))
+        site_gids, calc_aey, cf_arr = cls._parse_lcoe_inputs(site_df, cf_file,
+                                                             cf_year)
 
         for site in points_control.sites:
             # get SAM inputs from project_points based on the current site
             _, inputs = points_control.project_points[site]
 
-            # check to see if this site is offshore
-            offshore = False
-            if 'offshore' in site_df:
-                offshore = (bool(site_df.loc[site, 'offshore']) and
-                            not np.isnan(site_df.loc[site, 'offshore']))
+            site_df = cls.get_annual_energy(site, site_df, site_gids, cf_arr,
+                                            inputs, calc_aey)
 
-            # get the index location of the site in question
-            isite = site_gids.index(site)
-
-            # calculate the capacity factor
-            cf = cf_arr[isite]
-            if cf > 1:
-                warn('Capacity factor > 1. Dividing by 100.')
-                cf /= 100
-            site_df.loc[site, 'capacity_factor'] = cf
-
-            # calculate the annual energy yield if not input;
-            # offshore requires that ORCA does the aey calc
-            if calc_aey and not offshore:
-                # get the system capacity
-                sys_cap = cls.parse_sys_cap(site, inputs, site_df)
-
-                # Calc annual energy, mult by 8760 to convert kW to kWh
-                aey = sys_cap * cf * 8760
-
-                # add aey to site-specific inputs
-                site_df.loc[site, 'annual_energy'] = aey
-
-            # Create SAM econ instance and calculate requested output.
-            sim = cls(ssc=None, data=None, parameters=inputs,
-                      site_parameters=dict(site_df.loc[site, :]),
-                      output_request=output_request)
-            sim.site = site
-            sim.execute(cls.MODULE)
-            out[site] = sim.outputs
+            out[site] = super().reV_run(site, site_df, inputs, output_request)
 
         return out
 
@@ -376,16 +525,6 @@ class SingleOwner(Economic):
                          site_parameters=site_parameters,
                          output_request=output_request)
 
-    def set_gen(self, gen):
-        """Set the generation profile (kW) for single owner calculation.
-
-        Parameters
-        ----------
-        gen : np.ndarray
-            Generation profile (8760) in kW.
-        """
-        self.ssc.data_set_array(self.data, 'gen', gen)
-
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, cf_year,
                 output_request=('ppa_price',)):
@@ -419,39 +558,14 @@ class SingleOwner(Economic):
 
         out = {}
 
-        # get the cf_file meta data gid's to use as indexing tools
-        with Outputs(cf_file) as cfh:
-            site_gids = list(cfh.meta['gid'])
-
         for site in points_control.sites:
             # get SAM inputs from project_points based on the current site
             _, inputs = points_control.project_points[site]
 
-            # get the system capacity
-            sys_cap = cls.parse_sys_cap(site, inputs, site_df)
+            # set the generation profile as an input.
+            inputs = cls.get_gen_profile(site, site_df, cf_file, cf_year,
+                                         inputs)
 
-            # get the index location of the site in question
-            isite = site_gids.index(site)
-
-            # Calc generation profile for single owner input
-            with Outputs(cf_file) as cfh:
-                if 'cf_profile' in cfh.dsets:
-                    gen = cfh['cf_profile', :, isite] * sys_cap
-                elif 'cf_profile_{}'.format(cf_year) in cfh.dsets:
-                    gen = (cfh['cf_profile_{}'.format(cf_year), :, isite] *
-                           sys_cap)
-                else:
-                    raise KeyError('Could not find cf_profile values for '
-                                   'SingleOwner. Available datasets: {}'
-                                   .format(cfh.dsets))
-
-            # Create SAM econ instance and calculate requested output.
-            sim = cls(ssc=None, data=None, parameters=inputs,
-                      site_parameters=dict(site_df.loc[site, :]),
-                      output_request=output_request)
-            sim.site = site
-            sim.set_gen(gen)
-            sim.execute(cls.MODULE)
-            out[site] = sim.outputs
+            out[site] = super().reV_run(site, site_df, inputs, output_request)
 
         return out

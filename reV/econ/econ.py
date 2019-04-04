@@ -166,8 +166,7 @@ class Econ(Gen):
                     self._site_data = pd.read_csv(inp)
             elif isinstance(inp, pd.DataFrame):
                 self._site_data = inp
-
-            if not hasattr(self, '_site_data'):
+            else:
                 # site data was not able to be set. Raise error.
                 raise Exception('Site data input must be .csv or '
                                 'dataframe, but received: {}'.format(inp))
@@ -176,15 +175,14 @@ class Econ(Gen):
                     self._site_data.index.name != 'gid'):
                 # require gid as column label or index
                 raise KeyError('Site data input must have "gid" column '
-                               'to match reV site index.')
+                               'to match reV site gid.')
 
             if self._site_data.index.name != 'gid':
-                # make gid index if not already
-                self._site_data = self._site_data.\
-                    set_index('gid', drop=True)
+                # make gid the dataframe index if not already
+                self._site_data = self._site_data.set_index('gid', drop=True)
 
         # add offshore if necessary
-        self.check_offshore()
+        self._check_offshore()
 
     def add_site_data_to_pp(self):
         """Add the site df (site-specific inputs) to project points dataframe.
@@ -194,25 +192,26 @@ class Econ(Gen):
         """
         self.project_points.join_df(self.site_data, key=self.site_data.index)
 
-    def check_offshore(self):
-        """Ensure offshore boolean flag in site data df if available."""
-        # only run this once site_df has been set
-        if hasattr(self, '_site_data'):
+    def _check_offshore(self):
+        """Ensure offshore boolean flag in site data df if available.
 
-            if 'offshore' in self._site_data:
-                # offshore is already in site data df, just make sure boolean
-                self._site_data['offshore'] = self._site_data['offshore']\
+        Only run this once site_df has been set.
+        """
+
+        if 'offshore' in self._site_data:
+            # offshore is already in site data df, just make sure it's boolean
+            self._site_data['offshore'] = self._site_data['offshore']\
+                .astype(bool)
+
+        else:
+            # offshore not yet in site data df, check to see if in meta
+            if 'offshore' in self.meta:
+                logger.debug('Found "offshore" data in meta. Interpreting '
+                             'as wind sites that may be analyzed using '
+                             'ORCA.')
+                # save offshore flags as boolean array
+                self._site_data['offshore'] = self.meta['offshore']\
                     .astype(bool)
-
-            else:
-                # offshore not yet in site data df, check to see if in meta
-                if 'offshore' in self.meta:
-                    logger.info('Found "offshore" data in meta. Interpreting '
-                                'as wind sites that may be analyzed using '
-                                'ORCA.')
-                    # save offshore flags as boolean array
-                    self._site_data['offshore'] = self.meta['offshore']\
-                        .astype(bool)
 
     @property
     def cf_year(self):

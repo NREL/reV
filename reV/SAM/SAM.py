@@ -751,9 +751,9 @@ class SAM:
 
         Returns
         -------
-        output : list
-            Zipped list of output requests (self.output_request) and SAM
-            numerical results from the respective result functions.
+        output : SAM.SiteOutput
+            Slotted dictionary emulator keyed by SAM variable names with SAM
+            numerical results.
         """
 
         OUTPUTS = {'cf_mean': self.cf_mean,
