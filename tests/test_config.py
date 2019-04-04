@@ -90,7 +90,7 @@ def test_split_iter():
             i0_nom = s + i * n
             i1_nom = s + i * n + n
             if i1_nom >= e:
-                i1_nom = e - 1
+                i1_nom = e
 
             split = pp_split.project_points.df
             target = pp.df.iloc[i0_nom:i1_nom]
