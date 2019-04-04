@@ -74,6 +74,33 @@ def test_proj_points_split(start, interval):
         assert all(pp_0.df == pp.df.iloc[i0:i1]), msg
 
 
+def test_split_iter():
+    """Test Points_Control on two slices of ProjectPoints"""
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/wind_gen_standard_losses_0.json')
+    pp = ProjectPoints(slice(0, 500, 5), sam_files, 'wind',
+                       res_file=res_file)
+
+    n = 3
+    for s, e in [(0, 50), (50, 100)]:
+        pc = PointsControl.split(s, e, pp, sites_per_split=n)
+
+        for i, pp_split in enumerate(pc):
+            i0_nom = s + i * n
+            i1_nom = s + i * n + n
+            if i1_nom >= e:
+                i1_nom = e - 1
+
+            split = pp_split.project_points.df
+            target = pp.df.iloc[i0_nom:i1_nom]
+            print('split = ', split.head())
+            print('target = ', target.head())
+
+            msg = 'PointsControl iterator split did not function correctly!'
+            assert split.equals(target), msg
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

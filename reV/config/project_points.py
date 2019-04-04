@@ -41,8 +41,9 @@ class PointsControl:
         last_site = 0
         ilim = len(self.project_points)
 
-        logger.debug('PointsControl iterator initializing with site indices '
-                     '{} through {}'.format(last_site, ilim))
+        logger.debug('PointsControl iterator initializing with sites '
+                     '{} through {}'.format(self.project_points.sites[0],
+                                            self.project_points.sites[-1]))
 
         # pre-initialize all iter objects
         while True:
@@ -226,7 +227,6 @@ class ProjectPoints:
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
         """
-
         # set protected attributes
         self._df = self._parse_points(points, res_file=res_file)
         self._sam_config_obj = self._parse_sam_config(sam_config)
@@ -508,23 +508,20 @@ class ProjectPoints:
             The type is slice if possible. Will be a list only if sites are
             non-sequential.
         """
-        if isinstance(self.sites, slice):
-            sites_as_slice = self.sites
+        # try_slice is what the sites list would be if it is sequential
+        if len(self.sites) > 1:
+            try_step = self.sites[1] - self.sites[0]
         else:
-            # try_slice is what the sites list would be if it is sequential
-            if len(self.sites) > 1:
-                try_step = self.sites[1] - self.sites[0]
-            else:
-                try_step = 1
-            try_slice = slice(self.sites[0], self.sites[-1] + 1, try_step)
-            try_list = list(range(*try_slice.indices(try_slice.stop)))
+            try_step = 1
+        try_slice = slice(self.sites[0], self.sites[-1] + 1, try_step)
+        try_list = list(range(*try_slice.indices(try_slice.stop)))
 
-            if self.sites == try_list:
-                # try_slice is equivelant to the site list
-                sites_as_slice = try_slice
-            else:
-                # cannot be converted to a sequential slice, return list
-                sites_as_slice = self.sites
+        if self.sites == try_list:
+            # try_slice is equivelant to the site list
+            sites_as_slice = try_slice
+        else:
+            # cannot be converted to a sequential slice, return list
+            sites_as_slice = self.sites
 
         return sites_as_slice
 
