@@ -370,15 +370,16 @@ class Outputs(Resource):
         self._h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
                                                              scale_factor)
 
-    def _chunks(self, chunks):
+    def _check_chunks(self, chunks, data=None):
         """
         Convert dataset chunk size into valid tuple based on variable array
         shape
-
         Parameters
         ----------
         chunks : tuple
             Desired dataset chunk size
+        data : ndarray
+            Dataset array being chunked
 
         Returns
         -------
@@ -386,16 +387,20 @@ class Outputs(Resource):
             dataset chunk size
         """
         if chunks is not None:
-            shape = self.shape
+            if data is not None:
+                shape = data.shape
+            else:
+                shape = self.shape
+
             if chunks[0] is None:
                 chunk_0 = shape[0]
             else:
-                chunk_0 = chunks[0]
+                chunk_0 = np.min((shape[0], chunks[0]))
 
             if chunks[1] is None:
                 chunk_1 = shape[1]
             else:
-                chunk_1 = chunks[1]
+                chunk_1 = np.min((shape[1], chunks[1]))
 
             ds_chunks = (chunk_0, chunk_1)
         else:
@@ -424,7 +429,7 @@ class Outputs(Resource):
             Dataset data array
         """
         if self.writable:
-            chunks = self._chunks(chunks)
+            chunks = self._check_chunks(chunks, data=data)
             ds = self._h5.create_dataset(ds_name, shape=shape, dtype=dtype,
                                          chunks=chunks)
             if attrs is not None:
