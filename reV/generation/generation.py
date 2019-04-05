@@ -119,32 +119,31 @@ class Gen:
 
         Parameters
         ----------
-        req : list | tuple
-            Output variables requested from SAM.
+        req : str | list | tuple
+            Output variable(s) requested from SAM.
         """
 
-        if 'cf_mean' not in req:
-            # ensure that cf_mean is requested from output
-            if isinstance(req, list):
-                req += ['cf_mean']
-            elif isinstance(req, tuple):
-                req += ('cf_mean',)
-
-        if isinstance(req, list):
+        if isinstance(req, str):
+            # single output request, make tuple
+            self._output_request = (req,)
+        elif isinstance(req, (list, tuple)):
             # ensure output request is tuple
             self._output_request = tuple(req)
-        elif isinstance(req, tuple):
-            self._output_request = req
         else:
-            raise TypeError('Output request must be list or tuple but '
+            raise TypeError('Output request must be str, list, or tuple but '
                             'received: {}'.format(type(req)))
+
+        if 'cf_mean' not in self._output_request:
+            # ensure that cf_mean is requested from output
+            self._output_request += ('cf_mean',)
 
         for request in self._output_request:
             if request not in self.OUT_ATTRS:
                 raise ValueError('User output request "{}" not recognized. '
-                                 'The following output requests are available:'
-                                 ' "{}"'
-                                 .format(request, list(self.OUT_ATTRS.keys())))
+                                 'The following output requests are available '
+                                 'in "{}": "{}"'
+                                 .format(request, self.__class__,
+                                         list(self.OUT_ATTRS.keys())))
 
     @property
     def site_limit(self):

@@ -27,7 +27,7 @@ PURGE_OUT = True
 def test_gen_from_config(tech):
     """Gen PV CF profiles with write to disk and compare against rev1."""
 
-    job_name = 'config_test'
+    job_name = 'config_test_{}'.format(tech)
 
     if tech == 'pv':
         fconfig = 'local_pv.json'

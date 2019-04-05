@@ -212,6 +212,9 @@ class SAMAnalysisConfig(AnalysisConfig):
                        'plane_of_array_irradiance': 'poa',
                        'gen_profiles': 'gen_profile',
                        'lcoe': 'lcoe_fcr',
+                       'lcoe_nominal': 'lcoe_nom',
+                       'real_lcoe': 'lcoe_real',
+                       'net_present_value': 'npv',
                        'ppa': 'ppa_price',
                        'single_owner': 'ppa_price',
                        'singleowner': 'ppa_price',
@@ -345,19 +348,33 @@ class EconConfig(SAMAnalysisConfig):
         self.set_self_dict(config)
 
     @property
-    def cf_file(self):
-        """Get the capacity factors file (reV generation output data).
+    def cf_files(self):
+        """Get the capacity factor files (reV generation output data).
 
         Returns
         -------
-        _cf_file : str
-            Target path for capacity factors file (reV generation output data)
-            for input to reV LCOE calculation.
+        _cf_files : list
+            Target paths for capacity factor files (reV generation output
+            data) for input to reV LCOE calculation.
         """
-        if not hasattr(self, '_cf_file'):
-            if 'cf_file' in self:
-                self._cf_file = self['cf_file']
-        return self._cf_file
+
+        if not hasattr(self, '_cf_files'):
+            # get base filename, may have {} for year format
+            fname = self['cf_file']
+            if '{}' in fname:
+                # need to make list of res files for each year
+                self._cf_files = [fname.format(year) for year in self.years]
+            else:
+                # only one resource file request, still put in list
+                self._cf_files = [fname]
+        self.check_files(self._cf_files)
+        if len(self._cf_files) != len(self.years):
+            raise ConfigError('The number of cf files does not match '
+                              'the number of analysis years!'
+                              '\n\tCF files: \n\t\t{}'
+                              '\n\tYears: \n\t\t{}'
+                              .format(self._cf_files, self.years))
+        return self._cf_files
 
     @property
     def site_data(self):
@@ -365,10 +382,11 @@ class EconConfig(SAMAnalysisConfig):
 
         Returns
         -------
-        _site_data : str
+        _site_data : str | NoneType
             Target path for site-specific data file.
         """
         if not hasattr(self, '_site_data'):
+            self._site_data = None
             if 'site_data' in self:
                 self._site_data = self['site_data']
         return self._site_data

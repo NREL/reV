@@ -255,7 +255,8 @@ class SiteOutput(SlottedDict):
 
     # make attribute slots for all SAM output variable names
     __slots__ = ['cf_mean', 'cf_profile', 'annual_energy', 'energy_yield',
-                 'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr']
+                 'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr', 'npv',
+                 'lcoe_nom', 'lcoe_real']
 
     def __init__(self):
         self.var_list = []
@@ -343,20 +344,19 @@ class SAM:
     @property
     def site(self):
         """Get the site number for this SAM simulation."""
+        if not hasattr(self, '_site'):
+            self._site = 'N/A'
         return self._site
 
     @site.setter
     def site(self, inp):
         """Set the site number based on resource input or integer."""
-        if not hasattr(self, '_site'):
-            if hasattr(inp, 'name'):
-                # Set the protected property with the site number from resource
-                self._site = inp.name
-            elif isinstance(inp, int):
-                self._site = inp
-            else:
-                # resource site number not found, set as N/A
-                self._site = 'N/A'
+        if hasattr(inp, 'name'):
+            # Set the protected property with the site number from resource
+            self._site = inp.name
+        else:
+            # resource site number not found, set as N/A
+            self._site = inp
 
     @staticmethod
     def get_sam_res(res_file, project_points, module):
@@ -593,7 +593,6 @@ class SAM:
                 time_interval += 1
         return int(time_interval)
 
-    @property
     def cf_mean(self):
         """Get mean capacity factor (fractional) from SAM.
 
@@ -604,7 +603,6 @@ class SAM:
         """
         return self.ssc.data_get_number(self.data, 'capacity_factor') / 100
 
-    @property
     def cf_profile(self):
         """Get hourly capacity factor (frac) profile in orig timezone.
 
@@ -614,9 +612,8 @@ class SAM:
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return self.gen_profile / self.parameters['system_capacity']
+        return self.gen_profile() / self.parameters['system_capacity']
 
-    @property
     def annual_energy(self):
         """Get annual energy generation value in kWh from SAM.
 
@@ -627,7 +624,6 @@ class SAM:
         """
         return self.ssc.data_get_number(self.data, 'annual_energy')
 
-    @property
     def energy_yield(self):
         """Get annual energy yield value in kwh/kw from SAM.
 
@@ -638,7 +634,6 @@ class SAM:
         """
         return self.ssc.data_get_number(self.data, 'kwh_per_kw')
 
-    @property
     def gen_profile(self):
         """Get AC inverter power generation profile (orig timezone) in kW.
 
@@ -658,7 +653,6 @@ class SAM:
                                                 self.time_interval))
         return gen
 
-    @property
     def poa(self):
         """Get plane-of-array irradiance profile (orig timezone) in W/m2.
 
@@ -678,15 +672,40 @@ class SAM:
                                                 self.time_interval))
         return poa
 
-    @property
     def ppa_price(self):
-        """Get PPA price ($/MWh). Native units are cents/kWh."""
+        """Get PPA price ($/MWh).
+
+        Native units are cents/kWh, mult by 10 for $/MWh.
+        """
         return self.ssc.data_get_number(self.data, 'ppa') * 10
 
-    @property
+    def npv(self):
+        """Get net present value (NPV) ($).
+
+        Native units are dollars.
+        """
+        return self.ssc.data_get_number(self.data, 'npv')
+
     def lcoe_fcr(self):
-        """Get LCOE ($/MWh). Native units are $/kWh, mult by 1000 for $/MWh."""
+        """Get LCOE ($/MWh).
+
+        Native units are $/kWh, mult by 1000 for $/MWh.
+        """
         return self.ssc.data_get_number(self.data, 'lcoe_fcr') * 1000
+
+    def lcoe_nom(self):
+        """Get nominal LCOE ($/MWh) (from PPA/SingleOwner model).
+
+        Native units are cents/kWh, mult by 10 for $/MWh.
+        """
+        return self.ssc.data_get_number(self.data, 'lcoe_nom') * 10
+
+    def lcoe_real(self):
+        """Get real LCOE ($/MWh) (from PPA/SingleOwner model).
+
+        Native units are cents/kWh, mult by 10 for $/MWh.
+        """
+        return self.ssc.data_get_number(self.data, 'lcoe_real') * 10
 
     def execute(self, module_to_run, close=True):
         """Execute a single SAM simulation core by module name.
@@ -715,9 +734,9 @@ class SAM:
             idx = 0
             while msg is not None:
                 msg = self.ssc.module_log(module, idx)
+                logger.exception(msg)
                 raise SAMExecutionError('SAM error message: "{}"'
                                         .format(msg.decode('utf-8')))
-                logger.exception(msg)
                 idx = idx + 1
             raise Exception(msg)
         self.ssc.module_free(module)
@@ -732,29 +751,32 @@ class SAM:
 
         Returns
         -------
-        output : list
-            Zipped list of output requests (self.output_request) and SAM
-            numerical results from the respective result functions.
+        output : SAM.SiteOutput
+            Slotted dictionary emulator keyed by SAM variable names with SAM
+            numerical results.
         """
 
-        # results = {}
+        OUTPUTS = {'cf_mean': self.cf_mean,
+                   'cf_profile': self.cf_profile,
+                   'annual_energy': self.annual_energy,
+                   'energy_yield': self.energy_yield,
+                   'gen_profile': self.gen_profile,
+                   'poa': self.poa,
+                   'ppa_price': self.ppa_price,
+                   'npv': self.npv,
+                   'lcoe_fcr': self.lcoe_fcr,
+                   'lcoe_nom': self.lcoe_nom,
+                   'lcoe_real': self.lcoe_real,
+                   }
+
         results = SiteOutput()
         for request in self.output_request:
-            if request == 'cf_mean':
-                results[request] = self.cf_mean
-            elif request == 'cf_profile':
-                results[request] = self.cf_profile
-            elif request == 'annual_energy':
-                results[request] = self.annual_energy
-            elif request == 'energy_yield':
-                results[request] = self.energy_yield
-            elif request == 'gen_profile':
-                results[request] = self.gen_profile
-            elif request == 'poa':
-                results[request] = self.poa
-            elif request == 'ppa_price':
-                results[request] = self.ppa_price
-            elif request == 'lcoe_fcr':
-                results[request] = self.lcoe_fcr
+            if request in OUTPUTS:
+                results[request] = OUTPUTS[request]()
+            else:
+                msg = ('Requested SAM variable "{}" is not available. The '
+                       'following output variables are available: "{}".'
+                       .format(request, OUTPUTS.keys()))
+                raise SAMExecutionError(msg)
 
         return results
