@@ -341,7 +341,7 @@ class EconConfig(SAMAnalysisConfig):
         fname : str
             Econ config name (with path).
         """
-        self._cf_file = None
+        self._cf_files = None
         self._site_data = None
         # get the directory of the config file
         self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
@@ -367,7 +367,7 @@ class EconConfig(SAMAnalysisConfig):
             data) for input to reV LCOE calculation.
         """
 
-        if not hasattr(self, '_cf_files'):
+        if self._cf_files is None:
             # get base filename, may have {} for year format
             fname = self['cf_file']
             if '{}' in fname:
@@ -383,6 +383,7 @@ class EconConfig(SAMAnalysisConfig):
                               '\n\tCF files: \n\t\t{}'
                               '\n\tYears: \n\t\t{}'
                               .format(self._cf_files, self.years))
+
         return self._cf_files
 
     @property
