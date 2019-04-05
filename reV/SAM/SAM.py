@@ -21,39 +21,90 @@ logger = logging.getLogger(__name__)
 
 
 def is_num(n):
-    """Check if input is a number (returns True/False)"""
+    """Check if input is a number (returns True/False)
+
+    Parameters
+    ----------
+    n : obj
+        Input object
+
+    Returns
+    -------
+    out : bool
+        Boolean flag indicating if input is a number
+    """
     try:
         float(n)
-        return True
+        out = True
     except Exception as _:
-        return False
+        out = False
+
+    return out
 
 
 def is_str(s):
-    """Check if input is a string and not a number (returns True/False)"""
+    """Check if input is a string and not a number (returns True/False)
+
+    Parameters
+    ----------
+    n : obj
+        Input object
+
+    Returns
+    -------
+    out : bool
+        Boolean flag indicating if input is a string
+    """
     if is_num(s) is True:
-        return False
+        out = False
     else:
         try:
             str(s)
-            return True
+            out = True
         except Exception as _:
-            return False
+            out = False
+
+    return out
 
 
 def is_array(a):
-    """Check if input is an array (returns True/False)"""
+    """Check if input is an array (returns True/False)
+
+    Parameters
+    ----------
+    n : obj
+        Input object
+
+    Returns
+    -------
+    out : bool
+        Boolean flag indicating if input is an array
+    """
     if (isinstance(a, (list, np.ndarray)) and ~isinstance(a, str)):
-        return True
+        out = True
     else:
-        return False
+        out = False
+
+    return out
 
 
 def is_2D_list(a):
-    """Check if input is a nested (2D) list (returns True/False)"""
+    """Check if input is a nested (2D) list (returns True/False)
+
+    Parameters
+    ----------
+    n : obj
+        Input object
+
+    Returns
+    -------
+    out : bool
+        Boolean flag indicating if input is a 2D list
+    """
     if isinstance(a, list):
         if isinstance(a[0], list):
             return True
+
     return False
 
 
@@ -78,7 +129,7 @@ class ParametersManager:
 
         # set the parameters and module properties
         self._module = module
-        self.parameters = parameters
+        self._parameters = self._check_parameters(parameters)
 
         # get requirements and verify that all are satisfied
         self._requirements = self.get_requirements(self.module)
@@ -102,24 +153,40 @@ class ParametersManager:
         """Get module property."""
         return self._module
 
-    @property
-    def parameters(self):
-        """Get the parameters property"""
-        return self._parameters
+    def _check_parameters(self, p):
+        """Check parameters
 
-    @parameters.setter
-    def parameters(self, p):
-        """Set the parameters property"""
-        if isinstance(p, dict):
-            self._parameters = p
-        else:
+        Parameters
+        ----------
+        p : dict
+            Dictionary of Parameters
+
+        Returns
+        -------
+        p : dict
+            Dictionary of Parameters
+        """
+        if not isinstance(p, dict):
             warn('Input parameters for {} SAM module need to '
                  'be input as a dictionary but were input as '
                  'a {}'.format(self.module, type(p)), SAMInputWarning)
             warn('No input parameters specified for '
                  '{} SAM module, defaults will be set'
                  .format(self.module), SAMInputWarning)
-            self._parameters = {}
+            p = {}
+
+        return p
+
+    @property
+    def parameters(self):
+        """Get the parameters property
+
+        Returns
+        -------
+        _parameters : dict
+            Dictionary of Parameters
+        """
+        return self._parameters
 
     @property
     def requirements(self):
@@ -229,6 +296,7 @@ class ParametersManager:
                     warn('SAM input parameter "{}" must be of '
                          'type {} but is of type {}'
                          .format(name, dtypes, type(p)), SAMInputWarning)
+
         if missing_inputs and set_def:
             self.set_defaults()
 
@@ -257,9 +325,6 @@ class SiteOutput(SlottedDict):
     __slots__ = ['cf_mean', 'cf_profile', 'annual_energy', 'energy_yield',
                  'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr', 'npv',
                  'lcoe_nom', 'lcoe_real']
-
-    def __init__(self):
-        self.var_list = []
 
 
 class SAM:
@@ -735,9 +800,10 @@ class SAM:
             while msg is not None:
                 msg = self.ssc.module_log(module, idx)
                 logger.exception(msg)
+                idx = idx + 1
                 raise SAMExecutionError('SAM error message: "{}"'
                                         .format(msg.decode('utf-8')))
-                idx = idx + 1
+
             raise Exception(msg)
         self.ssc.module_free(module)
 

@@ -371,16 +371,16 @@ class SolarResource(Resource):
         res_df : pandas.DataFrame
             time-series DataFrame of resource variables needed to run SAM
         """
-        if self._unscale:
-            res_df = pd.DataFrame(index=self.time_index)
-            res_df.name = "{}-{}".format(ds_name, site)
-            for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
-                var_array = self._get_ds(var, slice(None, None, None), site)
-                res_df[var] = SAMResource.check_units(var, var_array)
-
-            return res_df
-        else:
+        if not self._unscale:
             raise HandlerValueError("SAM requires unscaled values")
+
+        res_df = pd.DataFrame(index=self.time_index)
+        res_df.name = "{}-{}".format(ds_name, site)
+        for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
+            var_array = self._get_ds(var, slice(None, None, None), site)
+            res_df[var] = SAMResource.check_units(var, var_array)
+
+        return res_df
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
@@ -742,21 +742,21 @@ class WindResource(Resource):
         res_df : pandas.DataFrame
             time-series DataFrame of resource variables needed to run SAM
         """
-        if self._unscale:
-            _, h = self._parse_name(ds_name)
-            res_df = pd.DataFrame(index=self.time_index)
-            res_df.name = site
-            variables = ['pressure', 'temperature', 'winddirection',
-                         'windspeed']
-            for var in variables:
-                var_name = "{}_{}m".format(var, h)
-                var_array = self._get_ds(var_name, slice(None, None, None),
-                                         site)
-                res_df[var_name] = SAMResource.check_units(var_name, var_array)
-
-            return res_df
-        else:
+        if not self._unscale:
             raise HandlerValueError("SAM requires unscaled values")
+
+        _, h = self._parse_name(ds_name)
+        res_df = pd.DataFrame(index=self.time_index)
+        res_df.name = site
+        variables = ['pressure', 'temperature', 'winddirection',
+                     'windspeed']
+        for var in variables:
+            var_name = "{}_{}m".format(var, h)
+            var_array = self._get_ds(var_name, slice(None, None, None),
+                                     site)
+            res_df[var_name] = SAMResource.check_units(var_name, var_array)
+
+        return res_df
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
