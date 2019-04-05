@@ -48,7 +48,8 @@ class Econ(Gen):
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
-                 output_request='lcoe_fcr', fout=None, dirout='./econ_out'):
+                 output_request='lcoe_fcr', fout=None, dirout='./econ_out',
+                 mem_util_lim=0.7):
         """Initialize an econ instance.
 
         Parameters
@@ -74,53 +75,68 @@ class Econ(Gen):
             Optional output directory specification. The directory will be
             created if it does not already exist.
         """
-
         self._points_control = points_control
         self._cf_file = cf_file
         self._cf_year = cf_year
+        self._site_limit = None
+        self._site_mem = None
         self._fout = fout
         self._dirout = dirout
-        self.output_request = output_request
-        self.site_data = site_data
+        self._time_index = None
+        self._meta = None
+        self.mem_util_lim = mem_util_lim
+        self._output_request = self._parse_output_request(output_request)
+        self._site_data = self._parse_site_data(site_data)
 
-        # set memory utilization limit as static (not as important as for gen)
-        self.mem_util_lim = 0.7
+        # pre-initialize output arrays to store results when available.
+        self._out = {}
+        self._finished_sites = []
+        self._out_chunk = ()
+        self._out_n_sites = 0
+        self.initialize_output_arrays()
 
-    @Gen.output_request.setter  # pylint: disable-msg=E1101
-    def output_request(self, req):
-        """Set the output variables requested from econ.
+    def _parse_output_request(self, req):
+        """Set the output variables requested from generation.
 
         Parameters
         ----------
-        req : str | list | tuple
-            Output variable(s) requested from SAM.
+        req : str| list | tuple
+            Output variables requested from SAM.
+
+        Returns
+        -------
+        output_request : tuple
+            Output variables requested from SAM.
         """
 
         if isinstance(req, str):
             # single output request, make tuple
-            self._output_request = (req,)
+            output_request = (req,)
         elif isinstance(req, (list, tuple)):
             # ensure output request is tuple
-            self._output_request = tuple(req)
+            output_request = tuple(req)
         else:
             raise TypeError('Output request must be str, list, or tuple but '
                             'received: {}'.format(type(req)))
 
-        for request in self._output_request:
+        for request in output_request:
             if request not in self.OUT_ATTRS:
                 raise ValueError('User output request "{}" not recognized. '
                                  'The following output requests are available '
                                  'in "{}": "{}"'
                                  .format(request, self.__class__,
                                          list(self.OUT_ATTRS.keys())))
-            if self.OPTIONS[request] != self.OPTIONS[self._output_request[0]]:
+
+            if self.OPTIONS[request] != self.OPTIONS[output_request[0]]:
                 msg = ('Econ outputs requested from different SAM modules not '
                        'currently supported. Output request variables "{}" '
                        'and "{}" require SAM modules "{}" and "{}".'
-                       .format(request, self._output_request[0],
+                       .format(request, output_request[0],
                                self.OPTIONS[request],
-                               self.OPTIONS[self._output_request[0]]))
+                               self.OPTIONS[output_request[0]]))
                 raise ValueError(msg)
+
+        return output_request
 
     @property
     def cf_file(self):
@@ -132,6 +148,63 @@ class Econ(Gen):
             reV generation capacity factor output file with path.
         """
         return self._cf_file
+
+    def _parse_site_data(self, inp):
+        """Set the site data attribute
+
+        Parameters
+        ----------
+        inp : str | pd.DataFrame | None
+            Site data in .csv or pre-extracted dataframe format. None signifies
+            that everything will be taken from the cf_file (generation outputs)
+
+        Returns
+        -------
+        site_data : pd.DataFrame
+            Site-specific data for econ calculation. Rows match sites,
+            columns are variables.
+
+        """
+        if not inp:
+            # no input, just initialize dataframe with site gids as index
+            site_data = pd.DataFrame(index=self.project_points.sites)
+        else:
+            # explicit input, initialize df
+            if isinstance(inp, str):
+                if inp.endswith('.csv'):
+                    site_data = pd.read_csv(inp)
+            elif isinstance(inp, pd.DataFrame):
+                site_data = inp
+            else:
+                # site data was not able to be set. Raise error.
+                raise Exception('Site data input must be .csv or '
+                                'dataframe, but received: {}'.format(inp))
+
+            if ('gid' not in site_data and
+                    site_data.index.name != 'gid'):
+                # require gid as column label or index
+                raise KeyError('Site data input must have "gid" column '
+                               'to match reV site gid.')
+
+            if site_data.index.name != 'gid':
+                # make gid the dataframe index if not already
+                site_data = site_data.set_index('gid', drop=True)
+
+        # add offshore if necessary
+        if 'offshore' in site_data:
+            # offshore is already in site data df, just make sure it's boolean
+            site_data['offshore'] = site_data['offshore'].astype(bool)
+
+        else:
+            # offshore not yet in site data df, check to see if in meta
+            if 'offshore' in self.meta:
+                logger.debug('Found "offshore" data in meta. Interpreting '
+                             'as wind sites that may be analyzed using '
+                             'ORCA.')
+                # save offshore flags as boolean array
+                site_data['offshore'] = self.meta['offshore'].astype(bool)
+
+        return site_data
 
     @property
     def site_data(self):
@@ -145,45 +218,6 @@ class Econ(Gen):
         """
         return self._site_data
 
-    @site_data.setter
-    def site_data(self, inp):
-        """Set the site data attribute
-
-        Parameters
-        ----------
-        inp : str | pd.DataFrame | None
-            Site data in .csv or pre-extracted dataframe format. None signifies
-            that everything will be taken from the cf_file (generation outputs)
-        """
-
-        if not inp:
-            # no input, just initialize dataframe with site gids as index
-            self._site_data = pd.DataFrame(index=self.project_points.sites)
-        else:
-            # explicit input, initialize df
-            if isinstance(inp, str):
-                if inp.endswith('.csv'):
-                    self._site_data = pd.read_csv(inp)
-            elif isinstance(inp, pd.DataFrame):
-                self._site_data = inp
-            else:
-                # site data was not able to be set. Raise error.
-                raise Exception('Site data input must be .csv or '
-                                'dataframe, but received: {}'.format(inp))
-
-            if ('gid' not in self._site_data and
-                    self._site_data.index.name != 'gid'):
-                # require gid as column label or index
-                raise KeyError('Site data input must have "gid" column '
-                               'to match reV site gid.')
-
-            if self._site_data.index.name != 'gid':
-                # make gid the dataframe index if not already
-                self._site_data = self._site_data.set_index('gid', drop=True)
-
-        # add offshore if necessary
-        self._check_offshore()
-
     def add_site_data_to_pp(self):
         """Add the site df (site-specific inputs) to project points dataframe.
 
@@ -191,27 +225,6 @@ class Econ(Gen):
         to dask workers when points_control is iterated and split.
         """
         self.project_points.join_df(self.site_data, key=self.site_data.index)
-
-    def _check_offshore(self):
-        """Ensure offshore boolean flag in site data df if available.
-
-        Only run this once site_df has been set.
-        """
-
-        if 'offshore' in self._site_data:
-            # offshore is already in site data df, just make sure it's boolean
-            self._site_data['offshore'] = self._site_data['offshore']\
-                .astype(bool)
-
-        else:
-            # offshore not yet in site data df, check to see if in meta
-            if 'offshore' in self.meta:
-                logger.debug('Found "offshore" data in meta. Interpreting '
-                             'as wind sites that may be analyzed using '
-                             'ORCA.')
-                # save offshore flags as boolean array
-                self._site_data['offshore'] = self.meta['offshore']\
-                    .astype(bool)
 
     @property
     def cf_year(self):
@@ -263,24 +276,23 @@ class Econ(Gen):
         _meta : pd.DataFrame
             Meta data from capacity factor outputs file.
         """
-
-        if not hasattr(self, '_meta'):
+        if self._meta is None:
             with Outputs(self.cf_file) as cfh:
                 # only take meta that belongs to this project's site list
                 self._meta = cfh.meta[
                     cfh.meta['gid'].isin(self.points_control.sites)]
+
             logger.debug('Meta shape is {}'.format(self._meta.shape))
+
         return self._meta
 
     @property
     def time_index(self):
         """Get the generation resource time index data."""
-        if not hasattr(self, '_time_index'):
+        if self._time_index is None:
             with Outputs(self.cf_file) as cfh:
                 if 'time_index' in cfh.dsets:
                     self._time_index = cfh.time_index
-                else:
-                    self._time_index = None
 
         return self._time_index
 

@@ -87,7 +87,6 @@ class Gen:
 
         self._points_control = points_control
         self._res_file = res_file
-        self._output_request = self._parse_output_request(output_request)
         self._site_limit = None
         self._site_mem = None
         self._fout = fout
@@ -95,6 +94,7 @@ class Gen:
         self._time_index = None
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
+        self._output_request = self._parse_output_request(output_request)
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
