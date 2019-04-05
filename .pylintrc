@@ -98,6 +98,7 @@ enable=unused-import,
        bad-open-mode,
        redundant-unittest-assert,
        attribute-defined-outside-init,
+       unreachable
 
 
 [REPORTS]
