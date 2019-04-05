@@ -215,6 +215,15 @@ class TestNSRDB:
         check_scale(NSRDB_res, 'surface_pressure')
         NSRDB_res.close()
 
+    # @staticmethod
+    # def test_units(NSRDB_res):
+    #     """
+    #     test unit attributes
+    #     """
+    #     assert NSRDB_res.get_units('dni') == 'W/m2'
+    #     assert NSRDB_res.get_units('wind_speed') == 'm/s'
+    #     NSRDB_res.close()
+
 
 class TestWindResource:
     """
@@ -296,3 +305,12 @@ class TestWindResource:
             check_interp(WindResource_res, var, h)
 
         WindResource_res.close()
+
+    # @staticmethod
+    # def test_units(WindResource_res):
+    #     """
+    #     test unit attributes
+    #     """
+    #     assert WindResource_res.get_units('windspeed_100m') == 'm s-1'
+    #     assert WindResource_res.get_units('temperature_100m') == 'C'
+    #     WindResource_res.close()
