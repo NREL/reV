@@ -17,6 +17,7 @@ from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
+from reV.utilities.exceptions import ConfigError
 
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['CURTAILMENT'] = None
     if config.curtailment is not None:
         # pass through the curtailment file, not the curtailment object
-        ctx.obj['CURTAILMENT'] = config.curtailment.file
+        ctx.obj['CURTAILMENT'] = config['curtailment']
 
     for i, year in enumerate(config.years):
         submit_from_config(ctx, name, year, config, i, verbose=verbose)

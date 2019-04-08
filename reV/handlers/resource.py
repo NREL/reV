@@ -472,11 +472,6 @@ class NSRDB(SolarResource):
 
         return out
 
-    @staticmethod
-    def downscale_resource(SAM_res):
-        """Downscale the NSRDB resource and return the preloaded SAM_res."""
-        return SAM_res
-
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
                     downscale=None, **kwargs):
@@ -517,7 +512,10 @@ class NSRDB(SolarResource):
 
                     SAM_res[var] = res[ds, :, sites_slice]
             else:
-                SAM_res = cls.downscale_resource(SAM_res)
+                # contingent import to avoid dependencies
+                from reV.utilities.downscale import downscale_nsrdb
+                SAM_res = downscale_nsrdb(SAM_res, res, project_points,
+                                          downscale)
 
         return SAM_res
 

@@ -476,7 +476,7 @@ class SAM:
         if downscale is not None:
             # make sure that downscaling is only requested for NSRDB resource
             if res_handler != NSRDB:
-                msg = ('Downscaling was requestd for a non-NSRDB '
+                msg = ('Downscaling was requested for a non-NSRDB '
                        'resource file. reV does not have this capability at '
                        'the current time. Please contact a developer for '
                        'more information on this feature.')
