@@ -489,7 +489,7 @@ class SLURM(SubprocessManager):
 
 
 def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
-                     **kwargs):
+                     threads_per_worker=1, **kwargs):
     """Execute a parallel compute on a single node.
 
     Parameters
@@ -503,6 +503,9 @@ def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
         List of logger names to initialize on the workers.
     n_workers : int
         Number of workers to scale the cluster to.
+    threads_per_worker : int
+        Number of threads to use per worker. Default of 1 starts a process
+        pool with no multi-threading per process.
     **kwargs : dict
         Key word arguments passed to the fun.
 
@@ -515,7 +518,8 @@ def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
     # start a local cluster on a personal comp or HPC single node
     # Set worker memory limit to zero to not kill workers on high mem util
     try:
-        cluster = LocalCluster(n_workers=n_workers, memory_limit=0)
+        cluster = LocalCluster(n_workers=n_workers, memory_limit=0,
+                               threads_per_worker=threads_per_worker)
     except Exception as e:
         logger.exception('Failed to start Dask LocalCluster: {}'
                          .format(e))
