@@ -50,6 +50,8 @@ class Economic(SAM):
             Requested SAM output(s) (e.g., 'ppa_price', 'lcoe_fcr').
         """
 
+        self._site = None
+
         if ssc is None and data is None:
             # SAM generation simulation core not passed in. Create new SSC.
             self._ssc = PySSC()
@@ -88,6 +90,7 @@ class Economic(SAM):
             self._site_parameters = site_parameters
         # Non-offshore parameters can be added to ParametersManager class
         else:
+            self._site_parameters = None
             self.parameters.update(site_parameters)
 
     def execute(self, module_to_run, close=True):
@@ -281,7 +284,7 @@ class Economic(SAM):
         sim = cls(ssc=None, data=None, parameters=inputs,
                   site_parameters=dict(site_df.loc[site, :]),
                   output_request=output_request)
-        sim.site = site
+        sim._site = site
         sim.execute(cls.MODULE)
         return sim.outputs
 
@@ -360,7 +363,7 @@ class LCOE(Economic):
         """Execute a SAM economic model calculation."""
         # check to see if there is an offshore flag and set for this run
         offshore = False
-        if hasattr(self, '_site_parameters'):
+        if self._site_parameters is not None:
             if 'offshore' in self._site_parameters:
                 offshore = bool(self._site_parameters['offshore'])
 
@@ -440,12 +443,52 @@ class ORCA_LCOE:
         from ORCA.data import Data as ORCAData
 
         # make an ORCA tech system instance
-        self.system_inputs = system_inputs
+        self._system_inputs = self._parse_system_inputs(system_inputs)
         self.system = ORCASystem(self.system_inputs)
 
         # make a site-specific data structure
-        self.site_data = site_data
+        self._site_data = self._parse_site_data(site_data)
         self.orca_data_struct = ORCAData(self.site_data)
+
+    @staticmethod
+    def _parse_system_inputs(inp):
+        """Parse the system (site-agnostic) inputs.
+
+        Parameters
+        ----------
+        inp : dict | ParametersManager
+            System/technology configuration inputs (non-site-specific).
+
+        Returns
+        -------
+        inp : dict
+            System/technology configuration inputs (non-site-specific).
+        """
+        # extract config inputs as dict if ParametersManager was received
+        if isinstance(inp, ParametersManager):
+            inp = inp.parameters
+        return inp
+
+    @staticmethod
+    def _parse_site_data(inp):
+        """Parse the site-specific inputs for ORCA.
+
+        Parameters
+        ----------
+        inp : dict | pd.DataFrame
+            Site-specific inputs.
+
+        Returns
+        -------
+        inp : pd.DataFrame
+            Site-specific inputs.
+        """
+        # convert site parameters to dataframe if necessary
+        if not isinstance(inp, pd.DataFrame):
+            inp = pd.DataFrame(inp, index=(0,))
+
+        # rename any SAM kwargs to match ORCA requirements
+        return inp.rename(index=str, columns=ORCA_LCOE.ARG_MAP)
 
     @property
     def system_inputs(self):
@@ -458,20 +501,6 @@ class ORCA_LCOE:
         """
         return self._system_inputs
 
-    @system_inputs.setter
-    def system_inputs(self, inp):
-        """Set the system (site-agnostic) inputs.
-
-        Parameters
-        ----------
-        inp : dict | ParametersManager
-            System/technology configuration inputs (non-site-specific).
-        """
-        # extract config inputs as dict if ParametersManager was received
-        if isinstance(inp, ParametersManager):
-            inp = inp.parameters
-        self._system_inputs = inp
-
     @property
     def site_data(self):
         """Get the site-specific inputs.
@@ -482,22 +511,6 @@ class ORCA_LCOE:
             Site-specific inputs.
         """
         return self._site_data
-
-    @site_data.setter
-    def site_data(self, inp):
-        """Set the site-specific inputs.
-
-        Parameters
-        ----------
-        inp : dict | pd.DataFrame
-            Site-specific inputs.
-        """
-        # convert site parameters to dataframe if necessary
-        if not isinstance(inp, pd.DataFrame):
-            inp = pd.DataFrame(inp, index=(0,))
-
-        # rename any SAM kwargs to match ORCA requirements
-        self._site_data = inp.rename(index=str, columns=self.ARG_MAP)
 
     @property
     def lcoe(self):

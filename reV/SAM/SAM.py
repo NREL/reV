@@ -357,6 +357,9 @@ class SAM:
             'lcoe_fcr').
         """
 
+        self._site = None
+        self.outputs = None
+
         # set meta attribute as protected
         self._meta = meta
 
@@ -409,19 +412,7 @@ class SAM:
     @property
     def site(self):
         """Get the site number for this SAM simulation."""
-        if not hasattr(self, '_site'):
-            self._site = 'N/A'
         return self._site
-
-    @site.setter
-    def site(self, inp):
-        """Set the site number based on resource input or integer."""
-        if hasattr(inp, 'name'):
-            # Set the protected property with the site number from resource
-            self._site = inp.name
-        else:
-            # resource site number not found, set as N/A
-            self._site = inp
 
     @staticmethod
     def get_sam_res(res_file, project_points, module):
@@ -711,11 +702,10 @@ class SAM:
         gen = np.array(self.ssc.data_get_array(self.data, 'gen'),
                        dtype=np.float32)
         # Roll back to native timezone if resource meta has a timezone
-        if hasattr(self, '_meta'):
-            if self._meta is not None:
-                if 'timezone' in self.meta:
-                    gen = np.roll(gen, -1 * int(self.meta['timezone'] *
-                                                self.time_interval))
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                gen = np.roll(gen, -1 * int(self.meta['timezone'] *
+                                            self.time_interval))
         return gen
 
     def poa(self):
@@ -730,11 +720,10 @@ class SAM:
         poa = np.array(self.ssc.data_get_array(self.data, 'poa'),
                        dtype=np.float32)
         # Roll back to native timezone if resource meta has a timezone
-        if hasattr(self, '_meta'):
-            if self._meta is not None:
-                if 'timezone' in self.meta:
-                    poa = np.roll(poa, -1 * int(self.meta['timezone'] *
-                                                self.time_interval))
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                poa = np.roll(poa, -1 * int(self.meta['timezone'] *
+                                            self.time_interval))
         return poa
 
     def ppa_price(self):

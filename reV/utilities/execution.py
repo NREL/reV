@@ -489,7 +489,7 @@ class SLURM(SubprocessManager):
 
 
 def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
-                     **kwargs):
+                     threads_per_worker=1, **kwargs):
     """Execute a parallel compute on a single node.
 
     Parameters
@@ -503,6 +503,9 @@ def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
         List of logger names to initialize on the workers.
     n_workers : int
         Number of workers to scale the cluster to.
+    threads_per_worker : int
+        Number of threads to use per worker. Default of 1 starts a process
+        pool with no multi-threading per process.
     **kwargs : dict
         Key word arguments passed to the fun.
 
@@ -515,7 +518,8 @@ def execute_parallel(fun, execution_iter, loggers=(), n_workers=None,
     # start a local cluster on a personal comp or HPC single node
     # Set worker memory limit to zero to not kill workers on high mem util
     try:
-        cluster = LocalCluster(n_workers=n_workers, memory_limit=0)
+        cluster = LocalCluster(n_workers=n_workers, memory_limit=0,
+                               threads_per_worker=threads_per_worker)
     except Exception as e:
         logger.exception('Failed to start Dask LocalCluster: {}'
                          .format(e))
@@ -628,10 +632,15 @@ class SmartParallelJob:
             be flushed and the local node memory will be cleared.
         """
 
-        self.obj = obj
+        if not hasattr(obj, 'run') or not hasattr(obj, 'flush'):
+            raise ExecutionError('Parallel execution with object: "{}" '
+                                 'failed. The target object must have methods '
+                                 'run() and flush()'.format(obj))
+        self._obj = obj
         self._execution_iter = execution_iter
-        self.n_workers = n_workers
+        self._n_workers = n_workers
         self._mem_util_lim = mem_util_lim
+        self._cluster = None
 
     @property
     def cluster(self):
@@ -644,7 +653,7 @@ class SmartParallelJob:
             Local cluster object with self.n_workers.
         """
 
-        if not hasattr(self, '_cluster'):
+        if self._cluster is None:
             # Spawn processes instead of fork (seems to be more robust)
             dask.config.set({'distributed.worker.multiprocessing-method':
                              'spawn'})
@@ -692,26 +701,12 @@ class SmartParallelJob:
         Returns
         -------
         _n_workers : int
-            Number of workers.
+            Number of workers. Default value is the number of CPU's.
         """
+        if self._n_workers is None:
+            self._n_workers = os.cpu_count()
 
         return self._n_workers
-
-    @n_workers.setter
-    def n_workers(self, n_workers):
-        """Set the number of workers to utilize.
-
-        Parameters
-        ----------
-        n_workers : int | NoneType
-            Number of workers to scale the cluster to. None will use all
-            available workers in a local cluster.
-        """
-
-        if n_workers:
-            self._n_workers = n_workers
-        else:
-            self._n_workers = os.cpu_count()
 
     @property
     def obj(self):
@@ -729,28 +724,6 @@ class SmartParallelJob:
             faster submission to the Dask client.
         """
         return self._obj
-
-    @obj.setter
-    def obj(self, inp_obj):
-        """Verify the input object and set to protected property.
-
-        Parameters
-        ----------
-        inp_obj : Object
-            Python object that will be submitted to futures. Must have methods
-            run(arg) and flush(). run(arg) must take the iteration result of
-            execution_iter as the single positional argument. Additionally,
-            the results of obj.run(arg) will be passed to obj.out. obj.out
-            will be passed None when the memory is to be cleared. It is
-            advisable that obj.run() be a @staticmethod for dramatically
-            faster submission to the Dask client.
-        """
-        if not hasattr(inp_obj, 'run') or not hasattr(inp_obj, 'flush'):
-            raise ExecutionError('Parallel execution with object: "{}" '
-                                 'failed. The target object must have methods '
-                                 'run() and flush()'.format(inp_obj))
-        else:
-            self._obj = inp_obj
 
     def flush(self):
         """Flush obj.out to disk, set obj.out=None, and garbage collect."""

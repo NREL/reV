@@ -7,6 +7,7 @@ SAM software development kit (SDK).
 import gc
 import logging
 import numpy as np
+import pandas as pd
 from warnings import warn
 
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
@@ -186,7 +187,10 @@ class Solar(Generation):
                          output_request=output_request)
 
         # Set the site number using resource
-        self.site = resource
+        if isinstance(resource, pd.DataFrame):
+            self._site = resource.name
+        else:
+            self._site = None
 
         if resource is None or meta is None:
             # if no resource input data is specified, you need a resource file
@@ -354,7 +358,10 @@ class Wind(Generation):
                          output_request=output_request)
 
         # Set the site number using resource
-        self.site = resource
+        if isinstance(resource, pd.DataFrame):
+            self._site = resource.name
+        else:
+            self._site = None
 
         if resource is None or meta is None:
             # if no resource input data is specified, you need a resource file
