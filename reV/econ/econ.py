@@ -150,7 +150,7 @@ class Econ(Gen):
         return self._cf_file
 
     def _parse_site_data(self, inp):
-        """Set the site data attribute
+        """Parse site data from input
 
         Parameters
         ----------

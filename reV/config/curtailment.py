@@ -34,8 +34,7 @@ class Curtailment(BaseConfig):
 
         if isinstance(curtailment_parameters, str):
             # received json, extract to dictionary
-            self.file = curtailment_parameters
-            curtailment_parameters = self.get_file(self.file)
+            curtailment_parameters = self.get_file(curtailment_parameters)
 
         # intialize config object with curtailment parameters
         super().__init__(curtailment_parameters)

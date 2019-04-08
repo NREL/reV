@@ -209,7 +209,6 @@ class PeregrineConfig(HPCConfig):
         """
         if self._feature is None:
             # default option if not specified
-            self._feature = None
             if 'feature' in self:
                 if self['feature']:
                     # config-specified, set to attribute

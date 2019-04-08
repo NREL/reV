@@ -395,7 +395,7 @@ class EconConfig(SAMAnalysisConfig):
         _site_data : str | NoneType
             Target path for site-specific data file.
         """
-        if not hasattr(self, '_site_data'):
+        if self._site_data is None:
             self._site_data = None
             if 'site_data' in self:
                 self._site_data = self['site_data']

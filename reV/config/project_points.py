@@ -57,12 +57,8 @@ class PointsControl:
             new = PointsControl.split(i0, i1, self.project_points,
                                       sites_per_split=self.sites_per_split)
             new._split_range = [i0, i1]
+            self._iter_list.append(new)
 
-            if not new.project_points.sites:
-                # no sites in new project points. Stop iterator.
-                break
-            else:
-                self._iter_list.append(new)
         logger.debug('PointsControl stopped iteration at attempted '
                      'index of {}. Length of iterator is: {}'
                      .format(i1, len(self)))
@@ -77,7 +73,7 @@ class PointsControl:
             Split instance of this class with a subset of project points based
             on the number of sites per split.
         """
-        if self._i < self._N:
+        if self._i < self.N:
             # Get next PointsControl from the iter list
             next_pc = self._iter_list[self._i]
         else:
@@ -101,13 +97,13 @@ class PointsControl:
         return ceil(len(self.project_points) / self.sites_per_split)
 
     @property
-    def _N(self):
+    def N(self):
         """
         Length of current iterator list
 
         Returns
         -------
-        _N : int
+        N : int
             Number of iterators in list
         """
         return len(self._iter_list)
@@ -206,7 +202,7 @@ class ProjectPoints:
 
         Parameters
         ----------
-        points : slice | str | pd.DataFrame
+        points : slice | str | pd.DataFrame | dict
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
         sam_config : dict | str
@@ -277,7 +273,7 @@ class ProjectPoints:
 
         Parameters
         ----------
-        points : str | pd.DataFrame | slice | list
+        points : str | pd.DataFrame | slice | list | dict
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
         res_file : str | NoneType
@@ -458,20 +454,28 @@ class ProjectPoints:
         Check to ensure the project points (df) and SAM configs
         (sam_config_obj) are compatible. Update as neccesary or break
         """
+        # Extract unique config refences from project_points DataFrame
         df_configs = self.df['config'].unique()
         sam_configs = self.sam_files
 
+        # Checks to make sure that the same number of SAM config .json files
+        # as references in project_points DataFrame
         if len(df_configs) != len(sam_configs):
             raise ConfigError('points references {} configs while '
                               '{} SAM configs were provided!'
                               .format(len(df_configs), len(sam_configs)))
 
+        # If project_points DataFrame was created from a list,
+        # config will be None and needs to be added to _df from sam_configs
         if len(df_configs) == 1:
             if df_configs[0] is None:
                 self._df['config'] = list(sam_configs.values())[0]
 
                 df_configs = self.df['config'].unique()
 
+        # Check to see if config references in project_points DataFrame
+        # are valid file paths, if compare with SAM configs
+        # and update as needed
         configs = {}
         for config in df_configs:
             if os.path.isfile(config):
