@@ -62,16 +62,43 @@ def test_proj_points_split(start, interval):
                        res_file=res_file)
 
     iter_interval = 5
-    for i0 in range(start, 100, iter_interval):
+    for i0 in range(0, len(pp), iter_interval):
         i1 = i0 + iter_interval
-        pp_0 = ProjectPoints.split(i0, i1, pp)
-
-        if not pp_0.sites:
+        if i1 > len(pp):
             break
+
+        pp_0 = ProjectPoints.split(i0, i1, pp)
 
         msg = 'ProjectPoints split did not function correctly!'
         assert pp_0.sites == pp.sites[i0:i1], msg
-        assert all(pp_0.df == pp.df.iloc[i0:i1, :]), msg
+        assert all(pp_0.df == pp.df.iloc[i0:i1]), msg
+
+
+def test_split_iter():
+    """Test Points_Control on two slices of ProjectPoints"""
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/wind_gen_standard_losses_0.json')
+    pp = ProjectPoints(slice(0, 500, 5), sam_files, 'wind',
+                       res_file=res_file)
+
+    n = 3
+    for s, e in [(0, 50), (50, 100)]:
+        pc = PointsControl.split(s, e, pp, sites_per_split=n)
+
+        for i, pp_split in enumerate(pc):
+            i0_nom = s + i * n
+            i1_nom = s + i * n + n
+            if i1_nom >= e:
+                i1_nom = e
+
+            split = pp_split.project_points.df
+            target = pp.df.iloc[i0_nom:i1_nom]
+            print('split = ', split.head())
+            print('target = ', target.head())
+
+            msg = 'PointsControl iterator split did not function correctly!'
+            assert split.equals(target), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):

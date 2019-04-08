@@ -28,6 +28,10 @@ class AnalysisConfig(BaseConfig):
     """Base analysis config (generation, lcoe, etc...)."""
 
     def __init__(self, config_dict):
+        self._years = None
+        self._dirout = None
+        self._logdir = None
+        self._ec = None
         super().__init__(config_dict)
 
     @property
@@ -42,7 +46,7 @@ class AnalysisConfig(BaseConfig):
             the code will look anticipate a year in the input files.
         """
 
-        if not hasattr(self, '_years'):
+        if self._years is None:
             self._years = [None]
             if 'analysis_years' in self['project_control']:
                 self._years = self['project_control']['analysis_years']
@@ -62,7 +66,7 @@ class AnalysisConfig(BaseConfig):
         _dirout : str
             Target path for reV output files.
         """
-        if not hasattr(self, '_dirout'):
+        if self._dirout is None:
             # set default value
             self._dirout = './out'
             if 'output_directory' in self['directories']:
@@ -78,7 +82,7 @@ class AnalysisConfig(BaseConfig):
         _logdir : str
             Target path for reV log files.
         """
-        if not hasattr(self, '_logdir'):
+        if self._logdir is None:
             # set default value
             self._logdir = './logs'
             if 'logging_directory' in self['directories']:
@@ -95,7 +99,7 @@ class AnalysisConfig(BaseConfig):
             reV execution config object specific to the execution_control
             option.
         """
-        if not hasattr(self, '_ec'):
+        if self._ec is None:
             ec = self['execution_control']
             # static map of avail execution options with corresponding classes
             ec_config_types = {'local': BaseExecutionConfig,
@@ -124,6 +128,10 @@ class SAMAnalysisConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
 
     def __init__(self, config_dict):
+        self._tech = None
+        self._sam_config = None
+        self._pc = None
+        self._output_request = None
         super().__init__(config_dict)
 
     @property
@@ -135,7 +143,7 @@ class SAMAnalysisConfig(AnalysisConfig):
         _tech : str
             reV technology string to analyze (e.g. pv, csp, wind, etc...).
         """
-        if not hasattr(self, '_tech'):
+        if self._tech is None:
             self._tech = self['project_control']['technology']
             self._tech = self._tech.lower().replace(' ', '')
         return self._tech
@@ -149,7 +157,7 @@ class SAMAnalysisConfig(AnalysisConfig):
         _sam_gen : reV.config.sam.SAMConfig
             SAM config object. This object emulates a dictionary.
         """
-        if not hasattr(self, '_sam_config'):
+        if self._sam_config is None:
             self._sam_config = SAMConfig(self['sam_files'])
         return self._sam_config
 
@@ -164,7 +172,7 @@ class SAMAnalysisConfig(AnalysisConfig):
             execution control option.
         """
 
-        if not hasattr(self, '_pc'):
+        if self._pc is None:
             # make an instance of project points
             pp = ProjectPoints(self['project_points'], self['sam_files'],
                                self.tech)
@@ -220,7 +228,7 @@ class SAMAnalysisConfig(AnalysisConfig):
                        'singleowner': 'ppa_price',
                        }
 
-        if not hasattr(self, '_output_request'):
+        if self._output_request is None:
             self._output_request = []
             # default output request if not specified
             temp = ['cf_mean']
@@ -259,7 +267,8 @@ class GenConfig(SAMAnalysisConfig):
         fname : str
             Generation config name (with path).
         """
-
+        self._curtailment = None
+        self._res_files = None
         # get the directory of the config file
         self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
 
@@ -271,7 +280,7 @@ class GenConfig(SAMAnalysisConfig):
 
         # Get file, Perform string replacement, save config to self instance
         config = self.str_replace(self.get_file(fname), self.str_rep)
-        self.set_self_dict(config)
+        super().__init__(config)
 
     @property
     def curtailment(self):
@@ -283,13 +292,12 @@ class GenConfig(SAMAnalysisConfig):
             Returns None if no curtailment config is specified. If one is
             specified, this returns the reV curtailment config object.
         """
-
-        if not hasattr(self, '_curtailment'):
-            self._curtailment = None
+        if self._curtailment is None:
             if 'curtailment' in self:
                 if self['curtailment']:
                     # curtailment was specified and is not None or False
                     self._curtailment = Curtailment(self['curtailment'])
+
         return self._curtailment
 
     @property
@@ -303,7 +311,7 @@ class GenConfig(SAMAnalysisConfig):
             formatting will be filled with the specified year(s). This return
             value is a list with len=1 for a single year run.
         """
-        if not hasattr(self, '_res_files'):
+        if self._res_files is None:
             # get base filename, may have {} for year format
             fname = self['resource_file']
             if '{}' in fname:
@@ -333,7 +341,8 @@ class EconConfig(SAMAnalysisConfig):
         fname : str
             Econ config name (with path).
         """
-
+        self._cf_files = None
+        self._site_data = None
         # get the directory of the config file
         self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
 
@@ -345,7 +354,7 @@ class EconConfig(SAMAnalysisConfig):
 
         # Get file, Perform string replacement, save config to self instance
         config = self.str_replace(self.get_file(fname), self.str_rep)
-        self.set_self_dict(config)
+        super().__init__(config)
 
     @property
     def cf_files(self):
@@ -358,7 +367,7 @@ class EconConfig(SAMAnalysisConfig):
             data) for input to reV LCOE calculation.
         """
 
-        if not hasattr(self, '_cf_files'):
+        if self._cf_files is None:
             # get base filename, may have {} for year format
             fname = self['cf_file']
             if '{}' in fname:
@@ -374,6 +383,7 @@ class EconConfig(SAMAnalysisConfig):
                               '\n\tCF files: \n\t\t{}'
                               '\n\tYears: \n\t\t{}'
                               .format(self._cf_files, self.years))
+
         return self._cf_files
 
     @property
@@ -385,7 +395,7 @@ class EconConfig(SAMAnalysisConfig):
         _site_data : str | NoneType
             Target path for site-specific data file.
         """
-        if not hasattr(self, '_site_data'):
+        if self._site_data is None:
             self._site_data = None
             if 'site_data' in self:
                 self._site_data = self['site_data']

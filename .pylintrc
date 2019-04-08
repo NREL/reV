@@ -97,6 +97,8 @@ enable=unused-import,
        global-at-module-level,
        bad-open-mode,
        redundant-unittest-assert,
+       attribute-defined-outside-init,
+       unreachable
 
 
 [REPORTS]

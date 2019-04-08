@@ -50,10 +50,12 @@ class SAMResource:
         require_wind_dir : bool
             Boolean flag indicating that wind direction is required
         """
+        self._i = 0
         self._project_points = project_points
         self._time_index = time_index
         self._shape = (len(time_index), len(project_points.sites))
         self._n = self._shape[1]
+        self._var_list = None
         self._meta = None
         self._runnable = False
         self._res_arrays = {}
@@ -110,7 +112,6 @@ class SAMResource:
             self._set_var_array(var, arr, *var_slice)
 
     def __iter__(self):
-        self._i = 0
         return self
 
     def __next__(self):
@@ -159,7 +160,7 @@ class SAMResource:
             ('solar' or 'wind')
         """
 
-        if not hasattr(self, '_var_list'):
+        if self._var_list is None:
             if self._res_type == 'solar':
                 self._var_list = ['dni', 'dhi', 'wind_speed',
                                   'air_temperature']

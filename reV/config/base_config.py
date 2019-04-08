@@ -16,6 +16,8 @@ class BaseConfig(dict):
 
     def __init__(self, config_dict):
         """Initialize configuration object with keyword dict."""
+        self._logging_level = None
+        self._name = None
         self.set_self_dict(config_dict)
 
     @staticmethod
@@ -130,7 +132,7 @@ class BaseConfig(dict):
             config-specified logging level string.
         """
 
-        if not hasattr(self, '_logging_level'):
+        if self._logging_level is None:
             levels = {'DEBUG': logging.DEBUG,
                       'INFO': logging.INFO,
                       'WARNING': logging.WARNING,
@@ -154,7 +156,7 @@ class BaseConfig(dict):
             Config-specified project control name.
         """
 
-        if not hasattr(self, '_name'):
+        if self._name is None:
             # set default value
             self._name = 'rev'
             if 'name' in self['project_control']:

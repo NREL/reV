@@ -87,11 +87,14 @@ class Gen:
 
         self._points_control = points_control
         self._res_file = res_file
-        self.output_request = output_request
+        self._site_limit = None
+        self._site_mem = None
         self._fout = fout
         self._dirout = dirout
+        self._time_index = None
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
+        self._output_request = self._parse_output_request(output_request)
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -100,7 +103,50 @@ class Gen:
                            .format(self.tech, list(self.OPTIONS.keys())))
 
         # pre-initialize output arrays to store results when available.
+        self._out = {}
+        self._finished_sites = []
+        self._out_chunk = ()
+        self._out_n_sites = 0
         self.initialize_output_arrays()
+
+    def _parse_output_request(self, req):
+        """Set the output variables requested from generation.
+
+        Parameters
+        ----------
+        req : list | tuple
+            Output variables requested from SAM.
+
+        Returns
+        -------
+        output_request : tuple
+            Output variables requested from SAM.
+        """
+        if 'cf_mean' not in req:
+            # ensure that cf_mean is requested from output
+            if isinstance(req, list):
+                req += ['cf_mean']
+            elif isinstance(req, tuple):
+                req += ('cf_mean',)
+
+        if isinstance(req, list):
+            # ensure output request is tuple
+            output_request = tuple(req)
+        elif isinstance(req, tuple):
+            output_request = req
+        else:
+            raise TypeError('Output request must be str, list, or tuple but '
+                            'received: {}'.format(type(req)))
+
+        for request in output_request:
+            if request not in self.OUT_ATTRS:
+                raise ValueError('User output request "{}" not recognized. '
+                                 'The following output requests are available '
+                                 'in "{}": "{}"'
+                                 .format(request, self.__class__,
+                                         list(self.OUT_ATTRS.keys())))
+
+        return output_request
 
     @property
     def output_request(self):
@@ -113,38 +159,6 @@ class Gen:
         """
         return self._output_request
 
-    @output_request.setter
-    def output_request(self, req):
-        """Set the output variables requested from generation.
-
-        Parameters
-        ----------
-        req : str | list | tuple
-            Output variable(s) requested from SAM.
-        """
-
-        if isinstance(req, str):
-            # single output request, make tuple
-            self._output_request = (req,)
-        elif isinstance(req, (list, tuple)):
-            # ensure output request is tuple
-            self._output_request = tuple(req)
-        else:
-            raise TypeError('Output request must be str, list, or tuple but '
-                            'received: {}'.format(type(req)))
-
-        if 'cf_mean' not in self._output_request:
-            # ensure that cf_mean is requested from output
-            self._output_request += ('cf_mean',)
-
-        for request in self._output_request:
-            if request not in self.OUT_ATTRS:
-                raise ValueError('User output request "{}" not recognized. '
-                                 'The following output requests are available '
-                                 'in "{}": "{}"'
-                                 .format(request, self.__class__,
-                                         list(self.OUT_ATTRS.keys())))
-
     @property
     def site_limit(self):
         """Get the number of sites results that can be stored in memory at once
@@ -156,7 +170,7 @@ class Gen:
             without violating memory limits.
         """
 
-        if not hasattr(self, '_site_limit'):
+        if self._site_limit is None:
             tot_mem = psutil.virtual_memory().total / 1e6
             avail_mem = self.mem_util_lim * tot_mem
             self._site_limit = int(np.floor(avail_mem / self.site_mem))
@@ -165,6 +179,7 @@ class Gen:
                         'with {3:.1f}% utilization).'
                         .format(self._site_limit, tot_mem / 1e3,
                                 avail_mem / 1e3, self.mem_util_lim * 100))
+
         return self._site_limit
 
     @property
@@ -178,7 +193,7 @@ class Gen:
             output_request for a single site.
         """
 
-        if not hasattr(self, '_site_mem'):
+        if self._site_mem is None:
             # average the memory usage over n sites
             # (for better understanding of array overhead)
             n = 100
@@ -195,6 +210,7 @@ class Gen:
             logger.info('Output results from a single site are calculated to '
                         'use {0:.3f} MB of memory.'
                         .format(self._site_mem))
+
         return self._site_mem
 
     @property
@@ -277,21 +293,21 @@ class Gen:
 
     @property
     def meta(self):
-        """Get resource meta for sites with results (in self.finished_sites).
+        """Get resource meta for sites with results (in self._finished_sites).
 
         Returns
         -------
-        _meta : pd.DataFrame
+        meta : pd.DataFrame
             Meta data df for sites that have completed results.
             Column names are variables, rows are different sites. The row index
             does not indicate the site number, so a 'gid' column is added.
         """
-
         with Resource(self.res_file) as res:
-            self._meta = res['meta', self.finished_sites]
-            self._meta.loc[:, 'gid'] = self.finished_sites
-            self._meta.loc[:, 'reV_tech'] = self.project_points.tech
-        return self._meta
+            meta = res['meta', self._finished_sites]
+            meta.loc[:, 'gid'] = self._finished_sites
+            meta.loc[:, 'reV_tech'] = self.project_points.tech
+
+        return meta
 
     @property
     def time_index(self):
@@ -303,7 +319,7 @@ class Gen:
             Time-series datetime index
         """
 
-        if not hasattr(self, '_time_index'):
+        if self._time_index is None:
             with Resource(self.res_file) as res:
                 self._time_index = res.time_index
 
@@ -456,26 +472,26 @@ class Gen:
         """
 
         self._out = {}
-        self.finished_sites = []
+        self._finished_sites = []
 
         # Output chunk is the index range (inclusive) of this set of site outs
-        self.output_chunk = (index_0, np.min((index_0 + self.site_limit,
-                                              len(self.project_points) - 1)))
-        self.out_n_sites = int(self.output_chunk[1] - self.output_chunk[0]) + 1
+        self._out_chunk = (index_0, np.min((index_0 + self.site_limit,
+                                            len(self.project_points) - 1)))
+        self._out_n_sites = int(self._out_chunk[1] - self._out_chunk[0]) + 1
 
         logger.info('Initializing generation outputs for {} sites with gids '
                     '{} through {} inclusive (site list index {} through {})'
-                    .format(self.out_n_sites,
-                            self.project_points.sites[self.output_chunk[0]],
-                            self.project_points.sites[self.output_chunk[1]],
-                            self.output_chunk[0], self.output_chunk[1]))
+                    .format(self._out_n_sites,
+                            self.project_points.sites[self._out_chunk[0]],
+                            self.project_points.sites[self._out_chunk[1]],
+                            self._out_chunk[0], self._out_chunk[1]))
 
         for request in self.output_request:
             dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
             if self.OUT_ATTRS[request]['type'] == 'array':
-                shape = (len(self.time_index), self.out_n_sites)
+                shape = (len(self.time_index), self._out_n_sites)
             else:
-                shape = (self.out_n_sites, )
+                shape = (self._out_n_sites, )
 
             # initialize the output request as an array of zeros
             self._out[request] = np.zeros(shape, dtype=dtype)
@@ -489,9 +505,6 @@ class Gen:
         out : dict
             Dictionary of generation results from SAM.
         """
-
-        if not hasattr(self, '_out'):
-            self.initialize_output_arrays()
         return self._out
 
     @out.setter
@@ -507,11 +520,6 @@ class Gen:
              - Dictionary input is interpreted as an already unpacked result.
              - None is interpreted as a signal to clear the output dictionary.
         """
-
-        if not hasattr(self, '_out'):
-            # initialize output dict and list of finished sites
-            self.initialize_output_arrays()
-
         if isinstance(result, list):
             # unpack futures list to dictionary first
             result = self.unpack_futures(result)
@@ -524,22 +532,22 @@ class Gen:
 
                 # check that the sites are stored sequentially then add to
                 # the finished site list
-                if self.finished_sites:
-                    if int(site_gid) < np.max(self.finished_sites):
+                if self._finished_sites:
+                    if int(site_gid) < np.max(self._finished_sites):
                         raise Exception('Site results are non sequential!')
 
                 # unpack site output object
                 self.unpack_output(site_gid, site_output)
 
                 # add site gid to the finished list after outputs are unpacked
-                self.finished_sites.append(site_gid)
+                self._finished_sites.append(site_gid)
 
             # try to clear some memory
             del result
 
         elif isinstance(result, type(None)):
             self._out.clear()
-            self.finished_sites.clear()
+            self._finished_sites.clear()
         else:
             raise TypeError('Did not recognize the type of generation output. '
                             'Tried to set output type "{}", but requires '
@@ -588,7 +596,7 @@ class Gen:
 
             # check to see if we have exceeded the current output chunk.
             # If so, flush data to disk and reset the output initialization
-            if i + 1 > self.out_n_sites:
+            if i + 1 > self._out_n_sites:
                 self.flush()
                 global_site_index = self.site_index(site_gid)
                 self.initialize_output_arrays(index_0=global_site_index)
@@ -629,14 +637,14 @@ class Gen:
         if not out_index:
             return global_site_index
         else:
-            output_index = global_site_index - self.output_chunk[0]
+            output_index = global_site_index - self._out_chunk[0]
             if output_index < 0:
                 raise ValueError('Attempting to set output data for site with '
                                  'gid {} to global site index {}, which was '
                                  'already set based on the current output '
                                  'index chunk of {}'
                                  .format(site_gid, global_site_index,
-                                         self.output_chunk))
+                                         self._out_chunk))
             return output_index
 
     def get_dset_attrs(self, var):

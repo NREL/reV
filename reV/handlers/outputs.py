@@ -61,6 +61,8 @@ class Outputs(Resource):
         self._h5 = h5py.File(h5_file, mode=mode)
         self._unscale = unscale
         self._mode = mode
+        self._meta = None
+        self._time_index = None
 
     def __len__(self):
         _len = 0

@@ -136,6 +136,8 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
                              f_rev1_out)
     sam_files = [TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
                  TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json']
+    sam_files = {'sam_param_{}'.format(i): k for i, k in
+                 enumerate(sam_files)}
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
     gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
                          return_obj=True)

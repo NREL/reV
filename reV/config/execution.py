@@ -13,8 +13,11 @@ class BaseExecutionConfig(BaseConfig):
     """Base class to handle execution configuration"""
 
     def __init__(self, config_dict):
-        for key, val in config_dict.items():
-            self.__setitem__(key, val)
+        self._option = None
+        self._nodes = None
+        self._ppn = None
+        self._mem_util_lim = None
+        super().__init__(config_dict)
 
     @property
     def option(self):
@@ -26,7 +29,7 @@ class BaseExecutionConfig(BaseConfig):
             Execution control option, e.g. local, peregrine, eagle...
         """
 
-        if not hasattr(self, '_option'):
+        if self._option is None:
             # default option if not specified
             self._option = 'local'
             if 'option' in self:
@@ -44,7 +47,7 @@ class BaseExecutionConfig(BaseConfig):
         _nodes : int
             Number of available nodes. Default is 1 node.
         """
-        if not hasattr(self, '_nodes'):
+        if self._nodes is None:
             # set default option if not specified
             self._nodes = 1
             if 'nodes' in self:
@@ -60,7 +63,7 @@ class BaseExecutionConfig(BaseConfig):
         _ppn : int
             Processes per node. Default is 1 ppn.
         """
-        if not hasattr(self, '_ppn'):
+        if self._ppn is None:
             # set default option if not specified
             self._ppn = 1
             if 'ppn' in self:
@@ -78,7 +81,7 @@ class BaseExecutionConfig(BaseConfig):
             "memory_utilization_limit".
         """
 
-        if not hasattr(self, '_mem_util_lim'):
+        if self._mem_util_lim is None:
             if 'memory_utilization_limit' in self:
                 self._mem_util_lim = self['memory_utilization_limit']
             else:
@@ -90,6 +93,7 @@ class HPCConfig(BaseExecutionConfig):
     """Class to handle HPC configuration inputs."""
 
     def __init__(self, config_dict):
+        self._hpc_alloc = None
         super().__init__(config_dict)
 
     @property
@@ -101,7 +105,7 @@ class HPCConfig(BaseExecutionConfig):
         _hpc_alloc : str
             Name of the HPC allocation account for the specified job.
         """
-        if not hasattr(self, '_hpc_alloc'):
+        if self._hpc_alloc is None:
             # default option if not specified
             self._hpc_alloc = 'rev'
             if 'allocation' in self:
@@ -115,6 +119,10 @@ class PeregrineConfig(HPCConfig):
     """Class to handle Peregrine configuration inputs."""
 
     def __init__(self, config_dict):
+        self._hpc_node_mem = None
+        self._hpc_walltime = None
+        self._hpc_queue = None
+        self._feature = None
         super().__init__(config_dict)
 
     @property
@@ -134,7 +142,7 @@ class PeregrineConfig(HPCConfig):
                     'bigmem': '64GB',
                     'data-transfer': '32GB',
                     }
-        if not hasattr(self, '_hpc_node_mem'):
+        if self._hpc_node_mem is None:
             # default option if not specified
             self._hpc_node_mem = defaults[self.queue]
             if 'memory' in self:
@@ -160,7 +168,7 @@ class PeregrineConfig(HPCConfig):
                     'bigmem': '240:00:00',
                     'data-transfer': '120:00:00',
                     }
-        if not hasattr(self, '_hpc_walltime'):
+        if self._hpc_walltime is None:
             # default option if not specified
             self._hpc_walltime = defaults[self.queue]
             if 'walltime' in self:
@@ -178,7 +186,7 @@ class PeregrineConfig(HPCConfig):
         _hpc_queue : str
             Peregrine queue request, e.g. 'short' or 'long'.
         """
-        if not hasattr(self, '_hpc_queue'):
+        if self._hpc_queue is None:
             # default option if not specified
             self._hpc_queue = 'short'
             if 'queue' in self:
@@ -199,9 +207,8 @@ class PeregrineConfig(HPCConfig):
                 "feature": "qos=high"
                 "feature": "feature=256GB"
         """
-        if not hasattr(self, '_feature'):
+        if self._feature is None:
             # default option if not specified
-            self._feature = None
             if 'feature' in self:
                 if self['feature']:
                     # config-specified, set to attribute
@@ -213,6 +220,8 @@ class EagleConfig(HPCConfig):
     """Class to handle Eagle configuration inputs."""
 
     def __init__(self, config_dict):
+        self._hpc_node_mem = None
+        self._hpc_walltime = None
         super().__init__(config_dict)
 
     @property
@@ -224,7 +233,7 @@ class EagleConfig(HPCConfig):
         _hpc_node_mem : int
             Requested node memory in GB.
         """
-        if not hasattr(self, '_hpc_node_mem'):
+        if self._hpc_node_mem is None:
             # default option if not specified
             self._hpc_node_mem = 96
             if 'memory' in self:
@@ -242,7 +251,7 @@ class EagleConfig(HPCConfig):
         _hpc_walltime : int
             Requested single node job time in hours.
         """
-        if not hasattr(self, '_hpc_walltime'):
+        if self._hpc_walltime is None:
             # default option if not specified
             self._hpc_walltime = 1
             if 'walltime' in self:

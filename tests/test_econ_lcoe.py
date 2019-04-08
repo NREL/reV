@@ -58,9 +58,9 @@ def test_ORCA(rut_id):
     points = TESTDATADIR + '/ORCA/rutgers_pp_slim.csv'
     cf_file = TESTDATADIR + '/gen_out/rut_{}_node00_x000.h5'.format(rut_id)
     sam_files = {'6MW_offshore': TESTDATADIR + '/ORCA/6MW_offshore.json',
-                 't200_t186': TESTDATADIR + '/ORCA/t200_t186.json',
+                 # 't200_t186': TESTDATADIR + '/ORCA/t200_t186.json',
                  't233_t217': TESTDATADIR + '/ORCA/t233_t217.json',
-                 't325_t302': TESTDATADIR + '/ORCA/t325_t302.json',
+                 # 't325_t302': TESTDATADIR + '/ORCA/t325_t302.json',
                  }
     site_data = TESTDATADIR + '/ORCA/orca_site_data.csv'
 

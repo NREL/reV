@@ -46,7 +46,7 @@ def manual_means(h5_files, dset):
     return np.mean(arr, axis=0)
 
 
-def manual_std(h5_files, dset):
+def manual_stdev(h5_files, dset):
     """
     Manually calculate standard deviation for dset in .h5 files
 
@@ -164,7 +164,7 @@ def test_update(dset='cf_mean'):
     files = H5_FILES[:1]
     MultiYear.collect_means(my_out, files, dset)
     my_means = manual_means(files, dset)
-    my_std = manual_std(files, dset)
+    my_std = manual_stdev(files, dset)
     with MultiYear(my_out, mode='r') as my:
         dset_means = my.means(dset)
         dset_std = my.std(dset)
@@ -176,7 +176,7 @@ def test_update(dset='cf_mean'):
     files = H5_FILES
     MultiYear.collect_means(my_out, files, dset)
     my_means = manual_means(files, dset)
-    my_std = manual_std(files, dset)
+    my_std = manual_stdev(files, dset)
     with MultiYear(my_out, mode='r') as my:
         dset_means = my.means(dset)
         dset_std = my.std(dset)
@@ -188,7 +188,7 @@ def test_update(dset='cf_mean'):
         os.remove(my_out)
 
 
-def test_my_std(dset='cf_mean'):
+def test_my_stdev(dset='cf_mean'):
     """
     Test computation of multi-year means
 
@@ -198,7 +198,7 @@ def test_my_std(dset='cf_mean'):
         dset to compute means from
     """
     init_logger('reV.handlers.multi_year')
-    my_std = manual_std(H5_FILES, dset)
+    my_std = manual_stdev(H5_FILES, dset)
 
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
     with MultiYear(my_out, mode='w') as my:

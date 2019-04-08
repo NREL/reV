@@ -51,7 +51,7 @@ def test_collection():
     """
     init_logger('reV.handlers.collection')
     profiles = manual_collect(H5_DIR, 'peregrine_2012', 'cf_profile')
-    h5_file = os.path.join(TEMP_DIR, 'cf_profiles.h5')
+    h5_file = os.path.join(TEMP_DIR, 'collection.h5')
     Collector.collect_profiles(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
                                dset_out=None,
                                file_prefix='peregrine_2012',
@@ -59,7 +59,9 @@ def test_collection():
     with h5py.File(h5_file) as f:
         cf_profiles = f['cf_profile'][...]
 
-    assert np.array_equal(profiles, cf_profiles)
+    diff = np.mean(np.abs(profiles - cf_profiles))
+    msg = "Arrays differ by {:.4f}".format(diff)
+    assert np.allclose(profiles, cf_profiles), msg
 
     if PURGE_OUT:
         os.remove(h5_file)
@@ -85,7 +87,9 @@ def test_parallel_collection():
     with h5py.File(h5_file) as f:
         parallel_profiles = f['cf_profile'][...]
 
-    assert np.array_equal(series_profiles, parallel_profiles)
+    diff = np.mean(np.abs(series_profiles - parallel_profiles))
+    msg = "Arrays differ by {:.4f}".format(diff)
+    assert np.allclose(series_profiles, parallel_profiles), msg
 
     if PURGE_OUT:
         os.remove(h5_file)

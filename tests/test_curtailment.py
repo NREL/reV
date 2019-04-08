@@ -25,10 +25,9 @@ def get_curtailment(year):
                             'ri_100_wtk_{}.h5'.format(year))
     sam_files = {0: os.path.join(TESTDATADIR, 'SAM/',
                                  'wind_gen_standard_losses_0.json')}
-
-    pp = ProjectPoints(slice(0, 100), sam_files, 'wind')
-
-    pp.curtailment = os.path.join(TESTDATADIR, 'config/', 'curtailment.json')
+    curtailment = os.path.join(TESTDATADIR, 'config/', 'curtailment.json')
+    pp = ProjectPoints(slice(0, 100), sam_files, 'wind',
+                       curtailment=curtailment)
 
     resource = SAM.get_sam_res(res_file, pp, 'wind')
     non_curtailed_res = deepcopy(resource)

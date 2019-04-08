@@ -38,6 +38,8 @@ class Resource:
             self._h5 = h5py.File(self._h5_file, 'r')
 
         self._unscale = unscale
+        self._meta = None
+        self._time_index = None
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
@@ -110,7 +112,7 @@ class Resource:
         meta : pandas.DataFrame
             Resource Meta Data
         """
-        if not hasattr(self, '_meta'):
+        if self._meta is None:
             self._meta = pd.DataFrame(self._h5['meta'][...])
 
         return self._meta
@@ -125,7 +127,7 @@ class Resource:
         time_index : pandas.DatetimeIndex
             Resource datetime index
         """
-        if not hasattr(self, '_time_index'):
+        if self._time_index is None:
             ti = self._h5['time_index'][...].astype(str)
             self._time_index = pd.to_datetime(ti)
 
@@ -288,7 +290,6 @@ class Resource:
         site : int
             Site to extract SAM DataFrame for
         """
-        pass
 
     def _get_ds(self, ds_name, *ds_slice):
         """
@@ -348,7 +349,6 @@ class Resource:
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
         """
-        pass
 
 
 class SolarResource(Resource):
@@ -371,16 +371,16 @@ class SolarResource(Resource):
         res_df : pandas.DataFrame
             time-series DataFrame of resource variables needed to run SAM
         """
-        if self._unscale:
-            res_df = pd.DataFrame(index=self.time_index)
-            res_df.name = "{}-{}".format(ds_name, site)
-            for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
-                var_array = self._get_ds(var, slice(None, None, None), site)
-                res_df[var] = SAMResource.check_units(var, var_array)
-
-            return res_df
-        else:
+        if not self._unscale:
             raise HandlerValueError("SAM requires unscaled values")
+
+        res_df = pd.DataFrame(index=self.time_index)
+        res_df.name = "{}-{}".format(ds_name, site)
+        for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
+            var_array = self._get_ds(var, slice(None, None, None), site)
+            res_df[var] = SAMResource.check_units(var, var_array)
+
+        return res_df
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
@@ -424,13 +424,25 @@ class NSRDB(SolarResource):
     Class to handle NSRDB .h5 files
     """
     SCALE_ATTR = 'psm_scale_factor'
-    UNIT_ATTRS = 'psm_units'
+    UNIT_ATTR = 'psm_units'
 
 
 class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
+    def __init__(self, h5_file, unscale=True):
+        """
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        """
+        self._heights = None
+        super().__init__(h5_file, unscale=unscale)
+
     @staticmethod
     def _parse_name(ds_name):
         """
@@ -473,7 +485,7 @@ class WindResource(Resource):
             List of available heights for:
             windspeed, winddirection, temperature, and pressure
         """
-        if not hasattr(self, '_heights'):
+        if self._heights is None:
             dsets = list(self._h5)
             heights = {'pressure': [],
                        'temperature': [],
@@ -730,21 +742,21 @@ class WindResource(Resource):
         res_df : pandas.DataFrame
             time-series DataFrame of resource variables needed to run SAM
         """
-        if self._unscale:
-            _, h = self._parse_name(ds_name)
-            res_df = pd.DataFrame(index=self.time_index)
-            res_df.name = site
-            variables = ['pressure', 'temperature', 'winddirection',
-                         'windspeed']
-            for var in variables:
-                var_name = "{}_{}m".format(var, h)
-                var_array = self._get_ds(var_name, slice(None, None, None),
-                                         site)
-                res_df[var_name] = SAMResource.check_units(var_name, var_array)
-
-            return res_df
-        else:
+        if not self._unscale:
             raise HandlerValueError("SAM requires unscaled values")
+
+        _, h = self._parse_name(ds_name)
+        res_df = pd.DataFrame(index=self.time_index)
+        res_df.name = site
+        variables = ['pressure', 'temperature', 'winddirection',
+                     'windspeed']
+        for var in variables:
+            var_name = "{}_{}m".format(var, h)
+            var_array = self._get_ds(var_name, slice(None, None, None),
+                                     site)
+            res_df[var_name] = SAMResource.check_units(var_name, var_array)
+
+        return res_df
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,

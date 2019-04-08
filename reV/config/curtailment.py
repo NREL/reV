@@ -25,11 +25,16 @@ class Curtailment(BaseConfig):
             information. Could also be a pre-extracted curtailment config
             dictionary (the contents of the curtailment json).
         """
+        self._wind_speed = None
+        self._dawn_dusk = None
+        self._months = None
+        self._temperature = None
+        self._precipitation = None
+        self._probability = None
 
         if isinstance(curtailment_parameters, str):
             # received json, extract to dictionary
-            self.file = curtailment_parameters
-            curtailment_parameters = self.get_file(self.file)
+            curtailment_parameters = self.get_file(curtailment_parameters)
 
         # intialize config object with curtailment parameters
         super().__init__(curtailment_parameters)
@@ -45,7 +50,7 @@ class Curtailment(BaseConfig):
             default to 5.0 m/s (curtailment when wspd < 5.0 m/s).
         """
 
-        if not hasattr(self, '_wind_speed'):
+        if self._wind_speed is None:
             self._wind_speed = float(self.get('wind_speed', 5.0))
         return self._wind_speed
 
@@ -65,7 +70,7 @@ class Curtailment(BaseConfig):
                    'astronomical': 108.0,
                    'civil': 96.0}
 
-        if not hasattr(self, '_dawn_dusk'):
+        if self._dawn_dusk is None:
             # set a default value
             self._dawn_dusk = presets['nautical']
             if 'dawn_dusk' in self:
@@ -88,7 +93,7 @@ class Curtailment(BaseConfig):
             curtailment could be in effect. Default is April through July.
         """
 
-        if not hasattr(self, '_months'):
+        if self._months is None:
             self._months = tuple(self.get('months', (4, 5, 6, 7)))
         return self._months
 
@@ -102,7 +107,7 @@ class Curtailment(BaseConfig):
             Temperature over which curtailment is possible. Defaults to None.
         """
 
-        if not hasattr(self, '_temperature'):
+        if self._temperature is None:
             self._temperature = self.get('temperature', None)
         return self._temperature
 
@@ -118,7 +123,7 @@ class Curtailment(BaseConfig):
             mm/hour. Defaults to None.
         """
 
-        if not hasattr(self, '_precipitation'):
+        if self._precipitation is None:
             self._precipitation = self.get('precipitation', None)
         return self._precipitation
 
@@ -135,6 +140,6 @@ class Curtailment(BaseConfig):
             in effect if all other criteria are met).
         """
 
-        if not hasattr(self, '_probability'):
+        if self._probability is None:
             self._probability = float(self.get('probability', 1.0))
         return self._probability
