@@ -6,12 +6,16 @@ Created on April 8 2019
 """
 import numpy as np
 import pandas as pd
+import logging
 
 from reV.utilities.solar_position import SolarPosition
 
 from nsrdb.all_sky import CLEAR_TYPES
 from nsrdb.all_sky.all_sky import all_sky
 from nsrdb.utilities.interpolation import temporal_lin, temporal_step
+
+
+logger = logging.getLogger(__name__)
 
 
 def make_time_index(year, frequency):
@@ -36,7 +40,26 @@ def make_time_index(year, frequency):
 
 def interp_cld_props(data, ti_native, ti_new,
                      var_list=('cld_reff_dcomp', 'cld_opd_dcomp')):
-    """Interpolate missing cloud properties (NOT CLOUD TYPE)."""
+    """Interpolate missing cloud properties (NOT CLOUD TYPE).
+
+    Parameters
+    ----------
+    data : dict
+        Namespace of variables for input to all_sky. Must include the cloud
+        variables in var_list and "cloud_type".
+    ti_native : pd.DateTimeIndex
+        Native time index of the original NSRDB data.
+    ti_new : pd.DateTimeIndex
+        Intended downscaled time index.
+    var_list : list | tuple
+        Cloud variables to downscale.
+
+    Returns
+    -------
+    data : dict
+        Namespace of variables with the cloud variables in var_list downscaled
+        to the requested ti_new.
+    """
 
     for var in var_list:
 
@@ -79,7 +102,10 @@ def downscale_nsrdb(SAM_res, res, project_points, frequency,
     -------
     SAM_res : SAMResource
         reV SAM resource object with downscaled solar resource data loaded.
+        Time index and shape are also updated.
     """
+
+    logger.debug('Downscaling NSRDB resource data to "{}".'.format(frequency))
 
     # variables required for all-sky not including clouds, ti, sza
     var_list = ('aod',
@@ -90,9 +116,6 @@ def downscale_nsrdb(SAM_res, res, project_points, frequency,
                 'alpha',
                 'ozone',
                 'total_precipitable_water',
-                'wind_speed',
-                'wind_direction',
-                'air_temperature',
                 )
 
     # variables to save to SAM resource handler before returning
@@ -104,6 +127,7 @@ def downscale_nsrdb(SAM_res, res, project_points, frequency,
     # get downscaled time_index
     time_index = make_time_index(res.time_index.year[0], frequency)
     SAM_res._time_index = time_index
+    SAM_res._shape = (len(time_index), len(project_points.sites))
 
     # downscale variables into an all-sky input variable namespace
     all_sky_ins = {'time_index': time_index}
@@ -112,7 +136,7 @@ def downscale_nsrdb(SAM_res, res, project_points, frequency,
                                         res.time_index, time_index)
 
     # calculate downscaled solar zenith angle
-    lat_lon = res.meta[sites_slice, ['latitude', 'longitude']]\
+    lat_lon = res.meta.loc[project_points.sites, ['latitude', 'longitude']]\
         .values.astype(np.float32)
     all_sky_ins['solar_zenith_angle'] = SolarPosition(time_index,
                                                       lat_lon).zenith
@@ -128,13 +152,18 @@ def downscale_nsrdb(SAM_res, res, project_points, frequency,
     all_sky_ins['ghi_variability'] = ghi_variability
 
     # run all-sky
+    logger.debug('Running all-sky for "{}".'.format(project_points))
     all_sky_outs = all_sky(**all_sky_ins)
 
     # set downscaled data to sam resource handler
     for k, v in all_sky_outs.items():
         if k in out_list:
             SAM_res[k] = v
-        else:
-            del all_sky_outs[k]
+
+    # downscale extra vars needed for SAM but not for all-sky
+    for var in out_list:
+        if var not in SAM_res._res_arrays:
+            SAM_res[var] = temporal_lin(res[var, :, sites_slice],
+                                        res.time_index, time_index)
 
     return SAM_res

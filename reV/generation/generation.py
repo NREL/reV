@@ -62,7 +62,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.7):
+                 mem_util_lim=0.7, downscale=None):
         """
         Parameters
         ----------
@@ -83,6 +83,10 @@ class Gen:
             Memory utilization limit (fractional). This sets how many site
             results will be stored in-memory at any given time before flushing
             to disk.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
         """
 
         self._points_control = points_control
@@ -95,6 +99,9 @@ class Gen:
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
         self._output_request = self._parse_output_request(output_request)
+
+        if downscale is not None:
+            self._set_downscaled_ti(downscale)
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -147,6 +154,20 @@ class Gen:
                                          list(self.OUT_ATTRS.keys())))
 
         return output_request
+
+    def _set_downscaled_ti(self, ds_freq):
+        """Set the downscaled time index based on a requested frequency.
+
+        Parameters
+        ----------
+        frequency : str
+            String in the Pandas frequency format, e.g. '5min'.
+        """
+        from reV.utilities.downscale import make_time_index
+        with Resource(self.res_file) as res:
+            year = res.time_index.year[0]
+        ti = make_time_index(year, ds_freq)
+        self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
 
     @property
     def output_request(self):
@@ -309,6 +330,35 @@ class Gen:
 
         return meta
 
+    @staticmethod
+    def handle_leap_ti(ti, drop_leap=False):
+        """Handle a time index for a leap year by dropping a day.
+
+        Parameters
+        ----------
+        ti : pandas.DatetimeIndex
+            Time-series datetime index with or without a leap day.
+        drop_leap : bool
+            Option to drop leap day (if True) or drop the last day of the year
+            (if False).
+
+        Returns
+        -------
+        ti : pandas.DatetimeIndex
+            Time-series datetime index ALWAYS with length of 365.
+        """
+        # drop leap day or last day
+        leap_day = ((ti.month == 2) & (ti.day == 29))
+        last_day = ((ti.month == 12) & (ti.day == 31))
+        if drop_leap:
+            # preference is to drop leap day if exists
+            ti = ti.drop(ti[leap_day])
+        elif any(leap_day):
+            # leap day exists but preference is to drop last day of year
+            ti = ti.drop(ti[last_day])
+
+        return ti
+
     @property
     def time_index(self):
         """Get the generation resource time index data.
@@ -321,19 +371,8 @@ class Gen:
 
         if self._time_index is None:
             with Resource(self.res_file) as res:
-                self._time_index = res.time_index
-
-            # drop leap day or last day
-            leap_day = ((self._time_index.month == 2) &
-                        (self._time_index.day == 29))
-            last_day = ((self._time_index.month == 12) &
-                        (self._time_index.day == 31))
-            if self._drop_leap:
-                self._time_index = self._time_index.drop(
-                    self._time_index[leap_day])
-            elif any(leap_day):
-                self._time_index = self._time_index.drop(
-                    self._time_index[last_day])
+                self._time_index = self.handle_leap_ti(
+                    res.time_index, drop_leap=self._drop_leap)
 
         return self._time_index
 
@@ -950,7 +989,7 @@ class Gen:
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout)
+                  dirout=dirout, downscale=downscale)
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
                   'output_request': gen.output_request,
@@ -1038,7 +1077,8 @@ class Gen:
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout, mem_util_lim=mem_util_lim)
+                  dirout=dirout, mem_util_lim=mem_util_lim,
+                  downscale=downscale)
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
                   'output_request': gen.output_request,
