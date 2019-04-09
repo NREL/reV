@@ -17,6 +17,7 @@ from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
+from reV.utilities.exceptions import ConfigError
 
 
 logger = logging.getLogger(__name__)
@@ -91,10 +92,19 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
     ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
 
+    # get downscale request and raise exception if not NSRDB
+    ctx.obj['DOWNSCALE'] = config.downscale
+    if (config.downscale is not None and config.tech != 'pv' and
+            config.tech != 'csp'):
+        raise ConfigError('User requested downscaling for a non-solar '
+                          'technology. reV does not have this capability at '
+                          'the current time. Please contact a developer for '
+                          'more information on this feature.')
+
     ctx.obj['CURTAILMENT'] = None
     if config.curtailment is not None:
-        # pass through the curtailment file
-        ctx.obj['CURTAILMENT'] = config.curtailment.file
+        # pass through the curtailment file, not the curtailment object
+        ctx.obj['CURTAILMENT'] = config['curtailment']
 
     for i, year in enumerate(config.years):
         submit_from_config(ctx, name, year, config, i, verbose=verbose)
@@ -200,11 +210,15 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
               default=None,
               help=('JSON file with curtailment inputs parameters. '
                     'Default is None (no curtailment).'))
+@click.option('-ds', '--downscale', type=STR, default=None,
+              help=('Option to request temporal downscaling for NSRDB '
+                    'resource data. Example request: "5min".'))
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
-           dirout, logdir, output_request, mem_util_lim, curtailment, verbose):
+           dirout, logdir, output_request, mem_util_lim, curtailment,
+           downscale, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['TECH'] = tech
@@ -218,6 +232,7 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
+    ctx.obj['DOWNSCALE'] = downscale
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
 
@@ -244,6 +259,7 @@ def gen_local(ctx, n_workers, points_range, verbose):
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
+    downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -267,6 +283,7 @@ def gen_local(ctx, n_workers, points_range, verbose):
                   res_file=res_file,
                   output_request=output_request,
                   curtailment=curtailment,
+                  downscale=downscale,
                   n_workers=n_workers,
                   sites_per_split=sites_per_core,
                   points_range=points_range,
@@ -359,7 +376,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_core=None, n_workers=None,
                  fout='reV.h5', dirout='./out/gen_out', logdir='./out/log_gen',
                  output_request=('cf_mean',), mem_util_lim=0.7,
-                 curtailment=None, verbose=False):
+                 curtailment=None, downscale=None, verbose=False):
     """Made a reV geneneration direct-local command line interface call string.
 
     Parameters
@@ -398,6 +415,10 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     curtailment : NoneType | str
         Pointer to a file containing curtailment input parameters or None if
         no curtailment.
+    downscale : NoneType | str
+        Option for NSRDB resource downscaling to higher temporal
+        resolution. Expects a string in the Pandas frequency format,
+        e.g. '5min'.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -414,6 +435,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 
     # make some strings only if specified
     cstr = '-curt {} '.format(SubprocessManager.s(curtailment))
+    dstr = '-ds {} '.format(SubprocessManager.s(downscale))
 
     # make a cli arg string for direct() in this module
     arg_direct = ('-t {tech} '
@@ -427,6 +449,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-or {out_req} '
                   '-mem {mem} '
                   '{curt}'
+                  '{ds}'
                   .format(tech=SubprocessManager.s(tech),
                           points=SubprocessManager.s(points),
                           sam_files=SubprocessManager.s(sam_files),
@@ -438,6 +461,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                           out_req=SubprocessManager.s(output_request),
                           mem=SubprocessManager.s(mem_util_lim),
                           curt=cstr if curtailment else '',
+                          ds=dstr if downscale else '',
                           ))
 
     # make a cli arg string for local() in this module
@@ -487,6 +511,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
+    downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -507,7 +532,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                            fout=fout_node, dirout=dirout, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
-                           verbose=verbose)
+                           downscale=downscale, verbose=verbose)
 
         logger.info('Running reV generation on Peregrine with node name "{}" '
                     'for {} (points range: {}).'
@@ -559,6 +584,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
+    downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -579,7 +605,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
                            fout=fout_node, dirout=dirout, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
-                           verbose=verbose)
+                           downscale=downscale, verbose=verbose)
 
         logger.info('Running reV generation on Eagle with node name "{}" for '
                     '{} (points range: {}).'

@@ -423,8 +423,101 @@ class NSRDB(SolarResource):
     """
     Class to handle NSRDB .h5 files
     """
+    ADD_ATTR = 'psm_add_offset'
     SCALE_ATTR = 'psm_scale_factor'
     UNIT_ATTR = 'psm_units'
+
+    def _get_ds(self, ds_name, *ds_slice):
+        """
+        Extract data from given dataset
+
+        Examples
+        --------
+        self['dni', :, 1]
+            - Get 'dni'timeseries for site 1
+        self['dni', ::2, :]
+            - Get hourly 'dni' timeseries for all sites (NSRDB)
+
+        Parameters
+        ----------
+        ds_name : str
+            Variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing slice of dataset array to extract
+
+        Returns
+        -------
+        ds : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+
+        if ds_name not in self.dsets:
+            raise HandlerKeyError('{} not in {}'
+                                  .format(ds_name, self.dsets))
+
+        ds = self._h5[ds_name]
+        out = ds[ds_slice]
+        if self._unscale:
+            scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
+            adder = ds.attrs.get(self.ADD_ATTR, 0)
+            out = out.astype('float32')
+
+            if adder != 0:
+                # special scaling for cloud properties
+                out *= scale_factor
+                out += adder
+            else:
+                out /= scale_factor
+
+        return out
+
+    @classmethod
+    def preload_SAM(cls, h5_file, project_points, clearsky=False,
+                    downscale=None, **kwargs):
+        """
+        Placeholder for classmethod that will pre-load project_points for SAM
+
+        Parameters
+        ----------
+        h5_file : str
+            h5_file to extract resource from
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+        clearsky : bool
+            Boolean flag to pull clearsky instead of real irradiance
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
+        kwargs : dict
+            Kwargs to pass to cls
+
+        Returns
+        -------
+        SAM_res : SAMResource
+            Instance of SAMResource pre-loaded with Solar resource for sites
+            in project_points
+        """
+        with cls(h5_file, **kwargs) as res:
+            SAM_res = SAMResource(project_points, res['time_index'])
+            sites_slice = project_points.sites_as_slice
+            SAM_res['meta'] = res['meta', sites_slice]
+
+            if not downscale:
+                for var in SAM_res.var_list:
+                    ds = var
+                    if clearsky and var in ['dni', 'dhi']:
+                        ds = 'clearsky_{}'.format(var)
+
+                    SAM_res[var] = res[ds, :, sites_slice]
+            else:
+                # contingent import to avoid dependencies
+                from reV.utilities.downscale import downscale_nsrdb
+                SAM_res = downscale_nsrdb(SAM_res, res, project_points,
+                                          downscale)
+
+        return SAM_res
 
 
 class WindResource(Resource):

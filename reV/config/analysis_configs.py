@@ -268,6 +268,7 @@ class GenConfig(SAMAnalysisConfig):
             Generation config name (with path).
         """
         self._curtailment = None
+        self._downscale = None
         self._res_files = None
         # get the directory of the config file
         self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
@@ -299,6 +300,25 @@ class GenConfig(SAMAnalysisConfig):
                     self._curtailment = Curtailment(self['curtailment'])
 
         return self._curtailment
+
+    @property
+    def downscale(self):
+        """Get the resource downscale request (nsrdb only!).
+
+        Returns
+        -------
+        _downscale : NoneType | str
+            Returns None if no downscaling is requested. Otherwise, expects a
+            downscale variable in the project_control section in the Pandas
+            frequency format, e.g. '5min'.
+        """
+
+        if self._downscale is None:
+            if 'downscale' in self['project_control']:
+                if self['project_control']['downscale']:
+                    # downscaling was requested and is not None or False
+                    self._downscale = str(self['project_control']['downscale'])
+        return self._downscale
 
     @property
     def res_files(self):

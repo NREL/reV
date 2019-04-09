@@ -96,7 +96,8 @@ class Generation(SAM):
             self.execute(module_to_run, close=True)
 
     @classmethod
-    def reV_run(cls, points_control, res_file, output_request=('cf_mean',)):
+    def reV_run(cls, points_control, res_file, output_request=('cf_mean',),
+                downscale=None):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -108,9 +109,10 @@ class Generation(SAM):
             Resource file with full path.
         output_request : list | tuple
             Outputs to retrieve from SAM.
-        return_meta : bool
-            Adds meta key/value pair to dictionary output. Additional reV
-            variables added to the meta series.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
 
         Returns
         -------
@@ -126,7 +128,8 @@ class Generation(SAM):
         # Get the SAM resource object
         resources = SAM.get_sam_res(res_file,
                                     points_control.project_points,
-                                    points_control.project_points.tech)
+                                    points_control.project_points.tech,
+                                    downscale=downscale)
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment

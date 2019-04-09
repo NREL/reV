@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 class Gen:
     """Base class for reV generation."""
 
-    # Mapping of reV technology strings to SAM generation functions
-    OPTIONS = {'pv': PV.reV_run,
-               'csp': CSP.reV_run,
-               'wind': LandBasedWind.reV_run,
-               'landbasedwind': LandBasedWind.reV_run,
-               'offshorewind': OffshoreWind.reV_run,
+    # Mapping of reV technology strings to SAM generation objects
+    OPTIONS = {'pv': PV,
+               'csp': CSP,
+               'wind': LandBasedWind,
+               'landbasedwind': LandBasedWind,
+               'offshorewind': OffshoreWind,
                }
 
     # Mapping of reV generation outputs to scale factors and units.
@@ -62,7 +62,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.7):
+                 mem_util_lim=0.7, downscale=None):
         """
         Parameters
         ----------
@@ -83,6 +83,10 @@ class Gen:
             Memory utilization limit (fractional). This sets how many site
             results will be stored in-memory at any given time before flushing
             to disk.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
         """
 
         self._points_control = points_control
@@ -95,6 +99,9 @@ class Gen:
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
         self._output_request = self._parse_output_request(output_request)
+
+        if downscale is not None:
+            self._set_downscaled_ti(downscale)
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -147,6 +154,20 @@ class Gen:
                                          list(self.OUT_ATTRS.keys())))
 
         return output_request
+
+    def _set_downscaled_ti(self, ds_freq):
+        """Set the downscaled time index based on a requested frequency.
+
+        Parameters
+        ----------
+        frequency : str
+            String in the Pandas frequency format, e.g. '5min'.
+        """
+        from reV.utilities.downscale import make_time_index
+        with Resource(self.res_file) as res:
+            year = res.time_index.year[0]
+        ti = make_time_index(year, ds_freq)
+        self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
 
     @property
     def output_request(self):
@@ -309,6 +330,35 @@ class Gen:
 
         return meta
 
+    @staticmethod
+    def handle_leap_ti(ti, drop_leap=False):
+        """Handle a time index for a leap year by dropping a day.
+
+        Parameters
+        ----------
+        ti : pandas.DatetimeIndex
+            Time-series datetime index with or without a leap day.
+        drop_leap : bool
+            Option to drop leap day (if True) or drop the last day of the year
+            (if False).
+
+        Returns
+        -------
+        ti : pandas.DatetimeIndex
+            Time-series datetime index ALWAYS with length of 365.
+        """
+        # drop leap day or last day
+        leap_day = ((ti.month == 2) & (ti.day == 29))
+        last_day = ((ti.month == 12) & (ti.day == 31))
+        if drop_leap:
+            # preference is to drop leap day if exists
+            ti = ti.drop(ti[leap_day])
+        elif any(leap_day):
+            # leap day exists but preference is to drop last day of year
+            ti = ti.drop(ti[last_day])
+
+        return ti
+
     @property
     def time_index(self):
         """Get the generation resource time index data.
@@ -321,19 +371,8 @@ class Gen:
 
         if self._time_index is None:
             with Resource(self.res_file) as res:
-                self._time_index = res.time_index
-
-            # drop leap day or last day
-            leap_day = ((self._time_index.month == 2) &
-                        (self._time_index.day == 29))
-            last_day = ((self._time_index.month == 12) &
-                        (self._time_index.day == 31))
-            if self._drop_leap:
-                self._time_index = self._time_index.drop(
-                    self._time_index[leap_day])
-            elif any(leap_day):
-                self._time_index = self._time_index.drop(
-                    self._time_index[last_day])
+                self._time_index = self.handle_leap_ti(
+                    res.time_index, drop_leap=self._drop_leap)
 
         return self._time_index
 
@@ -817,7 +856,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True):
+            scale_outputs=True, downscale=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -836,6 +875,10 @@ class Gen:
             Output variables requested from SAM.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
 
         Returns
         -------
@@ -846,7 +889,8 @@ class Gen:
 
         # run generation method for specified technology
         try:
-            out = Gen.OPTIONS[tech](points_control, res_file, output_request)
+            out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
+                                            output_request, downscale)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -880,9 +924,10 @@ class Gen:
 
     @classmethod
     def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-                   output_request=('cf_mean',), curtailment=None, n_workers=1,
-                   sites_per_split=None, points_range=None, fout=None,
-                   dirout='./gen_out', return_obj=True, scale_outputs=True):
+                   output_request=('cf_mean',), curtailment=None,
+                   downscale=None, n_workers=1, sites_per_split=None,
+                   points_range=None, fout=None, dirout='./gen_out',
+                   return_obj=True, scale_outputs=True):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -908,6 +953,10 @@ class Gen:
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int
@@ -940,11 +989,12 @@ class Gen:
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout)
+                  dirout=dirout, downscale=downscale)
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
                   'output_request': gen.output_request,
-                  'scale_outputs': scale_outputs}
+                  'scale_outputs': scale_outputs,
+                  'downscale': downscale}
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
@@ -967,9 +1017,10 @@ class Gen:
 
     @classmethod
     def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  output_request=('cf_mean',), curtailment=None, n_workers=1,
-                  sites_per_split=None, points_range=None, fout=None,
-                  dirout='./gen_out', mem_util_lim=0.7, scale_outputs=True):
+                  output_request=('cf_mean',), curtailment=None,
+                  downscale=None, n_workers=1, sites_per_split=None,
+                  points_range=None, fout=None, dirout='./gen_out',
+                  mem_util_lim=0.7, scale_outputs=True):
         """Execute a generation run with smart data flushing.
 
         Parameters
@@ -995,6 +1046,10 @@ class Gen:
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
         n_workers : int
             Number of local workers to run on.
         sites_per_split : int | None
@@ -1022,11 +1077,13 @@ class Gen:
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout, mem_util_lim=mem_util_lim)
+                  dirout=dirout, mem_util_lim=mem_util_lim,
+                  downscale=downscale)
 
         kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
                   'output_request': gen.output_request,
-                  'scale_outputs': scale_outputs}
+                  'scale_outputs': scale_outputs,
+                  'downscale': downscale}
 
         logger.info('Running parallel generation with smart data flushing '
                     'for: {}'.format(pc))
