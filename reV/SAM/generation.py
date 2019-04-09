@@ -129,7 +129,7 @@ class Generation(SAM):
         resources = SAM.get_sam_res(res_file,
                                     points_control.project_points,
                                     points_control.project_points.tech,
-                                    downscale)
+                                    downscale=downscale)
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment

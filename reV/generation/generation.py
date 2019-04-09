@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class Gen:
     """Base class for reV generation."""
 
-    # Mapping of reV technology strings to SAM generation functions
+    # Mapping of reV technology strings to SAM generation objects
     OPTIONS = {'pv': PV,
                'csp': CSP,
                'wind': LandBasedWind,

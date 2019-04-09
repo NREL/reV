@@ -268,6 +268,7 @@ class GenConfig(SAMAnalysisConfig):
             Generation config name (with path).
         """
         self._curtailment = None
+        self._downscale = None
         self._res_files = None
         # get the directory of the config file
         self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
@@ -312,8 +313,7 @@ class GenConfig(SAMAnalysisConfig):
             frequency format, e.g. '5min'.
         """
 
-        if not hasattr(self, '_downscale'):
-            self._downscale = None
+        if self._downscale is None:
             if 'downscale' in self['project_control']:
                 if self['project_control']['downscale']:
                     # downscaling was requested and is not None or False
