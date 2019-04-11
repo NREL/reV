@@ -142,6 +142,12 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
 
     # if the year isn't in the name, add it before setting the file output
     match = re.match(r'.*([1-3][0-9]{3})', name)
+    if match and year:
+        if str(year) != match:
+            raise ConfigError('Tried to submit job for {}, but found a '
+                              'different year in the base job name: "{}". '
+                              'Please remove the year from the job name.'
+                              .format(year, name))
     if year:
         ctx.obj['FOUT'] = '{}{}.h5'.format(name, '_{}'.format(year) if not
                                            match else '')
