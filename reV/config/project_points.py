@@ -460,8 +460,8 @@ class ProjectPoints:
 
         # Checks to make sure that the same number of SAM config .json files
         # as references in project_points DataFrame
-        if len(df_configs) != len(sam_configs):
-            raise ConfigError('points references {} configs while '
+        if len(df_configs) > len(sam_configs):
+            raise ConfigError('Points references {} configs while only '
                               '{} SAM configs were provided!'
                               .format(len(df_configs), len(sam_configs)))
 
