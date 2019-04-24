@@ -3,25 +3,34 @@
     "logging_directory": "TESTDATADIR/ri_pv_reV2",
     "output_directory": "TESTDATADIR/ri_pv_reV2"
   },
-  "exclusions": {
-    "/projects/rev/data/ri/ri_padus.tif": {
+  "exclusions": [
+    {
       "band": 1,
       "classes_exclude": [
         1
-      ]
+      ],
+      "fpath": "/projects/rev/data/ri/ri_padus.tif",
+      "name": "PAD-US",
+      "type": "Protected"
     },
-    "/projects/rev/data/ri/ri_smod.tif": {
+    {
       "band": 1,
       "classes_exclude": [
         2,
         3
-      ]
+      ],
+      "fpath": "/projects/rev/data/ri/ri_smod.tif",
+      "name": "GHSL Urban Areas",
+      "type": "Urban"
     },
-    "/projects/rev/data/ri/ri_srtm_slope.tif": {
+    {
       "band": 1,
-      "max_thresh": 5
+      "fpath": "/projects/rev/data/ri/ri_srtm_slope.tif",
+      "max_thresh": 5,
+      "name": "SRTM Slope",
+      "type": "Slope"
     }
-  },
+  ],
   "execution_control": {
     "allocation": "rev",
     "nodes": 1,

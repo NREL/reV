@@ -1,5 +1,24 @@
 """
 Basic reV Exclusions
+
+Sample Usage:
+
+    exclusion = Exclusions([{"fpath": "ri_srtm_slope.tif",
+                             "name": "SRTM Slope",
+                             "type": "Slope",
+                             "band": 1,
+                             "max_thresh": 5,
+                            },
+                            {"fpath": "ri_padus.tif",
+                             "name": "PAD-US",
+                             "type": "Protected",
+                             "band": 1,
+                             "classes_exclude": [1],
+                            }])
+
+    exclusion.apply_all_layers()
+    exclusion.export(fname='exclusions.tif')
+
 """
 import logging
 import rasterio
@@ -11,13 +30,15 @@ logger = logging.getLogger(__name__)
 class ExclusionLayer:
     """Base class for all input exclusion layers"""
 
-    def __init__(self, fname, options):
-        self.input_file = fname
-        self.band = options.get("band", 1)
-        self.min_thresh = options.get("min_thresh", None)
-        self.max_thresh = options.get("max_thresh", None)
-        self.classes_include = options.get("classes_include", None)
-        self.classes_exclude = options.get("classes_exclude", None)
+    def __init__(self, config):
+        self.input_file = config.get('fpath', None)
+        self.name = config.get("name", None)
+        self.type = config.get("type", None)
+        self.band = config.get("band", 1)
+        self.min_thresh = config.get("min_thresh", None)
+        self.max_thresh = config.get("max_thresh", None)
+        self.classes_include = config.get("classes_include", None)
+        self.classes_exclude = config.get("classes_exclude", None)
 
         with rasterio.open(self.input_file, 'r') as file:
             self.profile = file.profile
@@ -41,9 +62,12 @@ class ExclusionLayer:
         """
 
         _, window = self.block_windows[window_index]
+        col_slice = slice(window.col_off, window.col_off + window.width)
+        row_slice = slice(window.row_off, window.row_off + window.height)
+        window_slice = (row_slice, col_slice)
         with rasterio.open(self.input_file, 'r') as file:
             data = file.read(self.band, window=window)
-            return data
+        return data, window_slice
 
 
 class Exclusions:
@@ -60,9 +84,8 @@ class Exclusions:
         """ Generate list of layer objects from the config """
 
         layers = []
-        for fname in list(self.config.keys()):
-            options = self.config[fname]
-            exclusion = ExclusionLayer(fname, options)
+        for layer_config in self.config:
+            exclusion = ExclusionLayer(layer_config)
             layers.append(exclusion)
         if layers:
             self.layers = layers
@@ -112,6 +135,31 @@ class Exclusions:
             raise AttributeError('Profile has not been created yet '
                                  '(i.e. self.create_profile())')
 
+    def get_method_mask(self, data, layer):
+        """ Generate a mask based on config method specified
+
+        Parameters
+        ----------
+        data : np.array
+            data to be masked
+        layer : reV.exclusions.exclusions.ExclusionLayer
+            exclusion layer object
+        """
+        mask = None
+        if layer.classes_exclude:
+            mask = self.mask_classes(data,
+                                     layer.classes_exclude,
+                                     True)
+        elif layer.classes_include:
+            mask = self.mask_classes(data,
+                                     layer.classes_include,
+                                     False)
+        elif layer.min_thresh or layer.max_thresh:
+            mask = self.mask_interval(data,
+                                      layer.min_thresh,
+                                      layer.max_thresh)
+        return mask
+
     def apply_layer(self, layer, use_blocks=False):
         """ Read, process, and apply an input layer to the
         final output layer
@@ -124,32 +172,21 @@ class Exclusions:
             for large Tiffs, read dataset in by blocks
         """
 
-        mask = None
-
         if use_blocks:
             for window_index in range(layer.num_windows):
-                data = layer.read_window(window_index)
-                # TODO
-                return None
+                data, window_slice = layer.read_window(window_index)
+                mask = self.get_method_mask(data, layer)
+                if mask is not None:
+                    self.data[window_slice] = self.data[window_slice] * mask
+                else:
+                    logger.warning('Failed to mask {}'.format(layer.name))
         else:
             data = layer.read()
-            if layer.classes_exclude:
-                mask = self.mask_classes(data,
-                                         layer.classes_exclude,
-                                         True)
-            elif layer.classes_include:
-                mask = self.mask_classes(data,
-                                         layer.classes_include,
-                                         False)
-            elif layer.min_thresh or layer.max_thresh:
-                mask = self.mask_interval(data,
-                                          layer.min_thresh,
-                                          layer.max_thresh)
-
-        if mask is not None:
-            self.data *= mask
-        else:
-            logger.warning('Layer did not have any exclusions configured.')
+            mask = self.get_method_mask(data, layer)
+            if mask is not None:
+                self.data *= mask
+            else:
+                logger.warning('Failed to mask {}'.format(layer.name))
 
     def apply_all_layers(self, use_blocks=False):
         """ Read, process, and apply all input layers to the
