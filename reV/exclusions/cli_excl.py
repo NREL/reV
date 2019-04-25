@@ -6,6 +6,7 @@ import logging
 import os
 import pprint
 
+from reV.exclusions.exclusions import Exclusions
 from reV.config.analysis_configs import ExclConfig
 from reV.utilities.cli_dtypes import STR
 from reV.utilities.loggers import init_logger, REV_LOGGERS
@@ -13,10 +14,10 @@ from reV.utilities.loggers import init_logger, REV_LOGGERS
 logger = logging.getLogger(__name__)
 
 
-def init_gen_loggers(verbose, name, node=False, logdir='./out/log',
-                     modules=[__name__, 'reV.generation.generation',
-                              'reV.config', 'reV.utilities']):
-    """Init multiple loggers to a single file or stdout for the gen compute.
+def init_excl_loggers(verbose, name, node=False, logdir='./out/log',
+                      modules=[__name__, 'reV.exclusions.exclusions',
+                               'reV.config', 'reV.utilities']):
+    """Init multiple loggers to a single file or stdout for the exclusion compute.
 
     Parameters
     ----------
@@ -103,78 +104,20 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers. Not SAM (will be logged in the invoked processes).
-    init_gen_loggers(verbose, name, logdir=config.logdir)
+    init_excl_loggers(verbose, name, logdir=config.logdir)
 
     # Initial log statements
     logger.info('Running reV 2.0 exclusions from config file: "{}"'
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.logdir))
-    logger.info('The following project points were specified: "{}"'
-                .format(config.get('project_points', None)))
-    logger.info('The following SAM configs are available to this run:\n{}'
-                .format(pprint.pformat(config.get('sam_generation', None),
+    logger.info('The following exclusion layers are available:\n{}'
+                .format(pprint.pformat(config.get('exclusions', None),
                                        indent=4)))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    # set config objects to be passed through invoke to direct methods
-    # ctx.obj['TECH'] = config.tech
-    # ctx.obj['POINTS'] = config['project_points']
-    # ctx.obj['SAM_FILES'] = config.sam_config
-    # ctx.obj['DIROUT'] = config.dirout
-    # ctx.obj['LOGDIR'] = config.logdir
-    # ctx.obj['OUTPUT_REQUEST'] = config.output_request
-    # ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
+    exclusions = Exclusions(config['exclusions'])
+    exclusions.export(fname='exclusions.tif')
 
-    # submit_from_config(ctx, name, config, verbose)
-
-
-# def submit_from_config(ctx, name, config, verbose):
-#     """Function to submit one year from a config file.
-
-#     Parameters
-#     ----------
-#     ctx : cli.ctx
-#         Click context object. Use case: data = ctx.obj['key']
-#     name : str
-#         Job name.
-#     config : reV.config.ExclConfig
-#         Exclusion config object.
-#     """
-
-#     ctx.obj['FOUT'] = '{}.h5'.format(name)
-
-#     # invoke direct methods based on the config execution option
-#     if config.execution_control.option == 'local':
-#         sites_per_core = ceil(len(config.points_control) /
-#                               config.execution_control.ppn)
-#         ctx.obj['SITES_PER_CORE'] = sites_per_core
-#         ctx.invoke(local, n_workers=config.execution_control.ppn,
-#                    points_range=None, verbose=verbose)
-
-#     elif config.execution_control.option == 'peregrine':
-#         if not match and year:
-#             # Add year to name before submitting
-#             # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
-#             ctx.obj['NAME'] = '{}_{}'.format(name[:8], str(year))
-#         ctx.invoke(peregrine, nodes=config.execution_control.nodes,
-#                    alloc=config.execution_control.alloc,
-#                    queue=config.execution_control.queue,
-#                    feature=config.execution_control.feature,
-#                    stdout_path=os.path.join(config.dirout, 'stdout'),
-#                    verbose=verbose)
-
-#     elif config.execution_control.option == 'eagle':
-#         if not match and year:
-#             # Add year to name before submitting
-#             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
-#         ctx.invoke(eagle, nodes=config.execution_control.nodes,
-#                    alloc=config.execution_control.alloc,
-#                    walltime=config.execution_control.walltime,
-#                    memory=config.execution_control.node_mem,
-#                    stdout_path=os.path.join(config.dirout, 'stdout'),
-#                    verbose=verbose)
-#     else:
-#         raise ConfigError('Execution option not recognized: "{}"'
-#                           .format(config.execution_control.option))
+    return None
