@@ -9,6 +9,7 @@ import pytest
 import utilities as ut
 from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.utilities.loggers import init_logger
+from reV import TESTDATADIR
 
 
 class SAMTestManager:
@@ -17,11 +18,11 @@ class SAMTestManager:
         """Initialize a SAM unit test manager."""
         self._logger = init_logger("reV.SAM")
 
-    def execute_defaults(self, io_dir='./data/SAM', module='pvwatts',
+    def execute_defaults(self, module='pvwatts',
                          i_fname='i_pvwatts.json', o_fname='o_pvwatts.json'):
         """Execute a test case with SAM default inputs."""
-        i_fname = os.path.join(io_dir, str(i_fname))
-        o_fname = os.path.join(io_dir, o_fname)
+        i_fname = os.path.join(TESTDATADIR, 'SAM', str(i_fname))
+        o_fname = os.path.join(TESTDATADIR, 'SAM', o_fname)
 
         if os.path.exists(i_fname):
             with open(i_fname, 'r') as f:
@@ -76,9 +77,9 @@ class SAMTestManager:
 
     def execute_reV(self, module='pvwatts',
                     sites=range(0, 2),
-                    res_dir='./data/nsrdb',
+                    res_dir=os.path.join(TESTDATADIR, 'nsrdb'),
                     res='ri_100_nsrdb_2012.h5',
-                    io_dir='./data/SAM',
+                    io_dir=os.path.join(TESTDATADIR, 'SAM'),
                     i_fname='i_pvwatts_reV.json',
                     o_fname='o_pvwatts_reV.json'):
         """Execute a test case with SAM using reV defaults."""
