@@ -186,7 +186,8 @@ class PBS(SubprocessManager):
                                       feature=feature,
                                       stdout_path=stdout_path)
 
-    def check_status(self, job, var='id'):
+    @staticmethod
+    def check_status(job, var='id'):
         """Check the status of this PBS job using qstat.
 
         Parameters
@@ -205,7 +206,7 @@ class PBS(SubprocessManager):
 
         # column location of various job identifiers
         col_loc = {'id': 0, 'name': 3}
-        qstat_rows = self.qstat()
+        qstat_rows = PBS.qstat()
         if qstat_rows is None:
             return None
         else:
@@ -225,7 +226,8 @@ class PBS(SubprocessManager):
                     return status
         return None
 
-    def qstat(self):
+    @staticmethod
+    def qstat():
         """Run the PBS qstat command and return the stdout split to rows.
 
         Returns
@@ -235,8 +237,8 @@ class PBS(SubprocessManager):
             Returns None if qstat is empty.
         """
 
-        cmd = 'qstat -u {user}'.format(user=self.USER)
-        stdout, _ = self.submit(cmd)
+        cmd = 'qstat -u {user}'.format(user=PBS.USER)
+        stdout, _ = PBS.submit(cmd)
         if not stdout:
             # No jobs are currently running.
             return None
@@ -353,7 +355,8 @@ class SLURM(SubprocessManager):
         else:
             self.id = None
 
-    def check_status(self, job, var='id'):
+    @staticmethod
+    def check_status(job, var='id'):
         """Check the status of this PBS job using qstat.
 
         Parameters
@@ -375,9 +378,9 @@ class SLURM(SubprocessManager):
 
         if var == 'name':
             # check for specific name
-            squeue_rows = self.squeue(name=job)
+            squeue_rows = SLURM.squeue(name=job)
         else:
-            squeue_rows = self.squeue()
+            squeue_rows = SLURM.squeue()
 
         if squeue_rows is None:
             return None
@@ -398,7 +401,8 @@ class SLURM(SubprocessManager):
                     return row[4]
         return None
 
-    def squeue(self, name=None):
+    @staticmethod
+    def squeue(name=None):
         """Run the SLURM squeue command and return the stdout split to rows.
 
         Parameters
@@ -415,9 +419,9 @@ class SLURM(SubprocessManager):
         """
 
         cmd = ('squeue -u {user}{job_name}'
-               .format(user=self.USER,
+               .format(user=SLURM.USER,
                        job_name=' -n {}'.format(name) if name else ''))
-        stdout, _ = self.submit(cmd)
+        stdout, _ = SLURM.submit(cmd)
         if not stdout:
             # No jobs are currently running.
             return None
