@@ -21,7 +21,9 @@ Sample Usage:
                             },
                             {"fpath": "ri_padus.tif",
                              "classes_exclude": [1],
-                            }])
+                            }],
+                            use_blocks = True)
+    exclusions.build_from_config()
     exclusions.export(fname='exclusions.tif')
 
 """
@@ -71,13 +73,45 @@ class ExclusionLayer:
         self.classes_include = classes_include
         self.classes_exclude = classes_exclude
 
-        with rasterio.open(self.fpath, 'r') as file:
-            self.profile = file.profile
-            self.block_windows = list(file.block_windows(self.band))
-            self.num_windows = len(self.block_windows)
+        meta_data = self.extract_tiff_meta(self.fpath, self.band)
+        self.profile = meta_data[0]
+        self.block_windows = meta_data[1]
+        self.num_windows = meta_data[2]
+
+    @staticmethod
+    def extract_tiff_meta(fpath, band):
+        """ Read the meta data from a tiff file
+
+        Parameters
+        ----------
+        fpath : str
+            Layer file with path.
+        band : integer
+            GeoTiff band to read from file.
+
+        Outputs
+        -------
+        profile : rasterio.profiles.Profile
+            Meta data for the tiff file
+        block_windows : tuples list
+            Delineation of tiff windows
+        num_windows : int
+            The number of windows
+        """
+        with rasterio.open(fpath, 'r') as file:
+            profile = file.profile
+            block_windows = list(file.block_windows(band))
+            num_windows = len(block_windows)
+        return profile, block_windows, num_windows
 
     def read(self):
-        """ Read in entire dataset from Tiff """
+        """ Read in entire dataset from Tiff
+
+        Outputs
+        -------
+        data : numpy.ndarray
+            Layer's entire data array
+        """
 
         with rasterio.open(self.fpath, 'r') as file:
             data = file.read(self.band)
@@ -90,6 +124,13 @@ class ExclusionLayer:
         ----------
         window_index : integer
             list index of window
+
+        Outputs
+        -------
+        data : numpy.ndarray
+            Layer's data array for the current layer window
+        window_slice : tuple
+            The tuple that slices out the current window
         """
 
         _, window = self.block_windows[window_index]
@@ -109,39 +150,48 @@ class Exclusions:
         Parameters
         ----------
         layer_configs : dictionary list | None
-            Optional configs list for the auto addition of layers
+            Optional configs list for the addition of layers
         use_blocks : boolean
             Use blocks when applying layers to exclusions
         """
         self.layers = []
         self.data = None
         self.profile = None
+        # validate and set use_blocks argument
         if isinstance(use_blocks, bool):
             self.use_blocks = use_blocks
         else:
-            logger.error('use_blocks argument must be a boolean')
+            raise Exception('use_blocks argument must be a boolean')
+        # validate and set layer_configs argument
         if isinstance(layer_configs, (list, type(None))):
             self.layer_configs = layer_configs
         else:
-            logger.error('layer_configs argument must be a list or None')
-        if self.layer_configs:
-            self.build_config()
+            raise Exception('layer_configs argument must be a list or None')
 
-    def build_config(self):
-        """ Build exclusions from config if it exists """
-        if self.layer_configs:
-            for config in self.layer_configs:
+    def build_from_config(self, layer_configs=None):
+        """ Build and apply exclusion layers from config if it exists
+
+        Parameters
+        ----------
+        layer_configs : dictionary list | None
+            Configs list for the addition of layers
+            Provided as either an argument or predefined instance attribute
+        """
+
+        if not layer_configs:
+            layer_configs = self.layer_configs
+        if layer_configs:
+            for config in layer_configs:
                 if isinstance(config, dict):
                     if 'fpath' not in config:
-                        logger.error('fpath key is not defined in config')
-                        break
+                        raise Exception('fpath key is not defined in config')
                     layer = ExclusionLayer(**config)
                     self.add_layer(layer)
                 else:
-                    logger.error('Layer config must be a dictionary')
+                    raise Exception('Layer config must be a dictionary')
             self.apply_all_layers()
         else:
-            logger.error('Object has no configs: self.layer_configs')
+            raise Exception('Object has no configs: self.layer_configs')
 
     def add_layer(self, layer):
         """ Append a layer object to the list of exclusion layers """
@@ -156,7 +206,13 @@ class Exclusions:
         return self.layers
 
     def check_layer_compatibility(self):
-        """ Validate that all layers are the same shape """
+        """ Validate that all layers are the same shape
+
+        Outputs
+        -------
+        compatibility : boolean
+            Validates whether all layers are compatible with eachother
+        """
 
         compatibility = True
         widths = []
@@ -169,24 +225,23 @@ class Exclusions:
         if len(set(heights)) > 1:
             compatibility = False
 
-        if compatibility:
-            return True
-        else:
-            logger.error('Layers are not compatible')
+        if not compatibility:
+            logger.warning('Layers are not compatible')
+        return compatibility
 
     def create_profile(self):
-        """ Create the Tiff profile meta for output file """
+        """ Create the Tiff profile meta for output file from first layer """
 
         try:
-            # Start from the profile of a layer
+            # Start from the profile of the first layer
             self.profile = self.layers[0].profile
             # Modifications for output
             self.profile['dtype'] = rasterio.uint8
             self.profile['nodata'] = None
             self.initialize_data()
         except IndexError:
-            logger.error('Exclusion has no layers '
-                         '(i.e. self.add_layer(layer))')
+            raise Exception('Exclusion has no layers '
+                            '(i.e. self.add_layer(layer))')
 
     def initialize_data(self):
         """ Initiate the array for the output exclusion data """
@@ -195,8 +250,8 @@ class Exclusions:
             shape = (self.profile['height'], self.profile['width'])
             self.data = np.ones(shape=shape, dtype='uint8') * 100
         else:
-            logger.error('Profile has not been created yet '
-                         '(i.e. self.create_profile())')
+            raise Exception('Profile has not been created yet '
+                            '(i.e. self.create_profile())')
 
     def get_method_mask(self, data, layer):
         """ Generate a mask based on config method specified
@@ -207,6 +262,11 @@ class Exclusions:
             data to be masked
         layer : reV.exclusions.exclusions.ExclusionLayer
             exclusion layer object
+
+        Outputs
+        -------
+        mask : numpy.ndarray
+            float mask (0 to 1) to be applied to the final exclusion layer
         """
         mask = None
         if layer.classes_exclude:
@@ -235,16 +295,16 @@ class Exclusions:
 
         if self.use_blocks:
             for window_index in range(layer.num_windows):
-                data, window_slice = layer.read_window(window_index)
-                mask = self.get_method_mask(data, layer)
+                layer_data, window_slice = layer.read_window(window_index)
+                mask = self.get_method_mask(layer_data, layer)
                 if mask is not None:
                     block_data = (self.data[window_slice] * mask)
                     self.data[window_slice] = block_data.astype('uint8')
                 else:
                     logger.warning('Failed to mask {}'.format(layer.name))
         else:
-            data = layer.read()
-            mask = self.get_method_mask(data, layer)
+            layer_data = layer.read()
+            mask = self.get_method_mask(layer_data, layer)
             if mask is not None:
                 self.data = (self.data * mask).astype('uint8')
             else:
@@ -259,7 +319,15 @@ class Exclusions:
 
     @staticmethod
     def mask_interval(data, min_thresh, max_thresh):
-        """ Provide a mask between a range of thresholds """
+        """ Provide a mask between a range of thresholds
+
+        Parameters
+        ----------
+        min_thresh : float | int | None
+            Create exclusion based on a minimum value.
+        max_thresh : float | int | None
+            Create exclusion based on a maximum value.
+        """
 
         mask = np.ones(shape=data.shape)
         if min_thresh:
@@ -270,7 +338,15 @@ class Exclusions:
 
     @staticmethod
     def mask_classes(data, classes, exclude=True):
-        """ Provide a mask from integer classes """
+        """ Provide a mask from integer classes
+
+        Parameters
+        ----------
+        classes : integer list | None
+            Create exclusion based on discrete classes to include/exclude.
+        exclude : boolean
+            Use classes as inclusions or exclusions.
+        """
 
         mask = np.isin(data, classes)
         if exclude:
@@ -278,11 +354,19 @@ class Exclusions:
         return mask.astype(int)
 
     def export(self, fname='exclusions.tif', band=1):
-        """ Save the output exclusion layer as a Tiff """
+        """ Save the output exclusion layer as a Tiff
+
+        Parameters
+        ----------
+        fname : str
+            Output file with path.
+        band : integer
+            GeoTiff band to write to file.
+        """
 
         if self.profile:
             with rasterio.open(fname, 'w', **self.profile) as file:
                 file.write(self.data, band)
         else:
-            logger.error('Profile has not been created yet '
-                         '(i.e. self.create_profile())')
+            raise Exception('Profile has not been created yet '
+                            '(i.e. self.create_profile())')
