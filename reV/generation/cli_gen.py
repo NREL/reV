@@ -18,6 +18,7 @@ from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
 from reV.utilities.exceptions import ConfigError
+from reV.pipeline.status import Status
 
 
 logger = logging.getLogger(__name__)
@@ -270,6 +271,9 @@ def gen_local(ctx, n_workers, points_range, verbose):
     downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    # add job to reV status file.
+    Status.add_job(dirout, 'generation', name, replace=False)
+
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
                                      'reV.config', 'reV.utilities', 'reV.SAM'],
@@ -283,6 +287,8 @@ def gen_local(ctx, n_workers, points_range, verbose):
                 'file: {}. Target output path is: {}'
                 .format(name, res_file, os.path.join(dirout, fout)))
     t0 = time.time()
+
+    Status.retrieve_job_status(dirout, 'generation', name)
 
     # Execute the Generation module with smart data flushing.
     Gen.run_smart(tech=tech,
@@ -304,6 +310,8 @@ def gen_local(ctx, n_workers, points_range, verbose):
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'
                 .format(points, tmp_str if points_range else '',
                         (time.time() - t0) / 60, dirout))
+
+    Status.set_job_status(dirout, 'generation', name, 'successful')
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
@@ -562,6 +570,10 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
         if pbs.id:
             msg = ('Kicked off reV generation job "{}" (PBS jobid #{}) on '
                    'Peregrine.'.format(node_name, pbs.id))
+
+            # add job to reV status file.
+            Status.add_job(dirout, 'generation', node_name, job_id=pbs.id,
+                           hardware='peregrine')
         else:
             msg = ('Was unable to kick off reV generation job "{}". '
                    'Please see the stdout error messages'
@@ -640,6 +652,10 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
         if slurm.id:
             msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(node_name, slurm.id))
+
+            # add job to reV status file.
+            Status.add_job(dirout, 'generation', node_name, job_id=slurm.id,
+                           hardware='eagle')
         else:
             msg = ('Was unable to kick off reV generation job "{}". '
                    'Please see the stdout error messages'
