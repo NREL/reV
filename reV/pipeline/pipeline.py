@@ -19,6 +19,9 @@ class Pipeline:
     """reV pipeline execution framework."""
 
     COMMANDS = ('generation', 'econ')
+    RETURNCODE = {0: 'successful',
+                  1: 'running',
+                  2: 'failed'}
 
     def __init__(self, run_list):
         """
@@ -81,9 +84,6 @@ class Pipeline:
         -------
         returncode : int
             Pipeline step return code.
-            0 : step completed successfully
-            1 : step running
-            2 : step failed
         """
 
         module, f_config = self._get_command_config(i)
@@ -95,9 +95,6 @@ class Pipeline:
         status = Status(config_obj.dirout)
 
         if os.path.isfile(status._fpath):
-            if module not in status.data:
-                raise KeyError('Could not find "{}" in "{}".'
-                               .format(module, status._fpath))
             returncode = self._get_return_code(status, module)
         else:
             # file does not yet exist. assume job is not yet running.
@@ -119,29 +116,29 @@ class Pipeline:
         -------
         returncode : int
             Pipeline step return code.
-            0 : step completed successfully
-            1 : step running
-            2 : step failed
         """
 
         returncode = 0
-        for job_name, job_attrs in status.data[module].items():
-            status._update_job_status(module, job_name)
-            status._dump()
+        if module not in status.data:
+            returncode = 1
+        else:
+            for job_name, job_attrs in status.data[module].items():
+                status._update_job_status(module, job_name)
+                status._dump()
 
-            logger.debug('reV pipeline job "{}" has status "{}".'
-                         .format(job_name, job_attrs['job_status']))
+                logger.debug('reV pipeline job "{}" has status "{}".'
+                             .format(job_name, job_attrs['job_status']))
 
-            # if return code is changed to 1 or 2, do not update again
-            if returncode == 0:
-                if job_attrs['job_status'] == 'failed':
-                    returncode = 2
-                elif job_attrs['job_status'] is None:
-                    status.set_job_status(status._path, module,
-                                          job_name, 'failed')
-                    returncode = 2
-                elif job_attrs['job_status'] not in status.FROZEN_STATUS:
-                    returncode = 1
+                # if return code is changed to 1 or 2, do not update again
+                if returncode == 0:
+                    if job_attrs['job_status'] == 'failed':
+                        returncode = 2
+                    elif job_attrs['job_status'] is None:
+                        status.set_job_status(status._path, module,
+                                              job_name, 'failed')
+                        returncode = 2
+                    elif job_attrs['job_status'] not in status.FROZEN_STATUS:
+                        returncode = 1
         return returncode
 
     def _get_command_config(self, i):

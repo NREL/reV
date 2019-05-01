@@ -468,8 +468,9 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
             msg = ('Kicked off reV econ job "{}" (PBS jobid #{}) on '
                    'Peregrine.'.format(node_name, pbs.id))
             # add job to reV status file.
-            Status.add_job(dirout, 'econ', node_name, job_id=pbs.id,
-                           hardware='peregrine')
+            Status.add_job(dirout, 'econ', node_name,
+                           job_attrs={'job_id': pbs.id,
+                                      'hardware': 'peregrine'})
         else:
             msg = ('Was unable to kick off reV econ job "{}". '
                    'Please see the stdout error messages'
@@ -543,8 +544,8 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
             msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(node_name, slurm.id))
             # add job to reV status file.
-            Status.add_job(dirout, 'econ', node_name, job_id=slurm.id,
-                           hardware='eagle')
+            Status.add_job(dirout, 'econ', node_name,
+                           job_attrs={'job_id': slurm.id, 'hardware': 'eagle'})
         else:
             msg = ('Was unable to kick off reV econ job "{}". '
                    'Please see the stdout error messages'
