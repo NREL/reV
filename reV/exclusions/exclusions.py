@@ -26,6 +26,17 @@ Sample Usage:
     exclusions.build_from_config()
     exclusions.export(fname='exclusions.tif')
 
+    --- OR ---
+
+    Exclusions.run(config = [{"fpath": "ri_srtm_slope.tif",
+                              "max_thresh": 5,
+                             },
+                             {"fpath": "ri_padus.tif",
+                              "classes_exclude": [1],
+                             }],
+                   use_blocks = True,
+                   output_fname = 'exclusions.tif')
+
 """
 import logging
 import rasterio
@@ -161,12 +172,12 @@ class Exclusions:
         if isinstance(use_blocks, bool):
             self.use_blocks = use_blocks
         else:
-            raise Exception('use_blocks argument must be a boolean')
+            raise TypeError('use_blocks argument must be a boolean')
         # validate and set layer_configs argument
         if isinstance(layer_configs, (list, type(None))):
             self.layer_configs = layer_configs
         else:
-            raise Exception('layer_configs argument must be a list or None')
+            raise TypeError('layer_configs argument must be a list or None')
 
     def build_from_config(self, layer_configs=None):
         """ Build and apply exclusion layers from config if it exists
@@ -184,14 +195,14 @@ class Exclusions:
             for config in layer_configs:
                 if isinstance(config, dict):
                     if 'fpath' not in config:
-                        raise Exception('fpath key is not defined in config')
+                        raise KeyError('fpath key is not defined in config')
                     layer = ExclusionLayer(**config)
                     self.add_layer(layer)
                 else:
-                    raise Exception('Layer config must be a dictionary')
+                    raise TypeError('Layer config must be a dictionary')
             self.apply_all_layers()
         else:
-            raise Exception('Object has no configs: self.layer_configs')
+            raise AttributeError('Object has no configs: self.layer_configs')
 
     def add_layer(self, layer):
         """ Append a layer object to the list of exclusion layers """
@@ -240,8 +251,8 @@ class Exclusions:
             self.profile['nodata'] = None
             self.initialize_data()
         except IndexError:
-            raise Exception('Exclusion has no layers '
-                            '(i.e. self.add_layer(layer))')
+            raise AttributeError('Exclusion has no layers '
+                                 '(i.e. self.add_layer(layer))')
 
     def initialize_data(self):
         """ Initiate the array for the output exclusion data """
@@ -250,8 +261,8 @@ class Exclusions:
             shape = (self.profile['height'], self.profile['width'])
             self.data = np.ones(shape=shape, dtype='uint8') * 100
         else:
-            raise Exception('Profile has not been created yet '
-                            '(i.e. self.create_profile())')
+            raise AttributeError('Profile has not been created yet '
+                                 '(i.e. self.create_profile())')
 
     def get_method_mask(self, data, layer):
         """ Generate a mask based on config method specified
@@ -331,9 +342,9 @@ class Exclusions:
 
         mask = np.ones(shape=data.shape)
         if min_thresh:
-            mask *= (data >= min_thresh).astype(int)
+            mask *= (data >= min_thresh).astype('int8')
         if max_thresh:
-            mask *= (data <= max_thresh).astype(int)
+            mask *= (data <= max_thresh).astype('int8')
         return mask
 
     @staticmethod
@@ -351,7 +362,7 @@ class Exclusions:
         mask = np.isin(data, classes)
         if exclude:
             mask = ~mask
-        return mask.astype(int)
+        return mask.astype('int8')
 
     def export(self, fname='exclusions.tif', band=1):
         """ Save the output exclusion layer as a Tiff
@@ -368,5 +379,24 @@ class Exclusions:
             with rasterio.open(fname, 'w', **self.profile) as file:
                 file.write(self.data, band)
         else:
-            raise Exception('Profile has not been created yet '
-                            '(i.e. self.create_profile())')
+            raise AttributeError('Profile has not been created yet '
+                                 '(i.e. self.create_profile())')
+
+    @classmethod
+    def run(cls, config, use_blocks, output_fname):
+        """ Apply Exclusions from config and save to disc.
+
+        Parameters
+        ----------
+        layer_configs : dictionary list | None
+            Optional configs list for the addition of layers
+        use_blocks : boolean
+            Use blocks when applying layers to exclusions
+        output_fname : str
+            Output file with path.
+        """
+
+        exclusions = cls(config, use_blocks=use_blocks)
+        exclusions.build_from_config()
+        exclusions.export(fname=output_fname)
+        return None
