@@ -129,9 +129,7 @@ class Status(dict):
         current = self._get_job_status(job_id, hardware=hardware)
 
         # do not overwrite a successful or failed job status.
-        # do not overwrite if current status is None (job not found)
-        if (current != previous and current is not None and
-                previous not in self.FROZEN_STATUS):
+        if (current != previous and previous not in self.FROZEN_STATUS):
             self.data[module][job_name]['job_status'] = current
 
     def _set_job_status(self, module, job_name, status):

@@ -7,6 +7,7 @@ from reV.utilities.cli_dtypes import STR
 from reV.generation.cli_gen import from_config as run_gen_from_config
 from reV.econ.cli_econ import from_config as run_econ_from_config
 from reV.handlers.cli_collect import from_config as run_collect_from_config
+from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
 
 
 @click.group()
@@ -57,6 +58,18 @@ def collect(ctx, verbose):
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_collect_from_config, config_file=config_file,
+               verbose=verbose)
+
+
+@main.command()
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def pipeline(ctx, verbose):
+    """Run the full reV 2.0 pipeline using the config file."""
+    config_file = ctx.obj['CONFIG_FILE']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.invoke(run_pipeline_from_config, config_file=config_file,
                verbose=verbose)
 
 
