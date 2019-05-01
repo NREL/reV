@@ -387,8 +387,9 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                             v='-v' if verbose else ''))
 
     # Python command that will be executed on a node
+    # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.econ.cli_econ '
-           '{arg_main} direct {arg_direct} econ_local {arg_loc}'
+           '{arg_main} direct {arg_direct} econ-local {arg_loc}'
            .format(arg_main=arg_main,
                    arg_direct=arg_direct,
                    arg_loc=arg_loc))

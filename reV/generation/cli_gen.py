@@ -478,8 +478,9 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                             v='-v' if verbose else ''))
 
     # Python command that will be executed on a node
+    # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.generation.cli_gen '
-           '{arg_main} direct {arg_direct} gen_local {arg_loc}'
+           '{arg_main} direct {arg_direct} gen-local {arg_loc}'
            .format(arg_main=arg_main,
                    arg_direct=arg_direct,
                    arg_loc=arg_loc))
