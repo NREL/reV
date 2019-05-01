@@ -231,7 +231,6 @@ class Econ(Gen):
         """
         self.project_points.join_df(self.site_data, key=self.site_data.index)
 
-    @property
     def meta(self):
         """Get meta data from the source capacity factors file.
 

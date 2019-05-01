@@ -19,6 +19,7 @@ from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
 from reV.utilities.exceptions import ConfigError
 from reV.pipeline.status import Status
+from reV.utilities.utilities import parse_year
 
 
 logger = logging.getLogger(__name__)
@@ -40,10 +41,12 @@ def main(ctx, name, verbose):
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV generation configuration json file.')
+@click.option('--status_dir', '-st', default=None, type=STR,
+              help='Optional directory containing reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def from_config(ctx, config_file, verbose):
+def from_config(ctx, config_file, status_dir, verbose):
     """Run reV gen from a config file."""
     name = ctx.obj['NAME']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -83,9 +86,6 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    # Send config dir to methods to be used for status file
-    ctx.obj['CONFIG_DIR'] = os.path.dirname(config_file)
-
     # set config objects to be passed through invoke to direct methods
     ctx.obj['TECH'] = config.tech
     ctx.obj['POINTS'] = config['project_points']
@@ -95,6 +95,11 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
     ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
+
+    # Send status dir to methods to be used for status file
+    if status_dir is None:
+        status_dir = config.dirout
+    ctx.obj['STATUS_DIR'] = status_dir
 
     # get downscale request and raise exception if not NSRDB
     ctx.obj['DOWNSCALE'] = config.downscale
@@ -145,18 +150,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
              .format(year, config.res_files[i]))
 
     # if the year isn't in the name, add it before setting the file output
-    match = re.match(r'.*([1-3][0-9]{3})', name)
-    if match and year:
-        if str(year) != match:
-            raise ConfigError('Tried to submit job for {}, but found a '
-                              'different year in the base job name: "{}". '
-                              'Please remove the year from the job name.'
-                              .format(year, name))
-    if year:
-        ctx.obj['FOUT'] = '{}{}.h5'.format(name, '_{}'.format(year) if not
-                                           match else '')
-    else:
-        ctx.obj['FOUT'] = '{}.h5'.format(name)
+    ctx.obj['FOUT'] = make_fout(name, year)
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
@@ -167,6 +161,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
+        match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match and year:
             # Add year to name before submitting
             # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
@@ -179,6 +174,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
+        match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
@@ -189,6 +185,42 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    feature=config.execution_control.feature,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
                    verbose=verbose)
+
+
+def make_fout(name, year):
+    """Make an appropriate file output from name and year.
+
+    Parameters
+    ----------
+    name : str
+        Job name.
+    year : int | str
+        Analysis year.
+
+    Returns
+    -------
+    fout : str
+        .h5 output file based on name and year
+    """
+
+    try:
+        match = parse_year(name)
+    except RuntimeError as _:
+        match = False
+
+    # if the year isn't in the name, add it before setting the file output
+    if match and year:
+        if str(year) != str(match):
+            raise ConfigError('Tried to submit gen job for {}, but found a '
+                              'different year in the base job name: "{}". '
+                              'Please remove the year from the job name.'
+                              .format(year, name))
+    if year:
+        fout = '{}{}.h5'.format(name, '_{}'.format(year) if not
+                                match else '')
+    else:
+        fout = '{}.h5'.format(name)
+    return fout
 
 
 @main.group()
@@ -210,7 +242,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                     'Default is "gen_output.h5"'))
 @click.option('--dirout', '-do', default='./out/gen_out', type=STR,
               help='Output directory specification. Default is ./out/gen_out')
-@click.option('--status_dir', '-sd', default=None, type=STR,
+@click.option('--status_dir', '-st', default=None, type=STR,
               help='Directory containing the status file. Default is dirout.')
 @click.option('--logdir', '-lo', default='./out/log_gen', type=STR,
               help='Generation log file directory. Default is ./out/log_gen')
@@ -472,7 +504,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     # make some strings only if specified
     cstr = '-curt {} '.format(SubprocessManager.s(curtailment))
     dstr = '-ds {} '.format(SubprocessManager.s(downscale))
-    sdstr = '-sd {} '.format(SubprocessManager.s(status_dir))
+    ststr = '-st {} '.format(SubprocessManager.s(status_dir))
 
     # make a cli arg string for direct() in this module
     arg_direct = ('-t {tech} '
@@ -495,7 +527,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                           sites_per_core=SubprocessManager.s(sites_per_core),
                           fout=SubprocessManager.s(fout),
                           dirout=SubprocessManager.s(dirout),
-                          sdir=sdstr if status_dir else '',
+                          sdir=ststr if status_dir else '',
                           logdir=SubprocessManager.s(logdir),
                           out_req=SubprocessManager.s(output_request),
                           mem=SubprocessManager.s(mem_util_lim),
@@ -547,7 +579,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
-    config_dir = ctx.obj['CONFIG_DIR']
+    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
@@ -572,7 +604,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                            points=points, points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout,
-                           status_dir=config_dir, logdir=logdir,
+                           status_dir=status_dir, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
@@ -589,7 +621,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                    'Peregrine.'.format(node_name, pbs.id))
 
             # add job to reV status file.
-            Status.add_job(dirout, 'generation', node_name,
+            Status.add_job(status_dir, 'generation', node_name,
                            job_attrs={'job_id': pbs.id,
                                       'hardware': 'peregrine',
                                       'fout': fout_node,
@@ -634,7 +666,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
-    config_dir = ctx.obj['CONFIG_DIR']
+    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
@@ -659,7 +691,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
                            points=points, points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout,
-                           status_dir=config_dir, logdir=logdir,
+                           status_dir=status_dir, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
@@ -676,7 +708,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
                    'Eagle.'.format(node_name, slurm.id))
 
             # add job to reV status file.
-            Status.add_job(dirout, 'generation', node_name,
+            Status.add_job(status_dir, 'generation', node_name,
                            job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                                       'fout': fout_node, 'dirout': dirout})
         else:
