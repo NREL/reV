@@ -69,7 +69,7 @@ class Pipeline:
 
         command, f_config = self._get_command_config(i)
         cmd = self._get_cmd(command, f_config)
-        logger.debug('Submitting subprocess: {}'.format(cmd))
+        logger.info('reV pipeline submitting subprocess:\n\t"{}"'.format(cmd))
         SubprocessManager.submit(cmd)
 
     def _check_step_completed(self, i):
