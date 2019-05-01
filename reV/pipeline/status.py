@@ -161,7 +161,7 @@ class Status(dict):
                  .format(self.FROZEN_STATUS))
 
     @classmethod
-    def add_job(cls, path, module, job_name, replace=True, **kwargs):
+    def add_job(cls, path, module, job_name, replace=True, job_attrs=None):
         """Add or update job status using pre-defined methods.
 
         Parameters
@@ -174,23 +174,26 @@ class Status(dict):
             Unique job name identification.
         replace : bool
             Flag to replace pre-existing job status.
-        kwargs : dict
-            Job attributes. Should include 'job_id'
+        job_attrs : dict
+            Job attributes. Should include 'job_id' if running on HPC.
         """
 
         obj = cls(path)
 
-        if 'hardware' in kwargs:
-            if kwargs['hardware'] in ('eagle', 'peregrine'):
-                if 'job_id' not in kwargs:
+        if job_attrs is None:
+            job_attrs = {}
+
+        if 'hardware' in job_attrs:
+            if job_attrs['hardware'] in ('eagle', 'peregrine'):
+                if 'job_id' not in job_attrs:
                     warn('Key "job_id" should be in kwargs for "{}" if '
                          'adding job from an eagle or peregrine node.'
                          .format(job_name))
 
         if module not in obj.data:
-            obj.data[module] = {job_name: kwargs}
+            obj.data[module] = {job_name: job_attrs}
         if replace:
-            obj.data[module][job_name] = kwargs
+            obj.data[module][job_name] = job_attrs
 
         obj.data[module][job_name]['job_status'] = 'submitted'
 
