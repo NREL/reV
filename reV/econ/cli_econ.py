@@ -16,6 +16,7 @@ from reV.config.analysis_configs import EconConfig
 from reV.econ.econ import Econ
 from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
+from reV.utilities.exceptions import ConfigError
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
@@ -125,6 +126,12 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 
     # if the year isn't in the name, add it before setting the file output
     match = re.match(r'.*([1-3][0-9]{3})', name)
+    if match and year:
+        if str(year) != match:
+            raise ConfigError('Tried to submit job for {}, but found a '
+                              'different year in the base job name: "{}". '
+                              'Please remove the year from the job name.'
+                              .format(year, name))
     if year:
         ctx.obj['FOUT'] = '{}{}.h5'.format(name, '_{}'.format(year) if not
                                            match else '')
@@ -470,7 +477,9 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
             # add job to reV status file.
             Status.add_job(dirout, 'econ', node_name,
                            job_attrs={'job_id': pbs.id,
-                                      'hardware': 'peregrine'})
+                                      'hardware': 'peregrine',
+                                      'fout': fout_node,
+                                      'dirout': dirout})
         else:
             msg = ('Was unable to kick off reV econ job "{}". '
                    'Please see the stdout error messages'
@@ -545,7 +554,8 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
                    'Eagle.'.format(node_name, slurm.id))
             # add job to reV status file.
             Status.add_job(dirout, 'econ', node_name,
-                           job_attrs={'job_id': slurm.id, 'hardware': 'eagle'})
+                           job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                                      'fout': fout_node, 'dirout': dirout})
         else:
             msg = ('Was unable to kick off reV econ job "{}". '
                    'Please see the stdout error messages'

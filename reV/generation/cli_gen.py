@@ -83,6 +83,9 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
+    # Send config dir to methods to be used for status file
+    ctx.obj['CONFIG_DIR'] = os.path.dirname(config_file)
+
     # set config objects to be passed through invoke to direct methods
     ctx.obj['TECH'] = config.tech
     ctx.obj['POINTS'] = config['project_points']
@@ -207,6 +210,8 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                     'Default is "gen_output.h5"'))
 @click.option('--dirout', '-do', default='./out/gen_out', type=STR,
               help='Output directory specification. Default is ./out/gen_out')
+@click.option('--status_dir', '-sd', default=None, type=STR,
+              help='Directory containing the status file. Default is dirout.')
 @click.option('--logdir', '-lo', default='./out/log_gen', type=STR,
               help='Generation log file directory. Default is ./out/log_gen')
 @click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
@@ -226,8 +231,8 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
-           dirout, logdir, output_request, mem_util_lim, curtailment,
-           downscale, verbose):
+           dirout, status_dir, logdir, output_request, mem_util_lim,
+           curtailment, downscale, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['TECH'] = tech
@@ -237,6 +242,7 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
     ctx.obj['SITES_PER_CORE'] = sites_per_core
     ctx.obj['FOUT'] = fout
     ctx.obj['DIROUT'] = dirout
+    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
@@ -264,6 +270,7 @@ def gen_local(ctx, n_workers, points_range, verbose):
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
+    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
@@ -272,7 +279,9 @@ def gen_local(ctx, n_workers, points_range, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # add job to reV status file.
-    Status.add_job(dirout, 'generation', name, replace=False)
+    if status_dir is None:
+        status_dir = dirout
+    Status.add_job(status_dir, 'generation', name, replace=False)
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
@@ -288,7 +297,7 @@ def gen_local(ctx, n_workers, points_range, verbose):
                 .format(name, res_file, os.path.join(dirout, fout)))
     t0 = time.time()
 
-    Status.retrieve_job_status(dirout, 'generation', name)
+    Status.retrieve_job_status(status_dir, 'generation', name)
 
     # Execute the Generation module with smart data flushing.
     Gen.run_smart(tech=tech,
@@ -311,7 +320,7 @@ def gen_local(ctx, n_workers, points_range, verbose):
                 .format(points, tmp_str if points_range else '',
                         (time.time() - t0) / 60, dirout))
 
-    Status.set_job_status(dirout, 'generation', name, 'successful')
+    Status.set_job_status(status_dir, 'generation', name, 'successful')
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
@@ -398,9 +407,10 @@ def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
 
 def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_core=None, n_workers=None,
-                 fout='reV.h5', dirout='./out/gen_out', logdir='./out/log_gen',
-                 output_request=('cf_mean',), mem_util_lim=0.4,
-                 curtailment=None, downscale=None, verbose=False):
+                 fout='reV.h5', dirout='./out/gen_out', status_dir=None,
+                 logdir='./out/log_gen', output_request=('cf_mean',),
+                 mem_util_lim=0.4, curtailment=None, downscale=None,
+                 verbose=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -430,6 +440,8 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
         Target filename to dump generation outputs.
     dirout : str
         Target directory to dump generation fout.
+    status_dir : str
+        Optional directory to save status file.
     logdir : str
         Target directory to save log files.
     output_request : list | tuple
@@ -460,6 +472,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     # make some strings only if specified
     cstr = '-curt {} '.format(SubprocessManager.s(curtailment))
     dstr = '-ds {} '.format(SubprocessManager.s(downscale))
+    sdstr = '-sd {} '.format(SubprocessManager.s(status_dir))
 
     # make a cli arg string for direct() in this module
     arg_direct = ('-t {tech} '
@@ -469,6 +482,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-spc {sites_per_core} '
                   '-fo {fout} '
                   '-do {dirout} '
+                  '{sdir}'
                   '-lo {logdir} '
                   '-or {out_req} '
                   '-mem {mem} '
@@ -481,6 +495,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                           sites_per_core=SubprocessManager.s(sites_per_core),
                           fout=SubprocessManager.s(fout),
                           dirout=SubprocessManager.s(dirout),
+                          sdir=sdstr if status_dir else '',
                           logdir=SubprocessManager.s(logdir),
                           out_req=SubprocessManager.s(output_request),
                           mem=SubprocessManager.s(mem_util_lim),
@@ -532,6 +547,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
+    config_dir = ctx.obj['CONFIG_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
@@ -555,7 +571,8 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
+                           fout=fout_node, dirout=dirout,
+                           status_dir=config_dir, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
@@ -574,7 +591,9 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
             # add job to reV status file.
             Status.add_job(dirout, 'generation', node_name,
                            job_attrs={'job_id': pbs.id,
-                                      'hardware': 'peregrine'})
+                                      'hardware': 'peregrine',
+                                      'fout': fout_node,
+                                      'dirout': dirout})
         else:
             msg = ('Was unable to kick off reV generation job "{}". '
                    'Please see the stdout error messages'
@@ -615,6 +634,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
+    config_dir = ctx.obj['CONFIG_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
@@ -638,7 +658,8 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
+                           fout=fout_node, dirout=dirout,
+                           status_dir=config_dir, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
@@ -656,7 +677,8 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
 
             # add job to reV status file.
             Status.add_job(dirout, 'generation', node_name,
-                           job_attrs={'job_id': slurm.id, 'hardware': 'eagle'})
+                           job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                                      'fout': fout_node, 'dirout': dirout})
         else:
             msg = ('Was unable to kick off reV generation job "{}". '
                    'Please see the stdout error messages'
