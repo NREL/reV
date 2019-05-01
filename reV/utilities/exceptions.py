@@ -59,6 +59,13 @@ class SAMExecutionError(Exception):
     pass
 
 
+class OutputWarning(Warning):
+    """
+    Warning for suspect output files or data
+    """
+    pass
+
+
 class ExtrapolationWarning(Warning):
     """
     Warning for when value will be extrapolated

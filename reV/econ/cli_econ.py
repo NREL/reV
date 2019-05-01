@@ -10,15 +10,15 @@ import time
 import re
 from warnings import warn
 
-from reV.generation.cli_gen import get_node_name_fout
+from reV.generation.cli_gen import get_node_name_fout, make_fout
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.analysis_configs import EconConfig
 from reV.econ.econ import Econ
 from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
-from reV.utilities.exceptions import ConfigError
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
+from reV.pipeline.pipeline import Pipeline
 from reV.pipeline.status import Status
 
 
@@ -41,10 +41,12 @@ def main(ctx, name, verbose):
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV econ configuration json file.')
+@click.option('--status_dir', '-st', default=None, type=STR,
+              help='Optional directory containing reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def from_config(ctx, config_file, verbose):
+def from_config(ctx, config_file, status_dir, verbose):
     """Run reV econ from a config file."""
     name = ctx.obj['NAME']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -93,6 +95,11 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
 
+    # Send status dir to methods to be used for status file
+    if status_dir is None:
+        status_dir = config.dirout
+    ctx.obj['STATUS_DIR'] = status_dir
+
     for i, year in enumerate(config.years):
         submit_from_config(ctx, name, year, config, verbose, i)
 
@@ -116,6 +123,12 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     ctx.obj['CF_FILE'] = config.cf_files[i]
     ctx.obj['CF_YEAR'] = year
 
+    # parse pipeline for cf_file if specified
+    if ctx.obj['CF_FILE'].startswith('PIPELINE'):
+        ctx.obj['CF_FILE'] = Pipeline.parse_previous(
+            ctx.obj['STATUS_DIR'], 'econ',
+            target=ctx.obj['CF_FILE'].split('_')[-1])
+
     # check to make sure that the year matches the resource file
     if str(year) not in config.cf_files[i]:
         warn('reV gen results file and year do not appear to match. '
@@ -125,18 +138,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
              .format(year, config.cf_files[i]))
 
     # if the year isn't in the name, add it before setting the file output
-    match = re.match(r'.*([1-3][0-9]{3})', name)
-    if match and year:
-        if str(year) != match:
-            raise ConfigError('Tried to submit job for {}, but found a '
-                              'different year in the base job name: "{}". '
-                              'Please remove the year from the job name.'
-                              .format(year, name))
-    if year:
-        ctx.obj['FOUT'] = '{}{}.h5'.format(name, '_{}'.format(year) if not
-                                           match else '')
-    else:
-        ctx.obj['FOUT'] = '{}.h5'.format(name)
+    ctx.obj['FOUT'] = make_fout(name, year)
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
@@ -147,6 +149,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
+        match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match and year:
             # Add year to name before submitting
             # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
@@ -159,6 +162,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
+        match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
@@ -192,6 +196,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                     'Default is "econ_output.h5"'))
 @click.option('--dirout', '-do', default='./out/econ_out', type=STR,
               help='Output directory specification. Default is ./out/econ_out')
+@click.option('--status_dir', '-st', default=None, type=STR,
+              help='Directory containing the status file. Default is dirout.')
 @click.option('--logdir', '-lo', default='./out/log_econ', type=STR,
               help='Econ log file directory. Default is ./out/log_econ')
 @click.option('-or', '--output_request', type=STRLIST, default=['lcoe_fcr'],
@@ -201,7 +207,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, sam_files, cf_file, cf_year, points, site_data, sites_per_core,
-           fout, dirout, logdir, output_request, verbose):
+           fout, dirout, status_dir, logdir, output_request, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['POINTS'] = points
@@ -212,6 +218,7 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data, sites_per_core,
     ctx.obj['SITES_PER_CORE'] = sites_per_core
     ctx.obj['FOUT'] = fout
     ctx.obj['DIROUT'] = dirout
+    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -237,12 +244,15 @@ def econ_local(ctx, n_workers, points_range, verbose):
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
+    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # add job to reV status file.
-    Status.add_job(dirout, 'econ', name, replace=False)
+    if status_dir is None:
+        status_dir = dirout
+    Status.add_job(status_dir, 'econ', name, replace=False)
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
@@ -258,7 +268,7 @@ def econ_local(ctx, n_workers, points_range, verbose):
                 .format(name, cf_file, os.path.join(dirout, fout)))
     t0 = time.time()
 
-    Status.retrieve_job_status(dirout, 'econ', name)
+    Status.retrieve_job_status(status_dir, 'econ', name)
 
     # Execute the Generation module with smart data flushing.
     Econ.run_smart(points=points,
@@ -279,7 +289,7 @@ def econ_local(ctx, n_workers, points_range, verbose):
                 .format(points, tmp_str if points_range else '',
                         (time.time() - t0) / 60, dirout))
 
-    Status.set_job_status(dirout, 'econ', name, 'successful')
+    Status.set_job_status(status_dir, 'econ', name, 'successful')
 
 
 def get_node_pc(points, sam_files, nodes):
@@ -318,8 +328,8 @@ def get_node_pc(points, sam_files, nodes):
 def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                  points=slice(0, 100), points_range=None, sites_per_core=None,
                  n_workers=None, fout='reV.h5', dirout='./out/econ_out',
-                 logdir='./out/log_econ', output_request='lcoe_fcr',
-                 verbose=False):
+                 status_dir=None, logdir='./out/log_econ',
+                 output_request='lcoe_fcr', verbose=False):
     """Made a reV econ direct-local command line interface call string.
 
     Parameters
@@ -351,6 +361,8 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         Target filename to dump econ outputs.
     dirout : str
         Target directory to dump econ fout.
+    status_dir : str
+        Optional directory to save status file.
     logdir : str
         Target directory to save log files.
     output_request : list | tuple
@@ -370,6 +382,7 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
     arg_main = ('-n {name} '.format(name=SubprocessManager.s(name)))
 
     s_site_data = '-sd {} '.format(SubprocessManager.s(site_data))
+    ststr = '-st {} '.format(SubprocessManager.s(status_dir))
 
     # make a cli arg string for direct() in this module
     arg_direct = ('-p {points} '
@@ -380,6 +393,7 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                   '-spc {sites_per_core} '
                   '-fo {fout} '
                   '-do {dirout} '
+                  '{sdir}'
                   '-lo {logdir} '
                   '-or {out_req} '
                   .format(points=SubprocessManager.s(points),
@@ -390,6 +404,7 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                           sites_per_core=SubprocessManager.s(sites_per_core),
                           fout=SubprocessManager.s(fout),
                           dirout=SubprocessManager.s(dirout),
+                          sdir=ststr if status_dir else '',
                           logdir=SubprocessManager.s(logdir),
                           out_req=SubprocessManager.s(output_request),
                           ))
@@ -439,6 +454,7 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
+    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -460,7 +476,8 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                            site_data=site_data, points=points,
                            points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
+                           fout=fout_node, dirout=dirout,
+                           status_dir=status_dir, logdir=logdir,
                            output_request=output_request,
                            verbose=verbose)
 
@@ -475,7 +492,7 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
             msg = ('Kicked off reV econ job "{}" (PBS jobid #{}) on '
                    'Peregrine.'.format(node_name, pbs.id))
             # add job to reV status file.
-            Status.add_job(dirout, 'econ', node_name,
+            Status.add_job(status_dir, 'econ', node_name,
                            job_attrs={'job_id': pbs.id,
                                       'hardware': 'peregrine',
                                       'fout': fout_node,
@@ -517,6 +534,7 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
+    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -538,7 +556,8 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
                            site_data=site_data, points=points,
                            points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
+                           fout=fout_node, dirout=dirout,
+                           status_dir=status_dir, logdir=logdir,
                            output_request=output_request,
                            verbose=verbose)
 
@@ -553,7 +572,7 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
             msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(node_name, slurm.id))
             # add job to reV status file.
-            Status.add_job(dirout, 'econ', node_name,
+            Status.add_job(status_dir, 'econ', node_name,
                            job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                                       'fout': fout_node, 'dirout': dirout})
         else:

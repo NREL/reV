@@ -23,7 +23,7 @@ class Pipeline:
                   1: 'running',
                   2: 'failed'}
 
-    def __init__(self, run_list):
+    def __init__(self, run_list, status_dir=None):
         """
         Parameters
         ----------
@@ -31,9 +31,13 @@ class Pipeline:
             List of reV pipeline steps. Each pipeline step entry must have
             the following format:
                 run_list[0] = {"rev_module": "module_config_file"}
+        status_dir : str
+            Optional directory to save status file. Default will be dirout for
+            each module.
         """
 
         self._run_list = run_list
+        self._status_dir = status_dir
 
     def _main(self):
         """Iterate through run list submitting steps while monitoring status"""
@@ -68,7 +72,17 @@ class Pipeline:
         """
 
         command, f_config = self._get_command_config(i)
-        cmd = self._get_cmd(command, f_config)
+        cmd = self._get_cmd(command, f_config, status_dir=self._status_dir)
+
+        config_obj = self._get_config_obj(f_config)
+        status = self._get_status_obj(dirout=config_obj.dirout,
+                                      status_dir=self._status_dir)
+        if command in status.data:
+            status.data[command]['pipeline_index'] = i
+        else:
+            status.data[command] = {'pipeline_index': i}
+        status._dump()
+
         logger.info('reV pipeline submitting subprocess:\n\t"{}"'.format(cmd))
         SubprocessManager.submit(cmd)
 
@@ -87,12 +101,9 @@ class Pipeline:
         """
 
         module, f_config = self._get_command_config(i)
-
-        with open(f_config, 'r') as f:
-            config_dict = json.load(f)
-        config_obj = AnalysisConfig(config_dict)
-
-        status = Status(config_obj.dirout)
+        config_obj = self._get_config_obj(f_config)
+        status = self._get_status_obj(dirout=config_obj.dirout,
+                                      status_dir=self._status_dir)
 
         if os.path.isfile(status._fpath):
             returncode = self._get_return_code(status, module)
@@ -102,7 +113,50 @@ class Pipeline:
 
         return returncode
 
-    def _get_return_code(self, status, module):
+    @staticmethod
+    def _get_config_obj(f_config):
+        """Get an analysis config object form a config json file.
+
+        Parameters
+        ----------
+        f_config : str
+            File path for config.
+
+        Returns
+        -------
+        config_obj : AnalysisConfig
+            reV analysis config object.
+        """
+
+        with open(f_config, 'r') as f:
+            config_dict = json.load(f)
+        return AnalysisConfig(config_dict)
+
+    @staticmethod
+    def _get_status_obj(dirout=None, status_dir=None):
+        """Get a reV pipeline status object.
+
+        Parameters
+        ----------
+        dirout : str
+            Output directory which will be used if no status directory.
+        status_dir : str
+            Status directory which is the prefered location.
+
+        Returns
+        -------
+        status : reV.pipeline.status.Status
+            reV job status object.
+        """
+
+        if status_dir is None:
+            status = Status(dirout)
+        else:
+            status = Status(status_dir)
+        return status
+
+    @staticmethod
+    def _get_return_code(status, module):
         """Get a return code for a full module based on a status object.
 
         Parameters
@@ -123,22 +177,24 @@ class Pipeline:
             returncode = 1
         else:
             for job_name, job_attrs in status.data[module].items():
-                status._update_job_status(module, job_name)
-                status._dump()
+                if job_name != 'pipeline_index':
+                    status._update_job_status(module, job_name)
+                    status._dump()
+                    js = job_attrs['job_status']
 
-                logger.debug('reV pipeline job "{}" has status "{}".'
-                             .format(job_name, job_attrs['job_status']))
+                    logger.debug('reV pipeline job "{}" has status "{}".'
+                                 .format(job_name, js))
 
-                # if return code is changed to 1 or 2, do not update again
-                if returncode == 0:
-                    if job_attrs['job_status'] == 'failed':
-                        returncode = 2
-                    elif job_attrs['job_status'] is None:
-                        status.set_job_status(status._path, module,
-                                              job_name, 'failed')
-                        returncode = 2
-                    elif job_attrs['job_status'] not in status.FROZEN_STATUS:
-                        returncode = 1
+                    # if return code is changed to 1 or 2, do not update again
+                    if returncode == 0:
+                        if js == 'failed':
+                            returncode = 2
+                        elif js is None:
+                            status.set_job_status(status._path, module,
+                                                  job_name, 'failed')
+                            returncode = 2
+                        elif js not in status.FROZEN_STATUS:
+                            returncode = 1
         return returncode
 
     def _get_command_config(self, i):
@@ -158,7 +214,7 @@ class Pipeline:
         return key_pair
 
     @staticmethod
-    def _get_cmd(command, f_config):
+    def _get_cmd(command, f_config, status_dir=None):
         """Get the python cli call string based on the command and config arg.
 
         Parameters
@@ -167,6 +223,9 @@ class Pipeline:
             reV cli command which should be a reV module.
         f_config : str
             File path for the config file corresponding to the command.
+        status_dir : str
+            Optional directory to save status file. Default will be dirout for
+            each module.
 
         Returns
         -------
@@ -177,11 +236,108 @@ class Pipeline:
             raise KeyError('Could not recongize command "{}". '
                            'Available commands are: {}'
                            .format(command, Pipeline.COMMANDS))
-        cmd = 'python -m reV.cli -c {} {}'.format(f_config, command)
+        sdir_str = ''
+        if status_dir:
+            sdir_str = '-st {}'.format(status_dir)
+        cmd = ('python -m reV.cli -c {} {} {}'
+               .format(f_config, sdir_str, command))
         return cmd
 
+    @staticmethod
+    def _get_module_status(status, i):
+        """Get the status dict for the module with the given pipeline index.
+
+        Parameters
+        ----------
+        status : reV.pipeline.status.Status
+            reV job status object.
+        i : int
+            pipeline index of desired module.
+
+        Returns
+        -------
+        out : dict
+            Status dictionary for the module with pipeline index i.
+        """
+
+        # iterate through modules and find the one that was run previously
+        for module_status in status.data.values():
+            i_current = module_status.get('pipeline_index', -99)
+            if str(i) == str(i_current):
+                out = module_status
+                break
+
+        return out
+
+    @staticmethod
+    def _get_job_status(module_status, option='first'):
+        """Get a job status dict from the module status dict.
+
+        Parameters
+        ----------
+        module_status : dict
+            Status dictionary for a full reV module containing one or more
+            job status dict.
+        option : str
+            Option to retrieve one or many jobs from the module status dict.
+
+        Returns
+        -------
+        out : dict
+            Job status dict.
+        """
+
+        # find the preceding job (1st is used, should be one job in most cases)
+        if option == 'first':
+            for job, job_status in module_status.items():
+                if job != 'pipeline_index':
+                    out = job_status
+                    break
+        return out
+
+    @staticmethod
+    def parse_previous(status_dir, module, target='fpath'):
+        """Parse data from the previous pipeline step.
+
+        Parameters
+        ----------
+        status_dir : str
+            Directory containing the status file to parse.
+        module : str
+            Current module (i.e. current pipeline step).
+        target : str
+            Option for what to parse.
+
+        Returns
+        -------
+        out : str
+            Data parsed from the status file in status_dir from the module
+            preceding the input module arg.
+        """
+        status = Pipeline._get_status_obj(status_dir=status_dir)
+        msg = ('Could not parse data regarding "{}" from reV status file in '
+               '"{}".'.format(module, status_dir))
+        if module in status.data:
+            if 'pipeline_index' in status.data[module]:
+                msg = None
+        if msg:
+            raise KeyError(msg)
+
+        i1 = int(status.data[module]['pipeline_index'])
+        i0 = i1 - 1
+
+        module_status = Pipeline._get_module_status(status, i0)
+        job_status = Pipeline._get_job_status(module_status)
+
+        if target == 'fpath':
+            out = os.path.join(job_status['dirout'], job_status['fout'])
+        else:
+            out = job_status[target]
+
+        return out
+
     @classmethod
-    def run(cls, run_list):
+    def run(cls, run_list, status_dir=None):
         """Run the reV pipeline.
 
         Parameters
@@ -190,6 +346,9 @@ class Pipeline:
             List of reV pipeline steps. Each pipeline step entry must have
             the following format:
                 run_list[0] = {"rev_module": "module_config_file"}
+        status_dir : str
+            Optional directory to save status file. Default will be dirout for
+            each module.
         """
-        pipe = cls(run_list)
+        pipe = cls(run_list, status_dir=status_dir)
         pipe._main()

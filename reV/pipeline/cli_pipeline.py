@@ -3,6 +3,7 @@ Generation CLI entry points.
 """
 import click
 import json
+from reV.utilities.cli_dtypes import STR
 from reV.utilities.loggers import init_logger
 from reV.pipeline.pipeline import Pipeline
 
@@ -23,10 +24,12 @@ def main(ctx, name, verbose):
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV pipeline configuration json file.')
+@click.option('--status_dir', '-st', default=None, type=STR,
+              help='Optional directory containing reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def from_config(ctx, config_file, verbose):
+def from_config(ctx, config_file, status_dir, verbose):
     """Run reV pipeline from a config file."""
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
@@ -44,7 +47,7 @@ def from_config(ctx, config_file, verbose):
     if 'logging' in config_dict:
         init_logger('reV.pipeline', **config_dict['logging'])
 
-    Pipeline.run(config_dict['pipeline'])
+    Pipeline.run(config_dict['pipeline'], status_dir)
 
 
 if __name__ == '__main__':

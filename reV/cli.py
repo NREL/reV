@@ -16,14 +16,17 @@ from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
 @click.option('--config_file', '-c',
               required=True, type=click.Path(exists=True),
               help='reV configuration file json for a single module.')
+@click.option('--status_dir', '-st', default=None, type=STR,
+              help='Optional directory containing reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, config_file, verbose):
+def main(ctx, name, config_file, status_dir, verbose):
     """reV 2.0 config command line interface."""
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['CONFIG_FILE'] = config_file
+    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -34,8 +37,10 @@ def main(ctx, name, config_file, verbose):
 def generation(ctx, verbose):
     """Run reV 2.0 generation using the config file."""
     config_file = ctx.obj['CONFIG_FILE']
+    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-    ctx.invoke(run_gen_from_config, config_file=config_file, verbose=verbose)
+    ctx.invoke(run_gen_from_config, config_file=config_file,
+               status_dir=status_dir, verbose=verbose)
 
 
 @main.command()
@@ -45,8 +50,10 @@ def generation(ctx, verbose):
 def econ(ctx, verbose):
     """Run reV 2.0 econ using the config file."""
     config_file = ctx.obj['CONFIG_FILE']
+    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-    ctx.invoke(run_econ_from_config, config_file=config_file, verbose=verbose)
+    ctx.invoke(run_econ_from_config, config_file=config_file,
+               status_dir=status_dir, verbose=verbose)
 
 
 @main.command()
@@ -68,9 +75,10 @@ def collect(ctx, verbose):
 def pipeline(ctx, verbose):
     """Run the full reV 2.0 pipeline using the config file."""
     config_file = ctx.obj['CONFIG_FILE']
+    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_pipeline_from_config, config_file=config_file,
-               verbose=verbose)
+               status_dir=status_dir, verbose=verbose)
 
 
 if __name__ == '__main__':

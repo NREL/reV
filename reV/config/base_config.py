@@ -67,8 +67,10 @@ class BaseConfig(dict):
             List of files (with paths) to check existance of.
         """
         for f in flist:
-            if os.path.exists(f) is False:
-                raise IOError('File does not exist: {}'.format(f))
+            # ignore files that are to be specified using pipeline utils
+            if 'PIPELINE' not in os.path.basename(f):
+                if os.path.exists(f) is False:
+                    raise IOError('File does not exist: {}'.format(f))
 
     @staticmethod
     def load_json(fname):
