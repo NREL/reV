@@ -31,6 +31,7 @@
       "type": "Slope"
     }
   ],
+  "exclusions_output_file": "exclusions.tif",
   "execution_control": {
     "allocation": "rev",
     "nodes": 1,
@@ -42,11 +43,6 @@
     "analysis_years": 2012,
     "logging_level": "DEBUG",
     "name": "rev",
-    "output_request": [
-      "cf_mean",
-      "cf_profile",
-      "lcoe"
-    ],
     "technology": "pv"
   }
 }
