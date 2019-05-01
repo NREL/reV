@@ -106,9 +106,10 @@ class SubprocessManager:
         stderr = stderr.decode('ascii').rstrip()
         stdout = stdout.decode('ascii').rstrip()
 
-        if stderr:
-            raise Exception('Error occurred submitting job:\n{}'
-                            .format(stderr))
+        if process.returncode != 0:
+            raise OSError('Subprocess submission failed with return code {} '
+                          'and stderr:\n{}'
+                          .format(process.returncode, stderr))
 
         return stdout, stderr
 
