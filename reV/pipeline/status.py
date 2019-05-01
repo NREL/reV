@@ -41,8 +41,8 @@ class Status(dict):
         data : dict
             JSON file contents loaded as a python dictionary.
         """
-        if os.path.isfile(self._path):
-            with open(self._path, 'r') as f:
+        if os.path.isfile(self._fpath):
+            with open(self._fpath, 'r') as f:
                 data = json.load(f)
         else:
             data = {}
@@ -56,7 +56,7 @@ class Status(dict):
         data : dict
             reV data pipeline status info.
         """
-        with open(self._path, 'w') as f:
+        with open(self._fpath, 'w') as f:
             json.dump(self.data, f, sort_keys=True, indent=4,
                       separators=(',', ': '))
 
@@ -124,6 +124,7 @@ class Status(dict):
             previous = self.data[module][job_name]['job_status']
 
         job_id = self.data[module][job_name].get('job_id', None)
+        hardware = self.data[module][job_name].get('hardware', hardware)
 
         current = self._get_job_status(job_id, hardware=hardware)
 
@@ -162,7 +163,7 @@ class Status(dict):
                  .format(self.FROZEN_STATUS))
 
     @classmethod
-    def add_job(cls, path, module, job_name, **kwargs):
+    def add_job(cls, path, module, job_name, replace=True, **kwargs):
         """Add or update job status using pre-defined methods.
 
         Parameters
@@ -173,19 +174,24 @@ class Status(dict):
             reV module that the job belongs to.
         job_name : str
             Unique job name identification.
+        replace : bool
+            Flag to replace pre-existing job status.
         kwargs : dict
             Job attributes. Should include 'job_id'
         """
 
         obj = cls(path)
 
-        if 'job_id' not in kwargs:
-            warn('Key "job_id" should be in kwargs for "{}" when adding job.'
-                 .format(job_name))
+        if 'hardware' in kwargs:
+            if kwargs['hardware'] in ('eagle', 'peregrine'):
+                if 'job_id' not in kwargs:
+                    warn('Key "job_id" should be in kwargs for "{}" if '
+                         'adding job from an eagle or peregrine node.'
+                         .format(job_name))
 
         if module not in obj.data:
             obj.data[module] = {job_name: kwargs}
-        else:
+        if replace:
             obj.data[module][job_name] = kwargs
 
         obj.data[module][job_name]['job_status'] = 'submitted'
@@ -193,7 +199,7 @@ class Status(dict):
         obj._dump()
 
     @classmethod
-    def retrieve_job_status(cls, path, module, job_name, **kwargs):
+    def retrieve_job_status(cls, path, module, job_name):
         """Update and retrieve job status using pre-defined methods.
 
         Parameters
@@ -207,12 +213,12 @@ class Status(dict):
         """
 
         obj = cls(path)
-        obj._update_job_status(module, job_name, **kwargs)
+        obj._update_job_status(module, job_name)
         obj._dump()
         return obj.data[module][job_name]['job_status']
 
     @classmethod
-    def set_job_status(cls, path, module, job_name, status, **kwargs):
+    def set_job_status(cls, path, module, job_name, status):
         """Force set a job status to a frozen status and save to status file.
 
         Parameters
@@ -229,5 +235,5 @@ class Status(dict):
         """
 
         obj = cls(path)
-        obj._set_job_status(module, job_name, status, **kwargs)
+        obj._set_job_status(module, job_name, status)
         obj._dump()

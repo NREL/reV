@@ -18,6 +18,7 @@ from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
+from reV.pipeline.status import Status
 
 
 logger = logging.getLogger(__name__)
@@ -233,6 +234,9 @@ def econ_local(ctx, n_workers, points_range, verbose):
     output_request = ctx.obj['OUTPUT_REQUEST']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    # add job to reV status file.
+    Status.add_job(dirout, 'econ', name, replace=False)
+
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
                                      'reV.utilities', 'reV.SAM'],
@@ -246,6 +250,8 @@ def econ_local(ctx, n_workers, points_range, verbose):
                 'generation results file: {}. Target output path is: {}'
                 .format(name, cf_file, os.path.join(dirout, fout)))
     t0 = time.time()
+
+    Status.retrieve_job_status(dirout, 'econ', name)
 
     # Execute the Generation module with smart data flushing.
     Econ.run_smart(points=points,
@@ -265,6 +271,8 @@ def econ_local(ctx, n_workers, points_range, verbose):
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'
                 .format(points, tmp_str if points_range else '',
                         (time.time() - t0) / 60, dirout))
+
+    Status.set_job_status(dirout, 'econ', name, 'successful')
 
 
 def get_node_pc(points, sam_files, nodes):
@@ -459,6 +467,9 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
         if pbs.id:
             msg = ('Kicked off reV econ job "{}" (PBS jobid #{}) on '
                    'Peregrine.'.format(node_name, pbs.id))
+            # add job to reV status file.
+            Status.add_job(dirout, 'econ', node_name, job_id=pbs.id,
+                           hardware='peregrine')
         else:
             msg = ('Was unable to kick off reV econ job "{}". '
                    'Please see the stdout error messages'
@@ -531,6 +542,9 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
         if slurm.id:
             msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(node_name, slurm.id))
+            # add job to reV status file.
+            Status.add_job(dirout, 'econ', node_name, job_id=slurm.id,
+                           hardware='eagle')
         else:
             msg = ('Was unable to kick off reV econ job "{}". '
                    'Please see the stdout error messages'
