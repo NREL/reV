@@ -10,23 +10,21 @@ from reV.exclusions.exclusions import Exclusions
 from reV.config.analysis_configs import ExclConfig
 from reV.utilities.cli_dtypes import STR
 from reV.utilities.loggers import init_mult
+from reV.utilities.execution import SLURM
 
 
 logger = logging.getLogger(__name__)
 
 
 @click.command()
-@click.option('--name', '-n', default='reV_gen', type=STR,
-              help='Exclusion job name. Default is "reV_gen".')
+@click.option('--name', '-n', default='reV_excl', type=STR,
+              help='Exclusion job name. Default is "reV_excl".')
 @click.option('--config_file', '-c', required=True, type=STR,
               help='reV exclusion configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
-@click.pass_context
-def main(ctx, name, config_file, verbose):
+def main(name, config_file, verbose):
     """Command line interface (CLI) for the reV 2.0 Exclusion Module."""
-    ctx.obj['NAME'] = name
-    ctx.obj['VERBOSE'] = verbose
 
     # Instantiate the config object
     config = ExclConfig(config_file)
@@ -34,7 +32,6 @@ def main(ctx, name, config_file, verbose):
     # take name from config if not default
     if config.name.lower() != 'rev':
         name = config.name
-        ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
     if config.logging_level == logging.DEBUG:
@@ -59,8 +56,61 @@ def main(ctx, name, config_file, verbose):
     else:
         fname = os.path.join(config.dirout, 'exclusions.tif')
 
-    exclusions = Exclusions(config['exclusions'])
-    exclusions.build_from_config()
-    exclusions.export(fname=fname)
+    Exclusions.run(config=config['exclusions'],
+                   use_blocks=True,
+                   output_fname=fname)
 
     return None
+
+
+@click.command()
+@click.option('--name', '-n', default='reV_gen', type=STR,
+              help='Exclusion job name. Default is "reV_gen".')
+@click.option('--config_file', '-c', required=True, type=STR,
+              help='reV exclusion configuration json file.')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+def submit_eagle(name, config_file, verbose):
+    """Run exclusions on Eagle HPC via SLURM job submission."""
+
+    # Instantiate the config object
+    config = ExclConfig(config_file)
+
+    # Enforce verbosity if logging level is specified in the config
+    if config.logging_level == logging.DEBUG:
+        verbose = True
+
+    # initialize loggers
+    init_mult(verbose, name, logdir=config.logdir)
+
+    # Python command that will be executed on a node
+    if verbose:
+        verbose_flag = '-v'
+    else:
+        verbose_flag = ''
+    cmd = ('python -m reV.exclusions.cli_excl main'
+           '-n {name} -c {config_file} {verbose_flag}'
+           .format(name=name,
+                   config_file=config_file,
+                   verbose_flag=verbose_flag))
+    logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
+    logger.info('Running reV exclusions on Eagle with node name "{}"'
+                .format(config.name))
+
+    # create and submit the SLURM job
+    slurm = SLURM(cmd,
+                  alloc=config.execution_control.allocation,
+                  walltime=config.execution_control.walltime,
+                  name=config.name,
+                  stdout_path=os.path.join(config.logdir, 'stdout'))
+    if slurm.id:
+        msg = ('Kicked off reV exclusions job "{}" (SLURM jobid #{}) on '
+               'Eagle.'.format(config.name, slurm.id))
+    else:
+        msg = ('Was unable to kick off reV exclusions job "{}". '
+               'Please see the stdout error messages'
+               .format(config.name))
+    click.echo(msg)
+    logger.info(msg)
+
+    return slurm
