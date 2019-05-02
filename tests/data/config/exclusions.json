@@ -40,6 +40,6 @@
   },
   "project_control": {
     "logging_level": "DEBUG",
-    "name": "rev"
+    "name": "rev_exclusions"
   }
 }
