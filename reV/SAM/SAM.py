@@ -13,7 +13,8 @@ from warnings import warn
 
 from reV.handlers.resource import WindResource, SolarResource, NSRDB
 from reV.SAM.PySSC import PySSC
-from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
+from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
+                                      ResourceError)
 from reV.utilities.slots import SlottedDict
 
 
@@ -616,6 +617,11 @@ class SAM:
         res_arr : array-like
             Truncated array of resource data such that length(res_arr)%base=0.
         """
+
+        if len(res_arr) < 8760:
+            raise ResourceError('Resource timeseries must be hourly. '
+                                'Received timeseries of length {}.'
+                                .format(len(res_arr)))
 
         if len(res_arr) % base != 0:
             div = np.floor(len(res_arr) / 8760)

@@ -45,6 +45,13 @@ class HandlerValueError(Exception):
     pass
 
 
+class ResourceError(Exception):
+    """
+    Error for poorly formatted resource.
+    """
+    pass
+
+
 class SAMExecutionError(Exception):
     """
     Execution error for SAM simulations
