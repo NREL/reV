@@ -204,6 +204,9 @@ class Gen:
 
         if self._fpath is not None:
 
+            logger.info('Initializing full output file: "{}"'
+                        .format(self._fpath))
+
             attrs = {d: {} for d in self.output_request}
             chunks = {}
             dtypes = {}
@@ -303,8 +306,8 @@ class Gen:
                 self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
             self._site_mem = self._site_mem / 1e6 / n
             logger.info('Output results from a single site are calculated to '
-                        'use {0:.3f} MB of memory.'
-                        .format(self._site_mem))
+                        'use {0:.1f} KB of memory.'
+                        .format(self._site_mem / 1000))
 
         return self._site_mem
 
@@ -606,7 +609,7 @@ class Gen:
                                             len(self.project_points) - 1)))
         self._out_n_sites = int(self._out_chunk[1] - self._out_chunk[0]) + 1
 
-        logger.info('Initializing generation outputs for {} sites with gids '
+        logger.info('Initializing in-memory outputs for {} sites with gids '
                     '{} through {} inclusive (site list index {} through {})'
                     .format(self._out_n_sites,
                             self.project_points.sites[self._out_chunk[0]],
@@ -785,7 +788,7 @@ class Gen:
 
         # handle output file request if file is specified and .out is not empty
         if isinstance(self._fpath, str) and self.out:
-            logger.info('Flushing generation outputs to disk, target file: {}'
+            logger.info('Flushing outputs to disk, target file: "{}"'
                         .format(self._fpath))
 
             # get the slice of indices to write outputs to

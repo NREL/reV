@@ -353,8 +353,9 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
         Base node/job name
     fout : str
         Base file output name (no path) (with or without .h5 extension)
-    i : int
-        Node number.
+    i : int | None
+        Node number. If None, only a single node is being used and no
+        enumeration is necessary.
     hpc : str
         HPC job submission tool name (e.g. slurm or pbs). Affects job name.
 
@@ -366,16 +367,21 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
         Base file output name with _node00 tag.
     """
 
-    if hpc is 'slurm':
-        node_name = '{0}_{1:02d}'.format(name, i)
-    elif hpc is 'pbs':
-        # 13 chars for pbs, (lim is 16, -3 for "_ID")
-        node_name = '{0}_{1:02d}'.format(name[:13], i)
+    if not fout.endswith('.h5'):
+        fout += '.h5'
 
-    if fout.endswith('.h5'):
-        fout_node = fout.replace('.h5', '_node{0:02d}.h5'.format(i))
+    if i is None:
+        fout_node = fout
+        node_name = fout
+
     else:
-        fout_node = fout + '_node{0:02d}.h5'.format(i)
+        if hpc is 'slurm':
+            node_name = '{0}_{1:02d}'.format(name, i)
+        elif hpc is 'pbs':
+            # 13 chars for pbs, (lim is 16, -3 for "_ID")
+            node_name = '{0}_{1:02d}'.format(name[:13], i)
+
+        fout_node = fout.replace('.h5', '_node{0:02d}.h5'.format(i))
 
     return node_name, fout_node
 
@@ -533,7 +539,11 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='pbs')
+        node_i = i
+        if len(pc) == 1:
+            node_i = None
+        node_name, fout_node = get_node_name_fout(name, fout, node_i,
+                                                  hpc='pbs')
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
@@ -610,7 +620,11 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='slurm')
+        node_i = i
+        if len(pc) == 1:
+            node_i = None
+        node_name, fout_node = get_node_name_fout(name, fout, node_i,
+                                                  hpc='slurm')
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
