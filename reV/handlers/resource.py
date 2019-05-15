@@ -3,12 +3,41 @@ Classes to handle resource data
 """
 import h5py
 import numpy as np
+import os
 import pandas as pd
+import re
 import warnings
 
 from reV.handlers.sam_resource import parse_keys, SAMResource
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
-                                      HandlerValueError, ExtrapolationWarning)
+                                      HandlerValueError, ExtrapolationWarning,
+                                      HandlerWarning)
+
+
+def parse_year(f_name):
+    """
+    Attempt to parse year from file name
+
+    Parameters
+    ----------
+    f_name : str
+        File name from which year is to be parsed
+
+    Results
+    -------
+    year : int
+        Year parsed from file name, None if not present in file name
+    """
+    # Attempt to parse year from file name
+    match = re.match(r'.*([1-3][0-9]{3})', f_name)
+    if match:
+        year = int(match.group(1))
+    else:
+        warnings.warn('Cannot parse year from {}'.format(f_name),
+                      HandlerWarning)
+        year = None
+
+    return year
 
 
 class Resource:
@@ -656,34 +685,29 @@ class WindResource(Resource):
         out : ndarray
             Time-series array at height h
         """
-        if h == h_1:
-            out = ts_1
-        elif h == h_2:
-            out = ts_2
+        if h_1 > h_2:
+            h_1, h_2 = h_2, h_1
+            ts_1, ts_2 = ts_2, ts_1
+
+        if mean:
+            alpha = (np.log(ts_2.mean() / ts_1.mean()) /
+                     np.log(h_2 / h_1))
+
+            if alpha < 0.06:
+                warnings.warn('Alpha is < 0.06', RuntimeWarning)
+            elif alpha > 0.6:
+                warnings.warn('Alpha is > 0.6', RuntimeWarning)
         else:
-            if h_1 > h_2:
-                h_1, h_2 = h_2, h_1
-                ts_1, ts_2 = ts_2, ts_1
+            # Replace zero values for alpha calculation
+            ts_1[ts_1 == 0] = 0.001
+            ts_2[ts_2 == 0] = 0.001
 
-            if mean:
-                alpha = (np.log(ts_2.mean() / ts_1.mean()) /
-                         np.log(h_2 / h_1))
+            alpha = np.log(ts_2 / ts_1) / np.log(h_2 / h_1)
+            # The Hellmann exponent varies from 0.06 to 0.6
+            alpha[alpha < 0.06] = 0.06
+            alpha[alpha > 0.6] = 0.6
 
-                if alpha < 0.06:
-                    warnings.warn('Alpha is < 0.06', RuntimeWarning)
-                elif alpha > 0.6:
-                    warnings.warn('Alpha is > 0.6', RuntimeWarning)
-            else:
-                # Replace zero values for alpha calculation
-                ts_1[ts_1 == 0] = 0.001
-                ts_2[ts_2 == 0] = 0.001
-
-                alpha = np.log(ts_2 / ts_1) / np.log(h_2 / h_1)
-                # The Hellmann exponent varies from 0.06 to 0.6
-                alpha[alpha < 0.06] = 0.06
-                alpha[alpha > 0.6] = 0.6
-
-            out = ts_1 * (h / h_1)**alpha
+        out = ts_1 * (h / h_1)**alpha
 
         return out
 
@@ -710,20 +734,16 @@ class WindResource(Resource):
         out : ndarray
             Time-series array at height h
         """
-        if h == h_1:
-            out = ts_1
-        elif h == h_2:
-            out = ts_2
-        else:
-            if h_1 > h_2:
-                h_1, h_2 = h_2, h_1
-                ts_1, ts_2 = ts_2, ts_1
-            # Calculate slope for every posiiton in variable arrays
-            m = (ts_2 - ts_1) / (h_2 - h_1)
-            # Calculate intercept for every position in variable arrays
-            b = ts_2 - m * h_2
+        if h_1 > h_2:
+            h_1, h_2 = h_2, h_1
+            ts_1, ts_2 = ts_2, ts_1
 
-            out = m * h + b
+        # Calculate slope for every posiiton in variable arrays
+        m = (ts_2 - ts_1) / (h_2 - h_1)
+        # Calculate intercept for every position in variable arrays
+        b = ts_2 - m * h_2
+
+        out = m * h + b
 
         return out
 
@@ -770,17 +790,12 @@ class WindResource(Resource):
         out : ndarray
             Time-series array at height h
         """
-        if h == h_1:
-            out = ts_1
-        elif h == h_2:
-            out = ts_2
-        else:
-            h_f = (h - h_1) / (h_2 - h_1)
+        h_f = (h - h_1) / (h_2 - h_1)
 
-            da = WindResource.shortest_angle(ts_1, ts_2) * h_f
-            da = np.sign(da) * (np.abs(da) % 360)
+        da = WindResource.shortest_angle(ts_1, ts_2) * h_f
+        da = np.sign(da) * (np.abs(da) % 360)
 
-            out = (ts_2 + da) % 360
+        out = (ts_2 + da) % 360
 
         return out
 
@@ -803,6 +818,11 @@ class WindResource(Resource):
         """
         var_name, h = self._parse_name(ds_name)
         heights = self.heights[var_name]
+        if len(heights) == 1:
+            h = heights[0]
+            warnings.warn('Only one hub-height available, returning {}'
+                          .format(h), HandlerWarning)
+
         if h in heights:
             out = super()._get_ds(ds_name, *ds_slice)
         else:
@@ -913,3 +933,54 @@ class WindResource(Resource):
                 SAM_res[var] = res[ds_name, :, sites_slice]
 
         return SAM_res
+
+
+class FiveMinWTK:
+    """
+    Class to handle 5min WIND Toolkit data
+    """
+    def __init__(self, h5_dir, unscale=True, hourly_h5=None):
+        """
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        hourly_h5 : str
+            Path to hourly .h5 file
+        """
+        self._hourly_h5 = WindResource(hourly_h5, unscale=unscale)
+        self._unscale = unscale
+        self._heights = self._hourly_h5.heights
+        wind_files, heights = self.get_wind_files(h5_dir)
+        self._wind_files = wind_files
+        self._heights['windspeed'] = heights
+        self._heights['winddirection'] = heights
+
+    @staticmethod
+    def get_wind_files(h5_dir):
+        """
+        Fine .h5 files for wind hub-heights in h5_dir
+
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+
+        Returns
+        -------
+        wind_files : list
+            List of wind .h5 files by hub-height
+        heights : list
+            List of hub heights
+        """
+        wind_files = []
+        heights = []
+        for file in os.listdir(h5_dir):
+            if file.startswith('wind') and file.endswith('.h5'):
+                wind_files.append(os.path.join(h5_dir, file))
+                h = file.split('.')[0].split('_')[-1]
+                heights.append(h)
+
+        return wind_files, heights

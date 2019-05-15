@@ -6,40 +6,14 @@ import json
 import logging
 import numpy as np
 import pandas as pd
-import re
 import time
-from warnings import warn
 
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
-                                      HandlerValueError, HandlerWarning)
-from reV.handlers.resource import Resource, parse_keys
+                                      HandlerValueError)
+from reV.handlers.resource import Resource
+from reV.sam_resource import parse_keys
 
 logger = logging.getLogger(__name__)
-
-
-def parse_year(f_name):
-    """
-    Attempt to parse year from file name
-
-    Parameters
-    ----------
-    f_name : str
-        File name from which year is to be parsed
-
-    Results
-    -------
-    year : int
-        Year parsed from file name, None if not present in file name
-    """
-    # Attempt to parse year from file name
-    match = re.match(r'.*([1-3][0-9]{3})', f_name)
-    if match:
-        year = int(match.group(1))
-    else:
-        warn('Cannot parse year from {}'.format(f_name), HandlerWarning)
-        year = None
-
-    return year
 
 
 class Outputs(Resource):
