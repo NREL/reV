@@ -553,7 +553,7 @@ class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
-    def __init__(self, h5_file, unscale=True):
+    def __init__(self, h5_file, unscale=True, hsds=False):
         """
         Parameters
         ----------
@@ -561,9 +561,12 @@ class WindResource(Resource):
             Path to .h5 resource file
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
         """
         self._heights = None
-        super().__init__(h5_file, unscale=unscale)
+        super().__init__(h5_file, unscale=unscale, hsds=False)
 
     @staticmethod
     def _parse_name(ds_name):
@@ -935,28 +938,37 @@ class WindResource(Resource):
         return SAM_res
 
 
-class FiveMinWTK:
+class FiveMinWTK(WindResource):
     """
     Class to handle 5min WIND Toolkit data
     """
-    def __init__(self, h5_dir, unscale=True, hourly_h5=None):
+    def __init__(self, h5_dir, hourly_h5, unscale=True):
         """
         Parameters
         ----------
         h5_dir : str
             Path to directory containing 5min .h5 files
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
         hourly_h5 : str
             Path to hourly .h5 file
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
         """
-        self._hourly_h5 = WindResource(hourly_h5, unscale=unscale)
-        self._unscale = unscale
-        self._heights = self._hourly_h5.heights
-        wind_files, heights = self.get_wind_files(h5_dir)
+        # Init on hourly_h5 file
+        super().__init__(hourly_h5, unscale=unscale)
+        self._hourly_time_index = self.time_index
+
+        # Find 5min wind files
+        wind_files = self.get_wind_files(h5_dir)
         self._wind_files = wind_files
-        self._heights['windspeed'] = heights
-        self._heights['winddirection'] = heights
+        heights = self.heights
+        # Substitute wind hub_heights
+        wind_h = sorted(wind_files)
+        heights['windspeed'] = wind_h
+        heights['winddirection'] = wind_h
+        self._heights = heights
+        # Substitute hourly for 5min time_index
+        with Resource(wind_files[wind_h[0]]) as f:
+            self._time_index = f.time_index
 
     @staticmethod
     def get_wind_files(h5_dir):
@@ -970,17 +982,13 @@ class FiveMinWTK:
 
         Returns
         -------
-        wind_files : list
-            List of wind .h5 files by hub-height
-        heights : list
-            List of hub heights
+        wind_files : dict
+            Dictionary mapping wind files to hub-heights
         """
-        wind_files = []
-        heights = []
+        wind_files = {}
         for file in os.listdir(h5_dir):
             if file.startswith('wind') and file.endswith('.h5'):
-                wind_files.append(os.path.join(h5_dir, file))
-                h = file.split('.')[0].split('_')[-1]
-                heights.append(h)
+                h = WindResource._parse_name(file.split('.')[0])
+                wind_files[h] = os.path.join(h5_dir, file)
 
-        return wind_files, heights
+        return wind_files
