@@ -639,7 +639,7 @@ class Outputs(Resource):
 
     @classmethod
     def init_h5(cls, h5_file, dsets, shapes, attrs, chunks, dtypes,
-                time_index, meta):
+                meta, time_index=None, configs=None):
         """Init a full output file with the final intended shape without data.
 
         Parameters
@@ -657,21 +657,31 @@ class Outputs(Resource):
             Dictionary of chunk tuples (keys correspond to dsets).
         dtypes : dict
             dictionary of numpy datatypes (keys correspond to dsets).
-        time_index : pd.datetimeindex
-            Full pandas datetime index.
         meta : pd.DataFrame
             Full meta data.
+        time_index : pd.datetimeindex | None
+            Full pandas datetime index. None implies that only 1D results
+            (no site profiles) are being written.
+        configs : dict | None
+            Optional input configs to set as attr on meta.
         """
 
         logger.debug("Initializing output file: {}".format(h5_file))
         with cls(h5_file, mode='w-') as f:
-            f['time_index'] = time_index
             f['meta'] = meta
+
+            if time_index is not None:
+                f['time_index'] = time_index
 
             for dset in dsets:
                 if dset not in ('meta', 'time_index'):
                     # initialize each dset to disk
                     f._create_dset(dset, shapes[dset], dtypes[dset],
                                    chunks=chunks[dset], attrs=attrs[dset])
+
+            if configs is not None:
+                f.set_configs(configs)
+                logger.debug("\t- Configurations saved as attributes "
+                             "on 'meta'")
 
         logger.debug('Output file has been initialized.')

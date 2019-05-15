@@ -5,7 +5,6 @@ import logging
 import numpy as np
 import os
 import pprint
-import re
 import sys
 import psutil
 from warnings import warn
@@ -95,7 +94,9 @@ class Gen:
         self._site_mem = None
         self._fout = fout
         self._dirout = dirout
+        self._fpath = None
         self._time_index = None
+        self._year = None
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
         self._output_request = self._parse_output_request(output_request)
@@ -112,9 +113,14 @@ class Gen:
         # pre-initialize output arrays to store results when available.
         self._out = {}
         self._finished_sites = []
-        self._out_chunk = ()
         self._out_n_sites = 0
+        # _out_chunk is (start, end) indicies (inclusive) in the final output
+        self._out_chunk = ()
         self.initialize_output_arrays()
+
+        # initialize output file
+        self._init_fpath()
+        self._init_h5()
 
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
@@ -168,6 +174,74 @@ class Gen:
             year = res.time_index.year[0]
         ti = make_time_index(year, ds_freq)
         self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
+
+    def _init_fpath(self):
+        """Combine directory and filename, ensure .h5 ext., make out dirs."""
+
+        if self._fout is not None:
+
+            # ensure output file is an h5
+            if not self._fout .endswith('.h5'):
+                self._fout += '.h5'
+
+            # ensure year is in fout
+            if str(self.year) not in self._fout:
+                self._fout = self._fout.replace('.h5',
+                                                '_{}.h5'.format(self.year))
+
+            # create and use optional output dir
+            if self._dirout:
+                if not os.path.exists(self._dirout):
+                    os.makedirs(self._dirout)
+
+                # Add output dir to fout string
+                self._fpath = os.path.join(self._dirout, self._fout)
+            else:
+                self._fpath = self._fout
+
+    def _init_h5(self):
+        """Initialize the single h5 output file with all output requests."""
+
+        if self._fpath is not None:
+
+            attrs = {d: {} for d in self.output_request}
+            chunks = {}
+            dtypes = {}
+            shapes = {}
+
+            profiles_shape = (len(self.time_index), len(self.meta))
+            means_shape = (len(self.meta), )
+
+            # flag to write time index if profiles are being output
+            write_ti = False
+
+            for dset in self.output_request:
+                attrs[dset]['units'] = self.OUT_ATTRS[dset]['units']
+                attrs[dset]['scale_factor'] = \
+                    self.OUT_ATTRS[dset]['scale_factor']
+                chunks[dset] = self.OUT_ATTRS[dset]['chunks']
+                dtypes[dset] = self.OUT_ATTRS[dset]['dtype']
+
+                if self.OUT_ATTRS[dset]['type'] == 'array':
+                    shapes[dset] = profiles_shape
+                    write_ti = True
+                elif self.OUT_ATTRS[dset]['type'] == 'scalar':
+                    shapes[dset] = means_shape
+                else:
+                    raise ValueError('Output dset "{}" must have type "array" '
+                                     'or "scalar", but neither was found in '
+                                     'the OUT_ATTRS class attribute.'
+                                     .format(dset))
+
+            # only write time index if profiles were found in output request
+            if write_ti:
+                ti = self.time_index
+            else:
+                ti = None
+
+            Outputs.init_h5(self._fpath, self.output_request, shapes, attrs,
+                            chunks, dtypes, self.meta, time_index=ti,
+                            configs=self.sam_configs)
 
     @property
     def output_request(self):
@@ -324,8 +398,8 @@ class Gen:
             does not indicate the site number, so a 'gid' column is added.
         """
         with Resource(self.res_file) as res:
-            meta = res['meta', self._finished_sites]
-            meta.loc[:, 'gid'] = self._finished_sites
+            meta = res.meta.iloc[self.project_points.sites, :]
+            meta.loc[:, 'gid'] = self.project_points.sites
             meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
@@ -375,6 +449,20 @@ class Gen:
                     res.time_index, drop_leap=self._drop_leap)
 
         return self._time_index
+
+    @property
+    def year(self):
+        """Get the generation resource year.
+
+        Returns
+        -------
+        _year : int
+            Year of the time-series datetime index.
+        """
+
+        if self._year is None:
+            self._year = int(self.time_index.year[0])
+        return self._year
 
     @staticmethod
     def get_pc(points, points_range, sam_files, tech, sites_per_split=None,
@@ -660,8 +748,8 @@ class Gen:
             Resource-native site index (gid).
         out_index : bool
             Option to get output index (if true) which is the column index in
-            the current output array or the the global site index from the
-            project points site list (if false).
+            the current output array, or (if false) the the global site index
+            from the project points site list.
 
         Returns
         -------
@@ -686,171 +774,34 @@ class Gen:
                                          self._out_chunk))
             return output_index
 
-    def get_dset_attrs(self, var):
-        """Get dataset attributes associated with output variable.
-
-        Parameters
-        ----------
-        var : str
-            SAM variable name to be unpacked from gen_out, also the intended
-            dataset name that will be written to disk.
-
-        Returns
-        -------
-        data : np.ndarray
-            1D array of scalar values sorted by site number or 2D array of
-            profile outputs with rows matching the time series and columns
-            matching sorted rows.
-        dtype : str
-            Target dataset datatype. Defaults to float32.
-        chunks : list | tuple | NoneType
-            Chunk shape for target dataset. Defaults to None.
-        attrs : dict
-            Additional dataset attributes including scale_factor and units.
-        """
-
-        data = self.out[var]
-        dtype = self.OUT_ATTRS[var].get('dtype', 'float32')
-        chunks = self.OUT_ATTRS[var].get('chunks', None)
-        attrs = {k: self.OUT_ATTRS[var].get(k, 'None') for
-                 k in ['scale_factor', 'units']}
-        return data, dtype, chunks, attrs
-
-    def gen_to_disk(self, fout='gen_out.h5'):
-        """Save generation outputs to disk (all vars in self.output_request).
-
-        Parameters
-        ----------
-        fout : str
-            Target .h5 output file (with path).
-        """
-
-        with Outputs(fout, mode='w-') as f:
-            # Save meta
-            f['meta'] = self.meta
-            logger.debug("\t- 'meta' saved to disc")
-
-            if 'profile' in str(self.output_request):
-                f['time_index'] = self.time_index
-                logger.debug("\t- 'time_index' saved to disc")
-
-            if self.sam_configs is not None:
-                f.set_configs(self.sam_configs)
-                logger.debug("\t- SAM configurations saved as attributes "
-                             "on 'meta'")
-
-            # iterate through all output requests writing each as a dataset
-            for dset in self.output_request:
-                # retrieve the dataset with associated attributes
-                data, dtype, chunks, attrs = self.get_dset_attrs(dset)
-                # Write output dataset to disk
-                f._add_dset(dset_name=dset, data=data, dtype=dtype,
-                            chunks=chunks, attrs=attrs)
-
-    @staticmethod
-    def get_unique_fout(fout):
-        """Ensure a unique tag of format _x000 on the fout file name.
-
-        Parameters
-        ----------
-        fout : str
-            Target output directory joined with the INTENDED filename. Should
-            contain a _x000 tag in the filename.
-
-        Returns
-        -------
-        fout : str
-            Target output directory joined with a UNIQUE filename. The
-            extension in the original fout ("_x000") is incremented until the
-            result is unique in the output directory.
-        """
-
-        if os.path.exists(fout):
-            match = re.match(r'.*_x([0-9]{3})', fout)
-            if match:
-                new_tag = '_x' + str(int(match.group(1)) + 1).zfill(3)
-                fout = fout.replace('_x' + match.group(1), new_tag)
-                fout = Gen.get_unique_fout(fout)
-        return fout
-
-    @staticmethod
-    def handle_fout(fout, dirout):
-        """Ensure that the file+dir output exist and have unique names.
-
-        Parameters
-        ----------
-        fout : str
-            Target filename (with or without .h5 extension).
-        dirout : str
-            Target output directory.
-
-        Returns
-        -------
-        fout : str
-            Target output directory joined with the target filename. An
-            extension is appended to the filename in the format
-            "basename_x000.h5" where basename is the input fout and _x000
-            creates a unique filename in the output directory.
-        """
-
-        # combine filename and path
-        fout = Gen.make_h5_fpath(fout, dirout)
-
-        # check to see if target already exists. If so, assign unique ID.
-        fout = fout.replace('.h5', '_x000.h5')
-        fout = Gen.get_unique_fout(fout)
-
-        return fout
-
-    @staticmethod
-    def make_h5_fpath(fout, dirout):
-        """Combine directory and filename and ensure .h5 extension.
-
-        Parameters
-        ----------
-        fout : str
-            Target filename (with or without .h5 extension).
-        dirout : str
-            Target output directory.
-
-        Returns
-        -------
-        fout : str
-            Target output directory joined with the target filename
-            ending in .h5.
-        """
-
-        if not fout.endswith('.h5'):
-            fout += '.h5'
-        # create and use optional LCOE output dir
-        if dirout:
-            if not os.path.exists(dirout):
-                os.makedirs(dirout)
-            # Add output dir to LCOE fout string
-            fout = os.path.join(dirout, fout)
-        return fout
-
     def flush(self):
         """Flush generation data in self.out attribute to disk in .h5 format.
 
         The data to be flushed is accessed from the instance attribute
         "self.out". The disk target is based on the isntance attributes
-        "self.fout" and "self.dirout". The flushed file is ensured to have a
-        unique filename. Data is not flushed if fout is None or if .out is
+        "self._fpath". Data is not flushed if _fpath is None or if .out is
         empty.
         """
 
-        # use mutable copies of the properties
-        fout = self.fout
-        dirout = self.dirout
-
         # handle output file request if file is specified and .out is not empty
-        if isinstance(fout, str) and self.out:
-            fout = self.handle_fout(fout, dirout)
-
+        if isinstance(self._fpath, str) and self.out:
             logger.info('Flushing generation outputs to disk, target file: {}'
-                        .format(fout))
-            self.gen_to_disk(fout)
+                        .format(self._fpath))
+
+            # get the slice of indices to write outputs to
+            islice = slice(self._out_chunk[0], self._out_chunk[1] + 1)
+
+            with Outputs(self._fpath, mode='a') as f:
+
+                # iterate through all output requests writing each as a dataset
+                for dset in self.output_request:
+
+                    if len(self.out[dset].shape) == 1:
+                        # write array of scalars
+                        f[dset, islice] = self.out[dset]
+                    else:
+                        # write 2D array of profiles
+                        f[dset, :, islice] = self.out[dset]
 
             logger.debug('Flushed generation output successfully to disk.')
 

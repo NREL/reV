@@ -49,7 +49,7 @@ class Econ(Gen):
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
                  output_request='lcoe_fcr', fout=None, dirout='./econ_out',
-                 mem_util_lim=0.7):
+                 mem_util_lim=0.4):
         """Initialize an econ instance.
 
         Parameters
@@ -77,11 +77,12 @@ class Econ(Gen):
         """
         self._points_control = points_control
         self._cf_file = cf_file
-        self._cf_year = cf_year
+        self._year = cf_year
         self._site_limit = None
         self._site_mem = None
         self._fout = fout
         self._dirout = dirout
+        self._fpath = None
         self._time_index = None
         self._meta = None
         self.mem_util_lim = mem_util_lim
@@ -91,9 +92,14 @@ class Econ(Gen):
         # pre-initialize output arrays to store results when available.
         self._out = {}
         self._finished_sites = []
-        self._out_chunk = ()
         self._out_n_sites = 0
+        # _out_chunk is (start, end) indicies (inclusive) in the final output
+        self._out_chunk = ()
         self.initialize_output_arrays()
+
+        # initialize output file
+        self._init_fpath()
+        self._init_h5()
 
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
@@ -227,47 +233,6 @@ class Econ(Gen):
         self.project_points.join_df(self.site_data, key=self.site_data.index)
 
     @property
-    def cf_year(self):
-        """Get the year to analyze.
-
-        Returns
-        -------
-        cf_year : int | str | None
-            reV generation year to calculate econ for. Looks for cf_mean_{year}
-            or cf_profile_{year}. None will default to a non-year-specific cf
-            dataset (cf_mean, cf_profile).
-        """
-        return self._cf_year
-
-    @staticmethod
-    def handle_fout(fout, dirout, year):
-        """Ensure that the file+dir output exist and have unique names.
-
-        Parameters
-        ----------
-        fout : str
-            Target filename (with or without .h5 extension).
-        dirout : str
-            Target output directory.
-        year : str | int
-            Analysis year to be added to the fout.
-
-        Returns
-        -------
-        fout : str
-            Target output directory joined with the target filename.
-        """
-        # combine filename and path
-        fout = Econ.make_h5_fpath(fout, dirout)
-
-        if str(year) not in fout:
-            # add year tag to fout
-            if fout.endswith('.h5'):
-                fout = fout.replace('.h5', '_{}.h5'.format(year))
-
-        return fout
-
-    @property
     def meta(self):
         """Get meta data from the source capacity factors file.
 
@@ -295,56 +260,6 @@ class Econ(Gen):
                     self._time_index = cfh.time_index
 
         return self._time_index
-
-    def econ_to_disk(self, fout='econ_out.h5'):
-        """Save econ results to disk.
-
-        Parameters
-        ----------
-        fout : str
-            Target .h5 output file (with path).
-        """
-
-        with Outputs(fout, mode='w-') as f:
-            # Save meta
-            f['meta'] = self.meta
-            logger.debug("\t- 'meta' saved to disc")
-
-            if self.sam_configs is not None:
-                f.set_configs(self.sam_configs)
-                logger.debug("\t- SAM configurations saved as attributes "
-                             "on 'meta'")
-
-            # iterate through all output requests writing each as a dataset
-            for dset in self.output_request:
-                # retrieve the dataset with associated attributes
-                data, dtype, chunks, attrs = self.get_dset_attrs(dset)
-                # Write output dataset to disk
-                f._add_dset(dset_name=dset, data=data, dtype=dtype,
-                            chunks=chunks, attrs=attrs)
-
-    def flush(self):
-        """Flush econ data in self.out attribute to disk in .h5 format.
-
-        The data to be flushed is accessed from the instance attribute
-        "self.out". The disk target is based on the isntance attributes
-        "self.fout" and "self.dirout". The flushed file is ensured to have a
-        unique filename. Data is not flushed if fout is None or if .out is
-        empty.
-        """
-
-        # use mutable copies of the properties
-        fout = self.fout
-        dirout = self.dirout
-
-        # handle output file request if file is specified and .out is not empty
-        if isinstance(fout, str) and self.out:
-            fout = self.handle_fout(fout, dirout, self.cf_year)
-
-            logger.info('Flushing econ outputs to disk, target file: {}'
-                        .format(fout))
-            self.econ_to_disk(fout=fout)
-            logger.debug('Flushed econ output successfully to disk.')
 
     @staticmethod
     def run(pc, output_request, **kwargs):
