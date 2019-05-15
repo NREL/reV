@@ -94,6 +94,7 @@ class HPCConfig(BaseExecutionConfig):
 
     def __init__(self, config_dict):
         self._hpc_alloc = None
+        self._feature = None
         super().__init__(config_dict)
 
     @property
@@ -114,6 +115,33 @@ class HPCConfig(BaseExecutionConfig):
                     self._hpc_alloc = self['allocation']
         return self._hpc_alloc
 
+    @property
+    def feature(self):
+        """Get feature request str.
+
+        Returns
+        -------
+        _feature : str | NoneType
+            Feature request string.
+
+            For EAGLE, a full additional flag.
+            Config should look like:
+                "feature": "--qos=high"
+                "feature": "--depend=[state:job_id]"
+
+            For PEREGRINE, everything following the -l flag.
+            Config should look like:
+                "feature": "qos=high"
+                "feature": "feature=256GB"
+        """
+        if self._feature is None:
+            # default option if not specified
+            if 'feature' in self:
+                if self['feature']:
+                    # config-specified, set to attribute
+                    self._feature = self['feature']
+        return self._feature
+
 
 class PeregrineConfig(HPCConfig):
     """Class to handle Peregrine configuration inputs."""
@@ -122,7 +150,6 @@ class PeregrineConfig(HPCConfig):
         self._hpc_node_mem = None
         self._hpc_walltime = None
         self._hpc_queue = None
-        self._feature = None
         super().__init__(config_dict)
 
     @property
@@ -194,26 +221,6 @@ class PeregrineConfig(HPCConfig):
                     # config-specified, set to attribute
                     self._hpc_queue = self['queue']
         return self._hpc_queue
-
-    @property
-    def feature(self):
-        """Get feature request str.
-
-        Returns
-        -------
-        _feature : str | NoneType
-            Feature request string. Everything following the -l flag.
-            Config should look like:
-                "feature": "qos=high"
-                "feature": "feature=256GB"
-        """
-        if self._feature is None:
-            # default option if not specified
-            if 'feature' in self:
-                if self['feature']:
-                    # config-specified, set to attribute
-                    self._feature = self['feature']
-        return self._feature
 
 
 class EagleConfig(HPCConfig):
