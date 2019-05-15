@@ -85,7 +85,7 @@ class BaseExecutionConfig(BaseConfig):
             if 'memory_utilization_limit' in self:
                 self._mem_util_lim = self['memory_utilization_limit']
             else:
-                self._mem_util_lim = 0.7
+                self._mem_util_lim = 0.4
         return self._mem_util_lim
 
 
@@ -235,7 +235,7 @@ class EagleConfig(HPCConfig):
         """
         if self._hpc_node_mem is None:
             # default option if not specified
-            self._hpc_node_mem = 96
+            self._hpc_node_mem = 90
             if 'memory' in self:
                 if self['memory']:
                     # config-specified, set to attribute

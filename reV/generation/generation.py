@@ -62,7 +62,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.7, downscale=None):
+                 mem_util_lim=0.4, downscale=None):
         """
         Parameters
         ----------
@@ -1020,7 +1020,7 @@ class Gen:
                   output_request=('cf_mean',), curtailment=None,
                   downscale=None, n_workers=1, sites_per_split=None,
                   points_range=None, fout=None, dirout='./gen_out',
-                  mem_util_lim=0.7, scale_outputs=True):
+                  mem_util_lim=0.4, scale_outputs=True):
         """Execute a generation run with smart data flushing.
 
         Parameters

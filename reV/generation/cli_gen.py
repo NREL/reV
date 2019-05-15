@@ -210,8 +210,9 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
 @click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
               help=('List of requested output variable names. '
                     'Default is ["cf_mean"].'))
-@click.option('-mem', '--mem_util_lim', type=float, default=0.7,
-              help='Fractional node memory utilization limit. Default is 0.7')
+@click.option('-mem', '--mem_util_lim', type=float, default=0.4,
+              help='Fractional node memory utilization limit. Default is 0.4 '
+              'to account for numpy memory spikes and memory bloat.')
 @click.option('-curt', '--curtailment', type=click.Path(exists=True),
               default=None,
               help=('JSON file with curtailment inputs parameters. '
@@ -381,7 +382,7 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
 def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_core=None, n_workers=None,
                  fout='reV.h5', dirout='./out/gen_out', logdir='./out/log_gen',
-                 output_request=('cf_mean',), mem_util_lim=0.7,
+                 output_request=('cf_mean',), mem_util_lim=0.4,
                  curtailment=None, downscale=None, verbose=False):
     """Made a reV geneneration direct-local command line interface call string.
 
@@ -567,8 +568,8 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
               help='Number of Eagle nodes for gen job. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
               help='Eagle allocation account name. Default is "rev".')
-@click.option('--memory', '-mem', default=96, type=INT,
-              help='Eagle node memory request in GB. Default is 96')
+@click.option('--memory', '-mem', default=90, type=INT,
+              help='Eagle node memory request in GB. Default is 90')
 @click.option('--walltime', '-wt', default=1.0, type=float,
               help='Eagle walltime request in hours. Default is 1.0')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
