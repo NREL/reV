@@ -344,7 +344,7 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
     return pc
 
 
-def get_node_name_fout(name, fout, i, hpc='slurm'):
+def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
     """Make a node name and fout unique to the run name, year, and node number.
 
     Parameters
@@ -356,6 +356,8 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
     i : int | None
         Node number. If None, only a single node is being used and no
         enumeration is necessary.
+    pc : reV.config.PointsControl
+        A PointsControl instance that i is enumerated from.
     hpc : str
         HPC job submission tool name (e.g. slurm or pbs). Affects job name.
 
@@ -370,7 +372,7 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
     if not fout.endswith('.h5'):
         fout += '.h5'
 
-    if i is None:
+    if i is None or len(pc) == 1:
         fout_node = fout
         node_name = fout
 
@@ -539,10 +541,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_i = i
-        if len(pc) == 1:
-            node_i = None
-        node_name, fout_node = get_node_name_fout(name, fout, node_i,
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='pbs')
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
@@ -620,10 +619,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_i = i
-        if len(pc) == 1:
-            node_i = None
-        node_name, fout_node = get_node_name_fout(name, fout, node_i,
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,

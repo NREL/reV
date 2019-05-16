@@ -438,10 +438,7 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_i = i
-        if len(pc) == 1:
-            node_i = None
-        node_name, fout_node = get_node_name_fout(name, fout, node_i,
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='pbs')
 
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
@@ -513,10 +510,7 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_i = i
-        if len(pc) == 1:
-            node_i = None
-        node_name, fout_node = get_node_name_fout(name, fout, node_i,
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
 
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
