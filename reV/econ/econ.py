@@ -93,9 +93,8 @@ class Econ(Gen):
         self._out = {}
         self._finished_sites = []
         self._out_n_sites = 0
-        # _out_chunk is (start, end) indicies (inclusive) in the final output
         self._out_chunk = ()
-        self.initialize_output_arrays()
+        self._init_out_arrays()
 
         # initialize output file
         self._init_fpath()
@@ -144,33 +143,23 @@ class Econ(Gen):
 
         return output_request
 
-    @property
-    def cf_file(self):
-        """Get the capacity factor output filename and path.
-
-        Returns
-        -------
-        cf_file : str
-            reV generation capacity factor output file with path.
-        """
-        return self._cf_file
-
     def _parse_site_data(self, inp):
-        """Parse site data from input
+        """Parse site-specific data from input arg
 
         Parameters
         ----------
         inp : str | pd.DataFrame | None
             Site data in .csv or pre-extracted dataframe format. None signifies
-            that everything will be taken from the cf_file (generation outputs)
+            that there is no extra site-specific data and that everything will
+            be taken from the cf_file (generation outputs).
 
         Returns
         -------
         site_data : pd.DataFrame
-            Site-specific data for econ calculation. Rows match sites,
+            Site-specific data for econ calculation. Rows correspond to sites,
             columns are variables.
-
         """
+
         if not inp:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
@@ -186,8 +175,7 @@ class Econ(Gen):
                 raise Exception('Site data input must be .csv or '
                                 'dataframe, but received: {}'.format(inp))
 
-            if ('gid' not in site_data and
-                    site_data.index.name != 'gid'):
+            if 'gid' not in site_data and site_data.index.name != 'gid':
                 # require gid as column label or index
                 raise KeyError('Site data input must have "gid" column '
                                'to match reV site gid.')
@@ -211,6 +199,17 @@ class Econ(Gen):
                 site_data['offshore'] = self.meta['offshore'].astype(bool)
 
         return site_data
+
+    @property
+    def cf_file(self):
+        """Get the capacity factor output filename and path.
+
+        Returns
+        -------
+        cf_file : str
+            reV generation capacity factor output file with path.
+        """
+        return self._cf_file
 
     @property
     def site_data(self):
@@ -272,7 +271,7 @@ class Econ(Gen):
             Must have project_points with df property with all relevant
             site-specific inputs and a 'gid' column. By passing site-specific
             inputs in this dataframe, which was split using points_control,
-            only the data relevant to the current sites should be passed here.
+            only the data relevant to the current sites is passed.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
         kwargs : dict
