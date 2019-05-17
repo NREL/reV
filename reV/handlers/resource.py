@@ -992,3 +992,96 @@ class FiveMinWTK(WindResource):
                 wind_files[h] = os.path.join(h5_dir, file)
 
         return wind_files
+
+    def _get_wind_ds(self, ds_name, *ds_slice):
+        """
+        Extract 5min wind data
+
+        Parameters
+        ----------
+        ds_name : str
+            5min wind variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        var_name, h = self._parse_name(ds_name)
+        heights = self.heights[var_name]
+        if len(heights) == 1:
+            h = heights[0]
+            warnings.warn('Only one hub-height available, returning {}'
+                          .format(h), HandlerWarning)
+
+        if h in heights:
+            with Resource(self._wind_files[h], unscale=self._unscale) as f:
+                out = f._get_ds(ds_name, *ds_slice)
+        else:
+            (h1, h2), extrapolate = self.get_nearest_h(h, heights)
+            with Resource(self._wind_files[h1], unscale=self._unscale) as f:
+                ts1 = f._get_ds('{}_{}m'.format(var_name, h1), *ds_slice)
+
+            with Resource(self._wind_files[h2], unscale=self._unscale) as f:
+                ts2 = f._get_ds('{}_{}m'.format(var_name, h2), *ds_slice)
+
+            if (var_name == 'windspeed') and extrapolate:
+                out = self.power_law_interp(ts1, h1, ts2, h2, h)
+            elif var_name == 'winddirection':
+                out = self.circular_interp(ts1, h1, ts2, h2, h)
+            else:
+                out = self.linear_interp(ts1, h1, ts2, h2, h)
+
+        return out
+
+    def _interp_hourly_ds(self, ds_name, *ds_slice):
+        """
+        Extract and interp hourly data to 5min
+
+        Parameters
+        ----------
+        ds_name : str
+            Hourly variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        out = super()._get_ds(ds_name, *ds_slice)
+        out = pd.DataFrame(out, index=self._hourly_time_index)
+        out = pd.DataFrame(index=self.time_index).join(out)
+        out = out.interpolate(method='time')
+
+        return out.values
+
+    def _get_ds(self, ds_name, *ds_slice):
+        """
+        Extract data from given dataset
+
+        Parameters
+        ----------
+        ds_name : str
+            Variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        var_name, _ = self._parse_name(ds_name)
+        if var_name in ['windspeed', 'winddirection']:
+            out = self._get_wind_ds(ds_name, *ds_slice)
+        else:
+            out = self._interp_hourly_ds(ds_name, *ds_slice)
+
+        return out
