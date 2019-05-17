@@ -5,39 +5,12 @@ import h5py
 import numpy as np
 import os
 import pandas as pd
-import re
 import warnings
 
 from reV.handlers.sam_resource import parse_keys, SAMResource
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
                                       HandlerValueError, ExtrapolationWarning,
                                       HandlerWarning)
-
-
-def parse_year(f_name):
-    """
-    Attempt to parse year from file name
-
-    Parameters
-    ----------
-    f_name : str
-        File name from which year is to be parsed
-
-    Results
-    -------
-    year : int
-        Year parsed from file name, None if not present in file name
-    """
-    # Attempt to parse year from file name
-    match = re.match(r'.*([1-3][0-9]{3})', f_name)
-    if match:
-        year = int(match.group(1))
-    else:
-        warnings.warn('Cannot parse year from {}'.format(f_name),
-                      HandlerWarning)
-        year = None
-
-    return year
 
 
 class Resource:
@@ -960,12 +933,10 @@ class FiveMinWTK(WindResource):
         # Find 5min wind files
         wind_files = self.get_wind_files(h5_dir)
         self._wind_files = wind_files
-        heights = self.heights
         # Substitute wind hub_heights
         wind_h = sorted(wind_files)
-        heights['windspeed'] = wind_h
-        heights['winddirection'] = wind_h
-        self._heights = heights
+        self.heights['windspeed'] = wind_h
+        self.heights['winddirection'] = wind_h
         # Substitute hourly for 5min time_index
         with Resource(wind_files[wind_h[0]]) as f:
             self._time_index = f.time_index
@@ -973,7 +944,7 @@ class FiveMinWTK(WindResource):
     @staticmethod
     def get_wind_files(h5_dir):
         """
-        Fine .h5 files for wind hub-heights in h5_dir
+        Find .h5 files for wind hub-heights in h5_dir
 
         Parameters
         ----------
@@ -1056,10 +1027,9 @@ class FiveMinWTK(WindResource):
         """
         out = super()._get_ds(ds_name, *ds_slice)
         out = pd.DataFrame(out, index=self._hourly_time_index)
-        out = pd.DataFrame(index=self.time_index).join(out)
-        out = out.interpolate(method='time')
+        out = out.reindex(self.time_index).interpolate(method='time').values
 
-        return out.values
+        return out
 
     def _get_ds(self, ds_name, *ds_slice):
         """

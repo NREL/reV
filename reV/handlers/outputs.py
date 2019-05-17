@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 import time
 
-from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
-                                      HandlerValueError)
 from reV.handlers.resource import Resource
 from reV.sam_resource import parse_keys
+from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
+                                      HandlerValueError)
 
 logger = logging.getLogger(__name__)
 
