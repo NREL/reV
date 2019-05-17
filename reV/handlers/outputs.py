@@ -636,3 +636,52 @@ class Outputs(Resource):
         logger.info('{} added'.format(dset_name))
         logger.debug('\t- Saving to disc took {:.4f} minutes'
                      .format(tt))
+
+    @classmethod
+    def init_h5(cls, h5_file, dsets, shapes, attrs, chunks, dtypes,
+                meta, time_index=None, configs=None):
+        """Init a full output file with the final intended shape without data.
+
+        Parameters
+        ----------
+        h5_file : str
+            Full h5 output filepath.
+        dsets : list
+            List of strings of dataset names to initialize (does not include
+            meta or time_index).
+        shapes : dict
+            Dictionary of dataset shapes (keys correspond to dsets).
+        attrs : dict
+            Dictionary of dataset attributes (keys correspond to dsets).
+        chunks : dict
+            Dictionary of chunk tuples (keys correspond to dsets).
+        dtypes : dict
+            dictionary of numpy datatypes (keys correspond to dsets).
+        meta : pd.DataFrame
+            Full meta data.
+        time_index : pd.datetimeindex | None
+            Full pandas datetime index. None implies that only 1D results
+            (no site profiles) are being written.
+        configs : dict | None
+            Optional input configs to set as attr on meta.
+        """
+
+        logger.debug("Initializing output file: {}".format(h5_file))
+        with cls(h5_file, mode='w-') as f:
+            f['meta'] = meta
+
+            if time_index is not None:
+                f['time_index'] = time_index
+
+            for dset in dsets:
+                if dset not in ('meta', 'time_index'):
+                    # initialize each dset to disk
+                    f._create_dset(dset, shapes[dset], dtypes[dset],
+                                   chunks=chunks[dset], attrs=attrs[dset])
+
+            if configs is not None:
+                f.set_configs(configs)
+                logger.debug("\t- Configurations saved as attributes "
+                             "on 'meta'")
+
+        logger.debug('Output file has been initialized.')

@@ -438,7 +438,8 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='pbs')
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
+                                                  hpc='pbs')
 
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,
@@ -474,8 +475,8 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
               help='Number of Eagle nodes for econ job. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
               help='Eagle allocation account name. Default is "rev".')
-@click.option('--memory', '-mem', default=96, type=INT,
-              help='Eagle node memory request in GB. Default is 96')
+@click.option('--memory', '-mem', default=90, type=INT,
+              help='Eagle node memory request in GB. Default is 90')
 @click.option('--walltime', '-wt', default=0.5, type=float,
               help='Eagle walltime request in hours. Default is 0.5')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
@@ -509,7 +510,8 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='slurm')
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
+                                                  hpc='slurm')
 
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,

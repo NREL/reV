@@ -182,6 +182,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.node_mem,
+                   feature=config.execution_control.feature,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
                    verbose=verbose)
 
@@ -210,8 +211,9 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
 @click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
               help=('List of requested output variable names. '
                     'Default is ["cf_mean"].'))
-@click.option('-mem', '--mem_util_lim', type=float, default=0.7,
-              help='Fractional node memory utilization limit. Default is 0.7')
+@click.option('-mem', '--mem_util_lim', type=float, default=0.4,
+              help='Fractional node memory utilization limit. Default is 0.4 '
+              'to account for numpy memory spikes and memory bloat.')
 @click.option('-curt', '--curtailment', type=click.Path(exists=True),
               default=None,
               help=('JSON file with curtailment inputs parameters. '
@@ -342,7 +344,7 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
     return pc
 
 
-def get_node_name_fout(name, fout, i, hpc='slurm'):
+def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
     """Make a node name and fout unique to the run name, year, and node number.
 
     Parameters
@@ -351,8 +353,11 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
         Base node/job name
     fout : str
         Base file output name (no path) (with or without .h5 extension)
-    i : int
-        Node number.
+    i : int | None
+        Node number. If None, only a single node is being used and no
+        enumeration is necessary.
+    pc : reV.config.PointsControl
+        A PointsControl instance that i is enumerated from.
     hpc : str
         HPC job submission tool name (e.g. slurm or pbs). Affects job name.
 
@@ -364,16 +369,21 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
         Base file output name with _node00 tag.
     """
 
-    if hpc is 'slurm':
-        node_name = '{0}_{1:02d}'.format(name, i)
-    elif hpc is 'pbs':
-        # 13 chars for pbs, (lim is 16, -3 for "_ID")
-        node_name = '{0}_{1:02d}'.format(name[:13], i)
+    if not fout.endswith('.h5'):
+        fout += '.h5'
 
-    if fout.endswith('.h5'):
-        fout_node = fout.replace('.h5', '_node{0:02d}.h5'.format(i))
+    if i is None or len(pc) == 1:
+        fout_node = fout
+        node_name = fout
+
     else:
-        fout_node = fout + '_node{0:02d}.h5'.format(i)
+        if hpc is 'slurm':
+            node_name = '{0}_{1:02d}'.format(name, i)
+        elif hpc is 'pbs':
+            # 13 chars for pbs, (lim is 16, -3 for "_ID")
+            node_name = '{0}_{1:02d}'.format(name[:13], i)
+
+        fout_node = fout.replace('.h5', '_node{0:02d}.h5'.format(i))
 
     return node_name, fout_node
 
@@ -381,7 +391,7 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
 def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_core=None, n_workers=None,
                  fout='reV.h5', dirout='./out/gen_out', logdir='./out/log_gen',
-                 output_request=('cf_mean',), mem_util_lim=0.7,
+                 output_request=('cf_mean',), mem_util_lim=0.4,
                  curtailment=None, downscale=None, verbose=False):
     """Made a reV geneneration direct-local command line interface call string.
 
@@ -531,7 +541,8 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='pbs')
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
+                                                  hpc='pbs')
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
@@ -567,16 +578,20 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
               help='Number of Eagle nodes for gen job. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
               help='Eagle allocation account name. Default is "rev".')
-@click.option('--memory', '-mem', default=96, type=INT,
-              help='Eagle node memory request in GB. Default is 96')
+@click.option('--memory', '-mem', default=90, type=INT,
+              help='Eagle node memory request in GB. Default is 90')
 @click.option('--walltime', '-wt', default=1.0, type=float,
               help='Eagle walltime request in hours. Default is 1.0')
+@click.option('--feature', '-l', default=None, type=STR,
+              help=('Additional flags for SLURM job. Format is "--qos=high" '
+                    'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def gen_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
+def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
+              verbose):
     """Run generation on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -604,7 +619,8 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='slurm')
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
+                                                  hpc='slurm')
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
@@ -620,7 +636,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
 
         # create and submit the SLURM job
         slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      name=node_name, stdout_path=stdout_path)
+                      feature=feature, name=node_name, stdout_path=stdout_path)
         if slurm.id:
             msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(node_name, slurm.id))

@@ -5,7 +5,6 @@ import logging
 import numpy as np
 import os
 import pprint
-import re
 import sys
 import psutil
 from warnings import warn
@@ -62,7 +61,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.7, downscale=None):
+                 mem_util_lim=0.4, downscale=None):
         """
         Parameters
         ----------
@@ -95,7 +94,9 @@ class Gen:
         self._site_mem = None
         self._fout = fout
         self._dirout = dirout
+        self._fpath = None
         self._time_index = None
+        self._year = None
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
         self._output_request = self._parse_output_request(output_request)
@@ -112,9 +113,13 @@ class Gen:
         # pre-initialize output arrays to store results when available.
         self._out = {}
         self._finished_sites = []
-        self._out_chunk = ()
         self._out_n_sites = 0
-        self.initialize_output_arrays()
+        self._out_chunk = ()
+        self._init_out_arrays()
+
+        # initialize output file
+        self._init_fpath()
+        self._init_h5()
 
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
@@ -169,6 +174,114 @@ class Gen:
         ti = make_time_index(year, ds_freq)
         self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
 
+    def _init_fpath(self):
+        """Combine directory and filename, ensure .h5 ext., make out dirs."""
+
+        if self._fout is not None:
+
+            # ensure output file is an h5
+            if not self._fout .endswith('.h5'):
+                self._fout += '.h5'
+
+            # ensure year is in fout
+            if str(self.year) not in self._fout:
+                self._fout = self._fout.replace('.h5',
+                                                '_{}.h5'.format(self.year))
+
+            # create and use optional output dir
+            if self._dirout:
+                if not os.path.exists(self._dirout):
+                    os.makedirs(self._dirout)
+
+                # Add output dir to fout string
+                self._fpath = os.path.join(self._dirout, self._fout)
+            else:
+                self._fpath = self._fout
+
+    def _init_h5(self):
+        """Initialize the single h5 output file with all output requests."""
+
+        if self._fpath is not None:
+
+            logger.info('Initializing full output file: "{}"'
+                        .format(self._fpath))
+
+            attrs = {d: {} for d in self.output_request}
+            chunks = {}
+            dtypes = {}
+            shapes = {}
+
+            profiles_shape = (len(self.time_index), len(self.meta))
+            means_shape = (len(self.meta), )
+
+            # flag to write time index if profiles are being output
+            write_ti = False
+
+            for dset in self.output_request:
+                attrs[dset]['units'] = self.OUT_ATTRS[dset]['units']
+                attrs[dset]['scale_factor'] = \
+                    self.OUT_ATTRS[dset]['scale_factor']
+                chunks[dset] = self.OUT_ATTRS[dset]['chunks']
+                dtypes[dset] = self.OUT_ATTRS[dset]['dtype']
+
+                if self.OUT_ATTRS[dset]['type'] == 'array':
+                    shapes[dset] = profiles_shape
+                    write_ti = True
+                elif self.OUT_ATTRS[dset]['type'] == 'scalar':
+                    shapes[dset] = means_shape
+                else:
+                    raise ValueError('Output dset "{}" must have type "array" '
+                                     'or "scalar", but neither was found in '
+                                     'the OUT_ATTRS class attribute.'
+                                     .format(dset))
+
+            # only write time index if profiles were found in output request
+            if write_ti:
+                ti = self.time_index
+            else:
+                ti = None
+
+            Outputs.init_h5(self._fpath, self.output_request, shapes, attrs,
+                            chunks, dtypes, self.meta, time_index=ti,
+                            configs=self.sam_configs)
+
+    def _init_out_arrays(self, index_0=0):
+        """Initialize output arrays based on the number of sites that can be
+        stored in memory safely.
+
+        Parameters
+        ----------
+        index_0 : int
+            This is the site list index (not gid) for the first site in the
+            output data. If a node cannot process all sites in-memory at once,
+            this is used to segment the sites in the current output chunk.
+        """
+
+        self._out = {}
+        self._finished_sites = []
+
+        # Output chunk is the index range (inclusive) of this set of site outs
+        self._out_chunk = (index_0, np.min((index_0 + self.site_limit,
+                                            len(self.project_points) - 1)))
+        self._out_n_sites = int(self.out_chunk[1] - self.out_chunk[0]) + 1
+
+        logger.info('Initializing in-memory outputs for {} sites with gids '
+                    '{} through {} inclusive (site list index {} through {})'
+                    .format(self._out_n_sites,
+                            self.project_points.sites[self.out_chunk[0]],
+                            self.project_points.sites[self.out_chunk[1]],
+                            self.out_chunk[0], self.out_chunk[1]))
+
+        for request in self.output_request:
+            dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+            if self.OUT_ATTRS[request]['type'] == 'array':
+                shape = (len(self.time_index), self._out_n_sites)
+            else:
+                shape = (self._out_n_sites, )
+
+            # initialize the output request as an array of zeros
+            self._out[request] = np.zeros(shape, dtype=dtype)
+
     @property
     def output_request(self):
         """Get the output variables requested from generation.
@@ -179,6 +292,18 @@ class Gen:
             Output variables requested from SAM.
         """
         return self._output_request
+
+    @property
+    def out_chunk(self):
+        """Get the current output chunk index range (INCLUSIVE).
+
+        Returns
+        -------
+        _out_chunk : tuple
+            Two entry tuple (start, end) indicies (inclusive) for where the
+            current data in-memory belongs in the final output.
+        """
+        return self._out_chunk
 
     @property
     def site_limit(self):
@@ -229,8 +354,8 @@ class Gen:
                 self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
             self._site_mem = self._site_mem / 1e6 / n
             logger.info('Output results from a single site are calculated to '
-                        'use {0:.3f} MB of memory.'
-                        .format(self._site_mem))
+                        'use {0:.1f} KB of memory.'
+                        .format(self._site_mem / 1000))
 
         return self._site_mem
 
@@ -314,18 +439,20 @@ class Gen:
 
     @property
     def meta(self):
-        """Get resource meta for sites with results (in self._finished_sites).
+        """Get resource meta for all sites in project points.
 
         Returns
         -------
         meta : pd.DataFrame
-            Meta data df for sites that have completed results.
-            Column names are variables, rows are different sites. The row index
-            does not indicate the site number, so a 'gid' column is added.
+            Meta data df for sites in project points. Column names are meta
+            data variables, rows are different sites. The row index
+            does not indicate the site number if the project points are
+            non-sequential or do not start from 0, so a 'gid' column is added.
         """
+
         with Resource(self.res_file) as res:
-            meta = res['meta', self._finished_sites]
-            meta.loc[:, 'gid'] = self._finished_sites
+            meta = res.meta.iloc[self.project_points.sites, :]
+            meta.loc[:, 'gid'] = self.project_points.sites
             meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
@@ -345,8 +472,9 @@ class Gen:
         Returns
         -------
         ti : pandas.DatetimeIndex
-            Time-series datetime index ALWAYS with length of 365.
+            Time-series datetime index with length a multiple of 365.
         """
+
         # drop leap day or last day
         leap_day = ((ti.month == 2) & (ti.day == 29))
         last_day = ((ti.month == 12) & (ti.day == 31))
@@ -356,6 +484,10 @@ class Gen:
         elif any(leap_day):
             # leap day exists but preference is to drop last day of year
             ti = ti.drop(ti[last_day])
+
+        if len(ti) % 365 != 0:
+            raise ValueError('Bad time index with length not a multiple of '
+                             '365: {}'.format(ti))
 
         return ti
 
@@ -375,6 +507,20 @@ class Gen:
                     res.time_index, drop_leap=self._drop_leap)
 
         return self._time_index
+
+    @property
+    def year(self):
+        """Get the generation resource year.
+
+        Returns
+        -------
+        _year : int
+            Year of the time-series datetime index.
+        """
+
+        if self._year is None:
+            self._year = int(self.time_index.year[0])
+        return self._year
 
     @staticmethod
     def get_pc(points, points_range, sam_files, tech, sites_per_split=None,
@@ -498,43 +644,6 @@ class Gen:
                          'of {}.'.format(sites_per_core, res_file))
         return sites_per_core
 
-    def initialize_output_arrays(self, index_0=0):
-        """Initialize output arrays based on the number of sites that can be
-        stored in memory safely.
-
-        Parameters
-        ----------
-        index_0 : int
-            This is the site list index (not gid) for the first site in the
-            output data. If a node cannot process all sites in-memory at once,
-            this is used to segment the sites in the current output chunk.
-        """
-
-        self._out = {}
-        self._finished_sites = []
-
-        # Output chunk is the index range (inclusive) of this set of site outs
-        self._out_chunk = (index_0, np.min((index_0 + self.site_limit,
-                                            len(self.project_points) - 1)))
-        self._out_n_sites = int(self._out_chunk[1] - self._out_chunk[0]) + 1
-
-        logger.info('Initializing generation outputs for {} sites with gids '
-                    '{} through {} inclusive (site list index {} through {})'
-                    .format(self._out_n_sites,
-                            self.project_points.sites[self._out_chunk[0]],
-                            self.project_points.sites[self._out_chunk[1]],
-                            self._out_chunk[0], self._out_chunk[1]))
-
-        for request in self.output_request:
-            dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
-            if self.OUT_ATTRS[request]['type'] == 'array':
-                shape = (len(self.time_index), self._out_n_sites)
-            else:
-                shape = (self._out_n_sites, )
-
-            # initialize the output request as an array of zeros
-            self._out[request] = np.zeros(shape, dtype=dtype)
-
     @property
     def out(self):
         """Get the generation output results.
@@ -559,6 +668,7 @@ class Gen:
              - Dictionary input is interpreted as an already unpacked result.
              - None is interpreted as a signal to clear the output dictionary.
         """
+
         if isinstance(result, list):
             # unpack futures list to dictionary first
             result = self.unpack_futures(result)
@@ -619,7 +729,7 @@ class Gen:
         ----------
         site_gid : int
             Resource-native site gid (index).
-        site_output : SAM.SiteOutput
+        site_output : SAM.SiteOutput | dict
             SAM site output object.
         """
 
@@ -638,7 +748,7 @@ class Gen:
             if i + 1 > self._out_n_sites:
                 self.flush()
                 global_site_index = self.site_index(site_gid)
-                self.initialize_output_arrays(index_0=global_site_index)
+                self._init_out_arrays(index_0=global_site_index)
                 i = self.site_index(site_gid, out_index=True)
 
             if isinstance(value, np.ndarray):
@@ -660,14 +770,14 @@ class Gen:
             Resource-native site index (gid).
         out_index : bool
             Option to get output index (if true) which is the column index in
-            the current output array or the the global site index from the
-            project points site list (if false).
+            the current in-memory output array, or (if false) the global site
+            index from the project points site list.
 
         Returns
         -------
         index : int
             Global site index if out_index=False, otherwise column index in
-            the output array.
+            the current in-memory output array.
         """
 
         # get the index for site_gid in the (global) project points site list.
@@ -675,182 +785,47 @@ class Gen:
 
         if not out_index:
             return global_site_index
+
         else:
-            output_index = global_site_index - self._out_chunk[0]
+            output_index = global_site_index - self.out_chunk[0]
             if output_index < 0:
                 raise ValueError('Attempting to set output data for site with '
                                  'gid {} to global site index {}, which was '
                                  'already set based on the current output '
                                  'index chunk of {}'
                                  .format(site_gid, global_site_index,
-                                         self._out_chunk))
+                                         self.out_chunk))
             return output_index
-
-    def get_dset_attrs(self, var):
-        """Get dataset attributes associated with output variable.
-
-        Parameters
-        ----------
-        var : str
-            SAM variable name to be unpacked from gen_out, also the intended
-            dataset name that will be written to disk.
-
-        Returns
-        -------
-        data : np.ndarray
-            1D array of scalar values sorted by site number or 2D array of
-            profile outputs with rows matching the time series and columns
-            matching sorted rows.
-        dtype : str
-            Target dataset datatype. Defaults to float32.
-        chunks : list | tuple | NoneType
-            Chunk shape for target dataset. Defaults to None.
-        attrs : dict
-            Additional dataset attributes including scale_factor and units.
-        """
-
-        data = self.out[var]
-        dtype = self.OUT_ATTRS[var].get('dtype', 'float32')
-        chunks = self.OUT_ATTRS[var].get('chunks', None)
-        attrs = {k: self.OUT_ATTRS[var].get(k, 'None') for
-                 k in ['scale_factor', 'units']}
-        return data, dtype, chunks, attrs
-
-    def gen_to_disk(self, fout='gen_out.h5'):
-        """Save generation outputs to disk (all vars in self.output_request).
-
-        Parameters
-        ----------
-        fout : str
-            Target .h5 output file (with path).
-        """
-
-        with Outputs(fout, mode='w-') as f:
-            # Save meta
-            f['meta'] = self.meta
-            logger.debug("\t- 'meta' saved to disc")
-
-            if 'profile' in str(self.output_request):
-                f['time_index'] = self.time_index
-                logger.debug("\t- 'time_index' saved to disc")
-
-            if self.sam_configs is not None:
-                f.set_configs(self.sam_configs)
-                logger.debug("\t- SAM configurations saved as attributes "
-                             "on 'meta'")
-
-            # iterate through all output requests writing each as a dataset
-            for dset in self.output_request:
-                # retrieve the dataset with associated attributes
-                data, dtype, chunks, attrs = self.get_dset_attrs(dset)
-                # Write output dataset to disk
-                f._add_dset(dset_name=dset, data=data, dtype=dtype,
-                            chunks=chunks, attrs=attrs)
-
-    @staticmethod
-    def get_unique_fout(fout):
-        """Ensure a unique tag of format _x000 on the fout file name.
-
-        Parameters
-        ----------
-        fout : str
-            Target output directory joined with the INTENDED filename. Should
-            contain a _x000 tag in the filename.
-
-        Returns
-        -------
-        fout : str
-            Target output directory joined with a UNIQUE filename. The
-            extension in the original fout ("_x000") is incremented until the
-            result is unique in the output directory.
-        """
-
-        if os.path.exists(fout):
-            match = re.match(r'.*_x([0-9]{3})', fout)
-            if match:
-                new_tag = '_x' + str(int(match.group(1)) + 1).zfill(3)
-                fout = fout.replace('_x' + match.group(1), new_tag)
-                fout = Gen.get_unique_fout(fout)
-        return fout
-
-    @staticmethod
-    def handle_fout(fout, dirout):
-        """Ensure that the file+dir output exist and have unique names.
-
-        Parameters
-        ----------
-        fout : str
-            Target filename (with or without .h5 extension).
-        dirout : str
-            Target output directory.
-
-        Returns
-        -------
-        fout : str
-            Target output directory joined with the target filename. An
-            extension is appended to the filename in the format
-            "basename_x000.h5" where basename is the input fout and _x000
-            creates a unique filename in the output directory.
-        """
-
-        # combine filename and path
-        fout = Gen.make_h5_fpath(fout, dirout)
-
-        # check to see if target already exists. If so, assign unique ID.
-        fout = fout.replace('.h5', '_x000.h5')
-        fout = Gen.get_unique_fout(fout)
-
-        return fout
-
-    @staticmethod
-    def make_h5_fpath(fout, dirout):
-        """Combine directory and filename and ensure .h5 extension.
-
-        Parameters
-        ----------
-        fout : str
-            Target filename (with or without .h5 extension).
-        dirout : str
-            Target output directory.
-
-        Returns
-        -------
-        fout : str
-            Target output directory joined with the target filename
-            ending in .h5.
-        """
-
-        if not fout.endswith('.h5'):
-            fout += '.h5'
-        # create and use optional LCOE output dir
-        if dirout:
-            if not os.path.exists(dirout):
-                os.makedirs(dirout)
-            # Add output dir to LCOE fout string
-            fout = os.path.join(dirout, fout)
-        return fout
 
     def flush(self):
         """Flush generation data in self.out attribute to disk in .h5 format.
 
         The data to be flushed is accessed from the instance attribute
         "self.out". The disk target is based on the isntance attributes
-        "self.fout" and "self.dirout". The flushed file is ensured to have a
-        unique filename. Data is not flushed if fout is None or if .out is
+        "self._fpath". Data is not flushed if _fpath is None or if .out is
         empty.
         """
 
-        # use mutable copies of the properties
-        fout = self.fout
-        dirout = self.dirout
-
         # handle output file request if file is specified and .out is not empty
-        if isinstance(fout, str) and self.out:
-            fout = self.handle_fout(fout, dirout)
+        if isinstance(self._fpath, str) and self.out:
+            logger.info('Flushing outputs to disk, target file: "{}"'
+                        .format(self._fpath))
 
-            logger.info('Flushing generation outputs to disk, target file: {}'
-                        .format(fout))
-            self.gen_to_disk(fout)
+            # get the slice of indices to write outputs to
+            islice = slice(self.out_chunk[0], self.out_chunk[1] + 1)
+
+            # open output file in append mode to add output results to
+            with Outputs(self._fpath, mode='a') as f:
+
+                # iterate through all output requests writing each as a dataset
+                for dset in self.output_request:
+
+                    if len(self.out[dset].shape) == 1:
+                        # write array of scalars
+                        f[dset, islice] = self.out[dset]
+                    else:
+                        # write 2D array of profiles
+                        f[dset, :, islice] = self.out[dset]
 
             logger.debug('Flushed generation output successfully to disk.')
 
@@ -863,10 +838,6 @@ class Gen:
         ----------
         points_control : reV.config.PointsControl
             A PointsControl instance dictating what sites and configs are run.
-            This function uses an explicit points_control input instance
-            instead of an instance attribute so that the execute_futures
-            can pass in a split instance of points_control. This is a
-            @staticmethod to expedite submission to Dask client.
         tech : str
             Technology to analyze (pv, csp, landbasedwind, offshorewind).
         res_file : str
@@ -1020,7 +991,7 @@ class Gen:
                   output_request=('cf_mean',), curtailment=None,
                   downscale=None, n_workers=1, sites_per_split=None,
                   points_range=None, fout=None, dirout='./gen_out',
-                  mem_util_lim=0.7, scale_outputs=True):
+                  mem_util_lim=0.4, scale_outputs=True):
         """Execute a generation run with smart data flushing.
 
         Parameters

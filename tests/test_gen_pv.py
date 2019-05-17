@@ -88,9 +88,9 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
-    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file,
-                         n_workers=n_workers, sites_per_split=3, fout=None,
-                         return_obj=True)
+    gen = Gen.run_direct(tech='pv', points=rev2_points, sam_files=sam_files,
+                         res_file=res_file, n_workers=n_workers,
+                         sites_per_split=3, fout=None, return_obj=True)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -114,8 +114,8 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
 
     # run reV 2.0 generation
-    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
-                         return_obj=True)
+    gen = Gen.run_direct(tech='pv', points=rev2_points, sam_files=sam_files,
+                         res_file=res_file, fout=None, return_obj=True)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -139,7 +139,8 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
     sam_files = {'sam_param_{}'.format(i): k for i, k in
                  enumerate(sam_files)}
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
-    gen = Gen.run_direct('pv', rev2_points, sam_files, res_file, fout=None,
+    gen = Gen.run_direct(tech='pv', points=rev2_points, sam_files=sam_files,
+                         res_file=res_file, fout=None,
                          return_obj=True)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
@@ -164,7 +165,8 @@ def test_pv_gen_profiles(year):
     points = slice(0, 100)
 
     # run reV 2.0 generation and write to disk
-    Gen.run_direct('pv', points, sam_files, res_file, fout=rev2_out,
+    Gen.run_direct(tech='pv', points=points, sam_files=sam_files,
+                   res_file=res_file, fout=rev2_out,
                    output_request=('cf_profile',),
                    n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
                    return_obj=False)
@@ -202,7 +204,8 @@ def test_smart(year):
     points = slice(0, 10)
 
     # run reV 2.0 generation and write to disk
-    Gen.run_smart('pv', points, sam_files, res_file, fout=rev2_out,
+    Gen.run_smart(tech='pv', points=points, sam_files=sam_files,
+                  res_file=res_file, fout=rev2_out,
                   n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
                   output_request=('cf_profile',))
 
@@ -255,3 +258,5 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 if __name__ == '__main__':
     execute_pytest()
+#    test_smart(2012)
+#    test_pv_gen_slice('project_outputs.h5', slice(0, 10), '2012', 1)
