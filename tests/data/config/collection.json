@@ -21,8 +21,7 @@
     ],
     "logging_level": "DEBUG",
     "name": "rev",
-    "parallel": false,
-    "time_index": true
+    "parallel": false
   },
   "project_points": "./project_points_100.csv"
 }

@@ -99,19 +99,6 @@ class CollectionConfig(BaseConfig):
         return self._parallel
 
     @property
-    def time_index(self):
-        """Get the flag to collect the time index.
-
-        Returns
-        -------
-        _ti : bool
-            Flag to collect time index.
-        """
-        if 'time_index' in self['project_control']:
-            self._ti = self['project_control']['time_index']
-        return self._ti
-
-    @property
     def dsets(self):
         """Get dset names to collect.
 

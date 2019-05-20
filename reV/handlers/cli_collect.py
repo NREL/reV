@@ -62,7 +62,6 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['H5_DIR'] = config.coldir
     ctx.obj['DSETS'] = config.dsets
     ctx.obj['PROJECT_POINTS'] = config.project_points
-    ctx.obj['TIME_INDEX'] = config.time_index
     ctx.obj['PARALLEL'] = config.parallel
     ctx.obj['VERBOSE'] = verbose
 
@@ -87,15 +86,13 @@ def from_config(ctx, config_file, verbose):
               help='Dataset names to be collected.')
 @click.option('--file_prefix', '-fp', type=STR, default=None,
               help='File prefix found in the h5 file names to be collected.')
-@click.option('-ti', '--time_index', is_flag=True,
-              help='Flag to collect time index (for profile collection).')
 @click.option('-par', '--parallel', is_flag=True,
               help='Flag to turn on parallel collection.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def main(ctx, h5_file, h5_dir, project_points, dsets,
-         file_prefix, time_index, parallel, verbose):
+def main(ctx, h5_file, h5_dir, project_points, dsets, file_prefix, parallel,
+         verbose):
     """Main entry point for collection."""
 
     ctx.obj['H5_FILE'] = h5_file
@@ -103,7 +100,6 @@ def main(ctx, h5_file, h5_dir, project_points, dsets,
     ctx.obj['PROJECT_POINTS'] = project_points
     ctx.obj['DSETS'] = dsets
     ctx.obj['FILE_PREFIX'] = file_prefix
-    ctx.obj['TIME_INDEX'] = time_index
     ctx.obj['PARALLEL'] = parallel
     ctx.obj['VERBOSE'] = verbose
 
@@ -121,7 +117,6 @@ def collect(ctx, verbose):
     project_points = ctx.obj['PROJECT_POINTS']
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
-    time_index = ctx.obj['TIME_INDEX']
     parallel = ctx.obj['PARALLEL']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
@@ -139,8 +134,7 @@ def collect(ctx, verbose):
     t0 = time.time()
 
     Collector.collect(h5_file, h5_dir, project_points, dsets[0],
-                      file_prefix=file_prefix, time_index=time_index,
-                      parallel=parallel)
+                      file_prefix=file_prefix, parallel=parallel)
     if len(dsets) > 1:
         for dset_name in dsets[1:]:
             Collector.add_dataset(h5_file, h5_dir, dset_name,

@@ -293,6 +293,25 @@ class Collector:
 
         return meta
 
+    def get_dset_shape(self, dset_name):
+        """
+        Extract the dataset shape from the first file in the collection list.
+
+        Parameters
+        ----------
+        dset_name : str
+            Dataset to be collected whose shape is in question.
+
+        Returns
+        -------
+        shape : tuple
+            Dataset shape tuple.
+        """
+        with Outputs(self.h5_files[0], mode='r') as f:
+            shape, _, _ = f.get_dset_properties(dset_name)
+
+        return shape
+
     @property
     def h5_files(self):
         """
@@ -411,8 +430,7 @@ class Collector:
 
     @classmethod
     def collect(cls, h5_file, h5_dir, project_points, dset_name,
-                dset_out=None, file_prefix=None, time_index=False,
-                parallel=True):
+                dset_out=None, file_prefix=None, parallel=True):
         """
         Collect dataset from h5_dir to h5_file
 
@@ -426,13 +444,12 @@ class Collector:
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected
         dset_name : str
-            Dataset containing means
+            Dataset to be collected. If source shape is 2D, time index will be
+            collected.
         dset_out : str
             Dataset to collect means into
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
-        time_index : bool
-            Flag to collect time index (for profile collection)
         parallel : bool
             Option to run in parallel using dask
         """
@@ -448,7 +465,8 @@ class Collector:
                   parallel=parallel, clobber=True)
         logger.debug("\t- 'meta' collected")
 
-        if time_index:
+        dset_shape = clt.get_dset_shape(dset_name)
+        if len(dset_shape) > 1:
             clt.combine_time_index()
             logger.debug("\t- 'time_index' collected")
 
@@ -473,7 +491,8 @@ class Collector:
         h5_dir : str
             Root directory containing .h5 files to combine
         dset_name : str
-            Dataset containing means
+            Dataset to be collected. If source shape is 2D, time index will be
+            collected.
         dset_out : str
             Dataset to collect means into
         file_prefix : str
@@ -496,6 +515,11 @@ class Collector:
                   parallel=parallel)
         clt.combine_dset(dset_name, dset_out=dset_out)
         logger.debug("\t- '{}' collected".format(dset_name))
+
+        dset_shape = clt.get_dset_shape(dset_name)
+        if len(dset_shape) > 1:
+            clt.combine_time_index()
+            logger.debug("\t- 'time_index' collected")
 
         tt = (time.time() - ts) / 60
         logger.info('{} collected')
