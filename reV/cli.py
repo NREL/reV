@@ -37,10 +37,9 @@ def main(ctx, name, config_file, status_dir, verbose):
 def generation(ctx, verbose):
     """Run reV 2.0 generation using the config file."""
     config_file = ctx.obj['CONFIG_FILE']
-    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_gen_from_config, config_file=config_file,
-               status_dir=status_dir, verbose=verbose)
+               verbose=verbose)
 
 
 @main.command()
@@ -50,10 +49,9 @@ def generation(ctx, verbose):
 def econ(ctx, verbose):
     """Run reV 2.0 econ using the config file."""
     config_file = ctx.obj['CONFIG_FILE']
-    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_econ_from_config, config_file=config_file,
-               status_dir=status_dir, verbose=verbose)
+               verbose=verbose)
 
 
 @main.command()
@@ -75,10 +73,9 @@ def collect(ctx, verbose):
 def pipeline(ctx, verbose):
     """Run the full reV 2.0 pipeline using the config file."""
     config_file = ctx.obj['CONFIG_FILE']
-    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_pipeline_from_config, config_file=config_file,
-               status_dir=status_dir, verbose=verbose)
+               verbose=verbose)
 
 
 if __name__ == '__main__':

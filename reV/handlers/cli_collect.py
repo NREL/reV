@@ -11,6 +11,7 @@ from reV.config.collection import CollectionConfig
 from reV.handlers.collection import Collector
 from reV.utilities.cli_dtypes import STR, STRLIST
 from reV.utilities.loggers import init_mult
+from reV.pipeline.status import Status
 from reV.utilities.execution import SubprocessManager, SLURM
 
 
@@ -65,6 +66,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['DSETS'] = config.dsets
     ctx.obj['PROJECT_POINTS'] = config.project_points
     ctx.obj['PARALLEL'] = config.parallel
+    ctx.obj['STATUS_DIR'] = config.statusdir
     ctx.obj['VERBOSE'] = verbose
 
     for file_prefix in config.file_prefixes:
@@ -102,11 +104,13 @@ def from_config(ctx, config_file, verbose):
               help='File prefix found in the h5 file names to be collected.')
 @click.option('-par', '--parallel', is_flag=True,
               help='Flag to turn on parallel collection.')
+@click.option('--status_dir', '-st', default=None, type=STR,
+              help='Directory containing the status file. Default is dirout.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
 def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
-         parallel, verbose):
+         parallel, status_dir, verbose):
     """Main entry point for collection with context passing."""
 
     ctx.obj['NAME'] = name
@@ -116,6 +120,7 @@ def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
     ctx.obj['DSETS'] = dsets
     ctx.obj['FILE_PREFIX'] = file_prefix
     ctx.obj['PARALLEL'] = parallel
+    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -133,11 +138,18 @@ def collect(ctx, verbose):
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
     parallel = ctx.obj['PARALLEL']
+    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
     init_mult(name, h5_dir, modules=[__name__, 'reV.handlers.collection'],
               verbose=verbose, node=True)
+
+    # add job to reV status file.
+    if status_dir is None:
+        status_dir = os.path.abspath(h5_file)
+    Status.add_job(status_dir, 'collect', name, replace=False)
+    Status.retrieve_job_status(status_dir, 'collect', name)
 
     for key, val in ctx.obj.items():
         logger.debug('ctx var passed to collection method: "{}" : "{}" '
@@ -169,9 +181,12 @@ def collect(ctx, verbose):
                 'Time elapsed: {1:.2f} min. Target output file: "{2}"'
                 .format(h5_dir, (time.time() - t0) / 60, h5_file))
 
+    Status.make_completion_file(status_dir, name, 'successful')
+
 
 def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
-                 file_prefix=None, parallel=False, verbose=False):
+                 file_prefix=None, parallel=False, status_dir=None,
+                 verbose=False):
     """Make a reV collection local CLI call string.
 
     Parameters
@@ -191,6 +206,8 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         .h5 file prefix, if None collect all files on h5_dir
     parallel : bool
         Option to run in parallel using dask
+    status_dir : str | None
+        Directory to look for rev pipeline status.
 
     Returns
     -------
@@ -199,6 +216,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         appropriately formatted arguments based on input args:
             python -m reV.handlers.cli_collect [args] collect
     """
+    sdir_str = '-st {} '.format(status_dir)
 
     # make a cli arg string for direct() in this module
     arg_main = ('-n {name} '
@@ -207,6 +225,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                 '-pp {project_points} '
                 '-ds {dsets} '
                 '-fp {file_prefix} '
+                '{sdir_str}'
                 '{parallel}'
                 '{v}'
                 .format(name=SubprocessManager.s(name),
@@ -215,6 +234,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                         project_points=SubprocessManager.s(project_points),
                         dsets=SubprocessManager.s(dsets),
                         file_prefix=SubprocessManager.s(file_prefix),
+                        sdir_str=sdir_str if status_dir else '',
                         parallel='-par ' if parallel else '',
                         v='-v ' if verbose else '',
                         ))
@@ -252,11 +272,12 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
     parallel = ctx.obj['PARALLEL']
+    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, parallel=parallel,
-                       verbose=verbose)
+                       status_dir=status_dir, verbose=verbose)
 
     logger.info('Running reV collection on Eagle with node name "{}", '
                 'collecting data to "{}" from "{}" with file prefix "{}".'
@@ -268,6 +289,11 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     if slurm.id:
         msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
                'Eagle.'.format(name, slurm.id))
+        # add job to reV status file.
+        Status.add_job(status_dir, 'collect', name,
+                       job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                                  'fout': os.path.basename(h5_file),
+                                  'dirout': os.path.dirname(h5_file)})
     else:
         msg = ('Was unable to kick off reV collection job "{}". '
                'Please see the stdout error messages'

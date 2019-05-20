@@ -28,9 +28,12 @@ class Status(dict):
         """
 
         self._path = path
-        if not name.endswith('.json'):
-            name += '.json'
-        self._fpath = os.path.join(path, name)
+        if path.endswith('.json'):
+            self._fpath = self._path
+        else:
+            if not name.endswith('.json'):
+                name += '.json'
+            self._fpath = os.path.join(path, name)
         self.data = self._load()
 
     def _load(self):
@@ -101,8 +104,32 @@ class Status(dict):
             status = method(job_id)
         return status
 
+    @staticmethod
+    def _check_completion_file(path, job_name):
+        """Look for a completion file in the target path.
+
+        Parameters
+        ----------
+        path : str
+            Directory to look for completion file.
+        job_name : str
+            Job name.
+
+        Returns
+        -------
+        status : str | None
+            Job status if completion file found.
+        """
+        status = None
+        for fname in os.listdir(path):
+            if str(job_name) in fname and fname.endswith(Status.FROZEN_STATUS):
+                os.remove(os.path.join(path, fname))
+                status = fname.split('.')[-1]
+                break
+        return status
+
     def _update_job_status(self, module, job_name, hardware='eagle'):
-        """Update HPC job and respective job status to the status json.
+        """Update HPC job and respective job status to the status obj instance.
 
         Parameters
         ----------
@@ -126,7 +153,11 @@ class Status(dict):
         job_id = self.data[module][job_name].get('job_id', None)
         hardware = self.data[module][job_name].get('hardware', hardware)
 
-        current = self._get_job_status(job_id, hardware=hardware)
+        # look for completion file.
+        current = self._check_completion_file(self._path, job_name)
+        if current not in self.FROZEN_STATUS:
+            # check job status if completion file not present.
+            current = self._get_job_status(job_id, hardware=hardware)
 
         # do not overwrite a successful or failed job status.
         if (current != previous and previous not in self.FROZEN_STATUS):
@@ -159,6 +190,23 @@ class Status(dict):
         else:
             warn('Can only force-set a job status to one of the following: {}'
                  .format(self.FROZEN_STATUS))
+
+    @staticmethod
+    def make_completion_file(path, job_name, status):
+        """Make a temporary file recording the status of a job.
+
+        Parameters
+        ----------
+        path : str
+            Path to json status file.
+        job_name : str
+            Unique job name identification.
+        status : str
+            Status string to set. Must be a status string in
+            the FROZEN_STATUS class attribute.
+        """
+        if status in Status.FROZEN_STATUS:
+            open(os.path.join(path, job_name + '.{}'.format(status)), 'w')
 
     @classmethod
     def add_job(cls, path, module, job_name, replace=True, job_attrs=None):
@@ -237,4 +285,21 @@ class Status(dict):
 
         obj = cls(path)
         obj._set_job_status(module, job_name, status)
+        obj._dump()
+
+    @classmethod
+    def update(cls, path):
+        """Update all job statuses and dump to json.
+
+        Parameters
+        ----------
+        path : str
+            Path to json status file.
+        """
+
+        obj = cls(path)
+        for module in obj.data.keys():
+            for job_name in obj.data[module].keys():
+                if job_name != 'pipeline_index':
+                    obj._update_job_status(module, job_name)
         obj._dump()
