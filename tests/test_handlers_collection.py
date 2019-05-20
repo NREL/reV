@@ -52,10 +52,10 @@ def test_collection():
     init_logger('reV.handlers.collection')
     profiles = manual_collect(H5_DIR, 'peregrine_2012', 'cf_profile')
     h5_file = os.path.join(TEMP_DIR, 'collection.h5')
-    Collector.collect_profiles(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
-                               dset_out=None,
-                               file_prefix='peregrine_2012',
-                               parallel=False)
+    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
+                      dset_out=None,
+                      file_prefix='peregrine_2012',
+                      parallel=False)
     with h5py.File(h5_file) as f:
         cf_profiles = f['cf_profile'][...]
 
@@ -73,17 +73,17 @@ def test_parallel_collection():
     """
     init_logger('reV.handlers.collection')
     h5_file = os.path.join(TEMP_DIR, 'cf_profiles.h5')
-    Collector.collect_profiles(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
-                               dset_out=None,
-                               file_prefix='peregrine_2012',
-                               parallel=False)
+    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
+                      dset_out=None,
+                      file_prefix='peregrine_2012',
+                      parallel=False)
     with h5py.File(h5_file) as f:
         series_profiles = f['cf_profile'][...]
 
-    Collector.collect_profiles(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
-                               dset_out=None,
-                               file_prefix='peregrine_2012',
-                               parallel=True)
+    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
+                      dset_out=None,
+                      file_prefix='peregrine_2012',
+                      parallel=True)
     with h5py.File(h5_file) as f:
         parallel_profiles = f['cf_profile'][...]
 
@@ -101,10 +101,10 @@ def test_collect_means():
     """
     init_logger('reV.handlers.collection')
     h5_file = os.path.join(TEMP_DIR, 'cf_means.h5')
-    Collector.collect_means(h5_file, H5_DIR, POINTS_PATH, 'cf_mean',
-                            dset_out=None,
-                            file_prefix='peregrine_2012',
-                            parallel=False)
+    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_mean',
+                      dset_out=None,
+                      file_prefix='peregrine_2012',
+                      parallel=False)
     if PURGE_OUT:
         os.remove(h5_file)
 
@@ -115,10 +115,10 @@ def test_profiles_means():
     """
     init_logger('reV.handlers.collection')
     h5_file = os.path.join(TEMP_DIR, 'cf.h5')
-    Collector.collect_profiles(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
-                               dset_out=None,
-                               file_prefix='peregrine_2012',
-                               parallel=False)
+    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
+                      dset_out=None,
+                      file_prefix='peregrine_2012',
+                      parallel=False)
     Collector.add_dataset(h5_file, H5_DIR, 'cf_mean',
                           dset_out=None,
                           file_prefix='peregrine_2012',
@@ -138,10 +138,10 @@ def test_means_lcoe():
     """
     init_logger('reV.handlers.collection')
     h5_file = os.path.join(TEMP_DIR, 'cf_lcoe.h5')
-    Collector.collect_means(h5_file, H5_DIR, POINTS_PATH, 'cf_mean',
-                            dset_out=None,
-                            file_prefix='peregrine_2012',
-                            parallel=False)
+    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_mean',
+                      dset_out=None,
+                      file_prefix='peregrine_2012',
+                      parallel=False)
     Collector.add_dataset(h5_file, H5_DIR, 'lcoe_fcr',
                           dset_out=None,
                           file_prefix='peregrine_2012',
