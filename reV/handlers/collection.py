@@ -513,15 +513,16 @@ class Collector:
 
         clt = cls(h5_file, h5_dir, points, file_prefix=file_prefix,
                   parallel=parallel)
-        clt.combine_dset(dset_name, dset_out=dset_out)
-        logger.debug("\t- '{}' collected".format(dset_name))
 
         dset_shape = clt.get_dset_shape(dset_name)
         if len(dset_shape) > 1:
             clt.combine_time_index()
             logger.debug("\t- 'time_index' collected")
 
+        clt.combine_dset(dset_name, dset_out=dset_out)
+        logger.debug("\t- '{}' collected".format(dset_name))
+
         tt = (time.time() - ts) / 60
-        logger.info('{} collected')
+        logger.info('{} collected'.format(dset_name))
         logger.debug('\t- Collection took {:.4f} minutes'
                      .format(tt))

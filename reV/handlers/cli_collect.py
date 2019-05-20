@@ -11,7 +11,7 @@ from reV.config.collection import CollectionConfig
 from reV.handlers.collection import Collector
 from reV.utilities.cli_dtypes import STR, STRLIST
 from reV.utilities.loggers import init_mult
-from reV.utilities.execution import SLURM
+from reV.utilities.execution import SubprocessManager, SLURM
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def from_config(ctx, config_file, verbose):
     # take name from config if not default
     if config.name.lower() != 'rev':
         name = config.name
-        ctx.obj['NAME'] = config.name
+        ctx.obj['NAME'] = name
 
     # Enforce verbosity if logging level is specified in the config
     if config.logging_level == logging.DEBUG:
@@ -45,7 +45,8 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir, modules=[__name__, 'reV.handlers'],
+    init_mult(name, config.logdir,
+              modules=[__name__, 'reV.handlers.collection'],
               verbose=verbose)
 
     # Initial log statements
@@ -67,7 +68,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['VERBOSE'] = verbose
 
     for file_prefix in config.file_prefixes:
-        ctx.obj['NAME'] += '_{}'.format(file_prefix)
+        ctx.obj['NAME'] = name + '_{}'.format(file_prefix)
         ctx.obj['H5_FILE'] = os.path.join(config.dirout, file_prefix + '.h5')
         ctx.obj['FILE_PREFIX'] = file_prefix
 
@@ -85,6 +86,8 @@ def from_config(ctx, config_file, verbose):
 
 
 @click.group()
+@click.option('--name', '-n', default='reV_collect', type=str,
+              help='Collection job name. Default is "reV_collect".')
 @click.option('--h5_file', '-f', required=True, type=str,
               help='H5 file to be collected into.')
 @click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
@@ -102,10 +105,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def main(ctx, h5_file, h5_dir, project_points, dsets, file_prefix, parallel,
-         verbose):
+def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
+         parallel, verbose):
     """Main entry point for collection with context passing."""
 
+    ctx.obj['NAME'] = name
     ctx.obj['H5_FILE'] = h5_file
     ctx.obj['H5_DIR'] = h5_dir
     ctx.obj['PROJECT_POINTS'] = project_points
@@ -132,7 +136,7 @@ def collect(ctx, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
-    init_mult(name, h5_dir, modules=[__name__, 'reV.handlers'],
+    init_mult(name, h5_dir, modules=[__name__, 'reV.handlers.collection'],
               verbose=verbose, node=True)
 
     for key, val in ctx.obj.items():
@@ -144,24 +148,36 @@ def collect(ctx, verbose):
                 .format(dsets, name, h5_dir, h5_file))
     t0 = time.time()
 
-    Collector.collect(h5_file, h5_dir, project_points, dsets[0],
-                      file_prefix=file_prefix, parallel=parallel)
+    try:
+        Collector.collect(h5_file, h5_dir, project_points, dsets[0],
+                          file_prefix=file_prefix, parallel=parallel)
+    except Exception as e:
+        logger.exception('Collection failed!')
+        raise e
+
     if len(dsets) > 1:
         for dset_name in dsets[1:]:
-            Collector.add_dataset(h5_file, h5_dir, dset_name,
-                                  file_prefix=file_prefix, parallel=parallel)
+            try:
+                Collector.add_dataset(h5_file, h5_dir, dset_name,
+                                      file_prefix=file_prefix,
+                                      parallel=parallel)
+            except Exception as e:
+                logger.exception('Collection failed!')
+                raise e
 
     logger.info('Collection complete from h5 directory: "{0}". '
                 'Time elapsed: {1:.2f} min. Target output file: "{2}"'
                 .format(h5_dir, (time.time() - t0) / 60, h5_file))
 
 
-def get_node_cmd(h5_file, h5_dir, project_points, dsets, file_prefix=None,
-                 parallel=False, verbose=False):
+def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
+                 file_prefix=None, parallel=False, verbose=False):
     """Make a reV collection local CLI call string.
 
     Parameters
     ----------
+    name : str
+        reV collection jobname.
     h5_file : str
         Path to .h5 file into which data will be collected
     h5_dir : str
@@ -185,18 +201,20 @@ def get_node_cmd(h5_file, h5_dir, project_points, dsets, file_prefix=None,
     """
 
     # make a cli arg string for direct() in this module
-    arg_main = ('-f {h5_file} '
+    arg_main = ('-n {name} '
+                '-f {h5_file} '
                 '-d {h5_dir} '
                 '-pp {project_points} '
                 '-ds {dsets} '
                 '-fp {file_prefix} '
                 '{parallel}'
                 '{v}'
-                .format(h5_file=h5_file,
-                        h5_dir=h5_dir,
-                        project_points=project_points,
-                        dsets=dsets,
-                        file_prefix=file_prefix,
+                .format(name=SubprocessManager.s(name),
+                        h5_file=SubprocessManager.s(h5_file),
+                        h5_dir=SubprocessManager.s(h5_dir),
+                        project_points=SubprocessManager.s(project_points),
+                        dsets=SubprocessManager.s(dsets),
+                        file_prefix=SubprocessManager.s(file_prefix),
                         parallel='-par ' if parallel else '',
                         v='-v ' if verbose else '',
                         ))
@@ -236,7 +254,7 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     parallel = ctx.obj['PARALLEL']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    cmd = get_node_cmd(h5_file, h5_dir, project_points, dsets,
+    cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, parallel=parallel,
                        verbose=verbose)
 
