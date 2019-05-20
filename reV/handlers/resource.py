@@ -3,12 +3,14 @@ Classes to handle resource data
 """
 import h5py
 import numpy as np
+import os
 import pandas as pd
 import warnings
 
 from reV.handlers.sam_resource import parse_keys, SAMResource
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
-                                      HandlerValueError, ExtrapolationWarning)
+                                      HandlerValueError, ExtrapolationWarning,
+                                      HandlerWarning)
 
 
 class Resource:
@@ -524,7 +526,7 @@ class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
-    def __init__(self, h5_file, unscale=True):
+    def __init__(self, h5_file, unscale=True, hsds=False):
         """
         Parameters
         ----------
@@ -532,9 +534,12 @@ class WindResource(Resource):
             Path to .h5 resource file
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
         """
         self._heights = None
-        super().__init__(h5_file, unscale=unscale)
+        super().__init__(h5_file, unscale=unscale, hsds=False)
 
     @staticmethod
     def _parse_name(ds_name):
@@ -656,34 +661,29 @@ class WindResource(Resource):
         out : ndarray
             Time-series array at height h
         """
-        if h == h_1:
-            out = ts_1
-        elif h == h_2:
-            out = ts_2
+        if h_1 > h_2:
+            h_1, h_2 = h_2, h_1
+            ts_1, ts_2 = ts_2, ts_1
+
+        if mean:
+            alpha = (np.log(ts_2.mean() / ts_1.mean()) /
+                     np.log(h_2 / h_1))
+
+            if alpha < 0.06:
+                warnings.warn('Alpha is < 0.06', RuntimeWarning)
+            elif alpha > 0.6:
+                warnings.warn('Alpha is > 0.6', RuntimeWarning)
         else:
-            if h_1 > h_2:
-                h_1, h_2 = h_2, h_1
-                ts_1, ts_2 = ts_2, ts_1
+            # Replace zero values for alpha calculation
+            ts_1[ts_1 == 0] = 0.001
+            ts_2[ts_2 == 0] = 0.001
 
-            if mean:
-                alpha = (np.log(ts_2.mean() / ts_1.mean()) /
-                         np.log(h_2 / h_1))
+            alpha = np.log(ts_2 / ts_1) / np.log(h_2 / h_1)
+            # The Hellmann exponent varies from 0.06 to 0.6
+            alpha[alpha < 0.06] = 0.06
+            alpha[alpha > 0.6] = 0.6
 
-                if alpha < 0.06:
-                    warnings.warn('Alpha is < 0.06', RuntimeWarning)
-                elif alpha > 0.6:
-                    warnings.warn('Alpha is > 0.6', RuntimeWarning)
-            else:
-                # Replace zero values for alpha calculation
-                ts_1[ts_1 == 0] = 0.001
-                ts_2[ts_2 == 0] = 0.001
-
-                alpha = np.log(ts_2 / ts_1) / np.log(h_2 / h_1)
-                # The Hellmann exponent varies from 0.06 to 0.6
-                alpha[alpha < 0.06] = 0.06
-                alpha[alpha > 0.6] = 0.6
-
-            out = ts_1 * (h / h_1)**alpha
+        out = ts_1 * (h / h_1)**alpha
 
         return out
 
@@ -710,20 +710,16 @@ class WindResource(Resource):
         out : ndarray
             Time-series array at height h
         """
-        if h == h_1:
-            out = ts_1
-        elif h == h_2:
-            out = ts_2
-        else:
-            if h_1 > h_2:
-                h_1, h_2 = h_2, h_1
-                ts_1, ts_2 = ts_2, ts_1
-            # Calculate slope for every posiiton in variable arrays
-            m = (ts_2 - ts_1) / (h_2 - h_1)
-            # Calculate intercept for every position in variable arrays
-            b = ts_2 - m * h_2
+        if h_1 > h_2:
+            h_1, h_2 = h_2, h_1
+            ts_1, ts_2 = ts_2, ts_1
 
-            out = m * h + b
+        # Calculate slope for every posiiton in variable arrays
+        m = (ts_2 - ts_1) / (h_2 - h_1)
+        # Calculate intercept for every position in variable arrays
+        b = ts_2 - m * h_2
+
+        out = m * h + b
 
         return out
 
@@ -770,17 +766,12 @@ class WindResource(Resource):
         out : ndarray
             Time-series array at height h
         """
-        if h == h_1:
-            out = ts_1
-        elif h == h_2:
-            out = ts_2
-        else:
-            h_f = (h - h_1) / (h_2 - h_1)
+        h_f = (h - h_1) / (h_2 - h_1)
 
-            da = WindResource.shortest_angle(ts_1, ts_2) * h_f
-            da = np.sign(da) * (np.abs(da) % 360)
+        da = WindResource.shortest_angle(ts_1, ts_2) * h_f
+        da = np.sign(da) * (np.abs(da) % 360)
 
-            out = (ts_2 + da) % 360
+        out = (ts_2 + da) % 360
 
         return out
 
@@ -803,6 +794,11 @@ class WindResource(Resource):
         """
         var_name, h = self._parse_name(ds_name)
         heights = self.heights[var_name]
+        if len(heights) == 1:
+            h = heights[0]
+            warnings.warn('Only one hub-height available, returning {}'
+                          .format(h), HandlerWarning)
+
         if h in heights:
             out = super()._get_ds(ds_name, *ds_slice)
         else:
@@ -913,3 +909,149 @@ class WindResource(Resource):
                 SAM_res[var] = res[ds_name, :, sites_slice]
 
         return SAM_res
+
+
+class FiveMinWTK(WindResource):
+    """
+    Class to handle 5min WIND Toolkit data
+    """
+    def __init__(self, h5_dir, hourly_h5, unscale=True):
+        """
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+        hourly_h5 : str
+            Path to hourly .h5 file
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        """
+        # Init on hourly_h5 file
+        super().__init__(hourly_h5, unscale=unscale)
+        self._hourly_time_index = self.time_index
+
+        # Find 5min wind files
+        wind_files = self.get_wind_files(h5_dir)
+        self._wind_files = wind_files
+        # Substitute wind hub_heights
+        wind_h = sorted(wind_files)
+        self.heights['windspeed'] = wind_h
+        self.heights['winddirection'] = wind_h
+        # Substitute hourly for 5min time_index
+        with Resource(wind_files[wind_h[0]]) as f:
+            self._time_index = f.time_index
+
+    @staticmethod
+    def get_wind_files(h5_dir):
+        """
+        Find .h5 files for wind hub-heights in h5_dir
+
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+
+        Returns
+        -------
+        wind_files : dict
+            Dictionary mapping wind files to hub-heights
+        """
+        wind_files = {}
+        for file in os.listdir(h5_dir):
+            if file.startswith('wind') and file.endswith('.h5'):
+                h = WindResource._parse_name(file.split('.')[0])
+                wind_files[h] = os.path.join(h5_dir, file)
+
+        return wind_files
+
+    def _get_wind_ds(self, ds_name, *ds_slice):
+        """
+        Extract 5min wind data
+
+        Parameters
+        ----------
+        ds_name : str
+            5min wind variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        var_name, h = self._parse_name(ds_name)
+        heights = self.heights[var_name]
+        if len(heights) == 1:
+            h = heights[0]
+            warnings.warn('Only one hub-height available, returning {}'
+                          .format(h), HandlerWarning)
+
+        if h in heights:
+            with Resource(self._wind_files[h], unscale=self._unscale) as f:
+                out = f._get_ds(ds_name, *ds_slice)
+        else:
+            (h1, h2), extrapolate = self.get_nearest_h(h, heights)
+            with Resource(self._wind_files[h1], unscale=self._unscale) as f:
+                ts1 = f._get_ds('{}_{}m'.format(var_name, h1), *ds_slice)
+
+            with Resource(self._wind_files[h2], unscale=self._unscale) as f:
+                ts2 = f._get_ds('{}_{}m'.format(var_name, h2), *ds_slice)
+
+            if (var_name == 'windspeed') and extrapolate:
+                out = self.power_law_interp(ts1, h1, ts2, h2, h)
+            elif var_name == 'winddirection':
+                out = self.circular_interp(ts1, h1, ts2, h2, h)
+            else:
+                out = self.linear_interp(ts1, h1, ts2, h2, h)
+
+        return out
+
+    def _interp_hourly_ds(self, ds_name, *ds_slice):
+        """
+        Extract and interp hourly data to 5min
+
+        Parameters
+        ----------
+        ds_name : str
+            Hourly variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        out = super()._get_ds(ds_name, *ds_slice)
+        out = pd.DataFrame(out, index=self._hourly_time_index)
+        out = out.reindex(self.time_index).interpolate(method='time').values
+
+        return out
+
+    def _get_ds(self, ds_name, *ds_slice):
+        """
+        Extract data from given dataset
+
+        Parameters
+        ----------
+        ds_name : str
+            Variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        var_name, _ = self._parse_name(ds_name)
+        if var_name in ['windspeed', 'winddirection']:
+            out = self._get_wind_ds(ds_name, *ds_slice)
+        else:
+            out = self._interp_hourly_ds(ds_name, *ds_slice)
+
+        return out

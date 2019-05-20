@@ -8,11 +8,10 @@ import pandas as pd
 import time
 from warnings import warn
 
-from reV.utilities.execution import SmartParallelJob
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
                                       HandlerWarning)
-from reV.utilities.execution import execute_futures
+from reV.utilities.execution import execute_futures, SmartParallelJob
 
 logger = logging.getLogger(__name__)
 
