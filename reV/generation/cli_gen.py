@@ -393,7 +393,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  fout='reV.h5', dirout='./out/gen_out', logdir='./out/log_gen',
                  output_request=('cf_mean',), mem_util_lim=0.4,
                  curtailment=None, downscale=None, verbose=False):
-    """Made a reV geneneration direct-local command line interface call string.
+    """Make a reV geneneration direct-local CLI call string.
 
     Parameters
     ----------

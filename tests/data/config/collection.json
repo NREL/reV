@@ -6,7 +6,7 @@
   },
   "execution_control": {
     "allocation": "rev",
-    "memory": 96,
+    "memory": 90,
     "option": "eagle",
     "walltime": 0.5
   },
@@ -16,8 +16,8 @@
       "cf_profile"
     ],
     "file_prefixes": [
-      "rev_gen_1",
-      "rev_gen_2"
+      "gen_1",
+      "gen_2"
     ],
     "logging_level": "DEBUG",
     "name": "rev",
