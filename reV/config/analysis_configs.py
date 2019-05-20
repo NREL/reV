@@ -8,10 +8,8 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 from math import ceil
-import os
 from warnings import warn
 
-from reV import REVDIR, TESTDATADIR
 from reV.config.base_config import BaseConfig
 from reV.config.execution import (BaseExecutionConfig, PeregrineConfig,
                                   EagleConfig)
@@ -27,12 +25,12 @@ logger = logging.getLogger(__name__)
 class AnalysisConfig(BaseConfig):
     """Base analysis config (generation, lcoe, etc...)."""
 
-    def __init__(self, config_dict):
+    def __init__(self, config):
         self._years = None
         self._dirout = None
         self._logdir = None
         self._ec = None
-        super().__init__(config_dict)
+        super().__init__(config)
 
     @property
     def years(self):
@@ -127,12 +125,13 @@ class AnalysisConfig(BaseConfig):
 class SAMAnalysisConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
 
-    def __init__(self, config_dict):
+    def __init__(self, config):
+        """Initialize a config object."""
         self._tech = None
         self._sam_config = None
         self._pc = None
         self._output_request = None
-        super().__init__(config_dict)
+        super().__init__(config)
 
     @property
     def tech(self):
@@ -259,28 +258,11 @@ class SAMAnalysisConfig(AnalysisConfig):
 class GenConfig(SAMAnalysisConfig):
     """Class to import and manage user configuration inputs."""
 
-    def __init__(self, fname):
-        """Initialize a config object.
-
-        Parameters
-        ----------
-        fname : str
-            Generation config name (with path).
-        """
+    def __init__(self, config):
+        """Initialize a config object."""
         self._curtailment = None
         self._downscale = None
         self._res_files = None
-        # get the directory of the config file
-        self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
-
-        # str_rep is a mapping of config strings to replace with real values
-        self.str_rep = {'REVDIR': REVDIR,
-                        'TESTDATADIR': TESTDATADIR,
-                        './': self.dir,
-                        }
-
-        # Get file, Perform string replacement, save config to self instance
-        config = self.str_replace(self.get_file(fname), self.str_rep)
         super().__init__(config)
 
     @property
@@ -353,27 +335,10 @@ class GenConfig(SAMAnalysisConfig):
 class EconConfig(SAMAnalysisConfig):
     """Class to import and manage configuration inputs for econ analysis."""
 
-    def __init__(self, fname):
-        """Initialize a config object.
-
-        Parameters
-        ----------
-        fname : str
-            Econ config name (with path).
-        """
+    def __init__(self, config):
+        """Initialize a config object."""
         self._cf_files = None
         self._site_data = None
-        # get the directory of the config file
-        self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
-
-        # str_rep is a mapping of config strings to replace with real values
-        self.str_rep = {'REVDIR': REVDIR,
-                        'TESTDATADIR': TESTDATADIR,
-                        './': self.dir,
-                        }
-
-        # Get file, Perform string replacement, save config to self instance
-        config = self.str_replace(self.get_file(fname), self.str_rep)
         super().__init__(config)
 
     @property
