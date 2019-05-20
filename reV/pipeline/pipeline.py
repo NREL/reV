@@ -6,7 +6,7 @@ import json
 import os
 import logging
 
-from reV.config.analysis_configs import AnalysisConfig
+from reV.config.base_analysis_config import AnalysisConfig
 from reV.utilities.execution import SubprocessManager
 from reV.utilities.exceptions import ExecutionError
 from reV.pipeline.status import Status
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class Pipeline:
     """reV pipeline execution framework."""
 
-    COMMANDS = ('generation', 'econ')
+    COMMANDS = ('generation', 'econ', 'collect')
     RETURNCODE = {0: 'successful',
                   1: 'running',
                   2: 'failed'}
@@ -176,11 +176,11 @@ class Pipeline:
         if module not in status.data:
             returncode = 1
         else:
-            for job_name, job_attrs in status.data[module].items():
+            for job_name in status.data[module].keys():
                 if job_name != 'pipeline_index':
                     status._update_job_status(module, job_name)
                     status._dump()
-                    js = job_attrs['job_status']
+                    js = status.data[module][job_name]['job_status']
 
                     logger.debug('reV pipeline job "{}" has status "{}".'
                                  .format(job_name, js))
@@ -270,7 +270,7 @@ class Pipeline:
         return out
 
     @staticmethod
-    def _get_job_status(module_status, option='first'):
+    def _get_job_status(module_status, option='all'):
         """Get a job status dict from the module status dict.
 
         Parameters
@@ -283,8 +283,8 @@ class Pipeline:
 
         Returns
         -------
-        out : dict
-            Job status dict.
+        out : dict | list
+            Job status(es).
         """
 
         # find the preceding job (1st is used, should be one job in most cases)
@@ -293,11 +293,19 @@ class Pipeline:
                 if job != 'pipeline_index':
                     out = job_status
                     break
+        elif option == 'all':
+            out = []
+            for job, job_status in module_status.items():
+                if job != 'pipeline_index':
+                    out.append(job_status)
+        else:
+            raise KeyError('Did not recognize pipeline job status request '
+                           'for "{}"'.format(option))
         return out
 
     @staticmethod
     def parse_previous(status_dir, module, target='fpath'):
-        """Parse data from the previous pipeline step.
+        """Parse output file paths from the previous pipeline step.
 
         Parameters
         ----------
@@ -306,14 +314,15 @@ class Pipeline:
         module : str
             Current module (i.e. current pipeline step).
         target : str
-            Option for what to parse.
+            Parsing target of previous module.
 
         Returns
         -------
-        out : str
-            Data parsed from the status file in status_dir from the module
-            preceding the input module arg.
+        out : list
+            Arguments parsed from the status file in status_dir from
+            the module preceding the input module arg.
         """
+
         status = Pipeline._get_status_obj(status_dir=status_dir)
         msg = ('Could not parse data regarding "{}" from reV status file in '
                '"{}".'.format(module, status_dir))
@@ -327,12 +336,15 @@ class Pipeline:
         i0 = i1 - 1
 
         module_status = Pipeline._get_module_status(status, i0)
-        job_status = Pipeline._get_job_status(module_status)
+        job_statuses = Pipeline._get_job_status(module_status)
 
+        out = []
         if target == 'fpath':
-            out = os.path.join(job_status['dirout'], job_status['fout'])
+            for status in job_statuses:
+                out.append(os.path.join(status['dirout'], status['fout']))
         else:
-            out = job_status[target]
+            for status in job_statuses:
+                out.append(status[target])
 
         return out
 

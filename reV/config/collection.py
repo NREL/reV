@@ -8,7 +8,8 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 
-from reV.config.analysis_configs import AnalysisConfig
+from reV.pipeline.pipeline import Pipeline
+from reV.config.base_analysis_config import AnalysisConfig
 
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,7 @@ class CollectionConfig(AnalysisConfig):
     """Base analysis config (generation, lcoe, etc...)."""
 
     def __init__(self, config):
+<<<<<<< HEAD
         """
         Parameters
         ----------
@@ -25,6 +27,9 @@ class CollectionConfig(AnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
+=======
+        self._coldir = None
+>>>>>>> minor refactor of pipeline framework so that all pipeline parsing is done in the config. Additions/bug fixes:
         self._parallel = False
         self._dsets = None
         self._file_prefixes = None
@@ -40,7 +45,13 @@ class CollectionConfig(AnalysisConfig):
         _coldir : str
             Target path to collect h5 files from.
         """
-        return self['directories']['collect_directory']
+        if self._coldir is None:
+            self._coldir = self['directories']['collect_directory']
+            if 'PIPELINE' in self._coldir:
+                dirs = Pipeline.parse_previous(self.statusdir, 'collect',
+                                               target='dirout')
+                self._coldir = dirs[0]
+        return self._coldir
 
     @property
     def project_points(self):
@@ -82,6 +93,16 @@ class CollectionConfig(AnalysisConfig):
                 self._dsets = list(self._dsets)
         return self._dsets
 
+    def _parse_pipeline_prefixes(self):
+        """Parse reV pipeline for file prefixes from previous module."""
+        files = Pipeline.parse_previous(self.statusdir, 'collect',
+                                        target='fout')
+        for i, fname in enumerate(files):
+            files[i] = '_'.join([c for c in fname.split('_')
+                                 if '.h5' not in c and 'node' not in c])
+        file_prefixes = list(set(files))
+        return file_prefixes
+
     @property
     def file_prefixes(self):
         """Get the file prefixes to collect.
@@ -94,6 +115,8 @@ class CollectionConfig(AnalysisConfig):
 
         if self._file_prefixes is None:
             self._file_prefixes = self['project_control']['file_prefixes']
+            if 'PIPELINE' in self._file_prefixes:
+                self._file_prefixes = self._parse_pipeline_prefixes()
             if not isinstance(self._file_prefixes, list):
                 self._file_prefixes = list(self._file_prefixes)
         return self._file_prefixes

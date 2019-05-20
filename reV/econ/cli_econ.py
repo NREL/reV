@@ -18,35 +18,21 @@ from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
-from reV.pipeline.pipeline import Pipeline
 from reV.pipeline.status import Status
+from reV.generation.cli_gen import main
 
 
 logger = logging.getLogger(__name__)
-
-
-@click.group()
-@click.option('--name', '-n', default='reV_econ', type=STR,
-              help='Econ analysis job name. Default is "reV_econ".')
-@click.option('-v', '--verbose', is_flag=True,
-              help='Flag to turn on debug logging. Default is not verbose.')
-@click.pass_context
-def main(ctx, name, verbose):
-    """Command line interface (CLI) for the reV 2.0 Econ Module."""
-    ctx.obj['NAME'] = name
-    ctx.obj['VERBOSE'] = verbose
 
 
 @main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV econ configuration json file.')
-@click.option('--status_dir', '-st', default=None, type=STR,
-              help='Optional directory containing reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def from_config(ctx, config_file, status_dir, verbose):
+def from_config(ctx, config_file, verbose):
     """Run reV econ from a config file."""
     name = ctx.obj['NAME']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -92,13 +78,9 @@ def from_config(ctx, config_file, status_dir, verbose):
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
+    ctx.obj['STATUS_DIR'] = config.statusdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
-
-    # Send status dir to methods to be used for status file
-    if status_dir is None:
-        status_dir = config.dirout
-    ctx.obj['STATUS_DIR'] = status_dir
 
     for i, year in enumerate(config.years):
         submit_from_config(ctx, name, year, config, verbose, i)
@@ -122,12 +104,6 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     # set the year-specific variables
     ctx.obj['CF_FILE'] = config.cf_files[i]
     ctx.obj['CF_YEAR'] = year
-
-    # parse pipeline for cf_file if specified
-    if ctx.obj['CF_FILE'].startswith('PIPELINE'):
-        ctx.obj['CF_FILE'] = Pipeline.parse_previous(
-            ctx.obj['STATUS_DIR'], 'econ',
-            target=ctx.obj['CF_FILE'].split('_')[-1])
 
     # check to make sure that the year matches the resource file
     if str(year) not in config.cf_files[i]:
@@ -289,7 +265,7 @@ def econ_local(ctx, n_workers, points_range, verbose):
                 .format(points, tmp_str if points_range else '',
                         (time.time() - t0) / 60, dirout))
 
-    Status.set_job_status(status_dir, 'econ', name, 'successful')
+    Status.make_completion_file(status_dir, name, 'successful')
 
 
 def get_node_pc(points, sam_files, nodes):

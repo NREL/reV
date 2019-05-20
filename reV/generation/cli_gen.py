@@ -26,14 +26,17 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
-@click.option('--name', '-n', default='reV_gen', type=STR,
+@click.option('--name', '-n', default='reV', type=STR,
               help='Generation job name. Default is "reV_gen".')
+@click.option('--status_dir', '-st', default=None, type=STR,
+              help='Optional directory containing reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, verbose):
+def main(ctx, name, status_dir, verbose):
     """Command line interface (CLI) for the reV 2.0 Generation Module."""
     ctx.obj['NAME'] = name
+    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -41,12 +44,10 @@ def main(ctx, name, verbose):
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV generation configuration json file.')
-@click.option('--status_dir', '-st', default=None, type=STR,
-              help='Optional directory containing reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def from_config(ctx, config_file, status_dir, verbose):
+def from_config(ctx, config_file, verbose):
     """Run reV gen from a config file."""
     name = ctx.obj['NAME']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -92,14 +93,10 @@ def from_config(ctx, config_file, status_dir, verbose):
     ctx.obj['SAM_FILES'] = config.sam_config
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
+    ctx.obj['STATUS_DIR'] = config.statusdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
     ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
-
-    # Send status dir to methods to be used for status file
-    if status_dir is None:
-        status_dir = config.dirout
-    ctx.obj['STATUS_DIR'] = status_dir
 
     # get downscale request and raise exception if not NSRDB
     ctx.obj['DOWNSCALE'] = config.downscale
@@ -352,7 +349,7 @@ def gen_local(ctx, n_workers, points_range, verbose):
                 .format(points, tmp_str if points_range else '',
                         (time.time() - t0) / 60, dirout))
 
-    Status.set_job_status(status_dir, 'generation', name, 'successful')
+    Status.make_completion_file(status_dir, name, 'successful')
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
