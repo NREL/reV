@@ -1,0 +1,25 @@
+{
+  "directories": {
+    "collect_directory": "PIPELINE",
+    "logging_directory": "/scratch/gbuster/rev/test_pipeline",
+    "output_directory": "/scratch/gbuster/rev/test_pipeline"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "memory": 90,
+    "option": "eagle",
+    "walltime": 0.5
+  },
+  "project_control": {
+    "dsets": [
+      "cf_mean",
+      "cf_profile"
+    ],
+    "file_prefixes": "PIPELINE",
+    "logging_level": "INFO",
+    "name": "collect",
+    "parallel": false
+  },
+  "project_points": "./project_points/project_points.csv"
+}
