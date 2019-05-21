@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, status_dir, verbose):
-    """Command line interface (CLI) for the reV 2.0 Generation Module."""
+    """Command line interface (CLI) for the reV 2.0 SAM-based modules."""
     ctx.obj['NAME'] = name
     ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['VERBOSE'] = verbose
@@ -93,7 +93,6 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SAM_FILES'] = config.sam_config
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
-    ctx.obj['STATUS_DIR'] = config.statusdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
     ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
@@ -310,7 +309,7 @@ def gen_local(ctx, n_workers, points_range, verbose):
     # add job to reV status file.
     if status_dir is None:
         status_dir = dirout
-    Status.add_job(status_dir, 'generation', name, replace=False)
+    Status.add_job(status_dir, 'generation', name)
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
@@ -325,8 +324,6 @@ def gen_local(ctx, n_workers, points_range, verbose):
                 'file: {}. Target output path is: {}'
                 .format(name, res_file, os.path.join(dirout, fout)))
     t0 = time.time()
-
-    Status.retrieve_job_status(status_dir, 'generation', name)
 
     # Execute the Generation module with smart data flushing.
     Gen.run_smart(tech=tech,
@@ -618,7 +615,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                    'Peregrine.'.format(node_name, pbs.id))
 
             # add job to reV status file.
-            Status.add_job(status_dir, 'generation', node_name,
+            Status.add_job(status_dir, 'generation', node_name, replace=True,
                            job_attrs={'job_id': pbs.id,
                                       'hardware': 'peregrine',
                                       'fout': fout_node,
@@ -705,7 +702,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
                    'Eagle.'.format(node_name, slurm.id))
 
             # add job to reV status file.
-            Status.add_job(status_dir, 'generation', node_name,
+            Status.add_job(status_dir, 'generation', node_name, replace=True,
                            job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                                       'fout': fout_node, 'dirout': dirout})
         else:

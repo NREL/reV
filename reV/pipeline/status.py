@@ -209,7 +209,7 @@ class Status(dict):
             open(os.path.join(path, job_name + '.{}'.format(status)), 'w')
 
     @classmethod
-    def add_job(cls, path, module, job_name, replace=True, job_attrs=None):
+    def add_job(cls, path, module, job_name, replace=False, job_attrs=None):
         """Add or update job status using pre-defined methods.
 
         Parameters
@@ -221,7 +221,7 @@ class Status(dict):
         job_name : str
             Unique job name identification.
         replace : bool
-            Flag to replace pre-existing job status.
+            Flag to force replacement of pre-existing job status.
         job_attrs : dict
             Job attributes. Should include 'job_id' if running on HPC.
         """
@@ -238,14 +238,53 @@ class Status(dict):
                          'adding job from an eagle or peregrine node.'
                          .format(job_name))
 
-        if module not in obj.data:
-            obj.data[module] = {job_name: job_attrs}
-        if replace:
-            obj.data[module][job_name] = job_attrs
+        # check to see if job exists yet
+        exists = obj.job_exists(path, job_name)
 
-        obj.data[module][job_name]['job_status'] = 'submitted'
+        # job exists and user has requested forced removal
+        if replace and exists:
+            del obj.data[module][job_name]
 
-        obj._dump()
+        # new job attribute data will be written if either:
+        #  A) the user requested forced replacement or
+        #  B) if the job does not exist
+        if replace or not exists:
+
+            if module not in obj.data:
+                obj.data[module] = {job_name: job_attrs}
+            else:
+                obj.data[module][job_name] = job_attrs
+
+            obj.data[module][job_name]['job_status'] = 'submitted'
+
+            obj._dump()
+
+    @classmethod
+    def job_exists(cls, path, job_name):
+        """Check whether a job exists and return a bool.
+
+        Parameters
+        ----------
+        path : str
+            Path to json status file.
+        job_name : str
+            Unique job name identification.
+
+        Returns
+        -------
+        exists : bool
+            True if the job exists in the status json.
+        """
+
+        obj = cls(path)
+        if obj.data:
+            for jobs in obj.data.values():
+                if jobs:
+                    for name in jobs.keys():
+                        if name == job_name:
+                            return True
+
+        return False
 
     @classmethod
     def retrieve_job_status(cls, path, module, job_name):

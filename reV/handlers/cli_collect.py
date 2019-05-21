@@ -66,8 +66,13 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['DSETS'] = config.dsets
     ctx.obj['PROJECT_POINTS'] = config.project_points
     ctx.obj['PARALLEL'] = config.parallel
-    ctx.obj['STATUS_DIR'] = config.statusdir
     ctx.obj['VERBOSE'] = verbose
+
+    # if status dir was not passed from higher level cli, set to dirout
+    if 'STATUS_DIR' not in ctx.obj:
+        ctx.obj['STATUS_DIR'] = config.dirout
+    elif ctx.obj['STATUS_DIR'] is None:
+        ctx.obj['STATUS_DIR'] = config.dirout
 
     for file_prefix in config.file_prefixes:
         ctx.obj['NAME'] = name + '_{}'.format(file_prefix)
@@ -148,8 +153,7 @@ def collect(ctx, verbose):
     # add job to reV status file.
     if status_dir is None:
         status_dir = os.path.abspath(h5_file)
-    Status.add_job(status_dir, 'collect', name, replace=False)
-    Status.retrieve_job_status(status_dir, 'collect', name)
+    Status.add_job(status_dir, 'collect', name)
 
     for key, val in ctx.obj.items():
         logger.debug('ctx var passed to collection method: "{}" : "{}" '
@@ -290,7 +294,7 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
         msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
                'Eagle.'.format(name, slurm.id))
         # add job to reV status file.
-        Status.add_job(status_dir, 'collect', name,
+        Status.add_job(status_dir, 'collect', name, replace=True,
                        job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                                   'fout': os.path.basename(h5_file),
                                   'dirout': os.path.dirname(h5_file)})
