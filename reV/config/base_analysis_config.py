@@ -27,7 +27,6 @@ class AnalysisConfig(BaseConfig):
         self._years = None
         self._dirout = None
         self._logdir = None
-        self._statusdir = None
         self._ec = None
         super().__init__(config)
 
@@ -85,22 +84,6 @@ class AnalysisConfig(BaseConfig):
             if 'logging_directory' in self['directories']:
                 self._logdir = self['directories']['logging_directory']
         return self._logdir
-
-    @property
-    def statusdir(self):
-        """Get the directory of the job status.
-
-        Returns
-        -------
-        _statusdir : str
-            Target path for reV status files.
-        """
-        if self._statusdir is None:
-            # set default value
-            self._statusdir = self.dirout
-            if 'status_directory' in self['directories']:
-                self._statusdir = self['directories']['status_directory']
-        return self._statusdir
 
     @property
     def execution_control(self):

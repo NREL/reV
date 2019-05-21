@@ -78,7 +78,6 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
-    ctx.obj['STATUS_DIR'] = config.statusdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
 
@@ -229,7 +228,7 @@ def econ_local(ctx, n_workers, points_range, verbose):
     # add job to reV status file.
     if status_dir is None:
         status_dir = dirout
-    Status.add_job(status_dir, 'econ', name, replace=False)
+    Status.add_job(status_dir, 'econ', name)
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
@@ -244,8 +243,6 @@ def econ_local(ctx, n_workers, points_range, verbose):
                 'generation results file: {}. Target output path is: {}'
                 .format(name, cf_file, os.path.join(dirout, fout)))
     t0 = time.time()
-
-    Status.retrieve_job_status(status_dir, 'econ', name)
 
     # Execute the Generation module with smart data flushing.
     Econ.run_smart(points=points,
@@ -469,7 +466,7 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
             msg = ('Kicked off reV econ job "{}" (PBS jobid #{}) on '
                    'Peregrine.'.format(node_name, pbs.id))
             # add job to reV status file.
-            Status.add_job(status_dir, 'econ', node_name,
+            Status.add_job(status_dir, 'econ', node_name, replace=True,
                            job_attrs={'job_id': pbs.id,
                                       'hardware': 'peregrine',
                                       'fout': fout_node,
@@ -553,7 +550,7 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
             msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(node_name, slurm.id))
             # add job to reV status file.
-            Status.add_job(status_dir, 'econ', node_name,
+            Status.add_job(status_dir, 'econ', node_name, replace=True,
                            job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                                       'fout': fout_node, 'dirout': dirout})
         else:
