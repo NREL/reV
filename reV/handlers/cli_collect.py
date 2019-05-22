@@ -166,7 +166,8 @@ def collect(ctx, verbose):
     # add job to reV status file.
     status = {'dirout': os.path.dirname(h5_file),
               'fout': os.path.basename(h5_file), 'job_status': 'successful',
-              'runtime': runtime}
+              'runtime': runtime,
+              'finput': os.path.join(h5_dir, '{}*.h5'.format(file_prefix))}
     Status.make_job_file(os.path.dirname(h5_file), 'collect', name, status)
 
 

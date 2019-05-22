@@ -337,7 +337,7 @@ def gen_local(ctx, n_workers, points_range, verbose):
 
     # add job to reV status file.
     status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
-              'runtime': runtime}
+              'runtime': runtime, 'finput': res_file}
     Status.make_job_file(dirout, 'generation', name, status)
 
 
