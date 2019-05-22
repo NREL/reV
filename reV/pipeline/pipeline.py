@@ -52,6 +52,7 @@ class Pipeline:
             else:
                 returncode = 1
                 self._submit_step(i)
+                time.sleep(1)
                 while returncode == 1:
                     time.sleep(5)
                     returncode = self._check_step_completed(i)
