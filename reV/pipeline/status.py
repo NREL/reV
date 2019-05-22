@@ -1,6 +1,7 @@
 """
 reV Base Configuration Frameworks
 """
+import copy
 import os
 import json
 import logging
@@ -116,7 +117,7 @@ class Status(dict):
         """
 
         for fname in os.listdir(path):
-            if fname.startswith('_status') and fname.endswith('.json'):
+            if fname.startswith('status_') and fname.endswith('.json'):
                 # wait one second to make sure file is finished being written
                 time.sleep(0.1)
                 with open(os.path.join(path, fname), 'r') as f:
@@ -235,6 +236,8 @@ class Status(dict):
             d with data updated from u.
         """
 
+        d = copy.deepcopy(d)
+
         for k, v in u.items():
             if isinstance(v, dict):
                 d[k] = Status.update_dict(d.get(k, {}), v)
@@ -315,7 +318,8 @@ class Status(dict):
             else:
                 obj.data[module][job_name] = job_attrs
 
-            obj.data[module][job_name]['job_status'] = 'submitted'
+            if 'job_status' not in job_attrs:
+                obj.data[module][job_name]['job_status'] = 'submitted'
 
             obj._dump()
 
