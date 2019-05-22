@@ -16,18 +16,14 @@ from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
 @click.option('--config_file', '-c',
               required=True, type=click.Path(exists=True),
               help='reV configuration file json for a single module.')
-@click.option('--status_dir', '-st', default=None, type=STR,
-              help='Optional explicit directory specification containing '
-              'reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, config_file, status_dir, verbose):
+def main(ctx, name, config_file, verbose):
     """reV 2.0 command line interface."""
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['CONFIG_FILE'] = config_file
-    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['VERBOSE'] = verbose
 
 

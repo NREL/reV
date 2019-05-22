@@ -68,12 +68,6 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['PARALLEL'] = config.parallel
     ctx.obj['VERBOSE'] = verbose
 
-    # if status dir was not passed from higher level cli, set to dirout
-    if 'STATUS_DIR' not in ctx.obj:
-        ctx.obj['STATUS_DIR'] = config.dirout
-    elif ctx.obj['STATUS_DIR'] is None:
-        ctx.obj['STATUS_DIR'] = config.dirout
-
     for file_prefix in config.file_prefixes:
         ctx.obj['NAME'] = name + '_{}'.format(file_prefix)
         ctx.obj['H5_FILE'] = os.path.join(config.dirout, file_prefix + '.h5')
@@ -109,13 +103,11 @@ def from_config(ctx, config_file, verbose):
               help='File prefix found in the h5 file names to be collected.')
 @click.option('-par', '--parallel', is_flag=True,
               help='Flag to turn on parallel collection.')
-@click.option('--status_dir', '-st', default=None, type=STR,
-              help='Directory containing the status file. Default is dirout.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
 def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
-         parallel, status_dir, verbose):
+         parallel, verbose):
     """Main entry point for collection with context passing."""
 
     ctx.obj['NAME'] = name
@@ -125,7 +117,6 @@ def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
     ctx.obj['DSETS'] = dsets
     ctx.obj['FILE_PREFIX'] = file_prefix
     ctx.obj['PARALLEL'] = parallel
-    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -143,7 +134,6 @@ def collect(ctx, verbose):
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
     parallel = ctx.obj['PARALLEL']
-    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -174,17 +164,14 @@ def collect(ctx, verbose):
                 .format(h5_dir, runtime, h5_file))
 
     # add job to reV status file.
-    if status_dir is None:
-        status_dir = os.path.dirname(h5_file)
     status = {'dirout': os.path.dirname(h5_file),
               'fout': os.path.basename(h5_file), 'job_status': 'successful',
               'runtime': runtime}
-    Status.make_job_file(status_dir, 'collect', name, status)
+    Status.make_job_file(os.path.dirname(h5_file), 'collect', name, status)
 
 
 def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
-                 file_prefix=None, parallel=False, status_dir=None,
-                 verbose=False):
+                 file_prefix=None, parallel=False, verbose=False):
     """Make a reV collection local CLI call string.
 
     Parameters
@@ -204,8 +191,6 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         .h5 file prefix, if None collect all files on h5_dir
     parallel : bool
         Option to run in parallel using dask
-    status_dir : str | None
-        Directory to look for rev pipeline status.
 
     Returns
     -------
@@ -214,7 +199,6 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         appropriately formatted arguments based on input args:
             python -m reV.handlers.cli_collect [args] collect
     """
-    sdir_str = '-st {} '.format(status_dir)
 
     # make a cli arg string for direct() in this module
     arg_main = ('-n {name} '
@@ -223,7 +207,6 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                 '-pp {project_points} '
                 '-ds {dsets} '
                 '-fp {file_prefix} '
-                '{sdir_str}'
                 '{parallel}'
                 '{v}'
                 .format(name=SubprocessManager.s(name),
@@ -232,7 +215,6 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                         project_points=SubprocessManager.s(project_points),
                         dsets=SubprocessManager.s(dsets),
                         file_prefix=SubprocessManager.s(file_prefix),
-                        sdir_str=sdir_str if status_dir else '',
                         parallel='-par ' if parallel else '',
                         v='-v ' if verbose else '',
                         ))
@@ -270,22 +252,18 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
     parallel = ctx.obj['PARALLEL']
-    status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-
-    if status_dir is None:
-        status_dir = os.path.dirname(h5_file)
 
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, parallel=parallel,
-                       status_dir=status_dir, verbose=verbose)
+                       verbose=verbose)
 
-    status = Status.retrieve_job_status(status_dir, 'econ',
+    status = Status.retrieve_job_status(os.path.dirname(h5_file), 'econ',
                                         name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
-               .format(name, status_dir))
+               .format(name, os.path.dirname(h5_file)))
     else:
         logger.info('Running reV collection on Eagle with node name "{}", '
                     'collecting data to "{}" from "{}" with file prefix "{}".'
@@ -297,10 +275,11 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
             msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(name, slurm.id))
             # add job to reV status file.
-            Status.add_job(status_dir, 'collect', name, replace=True,
-                           job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
-                                      'fout': os.path.basename(h5_file),
-                                      'dirout': os.path.dirname(h5_file)})
+            Status.add_job(
+                os.path.dirname(h5_file), 'collect', name, replace=True,
+                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                           'fout': os.path.basename(h5_file),
+                           'dirout': os.path.dirname(h5_file)})
         else:
             msg = ('Was unable to kick off reV collection job "{}". '
                    'Please see the stdout error messages'
