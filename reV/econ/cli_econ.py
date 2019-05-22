@@ -225,11 +225,6 @@ def econ_local(ctx, n_workers, points_range, verbose):
     output_request = ctx.obj['OUTPUT_REQUEST']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    # add job to reV status file.
-    if status_dir is None:
-        status_dir = dirout
-    Status.add_job(status_dir, 'econ', name)
-
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
                                      'reV.utilities', 'reV.SAM'],
@@ -258,12 +253,18 @@ def econ_local(ctx, n_workers, points_range, verbose):
                    dirout=dirout)
 
     tmp_str = ' with points range {}'.format(points_range)
+    runtime = (time.time() - t0) / 60
     logger.info('Econ compute complete for project points "{0}"{1}. '
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'
                 .format(points, tmp_str if points_range else '',
-                        (time.time() - t0) / 60, dirout))
+                        runtime, dirout))
 
-    Status.make_completion_file(status_dir, name, 'successful')
+    # add job to reV status file.
+    if status_dir is None:
+        status_dir = dirout
+    status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
+              'runtime': runtime}
+    Status.make_job_file(status_dir, 'econ', name, status)
 
 
 def get_node_pc(points, sam_files, nodes):
@@ -433,6 +434,9 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     output_request = ctx.obj['OUTPUT_REQUEST']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    if status_dir is None:
+        status_dir = dirout
+
     # initialize an info logger on the year level
     init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
                                      'reV.utilities', 'reV.SAM'],
@@ -516,6 +520,9 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     verbose = any([verbose, ctx.obj['VERBOSE']])
+
+    if status_dir is None:
+        status_dir = dirout
 
     # initialize an info logger on the year level
     init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',

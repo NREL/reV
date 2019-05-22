@@ -364,7 +364,7 @@ class Collector:
         meta_gids = meta['gid'].values
         gids = np.array(self.gids)
         missing = gids[~np.in1d(gids, meta_gids)]
-        if missing:
+        if any(missing):
             # TODO: Convert HandlerRuntimeError to a custom collection error
             # TODO: Write missing gids to disk to allow for automated re-run
             raise HandlerRuntimeError("gids: {} are missing"

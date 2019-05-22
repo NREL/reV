@@ -53,7 +53,7 @@ class Pipeline:
                 returncode = 1
                 self._submit_step(i)
                 while returncode == 1:
-                    time.sleep(30)
+                    time.sleep(5)
                     returncode = self._check_step_completed(i)
 
                     if returncode == 2:
@@ -169,32 +169,40 @@ class Pipeline:
         Returns
         -------
         returncode : int
-            Pipeline step return code.
+            Pipeline step return code. ()
         """
 
-        returncode = 0
+        # start return code as failed
+        returncode = 2
+
         if module not in status.data:
+            # assume running
             returncode = 1
         else:
             for job_name in status.data[module].keys():
                 if job_name != 'pipeline_index':
                     status._update_job_status(module, job_name)
-                    status._dump()
                     js = status.data[module][job_name]['job_status']
 
-                    logger.debug('reV pipeline job "{}" has status "{}".'
-                                 .format(job_name, js))
+                    if js == 'successful':
+                        returncode = 0
+                    elif js == 'failed':
+                        returncode = 2
+                        break
+                    elif js is None:
+                        status.set_job_status(status._path, module,
+                                              job_name, 'failed')
+                        returncode = 2
+                        break
+                    else:
+                        returncode = 1
+                        break
 
-                    # if return code is changed to 1 or 2, do not update again
-                    if returncode == 0:
-                        if js == 'failed':
-                            returncode = 2
-                        elif js is None:
-                            status.set_job_status(status._path, module,
-                                                  job_name, 'failed')
-                            returncode = 2
-                        elif js not in status.FROZEN_STATUS:
-                            returncode = 1
+            status._dump()
+
+        logger.debug('reV pipeline module "{}" has status "{}".'
+                     .format(module, Pipeline.RETURNCODE[returncode]))
+
         return returncode
 
     def _get_command_config(self, i):

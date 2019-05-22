@@ -4,6 +4,7 @@ reV Base Configuration Frameworks
 import os
 import json
 import logging
+import time
 from warnings import warn
 
 from reV.utilities.execution import SLURM, PBS
@@ -28,10 +29,10 @@ class Status(dict):
         """
 
         self._path = path
-        if path.endswith('.json'):
+        if str(path).endswith('.json'):
             self._fpath = self._path
         else:
-            if not name.endswith('.json'):
+            if not str(name).endswith('.json'):
                 name += '.json'
             self._fpath = os.path.join(path, name)
         self.data = self._load()
@@ -104,9 +105,28 @@ class Status(dict):
             status = method(job_id)
         return status
 
+    def _check_all_job_files(self, path):
+        """Look for all single-job job status files in the target path and
+        update status.
+
+        Parameters
+        ----------
+        path : str
+            Directory to look for completion file.
+        """
+
+        for fname in os.listdir(path):
+            if fname.startswith('_status') and fname.endswith('.json'):
+                # wait one second to make sure file is finished being written
+                time.sleep(1)
+                with open(os.path.join(path, fname), 'r') as f:
+                    status = json.load(f)
+                self.data = self.update_dict(self.data, status)
+                os.remove(os.path.join(path, fname))
+
     @staticmethod
-    def _check_completion_file(path, job_name):
-        """Look for a completion file in the target path.
+    def _check_job_file(path, job_name):
+        """Look for a single-job job status file in the target path.
 
         Parameters
         ----------
@@ -117,14 +137,18 @@ class Status(dict):
 
         Returns
         -------
-        status : str | None
-            Job status if completion file found.
+        status : dict | None
+            Job status dictionary if completion file found.
         """
         status = None
+        target_fname = 'status_{}.json'.format(job_name)
         for fname in os.listdir(path):
-            if str(job_name) in fname and fname.endswith(Status.FROZEN_STATUS):
+            if fname == target_fname:
+                # wait one second to make sure file is finished being written
+                time.sleep(1)
+                with open(os.path.join(path, fname), 'r') as f:
+                    status = json.load(f)
                 os.remove(os.path.join(path, fname))
-                status = fname.split('.')[-1]
                 break
         return status
 
@@ -141,27 +165,30 @@ class Status(dict):
             Hardware option, either eagle or peregrine.
         """
 
-        if module not in self.data:
-            raise KeyError('reV status has not yet been initialized for "{}".'
-                           .format(module))
-        if job_name not in self.data[module]:
-            raise KeyError('reV status has not yet been initialized for "{}".'
-                           .format(job_name))
-        else:
-            previous = self.data[module][job_name]['job_status']
-
-        job_id = self.data[module][job_name].get('job_id', None)
-        hardware = self.data[module][job_name].get('hardware', hardware)
+        # init defaults in case job/module not in status file yet
+        previous = None
+        job_id = None
+        if module in self.data:
+            if job_name in self.data[module]:
+                previous = self.data[module][job_name].get('job_status', None)
+                job_id = self.data[module][job_name].get('job_id', None)
+                hardware = self.data[module][job_name].get('hardware',
+                                                           hardware)
 
         # look for completion file.
-        current = self._check_completion_file(self._path, job_name)
-        if current not in self.FROZEN_STATUS:
-            # check job status if completion file not present.
+        current = self._check_job_file(self._path, job_name)
+
+        # Update status data dict recursively if job file was found
+        if current is not None:
+            self.data = Status.update_dict(self.data, current)
+
+        # check job status via hardware if job file not found.
+        else:
             current = self._get_job_status(job_id, hardware=hardware)
 
-        # do not overwrite a successful or failed job status.
-        if (current != previous and previous not in self.FROZEN_STATUS):
-            self.data[module][job_name]['job_status'] = current
+            # do not overwrite a successful or failed job status.
+            if (current != previous and previous not in self.FROZEN_STATUS):
+                self.data[module][job_name]['job_status'] = current
 
     def _set_job_status(self, module, job_name, status):
         """Set an updated job status when finished. Must be a status string in
@@ -192,25 +219,56 @@ class Status(dict):
                  .format(self.FROZEN_STATUS))
 
     @staticmethod
-    def make_completion_file(path, job_name, status):
-        """Make a temporary file recording the status of a job.
+    def update_dict(d, u):
+        """Update a dictionary recursively.
+
+        Parameters
+        ----------
+        d : dict
+            Base dictionary to update.
+        u : dict
+            New dictionary with data to add to d.
+
+        Returns
+        -------
+        d : dict
+            d with data updated from u.
+        """
+
+        for k, v in u.items():
+            if isinstance(v, dict):
+                d[k] = Status.update_dict(d.get(k, {}), v)
+            else:
+                d[k] = v
+        return d
+
+    @staticmethod
+    def make_job_file(path, module, job_name, attrs):
+        """Make a json file recording the status of a single job.
 
         Parameters
         ----------
         path : str
             Path to json status file.
+        module : str
+            reV module that the job belongs to.
         job_name : str
             Unique job name identification.
-        status : str
-            Status string to set. Must be a status string in
-            the FROZEN_STATUS class attribute.
+        attrs : str
+            Dictionary of job attributes that represent the job status
+            attributes.
         """
-        if status in Status.FROZEN_STATUS:
-            open(os.path.join(path, job_name + '.{}'.format(status)), 'w')
+        if job_name.endswith('.h5'):
+            job_name = job_name.replace('.h5', '')
+        status = {module: {job_name: attrs}}
+        fpath = os.path.join(path, 'status_{}.json'.format(job_name))
+        with open(fpath, 'w') as f:
+            json.dump(status, f, sort_keys=True, indent=4,
+                      separators=(',', ': '))
 
     @classmethod
     def add_job(cls, path, module, job_name, replace=False, job_attrs=None):
-        """Add or update job status using pre-defined methods.
+        """Add a job to status json.
 
         Parameters
         ----------
@@ -225,6 +283,8 @@ class Status(dict):
         job_attrs : dict
             Job attributes. Should include 'job_id' if running on HPC.
         """
+        if job_name.endswith('.h5'):
+            job_name = job_name.replace('.h5', '')
 
         obj = cls(path)
 
@@ -241,7 +301,7 @@ class Status(dict):
         # check to see if job exists yet
         exists = obj.job_exists(path, job_name)
 
-        # job exists and user has requested forced removal
+        # job exists and user has requested forced replacement
         if replace and exists:
             del obj.data[module][job_name]
 
@@ -275,6 +335,8 @@ class Status(dict):
         exists : bool
             True if the job exists in the status json.
         """
+        if job_name.endswith('.h5'):
+            job_name = job_name.replace('.h5', '')
 
         obj = cls(path)
         if obj.data:
@@ -288,7 +350,7 @@ class Status(dict):
 
     @classmethod
     def retrieve_job_status(cls, path, module, job_name):
-        """Update and retrieve job status using pre-defined methods.
+        """Update and retrieve job status.
 
         Parameters
         ----------
@@ -298,12 +360,24 @@ class Status(dict):
             reV module that the job belongs to.
         job_name : str
             Unique job name identification.
+
+        Returns
+        -------
+        status : str | None
+            Status string or None if job/module not found.
         """
+        if job_name.endswith('.h5'):
+            job_name = job_name.replace('.h5', '')
 
         obj = cls(path)
         obj._update_job_status(module, job_name)
-        obj._dump()
-        return obj.data[module][job_name]['job_status']
+
+        try:
+            status = obj.data[module][job_name]['job_status']
+        except KeyError as _:
+            status = None
+
+        return status
 
     @classmethod
     def set_job_status(cls, path, module, job_name, status):
@@ -321,6 +395,8 @@ class Status(dict):
             Status string to set. Must be a status string in
             the FROZEN_STATUS class attribute.
         """
+        if job_name.endswith('.h5'):
+            job_name = job_name.replace('.h5', '')
 
         obj = cls(path)
         obj._set_job_status(module, job_name, status)
@@ -341,4 +417,5 @@ class Status(dict):
             for job_name in obj.data[module].keys():
                 if job_name != 'pipeline_index':
                     obj._update_job_status(module, job_name)
+        obj._check_all_job_files(path)
         obj._dump()
