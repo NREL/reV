@@ -703,25 +703,33 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
 
-        logger.info('Running reV generation on Eagle with node name "{}" for '
-                    '{} (points range: {}).'
-                    .format(node_name, pc, split.split_range))
-
-        # create and submit the SLURM job
-        slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      feature=feature, name=node_name, stdout_path=stdout_path)
-        if slurm.id:
-            msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) on '
-                   'Eagle.'.format(node_name, slurm.id))
-
-            # add job to reV status file.
-            Status.add_job(status_dir, 'generation', node_name, replace=True,
-                           job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
-                                      'fout': fout_node, 'dirout': dirout})
+        status = Status.retrieve_job_status(status_dir, 'generation',
+                                            node_name)
+        if status == 'successful':
+            msg = ('Job "{}" is successful in status found json in "{}", '
+                   'not re-running.'
+                   .format(node_name, status_dir))
         else:
-            msg = ('Was unable to kick off reV generation job "{}". '
-                   'Please see the stdout error messages'
-                   .format(node_name))
+            logger.info('Running reV generation on Eagle with node name "{}" '
+                        'for {} (points range: {}).'
+                        .format(node_name, pc, split.split_range))
+            # create and submit the SLURM job
+            slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
+                          feature=feature, name=node_name,
+                          stdout_path=stdout_path)
+            if slurm.id:
+                msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) '
+                       'on Eagle.'.format(node_name, slurm.id))
+                # add job to reV status file.
+                Status.add_job(
+                    status_dir, 'generation', node_name, replace=True,
+                    job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                               'fout': fout_node, 'dirout': dirout})
+            else:
+                msg = ('Was unable to kick off reV generation job "{}". '
+                       'Please see the stdout error messages'
+                       .format(node_name))
+
         click.echo(msg)
         logger.info(msg)
         jobs[i] = slurm

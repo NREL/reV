@@ -278,25 +278,31 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
                        file_prefix=file_prefix, parallel=parallel,
                        status_dir=status_dir, verbose=verbose)
 
-    logger.info('Running reV collection on Eagle with node name "{}", '
-                'collecting data to "{}" from "{}" with file prefix "{}".'
-                .format(name, h5_file, h5_dir, file_prefix))
-
-    # create and submit the SLURM job
-    slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                  feature=feature, name=name, stdout_path=stdout_path)
-    if slurm.id:
-        msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
-               'Eagle.'.format(name, slurm.id))
-        # add job to reV status file.
-        Status.add_job(status_dir, 'collect', name, replace=True,
-                       job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
-                                  'fout': os.path.basename(h5_file),
-                                  'dirout': os.path.dirname(h5_file)})
+    status = Status.retrieve_job_status(status_dir, 'econ',
+                                        name)
+    if status == 'successful':
+        msg = ('Job "{}" is successful in status json found in "{}", '
+               'not re-running.'
+               .format(name, status_dir))
     else:
-        msg = ('Was unable to kick off reV collection job "{}". '
-               'Please see the stdout error messages'
-               .format(name))
+        logger.info('Running reV collection on Eagle with node name "{}", '
+                    'collecting data to "{}" from "{}" with file prefix "{}".'
+                    .format(name, h5_file, h5_dir, file_prefix))
+        # create and submit the SLURM job
+        slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
+                      feature=feature, name=name, stdout_path=stdout_path)
+        if slurm.id:
+            msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
+                   'Eagle.'.format(name, slurm.id))
+            # add job to reV status file.
+            Status.add_job(status_dir, 'collect', name, replace=True,
+                           job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                                      'fout': os.path.basename(h5_file),
+                                      'dirout': os.path.dirname(h5_file)})
+        else:
+            msg = ('Was unable to kick off reV collection job "{}". '
+                   'Please see the stdout error messages'
+                   .format(name))
     click.echo(msg)
     logger.info(msg)
 
