@@ -118,7 +118,7 @@ class Status(dict):
         for fname in os.listdir(path):
             if fname.startswith('_status') and fname.endswith('.json'):
                 # wait one second to make sure file is finished being written
-                time.sleep(1)
+                time.sleep(0.1)
                 with open(os.path.join(path, fname), 'r') as f:
                     status = json.load(f)
                 self.data = self.update_dict(self.data, status)
@@ -145,7 +145,7 @@ class Status(dict):
         for fname in os.listdir(path):
             if fname == target_fname:
                 # wait one second to make sure file is finished being written
-                time.sleep(1)
+                time.sleep(0.1)
                 with open(os.path.join(path, fname), 'r') as f:
                     status = json.load(f)
                 os.remove(os.path.join(path, fname))
