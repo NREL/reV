@@ -28,15 +28,12 @@ logger = logging.getLogger(__name__)
 @click.group()
 @click.option('--name', '-n', default='reV', type=STR,
               help='Generation job name. Default is "reV_gen".')
-@click.option('--status_dir', '-st', default=None, type=STR,
-              help='Optional directory containing reV status json.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, status_dir, verbose):
+def main(ctx, name, verbose):
     """Command line interface (CLI) for the reV 2.0 SAM-based modules."""
     ctx.obj['NAME'] = name
-    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -238,8 +235,6 @@ def make_fout(name, year):
                     'Default is "gen_output.h5"'))
 @click.option('--dirout', '-do', default='./out/gen_out', type=STR,
               help='Output directory specification. Default is ./out/gen_out')
-@click.option('--status_dir', '-st', default=None, type=STR,
-              help='Directory containing the status file. Default is dirout.')
 @click.option('--logdir', '-lo', default='./out/log_gen', type=STR,
               help='Generation log file directory. Default is ./out/log_gen')
 @click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
@@ -259,7 +254,7 @@ def make_fout(name, year):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
-           dirout, status_dir, logdir, output_request, mem_util_lim,
+           dirout, logdir, output_request, mem_util_lim,
            curtailment, downscale, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
@@ -270,7 +265,6 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
     ctx.obj['SITES_PER_CORE'] = sites_per_core
     ctx.obj['FOUT'] = fout
     ctx.obj['DIROUT'] = dirout
-    ctx.obj['STATUS_DIR'] = status_dir
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
@@ -298,7 +292,6 @@ def gen_local(ctx, n_workers, points_range, verbose):
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
-    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
@@ -343,11 +336,9 @@ def gen_local(ctx, n_workers, points_range, verbose):
                         runtime, dirout))
 
     # add job to reV status file.
-    if status_dir is None:
-        status_dir = dirout
     status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
               'runtime': runtime}
-    Status.make_job_file(status_dir, 'generation', name, status)
+    Status.make_job_file(dirout, 'generation', name, status)
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
@@ -440,7 +431,7 @@ def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
 
 def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_core=None, n_workers=None,
-                 fout='reV.h5', dirout='./out/gen_out', status_dir=None,
+                 fout='reV.h5', dirout='./out/gen_out',
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  mem_util_lim=0.4, curtailment=None, downscale=None,
                  verbose=False):
@@ -473,8 +464,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
         Target filename to dump generation outputs.
     dirout : str
         Target directory to dump generation fout.
-    status_dir : str
-        Optional directory to save status file.
     logdir : str
         Target directory to save log files.
     output_request : list | tuple
@@ -505,7 +494,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     # make some strings only if specified
     cstr = '-curt {} '.format(SubprocessManager.s(curtailment))
     dstr = '-ds {} '.format(SubprocessManager.s(downscale))
-    ststr = '-st {} '.format(SubprocessManager.s(status_dir))
 
     # make a cli arg string for direct() in this module
     arg_direct = ('-t {tech} '
@@ -515,7 +503,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-spc {sites_per_core} '
                   '-fo {fout} '
                   '-do {dirout} '
-                  '{sdir}'
                   '-lo {logdir} '
                   '-or {out_req} '
                   '-mem {mem} '
@@ -528,7 +515,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                           sites_per_core=SubprocessManager.s(sites_per_core),
                           fout=SubprocessManager.s(fout),
                           dirout=SubprocessManager.s(dirout),
-                          sdir=ststr if status_dir else '',
                           logdir=SubprocessManager.s(logdir),
                           out_req=SubprocessManager.s(output_request),
                           mem=SubprocessManager.s(mem_util_lim),
@@ -580,16 +566,12 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
-    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
     downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-
-    if status_dir is None:
-        status_dir = dirout
 
     # initialize an info logger on the year level
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
@@ -607,8 +589,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
-                           fout=fout_node, dirout=dirout,
-                           status_dir=status_dir, logdir=logdir,
+                           fout=fout_node, dirout=dirout, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
@@ -625,7 +606,7 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
                    'Peregrine.'.format(node_name, pbs.id))
 
             # add job to reV status file.
-            Status.add_job(status_dir, 'generation', node_name, replace=True,
+            Status.add_job(dirout, 'generation', node_name, replace=True,
                            job_attrs={'job_id': pbs.id,
                                       'hardware': 'peregrine',
                                       'fout': fout_node,
@@ -670,16 +651,12 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     sites_per_core = ctx.obj['SITES_PER_CORE']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
-    status_dir = ctx.obj['STATUS_DIR']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
     downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-
-    if status_dir is None:
-        status_dir = dirout
 
     # initialize an info logger on the year level
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
@@ -695,18 +672,16 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
-                           fout=fout_node, dirout=dirout,
-                           status_dir=status_dir, logdir=logdir,
+                           fout=fout_node, dirout=dirout, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
 
-        status = Status.retrieve_job_status(status_dir, 'generation',
-                                            node_name)
+        status = Status.retrieve_job_status(dirout, 'generation', node_name)
         if status == 'successful':
             msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'
-                   .format(node_name, status_dir))
+                   .format(node_name, dirout))
         else:
             logger.info('Running reV generation on Eagle with node name "{}" '
                         'for {} (points range: {}).'
@@ -720,7 +695,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
                        'on Eagle.'.format(node_name, slurm.id))
                 # add job to reV status file.
                 Status.add_job(
-                    status_dir, 'generation', node_name, replace=True,
+                    dirout, 'generation', node_name, replace=True,
                     job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                                'fout': fout_node, 'dirout': dirout})
             else:
