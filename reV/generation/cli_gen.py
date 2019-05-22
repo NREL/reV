@@ -688,8 +688,6 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
 
     pc = get_node_pc(points, sam_files, tech, res_file, nodes)
 
-    jobs = {}
-
     for i, split in enumerate(pc):
         node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
@@ -706,7 +704,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
         status = Status.retrieve_job_status(status_dir, 'generation',
                                             node_name)
         if status == 'successful':
-            msg = ('Job "{}" is successful in status found json in "{}", '
+            msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'
                    .format(node_name, status_dir))
         else:
@@ -732,9 +730,6 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
 
         click.echo(msg)
         logger.info(msg)
-        jobs[i] = slurm
-
-    return jobs
 
 
 if __name__ == '__main__':
