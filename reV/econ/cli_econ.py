@@ -531,8 +531,6 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
 
     pc = get_node_pc(points, sam_files, nodes)
 
-    jobs = {}
-
     for i, split in enumerate(pc):
         node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
@@ -575,9 +573,6 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
 
         click.echo(msg)
         logger.info(msg)
-        jobs[i] = slurm
-
-    return jobs
 
 
 if __name__ == '__main__':

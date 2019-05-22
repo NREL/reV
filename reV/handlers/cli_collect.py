@@ -308,8 +308,6 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     click.echo(msg)
     logger.info(msg)
 
-    return slurm
-
 
 if __name__ == '__main__':
     main(obj={})
