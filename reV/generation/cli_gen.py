@@ -306,11 +306,6 @@ def gen_local(ctx, n_workers, points_range, verbose):
     downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    # add job to reV status file.
-    if status_dir is None:
-        status_dir = dirout
-    Status.add_job(status_dir, 'generation', name)
-
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
                                      'reV.config', 'reV.utilities', 'reV.SAM'],
@@ -341,12 +336,18 @@ def gen_local(ctx, n_workers, points_range, verbose):
                   mem_util_lim=mem_util_lim)
 
     tmp_str = ' with points range {}'.format(points_range)
+    runtime = (time.time() - t0) / 60
     logger.info('Gen compute complete for project points "{0}"{1}. '
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'
                 .format(points, tmp_str if points_range else '',
-                        (time.time() - t0) / 60, dirout))
+                        runtime, dirout))
 
-    Status.make_completion_file(status_dir, name, 'successful')
+    # add job to reV status file.
+    if status_dir is None:
+        status_dir = dirout
+    status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
+              'runtime': runtime}
+    Status.make_job_file(status_dir, 'generation', name, status)
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
@@ -412,6 +413,9 @@ def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
         Base file output name with _node00 tag.
     """
 
+    if name.endswith('.h5'):
+        name = name.replace('.h5', '')
+
     if not fout.endswith('.h5'):
         fout += '.h5'
 
@@ -427,6 +431,9 @@ def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
             node_name = '{0}_{1:02d}'.format(name[:13], i)
 
         fout_node = fout.replace('.h5', '_node{0:02d}.h5'.format(i))
+
+    if node_name.endswith('.h5'):
+        node_name = node_name.replace('.h5', '')
 
     return node_name, fout_node
 
@@ -581,6 +588,9 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    if status_dir is None:
+        status_dir = dirout
+
     # initialize an info logger on the year level
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
                                      'reV.config', 'reV.utilities', 'reV.SAM'],
@@ -667,6 +677,9 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     curtailment = ctx.obj['CURTAILMENT']
     downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
+
+    if status_dir is None:
+        status_dir = dirout
 
     # initialize an info logger on the year level
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',

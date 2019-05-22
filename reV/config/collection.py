@@ -48,7 +48,7 @@ class CollectionConfig(AnalysisConfig):
         if self._coldir is None:
             self._coldir = self['directories']['collect_directory']
             if 'PIPELINE' in self._coldir:
-                dirs = Pipeline.parse_previous(self.statusdir, 'collect',
+                dirs = Pipeline.parse_previous(self.dirout, 'collect',
                                                target='dirout')
                 self._coldir = dirs[0]
         return self._coldir
@@ -95,7 +95,7 @@ class CollectionConfig(AnalysisConfig):
 
     def _parse_pipeline_prefixes(self):
         """Parse reV pipeline for file prefixes from previous module."""
-        files = Pipeline.parse_previous(self.statusdir, 'collect',
+        files = Pipeline.parse_previous(self.dirout, 'collect',
                                         target='fout')
         for i, fname in enumerate(files):
             files[i] = '_'.join([c for c in fname.split('_')

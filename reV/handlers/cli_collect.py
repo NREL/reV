@@ -150,11 +150,6 @@ def collect(ctx, verbose):
     init_mult(name, h5_dir, modules=[__name__, 'reV.handlers.collection'],
               verbose=verbose, node=True)
 
-    # add job to reV status file.
-    if status_dir is None:
-        status_dir = os.path.abspath(h5_file)
-    Status.add_job(status_dir, 'collect', name)
-
     for key, val in ctx.obj.items():
         logger.debug('ctx var passed to collection method: "{}" : "{}" '
                      'with type "{}"'.format(key, val, type(val)))
@@ -164,28 +159,27 @@ def collect(ctx, verbose):
                 .format(dsets, name, h5_dir, h5_file))
     t0 = time.time()
 
-    try:
-        Collector.collect(h5_file, h5_dir, project_points, dsets[0],
-                          file_prefix=file_prefix, parallel=parallel)
-    except Exception as e:
-        logger.exception('Collection failed!')
-        raise e
+    Collector.collect(h5_file, h5_dir, project_points, dsets[0],
+                      file_prefix=file_prefix, parallel=parallel)
 
     if len(dsets) > 1:
         for dset_name in dsets[1:]:
-            try:
-                Collector.add_dataset(h5_file, h5_dir, dset_name,
-                                      file_prefix=file_prefix,
-                                      parallel=parallel)
-            except Exception as e:
-                logger.exception('Collection failed!')
-                raise e
+            Collector.add_dataset(h5_file, h5_dir, dset_name,
+                                  file_prefix=file_prefix,
+                                  parallel=parallel)
 
+    runtime = (time.time() - t0) / 60
     logger.info('Collection complete from h5 directory: "{0}". '
                 'Time elapsed: {1:.2f} min. Target output file: "{2}"'
-                .format(h5_dir, (time.time() - t0) / 60, h5_file))
+                .format(h5_dir, runtime, h5_file))
 
-    Status.make_completion_file(status_dir, name, 'successful')
+    # add job to reV status file.
+    if status_dir is None:
+        status_dir = os.path.dirname(h5_file)
+    status = {'dirout': os.path.dirname(h5_file),
+              'fout': os.path.basename(h5_file), 'job_status': 'successful',
+              'runtime': runtime}
+    Status.make_job_file(status_dir, 'collect', name, status)
 
 
 def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
@@ -276,6 +270,9 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     parallel = ctx.obj['PARALLEL']
     status_dir = ctx.obj['STATUS_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
+
+    if status_dir is None:
+        status_dir = os.path.dirname(h5_file)
 
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, parallel=parallel,
