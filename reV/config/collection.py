@@ -19,7 +19,6 @@ class CollectionConfig(AnalysisConfig):
     """Base analysis config (generation, lcoe, etc...)."""
 
     def __init__(self, config):
-<<<<<<< HEAD
         """
         Parameters
         ----------
@@ -27,31 +26,11 @@ class CollectionConfig(AnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
-=======
-        self._coldir = None
->>>>>>> minor refactor of pipeline framework so that all pipeline parsing is done in the config. Additions/bug fixes:
         self._parallel = False
         self._dsets = None
         self._file_prefixes = None
         self._ec = None
         super().__init__(config)
-
-    @property
-    def coldir(self):
-        """Get the directory to collect files from.
-
-        Returns
-        -------
-        _coldir : str
-            Target path to collect h5 files from.
-        """
-        if self._coldir is None:
-            self._coldir = self['directories']['collect_directory']
-            if 'PIPELINE' in self._coldir:
-                dirs = Pipeline.parse_previous(self.dirout, 'collect',
-                                               target='dirout')
-                self._coldir = dirs[0]
-        return self._coldir
 
     @property
     def project_points(self):
