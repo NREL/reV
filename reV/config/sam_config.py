@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 class SAMConfig(BaseConfig):
     """Class to handle the SAM section of config input."""
-    def __init__(self, SAM_configs):
-        """Initialize the SAM section of config as an object.
 
+    def __init__(self, SAM_configs):
+        """
         Parameters
         ----------
         SAM_configs : dict

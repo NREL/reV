@@ -16,12 +16,12 @@ class BaseConfig(dict):
     """Base class for configuration frameworks."""
 
     def __init__(self, config):
-        """Initialize configuration object with keyword dict.
-
+        """
         Parameters
         ----------
         config : str | dict
-            File path to config json or dictionary with pre-extracted config
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
         """
         self._logging_level = None
         self._name = None
@@ -33,7 +33,8 @@ class BaseConfig(dict):
         Parameters
         ----------
         config : str | dict
-            File path to config json or dictionary with pre-extracted config
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
         """
 
         # str_rep is a mapping of config strings to replace with real values
@@ -41,18 +42,19 @@ class BaseConfig(dict):
                         'TESTDATADIR': TESTDATADIR,
                         }
 
+        # str is either json file path or serialized json object
         if isinstance(config, str):
-            if not config.endswith('.json'):
-                raise ConfigError('Config input string must be a json file '
-                                  'but received: "{}"'.format(config))
-            # get the directory of the config file
-            self.dir = os.path.dirname(os.path.realpath(config)) + '/'
-            self.str_rep['./'] = self.dir
-            config = self.get_file(config)
+            if config.endswith('.json'):
+                # get the directory of the config file
+                self.dir = os.path.dirname(os.path.realpath(config)) + '/'
+                self.str_rep['./'] = self.dir
+                config = self.get_file(config)
+            else:
+                # attempt to deserialize non-json string
+                config = json.loads(config)
 
-        # Get file, Perform string replacement, save config to self instance
+        # Perform string replacement, save config to self instance
         config = self.str_replace(config, self.str_rep)
-
         self.set_self_dict(config)
 
     @staticmethod

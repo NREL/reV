@@ -26,6 +26,13 @@ class AnalysisConfig(BaseConfig):
     """Base analysis config (generation, lcoe, etc...)."""
 
     def __init__(self, config):
+        """
+        Parameters
+        ----------
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
+        """
         self._years = None
         self._dirout = None
         self._logdir = None
@@ -126,7 +133,13 @@ class SAMAnalysisConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
 
     def __init__(self, config):
-        """Initialize a config object."""
+        """
+        Parameters
+        ----------
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
+        """
         self._tech = None
         self._sam_config = None
         self._pc = None
@@ -259,7 +272,13 @@ class GenConfig(SAMAnalysisConfig):
     """Class to import and manage user configuration inputs."""
 
     def __init__(self, config):
-        """Initialize a config object."""
+        """
+        Parameters
+        ----------
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
+        """
         self._curtailment = None
         self._downscale = None
         self._res_files = None
@@ -336,7 +355,13 @@ class EconConfig(SAMAnalysisConfig):
     """Class to import and manage configuration inputs for econ analysis."""
 
     def __init__(self, config):
-        """Initialize a config object."""
+        """
+        Parameters
+        ----------
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
+        """
         self._cf_files = None
         self._site_data = None
         super().__init__(config)
