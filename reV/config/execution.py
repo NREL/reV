@@ -13,6 +13,13 @@ class BaseExecutionConfig(BaseConfig):
     """Base class to handle execution configuration"""
 
     def __init__(self, config_dict):
+        """
+        Parameters
+        ----------
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
+        """
         self._option = None
         self._nodes = None
         self._ppn = None
