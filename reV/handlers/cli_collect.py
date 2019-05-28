@@ -259,7 +259,7 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
                        file_prefix=file_prefix, parallel=parallel,
                        verbose=verbose)
 
-    status = Status.retrieve_job_status(os.path.dirname(h5_file), 'econ',
+    status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
                                         name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '

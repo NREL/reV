@@ -30,7 +30,24 @@ class CollectionConfig(AnalysisConfig):
         self._dsets = None
         self._file_prefixes = None
         self._ec = None
+        self._coldir = None
         super().__init__(config)
+
+    @property
+    def coldir(self):
+        """Get the directory to collect files from.
+        Returns
+        -------
+        _coldir : str
+            Target path to collect h5 files from.
+        """
+        if self._coldir is None:
+            self._coldir = self['directories']['collect_directory']
+
+        if self._coldir == 'PIPELINE':
+            self._coldir = Pipeline.parse_previous(self.dirout, 'collect',
+                                                   target='dirout')[0]
+        return self._coldir
 
     @property
     def project_points(self):
