@@ -190,7 +190,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
     file_prefix : str
         .h5 file prefix, if None collect all files on h5_dir
     parallel : bool
-        Option to run in parallel using dask
+        Option to run in parallel
 
     Returns
     -------

@@ -11,7 +11,7 @@ from warnings import warn
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
                                       HandlerWarning)
-from reV.utilities.execution import execute_futures, SmartParallelJob
+from reV.utilities.execution import execute_parallel, SmartParallelJob
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,7 @@ class Collector:
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
-            Option to run in parallel using dask
+            Option to run in parallel
         clobber : bool
             Flag to purge .h5 file if it already exists
         """
@@ -379,7 +379,7 @@ class Collector:
                 self._check_meta(f.meta)
             else:
                 if self._parallel:
-                    meta = execute_futures(self.parse_meta, self.h5_files)
+                    meta = execute_parallel(self.parse_meta, self.h5_files)
                 else:
                     meta = [self.parse_meta(file) for file in self.h5_files]
 
@@ -422,8 +422,7 @@ class Collector:
         if self._parallel:
             dset_collector = DatasetCollector(self._h5_out, self.gids, dset,
                                               dset_out=dset_out)
-            SmartParallelJob.execute(dset_collector, self.h5_files,
-                                     loggers=(__name__, ))
+            SmartParallelJob.execute(dset_collector, self.h5_files)
         else:
             DatasetCollector.collect(self._h5_out, self.gids, dset,
                                      self.h5_files, dset_out=dset_out)
@@ -451,7 +450,7 @@ class Collector:
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
-            Option to run in parallel using dask
+            Option to run in parallel
         """
         if file_prefix is None:
             h5_files = "*.h5"
@@ -498,7 +497,7 @@ class Collector:
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
-            Option to run in parallel using dask
+            Option to run in parallel
         """
         if file_prefix is None:
             h5_files = "*.h5"

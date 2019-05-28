@@ -973,8 +973,7 @@ class Gen:
             out = execute_single(gen.run, pc, **kwargs)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(gen.run, pc, n_workers=n_workers,
-                                   loggers=[__name__, 'reV.SAM'], **kwargs)
+            out = execute_parallel(gen.run, pc, n_workers=n_workers, **kwargs)
 
         # save output data to object attribute
         gen.out = out
@@ -1068,8 +1067,6 @@ class Gen:
             # use SmartParallelJob to manage runs, but set mem limit to 1
             # because Gen() will manage the sites in-memory
             SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                     loggers=['reV.generation', 'reV.SAM',
-                                              'reV.utilities'],
                                      mem_util_lim=1.0, **kwargs)
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed.')

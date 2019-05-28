@@ -20,6 +20,14 @@ reV.utilities.curtailment module
     :undoc-members:
     :show-inheritance:
 
+reV.utilities.downscale module
+------------------------------
+
+.. automodule:: reV.utilities.downscale
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.utilities.exceptions module
 -------------------------------
 

@@ -227,7 +227,7 @@ class Econ(Gen):
         """Add the site df (site-specific inputs) to project points dataframe.
 
         This ensures that only the relevant site's data will be passed through
-        to dask workers when points_control is iterated and split.
+        to parallel workers when points_control is iterated and split.
         """
         self.project_points.join_df(self.site_data, key=self.site_data.index)
 
@@ -382,10 +382,7 @@ class Econ(Gen):
             out = execute_single(econ.run, pc, **kwargs)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(econ.run, pc, n_workers=n_workers,
-                                   loggers=[__name__, 'reV.econ',
-                                            'reV.generation', 'reV.SAM',
-                                            'reV.utilities'], **kwargs)
+            out = execute_parallel(econ.run, pc, n_workers=n_workers, **kwargs)
 
         # save output data to object attribute
         econ.out = out
@@ -484,9 +481,6 @@ class Econ(Gen):
             # use SmartParallelJob to manage runs, but set mem limit to 1
             # because Econ() will manage the sites in-memory
             SmartParallelJob.execute(econ, pc, n_workers=n_workers,
-                                     loggers=[__name__, 'reV.econ',
-                                              'reV.generation', 'reV.SAM',
-                                              'reV.utilities'],
                                      mem_util_lim=1.0, **kwargs)
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed.')
