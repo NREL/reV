@@ -4,6 +4,14 @@ reV.handlers package
 Submodules
 ----------
 
+reV.handlers.cli\_collect module
+--------------------------------
+
+.. automodule:: reV.handlers.cli_collect
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.handlers.collection module
 ------------------------------
 
