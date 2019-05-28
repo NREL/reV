@@ -422,8 +422,7 @@ class Collector:
         if self._parallel:
             dset_collector = DatasetCollector(self._h5_out, self.gids, dset,
                                               dset_out=dset_out)
-            SmartParallelJob.execute(dset_collector, self.h5_files,
-                                     loggers=(__name__, ))
+            SmartParallelJob.execute(dset_collector, self.h5_files)
         else:
             DatasetCollector.collect(self._h5_out, self.gids, dset,
                                      self.h5_files, dset_out=dset_out)

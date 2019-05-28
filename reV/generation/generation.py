@@ -1068,8 +1068,6 @@ class Gen:
             # use SmartParallelJob to manage runs, but set mem limit to 1
             # because Gen() will manage the sites in-memory
             SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                     loggers=['reV.generation', 'reV.SAM',
-                                              'reV.utilities'],
                                      mem_util_lim=1.0, **kwargs)
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed.')
