@@ -186,7 +186,7 @@ class Collector:
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
-            Option to run in parallel using dask
+            Option to run in parallel
         clobber : bool
             Flag to purge .h5 file if it already exists
         """
@@ -450,7 +450,7 @@ class Collector:
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
-            Option to run in parallel using dask
+            Option to run in parallel
         """
         if file_prefix is None:
             h5_files = "*.h5"
@@ -497,7 +497,7 @@ class Collector:
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
-            Option to run in parallel using dask
+            Option to run in parallel
         """
         if file_prefix is None:
             h5_files = "*.h5"

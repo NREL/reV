@@ -227,7 +227,7 @@ class Econ(Gen):
         """Add the site df (site-specific inputs) to project points dataframe.
 
         This ensures that only the relevant site's data will be passed through
-        to dask workers when points_control is iterated and split.
+        to parallel workers when points_control is iterated and split.
         """
         self.project_points.join_df(self.site_data, key=self.site_data.index)
 
