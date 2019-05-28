@@ -221,7 +221,7 @@ class Pipeline:
 
         fail_str = ''
         if check_failed:
-            fail_str = ' with some jobs failed'
+            fail_str = ', but some jobs have failed'
         logger.debug('reV {} is {}{}.'
                      .format(module, Pipeline.RETURNCODE[returncode],
                              fail_str))

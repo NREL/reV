@@ -641,7 +641,7 @@ class Outputs(Resource):
         """
 
         logger.debug("Initializing output file: {}".format(h5_file))
-        with cls(h5_file, mode='w-') as f:
+        with cls(h5_file, mode='w') as f:
             f['meta'] = meta
 
             if time_index is not None:
