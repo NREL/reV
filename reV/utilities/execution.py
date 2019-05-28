@@ -500,7 +500,7 @@ class SLURM(SubprocessManager):
         return out, err
 
 
-def execute_futures(fun, execution_iter, n_workers=None, **kwargs):
+def execute_parallel(fun, execution_iter, n_workers=None, **kwargs):
     """Execute concurrent futures with an established cluster.
 
     Parameters

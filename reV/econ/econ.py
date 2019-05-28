@@ -382,10 +382,7 @@ class Econ(Gen):
             out = execute_single(econ.run, pc, **kwargs)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(econ.run, pc, n_workers=n_workers,
-                                   loggers=[__name__, 'reV.econ',
-                                            'reV.generation', 'reV.SAM',
-                                            'reV.utilities'], **kwargs)
+            out = execute_parallel(econ.run, pc, n_workers=n_workers, **kwargs)
 
         # save output data to object attribute
         econ.out = out

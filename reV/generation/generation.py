@@ -973,8 +973,7 @@ class Gen:
             out = execute_single(gen.run, pc, **kwargs)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(gen.run, pc, n_workers=n_workers,
-                                   loggers=[__name__, 'reV.SAM'], **kwargs)
+            out = execute_parallel(gen.run, pc, n_workers=n_workers, **kwargs)
 
         # save output data to object attribute
         gen.out = out

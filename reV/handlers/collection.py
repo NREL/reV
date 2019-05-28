@@ -11,7 +11,7 @@ from warnings import warn
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
                                       HandlerWarning)
-from reV.utilities.execution import execute_futures, SmartParallelJob
+from reV.utilities.execution import execute_parallel, SmartParallelJob
 
 logger = logging.getLogger(__name__)
 
@@ -379,7 +379,7 @@ class Collector:
                 self._check_meta(f.meta)
             else:
                 if self._parallel:
-                    meta = execute_futures(self.parse_meta, self.h5_files)
+                    meta = execute_parallel(self.parse_meta, self.h5_files)
                 else:
                     meta = [self.parse_meta(file) for file in self.h5_files]
 
