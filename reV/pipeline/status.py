@@ -185,15 +185,26 @@ class Status(dict):
 
         # check job status via hardware if job file not found.
         else:
-            current = self._get_job_status(job_id, hardware=hardware)
+            # job exists
+            if job_name in self.data[module]:
 
-            # do not overwrite a successful or failed job status.
-            if (current != previous and previous not in self.FROZEN_STATUS):
-                self.data[module][job_name]['job_status'] = current
+                current = self._get_job_status(job_id, hardware=hardware)
+
+                # No current status and job was not successful: failed!
+                if current is None and previous != 'successful':
+                    self.data[module][job_name]['job_status'] = 'failed'
+
+                # do not overwrite a successful or failed job status.
+                elif (current != previous and
+                      previous not in self.FROZEN_STATUS):
+                    self.data[module][job_name]['job_status'] = current
+
+            # job does not yet exist
+            else:
+                self.data[module][job_name] = {}
 
     def _set_job_status(self, module, job_name, status):
-        """Set an updated job status when finished. Must be a status string in
-        the FROZEN_STATUS class attribute.
+        """Set an updated job status to the object instance.
 
         Parameters
         ----------
@@ -213,11 +224,7 @@ class Status(dict):
             raise KeyError('reV pipeline status has not been initialized '
                            'for "{}: {}".'.format(module, job_name))
 
-        if status in self.FROZEN_STATUS:
-            self.data[module][job_name]['job_status'] = status
-        else:
-            warn('Can only force-set a job status to one of the following: {}'
-                 .format(self.FROZEN_STATUS))
+        self.data[module][job_name]['job_status'] = status
 
     @staticmethod
     def update_dict(d, u):
@@ -376,10 +383,7 @@ class Status(dict):
         obj = cls(path)
         obj._update_job_status(module, job_name)
 
-        try:
-            status = obj.data[module][job_name]['job_status']
-        except KeyError as _:
-            status = None
+        status = obj.data[module][job_name].get('job_status', None)
 
         return status
 

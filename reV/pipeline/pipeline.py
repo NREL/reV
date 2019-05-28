@@ -4,6 +4,7 @@ reV date pipeline architecture.
 import time
 import json
 import os
+import numpy as np
 import logging
 
 from reV.config.base_analysis_config import AnalysisConfig
@@ -21,7 +22,8 @@ class Pipeline:
     COMMANDS = ('generation', 'econ', 'collect')
     RETURNCODE = {0: 'successful',
                   1: 'running',
-                  2: 'failed'}
+                  2: 'failed',
+                  3: 'complete'}
 
     def __init__(self, run_list, status_dir=None):
         """
@@ -107,7 +109,7 @@ class Pipeline:
                                       status_dir=self._status_dir)
 
         if os.path.isfile(status._fpath):
-            returncode = self._get_return_code(status, module)
+            returncode = self._get_module_return_code(status, module)
         else:
             # file does not yet exist. assume job is not yet running.
             returncode = 1
@@ -157,7 +159,7 @@ class Pipeline:
         return status
 
     @staticmethod
-    def _get_return_code(status, module):
+    def _get_module_return_code(status, module):
         """Get a return code for a full module based on a status object.
 
         Parameters
@@ -173,36 +175,56 @@ class Pipeline:
             Pipeline step return code. ()
         """
 
-        # start return code as failed
-        returncode = 2
+        # initialize return code array
+        returncode = []
 
         if module not in status.data:
             # assume running
-            returncode = 1
+            returncode = [1]
         else:
             for job_name in status.data[module].keys():
                 if job_name != 'pipeline_index':
+
+                    # update the job status and get the status string
                     status._update_job_status(module, job_name)
                     js = status.data[module][job_name]['job_status']
 
                     if js == 'successful':
-                        returncode = 0
+                        returncode.append(0)
                     elif js == 'failed':
-                        returncode = 2
-                        break
+                        returncode.append(2)
                     elif js is None:
-                        status.set_job_status(status._path, module,
-                                              job_name, 'failed')
-                        returncode = 2
-                        break
+                        returncode.append(3)
                     else:
-                        returncode = 1
-                        break
+                        returncode.append(1)
 
             status._dump()
 
-        logger.debug('reV pipeline module "{}" has status "{}".'
-                     .format(module, Pipeline.RETURNCODE[returncode]))
+        # check to see if all have completed, or any have failed
+        check_success = all(np.array(returncode) == 0)
+        check_complete = all(np.array(returncode) != 1)
+        check_failed = any(np.array(returncode) == 2)
+
+        # only return success if all have succeeded.
+        if check_success:
+            returncode = 0
+        # Only return failed when all have finished.
+        elif check_complete & check_failed:
+            returncode = 2
+        # only return complete when all have completed
+        # (but some should have succeeded or failed)
+        elif check_complete:
+            returncode = 3
+        # otherwise, jobs are still running
+        else:
+            returncode = 1
+
+        fail_str = ''
+        if check_failed:
+            fail_str = ' with some jobs failed'
+        logger.debug('reV {} is {}{}.'
+                     .format(module, Pipeline.RETURNCODE[returncode],
+                             fail_str))
 
         return returncode
 
