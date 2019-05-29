@@ -109,6 +109,7 @@ def submit_eagle(name, config_file, verbose):
     # create and submit the SLURM job
     slurm = SLURM(cmd,
                   alloc=config.execution_control.allocation,
+                  memory=config.execution_control.memory,
                   walltime=config.execution_control.walltime,
                   name=config.name,
                   stdout_path=os.path.join(config.logdir, 'stdout'))

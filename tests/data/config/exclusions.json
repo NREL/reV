@@ -36,6 +36,7 @@
   "exclusions_use_blocks": true,
   "execution_control": {
     "allocation": "rev",
+    "memory": 90,
     "nodes": 1,
     "option": "eagle",
     "walltime": 0.1
