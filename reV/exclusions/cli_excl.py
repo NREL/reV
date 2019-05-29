@@ -56,9 +56,18 @@ def main(name, config_file, verbose):
     else:
         fname = os.path.join(config.dirout, 'exclusions.tif')
 
+    use_blocks = False
+    if 'exclusions_use_blocks' in config:
+        use_blocks = config['exclusions_output_file']
+
+    contiguous_filter = None
+    if 'exclusions_filter' in config:
+        contiguous_filter = config['exclusions_filter']
+
     Exclusions.run(config=config['exclusions'],
-                   use_blocks=True,
-                   output_fname=fname)
+                   output_fname=fname,
+                   use_blocks=use_blocks,
+                   contiguous_filter=contiguous_filter)
 
     return None
 
