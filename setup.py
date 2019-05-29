@@ -48,6 +48,26 @@ class PostDevelopCommand(develop):
         develop.run(self)
 
 
+def get_sam_data_files():
+    """
+    Get all data files in the SAM directory that are required to run reV.
+    """
+
+    rel_dir = 'reV/SAM/'
+    sam_dir = os.path.join(os.getcwd(), rel_dir)
+    sam_data_files = []
+    for root, _, files in os.walk(sam_dir):
+
+        f_dir = root[root.index(rel_dir):]
+        for fname in files:
+            sam_data_files.append(os.path.join(f_dir, fname))
+
+    sam_data_files = [f for f in sam_data_files
+                      if not f.endswith(('.py', '.pyc'))]
+
+    return sam_data_files
+
+
 setup(
     name="reV",
     version=version,
@@ -59,7 +79,11 @@ setup(
     packages=find_packages(),
     package_dir={"rev": "rev"},
     entry_points={
-        "console_scripts": ["rev=reV.cli:main", ],
+        "console_scripts": ["rev=reV.cli:main",
+                            "rev_gen=reV.generation.cli_gen:main",
+                            "rev_collect=reV.handlers.cli_collect:main",
+                            "rev_econ=reV.econ.cli_econ:main",
+                            "rev_pipeline=reV.pipeline.cli_pipeline:main"],
     },
     include_package_data=True,
     license="BSD license",
@@ -81,4 +105,5 @@ setup(
         "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],
     },
     cmdclass={"develop": PostDevelopCommand},
+    data_files=[('sam_files', get_sam_data_files())],
 )

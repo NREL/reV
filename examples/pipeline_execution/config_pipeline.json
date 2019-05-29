@@ -1,0 +1,18 @@
+{
+  "logging": {
+    "log_file": null,
+    "log_level": "DEBUG"
+  },
+  "name": "rev_pipeline",
+  "pipeline": [
+    {
+      "generation": "/scratch/gbuster/rev/test_pipeline/config_gen.json"
+    },
+    {
+      "collect": "/scratch/gbuster/rev/test_pipeline/config_collect.json"
+    },
+    {
+      "econ": "/scratch/gbuster/rev/test_pipeline/config_econ.json"
+    }
+  ]
+}

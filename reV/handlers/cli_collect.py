@@ -11,6 +11,7 @@ from reV.config.collection import CollectionConfig
 from reV.handlers.collection import Collector
 from reV.utilities.cli_dtypes import STR, STRLIST
 from reV.utilities.loggers import init_mult
+from reV.pipeline.status import Status
 from reV.utilities.execution import SubprocessManager, SLURM
 
 
@@ -148,26 +149,26 @@ def collect(ctx, verbose):
                 .format(dsets, name, h5_dir, h5_file))
     t0 = time.time()
 
-    try:
-        Collector.collect(h5_file, h5_dir, project_points, dsets[0],
-                          file_prefix=file_prefix, parallel=parallel)
-    except Exception as e:
-        logger.exception('Collection failed!')
-        raise e
+    Collector.collect(h5_file, h5_dir, project_points, dsets[0],
+                      file_prefix=file_prefix, parallel=parallel)
 
     if len(dsets) > 1:
         for dset_name in dsets[1:]:
-            try:
-                Collector.add_dataset(h5_file, h5_dir, dset_name,
-                                      file_prefix=file_prefix,
-                                      parallel=parallel)
-            except Exception as e:
-                logger.exception('Collection failed!')
-                raise e
+            Collector.add_dataset(h5_file, h5_dir, dset_name,
+                                  file_prefix=file_prefix,
+                                  parallel=parallel)
 
+    runtime = (time.time() - t0) / 60
     logger.info('Collection complete from h5 directory: "{0}". '
                 'Time elapsed: {1:.2f} min. Target output file: "{2}"'
-                .format(h5_dir, (time.time() - t0) / 60, h5_file))
+                .format(h5_dir, runtime, h5_file))
+
+    # add job to reV status file.
+    status = {'dirout': os.path.dirname(h5_file),
+              'fout': os.path.basename(h5_file), 'job_status': 'successful',
+              'runtime': runtime,
+              'finput': os.path.join(h5_dir, '{}*.h5'.format(file_prefix))}
+    Status.make_job_file(os.path.dirname(h5_file), 'collect', name, status)
 
 
 def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
@@ -258,24 +259,34 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
                        file_prefix=file_prefix, parallel=parallel,
                        verbose=verbose)
 
-    logger.info('Running reV collection on Eagle with node name "{}", '
-                'collecting data to "{}" from "{}" with file prefix "{}".'
-                .format(name, h5_file, h5_dir, file_prefix))
-
-    # create and submit the SLURM job
-    slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                  feature=feature, name=name, stdout_path=stdout_path)
-    if slurm.id:
-        msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
-               'Eagle.'.format(name, slurm.id))
+    status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
+                                        name)
+    if status == 'successful':
+        msg = ('Job "{}" is successful in status json found in "{}", '
+               'not re-running.'
+               .format(name, os.path.dirname(h5_file)))
     else:
-        msg = ('Was unable to kick off reV collection job "{}". '
-               'Please see the stdout error messages'
-               .format(name))
+        logger.info('Running reV collection on Eagle with node name "{}", '
+                    'collecting data to "{}" from "{}" with file prefix "{}".'
+                    .format(name, h5_file, h5_dir, file_prefix))
+        # create and submit the SLURM job
+        slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
+                      feature=feature, name=name, stdout_path=stdout_path)
+        if slurm.id:
+            msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
+                   'Eagle.'.format(name, slurm.id))
+            # add job to reV status file.
+            Status.add_job(
+                os.path.dirname(h5_file), 'collect', name, replace=True,
+                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                           'fout': os.path.basename(h5_file),
+                           'dirout': os.path.dirname(h5_file)})
+        else:
+            msg = ('Was unable to kick off reV collection job "{}". '
+                   'Please see the stdout error messages'
+                   .format(name))
     click.echo(msg)
     logger.info(msg)
-
-    return slurm
 
 
 if __name__ == '__main__':

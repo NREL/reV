@@ -12,6 +12,7 @@ Subpackages
     reV.exclusions
     reV.generation
     reV.handlers
+    reV.pipeline
     reV.supply_curve
     reV.utilities
 
