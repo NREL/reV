@@ -38,7 +38,7 @@
     "allocation": "rev",
     "memory": 90,
     "nodes": 1,
-    "option": "eagle",
+    "option": "local",
     "walltime": 0.1
   },
   "project_control": {
