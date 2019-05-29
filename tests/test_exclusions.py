@@ -24,7 +24,8 @@ def test_exclusions_output():
                      {"fpath": os.path.join(f_path, "ri_padus.tif"),
                       "classes_exclude": [1]}]
 
-    exclusions = Exclusions(layer_configs)
+    exclusions = Exclusions(layer_configs, contiguous_filter='queen')
+    exclusions.build_from_config()
 
     assert np.array_equal(exclusions.data, valid_exclusions_data)
 

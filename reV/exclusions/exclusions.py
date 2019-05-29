@@ -12,6 +12,7 @@ Sample Usage:
     exclusions.add_layer(layer)
 
     exclusions.apply_all_layers()
+    exclusions.apply_filter('queen')
     exclusions.export(fname='exclusions.tif')
 
     --- OR ---
@@ -22,7 +23,8 @@ Sample Usage:
                             {"fpath": "ri_padus.tif",
                              "classes_exclude": [1],
                             }],
-                            use_blocks = True)
+                            use_blocks = True,
+                            contiguous_filter = 'queen')
     exclusions.build_from_config()
     exclusions.export(fname='exclusions.tif')
 
@@ -35,12 +37,14 @@ Sample Usage:
                               "classes_exclude": [1],
                              }],
                    use_blocks = True,
+                   contiguous_filter = 'queen',
                    output_fname = 'exclusions.tif')
 
 """
 import logging
 import rasterio
 import numpy as np
+from scipy import ndimage
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +160,16 @@ class ExclusionLayer:
 class Exclusions:
     """Base class for single output exclusion layer"""
 
-    def __init__(self, layer_configs=None, use_blocks=False):
+    contiguous_filter_kernels = {
+        'queen': np.array([[1, 1, 1],
+                           [1, 0, 1],
+                           [1, 1, 1]]),
+        'rook': np.array([[0, 1, 0],
+                          [1, 0, 1],
+                          [0, 1, 0]])}
+
+    def __init__(self, layer_configs=None, use_blocks=False,
+                 contiguous_filter=None):
         """
         Parameters
         ----------
@@ -164,6 +177,8 @@ class Exclusions:
             Optional configs list for the addition of layers
         use_blocks : boolean
             Use blocks when applying layers to exclusions
+        contiguous_filter : str | None
+            Contiguous filter method to use on final exclusion
         """
         self.layers = []
         self.data = None
@@ -173,13 +188,18 @@ class Exclusions:
             self.use_blocks = use_blocks
         else:
             raise TypeError('use_blocks argument must be a boolean')
+        # validate and set contiguous filter argument
+        if contiguous_filter in [None, "queen", "rook"]:
+            self.contiguous_filter = contiguous_filter
+        else:
+            raise TypeError('contiguous_filter must be "queen" or "rook"')
         # validate and set layer_configs argument
         if isinstance(layer_configs, (list, type(None))):
             self.layer_configs = layer_configs
         else:
             raise TypeError('layer_configs argument must be a list or None')
 
-    def build_from_config(self, layer_configs=None):
+    def build_from_config(self, layer_configs=None, contiguous_filter=None):
         """ Build and apply exclusion layers from config if it exists
 
         Parameters
@@ -191,6 +211,8 @@ class Exclusions:
 
         if not layer_configs:
             layer_configs = self.layer_configs
+        if not contiguous_filter:
+            contiguous_filter = self.contiguous_filter
         if layer_configs:
             for config in layer_configs:
                 if isinstance(config, dict):
@@ -201,6 +223,8 @@ class Exclusions:
                 else:
                     raise TypeError('Layer config must be a dictionary')
             self.apply_all_layers()
+            if contiguous_filter is not None:
+                self.apply_filter(contiguous_filter)
         else:
             raise AttributeError('Object has no configs: self.layer_configs')
 
@@ -364,6 +388,32 @@ class Exclusions:
             mask = ~mask
         return mask.astype('int8')
 
+    def apply_filter(self, contiguous_filter=None):
+        """ Read, process, and apply an input layer to the
+        final output layer
+
+        Parameters
+        ----------
+        contiguous_filter : str | None
+            Contiguous filter method to use on final exclusion
+        """
+
+        if not contiguous_filter:
+            contiguous_filter = self.contiguous_filter
+        if contiguous_filter not in [None, "queen", "rook"]:
+            raise TypeError('contiguous_filter must be "queen" or "rook"')
+        if isinstance(self.data, type(None)):
+            raise AttributeError('Exclusion has not been created yet'
+                                 '(i.e. self.apply_layer())')
+        if isinstance(contiguous_filter, type(None)):
+            logger.info('No contiguous filter provided')
+            return None
+        mask = (self.data != 0).astype('int8')
+        kernel = self.contiguous_filter_kernels[contiguous_filter]
+        mask = ndimage.convolve(mask, kernel, mode='constant', cval=0.0)
+        self.data[mask == 0] = 0
+        return None
+
     def export(self, fname='exclusions.tif', band=1):
         """ Save the output exclusion layer as a Tiff
 
@@ -383,20 +433,24 @@ class Exclusions:
                                  '(i.e. self.create_profile())')
 
     @classmethod
-    def run(cls, config, use_blocks, output_fname):
+    def run(cls, config, output_fname,
+            use_blocks=False, contiguous_filter=None):
         """ Apply Exclusions from config and save to disc.
 
         Parameters
         ----------
         layer_configs : dictionary list | None
             Optional configs list for the addition of layers
-        use_blocks : boolean
-            Use blocks when applying layers to exclusions
         output_fname : str
             Output file with path.
+        use_blocks : boolean
+            Use blocks when applying layers to exclusions
+        contiguous_filter : str | None
+            Contiguous filter method to use on final exclusion
         """
 
-        exclusions = cls(config, use_blocks=use_blocks)
+        exclusions = cls(config, use_blocks=use_blocks,
+                         contiguous_filter=contiguous_filter)
         exclusions.build_from_config()
         exclusions.export(fname=output_fname)
         return None

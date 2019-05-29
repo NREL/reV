@@ -31,7 +31,9 @@
       "type": "Slope"
     }
   ],
+  "exclusions_filter": "queen",
   "exclusions_output_file": "exclusions.tif",
+  "exclusions_use_blocks": true,
   "execution_control": {
     "allocation": "rev",
     "nodes": 1,
