@@ -12,6 +12,14 @@ reV.config.analysis\_configs module
     :undoc-members:
     :show-inheritance:
 
+reV.config.base\_analysis\_config module
+----------------------------------------
+
+.. automodule:: reV.config.base_analysis_config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.config.base\_config module
 ------------------------------
 
@@ -40,6 +48,14 @@ reV.config.execution module
 ---------------------------
 
 .. automodule:: reV.config.execution
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+reV.config.pipeline module
+--------------------------
+
+.. automodule:: reV.config.pipeline
     :members:
     :undoc-members:
     :show-inheritance:
