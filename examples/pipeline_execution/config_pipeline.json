@@ -3,6 +3,7 @@
     "log_file": null,
     "log_level": "DEBUG"
   },
+  "name": "rev_pipeline",
   "pipeline": [
     {
       "generation": "/scratch/gbuster/rev/test_pipeline/config_gen.json"

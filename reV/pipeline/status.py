@@ -19,35 +19,69 @@ class Status(dict):
 
     FROZEN_STATUS = ('successful', 'failed')
 
-    def __init__(self, path, name='rev_status.json'):
+    def __init__(self, status_dir, name=None):
         """
         Parameters
         ----------
-        path : str
-            Path to json status file.
-        name : str
-            Filename for rev status file.
+        status_dir : str
+            Directory to with json status file.
+        name : str | None
+            Optional job name for status. Will look for the file
+            "{name}_status.json" in the status_dir.
         """
 
-        self._path = path
-        if str(path).endswith('.json'):
-            self._fpath = self._path
-        else:
-            if not str(name).endswith('.json'):
-                name += '.json'
-            self._fpath = os.path.join(path, name)
-        self.data = self._load()
+        self._status_dir = status_dir
+        self._fpath = self._parse_fpath(status_dir, name)
+        self.data = self._load(self._fpath)
 
-    def _load(self):
+    @staticmethod
+    def _parse_fpath(status_dir, name):
+        """Get the status filepath from the status directory and jobname.
+
+        Parameters
+        ----------
+        status_dir : str
+            Directory to with json status file.
+        name : str | None
+            Optional job name for status. Will look for the file
+            "{name}_status.json" in the status_dir.
+
+        Returns
+        -------
+        fpath : str
+            Filepath to job status json.
+        """
+
+        if str(status_dir).endswith('.json'):
+            raise TypeError('Need a directory containing a status json, '
+                            'not a status json: {}'.format(status_dir))
+
+        if name is None:
+            for fn in os.listdir(status_dir):
+                if fn.endswith('_status.json'):
+                    fpath = os.path.join(status_dir, fn)
+                    break
+        else:
+            fpath = os.path.join(status_dir, '{}_status.json'.format(name))
+
+        return fpath
+
+    @staticmethod
+    def _load(fpath):
         """Load status json.
+
+        Parameters
+        -------
+        fpath : str
+            Filepath to job status json.
 
         Returns
         -------
         data : dict
             JSON file contents loaded as a python dictionary.
         """
-        if os.path.isfile(self._fpath):
-            with open(self._fpath, 'r') as f:
+        if os.path.isfile(fpath):
+            with open(fpath, 'r') as f:
                 data = json.load(f)
         else:
             data = {}
@@ -61,9 +95,24 @@ class Status(dict):
         data : dict
             reV data pipeline status info.
         """
+        self._sort_by_index()
         with open(self._fpath, 'w') as f:
-            json.dump(self.data, f, sort_keys=True, indent=4,
-                      separators=(',', ': '))
+            json.dump(self.data, f, indent=4, separators=(',', ': '))
+
+    def _sort_by_index(self):
+        """Sort modules in data dictionary by pipeline index."""
+
+        sortable = True
+
+        for value in self.data.values():
+            if 'pipeline_index' not in value:
+                sortable = False
+                break
+
+        if sortable:
+            sorted_keys = sorted(self.data, key=lambda x:
+                                 self.data[x]['pipeline_index'])
+            self.data = {k: self.data[k] for k in sorted_keys}
 
     @staticmethod
     def _get_check_method(hardware='eagle'):
@@ -106,32 +155,32 @@ class Status(dict):
             status = method(job_id)
         return status
 
-    def _check_all_job_files(self, path):
-        """Look for all single-job job status files in the target path and
-        update status.
+    def _check_all_job_files(self, status_dir):
+        """Look for all single-job job status files in the target status_dir
+        and update status.
 
         Parameters
         ----------
-        path : str
+        status_dir : str
             Directory to look for completion file.
         """
 
-        for fname in os.listdir(path):
-            if fname.startswith('status_') and fname.endswith('.json'):
+        for fname in os.listdir(status_dir):
+            if fname.startswith('jobstatus_') and fname.endswith('.json'):
                 # wait one second to make sure file is finished being written
                 time.sleep(0.1)
-                with open(os.path.join(path, fname), 'r') as f:
+                with open(os.path.join(status_dir, fname), 'r') as f:
                     status = json.load(f)
                 self.data = self.update_dict(self.data, status)
-                os.remove(os.path.join(path, fname))
+                os.remove(os.path.join(status_dir, fname))
 
     @staticmethod
-    def _check_job_file(path, job_name):
-        """Look for a single-job job status file in the target path.
+    def _check_job_file(status_dir, job_name):
+        """Look for a single-job job status file in the target status_dir.
 
         Parameters
         ----------
-        path : str
+        status_dir : str
             Directory to look for completion file.
         job_name : str
             Job name.
@@ -142,14 +191,14 @@ class Status(dict):
             Job status dictionary if completion file found.
         """
         status = None
-        target_fname = 'status_{}.json'.format(job_name)
-        for fname in os.listdir(path):
+        target_fname = 'jobstatus_{}.json'.format(job_name)
+        for fname in os.listdir(status_dir):
             if fname == target_fname:
                 # wait one second to make sure file is finished being written
                 time.sleep(0.1)
-                with open(os.path.join(path, fname), 'r') as f:
+                with open(os.path.join(status_dir, fname), 'r') as f:
                     status = json.load(f)
-                os.remove(os.path.join(path, fname))
+                os.remove(os.path.join(status_dir, fname))
                 break
         return status
 
@@ -166,18 +215,8 @@ class Status(dict):
             Hardware option, either eagle or peregrine.
         """
 
-        # init defaults in case job/module not in status file yet
-        previous = None
-        job_id = None
-        if module in self.data:
-            if job_name in self.data[module]:
-                previous = self.data[module][job_name].get('job_status', None)
-                job_id = self.data[module][job_name].get('job_id', None)
-                hardware = self.data[module][job_name].get('hardware',
-                                                           hardware)
-
         # look for completion file.
-        current = self._check_job_file(self._path, job_name)
+        current = self._check_job_file(self._status_dir, job_name)
 
         # Update status data dict recursively if job file was found
         if current is not None:
@@ -188,6 +227,13 @@ class Status(dict):
             # job exists
             if job_name in self.data[module]:
 
+                # init defaults in case job/module not in status file yet
+                previous = self.data[module][job_name].get('job_status', None)
+                job_id = self.data[module][job_name].get('job_id', None)
+                hardware = self.data[module][job_name].get('hardware',
+                                                           hardware)
+
+                # get job status from hardware
                 current = self._get_job_status(job_id, hardware=hardware)
 
                 # No current status and job was not successful: failed!
@@ -253,13 +299,13 @@ class Status(dict):
         return d
 
     @staticmethod
-    def make_job_file(path, module, job_name, attrs):
+    def make_job_file(status_dir, module, job_name, attrs):
         """Make a json file recording the status of a single job.
 
         Parameters
         ----------
-        path : str
-            Path to json status file.
+        status_dir : str
+            Directory to put json status file.
         module : str
             reV module that the job belongs to.
         job_name : str
@@ -271,19 +317,20 @@ class Status(dict):
         if job_name.endswith('.h5'):
             job_name = job_name.replace('.h5', '')
         status = {module: {job_name: attrs}}
-        fpath = os.path.join(path, 'status_{}.json'.format(job_name))
+        fpath = os.path.join(status_dir, 'jobstatus_{}.json'.format(job_name))
         with open(fpath, 'w') as f:
             json.dump(status, f, sort_keys=True, indent=4,
                       separators=(',', ': '))
 
     @classmethod
-    def add_job(cls, path, module, job_name, replace=False, job_attrs=None):
+    def add_job(cls, status_dir, module, job_name, replace=False,
+                job_attrs=None):
         """Add a job to status json.
 
         Parameters
         ----------
-        path : str
-            Path to json status file.
+        status_dir : str
+            Directory containing json status file.
         module : str
             reV module that the job belongs to.
         job_name : str
@@ -296,7 +343,7 @@ class Status(dict):
         if job_name.endswith('.h5'):
             job_name = job_name.replace('.h5', '')
 
-        obj = cls(path)
+        obj = cls(status_dir)
 
         if job_attrs is None:
             job_attrs = {}
@@ -309,7 +356,7 @@ class Status(dict):
                          .format(job_name))
 
         # check to see if job exists yet
-        exists = obj.job_exists(path, job_name)
+        exists = obj.job_exists(status_dir, job_name)
 
         # job exists and user has requested forced replacement
         if replace and exists:
@@ -331,13 +378,13 @@ class Status(dict):
             obj._dump()
 
     @classmethod
-    def job_exists(cls, path, job_name):
+    def job_exists(cls, status_dir, job_name):
         """Check whether a job exists and return a bool.
 
         Parameters
         ----------
-        path : str
-            Path to json status file.
+        status_dir : str
+            Directory containing json status file.
         job_name : str
             Unique job name identification.
 
@@ -349,24 +396,26 @@ class Status(dict):
         if job_name.endswith('.h5'):
             job_name = job_name.replace('.h5', '')
 
-        obj = cls(path)
+        obj = cls(status_dir)
+        exists = False
         if obj.data:
             for jobs in obj.data.values():
                 if jobs:
                     for name in jobs.keys():
                         if name == job_name:
-                            return True
+                            exists = True
+                            break
 
-        return False
+        return exists
 
     @classmethod
-    def retrieve_job_status(cls, path, module, job_name):
+    def retrieve_job_status(cls, status_dir, module, job_name):
         """Update and retrieve job status.
 
         Parameters
         ----------
-        path : str
-            Path to json status file.
+        status_dir : str
+            Directory containing json status file.
         module : str
             reV module that the job belongs to.
         job_name : str
@@ -380,7 +429,7 @@ class Status(dict):
         if job_name.endswith('.h5'):
             job_name = job_name.replace('.h5', '')
 
-        obj = cls(path)
+        obj = cls(status_dir)
         obj._update_job_status(module, job_name)
 
         status = obj.data[module][job_name].get('job_status', None)
@@ -388,13 +437,13 @@ class Status(dict):
         return status
 
     @classmethod
-    def set_job_status(cls, path, module, job_name, status):
+    def set_job_status(cls, status_dir, module, job_name, status):
         """Force set a job status to a frozen status and save to status file.
 
         Parameters
         ----------
-        path : str
-            Path to json status file.
+        status_dir : str
+            Directory containing json status file.
         module : str
             reV module that the job belongs to.
         job_name : str
@@ -406,24 +455,24 @@ class Status(dict):
         if job_name.endswith('.h5'):
             job_name = job_name.replace('.h5', '')
 
-        obj = cls(path)
+        obj = cls(status_dir)
         obj._set_job_status(module, job_name, status)
         obj._dump()
 
     @classmethod
-    def update(cls, path):
+    def update(cls, status_dir):
         """Update all job statuses and dump to json.
 
         Parameters
         ----------
-        path : str
-            Path to json status file.
+        status_dir : str
+            Directory containing json status file.
         """
 
-        obj = cls(path)
+        obj = cls(status_dir)
         for module in obj.data.keys():
             for job_name in obj.data[module].keys():
                 if job_name != 'pipeline_index':
                     obj._update_job_status(module, job_name)
-        obj._check_all_job_files(path)
+        obj._check_all_job_files(status_dir)
         obj._dump()

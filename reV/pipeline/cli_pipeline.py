@@ -2,8 +2,6 @@
 Generation CLI entry points.
 """
 import click
-import json
-from reV.utilities.loggers import init_logger
 from reV.pipeline.pipeline import Pipeline
 
 
@@ -30,21 +28,8 @@ def from_config(ctx, config_file, verbose):
     """Run reV pipeline from a config file."""
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    # load the config file as a dict
-    with open(config_file, 'r') as f:
-        config_dict = json.load(f)
-
-    msg = ('The reV pipeline config must have a "pipeline" entry which is a '
-           'list of command/config key pairs.')
-    if 'pipeline' not in config_dict:
-        raise KeyError(msg)
-    if not isinstance(config_dict['pipeline'], list):
-        raise TypeError(msg)
-
-    if 'logging' in config_dict:
-        init_logger('reV.pipeline', **config_dict['logging'])
-
-    Pipeline.run(config_dict['pipeline'])
+    # init pipeline config, which will also run pre-flight checks
+    Pipeline.run(config_file)
 
 
 if __name__ == '__main__':

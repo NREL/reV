@@ -24,6 +24,13 @@ class ExecutionError(Exception):
     pass
 
 
+class PipelineError(Exception):
+    """
+    Error for pipeline execution failure
+    """
+    pass
+
+
 class HandlerKeyError(Exception):
     """
     KeyError for Handlers
