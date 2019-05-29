@@ -79,19 +79,54 @@ class ExclusionLayer:
             Create exclusion based on discrete classes to include.
             Conflicts with min_thresh, max_thresh, and classes_exclude.
         """
-        self.fpath = fpath
-        self.band = band
+        self._fpath = fpath
+        self._band = band
         self.name = layer_name
-        self.type = layer_type
-        self.min_thresh = min_thresh
-        self.max_thresh = max_thresh
-        self.classes_include = classes_include
-        self.classes_exclude = classes_exclude
+        self._type = layer_type
+        self._min_thresh = min_thresh
+        self._max_thresh = max_thresh
+        self._classes_include = classes_include
+        self._classes_exclude = classes_exclude
 
-        meta_data = self.extract_tiff_meta(self.fpath, self.band)
-        self.profile = meta_data[0]
-        self.block_windows = meta_data[1]
-        self.num_windows = meta_data[2]
+        meta_data = self.extract_tiff_meta(self._fpath, self._band)
+        self._profile = meta_data[0]
+        self._block_windows = meta_data[1]
+        self._num_windows = meta_data[2]
+
+    @property
+    def fpath(self):
+        """ Get the file path for layer """
+        return self._fpath
+
+    @property
+    def band(self):
+        """ Get the file band for layer """
+        return self._band
+
+    @property
+    def type(self):
+        """ Get the layer type """
+        return self._type
+
+    @property
+    def min_thresh(self):
+        """ Get the minimumum threshold for layer """
+        return self._min_thresh
+
+    @property
+    def max_thresh(self):
+        """ Get the maximum threshold for layer """
+        return self._max_thresh
+
+    @property
+    def classes_include(self):
+        """ Get the classes to include for layer """
+        return self._classes_include
+
+    @property
+    def classes_exclude(self):
+        """ Get the classes to exclude for layer """
+        return self._classes_exclude
 
     @staticmethod
     def extract_tiff_meta(fpath, band):
@@ -106,7 +141,7 @@ class ExclusionLayer:
 
         Outputs
         -------
-        profile : rasterio.profiles.Profile
+        profile : rasterio._profiles._Profile
             Meta data for the tiff file
         block_windows : tuples list
             Delineation of tiff windows
@@ -119,7 +154,7 @@ class ExclusionLayer:
             num_windows = len(block_windows)
         return profile, block_windows, num_windows
 
-    def read(self):
+    def _read(self):
         """ Read in entire dataset from Tiff
 
         Outputs
@@ -128,11 +163,11 @@ class ExclusionLayer:
             Layer's entire data array
         """
 
-        with rasterio.open(self.fpath, 'r') as file:
-            data = file.read(self.band)
+        with rasterio.open(self._fpath, 'r') as file:
+            data = file.read(self._band)
             return data
 
-    def read_window(self, window_index):
+    def _read_window(self, window_index):
         """ Read in a single block dataset from Tiff
 
         Parameters
@@ -148,19 +183,19 @@ class ExclusionLayer:
             The tuple that slices out the current window
         """
 
-        _, window = self.block_windows[window_index]
+        _, window = self._block_windows[window_index]
         col_slice = slice(window.col_off, window.col_off + window.width)
         row_slice = slice(window.row_off, window.row_off + window.height)
         window_slice = (row_slice, col_slice)
-        with rasterio.open(self.fpath, 'r') as file:
-            data = file.read(self.band, window=window)
+        with rasterio.open(self._fpath, 'r') as file:
+            data = file.read(self._band, window=window)
         return data, window_slice
 
 
 class Exclusions:
     """Base class for single output exclusion layer"""
 
-    contiguous_filter_kernels = {
+    FILTER_KERNELS = {
         'queen': np.array([[1, 1, 1],
                            [1, 0, 1],
                            [1, 1, 1]]),
@@ -180,24 +215,49 @@ class Exclusions:
         contiguous_filter : str | None
             Contiguous filter method to use on final exclusion
         """
-        self.layers = []
-        self.data = None
-        self.profile = None
+        self._layers = []
+        self._data = None
+        self._profile = None
         # validate and set use_blocks argument
         if isinstance(use_blocks, bool):
-            self.use_blocks = use_blocks
+            self._use_blocks = use_blocks
         else:
             raise TypeError('use_blocks argument must be a boolean')
         # validate and set contiguous filter argument
         if contiguous_filter in [None, "queen", "rook"]:
-            self.contiguous_filter = contiguous_filter
+            self._contiguous_filter = contiguous_filter
         else:
             raise TypeError('contiguous_filter must be "queen" or "rook"')
         # validate and set layer_configs argument
         if isinstance(layer_configs, (list, type(None))):
-            self.layer_configs = layer_configs
+            self._layer_configs = layer_configs
         else:
             raise TypeError('layer_configs argument must be a list or None')
+
+    @property
+    def layers(self):
+        """ Get the layers for exclusion """
+        return self._layers
+
+    @property
+    def data(self):
+        """ Get the data for exclusion """
+        return self._data
+
+    @property
+    def profile(self):
+        """ Get the profile for exclusion """
+        return self._profile
+
+    @property
+    def use_blocks(self):
+        """ Get the blocks setting for exclusion """
+        return self._use_blocks
+
+    @property
+    def contiguous_filter(self):
+        """ Get the contiguous filter method for exclusion """
+        return self._contiguous_filter
 
     def build_from_config(self, layer_configs=None, contiguous_filter=None):
         """ Build and apply exclusion layers from config if it exists
@@ -210,9 +270,9 @@ class Exclusions:
         """
 
         if not layer_configs:
-            layer_configs = self.layer_configs
+            layer_configs = self._layer_configs
         if not contiguous_filter:
-            contiguous_filter = self.contiguous_filter
+            contiguous_filter = self._contiguous_filter
         if layer_configs:
             for config in layer_configs:
                 if isinstance(config, dict):
@@ -226,21 +286,21 @@ class Exclusions:
             if contiguous_filter is not None:
                 self.apply_filter(contiguous_filter)
         else:
-            raise AttributeError('Object has no configs: self.layer_configs')
+            raise AttributeError('Object has no configs: self._layer_configs')
 
     def add_layer(self, layer):
         """ Append a layer object to the list of exclusion layers """
 
         if isinstance(layer, ExclusionLayer):
-            self.layers.append(layer)
-            if len(self.layers) == 1:
-                self.create_profile()
-            self.check_layer_compatibility()
+            self._layers.append(layer)
+            if len(self._layers) == 1:
+                self._create_profile()
+            self._check_layer_compatibility()
         else:
             logger.warning('Layers must be an instance of ExclusionLayer')
-        return self.layers
+        return self._layers
 
-    def check_layer_compatibility(self):
+    def _check_layer_compatibility(self):
         """ Validate that all layers are the same shape
 
         Outputs
@@ -252,9 +312,9 @@ class Exclusions:
         compatibility = True
         widths = []
         heights = []
-        for layer in self.layers:
-            widths.append(layer.profile['width'])
-            heights.append(layer.profile['height'])
+        for layer in self._layers:
+            widths.append(layer._profile['width'])
+            heights.append(layer._profile['height'])
         if len(set(widths)) > 1:
             compatibility = False
         if len(set(heights)) > 1:
@@ -264,31 +324,31 @@ class Exclusions:
             logger.warning('Layers are not compatible')
         return compatibility
 
-    def create_profile(self):
+    def _create_profile(self):
         """ Create the Tiff profile meta for output file from first layer """
 
         try:
             # Start from the profile of the first layer
-            self.profile = self.layers[0].profile
+            self._profile = self._layers[0]._profile
             # Modifications for output
-            self.profile['dtype'] = rasterio.uint8
-            self.profile['nodata'] = None
-            self.initialize_data()
+            self._profile['dtype'] = rasterio.uint8
+            self._profile['nodata'] = None
+            self._initialize_data()
         except IndexError:
             raise AttributeError('Exclusion has no layers '
                                  '(i.e. self.add_layer(layer))')
 
-    def initialize_data(self):
+    def _initialize_data(self):
         """ Initiate the array for the output exclusion data """
 
-        if self.profile:
-            shape = (self.profile['height'], self.profile['width'])
-            self.data = np.ones(shape=shape, dtype='uint8') * 100
+        if self._profile:
+            shape = (self._profile['height'], self._profile['width'])
+            self._data = np.ones(shape=shape, dtype='uint8') * 100
         else:
             raise AttributeError('Profile has not been created yet '
-                                 '(i.e. self.create_profile())')
+                                 '(i.e. self._create_profile())')
 
-    def get_method_mask(self, data, layer):
+    def _get_method_mask(self, data, layer):
         """ Generate a mask based on config method specified
 
         Parameters
@@ -304,18 +364,18 @@ class Exclusions:
             float mask (0 to 1) to be applied to the final exclusion layer
         """
         mask = None
-        if layer.classes_exclude:
-            mask = self.mask_classes(data,
-                                     layer.classes_exclude,
-                                     True)
-        elif layer.classes_include:
-            mask = self.mask_classes(data,
-                                     layer.classes_include,
-                                     False)
-        elif layer.min_thresh or layer.max_thresh:
-            mask = self.mask_interval(data,
-                                      layer.min_thresh,
-                                      layer.max_thresh)
+        if layer._classes_exclude:
+            mask = self._mask_classes(data,
+                                      layer._classes_exclude,
+                                      True)
+        elif layer._classes_include:
+            mask = self._mask_classes(data,
+                                      layer._classes_include,
+                                      False)
+        elif layer._min_thresh or layer._max_thresh:
+            mask = self._mask_interval(data,
+                                       layer._min_thresh,
+                                       layer._max_thresh)
         return mask
 
     def apply_layer(self, layer):
@@ -328,20 +388,20 @@ class Exclusions:
             exclusion layer object
         """
 
-        if self.use_blocks:
-            for window_index in range(layer.num_windows):
-                layer_data, window_slice = layer.read_window(window_index)
-                mask = self.get_method_mask(layer_data, layer)
+        if self._use_blocks:
+            for window_index in range(layer._num_windows):
+                layer_data, window_slice = layer._read_window(window_index)
+                mask = self._get_method_mask(layer_data, layer)
                 if mask is not None:
-                    block_data = (self.data[window_slice] * mask)
-                    self.data[window_slice] = block_data.astype('uint8')
+                    block_data = (self._data[window_slice] * mask)
+                    self._data[window_slice] = block_data.astype('uint8')
                 else:
                     logger.warning('Failed to mask {}'.format(layer.name))
         else:
-            layer_data = layer.read()
-            mask = self.get_method_mask(layer_data, layer)
+            layer_data = layer._read()
+            mask = self._get_method_mask(layer_data, layer)
             if mask is not None:
-                self.data = (self.data * mask).astype('uint8')
+                self._data = (self._data * mask).astype('uint8')
             else:
                 logger.warning('Failed to mask {}'.format(layer.name))
 
@@ -349,11 +409,11 @@ class Exclusions:
         """ Read, process, and apply all input layers to the
         final output layer """
 
-        for layer in self.layers:
+        for layer in self._layers:
             self.apply_layer(layer)
 
     @staticmethod
-    def mask_interval(data, min_thresh, max_thresh):
+    def _mask_interval(data, min_thresh, max_thresh):
         """ Provide a mask between a range of thresholds
 
         Parameters
@@ -372,7 +432,7 @@ class Exclusions:
         return mask
 
     @staticmethod
-    def mask_classes(data, classes, exclude=True):
+    def _mask_classes(data, classes, exclude=True):
         """ Provide a mask from integer classes
 
         Parameters
@@ -399,19 +459,19 @@ class Exclusions:
         """
 
         if not contiguous_filter:
-            contiguous_filter = self.contiguous_filter
+            contiguous_filter = self._contiguous_filter
         if contiguous_filter not in [None, "queen", "rook"]:
             raise TypeError('contiguous_filter must be "queen" or "rook"')
-        if isinstance(self.data, type(None)):
+        if isinstance(self._data, type(None)):
             raise AttributeError('Exclusion has not been created yet'
                                  '(i.e. self.apply_layer())')
         if isinstance(contiguous_filter, type(None)):
             logger.info('No contiguous filter provided')
             return None
-        mask = (self.data != 0).astype('int8')
-        kernel = self.contiguous_filter_kernels[contiguous_filter]
+        mask = (self._data != 0).astype('int8')
+        kernel = self.FILTER_KERNELS[contiguous_filter]
         mask = ndimage.convolve(mask, kernel, mode='constant', cval=0.0)
-        self.data[mask == 0] = 0
+        self._data[mask == 0] = 0
         return None
 
     def export(self, fname='exclusions.tif', band=1):
@@ -425,12 +485,12 @@ class Exclusions:
             GeoTiff band to write to file.
         """
 
-        if self.profile:
-            with rasterio.open(fname, 'w', **self.profile) as file:
-                file.write(self.data, band)
+        if self._profile:
+            with rasterio.open(fname, 'w', **self._profile) as file:
+                file.write(self._data, band)
         else:
             raise AttributeError('Profile has not been created yet '
-                                 '(i.e. self.create_profile())')
+                                 '(i.e. self._create_profile())')
 
     @classmethod
     def run(cls, config, output_fname,
