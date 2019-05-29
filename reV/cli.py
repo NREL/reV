@@ -103,7 +103,8 @@ def exclusions(ctx, verbose):
     """Run reV 2.0 exclusions using the config file."""
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-    ctx.invoke(run_excl_from_config, config_file=config_file, verbose=verbose)
+    ctx.invoke(run_excl_from_config, config_file=config_file,
+               verbose=verbose)
 
 
 if __name__ == '__main__':
