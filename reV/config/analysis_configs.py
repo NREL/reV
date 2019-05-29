@@ -246,27 +246,16 @@ class GenConfig(SAMAnalysisConfig):
 class ExclConfig(AnalysisConfig):
     """Class to import and manage user exclusion configuration inputs."""
 
-    def __init__(self, fname):
-        """Initialize a config object.
-
+    def __init__(self, config):
+        """
         Parameters
         ----------
-        fname : str
-            Generation config name (with path).
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
         """
 
-        # get the directory of the config file
-        self.dir = os.path.dirname(os.path.realpath(fname)) + '/'
-
-        # str_rep is a mapping of config strings to replace with real values
-        self.str_rep = {'REVDIR': REVDIR,
-                        'TESTDATADIR': TESTDATADIR,
-                        './': self.dir,
-                        }
-
-        # Get file, Perform string replacement, save config to self instance
-        config = self.str_replace(self.get_file(fname), self.str_rep)
-        self.set_self_dict(config)
+        super().__init__(config)
 
 
 class EconConfig(SAMAnalysisConfig):
