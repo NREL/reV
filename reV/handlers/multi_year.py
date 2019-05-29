@@ -6,8 +6,9 @@ import numpy as np
 import os
 import pandas as pd
 
+from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import HandlerRuntimeError
-from reV.handlers.outputs import Outputs, parse_year
+from reV.utilities.utilities import parse_year
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +37,6 @@ class MultiYear(Outputs):
         """
         f_name = os.path.join(source_h5)
         year = parse_year(f_name)
-        if year is None:
-            raise HandlerRuntimeError("Cannot parse year from {}"
-                                      .format(f_name))
-
         dset_out = "{}-{}".format(dset, year)
         return dset_out
 

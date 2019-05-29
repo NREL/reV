@@ -24,6 +24,13 @@ class ExecutionError(Exception):
     pass
 
 
+class PipelineError(Exception):
+    """
+    Error for pipeline execution failure
+    """
+    pass
+
+
 class HandlerKeyError(Exception):
     """
     KeyError for Handlers
@@ -45,9 +52,23 @@ class HandlerValueError(Exception):
     pass
 
 
+class ResourceError(Exception):
+    """
+    Error for poorly formatted resource.
+    """
+    pass
+
+
 class SAMExecutionError(Exception):
     """
     Execution error for SAM simulations
+    """
+    pass
+
+
+class OutputWarning(Warning):
+    """
+    Warning for suspect output files or data
     """
     pass
 

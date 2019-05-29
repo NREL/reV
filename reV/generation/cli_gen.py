@@ -18,19 +18,21 @@ from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
 from reV.utilities.exceptions import ConfigError
+from reV.pipeline.status import Status
+from reV.utilities.utilities import parse_year
 
 
 logger = logging.getLogger(__name__)
 
 
 @click.group()
-@click.option('--name', '-n', default='reV_gen', type=STR,
+@click.option('--name', '-n', default='reV', type=STR,
               help='Generation job name. Default is "reV_gen".')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, verbose):
-    """Command line interface (CLI) for the reV 2.0 Generation Module."""
+    """Command line interface (CLI) for the reV 2.0 SAM-based modules."""
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
 
@@ -141,18 +143,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
              .format(year, config.res_files[i]))
 
     # if the year isn't in the name, add it before setting the file output
-    match = re.match(r'.*([1-3][0-9]{3})', name)
-    if match and year:
-        if str(year) != match:
-            raise ConfigError('Tried to submit job for {}, but found a '
-                              'different year in the base job name: "{}". '
-                              'Please remove the year from the job name.'
-                              .format(year, name))
-    if year:
-        ctx.obj['FOUT'] = '{}{}.h5'.format(name, '_{}'.format(year) if not
-                                           match else '')
-    else:
-        ctx.obj['FOUT'] = '{}.h5'.format(name)
+    ctx.obj['FOUT'] = make_fout(name, year)
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
@@ -163,6 +154,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
+        match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match and year:
             # Add year to name before submitting
             # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
@@ -175,6 +167,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
+        match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
@@ -182,8 +175,45 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.node_mem,
+                   feature=config.execution_control.feature,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
                    verbose=verbose)
+
+
+def make_fout(name, year):
+    """Make an appropriate file output from name and year.
+
+    Parameters
+    ----------
+    name : str
+        Job name.
+    year : int | str
+        Analysis year.
+
+    Returns
+    -------
+    fout : str
+        .h5 output file based on name and year
+    """
+
+    try:
+        match = parse_year(name)
+    except RuntimeError as _:
+        match = False
+
+    # if the year isn't in the name, add it before setting the file output
+    if match and year:
+        if str(year) != str(match):
+            raise ConfigError('Tried to submit gen job for {}, but found a '
+                              'different year in the base job name: "{}". '
+                              'Please remove the year from the job name.'
+                              .format(year, name))
+    if year:
+        fout = '{}{}.h5'.format(name, '_{}'.format(year) if not
+                                match else '')
+    else:
+        fout = '{}.h5'.format(name)
+    return fout
 
 
 @main.group()
@@ -210,8 +240,9 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
 @click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
               help=('List of requested output variable names. '
                     'Default is ["cf_mean"].'))
-@click.option('-mem', '--mem_util_lim', type=float, default=0.7,
-              help='Fractional node memory utilization limit. Default is 0.7')
+@click.option('-mem', '--mem_util_lim', type=float, default=0.4,
+              help='Fractional node memory utilization limit. Default is 0.4 '
+              'to account for numpy memory spikes and memory bloat.')
 @click.option('-curt', '--curtailment', type=click.Path(exists=True),
               default=None,
               help=('JSON file with curtailment inputs parameters. '
@@ -223,8 +254,8 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
-           dirout, logdir, output_request, mem_util_lim, curtailment,
-           downscale, verbose):
+           dirout, logdir, output_request, mem_util_lim,
+           curtailment, downscale, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['TECH'] = tech
@@ -298,10 +329,16 @@ def gen_local(ctx, n_workers, points_range, verbose):
                   mem_util_lim=mem_util_lim)
 
     tmp_str = ' with points range {}'.format(points_range)
+    runtime = (time.time() - t0) / 60
     logger.info('Gen compute complete for project points "{0}"{1}. '
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'
                 .format(points, tmp_str if points_range else '',
-                        (time.time() - t0) / 60, dirout))
+                        runtime, dirout))
+
+    # add job to reV status file.
+    status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
+              'runtime': runtime, 'finput': res_file}
+    Status.make_job_file(dirout, 'generation', name, status)
 
 
 def get_node_pc(points, sam_files, tech, res_file, nodes):
@@ -342,7 +379,7 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
     return pc
 
 
-def get_node_name_fout(name, fout, i, hpc='slurm'):
+def get_node_name_fout(name, fout, i, pc, hpc='slurm'):
     """Make a node name and fout unique to the run name, year, and node number.
 
     Parameters
@@ -351,8 +388,11 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
         Base node/job name
     fout : str
         Base file output name (no path) (with or without .h5 extension)
-    i : int
-        Node number.
+    i : int | None
+        Node number. If None, only a single node is being used and no
+        enumeration is necessary.
+    pc : reV.config.PointsControl
+        A PointsControl instance that i is enumerated from.
     hpc : str
         HPC job submission tool name (e.g. slurm or pbs). Affects job name.
 
@@ -364,26 +404,38 @@ def get_node_name_fout(name, fout, i, hpc='slurm'):
         Base file output name with _node00 tag.
     """
 
-    if hpc is 'slurm':
-        node_name = '{0}_{1:02d}'.format(name, i)
-    elif hpc is 'pbs':
-        # 13 chars for pbs, (lim is 16, -3 for "_ID")
-        node_name = '{0}_{1:02d}'.format(name[:13], i)
+    if name.endswith('.h5'):
+        name = name.replace('.h5', '')
 
-    if fout.endswith('.h5'):
-        fout_node = fout.replace('.h5', '_node{0:02d}.h5'.format(i))
+    if not fout.endswith('.h5'):
+        fout += '.h5'
+
+    if i is None or len(pc) == 1:
+        fout_node = fout
+        node_name = fout
+
     else:
-        fout_node = fout + '_node{0:02d}.h5'.format(i)
+        if hpc is 'slurm':
+            node_name = '{0}_{1:02d}'.format(name, i)
+        elif hpc is 'pbs':
+            # 13 chars for pbs, (lim is 16, -3 for "_ID")
+            node_name = '{0}_{1:02d}'.format(name[:13], i)
+
+        fout_node = fout.replace('.h5', '_node{0:02d}.h5'.format(i))
+
+    if node_name.endswith('.h5'):
+        node_name = node_name.replace('.h5', '')
 
     return node_name, fout_node
 
 
 def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_core=None, n_workers=None,
-                 fout='reV.h5', dirout='./out/gen_out', logdir='./out/log_gen',
-                 output_request=('cf_mean',), mem_util_lim=0.7,
-                 curtailment=None, downscale=None, verbose=False):
-    """Made a reV geneneration direct-local command line interface call string.
+                 fout='reV.h5', dirout='./out/gen_out',
+                 logdir='./out/log_gen', output_request=('cf_mean',),
+                 mem_util_lim=0.4, curtailment=None, downscale=None,
+                 verbose=False):
+    """Make a reV geneneration direct-local CLI call string.
 
     Parameters
     ----------
@@ -478,8 +530,9 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                             v='-v' if verbose else ''))
 
     # Python command that will be executed on a node
+    # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.generation.cli_gen '
-           '{arg_main} direct {arg_direct} gen_local {arg_loc}'
+           '{arg_main} direct {arg_direct} gen-local {arg_loc}'
            .format(arg_main=arg_main,
                    arg_direct=arg_direct,
                    arg_loc=arg_loc))
@@ -530,7 +583,8 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='pbs')
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
+                                                  hpc='pbs')
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
@@ -550,6 +604,13 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
         if pbs.id:
             msg = ('Kicked off reV generation job "{}" (PBS jobid #{}) on '
                    'Peregrine.'.format(node_name, pbs.id))
+
+            # add job to reV status file.
+            Status.add_job(dirout, 'generation', node_name, replace=True,
+                           job_attrs={'job_id': pbs.id,
+                                      'hardware': 'peregrine',
+                                      'fout': fout_node,
+                                      'dirout': dirout})
         else:
             msg = ('Was unable to kick off reV generation job "{}". '
                    'Please see the stdout error messages'
@@ -566,16 +627,20 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
               help='Number of Eagle nodes for gen job. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
               help='Eagle allocation account name. Default is "rev".')
-@click.option('--memory', '-mem', default=96, type=INT,
-              help='Eagle node memory request in GB. Default is 96')
+@click.option('--memory', '-mem', default=90, type=INT,
+              help='Eagle node memory request in GB. Default is 90')
 @click.option('--walltime', '-wt', default=1.0, type=float,
               help='Eagle walltime request in hours. Default is 1.0')
+@click.option('--feature', '-l', default=None, type=STR,
+              help=('Additional flags for SLURM job. Format is "--qos=high" '
+                    'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def gen_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
+def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
+              verbose):
     """Run generation on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -600,10 +665,9 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
 
     pc = get_node_pc(points, sam_files, tech, res_file, nodes)
 
-    jobs = {}
-
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='slurm')
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
+                                                  hpc='slurm')
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
@@ -613,25 +677,34 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
 
-        logger.info('Running reV generation on Eagle with node name "{}" for '
-                    '{} (points range: {}).'
-                    .format(node_name, pc, split.split_range))
-
-        # create and submit the SLURM job
-        slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      name=node_name, stdout_path=stdout_path)
-        if slurm.id:
-            msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) on '
-                   'Eagle.'.format(node_name, slurm.id))
+        status = Status.retrieve_job_status(dirout, 'generation', node_name)
+        if status == 'successful':
+            msg = ('Job "{}" is successful in status json found in "{}", '
+                   'not re-running.'
+                   .format(node_name, dirout))
         else:
-            msg = ('Was unable to kick off reV generation job "{}". '
-                   'Please see the stdout error messages'
-                   .format(node_name))
+            logger.info('Running reV generation on Eagle with node name "{}" '
+                        'for {} (points range: {}).'
+                        .format(node_name, pc, split.split_range))
+            # create and submit the SLURM job
+            slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
+                          feature=feature, name=node_name,
+                          stdout_path=stdout_path)
+            if slurm.id:
+                msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) '
+                       'on Eagle.'.format(node_name, slurm.id))
+                # add job to reV status file.
+                Status.add_job(
+                    dirout, 'generation', node_name, replace=True,
+                    job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                               'fout': fout_node, 'dirout': dirout})
+            else:
+                msg = ('Was unable to kick off reV generation job "{}". '
+                       'Please see the stdout error messages'
+                       .format(node_name))
+
         click.echo(msg)
         logger.info(msg)
-        jobs[i] = slurm
-
-    return jobs
 
 
 if __name__ == '__main__':

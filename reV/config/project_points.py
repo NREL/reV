@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 class PointsControl:
     """Class to manage and split ProjectPoints."""
     def __init__(self, project_points, sites_per_split=100):
-        """Initialize points control object.
-
+        """
         Parameters
         ----------
         project_points : reV.config.ProjectPoints
@@ -198,8 +197,7 @@ class ProjectPoints:
 
     def __init__(self, points, sam_config, tech, res_file=None,
                  curtailment=None):
-        """Init project points containing sites and corresponding SAM configs.
-
+        """
         Parameters
         ----------
         points : slice | str | pd.DataFrame | dict

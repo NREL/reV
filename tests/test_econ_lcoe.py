@@ -14,6 +14,7 @@ import numpy as np
 
 from reV.econ.econ import Econ
 from reV import TESTDATADIR
+from reV.handlers.outputs import Outputs
 
 
 RTOL = 0.01
@@ -24,9 +25,12 @@ PURGE_OUT = True
 @pytest.mark.parametrize('year', ('2012', '2013'))
 def test_lcoe(year):
     """Gen PV CF profiles with write to disk and compare against rev1."""
-    cf_file = TESTDATADIR + '/gen_out/gen_ri_pv_{}_x000.h5'.format(year)
-    sam_files = TESTDATADIR + '/SAM/i_lcoe_naris_pv_1axis_inv13.json'
-    r1f = TESTDATADIR + '/ri_pv/scalar_outputs/project_outputs.h5'
+    cf_file = os.path.join(TESTDATADIR,
+                           'gen_out/gen_ri_pv_{}_x000.h5'.format(year))
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/i_lcoe_naris_pv_1axis_inv13.json')
+    r1f = os.path.join(TESTDATADIR,
+                       'ri_pv/scalar_outputs/project_outputs.h5')
     points = slice(0, 100)
     obj = Econ.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
                           cf_year=year, output_request='lcoe_fcr',
@@ -39,6 +43,39 @@ def test_lcoe(year):
         r1_lcoe = f['pv']['lcoefcr'][year_rows[str(year)], 0:100] * 1000
 
     result = np.allclose(lcoe, r1_lcoe, rtol=RTOL, atol=ATOL)
+
+    assert result
+
+
+@pytest.mark.parametrize('year', ('2012', '2013'))
+def test_fout(year):
+    """Gen PV CF profiles with write to disk and compare against rev1."""
+    cf_file = os.path.join(TESTDATADIR,
+                           'gen_out/gen_ri_pv_{}_x000.h5'.format(year))
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/i_lcoe_naris_pv_1axis_inv13.json')
+    r1f = os.path.join(TESTDATADIR,
+                       'ri_pv/scalar_outputs/project_outputs.h5')
+    dirout = os.path.join(TESTDATADIR, 'lcoe_out')
+    fout = 'lcoe_out_{}.h5'.format(year)
+    fpath = os.path.join(dirout, fout)
+    points = slice(0, 100)
+    Econ.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
+                    cf_year=year, output_request='lcoe_fcr',
+                    n_workers=1, sites_per_split=25,
+                    points_range=None, fout=fout, dirout=dirout,
+                    return_obj=False)
+
+    with Outputs(fpath) as f:
+        lcoe = f['lcoe_fcr']
+
+    with h5py.File(r1f) as f:
+        year_rows = {'2012': 0, '2013': 1}
+        r1_lcoe = f['pv']['lcoefcr'][year_rows[str(year)], 0:100] * 1000
+    result = np.allclose(lcoe, r1_lcoe, rtol=RTOL, atol=ATOL)
+
+    if PURGE_OUT:
+        os.remove(fpath)
 
     assert result
 
@@ -71,6 +108,7 @@ def test_ORCA(rut_id):
                           fout=None, dirout=None, return_obj=True)
 
     lcoe = list(obj.out['lcoe_fcr'])
+
     msg = ('LCOE does not match (new, baseline): \n{} \n{}'
            .format(lcoe, baseline[rut_id]))
     result = np.allclose(lcoe, baseline[rut_id], rtol=RTOL, atol=ATOL)

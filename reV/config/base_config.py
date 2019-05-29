@@ -6,6 +6,7 @@ import logging
 import os
 
 from reV.utilities.exceptions import ConfigError
+from reV import REVDIR, TESTDATADIR
 
 
 logger = logging.getLogger(__name__)
@@ -14,11 +15,47 @@ logger = logging.getLogger(__name__)
 class BaseConfig(dict):
     """Base class for configuration frameworks."""
 
-    def __init__(self, config_dict):
-        """Initialize configuration object with keyword dict."""
+    def __init__(self, config):
+        """
+        Parameters
+        ----------
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
+        """
         self._logging_level = None
         self._name = None
-        self.set_self_dict(config_dict)
+        self._parse_config(config)
+
+    def _parse_config(self, config):
+        """Parse a config input and set appropriate instance attributes.
+
+        Parameters
+        ----------
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
+        """
+
+        # str_rep is a mapping of config strings to replace with real values
+        self.str_rep = {'REVDIR': REVDIR,
+                        'TESTDATADIR': TESTDATADIR,
+                        }
+
+        # str is either json file path or serialized json object
+        if isinstance(config, str):
+            if config.endswith('.json'):
+                # get the directory of the config file
+                self.dir = os.path.dirname(os.path.realpath(config)) + '/'
+                self.str_rep['./'] = self.dir
+                config = self.get_file(config)
+            else:
+                # attempt to deserialize non-json string
+                config = json.loads(config)
+
+        # Perform string replacement, save config to self instance
+        config = self.str_replace(config, self.str_rep)
+        self.set_self_dict(config)
 
     @staticmethod
     def check_files(flist):
@@ -30,8 +67,10 @@ class BaseConfig(dict):
             List of files (with paths) to check existance of.
         """
         for f in flist:
-            if os.path.exists(f) is False:
-                raise IOError('File does not exist: {}'.format(f))
+            # ignore files that are to be specified using pipeline utils
+            if 'PIPELINE' not in os.path.basename(f):
+                if os.path.exists(f) is False:
+                    raise IOError('File does not exist: {}'.format(f))
 
     @staticmethod
     def load_json(fname):

@@ -10,7 +10,7 @@ import time
 import re
 from warnings import warn
 
-from reV.generation.cli_gen import get_node_name_fout
+from reV.generation.cli_gen import get_node_name_fout, make_fout
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.analysis_configs import EconConfig
 from reV.econ.econ import Econ
@@ -18,21 +18,11 @@ from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
 from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
+from reV.pipeline.status import Status
+from reV.generation.cli_gen import main
 
 
 logger = logging.getLogger(__name__)
-
-
-@click.group()
-@click.option('--name', '-n', default='reV_econ', type=STR,
-              help='Econ analysis job name. Default is "reV_econ".')
-@click.option('-v', '--verbose', is_flag=True,
-              help='Flag to turn on debug logging. Default is not verbose.')
-@click.pass_context
-def main(ctx, name, verbose):
-    """Command line interface (CLI) for the reV 2.0 Econ Module."""
-    ctx.obj['NAME'] = name
-    ctx.obj['VERBOSE'] = verbose
 
 
 @main.command()
@@ -123,12 +113,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
              .format(year, config.cf_files[i]))
 
     # if the year isn't in the name, add it before setting the file output
-    match = re.match(r'.*([1-3][0-9]{3})', name)
-    if year:
-        ctx.obj['FOUT'] = '{}{}.h5'.format(name, '_{}'.format(year) if not
-                                           match else '')
-    else:
-        ctx.obj['FOUT'] = '{}.h5'.format(name)
+    ctx.obj['FOUT'] = make_fout(name, year)
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
@@ -139,6 +124,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
+        match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match and year:
             # Add year to name before submitting
             # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
@@ -151,6 +137,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
+        match = re.match(r'.*([1-3][0-9]{3})', name)
         if not match and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
@@ -158,6 +145,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.node_mem,
+                   feature=config.execution_control.feature,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
                    verbose=verbose)
 
@@ -261,10 +249,16 @@ def econ_local(ctx, n_workers, points_range, verbose):
                    dirout=dirout)
 
     tmp_str = ' with points range {}'.format(points_range)
+    runtime = (time.time() - t0) / 60
     logger.info('Econ compute complete for project points "{0}"{1}. '
                 'Time elapsed: {2:.2f} min. Target output dir: {3}'
                 .format(points, tmp_str if points_range else '',
-                        (time.time() - t0) / 60, dirout))
+                        runtime, dirout))
+
+    # add job to reV status file.
+    status = {'dirout': dirout, 'fout': fout, 'job_status': 'successful',
+              'runtime': runtime, 'finput': cf_file}
+    Status.make_job_file(dirout, 'econ', name, status)
 
 
 def get_node_pc(points, sam_files, nodes):
@@ -387,8 +381,9 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                             v='-v' if verbose else ''))
 
     # Python command that will be executed on a node
+    # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.econ.cli_econ '
-           '{arg_main} direct {arg_direct} econ_local {arg_loc}'
+           '{arg_main} direct {arg_direct} econ-local {arg_loc}'
            .format(arg_main=arg_main,
                    arg_direct=arg_direct,
                    arg_loc=arg_loc))
@@ -437,15 +432,15 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     jobs = {}
 
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='pbs')
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
+                                                  hpc='pbs')
 
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,
                            points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
-                           output_request=output_request,
-                           verbose=verbose)
+                           output_request=output_request, verbose=verbose)
 
         logger.info('Running reV econ on Peregrine with node name "{}" '
                     'for {} (points range: {}).'
@@ -457,6 +452,12 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
         if pbs.id:
             msg = ('Kicked off reV econ job "{}" (PBS jobid #{}) on '
                    'Peregrine.'.format(node_name, pbs.id))
+            # add job to reV status file.
+            Status.add_job(dirout, 'econ', node_name, replace=True,
+                           job_attrs={'job_id': pbs.id,
+                                      'hardware': 'peregrine',
+                                      'fout': fout_node,
+                                      'dirout': dirout})
         else:
             msg = ('Was unable to kick off reV econ job "{}". '
                    'Please see the stdout error messages'
@@ -473,16 +474,20 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
               help='Number of Eagle nodes for econ job. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
               help='Eagle allocation account name. Default is "rev".')
-@click.option('--memory', '-mem', default=96, type=INT,
-              help='Eagle node memory request in GB. Default is 96')
+@click.option('--memory', '-mem', default=90, type=INT,
+              help='Eagle node memory request in GB. Default is 90')
 @click.option('--walltime', '-wt', default=0.5, type=float,
               help='Eagle walltime request in hours. Default is 0.5')
+@click.option('--feature', '-l', default=None, type=STR,
+              help=('Additional flags for SLURM job. Format is "--qos=high" '
+                    'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
+def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
+               verbose):
     """Run econ on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -505,38 +510,46 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, stdout_path, verbose):
 
     pc = get_node_pc(points, sam_files, nodes)
 
-    jobs = {}
-
     for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, hpc='slurm')
+        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
+                                                  hpc='slurm')
 
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,
                            points_range=split.split_range,
                            sites_per_core=sites_per_core, n_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
-                           output_request=output_request,
-                           verbose=verbose)
+                           output_request=output_request, verbose=verbose)
 
-        logger.info('Running reV econ on Eagle with node name "{}" for '
-                    '{} (points range: {}).'
-                    .format(node_name, pc, split.split_range))
+        status = Status.retrieve_job_status(dirout, 'econ', node_name)
 
-        # create and submit the SLURM job
-        slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      name=node_name, stdout_path=stdout_path)
-        if slurm.id:
-            msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}) on '
-                   'Eagle.'.format(node_name, slurm.id))
+        if status == 'successful':
+            msg = ('Job "{}" is successful in status json found in "{}", '
+                   'not re-running.'
+                   .format(node_name, dirout))
         else:
-            msg = ('Was unable to kick off reV econ job "{}". '
-                   'Please see the stdout error messages'
-                   .format(node_name))
+            logger.info('Running reV econ on Eagle with node name "{}" for '
+                        '{} (points range: {}).'
+                        .format(node_name, pc, split.split_range))
+            # create and submit the SLURM job
+            slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
+                          feature=feature, name=node_name,
+                          stdout_path=stdout_path)
+            if slurm.id:
+                msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}) on '
+                       'Eagle.'.format(node_name, slurm.id))
+                # add job to reV status file.
+                Status.add_job(
+                    dirout, 'econ', node_name, replace=True,
+                    job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                               'fout': fout_node, 'dirout': dirout})
+            else:
+                msg = ('Was unable to kick off reV econ job "{}". '
+                       'Please see the stdout error messages'
+                       .format(node_name))
+
         click.echo(msg)
         logger.info(msg)
-        jobs[i] = slurm
-
-    return jobs
 
 
 if __name__ == '__main__':
