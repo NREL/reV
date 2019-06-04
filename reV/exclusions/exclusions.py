@@ -264,7 +264,7 @@ class Exclusions:
 
         Parameters
         ----------
-        layer_configs : dictionary list | None
+        layer_configs : dictionary | list | None
             Configs list for the addition of layers
             Provided as either an argument or predefined instance attribute
         """

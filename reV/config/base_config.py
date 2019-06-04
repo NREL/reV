@@ -115,6 +115,10 @@ class BaseConfig(dict):
                 if isinstance(val, dict):
                     # if the value is also a dict, go one more level deeper
                     d[key] = BaseConfig.str_replace(val, strrep)
+                elif isinstance(val, list):
+                    # if the value is also a list, iterate through
+                    for i, entry in enumerate(val):
+                        d[key][i] = BaseConfig.str_replace(entry, strrep)
                 elif isinstance(val, str):
                     # if val is a str, check to see if str replacements apply
                     for old_str, new in strrep.items():
