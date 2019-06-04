@@ -320,7 +320,7 @@ class ExclConfig(AnalysisConfig):
 
     @property
     def exclusions_filter(self):
-        """Get the exclusions_filter config object that the gen config points to.
+        """Get exclusions_filter config object that the gen config points to.
 
         Returns
         -------

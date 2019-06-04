@@ -41,7 +41,9 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(verbose, name, logdir=config.logdir)
+    init_mult(name, config.logdir,
+              modules=[__name__, 'reV.exclusions.exclusions',
+                       'reV.config', 'reV.utilities'], verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV 2.0 exclusions from config file: "{}"'
@@ -118,7 +120,9 @@ def exclusions(ctx, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers
-    init_mult(verbose, name, logdir=dirout)
+    init_mult(name, dirout,
+              modules=[__name__, 'reV.exclusions.exclusions',
+                       'reV.config', 'reV.utilities'], verbose=verbose)
 
     t0 = time.time()
     Exclusions.run(config=config,

@@ -1,0 +1,34 @@
+{
+  "directories": {
+    "logging_directory": "TESTDATADIR/ri_excl_reV2",
+    "output_directory": "TESTDATADIR/ri_excl_reV2"
+  },
+  "exclusions": [
+    {
+      "band": 1,
+      "classes_exclude": [
+        1
+      ],
+      "fpath": "TESTDATADIR/ri_exclusions/ri_padus.tif",
+      "layer_name": "PAD-US",
+      "layer_type": "Protected"
+    },
+    {
+      "band": 1,
+      "fpath": "TESTDATADIR/ri_exclusions/ri_srtm_slope.tif",
+      "layer_name": "SRTM Slope",
+      "layer_type": "Slope",
+      "max_thresh": 5
+    }
+  ],
+  "exclusions_filter": "queen",
+  "exclusions_output_file": "exclusions.tif",
+  "exclusions_use_blocks": true,
+  "execution_control": {
+    "option": "local"
+  },
+  "project_control": {
+    "logging_level": "DEBUG",
+    "name": "rev_exclusions"
+  }
+}
