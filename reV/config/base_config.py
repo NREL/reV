@@ -112,16 +112,20 @@ class BaseConfig(dict):
         if isinstance(d, dict):
             # go through dict keys and values
             for key, val in d.items():
-                if isinstance(val, dict):
-                    # if the value is also a dict, go one more level deeper
-                    d[key] = BaseConfig.str_replace(val, strrep)
-                elif isinstance(val, str):
-                    # if val is a str, check to see if str replacements apply
-                    for old_str, new in strrep.items():
-                        # old_str is in the value, replace with new value
-                        d[key] = val.replace(old_str, new)
-                        val = val.replace(old_str, new)
-        # return updated dictionary
+                d[key] = BaseConfig.str_replace(val, strrep)
+
+        elif isinstance(d, list):
+            # if the value is also a list, iterate through
+            for i, entry in enumerate(d):
+                d[i] = BaseConfig.str_replace(entry, strrep)
+
+        elif isinstance(d, str):
+            # if val is a str, check to see if str replacements apply
+            for old_str, new in strrep.items():
+                # old_str is in the value, replace with new value
+                d = d.replace(old_str, new)
+
+        # return updated
         return d
 
     def set_self_dict(self, dictlike):
