@@ -6,7 +6,6 @@ Created on Mon Jan 28 11:43:27 2019
 
 @author: gbuster
 """
-import os
 import logging
 
 from reV.pipeline.pipeline import Pipeline
@@ -17,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class CollectionConfig(AnalysisConfig):
-    """Base analysis config (generation, lcoe, etc...)."""
+    """File collection config."""
 
     def __init__(self, config):
         """
@@ -128,10 +127,7 @@ class CollectionConfig(AnalysisConfig):
             reV job name.
         """
         if self._name is None:
-            if self._dirout is not None:
-                self._name = os.path.split(self.dirout)[-1] + '_col'
-            else:
-                self._name = 'rev'
+            self._name = 'collect'
             if 'name' in self['project_control']:
                 if self['project_control']['name']:
                     self._name = self['project_control']['name']

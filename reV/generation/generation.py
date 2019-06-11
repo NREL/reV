@@ -27,6 +27,7 @@ class Gen:
     OPTIONS = {'pv': PV,
                'csp': CSP,
                'wind': LandBasedWind,
+               'windpower': LandBasedWind,
                'landbasedwind': LandBasedWind,
                'offshorewind': OffshoreWind,
                }

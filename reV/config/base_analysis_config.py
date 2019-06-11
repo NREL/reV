@@ -130,10 +130,7 @@ class AnalysisConfig(BaseConfig):
             reV job name.
         """
         if self._name is None:
-            if self._dirout is not None:
-                self._name = os.path.split(self.dirout)[-1]
-            else:
-                self._name = 'rev'
+            self._name = os.path.basename(os.path.normpath(self.dirout))
             if 'name' in self['project_control']:
                 if self['project_control']['name']:
                     self._name = self['project_control']['name']

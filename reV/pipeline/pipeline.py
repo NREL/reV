@@ -62,13 +62,15 @@ class Pipeline:
     def _main(self):
         """Iterate through run list submitting steps while monitoring status"""
 
+        i = 0
+
         for i, step in enumerate(self._run_list):
             return_code = self._check_step_completed(i)
 
             if return_code == 0:
-                logger.info('Based on successful end state in reV status '
-                            'file, not running pipeline step {}: {}.'
-                            .format(i, step))
+                logger.debug('Based on successful end state in reV status '
+                             'file, not running pipeline step {}: {}.'
+                             .format(i, step))
             else:
                 return_code = 1
                 self._submit_step(i)
@@ -88,8 +90,9 @@ class Pipeline:
                                              '{} "{}" {}'
                                              .format(i, module, f_config))
 
-        logger.info('Pipeline job "{}" is complete. Output directory is: "{}"'
-                    .format(self._config.name, self._config.dirout))
+        if i + 1 == len(self._run_list) and return_code == 0:
+            logger.info('Pipeline job "{}" is complete. Output directory is: '
+                        '"{}"'.format(self._config.name, self._config.dirout))
 
     def _submit_step(self, i):
         """Submit a step in the pipeline.

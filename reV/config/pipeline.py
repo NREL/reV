@@ -56,7 +56,10 @@ class PipelineConfig(AnalysisConfig):
             for f_config in di.values():
                 config = AnalysisConfig(f_config)
                 dirouts.append(config.dirout)
-                names.append(config.name)
+
+                if 'project_control' in config:
+                    if 'name' in config['project_control']:
+                        names.append(config.name)
 
         if len(set(dirouts)) != 1:
             raise ConfigError('Pipeline steps must have a common output '
@@ -118,10 +121,7 @@ class PipelineConfig(AnalysisConfig):
             reV pipeline name.
         """
         if self._name is None:
-            if self._dirout is not None:
-                self._name = os.path.split(self.dirout)[-1]
-            else:
-                self._name = 'rev'
+            self._name = os.path.basename(os.path.normpath(self.dirout))
             if 'name' in self:
                 if self['name']:
                     self._name = self['name']
