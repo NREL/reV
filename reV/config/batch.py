@@ -5,6 +5,7 @@ Created on Mon Jun 10 13:49:53 2019
 @author: gbuster
 """
 import os
+
 from reV.utilities.exceptions import ConfigError
 from reV.config.base_config import BaseConfig
 
