@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-reV analysis configs (generation, lcoe, etc...)
+reV collection config
 
 Created on Mon Jan 28 11:43:27 2019
 
 @author: gbuster
 """
+import os
 import logging
 
 from reV.pipeline.pipeline import Pipeline
@@ -116,3 +117,22 @@ class CollectionConfig(AnalysisConfig):
             if not isinstance(self._file_prefixes, list):
                 self._file_prefixes = list(self._file_prefixes)
         return self._file_prefixes
+
+    @property
+    def name(self):
+        """Get the job name, defaults to the output directory name + _col.
+
+        Returns
+        -------
+        _name : str
+            reV job name.
+        """
+        if self._name is None:
+            if self._dirout is not None:
+                self._name = os.path.split(self.dirout)[-1] + '_col'
+            else:
+                self._name = 'rev'
+            if 'name' in self['project_control']:
+                if self['project_control']['name']:
+                    self._name = self['project_control']['name']
+        return self._name

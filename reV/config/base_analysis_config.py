@@ -1,6 +1,7 @@
 """
 reV Base analysis Configuration Frameworks
 """
+import os
 import logging
 from warnings import warn
 
@@ -118,3 +119,22 @@ class AnalysisConfig(BaseConfig):
                      'Defaulting to a local run.')
                 self._ec = BaseExecutionConfig(ec)
         return self._ec
+
+    @property
+    def name(self):
+        """Get the job name, defaults to the output directory name.
+
+        Returns
+        -------
+        _name : str
+            reV job name.
+        """
+        if self._name is None:
+            if self._dirout is not None:
+                self._name = os.path.split(self.dirout)[-1]
+            else:
+                self._name = 'rev'
+            if 'name' in self['project_control']:
+                if self['project_control']['name']:
+                    self._name = self['project_control']['name']
+        return self._name

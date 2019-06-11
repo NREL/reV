@@ -1,0 +1,15 @@
+{
+  "logging": {
+    "log_file": null,
+    "log_level": "DEBUG"
+  },
+  "name": "rev_batch",
+  "pipeline": [
+    {
+      "generation": "./config_gen.json"
+    },
+    {
+      "collect": "./config_collect.json"
+    }
+  ]
+}

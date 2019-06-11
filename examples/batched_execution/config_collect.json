@@ -1,0 +1,23 @@
+{
+  "directories": {
+    "collect_directory": "PIPELINE",
+    "logging_directory": "./",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "memory": 90,
+    "option": "eagle",
+    "walltime": 0.5
+  },
+  "project_control": {
+    "dsets": [
+      "cf_mean"
+    ],
+    "file_prefixes": "PIPELINE",
+    "logging_level": "INFO",
+    "parallel": false
+  },
+  "project_points": "./project_points/project_points.csv"
+}
