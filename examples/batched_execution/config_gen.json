@@ -8,7 +8,7 @@
     "feature": "--qos=high",
     "nodes": 2,
     "option": "eagle",
-    "sites_per_core": 100,
+    "sites_per_core": 25,
     "walltime": 0.5
   },
   "project_control": {
@@ -23,7 +23,7 @@
     "technology": "windpower"
   },
   "project_points": "./project_points/project_points.csv",
-  "resource_file": "/lustre/eaglefs/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
+  "resource_file": "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
   "sam_files": {
     "turbine": "./sam_configs/turbine.json"
   }

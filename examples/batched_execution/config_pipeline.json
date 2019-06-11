@@ -1,9 +1,8 @@
 {
   "logging": {
     "log_file": null,
-    "log_level": "DEBUG"
+    "log_level": "INFO"
   },
-  "name": "rev_batch",
   "pipeline": [
     {
       "generation": "./config_gen.json"
