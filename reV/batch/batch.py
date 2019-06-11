@@ -271,7 +271,8 @@ class BatchJob:
 
     @classmethod
     def run(cls, config):
-        """
+        """Run the reV batch job from a config file.
+
         Parameters
         ----------
         config : str

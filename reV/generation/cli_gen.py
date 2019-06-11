@@ -27,12 +27,12 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.option('--name', '-n', default='reV', type=STR,
-              help='Generation job name. Default is "reV_gen".')
+              help='reV job name.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, verbose):
-    """Command line interface (CLI) for the reV 2.0 SAM-based modules."""
+    """Command line interface (CLI) for the reV 2.0 modules."""
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
 
