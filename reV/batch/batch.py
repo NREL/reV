@@ -10,6 +10,7 @@ import os
 import shutil
 import itertools
 
+from reV.pipeline.pipeline import Pipeline
 from reV.config.batch import BatchConfig
 
 
@@ -152,6 +153,19 @@ class BatchJob:
 
         return self._file_sets
 
+    @property
+    def sub_dirs(self):
+        """List of job sub directories.
+
+        Returns
+        -------
+        sub_dirs : list
+            List of strings of job sub directories.
+        """
+        sub_dirs = [os.path.join(self._base_dir, tag + '/')
+                    for tag in self.job_tags]
+        return sub_dirs
+
     @staticmethod
     def _mod_dict(inp, arg_mods):
         """Recursively modify key/value pairs in a dictionary.
@@ -177,7 +191,7 @@ class BatchJob:
                 if k in arg_mods:
                     out[k] = arg_mods[k]
                 elif isinstance(v, (list, dict)):
-                    out[k] = BatchJob._mod_dict(v, arg_comb)
+                    out[k] = BatchJob._mod_dict(v, arg_mods)
 
         elif isinstance(inp, list):
             for i, entry in enumerate(inp):
@@ -248,11 +262,22 @@ class BatchJob:
                             shutil.copy(os.path.join(dirpath, fn),
                                         os.path.join(new_path, fn))
 
+    def _run_pipelines(self):
+        """Run the reV pipeline modules for each batch job."""
+        for d in self.sub_dirs:
+            config_pipeline = os.path.join(
+                d, os.path.basename(self._config.config_pipeline))
+            Pipeline.run(config_pipeline, monitor=False)
 
-if __name__ == '__main__':
-    fn = 'C:/sandbox/reV/git_reV2/examples/batched_execution/config_batch.json'
-    b = BatchJob(fn)
-    arg_combs = b.arg_combs
-    arg_comb = arg_combs[0]
-    file_sets = b._file_sets
-    b._make_job_dirs()
+    @classmethod
+    def run(cls, config):
+        """
+        Parameters
+        ----------
+        config : str
+            File path to config json (str).
+        """
+
+        b = cls(config)
+        b._make_job_dirs()
+        b._run_pipelines()

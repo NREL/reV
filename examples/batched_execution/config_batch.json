@@ -1,4 +1,5 @@
 {
+  "pipeline_config": "./config_pipeline.json",
   "sets": [
     {
       "args": {

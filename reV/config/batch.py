@@ -24,3 +24,13 @@ class BatchConfig(BaseConfig):
                               'but received a "{}".'.format(type(config)))
 
         super().__init__(config)
+
+    def _pre_flight(self):
+        """Run pre-flight checks on the config."""
+        if 'pipeline_config' not in self:
+            raise ConfigError('Batch config needs "pipeline_config" arg!')
+
+    @property
+    def config_pipeline(self):
+        """Get the base pipeline config file with full file path."""
+        return self['pipeline_config']
