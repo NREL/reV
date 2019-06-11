@@ -28,13 +28,16 @@ class Pipeline:
                     2: 'failed',
                     3: 'complete'}
 
-    def __init__(self, pipeline):
+    def __init__(self, pipeline, monitor=True):
         """
         Parameters
         ----------
         pipeline : str | dict
             Pipeline config file path or dictionary.
+        monitor : bool
+            Flag to perform continuous monitoring of the pipeline.
         """
+        self.monitor = monitor
         self._config = PipelineConfig(pipeline)
         self._run_list = self._config.pipeline_steps
         self._init_status()
@@ -69,8 +72,13 @@ class Pipeline:
             else:
                 return_code = 1
                 self._submit_step(i)
+
+                # do not enter while loop for continuous monitoring
+                if not self.monitor:
+                    break
+
                 time.sleep(1)
-                while return_code == 1:
+                while return_code == 1 and self.monitor:
                     time.sleep(5)
                     return_code = self._check_step_completed(i)
 
@@ -79,6 +87,7 @@ class Pipeline:
                         raise ExecutionError('reV pipeline failed at step '
                                              '{} "{}" {}'
                                              .format(i, module, f_config))
+
         logger.info('Pipeline job "{}" is complete. Output directory is: "{}"'
                     .format(self._config.name, self._config.dirout))
 
@@ -421,13 +430,16 @@ class Pipeline:
         return out
 
     @classmethod
-    def run(cls, pipeline):
+    def run(cls, pipeline, monitor=True):
         """Run the reV pipeline.
 
         Parameters
         ----------
         pipeline : str | dict
             Pipeline config file path or dictionary.
+        monitor : bool
+            Flag to perform continuous monitoring of the pipeline.
         """
-        pipe = cls(pipeline)
+
+        pipe = cls(pipeline, monitor=monitor)
         pipe._main()
