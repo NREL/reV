@@ -4,6 +4,8 @@ Created on Mon Jun 10 13:49:53 2019
 
 @author: gbuster
 """
+import copy
+import json
 import os
 import shutil
 import itertools
@@ -27,7 +29,7 @@ class BatchJob:
         self._config = BatchConfig(config)
         self._base_dir = self._config.dir
 
-        self._arg_combs, self._set_files = self._parse_config(self._config)
+        self._arg_combs, self._file_sets = self._parse_config(self._config)
 
     @staticmethod
     def _parse_config(config):
@@ -43,13 +45,13 @@ class BatchJob:
         arg_combs : list
             List of dictionaries representing the different arg/value
             combinations made available in the batch config json.
-        set_files : list
+        file_sets : list
             List of same length as arg_combs, representing the files to
             manipulate for each arg comb.
         """
 
         arg_combs = []
-        set_files = []
+        file_sets = []
 
         # iterate through batch sets
         for s in config['sets']:
@@ -64,9 +66,9 @@ class BatchJob:
 
                 # append the unique dictionary representation to the attr
                 arg_combs.append(comb_dict)
-                set_files.append(s['files'])
+                file_sets.append(s['files'])
 
-        return arg_combs, set_files
+        return arg_combs, file_sets
 
     def _make_job_tag(self, arg_comb):
         """Make a job tags from a unique combination of args + values.
@@ -138,17 +140,73 @@ class BatchJob:
         return self._arg_combs
 
     @property
-    def set_files(self):
+    def file_sets(self):
         """List of files to be manipulated for each arg comb batch job.
 
         Returns
         -------
-        set_files : list
+        file_sets : list
             List of same length as arg_combs, representing the files to
             manipulate for each arg comb.
         """
 
-        return self._set_files
+        return self._file_sets
+
+    @staticmethod
+    def _mod_dict(inp, arg_mods):
+        """Recursively modify key/value pairs in a dictionary.
+
+        Parameters
+        ----------
+        inp : dict | list | str | int | float
+            Input arg to modify. Should be a dict first, the recusive call
+            can input nested values as dict/list/str etc...
+        arg_mods : dict
+            Key/value pairs to insert in the inp.
+
+        Returns
+        -------
+        out : dict | list | str | int | float
+            Modified inp with arg_mods.
+        """
+
+        out = copy.deepcopy(inp)
+
+        if isinstance(inp, dict):
+            for k, v in inp.items():
+                if k in arg_mods:
+                    out[k] = arg_mods[k]
+                elif isinstance(v, (list, dict)):
+                    out[k] = BatchJob._mod_dict(v, arg_comb)
+
+        elif isinstance(inp, list):
+            for i, entry in enumerate(inp):
+                out[i] = BatchJob._mod_dict(entry, arg_mods)
+
+        return out
+
+    @staticmethod
+    def _mod_json(fpath, fpath_out, arg_mods):
+        """Import and modify the contents of a json. Dump to new file.
+
+        Parameters
+        ---------
+        fpath : str
+            File path to json to be imported/modified
+        fpath_out : str
+            File path to dump new modified json.
+        arg_mods : dict
+            Dictionary representing one set of arg/value combinations to
+            implement in the json
+        """
+
+        with open(fpath, 'r') as f:
+            data = json.load(f)
+
+        data = BatchJob._mod_dict(data, arg_mods)
+
+        with open(fpath_out, 'w') as f:
+            json.dump(data, f, indent=4, separators=(',', ': '))
 
     def _make_job_dirs(self):
         """Copy job files from the batch config dir into sub job dirs."""
@@ -156,32 +214,45 @@ class BatchJob:
         # walk through current directory getting everything to copy
         for dirpath, _, filenames in os.walk(self._base_dir):
 
-            # For each dir level, iterate through the batch arg combinations
-            for i, _ in enumerate(self.arg_combs):
-                # tag and files to mod corresponding to this arg combination
-                tag = self.job_tags[i]
-                mod_files = self.set_files[i]
-                mod_fnames = [os.path.basename(fn) for fn in mod_files]
+            # do make additional copies of job sub directories.
+            skip = any([job_tag in dirpath for job_tag in self.job_tags])
 
-                # Add the job tag to the directory path.
-                # This will copy config subdirs into the job subdirs
-                new_path = dirpath.replace(
-                    self._base_dir, os.path.join(self._base_dir, tag + '/'))
+            if not skip:
 
-                if not os.path.exists(new_path):
-                    os.makedirs(new_path)
+                # For each dir level, iterate through the batch arg combos
+                for i, arg_comb in enumerate(self.arg_combs):
+                    # tag and files to mod corresponding to this arg combo
+                    tag = self.job_tags[i]
+                    mod_files = self.file_sets[i]
+                    mod_fnames = [os.path.basename(fn) for fn in mod_files]
 
-                for fn in filenames:
+                    # Add the job tag to the directory path.
+                    # This will copy config subdirs into the job subdirs
+                    new_path = dirpath.replace(
+                        self._base_dir,
+                        os.path.join(self._base_dir, tag + '/'))
 
-                    # straight copy
-                    if fn not in mod_fnames:
-                        shutil.copy(os.path.join(dirpath, fn),
-                                    os.path.join(new_path, fn))
+                    if not os.path.exists(new_path):
+                        os.makedirs(new_path)
+
+                    for fn in filenames:
+
+                        if fn in mod_fnames and fn.endswith('.json'):
+                            # modify json and dump to new path
+                            self._mod_json(os.path.join(dirpath, fn),
+                                           os.path.join(new_path, fn),
+                                           arg_comb)
+
+                        else:
+                            # straight copy of non-mod and non-json
+                            shutil.copy(os.path.join(dirpath, fn),
+                                        os.path.join(new_path, fn))
 
 
 if __name__ == '__main__':
     fn = 'C:/sandbox/reV/git_reV2/examples/batched_execution/config_batch.json'
     b = BatchJob(fn)
     arg_combs = b.arg_combs
-    set_files = b._set_files
+    arg_comb = arg_combs[0]
+    file_sets = b._file_sets
     b._make_job_dirs()
