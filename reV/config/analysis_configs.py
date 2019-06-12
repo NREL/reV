@@ -6,7 +6,6 @@ Created on Mon Jan 28 11:43:27 2019
 
 @author: gbuster
 """
-import os
 import logging
 from math import ceil
 from warnings import warn
@@ -164,6 +163,8 @@ class SAMAnalysisConfig(AnalysisConfig):
 class GenConfig(SAMAnalysisConfig):
     """Class to import and manage user configuration inputs."""
 
+    NAME = 'gen'
+
     def __init__(self, config):
         """
         Parameters
@@ -243,26 +244,11 @@ class GenConfig(SAMAnalysisConfig):
                               .format(self._res_files, self.years))
         return self._res_files
 
-    @property
-    def name(self):
-        """Get the job name, defaults to the output directory name + _gen.
-
-        Returns
-        -------
-        _name : str
-            reV job name.
-        """
-        if self._name is None:
-            self._name = (os.path.basename(os.path.normpath(self.dirout)) +
-                          '_gen')
-            if 'name' in self['project_control']:
-                if self['project_control']['name']:
-                    self._name = self['project_control']['name']
-        return self._name
-
 
 class EconConfig(SAMAnalysisConfig):
     """Class to import and manage configuration inputs for econ analysis."""
+
+    NAME = 'econ'
 
     def __init__(self, config):
         """
@@ -333,20 +319,3 @@ class EconConfig(SAMAnalysisConfig):
             if 'site_data' in self:
                 self._site_data = self['site_data']
         return self._site_data
-
-    @property
-    def name(self):
-        """Get the job name, defaults to the output directory name + _econ.
-
-        Returns
-        -------
-        _name : str
-            reV job name.
-        """
-        if self._name is None:
-            self._name = (os.path.basename(os.path.normpath(self.dirout)) +
-                          '_econ')
-            if 'name' in self['project_control']:
-                if self['project_control']['name']:
-                    self._name = self['project_control']['name']
-        return self._name

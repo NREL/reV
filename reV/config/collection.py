@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 class CollectionConfig(AnalysisConfig):
     """File collection config."""
 
+    NAME = 'collect'
+
     def __init__(self, config):
         """
         Parameters
@@ -116,19 +118,3 @@ class CollectionConfig(AnalysisConfig):
             if not isinstance(self._file_prefixes, list):
                 self._file_prefixes = list(self._file_prefixes)
         return self._file_prefixes
-
-    @property
-    def name(self):
-        """Get the job name, defaults to the output directory name + _col.
-
-        Returns
-        -------
-        _name : str
-            reV job name.
-        """
-        if self._name is None:
-            self._name = 'collect'
-            if 'name' in self['project_control']:
-                if self['project_control']['name']:
-                    self._name = self['project_control']['name']
-        return self._name

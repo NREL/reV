@@ -202,7 +202,8 @@ class BaseConfig(dict):
         if self._name is None:
             # set default value
             self._name = 'rev'
-            if 'name' in self['project_control']:
-                if self['project_control']['name']:
-                    self._name = self['project_control']['name']
+            if 'project_control' in self:
+                if 'name' in self['project_control']:
+                    if self['project_control']['name']:
+                        self._name = self['project_control']['name']
         return self._name
