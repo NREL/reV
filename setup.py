@@ -26,10 +26,6 @@ with open(os.path.join(here, "reV", "version.py"), encoding="utf-8") as f:
 
 version = version.split()[2].strip('"').strip("'")
 
-test_requires = ["pytest", ]
-
-numpy_dependency = "numpy>=1.13.0"
-
 
 class PostDevelopCommand(develop):
     """
@@ -68,6 +64,12 @@ def get_sam_data_files():
     return sam_data_files
 
 
+test_requires = ["pytest", ]
+
+numpy_dependency = "numpy>=1.15.0"
+pandas_dependency = "pandas>=0.23.0"
+click_dependency = "click>=7.0"
+
 setup(
     name="reV",
     version=version,
@@ -75,7 +77,7 @@ setup(
     long_description=readme,
     author="Galen Maclaurin",
     author_email="galen.maclaurin@nrel.gov",
-    url="https://github.com/NREL/ditto",
+    url="https://github.nrel.gov/reV/reV2",
     packages=find_packages(),
     package_dir={"rev": "rev"},
     entry_points={
@@ -95,12 +97,11 @@ setup(
         "Intended Audience :: Modelers",
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
     ],
     test_suite="tests",
-    install_requires=["click", "future"],
+    install_requires=["click", "h5py", "numpy", "pandas", "psutil"],
     extras_require={
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],
