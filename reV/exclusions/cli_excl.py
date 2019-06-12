@@ -59,9 +59,10 @@ def from_config(ctx, config_file, verbose):
     # set config objects to be passed through invoke to direct methods
     ctx.obj['EXCLUSIONS'] = config.exclusions
     ctx.obj['DIROUT'] = config.dirout
-    ctx.obj['EXCLUSIONS_OUTPUT_FILE'] = config.exclusions_output_file
-    ctx.obj['EXCLUSIONS_USE_BLOCKS'] = config.exclusions_use_blocks
-    ctx.obj['EXCLUSIONS_FILTER'] = config.exclusions_filter
+    ctx.obj['FOUT'] = config.fout
+    ctx.obj['USE_BLOCKS'] = config.use_blocks
+    ctx.obj['FILTER'] = config.filter
+    ctx.obj['LOGDIR'] = config.logdir
 
     if config.execution_control.option == 'local':
         ctx.invoke(exclusions)
@@ -84,7 +85,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('-o', '--fout',
               required=True, type=click.Path(exists=False),
               help='Output file path for exclusion.')
-@click.option('-f', '--exclusions_filter', default=None, type=str,
+@click.option('--dirout', '-d', required=True, type=click.Path(exists=True),
+              help='Directory for exclusions output.')
+@click.option('--logdir', '-l', required=True, type=click.Path(exists=True),
+              help='Directory for exclusions output.')
+@click.option('-f', '--filter_method', default=None, type=str,
               help='Contiguous filter method to apply')
 @click.option('-b', '--use_blocks', is_flag=True,
               help='Flag to turn on block windows.')
@@ -92,15 +97,16 @@ def from_config(ctx, config_file, verbose):
               help='Flag to turn on debug logging.')
 @click.pass_context
 def main(ctx, name, layers_config_str, fout,
-         exclusions_filter, use_blocks, verbose):
+         dirout, logdir, filter_method, use_blocks, verbose):
     """Main entry point for exclusions with context passing."""
 
     ctx.obj['NAME'] = name
-    ctx.obj['DIROUT'] = '.'
+    ctx.obj['DIROUT'] = dirout
+    ctx.obj['LOGDIR'] = logdir
     ctx.obj['EXCLUSIONS'] = json.loads(layers_config_str)
-    ctx.obj['EXCLUSIONS_FILTER'] = exclusions_filter
-    ctx.obj['EXCLUSIONS_OUTPUT_FILE'] = fout
-    ctx.obj['EXCLUSIONS_USE_BLOCKS'] = use_blocks
+    ctx.obj['FILTER'] = filter_method
+    ctx.obj['FOUT'] = fout
+    ctx.obj['USE_BLOCKS'] = use_blocks
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -113,27 +119,31 @@ def exclusions(ctx, verbose):
 
     name = ctx.obj['NAME']
     dirout = ctx.obj['DIROUT']
+    logdir = ctx.obj['LOGDIR']
     config = ctx.obj['EXCLUSIONS']
-    contiguous_filter = ctx.obj['EXCLUSIONS_FILTER']
-    fout = ctx.obj['EXCLUSIONS_OUTPUT_FILE']
-    use_blocks = ctx.obj['EXCLUSIONS_USE_BLOCKS']
+    contiguous_filter = ctx.obj['FILTER']
+    fout = ctx.obj['FOUT']
+    use_blocks = ctx.obj['USE_BLOCKS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
+    fpath = os.path.join(dirout, fout)
 
     # initialize loggers
-    init_mult(name, dirout,
+    init_mult(name, logdir,
               modules=[__name__, 'reV.exclusions.exclusions',
                        'reV.config', 'reV.utilities'], verbose=verbose)
 
     t0 = time.time()
     Exclusions.run(config=config,
-                   output_fname=fout,
+                   output_fpath=fpath,
                    use_blocks=use_blocks,
                    contiguous_filter=contiguous_filter)
     runtime = (time.time() - t0) / 60
 
     # add job to reV status file.
-    status = {'fout': fout, 'job_status': 'successful', 'runtime': runtime}
-    Status.make_job_file(dirout, 'exclusions', name, status)
+    finput = str([excl.fpath for excl in config])
+    status = {'finput': finput, 'fpath': fpath,
+              'job_status': 'successful', 'runtime': runtime}
+    Status.make_job_file(fpath, 'exclusions', name, status)
 
     return None
 
@@ -158,11 +168,13 @@ def exclusions_eagle(ctx, alloc, memory, walltime,
     """Run exclusions on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
+    dirout = ctx.obj['DIROUT']
     config = ctx.obj['EXCLUSIONS']
-    contiguous_filter = ctx.obj['EXCLUSIONS_FILTER']
-    fout = ctx.obj['EXCLUSIONS_OUTPUT_FILE']
-    use_blocks = ctx.obj['EXCLUSIONS_USE_BLOCKS']
+    contiguous_filter = ctx.obj['FILTER']
+    fout = ctx.obj['FOUT']
+    use_blocks = ctx.obj['USE_BLOCKS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
+    fpath = os.path.join(dirout, fout)
 
     # Python command that will be executed on a node
     if verbose:
@@ -173,38 +185,45 @@ def exclusions_eagle(ctx, alloc, memory, walltime,
            '-n {name} '
            '-c {layers_config_str} '
            '-o {fout} '
+           '-d {dirout} '
            '-f {contiguous_filter} '
            '-b {use_blocks} '
            '{verbose_flag} exclusions'
            .format(name=name,
                    layers_config_str=json.dumps(config),
                    fout=fout,
+                   dirout=dirout,
                    contiguous_filter=contiguous_filter,
                    use_blocks=use_blocks,
                    verbose_flag=verbose_flag))
-    logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
-    logger.info('Running reV exclusions on Eagle with node name "{}"'
-                .format(name))
 
-    # create and submit the SLURM job
-    slurm = SLURM(cmd,
-                  alloc=alloc,
-                  memory=memory,
-                  walltime=walltime,
-                  name=name,
-                  stdout_path=stdout_path,
-                  feature=feature)
-    if slurm.id:
-        msg = ('Kicked off reV exclusions job "{}" (SLURM jobid #{}) on '
-               'Eagle.'.format(name, slurm.id))
+    status = Status.retrieve_job_status(fpath, 'exclusions', name)
+    if status == 'successful':
+        msg = ('Job "{}" is successful in status json found in "{}", '
+               'not re-running.'
+               .format(name, dirout))
+
     else:
-        msg = ('Was unable to kick off reV exclusions job "{}". '
-               'Please see the stdout error messages'
-               .format(name))
+        logger.info('Running reV exclusions on Eagle with node name "{}"'
+                    .format(name))
+
+        # create and submit the SLURM job
+        slurm = SLURM(cmd,
+                      alloc=alloc,
+                      memory=memory,
+                      walltime=walltime,
+                      name=name,
+                      stdout_path=stdout_path,
+                      feature=feature)
+        if slurm.id:
+            msg = ('Kicked off reV exclusions job "{}" (SLURM jobid #{}) on '
+                   'Eagle.'.format(name, slurm.id))
+        else:
+            msg = ('Was unable to kick off reV exclusions job "{}". '
+                   'Please see the stdout error messages'
+                   .format(name))
     click.echo(msg)
     logger.info(msg)
-
-    return slurm
 
 
 if __name__ == '__main__':

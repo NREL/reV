@@ -258,9 +258,9 @@ class ExclConfig(AnalysisConfig):
             or dictionary with pre-extracted config.
         """
         self._exclusions = None
-        self._exclusions_output_file = None
-        self._exclusions_use_blocks = False
-        self._exclusions_filter = None
+        self._fout = None
+        self._use_blocks = False
+        self._filter = None
 
         super().__init__(config)
 
@@ -281,58 +281,58 @@ class ExclConfig(AnalysisConfig):
         return self._exclusions
 
     @property
-    def exclusions_output_file(self):
+    def fout(self):
         """Get the exclusions output filename.
 
         Returns
         -------
-        _exclusions_output_file : NoneType | dict list
-            Returns None if no exclusions_output_file is specified. If one is
-            specified, this returns the reV exclusions_output_file object.
+        _fout : NoneType | dict list
+            Returns None if no fout is specified. If one is
+            specified, this returns the reV fout object.
         """
-        if self._exclusions_output_file is None:
-            if 'exclusions_output_file' in self:
+        if self._fout is None:
+            if 'fout' in self:
                 fout = os.path.join(self.dirout,
-                                    self['exclusions_output_file'])
+                                    self['fout'])
             else:
                 fout = os.path.join(self.dirout,
                                     'exclusions.tif')
-            self._exclusions_output_file = fout
-        return self._exclusions_output_file
+            self._fout = fout
+        return self._fout
 
     @property
-    def exclusions_use_blocks(self):
-        """Get the exclusions_use_blocks config object.
+    def use_blocks(self):
+        """Get the use_blocks config object.
 
         Returns
         -------
-        _exclusions_use_blocks : NoneType | dict list
-            Returns None if no exclusions_use_blocks config is specified.
-            If one is specified, this returns the reV exclusions_use_blocks
+        _use_blocks : NoneType | dict list
+            Returns None if no use_blocks config is specified.
+            If one is specified, this returns the reV use_blocks
             config object.
         """
-        if self._exclusions_use_blocks is False:
-            if 'exclusions_use_blocks' in self:
-                use_blocks = bool(self['exclusions_use_blocks'])
-                self._exclusions_use_blocks = use_blocks
+        if self._use_blocks is False:
+            if 'use_blocks' in self:
+                use_blocks = bool(self['use_blocks'])
+                self._use_blocks = use_blocks
 
-        return self._exclusions_use_blocks
+        return self._use_blocks
 
     @property
-    def exclusions_filter(self):
-        """Get exclusions_filter config object that the gen config points to.
+    def filter(self):
+        """Get filter config object that the gen config points to.
 
         Returns
         -------
-        _exclusions_filter : NoneType | dict list
-            Returns None if no exclusions_filter config is specified. If one is
-            specified, this returns the reV exclusions_filter config object.
+        _filter : NoneType | dict list
+            Returns None if no filter config is specified. If one is
+            specified, this returns the reV filter config object.
         """
-        if self._exclusions_filter is None:
-            if 'exclusions_filter' in self:
-                self._exclusions_filter = self['exclusions_filter']
+        if self._filter is None:
+            if 'filter' in self:
+                self._filter = self['filter']
 
-        return self._exclusions_filter
+        return self._filter
 
 
 class EconConfig(SAMAnalysisConfig):

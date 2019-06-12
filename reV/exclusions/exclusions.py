@@ -13,7 +13,7 @@ Sample Usage:
 
     exclusions.apply_all_layers()
     exclusions.apply_filter('queen')
-    exclusions.export(fname='exclusions.tif')
+    exclusions.export(fpath='exclusions.tif')
 
     --- OR ---
 
@@ -26,7 +26,7 @@ Sample Usage:
                             use_blocks = True,
                             contiguous_filter = 'queen')
     exclusions.build_from_config()
-    exclusions.export(fname='exclusions.tif')
+    exclusions.export(fpath='exclusions.tif')
 
     --- OR ---
 
@@ -38,7 +38,7 @@ Sample Usage:
                              }],
                    use_blocks = True,
                    contiguous_filter = 'queen',
-                   output_fname = 'exclusions.tif')
+                   output_fpath = 'exclusions.tif')
 
 """
 import logging
@@ -474,26 +474,26 @@ class Exclusions:
         self._data[mask == 0] = 0
         return None
 
-    def export(self, fname='exclusions.tif', band=1):
+    def export(self, fpath='exclusions.tif', band=1):
         """ Save the output exclusion layer as a Tiff
 
         Parameters
         ----------
-        fname : str
+        fpath : str
             Output file with path.
         band : integer
             GeoTiff band to write to file.
         """
 
         if self._profile:
-            with rasterio.open(fname, 'w', **self._profile) as file:
+            with rasterio.open(fpath, 'w', **self._profile) as file:
                 file.write(self._data, band)
         else:
             raise AttributeError('Profile has not been created yet '
                                  '(i.e. self._create_profile())')
 
     @classmethod
-    def run(cls, config, output_fname,
+    def run(cls, config, output_fpath,
             use_blocks=False, contiguous_filter=None):
         """ Apply Exclusions from config and save to disc.
 
@@ -501,7 +501,7 @@ class Exclusions:
         ----------
         layer_configs : dictionary list | None
             Optional configs list for the addition of layers
-        output_fname : str
+        output_fpath : str
             Output file with path.
         use_blocks : boolean
             Use blocks when applying layers to exclusions
@@ -512,5 +512,5 @@ class Exclusions:
         exclusions = cls(config, use_blocks=use_blocks,
                          contiguous_filter=contiguous_filter)
         exclusions.build_from_config()
-        exclusions.export(fname=output_fname)
+        exclusions.export(fpath=output_fpath)
         return None
