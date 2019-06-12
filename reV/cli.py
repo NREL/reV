@@ -79,13 +79,15 @@ def pipeline(ctx, verbose):
 @main.command()
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
+@click.option('--dry-run', is_flag=True,
+              help='Flag to do a dry run (make batch dirs without running).')
 @click.pass_context
-def batch(ctx, verbose):
+def batch(ctx, verbose, dry_run):
     """Execute multiple steps in a reV analysis pipeline."""
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_batch_from_config, config_file=config_file,
-               verbose=verbose)
+               verbose=verbose, dry_run=dry_run)
 
 
 if __name__ == '__main__':

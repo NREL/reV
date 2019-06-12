@@ -284,15 +284,18 @@ class BatchJob:
             Pipeline.run(config_pipeline, monitor=False)
 
     @classmethod
-    def run(cls, config):
+    def run(cls, config, dry_run=False):
         """Run the reV batch job from a config file.
 
         Parameters
         ----------
         config : str
             File path to config json (str).
+        dry_run : bool
+            Flag to make job directories without running.
         """
 
         b = cls(config)
         b._make_job_dirs()
-        b._run_pipelines()
+        if not dry_run:
+            b._run_pipelines()

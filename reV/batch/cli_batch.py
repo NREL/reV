@@ -12,11 +12,13 @@ from reV.batch.batch import BatchJob
               help='reV batch configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
+@click.option('--dry-run', is_flag=True,
+              help='Flag to do a dry run (make batch dirs without running).')
 @click.pass_context
-def from_config(ctx, config_file, verbose):
+def from_config(ctx, config_file, verbose, dry_run):
     """Run reV batch from a config file."""
     verbose = any([verbose, ctx.obj['VERBOSE']])
-    BatchJob.run(config_file)
+    BatchJob.run(config_file, dry_run=dry_run)
 
 
 if __name__ == '__main__':
