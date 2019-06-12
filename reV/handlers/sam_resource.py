@@ -39,6 +39,11 @@ class SAMResource:
     """
     Resource Manager for SAM
     """
+
+    RES_VARS = {'solar': ('dni', 'dhi', 'wind_speed', 'air_temperature'),
+                'wind': ('pressure', 'temperature', 'winddirection',
+                         'windspeed')}
+
     def __init__(self, project_points, time_index, require_wind_dir=False):
         """
         Parameters
@@ -161,12 +166,8 @@ class SAMResource:
         """
 
         if self._var_list is None:
-            if self._res_type == 'solar':
-                self._var_list = ['dni', 'dhi', 'wind_speed',
-                                  'air_temperature']
-            elif self._res_type == 'wind':
-                self._var_list = ['pressure', 'temperature', 'winddirection',
-                                  'windspeed']
+            if self._res_type in self.RES_VARS:
+                self._var_list = list(self.RES_VARS[self._res_type])
             else:
                 raise HandlerValueError("Resource type is invalid!")
 
@@ -272,6 +273,41 @@ class SAMResource:
                 var_array += -273.15
 
         return var_array
+
+    def check_physical_ranges(self):
+        """Check physical ranges and enforce usable data.
+
+        Current methodology sets windspeed=0 if any of the checks are violated.
+
+        SAM ranges are from:
+            https://github.com/NREL/ssc/blob/develop/shared/lib_windfile.cpp
+            https://github.com/NREL/ssc/blob/develop/ssc/cmod_wfcheck.cpp
+        """
+
+        if self._res_type == 'wind':
+
+            # units are in C
+            check = ((self._res_arrays['temperature'] < -200) |
+                     (self._res_arrays['temperature'] > 100))
+            if check.any():
+                ibad = check.any(axis=0)
+                self._res_arrays['temperature'][:, ibad] = 0
+                self._res_arrays['windspeed'][:, ibad] = 0
+
+            # units are in atm
+            check = ((self._res_arrays['pressure'] < 0.5) |
+                     (self._res_arrays['pressure'] > 1.1))
+            if check.any():
+                ibad = check.any(axis=0)
+                self._res_arrays['pressure'][:, ibad] = 1
+                self._res_arrays['windspeed'][:, ibad] = 0
+
+            # units are in m/s
+            check = ((self._res_arrays['windspeed'] < 0) |
+                     (self._res_arrays['windspeed'] > 120))
+            if check.any():
+                ibad = check.any(axis=0)
+                self._res_arrays['windspeed'][:, ibad] = 0
 
     def runnable(self):
         """
