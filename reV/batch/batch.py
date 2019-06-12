@@ -13,6 +13,7 @@ import logging
 
 from reV.pipeline.pipeline import Pipeline
 from reV.config.batch import BatchConfig
+from reV.utilities.utilities import parse_year
 
 
 logger = logging.getLogger(__name__)
@@ -78,6 +79,34 @@ class BatchJob:
 
         return arg_combs, file_sets
 
+    @staticmethod
+    def _tag_value(value):
+        """If one of the tag values looks like a year, add a zero for the tag.
+
+        Parameters
+        ----------
+        value : str | int | float
+            Value from a batch run.
+
+        Returns
+        -------
+        value : str
+            Value from a batch run converted to a string tag, if the input
+            value looks like a year, a zero will be added.
+        """
+
+        value = str(value).replace('.', '')
+
+        try:
+            match = parse_year('_' + value)
+        except RuntimeError as _:
+            match = False
+
+        if match:
+            value += '0'
+
+        return value
+
     def _make_job_tag(self, arg_comb):
         """Make a job tags from a unique combination of args + values.
 
@@ -94,11 +123,8 @@ class BatchJob:
             temp = arg.split('_')
             temp = ''.join([s[0] for s in temp])
 
-            if isinstance(value, (int, str)):
-                temp += str(value)
-
-            elif isinstance(value, float):
-                temp += str(value).replace('.', '')
+            if isinstance(value, (int, str, float)):
+                temp += self._tag_value(value)
 
             else:
                 i = 0
