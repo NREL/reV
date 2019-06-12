@@ -8,6 +8,7 @@ from reV.generation.cli_gen import from_config as run_gen_from_config
 from reV.econ.cli_econ import from_config as run_econ_from_config
 from reV.handlers.cli_collect import from_config as run_collect_from_config
 from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
+from reV.batch.cli_batch import from_config as run_batch_from_config
 
 
 @click.group()
@@ -73,6 +74,20 @@ def pipeline(ctx, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_pipeline_from_config, config_file=config_file,
                verbose=verbose)
+
+
+@main.command()
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.option('--dry-run', is_flag=True,
+              help='Flag to do a dry run (make batch dirs without running).')
+@click.pass_context
+def batch(ctx, verbose, dry_run):
+    """Execute multiple steps in a reV analysis pipeline."""
+    config_file = ctx.obj['CONFIG_FILE']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.invoke(run_batch_from_config, config_file=config_file,
+               verbose=verbose, dry_run=dry_run)
 
 
 if __name__ == '__main__':

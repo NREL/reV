@@ -28,6 +28,14 @@ reV.config.base\_config module
     :undoc-members:
     :show-inheritance:
 
+reV.config.batch module
+-----------------------
+
+.. automodule:: reV.config.batch
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.config.collection module
 ----------------------------
 

@@ -1,0 +1,30 @@
+{
+  "directories": {
+    "logging_directory": "./",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "nodes": 2,
+    "option": "eagle",
+    "sites_per_core": 25,
+    "walltime": 0.5
+  },
+  "project_control": {
+    "analysis_years": [
+      2010,
+      2011
+    ],
+    "logging_level": "INFO",
+    "output_request": [
+      "cf_mean"
+    ],
+    "technology": "windpower"
+  },
+  "project_points": "./project_points/project_points.csv",
+  "resource_file": "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
+  "sam_files": {
+    "turbine": "./sam_configs/turbine.json"
+  }
+}

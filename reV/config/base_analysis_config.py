@@ -1,6 +1,7 @@
 """
 reV Base analysis Configuration Frameworks
 """
+import os
 import logging
 from warnings import warn
 
@@ -15,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 class AnalysisConfig(BaseConfig):
     """Base analysis config (generation, lcoe, etc...)."""
+
+    NAME = None
 
     def __init__(self, config):
         """
@@ -118,3 +121,33 @@ class AnalysisConfig(BaseConfig):
                      'Defaulting to a local run.')
                 self._ec = BaseExecutionConfig(ec)
         return self._ec
+
+    @property
+    def name(self):
+        """Get the job name, defaults to the output directory name.
+
+        Returns
+        -------
+        _name : str
+            reV job name.
+        """
+
+        if self._name is None:
+
+            # name defaults to base directory name
+            self._name = os.path.basename(os.path.normpath(self.dirout))
+
+            # collect name is simple, will be added to what is being collected
+            if self.NAME == 'collect':
+                self._name = self.NAME
+
+            # Analysis job name tag (helps ensure unique job name)
+            elif self.NAME is not None:
+                self._name += '_{}'.format(self.NAME)
+
+            # name specified by user config
+            if 'name' in self['project_control']:
+                if self['project_control']['name']:
+                    self._name = self['project_control']['name']
+
+        return self._name

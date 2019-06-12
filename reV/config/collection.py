@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV analysis configs (generation, lcoe, etc...)
+reV collection config
 
 Created on Mon Jan 28 11:43:27 2019
 
@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class CollectionConfig(AnalysisConfig):
-    """Base analysis config (generation, lcoe, etc...)."""
+    """File collection config."""
+
+    NAME = 'collect'
 
     def __init__(self, config):
         """

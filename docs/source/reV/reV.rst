@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     reV.SAM
+    reV.batch
     reV.config
     reV.econ
     reV.exclusions

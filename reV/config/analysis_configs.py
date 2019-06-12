@@ -163,6 +163,8 @@ class SAMAnalysisConfig(AnalysisConfig):
 class GenConfig(SAMAnalysisConfig):
     """Class to import and manage user configuration inputs."""
 
+    NAME = 'gen'
+
     def __init__(self, config):
         """
         Parameters
@@ -245,6 +247,8 @@ class GenConfig(SAMAnalysisConfig):
 
 class EconConfig(SAMAnalysisConfig):
     """Class to import and manage configuration inputs for econ analysis."""
+
+    NAME = 'econ'
 
     def __init__(self, config):
         """
