@@ -418,6 +418,9 @@ class SolarResource(Resource):
 
                 SAM_res[var] = res[ds, :, sites_slice]
 
+        # ensure physical data ranges
+        SAM_res.check_physical_ranges()
+
         return SAM_res
 
 
@@ -518,6 +521,8 @@ class NSRDB(SolarResource):
                 from reV.utilities.downscale import downscale_nsrdb
                 SAM_res = downscale_nsrdb(SAM_res, res, project_points,
                                           downscale)
+        # ensure physical data ranges
+        SAM_res.check_physical_ranges()
 
         return SAM_res
 
@@ -907,6 +912,9 @@ class WindResource(Resource):
                 ds_name = '{}_0m'.format(var)
                 SAM_res.append_var_list(var)
                 SAM_res[var] = res[ds_name, :, sites_slice]
+
+        # ensure physical data ranges
+        SAM_res.check_physical_ranges()
 
         return SAM_res
 
