@@ -2,7 +2,7 @@
 Execution utilities.
 """
 import concurrent.futures as cf
-from subprocess import Popen, PIPE
+from subprocess import call, Popen, PIPE
 import logging
 import gc
 from math import floor
@@ -427,6 +427,20 @@ class SLURM(SubprocessManager):
         else:
             squeue_rows = stdout.split('\n')
             return squeue_rows
+
+    @staticmethod
+    def scancel(job_id):
+        """Cancel a slurm job.
+
+        Parameters
+        ----------
+        job_id : int
+            SLURM job id to cancel
+        """
+
+        cmd = ('scancel {job_id}'.format(job_id=job_id))
+        cmd = shlex.split(cmd)
+        call(cmd)
 
     def sbatch(self, cmd, alloc, memory, walltime, feature=None, name='reV',
                stdout_path='./stdout', keep_sh=False):
