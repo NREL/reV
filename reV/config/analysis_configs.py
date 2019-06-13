@@ -391,7 +391,7 @@ class EconConfig(SAMAnalysisConfig):
                                       '\n\tYears: \n\t\t{}'
                                       .format(self._cf_files, self.years))
                 for year in self.years:
-                    if year not in str(self._cf_files):
+                    if str(year) not in str(self._cf_files):
                         raise ConfigError('Could not find year {} in cf '
                                           'files: {}'
                                           .format(year, self._cf_files))
