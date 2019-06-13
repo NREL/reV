@@ -140,10 +140,11 @@ def exclusions(ctx, verbose):
     runtime = (time.time() - t0) / 60
 
     # add job to reV status file.
-    finput = str([excl.fpath for excl in config])
-    status = {'finput': finput, 'fpath': fpath,
+    print(config, type(config))
+    finput = str([excl['fpath'] for excl in config])
+    status = {'finput': finput, 'fout': fout, 'dirout': dirout,
               'job_status': 'successful', 'runtime': runtime}
-    Status.make_job_file(fpath, 'exclusions', name, status)
+    Status.make_job_file(dirout, 'exclusions', name, status)
 
     return None
 
@@ -218,6 +219,11 @@ def exclusions_eagle(ctx, alloc, memory, walltime,
         if slurm.id:
             msg = ('Kicked off reV exclusions job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(name, slurm.id))
+            # add job to reV status file.
+            Status.add_job(
+                dirout, 'exclusions', name, replace=True,
+                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                           'fout': fout, 'dirout': dirout})
         else:
             msg = ('Was unable to kick off reV exclusions job "{}". '
                    'Please see the stdout error messages'

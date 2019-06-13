@@ -3,7 +3,7 @@
     "logging_directory": "TESTDATADIR/ri_pv_reV2",
     "output_directory": "TESTDATADIR/ri_pv_reV2"
   },
-  "dirout": ".",
+  "dirout": "./",
   "exclusions": [
     {
       "band": 1,

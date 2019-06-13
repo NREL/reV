@@ -208,7 +208,7 @@ class Exclusions:
         """
         Parameters
         ----------
-        layer_configs : dictionary list | None
+        layer_configs : dictionary | list | None
             Optional configs list for the addition of layers
         use_blocks : boolean
             Use blocks when applying layers to exclusions
@@ -499,7 +499,7 @@ class Exclusions:
 
         Parameters
         ----------
-        layer_configs : dictionary list | None
+        config : dictionary | list | None
             Optional configs list for the addition of layers
         output_fpath : str
             Output file with path.

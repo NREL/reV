@@ -21,14 +21,14 @@
       "max_thresh": 5
     }
   ],
-  "exclusions_filter": "queen",
-  "exclusions_output_file": "exclusions.tif",
-  "exclusions_use_blocks": true,
   "execution_control": {
     "option": "local"
   },
+  "filter": "queen",
+  "fout": "exclusions.tif",
   "project_control": {
     "logging_level": "DEBUG",
     "name": "rev_exclusions"
-  }
+  },
+  "use_blocks": true
 }
