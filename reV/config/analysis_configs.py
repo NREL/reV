@@ -127,10 +127,13 @@ class SAMAnalysisConfig(AnalysisConfig):
                        'lcoe': 'lcoe_fcr',
                        'lcoe_nominal': 'lcoe_nom',
                        'real_lcoe': 'lcoe_real',
-                       'net_present_value': 'npv',
+                       'net_present_value': 'project_return_aftertax_npv',
+                       'npv': 'project_return_aftertax_npv',
                        'ppa': 'ppa_price',
                        'single_owner': 'ppa_price',
                        'singleowner': 'ppa_price',
+                       'actual_irr': 'flip_actual_irr',
+                       'irr': 'flip_actual_irr',
                        }
 
         if self._output_request is None:
