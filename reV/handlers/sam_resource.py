@@ -4,9 +4,10 @@ DataFrames
 """
 import numpy as np
 import pandas as pd
+from warnings import warn
 
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
-                                      HandlerValueError)
+                                      HandlerValueError, SAMInputWarning)
 
 
 def parse_keys(keys):
@@ -40,6 +41,7 @@ class SAMResource:
     Resource Manager for SAM
     """
 
+    # Resource variables to load for each res type
     RES_VARS = {'solar': ('dni', 'dhi', 'wind_speed', 'air_temperature'),
                 'wind': ('pressure', 'temperature', 'winddirection',
                          'windspeed')}
@@ -275,7 +277,7 @@ class SAMResource:
         return var_array
 
     def check_physical_ranges(self):
-        """Check physical ranges and enforce usable data.
+        """Check physical ranges and enforce usable SAM data.
 
         Current methodology sets windspeed=0 if any of the checks are violated.
 
@@ -294,6 +296,11 @@ class SAMResource:
                 self._res_arrays['temperature'][:, ibad] = 0
                 self._res_arrays['windspeed'][:, ibad] = 0
 
+                warn('Wind resource temp. out of viable SAM range for sites '
+                     '{}. Fixing and setting windspeed to zero.'
+                     .format(list(np.array(self.sites)[ibad])),
+                     SAMInputWarning)
+
             # units are in atm
             check = ((self._res_arrays['pressure'] < 0.5) |
                      (self._res_arrays['pressure'] > 1.1))
@@ -301,6 +308,10 @@ class SAMResource:
                 ibad = check.any(axis=0)
                 self._res_arrays['pressure'][:, ibad] = 1
                 self._res_arrays['windspeed'][:, ibad] = 0
+                warn('Wind resource press. out of viable SAM range for sites '
+                     '{}. Fixing and setting windspeed to zero.'
+                     .format(list(np.array(self.sites)[ibad])),
+                     SAMInputWarning)
 
             # units are in m/s
             check = ((self._res_arrays['windspeed'] < 0) |
@@ -308,6 +319,10 @@ class SAMResource:
             if check.any():
                 ibad = check.any(axis=0)
                 self._res_arrays['windspeed'][:, ibad] = 0
+                warn('Wind resource speed out of viable SAM range for sites '
+                     '{}. Setting windspeed to zero.'
+                     .format(list(np.array(self.sites)[ibad])),
+                     SAMInputWarning)
 
     def runnable(self):
         """
