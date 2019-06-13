@@ -124,7 +124,7 @@ class BatchJob:
             temp = arg.split('_')
             temp = ''.join([s[0] for s in temp])
 
-            if isinstance(value, (int, str, float)):
+            if isinstance(value, (int, float)):
                 temp += self._tag_value(value)
 
             else:
