@@ -43,6 +43,7 @@
   [
     "tilt",
     [
+      "str",
       "int",
       "float"
     ]
