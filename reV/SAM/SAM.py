@@ -311,7 +311,19 @@ class ParametersManager:
         """
         if more_parameters is not None:
             if isinstance(more_parameters, dict):
-                self._parameters.update(more_parameters)
+
+                for k, v in more_parameters.items():
+
+                    special = False
+
+                    # special treatment of nested lists
+                    if isinstance(v, str):
+                        if '[' in v and ']' in v:
+                            special = True
+                            self._parameters[k] = json.loads(v)
+
+                    if not special:
+                        self._parameters[k] = v
             else:
                 warn('Attempting to update SAM input parameters with non-dict '
                      'input. Cannot perform update operation. Proceeding '
