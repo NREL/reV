@@ -294,7 +294,7 @@ class Status(dict):
 
         if isinstance(inp, dict):
             if key in inp:
-                return inp[key]
+                out = inp[key]
             else:
                 for v in inp.values():
                     temp = Status._get_attr_list(v, key=key)
