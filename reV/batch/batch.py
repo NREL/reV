@@ -14,6 +14,7 @@ import logging
 from reV.pipeline.pipeline import Pipeline
 from reV.config.batch import BatchConfig
 from reV.utilities.utilities import parse_year
+from reV.utilities.exceptions import PipelineError
 
 
 logger = logging.getLogger(__name__)
@@ -307,7 +308,32 @@ class BatchJob:
         for d in self.sub_dirs:
             config_pipeline = os.path.join(
                 d, os.path.basename(self._config.config_pipeline))
-            Pipeline.run(config_pipeline, monitor=False)
+            if os.path.isfile(config_pipeline):
+                Pipeline.run(config_pipeline, monitor=False)
+            else:
+                raise PipelineError('Could not find pipeline config to run: '
+                                    '"{}"'.format(config_pipeline))
+
+    def _cancel_all(self):
+        """Cancel all reV pipeline modules for all batch jobs."""
+        for d in self.sub_dirs:
+            config_pipeline = os.path.join(
+                d, os.path.basename(self._config.config_pipeline))
+            if os.path.isfile(config_pipeline):
+                Pipeline.cancel_all(config_pipeline)
+
+    @classmethod
+    def cancel_all(cls, config):
+        """Cancel all reV pipeline modules for all batch jobs.
+
+        Parameters
+        ----------
+        config : str
+            File path to config json (str).
+        """
+
+        b = cls(config)
+        b._cancel_all()
 
     @classmethod
     def run(cls, config, dry_run=False):

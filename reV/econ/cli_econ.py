@@ -7,7 +7,6 @@ from math import ceil
 import os
 import pprint
 import time
-import re
 from warnings import warn
 
 from reV.generation.cli_gen import get_node_name_fout, make_fout
@@ -20,6 +19,7 @@ from reV.utilities.execution import PBS, SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
 from reV.generation.cli_gen import main
+from reV.utilities.utilities import parse_year
 
 
 logger = logging.getLogger(__name__)
@@ -124,8 +124,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
-        match = re.match(r'.*([1-3][0-9]{3})', name)
-        if not match and year:
+        if not parse_year(name, option='bool') and year:
             # Add year to name before submitting
             # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
             ctx.obj['NAME'] = '{}_{}'.format(name[:8], str(year))
@@ -137,8 +136,7 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
-        match = re.match(r'.*([1-3][0-9]{3})', name)
-        if not match and year:
+        if not parse_year(name, option='bool') and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(econ_eagle, nodes=config.execution_control.nodes,

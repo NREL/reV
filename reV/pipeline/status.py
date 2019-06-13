@@ -274,6 +274,49 @@ class Status(dict):
         self.data[module][job_name]['job_status'] = status
 
     @staticmethod
+    def _get_attr_list(inp, key='job_id'):
+        """Get all job attribute values from the status data dict.
+
+        Parameters
+        ----------
+        inp : dict
+            Job status dictionary.
+        key : str
+            Key to get values for.
+
+        Returns
+        -------
+        out : list
+            List of values corresponding to the input key for all jobs in inp.
+        """
+
+        out = []
+
+        if isinstance(inp, dict):
+            if key in inp:
+                out = inp[key]
+            else:
+                for v in inp.values():
+                    temp = Status._get_attr_list(v, key=key)
+
+                    if isinstance(temp, list):
+                        if any(temp):
+                            out += temp
+                    elif isinstance(temp, (int, str)):
+                        out.append(temp)
+        return out
+
+    @property
+    def job_ids(self):
+        """Get list of job ids."""
+        return self._get_attr_list(self.data, key='job_id')
+
+    @property
+    def hardware(self):
+        """Get list of job hardware."""
+        return self._get_attr_list(self.data, key='hardware')
+
+    @staticmethod
     def update_dict(d, u):
         """Update a dictionary recursively.
 

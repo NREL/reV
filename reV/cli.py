@@ -65,29 +65,33 @@ def collect(ctx, verbose):
 
 
 @main.command()
+@click.option('--cancel', is_flag=True,
+              help='Flag to cancel all jobs associated with a given pipeline.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def pipeline(ctx, verbose):
+def pipeline(ctx, cancel, verbose):
     """Execute multiple steps in a reV analysis pipeline."""
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_pipeline_from_config, config_file=config_file,
-               verbose=verbose)
+               cancel=cancel, verbose=verbose)
 
 
 @main.command()
-@click.option('-v', '--verbose', is_flag=True,
-              help='Flag to turn on debug logging.')
 @click.option('--dry-run', is_flag=True,
               help='Flag to do a dry run (make batch dirs without running).')
+@click.option('--cancel', is_flag=True,
+              help='Flag to cancel all jobs associated with a given batch.')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
 @click.pass_context
-def batch(ctx, verbose, dry_run):
+def batch(ctx, dry_run, cancel, verbose):
     """Execute multiple steps in a reV analysis pipeline."""
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_batch_from_config, config_file=config_file,
-               verbose=verbose, dry_run=dry_run)
+               dry_run=dry_run, cancel=cancel, verbose=verbose)
 
 
 if __name__ == '__main__':

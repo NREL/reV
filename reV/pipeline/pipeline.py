@@ -9,7 +9,7 @@ import logging
 from warnings import warn
 
 from reV.config.base_analysis_config import AnalysisConfig
-from reV.utilities.execution import SubprocessManager
+from reV.utilities.execution import SubprocessManager, SLURM
 from reV.utilities.exceptions import ExecutionError
 from reV.pipeline.status import Status
 from reV.config.pipeline import PipelineConfig
@@ -58,6 +58,12 @@ class Pipeline:
                 status.data = status.update_dict(status.data, module_dict)
 
         status._dump()
+
+    def _cancel_all_jobs(self):
+        """Cancel all jobs in this pipeline via SLURM scancel."""
+        status = self._get_status_obj()
+        for job_id in status.job_ids:
+            SLURM.scancel(job_id)
 
     def _main(self):
         """Iterate through run list submitting steps while monitoring status"""
@@ -431,6 +437,19 @@ class Pipeline:
                 out.append(status[target])
 
         return out
+
+    @classmethod
+    def cancel_all(cls, pipeline):
+        """Cancel all jobs via SLURM scancel corresponding to pipeline.
+
+        Parameters
+        ----------
+        pipeline : str | dict
+            Pipeline config file path or dictionary.
+        """
+
+        pipe = cls(pipeline)
+        pipe._cancel_all_jobs()
 
     @classmethod
     def run(cls, pipeline, monitor=True):

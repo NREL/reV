@@ -6,7 +6,6 @@ import logging
 from math import ceil
 import os
 import pprint
-import re
 import time
 from warnings import warn
 
@@ -154,8 +153,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
-        match = re.match(r'.*([1-3][0-9]{3})', name)
-        if not match and year:
+        if not parse_year(name, option='bool') and year:
             # Add year to name before submitting
             # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
             ctx.obj['NAME'] = '{}_{}'.format(name[:8], str(year))
@@ -167,8 +165,7 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
-        match = re.match(r'.*([1-3][0-9]{3})', name)
-        if not match and year:
+        if not parse_year(name, option='bool') and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(gen_eagle, nodes=config.execution_control.nodes,
