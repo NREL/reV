@@ -796,8 +796,9 @@ class WindResource(Resource):
         heights = self.heights[var_name]
         if len(heights) == 1:
             h = heights[0]
+            ds_name = '{}_{}m'.format(var_name, h)
             warnings.warn('Only one hub-height available, returning {}'
-                          .format(h), HandlerWarning)
+                          .format(ds_name), HandlerWarning)
 
         if h in heights:
             out = super()._get_ds(ds_name, *ds_slice)
@@ -985,8 +986,9 @@ class FiveMinWTK(WindResource):
         heights = self.heights[var_name]
         if len(heights) == 1:
             h = heights[0]
+            ds_name = '{}_{}m'.format(var_name, h)
             warnings.warn('Only one hub-height available, returning {}'
-                          .format(h), HandlerWarning)
+                          .format(ds_name), HandlerWarning)
 
         if h in heights:
             with Resource(self._wind_files[h], unscale=self._unscale) as f:
