@@ -775,6 +775,31 @@ class WindResource(Resource):
 
         return out
 
+    def _check_hub_height(self, h):
+        """
+        Check requested hub-height against available windspeed hub-heights
+        If only one hub-height is available change request to match available
+        hub-height
+
+        Parameters
+        ----------
+        h : int | float
+            Requested hub-height
+
+        Returns
+        -------
+        h : int | float
+            Hub-height to extract
+        """
+        heights = self.heights['windspeed']
+        if len(heights) == 1:
+            h = heights[0]
+            warnings.warn('Wind speed is only available at {h}m, '
+                          'all variables will be extracted at {h}m'
+                          .format(h=h), HandlerWarning)
+
+        return h
+
     def _get_ds(self, ds_name, *ds_slice):
         """
         Extract data from given dataset
@@ -836,6 +861,7 @@ class WindResource(Resource):
             raise HandlerValueError("SAM requires unscaled values")
 
         _, h = self._parse_name(ds_name)
+        h = self._check_hub_height(h)
         res_df = pd.DataFrame(index=self.time_index)
         res_df.name = site
         variables = ['pressure', 'temperature', 'winddirection',
@@ -884,6 +910,7 @@ class WindResource(Resource):
                 var_list.remove('winddirection')
 
             h = project_points.h
+            h = res._check_hub_height(h)
             if isinstance(h, (int, float)):
                 for var in var_list:
                     ds_name = "{}_{}m".format(var, h)
