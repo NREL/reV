@@ -841,7 +841,7 @@ class WindResource(Resource):
 
         return out
 
-    def _get_SAM_df(self, ds_name, site):
+    def _get_SAM_df(self, ds_name, site, require_wind_dir=False):
         """
         Get SAM wind resource DataFrame for given site
 
@@ -851,6 +851,8 @@ class WindResource(Resource):
             'Dataset' name == SAM
         site : int
             Site to extract SAM DataFrame for
+        require_wind_dir : bool
+            Boolean flag as to whether wind direction will be loaded.
 
         Returns
         -------
@@ -864,8 +866,9 @@ class WindResource(Resource):
         h = self._check_hub_height(h)
         res_df = pd.DataFrame(index=self.time_index)
         res_df.name = site
-        variables = ['pressure', 'temperature', 'winddirection',
-                     'windspeed']
+        variables = ['pressure', 'temperature', 'winddirection', 'windspeed']
+        if not require_wind_dir:
+            variables.remove('winddirection')
         for var in variables:
             var_name = "{}_{}m".format(var, h)
             var_array = self._get_ds(var_name, slice(None, None, None),
@@ -887,8 +890,7 @@ class WindResource(Resource):
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
         require_wind_dir : bool
-            Boolean flag as to whether wind direction will be loaded from
-            WindResource or will be filled with zeros
+            Boolean flag as to whether wind direction will be loaded.
         precip_rate : bool
             Boolean flag as to whether precipitationrate_0m will be preloaded
         kwargs : dict

@@ -260,6 +260,7 @@ class SAMResource:
         var_array : ndarray
             Variable data with updated units if needed
         """
+
         if 'pressure' in var_name:
             # Check if pressure is in Pa, if so convert to atm
             if np.min(var_array) > 1e3:
@@ -295,7 +296,7 @@ class SAMResource:
 
     def _set_var_array(self, var, arr, *var_slice):
         """
-        Set variable array
+        Set variable array (units are checked as set)
 
         Parameters
         ----------
@@ -310,7 +311,7 @@ class SAMResource:
             var_arr = self._res_arrays.get(var, np.zeros(self._shape,
                                                          dtype='float32'))
             if var_arr[var_slice].shape == arr.shape:
-                var_arr[var_slice] = arr
+                var_arr[var_slice] = self.check_units(var, arr)
                 self._res_arrays[var] = var_arr
             else:
                 raise HandlerValueError('{} does not have proper shape: {}'
@@ -335,6 +336,7 @@ class SAMResource:
         ts : pandas.DataFrame
             Time-series for desired sites of variable var
         """
+
         if var in self.var_list:
             try:
                 var_array = self._res_arrays[var]
@@ -365,6 +367,7 @@ class SAMResource:
         res_df : pandas.DataFrame
             Time-series of SAM resource variables for given site
         """
+
         self.runnable()
         try:
             idx = self.sites.index(site)
@@ -383,8 +386,7 @@ class SAMResource:
         res_df = pd.DataFrame(index=self.time_index)
         res_df.name = site
         for var_name, var_array in self._res_arrays.items():
-            res_df[var_name] = self.check_units(var_name,
-                                                var_array[:, idx])
+            res_df[var_name] = var_array[:, idx]
 
         return res_df, site_meta
 
