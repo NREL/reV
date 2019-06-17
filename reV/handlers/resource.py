@@ -879,6 +879,9 @@ class WindResource(Resource):
             var_array = self._get_ds(var_name, slice(None, None, None),
                                      site)
             res_df[var_name] = SAMResource.check_units(var_name, var_array)
+            res_df[var_name] = SAMResource.enforce_arr_range(
+                var, res_df[var_name],
+                SAMResource.WIND_DATA_RANGES[var], [site])
 
         return res_df
 

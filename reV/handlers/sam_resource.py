@@ -46,6 +46,11 @@ class SAMResource:
                 'wind': ('pressure', 'temperature', 'winddirection',
                          'windspeed')}
 
+    # valid data ranges for wind resource in SAM
+    WIND_DATA_RANGES = {'windspeed': (0, 120),
+                        'pressure': (0.5, 1.1),
+                        'temperature': (-200, 100)}
+
     def __init__(self, project_points, time_index, require_wind_dir=False):
         """
         Parameters
@@ -276,6 +281,44 @@ class SAMResource:
 
         return var_array
 
+    @staticmethod
+    def enforce_arr_range(var, arr, valid_range, sites):
+        """Check an array for valid data range, warn, patch, and return.
+
+        Parameters
+        ----------
+        var : str
+            variable name
+        arr : np.ndarray
+            Array to be checked and patched
+        valid_range : np.ndarray | tuple | list
+            arr data will be ensured within the min/max values of valid_range
+        sites : list
+            Resource gid site list for warning printout.
+
+        Returns
+        -------
+        arr : np.ndarray
+            Patched array with valid range.
+        """
+        min_val = np.min(valid_range)
+        max_val = np.max(valid_range)
+        check_low = (arr < min_val)
+        check_high = (arr > max_val)
+        check = (check_low | check_high)
+        if check.any():
+            warn('Resource dataset "{}" out of viable SAM range ({}, {}) for '
+                 'sites {}. Data min/max: {}/{}. Patching data...'
+                 .format(var, min_val, max_val,
+                         list(np.array(sites)[check.any(axis=0)]),
+                         np.min(arr), np.max(arr)),
+                 SAMInputWarning)
+
+            arr[check_low] = min_val
+            arr[check_high] = max_val
+
+        return arr
+
     def check_physical_ranges(self):
         """Check physical ranges and enforce usable SAM data.
 
@@ -287,42 +330,9 @@ class SAMResource:
         """
 
         if self._res_type == 'wind':
-
-            # units are in C
-            check = ((self._res_arrays['temperature'] < -200) |
-                     (self._res_arrays['temperature'] > 100))
-            if check.any():
-                ibad = check.any(axis=0)
-                self._res_arrays['temperature'][:, ibad] = 0
-                self._res_arrays['windspeed'][:, ibad] = 0
-
-                warn('Wind resource temp. out of viable SAM range for sites '
-                     '{}. Fixing and setting windspeed to zero.'
-                     .format(list(np.array(self.sites)[ibad])),
-                     SAMInputWarning)
-
-            # units are in atm
-            check = ((self._res_arrays['pressure'] < 0.5) |
-                     (self._res_arrays['pressure'] > 1.1))
-            if check.any():
-                ibad = check.any(axis=0)
-                self._res_arrays['pressure'][:, ibad] = 1
-                self._res_arrays['windspeed'][:, ibad] = 0
-                warn('Wind resource press. out of viable SAM range for sites '
-                     '{}. Fixing and setting windspeed to zero.'
-                     .format(list(np.array(self.sites)[ibad])),
-                     SAMInputWarning)
-
-            # units are in m/s
-            check = ((self._res_arrays['windspeed'] < 0) |
-                     (self._res_arrays['windspeed'] > 120))
-            if check.any():
-                ibad = check.any(axis=0)
-                self._res_arrays['windspeed'][:, ibad] = 0
-                warn('Wind resource speed out of viable SAM range for sites '
-                     '{}. Setting windspeed to zero.'
-                     .format(list(np.array(self.sites)[ibad])),
-                     SAMInputWarning)
+            for var, valid_range in self.WIND_DATA_RANGES.items():
+                self._res_arrays[var] = self.enforce_arr_range(
+                    var, self._res_arrays[var], valid_range, self.sites)
 
     def runnable(self):
         """
