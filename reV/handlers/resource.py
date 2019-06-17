@@ -775,6 +775,31 @@ class WindResource(Resource):
 
         return out
 
+    def _check_hub_height(self, h):
+        """
+        Check requested hub-height against available windspeed hub-heights
+        If only one hub-height is available change request to match available
+        hub-height
+
+        Parameters
+        ----------
+        h : int | float
+            Requested hub-height
+
+        Returns
+        -------
+        h : int | float
+            Hub-height to extract
+        """
+        heights = self.heights['windspeed']
+        if len(heights) == 1:
+            h = heights[0]
+            warnings.warn('Wind speed is only available at {h}m, '
+                          'all variables will be extracted at {h}m'
+                          .format(h=h), HandlerWarning)
+
+        return h
+
     def _get_ds(self, ds_name, *ds_slice):
         """
         Extract data from given dataset
@@ -796,8 +821,9 @@ class WindResource(Resource):
         heights = self.heights[var_name]
         if len(heights) == 1:
             h = heights[0]
+            ds_name = '{}_{}m'.format(var_name, h)
             warnings.warn('Only one hub-height available, returning {}'
-                          .format(h), HandlerWarning)
+                          .format(ds_name), HandlerWarning)
 
         if h in heights:
             out = super()._get_ds(ds_name, *ds_slice)
@@ -815,7 +841,7 @@ class WindResource(Resource):
 
         return out
 
-    def _get_SAM_df(self, ds_name, site):
+    def _get_SAM_df(self, ds_name, site, require_wind_dir=False):
         """
         Get SAM wind resource DataFrame for given site
 
@@ -825,6 +851,8 @@ class WindResource(Resource):
             'Dataset' name == SAM
         site : int
             Site to extract SAM DataFrame for
+        require_wind_dir : bool
+            Boolean flag as to whether wind direction will be loaded.
 
         Returns
         -------
@@ -835,10 +863,12 @@ class WindResource(Resource):
             raise HandlerValueError("SAM requires unscaled values")
 
         _, h = self._parse_name(ds_name)
+        h = self._check_hub_height(h)
         res_df = pd.DataFrame(index=self.time_index)
         res_df.name = site
-        variables = ['pressure', 'temperature', 'winddirection',
-                     'windspeed']
+        variables = ['pressure', 'temperature', 'winddirection', 'windspeed']
+        if not require_wind_dir:
+            variables.remove('winddirection')
         for var in variables:
             var_name = "{}_{}m".format(var, h)
             var_array = self._get_ds(var_name, slice(None, None, None),
@@ -860,8 +890,7 @@ class WindResource(Resource):
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
         require_wind_dir : bool
-            Boolean flag as to whether wind direction will be loaded from
-            WindResource or will be filled with zeros
+            Boolean flag as to whether wind direction will be loaded.
         precip_rate : bool
             Boolean flag as to whether precipitationrate_0m will be preloaded
         kwargs : dict
@@ -883,6 +912,7 @@ class WindResource(Resource):
                 var_list.remove('winddirection')
 
             h = project_points.h
+            h = res._check_hub_height(h)
             if isinstance(h, (int, float)):
                 for var in var_list:
                     ds_name = "{}_{}m".format(var, h)
@@ -985,8 +1015,9 @@ class FiveMinWTK(WindResource):
         heights = self.heights[var_name]
         if len(heights) == 1:
             h = heights[0]
+            ds_name = '{}_{}m'.format(var_name, h)
             warnings.warn('Only one hub-height available, returning {}'
-                          .format(h), HandlerWarning)
+                          .format(ds_name), HandlerWarning)
 
         if h in heights:
             with Resource(self._wind_files[h], unscale=self._unscale) as f:
