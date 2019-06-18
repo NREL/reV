@@ -224,7 +224,7 @@ class Status(dict):
             self.data = Status.update_dict(self.data, current)
 
         # check job status via hardware if job file not found.
-        else:
+        elif module in self.data:
             # job exists
             if job_name in self.data[module]:
 
@@ -476,7 +476,10 @@ class Status(dict):
         obj = cls(status_dir)
         obj._update_job_status(module, job_name)
 
-        status = obj.data[module][job_name].get('job_status', None)
+        try:
+            status = obj.data[module][job_name].get('job_status', None)
+        except KeyError as _:
+            status = None
 
         return status
 
