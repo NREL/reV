@@ -46,7 +46,8 @@ class SAMResource:
                 'wind': ('pressure', 'temperature', 'winddirection',
                          'windspeed')}
 
-    # valid data ranges for wind resource in SAM
+    # valid data ranges for wind resource in SAM based on the cpp file:
+    # https://github.com/NREL/ssc/blob/develop/shared/lib_windfile.cpp
     WIND_DATA_RANGES = {'windspeed': (0, 120),
                         'pressure': (0.5, 1.1),
                         'temperature': (-200, 100)}
@@ -319,20 +320,38 @@ class SAMResource:
 
         return arr
 
-    def check_physical_ranges(self):
-        """Check physical ranges and enforce usable SAM data.
+    def _check_physical_ranges(self, var, arr, var_slice):
+        """Check physical range of array and enforce usable SAM data.
 
-        Current methodology sets windspeed=0 if any of the checks are violated.
+        Parameters
+        ----------
+        var : str
+            variable name
+        arr : np.ndarray
+            Array to be checked and patched
+        var_slice : tuple of int | list | slice
+            Slice of variable array to extract
 
-        SAM ranges are from:
-            https://github.com/NREL/ssc/blob/develop/shared/lib_windfile.cpp
-            https://github.com/NREL/ssc/blob/develop/ssc/cmod_wfcheck.cpp
+        Returns
+        -------
+        arr : np.ndarray
+            Patched array with valid range.
         """
 
+        # Get site list corresponding to the var_slice. Only reduce the sites
+        # list if the var_slice has a second entry (column slice of sites)
+        arr_sites = self.sites
+        if not isinstance(var_slice, slice):
+            if (len(var_slice) > 1 and
+                    not isinstance(var_slice[1], slice)):
+                arr_sites = list(np.array(self.sites)[np.array(var_slice[1])])
+
         if self._res_type == 'wind':
-            for var, valid_range in self.WIND_DATA_RANGES.items():
-                self._res_arrays[var] = self.enforce_arr_range(
-                    var, self._res_arrays[var], valid_range, self.sites)
+            if var in self.WIND_DATA_RANGES:
+                valid_range = self.WIND_DATA_RANGES[var]
+                arr = self.enforce_arr_range(var, arr, valid_range, arr_sites)
+
+        return arr
 
     def runnable(self):
         """
@@ -357,7 +376,7 @@ class SAMResource:
 
     def _set_var_array(self, var, arr, *var_slice):
         """
-        Set variable array (units are checked as set)
+        Set variable array (units and physical ranges are checked while set).
 
         Parameters
         ----------
@@ -372,7 +391,9 @@ class SAMResource:
             var_arr = self._res_arrays.get(var, np.zeros(self._shape,
                                                          dtype='float32'))
             if var_arr[var_slice].shape == arr.shape:
-                var_arr[var_slice] = self.check_units(var, arr)
+                arr = self.check_units(var, arr)
+                arr = self._check_physical_ranges(var, arr, var_slice)
+                var_arr[var_slice] = arr
                 self._res_arrays[var] = var_arr
             else:
                 raise HandlerValueError('{} does not have proper shape: {}'
