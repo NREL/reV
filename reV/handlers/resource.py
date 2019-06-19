@@ -302,6 +302,8 @@ class Resource:
         if len(ds_slice) == 2:
             meta = meta[ds_slice[1]]
 
+        meta = self.df_str_decode(meta)
+
         return meta
 
     def _get_SAM_df(self, ds_name, site):
