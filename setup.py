@@ -101,7 +101,8 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     test_suite="tests",
-    install_requires=["click", "h5py", "numpy", "pandas", "psutil"],
+    install_requires=["click", "h5py", "numpy", "pandas", "psutil",
+                      "rasterio"],
     extras_require={
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],

@@ -2,7 +2,9 @@ name: rev
 channels:
   - defaults
 dependencies:
+  - affine=2.2.2
   - alabaster=0.7.12
+  - appnope=0.1.0
   - asn1crypto=0.24.0
   - atomicwrites=1.3.0
   - attrs=19.1.0
@@ -10,21 +12,35 @@ dependencies:
   - backcall=0.1.0
   - blas=1.0
   - bokeh=1.1.0
-  - ca-certificates=2019.1.23
+  - bzip2=1.0.6
+  - ca-certificates=2019.5.15
+  - cairo=1.14.12
   - certifi=2019.3.9
   - cffi=1.12.3
   - chardet=3.0.4
   - click=7.0
+  - click-plugins=1.1.1
+  - cligj=0.5.0
   - cloudpickle=1.0.0
   - cryptography=2.6.1
+  - curl=7.64.1
   - cytoolz=0.9.0.1
+  - dask-core=1.2.2
   - decorator=4.4.0
   - docutils=0.14
-  - flake8=3.7.7
+  - expat=2.2.6
+  - fontconfig=2.13.0
   - freetype=2.9.1
+  - freexl=1.0.5
+  - geos=3.7.1
+  - gettext=0.19.8.1
+  - giflib=5.1.4
+  - glib=2.56.2
   - h5py=2.9.0
+  - hdf4=4.2.13
   - hdf5=1.10.4
   - heapdict=1.0.0
+  - icu=58.2
   - idna=2.8
   - imagesize=1.1.0
   - intel-openmp=2019.3
@@ -34,11 +50,30 @@ dependencies:
   - jedi=0.13.3
   - jinja2=2.10.1
   - jpeg=9b
+  - json-c=0.13.1
   - jupyter_client=5.2.4
   - jupyter_core=4.4.0
+  - kealib=1.4.7
+  - krb5=1.16.1
+  - libboost=1.67.0
+  - libcurl=7.64.1
+  - libcxx=4.0.1
+  - libcxxabi=4.0.1
+  - libdap4=3.19.1
+  - libedit=3.1.20181209
+  - libffi=3.2.1
+  - libgdal=2.3.3
+  - libgfortran=3.0.1
+  - libiconv=1.15
+  - libkml=1.3.0
+  - libnetcdf=4.6.1
   - libpng=1.6.37
+  - libpq=11.2
   - libsodium=1.0.16
+  - libspatialite=4.3.0a
+  - libssh2=1.8.2
   - libtiff=4.0.10
+  - libxml2=2.9.9
   - locket=0.2.0
   - markupsafe=1.1.1
   - mkl=2019.3
@@ -46,21 +81,29 @@ dependencies:
   - mkl_random=1.0.2
   - more-itertools=7.0.0
   - msgpack-python=0.6.1
+  - ncurses=6.1
   - numpy=1.16.3
   - numpy-base=1.16.3
   - olefile=0.46
-  - openssl=1.1.1b
+  - openjpeg=2.3.0
+  - openssl=1.1.1c
   - packaging=19.0
   - pandas=0.24.2
   - parso=0.4.0
   - partd=0.3.10
+  - pcre=8.43
   - pexpect=4.7.0
   - pickleshare=0.7.5
   - pillow=6.0.0
   - pip=19.1.1
+  - pixman=0.38.0
   - pluggy=0.11.0
+  - poppler=0.65.0
+  - poppler-data=0.4.9
+  - proj4=5.2.0
   - prompt_toolkit=2.0.9
   - psutil=5.6.2
+  - ptyprocess=0.6.0
   - py=1.8.0
   - pycparser=2.19
   - pygments=2.4.0
@@ -73,13 +116,13 @@ dependencies:
   - pytz=2019.1
   - pyyaml=5.1
   - pyzmq=18.0.0
-  - rasterio=1.0.13
+  - rasterio=1.0.21
   - readline=7.0
   - requests=2.21.0
-  - scipy=0.19.1
   - setuptools=41.0.1
   - six=1.12.0
   - snowballstemmer=1.2.1
+  - snuggs=1.4.6
   - sortedcontainers=2.1.0
   - sphinx=2.0.1
   - sphinx_rtd_theme=0.4.3
@@ -95,10 +138,12 @@ dependencies:
   - tblib=1.4.0
   - tk=8.6.8
   - toolz=0.9.0
+  - tornado=6.0.2
   - traitlets=4.3.2
   - urllib3=1.24.2
   - wcwidth=0.1.7
   - wheel=0.33.4
+  - xerces-c=3.2.2
   - xz=5.2.4
   - yaml=0.1.7
   - zeromq=4.3.1
@@ -108,8 +153,5 @@ dependencies:
   - pip:
     - future==0.17.1
     - ghp-import==0.5.5
-    - cerberus==1.2
-    - pre-commit==1.16.1
-    - pylint==2.3.1
 prefix: /Users/mrossol/miniconda3/envs/rev
 
