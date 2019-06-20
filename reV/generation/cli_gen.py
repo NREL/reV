@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 def main(ctx, name, verbose):
     """Command line interface (CLI) for the reV 2.0 modules."""
+    ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
 
@@ -254,7 +255,6 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
            dirout, logdir, output_request, mem_util_lim,
            curtailment, downscale, verbose):
     """Run reV gen directly w/o a config file."""
-    ctx.ensure_object(dict)
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
     ctx.obj['SAM_FILES'] = sam_files

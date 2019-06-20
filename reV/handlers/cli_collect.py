@@ -109,7 +109,7 @@ def from_config(ctx, config_file, verbose):
 def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
          parallel, verbose):
     """Main entry point for collection with context passing."""
-
+    ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['H5_FILE'] = h5_file
     ctx.obj['H5_DIR'] = h5_dir

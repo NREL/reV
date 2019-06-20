@@ -69,6 +69,7 @@ test_requires = ["pytest", ]
 numpy_dependency = "numpy>=1.15.0"
 pandas_dependency = "pandas>=0.23.0"
 click_dependency = "click>=7.0"
+scipy_dependency = "scipy>=1.2.1"
 
 setup(
     name="reV",
@@ -102,7 +103,7 @@ setup(
     ],
     test_suite="tests",
     install_requires=["click", "h5py", "numpy", "pandas", "psutil",
-                      "rasterio"],
+                      "rasterio", "scipy"],
     extras_require={
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],

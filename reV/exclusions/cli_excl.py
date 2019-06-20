@@ -99,7 +99,7 @@ def from_config(ctx, config_file, verbose):
 def main(ctx, name, layers_config_str, fout,
          dirout, logdir, filter_method, use_blocks, verbose):
     """Main entry point for exclusions with context passing."""
-
+    ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['DIROUT'] = dirout
     ctx.obj['LOGDIR'] = logdir
@@ -152,20 +152,20 @@ def exclusions(ctx, verbose):
 @main.command()
 @click.option('--alloc', '-a', default='rev', type=str,
               help='Eagle allocation account name. Default is "rev".')
-@click.option('--memory', '-mem', default=90, type=int,
-              help='Eagle node memory request in GB. Default is 90')
 @click.option('--walltime', '-wt', default=1.0, type=float,
               help='Eagle walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
+@click.option('--memory', '-mem', default=90, type=int,
+              help='Eagle node memory request in GB. Default is 90')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def exclusions_eagle(ctx, alloc, memory, walltime,
-                     feature, stdout_path, verbose):
+def exclusions_eagle(ctx, alloc, walltime, feature, memory, stdout_path,
+                     verbose):
     """Run exclusions on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
