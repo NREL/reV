@@ -7,7 +7,8 @@ import os
 import pandas as pd
 import warnings
 
-from reV.handlers.sam_resource import parse_keys, SAMResource
+from reV.handlers.parse_keys import parse_keys
+from reV.handlers.sam_resource import SAMResource
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
                                       HandlerValueError, ExtrapolationWarning,
                                       HandlerWarning)

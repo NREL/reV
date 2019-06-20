@@ -6,34 +6,9 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
+from reV.handlers.parse_keys import parse_keys
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
                                       HandlerValueError, SAMInputWarning)
-
-
-def parse_keys(keys):
-    """
-    Parse keys for complex __getitem__ and __setitem__
-
-    Parameters
-    ----------
-    keys : string | tuple
-        key or key and slice to extract
-
-    Returns
-    -------
-    key : string
-        key to extract
-    key_slice : slice | tuple
-        Slice or tuple of slices of key to extract
-    """
-    if isinstance(keys, tuple):
-        key = keys[0]
-        key_slice = keys[1:]
-    else:
-        key = keys
-        key_slice = (slice(None, None, None),)
-
-    return key, key_slice
 
 
 class SAMResource:

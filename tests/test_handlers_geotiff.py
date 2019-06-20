@@ -15,8 +15,8 @@ def test_geotiff_meta():
     fpath = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
 
     with Geotiff(fpath) as f:
-        meta = f.meta
-        data = f.get_flat_data(layer=0)
+        meta = f['meta']
+        data = f[0]
 
     # assert approximate RI boundaries
     assert meta['latitude'].min() > 40.8

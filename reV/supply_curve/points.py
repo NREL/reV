@@ -6,6 +6,22 @@ import numpy as np
 from reV.handlers.geotiff import Geotiff
 
 
+class ExclusionPoints(Geotiff):
+    """Exclusion points framework"""
+
+    def __init__(self, fpath, chunks=(128, 128)):
+        """
+        Parameters
+        ----------
+        fpath : str
+            Path to .tiff file.
+        chunks : tuple
+            GeoTIFF chunk (tile) shape/size.
+        """
+
+        super().__init__(fpath, chunks=chunks)
+
+
 class SupplyCurvePoints:
     """Supply curve points framework."""
 
@@ -13,24 +29,44 @@ class SupplyCurvePoints:
         """
         Parameters
         ----------
-        exclusions : str | reV.handlers.geotiff.Geotiff
-            File path to the exclusions grid, or pre-extracted exclusions
-            geotiff. The exclusions dictate the SC analysis extent.
+        exclusions : str | ExclusionPoints
+            File path to the exclusions grid, or pre-initialized
+            ExclusionPoints. The exclusions dictate the SC analysis extent.
         resolution : int
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
         """
 
-        if isinstance(exclusions, Geotiff):
+        if isinstance(exclusions, ExclusionPoints):
             self._exclusions = exclusions
+        elif isinstance(exclusions, str):
+            self._exclusions = ExclusionPoints(exclusions)
         else:
-            self._exclusions = Geotiff(exclusions)
+            raise IOError('SupplyCurvePoints needs an ExclusionPoints object '
+                          'or a file path, but received: {}'
+                          .format(type(exclusions)))
 
         self._res = resolution
         self._cols_of_excl = None
         self._rows_of_excl = None
         self._points = None
+
+    def __len__(self):
+        """Total number of supply curve points."""
+        return self.n_rows * self.n_cols
+
+    @property
+    def shape(self):
+        """Get the Supply curve shape tuple (n_rows, n_cols).
+
+        Returns
+        -------
+        shape : tuple
+            2-entry tuple representing the full supply curve extent.
+        """
+
+        return (self.n_rows, self.n_cols)
 
     @property
     def exclusions(self):
@@ -38,8 +74,8 @@ class SupplyCurvePoints:
 
         Returns
         -------
-        _exclusions : reV.handlers.geotiff.Geotiff
-            Exclusions geotiff object.
+        _exclusions : ExclusionPoints
+            Exclusions geotiff handler object.
         """
         return self._exclusions
 
@@ -65,7 +101,7 @@ class SupplyCurvePoints:
         excl_rows : np.ndarray
             Array of exclusion row indices.
         """
-        return self._exclusions.meta['row_ind'].unique()
+        return np.arange(self.exclusions.n_rows)
 
     @property
     def excl_cols(self):
@@ -76,7 +112,7 @@ class SupplyCurvePoints:
         excl_cols : np.ndarray
             Array of exclusion column indices.
         """
-        return self._exclusions.meta['col_ind'].unique()
+        return np.arange(self.exclusions.n_cols)
 
     @property
     def rows_of_excl(self):
@@ -111,6 +147,28 @@ class SupplyCurvePoints:
         return self._cols_of_excl
 
     @property
+    def n_rows(self):
+        """Get the number of supply curve grid rows.
+
+        Returns
+        -------
+        n_rows : int
+            Number of row entries in the full supply curve grid.
+        """
+        return int(np.ceil(self.exclusions.n_rows / self.resolution))
+
+    @property
+    def n_cols(self):
+        """Get the number of supply curve grid columns.
+
+        Returns
+        -------
+        n_cols : int
+            Number of column entries in the full supply curve grid.
+        """
+        return int(np.ceil(self.exclusions.n_cols / self.resolution))
+
+    @property
     def points(self):
         """Get the summary dataframe of supply curve points.
 
@@ -121,51 +179,39 @@ class SupplyCurvePoints:
         """
 
         if self._points is None:
-            sc_col_ind, sc_row_ind = np.meshgrid(
-                np.arange(len(self.cols_of_excl)),
-                np.arange(len(self.rows_of_excl)))
+            sc_col_ind, sc_row_ind = np.meshgrid(np.arange(self.n_cols),
+                                                 np.arange(self.n_rows))
             self._points = pd.DataFrame({'row_ind': sc_row_ind.flatten(),
                                          'col_ind': sc_col_ind.flatten()})
             self._points.index.name = 'gid'
         return self._points
 
-    def get_excl_mask(self, gid):
-        """Get the mask of excl points corresponding to the supply curve gid.
+    def get_excl_points(self, dset, gid):
+        """Get the exclusions data corresponding to a supply curve gid.
 
         Parameters
         ----------
-        gid : int
-            Supply curve point gid.
-
-        Returns
-        -------
-        mask : pd.Series
-            Boolean mask to be applied to the exclusions meta.
-        """
-
-        sc_row_ind = self.points.loc[gid, 'row_ind']
-        sc_col_ind = self.points.loc[gid, 'col_ind']
-        excl_rows = self.rows_of_excl[sc_row_ind]
-        excl_cols = self.rows_of_excl[sc_col_ind]
-        mask = (self.exclusions.meta['row_ind'].isin(excl_rows) &
-                self.exclusions.meta['col_ind'].isin(excl_cols))
-        return mask
-
-    def get_excl_points(self, gid):
-        """Get the exclusions meta points corresponding to a supply curve gid.
-
-        Parameters
-        ----------
+        dset : str | int
+            Used as the first arg in the exclusions __getitem__ slice.
+            String can be "meta", integer can be layer number.
         gid : int
             Supply curve point gid.
 
         Returns
         -------
         excl_points : pd.DataFrame
-            Exclusions meta df reduced to just the exclusion points associated
-            with the input supply curve gid.
+            Exclusions data reduced to just the exclusion points associated
+            with the requested supply curve gid.
         """
-        return self.exclusions.meta[self.get_excl_mask(gid)]
+
+        sc_row_ind = self.points.loc[gid, 'row_ind']
+        sc_col_ind = self.points.loc[gid, 'col_ind']
+        excl_rows = self.rows_of_excl[sc_row_ind]
+        excl_cols = self.cols_of_excl[sc_col_ind]
+        row_slice = slice(np.min(excl_rows), np.max(excl_rows))
+        col_slice = slice(np.min(excl_cols), np.max(excl_cols))
+
+        return self.exclusions[dset, row_slice, col_slice]
 
     def _chunk_excl(self, arr):
         """Split an array into a list of arrays with len == resolution.

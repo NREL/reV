@@ -10,7 +10,7 @@ import numpy as np
 import xarray as xr
 from pyproj import transform, Proj
 
-from reV.handlers.sam_resource import parse_keys
+from reV.handlers.parse_keys import parse_keys
 from reV.utilities.exceptions import HandlerKeyError
 
 
@@ -39,6 +39,10 @@ class Geotiff:
         if type is not None:
             raise
 
+    def __len__(self):
+        """Total number of pixels in the GeoTiff."""
+        return self.n_rows * self.n_cols
+
     def __getitem__(self, keys):
         """Retrieve data from the GeoTIFF object.
 
@@ -62,6 +66,46 @@ class Geotiff:
 
         return out
 
+    @staticmethod
+    def _get_meta_inds(x_slice, y_slice, lon, lat):
+        """Get the row and column indices associated with lat/lon slices.
+
+        Parameters
+        ----------
+        x_slice : slice
+            Column slice corresponding to the extracted lon values.
+        y_slice : slice
+            Row slice corresponding to the extracted lat values.
+        lon : np.ndarray
+            Extracted lon values (pre-meshgrid) associated with the x_slice.
+        lat : np.ndarray
+            Extracted lat values (pre-meshgrid) associated with the y_slice.
+
+        Returns
+        -------
+        row_ind : np.ndarray
+            1D array of the row indices corresponding to the lat/lon arrays
+            once mesh-gridded and flattened
+        col_ind : np.ndarray
+            1D array of the col indices corresponding to the lat/lon arrays
+            once mesh-gridded and flattened
+        """
+
+        if y_slice.start is None:
+            y_slice = slice(0, y_slice.stop)
+        if x_slice.start is None:
+            x_slice = slice(0, x_slice.stop)
+
+        col_ind = np.arange(x_slice.start, x_slice.start + len(lon))
+        row_ind = np.arange(y_slice.start, y_slice.start + len(lat))
+        col_ind = col_ind.astype(np.uint32)
+        row_ind = row_ind.astype(np.uint32)
+        col_ind, row_ind = np.meshgrid(col_ind, row_ind)
+        col_ind = col_ind.flatten()
+        row_ind = row_ind.flatten()
+
+        return row_ind, col_ind
+
     def _get_meta(self, *yx_slice):
         """Get the geotiff meta dataframe in standard WGS84 projection.
 
@@ -80,21 +124,10 @@ class Geotiff:
         else:
             raise HandlerKeyError('Cannot do 3D slicing on GeoTiff meta.')
 
-        if y_slice.start is None:
-            y_slice = slice(0, y_slice.stop)
-        if x_slice.start is None:
-            x_slice = slice(0, x_slice.stop)
-
         lon = self._src.coords['x'].values.astype(np.float32)[x_slice]
         lat = self._src.coords['y'].values.astype(np.float32)[y_slice]
 
-        col_ind = np.arange(x_slice.start, x_slice.start + len(lon))
-        row_ind = np.arange(y_slice.start, y_slice.start + len(lat))
-        col_ind = col_ind.astype(np.uint32)
-        row_ind = row_ind.astype(np.uint32)
-        col_ind, row_ind = np.meshgrid(col_ind, row_ind)
-        col_ind = col_ind.flatten()
-        row_ind = row_ind.flatten()
+        row_ind, col_ind = self._get_meta_inds(x_slice, y_slice, lon, lat)
 
         lon, lat = np.meshgrid(lon, lat)
         lon = lon.flatten()
@@ -133,6 +166,40 @@ class Geotiff:
                                   'within a layer')
 
         return self._src.data[ds, y_slice, x_slice].flatten()
+
+    @property
+    def shape(self):
+        """Get the Geotiff shape tuple (n_rows, n_cols).
+
+        Returns
+        -------
+        shape : tuple
+            2-entry tuple representing the full GeoTiff shape.
+        """
+
+        return (self.n_rows, self.n_cols)
+
+    @property
+    def n_rows(self):
+        """Get the number of Geotiff rows.
+
+        Returns
+        -------
+        n_rows : int
+            Number of row entries in the full geotiff.
+        """
+        return len(self._src.coords['y'])
+
+    @property
+    def n_cols(self):
+        """Get the number of Geotiff columns.
+
+        Returns
+        -------
+        n_cols : int
+            Number of column entries in the full geotiff.
+        """
+        return len(self._src.coords['x'])
 
     def close(self):
         """Close the xarray-rasterio source object"""
