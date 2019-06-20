@@ -4,6 +4,14 @@ reV.exclusions package
 Submodules
 ----------
 
+reV.exclusions.cli\_excl module
+-------------------------------
+
+.. automodule:: reV.exclusions.cli_excl
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.exclusions.exclusions module
 --------------------------------
 
