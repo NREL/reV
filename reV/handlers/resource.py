@@ -116,8 +116,31 @@ class Resource:
         """
         if self._meta is None:
             self._meta = pd.DataFrame(self._h5['meta'][...])
+            self._meta = self.df_str_decode(self._meta)
 
         return self._meta
+
+    @staticmethod
+    def df_str_decode(df):
+        """Decode a dataframe with byte string columns into ordinary str cols.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Dataframe with some columns being byte strings.
+
+        Returns
+        -------
+        df : pd.DataFrame
+            DataFrame with str columns instead of byte str columns.
+        """
+
+        for col in df:
+            if (np.issubdtype(df[col].dtype, np.object_) and
+                    isinstance(df[col].values[0], bytes)):
+                df[col] = df[col].copy().str.decode('utf-8', 'ignore')
+
+        return df
 
     @property
     def time_index(self):
@@ -278,6 +301,8 @@ class Resource:
         meta = pd.DataFrame(meta, index=sites)
         if len(ds_slice) == 2:
             meta = meta[ds_slice[1]]
+
+        meta = self.df_str_decode(meta)
 
         return meta
 
