@@ -64,6 +64,22 @@ def test_sc_aggregation(resolution=64):
     assert len(set(all_res_gids)) == 100
 
 
+def test_parallel_agg(resolution=64):
+    """Test that parallel aggregation yields the same results as serial
+    aggregation."""
+
+    fpath_excl = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
+    fpath_gen = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
+    gids = list(range(50, 70))
+    summary_serial = Aggregation.summary(fpath_excl, fpath_gen,
+                                         resolution=resolution, gids=gids)
+    summary_parallel = Aggregation.summary(fpath_excl, fpath_gen,
+                                           resolution=resolution, gids=gids,
+                                           n_cores=3)
+
+    assert all(summary_serial == summary_parallel)
+
+
 def plot_all_sc_points(resolution=64):
     """Test the calculation of the SC points setup from exclusions tiff."""
 
