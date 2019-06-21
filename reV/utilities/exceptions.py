@@ -66,6 +66,20 @@ class SAMExecutionError(Exception):
     pass
 
 
+class SupplyCurveError(Exception):
+    """
+    Execution error for SAM simulations
+    """
+    pass
+
+
+class SupplyCurveInputError(SupplyCurveError):
+    """
+    Execution error for SAM simulations
+    """
+    pass
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data
