@@ -29,6 +29,7 @@ class Geotiff:
 
         self._fpath = fpath
         self._meta = None
+        self._iarr = None
         self._src = xr.open_rasterio(self._fpath, chunks=chunks)
 
     def __enter__(self):
@@ -166,6 +167,22 @@ class Geotiff:
                                   'within a layer')
 
         return self._src.data[ds, y_slice, x_slice].flatten()
+
+    @property
+    def iarr(self):
+        """Get an array of 1D index values for the flattened geotiff extent.
+
+        Returns
+        -------
+        iarr : np.ndarray
+            Uint array with same shape as geotiff extent, representing the 1D
+            index values if the geotiff extent was flattened
+            (with default flatten order 'C')
+        """
+        if self._iarr is None:
+            self._iarr = np.arange(len(self), dtype=np.uint32)
+            self._iarr = self._iarr.reshape(self.shape)
+        return self._iarr
 
     @property
     def shape(self):

@@ -422,7 +422,9 @@ class SupplyCurveExtent:
                                         'exclusions file path, but received: '
                                         '{}'.format(type(fpath_excl)))
 
-        self._res = resolution
+        # limit the resolution to the exclusion shape.
+        self._res = int(np.min(self.exclusions.shape + (resolution, )))
+
         self._cols_of_excl = None
         self._rows_of_excl = None
         self._points = None
@@ -629,6 +631,26 @@ class SupplyCurveExtent:
         row_slice = slice(np.min(excl_rows), np.max(excl_rows) + 1)
         col_slice = slice(np.min(excl_cols), np.max(excl_cols) + 1)
         return row_slice, col_slice
+
+    def get_flat_excl_ind(self, gid):
+        """Get the index values of the flattened exclusions grid corresponding
+        to the supply curve point gid.
+
+        Parameters
+        ----------
+        gid : int
+            Supply curve point gid.
+
+        Returns
+        -------
+        excl_ind : np.ndarray
+            Index values of the flattened exclusions grid corresponding to
+            the SC gid.
+        """
+
+        row_slice, col_slice = self.get_excl_slices(gid)
+        excl_ind = self.exclusions.iarr[row_slice, col_slice].flatten()
+        return excl_ind
 
     def get_excl_points(self, dset, gid):
         """Get the exclusions data corresponding to a supply curve gid.
