@@ -6,7 +6,8 @@ import numpy as np
 from scipy.spatial import cKDTree
 from reV.handlers.outputs import Outputs
 from reV.handlers.geotiff import Geotiff
-from reV.utilities.exceptions import SupplyCurveError, SupplyCurveInputError
+from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
+                                      EmptySupplyCurvePointError)
 
 
 class ExclusionPoints(Geotiff):
@@ -54,6 +55,8 @@ class SingleSupplyCurvePoint:
             Boolean series mask on generation data that was used to create
             the cKDTree. Required if cKDTree is input.
         """
+        self._fpath_excl = None
+        self._fpath_gen = None
         self._excl_meta = None
         self._gen_ind_global = None
         self._lat_lon_lims = None
@@ -94,7 +97,7 @@ class SingleSupplyCurvePoint:
             self._excl_row_slice = excl_row_slice
             self._excl_col_slice = excl_col_slice
 
-        if gid is None and excl_row_slice is None and excl_col_slice is None:
+        elif gid is None and excl_row_slice is None and excl_col_slice is None:
             raise SupplyCurveInputError('SingleSupplyCurvePoint needs either '
                                         'a gid or a row/col slice input but '
                                         'received None.')
@@ -121,6 +124,7 @@ class SingleSupplyCurvePoint:
         """
 
         if isinstance(fpath_excl, str):
+            self._fpath_excl = fpath_excl
             self._exclusions = ExclusionPoints(fpath_excl)
         else:
             raise SupplyCurveInputError('SingleSupplyCurvePoint needs an '
@@ -128,6 +132,7 @@ class SingleSupplyCurvePoint:
                                         '{}'.format(type(fpath_excl)))
 
         if isinstance(fpath_gen, str):
+            self._fpath_gen = fpath_gen
             self._gen = Outputs(fpath_gen)
         else:
             raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
@@ -197,6 +202,14 @@ class SingleSupplyCurvePoint:
         """
         self._excl_meta = self._excl_meta[self._excl_mask]
         self._excl_meta['global_gen_gid'] = self._gen_ind_global
+
+        if self._excl_meta.empty:
+            msg = ('Supply curve point with row/col slices {}/{} at centroid '
+                   'lat/lon {} has no viable exclusion points based on '
+                   'exclusion and gen files: "{}", "{}"'
+                   .format(self._excl_row_slice, self._excl_col_slice,
+                           self.centroid, self._fpath_excl, self._fpath_gen))
+            raise EmptySupplyCurvePointError(msg)
 
     def __enter__(self):
         return self
@@ -326,7 +339,7 @@ class SingleSupplyCurvePoint:
         """
         if self._gen_mask is None:
             # margin is the extra distance (in decimal lat/lon) to allow
-            margin = 0.1
+            margin = 0.5
             lat_min = np.min(self.lat_lon_lims[0])
             lat_max = np.max(self.lat_lon_lims[0])
             lon_min = np.min(self.lat_lon_lims[1])
@@ -336,6 +349,14 @@ class SingleSupplyCurvePoint:
                               (self.gen.meta['longitude'] > lon_min - margin) &
                               (self.gen.meta['longitude'] < lon_max + margin))
 
+            if self._gen_mask.sum() == 0:
+                msg = ('Supply curve point with row/col slices {}/{} at '
+                       'centroid lat/lon {} has no viable generation points '
+                       'based on exclusion and gen files: "{}", "{}"'
+                       .format(self._excl_row_slice, self._excl_col_slice,
+                               self.centroid, self._fpath_excl,
+                               self._fpath_gen))
+                raise EmptySupplyCurvePointError(msg)
         return self._gen_mask
 
     @property
@@ -548,7 +569,9 @@ class SupplyCurvePoints:
         """
         row_slice, col_slice = self.get_excl_slices(gid)
         sc_point = SingleSupplyCurvePoint(self._fpath_excl, fpath_gen,
-                                          row_slice, col_slice, **kwargs)
+                                          excl_row_slice=row_slice,
+                                          excl_col_slice=col_slice,
+                                          **kwargs)
         return sc_point
 
     def get_excl_slices(self, gid):
