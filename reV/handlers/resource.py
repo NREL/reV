@@ -21,7 +21,7 @@ class Resource:
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
 
-    def __init__(self, h5_file, unscale=True, hsds=False):
+    def __init__(self, h5_file, unscale=True, hsds=False, str_decode=True):
         """
         Parameters
         ----------
@@ -32,6 +32,9 @@ class Resource:
         hsds : bool
             Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
             behind HSDS
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
         """
         self._h5_file = h5_file
         if hsds:
@@ -43,6 +46,7 @@ class Resource:
         self._unscale = unscale
         self._meta = None
         self._time_index = None
+        self._str_decode = str_decode
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
@@ -117,7 +121,9 @@ class Resource:
         """
         if self._meta is None:
             self._meta = pd.DataFrame(self._h5['meta'][...])
-            self._meta = self.df_str_decode(self._meta)
+
+            if self._str_decode:
+                self._meta = self.df_str_decode(self._meta)
 
         return self._meta
 
@@ -303,7 +309,8 @@ class Resource:
         if len(ds_slice) == 2:
             meta = meta[ds_slice[1]]
 
-        meta = self.df_str_decode(meta)
+        if self._str_decode:
+            meta = self.df_str_decode(meta)
 
         return meta
 

@@ -4,9 +4,12 @@ reV Supply Curve Points
 import pandas as pd
 import numpy as np
 from scipy.spatial import cKDTree
+from warnings import warn
+
 from reV.handlers.outputs import Outputs
 from reV.handlers.geotiff import Geotiff
 from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
+                                      OutputWarning,
                                       EmptySupplyCurvePointError)
 
 
@@ -26,12 +29,12 @@ class ExclusionPoints(Geotiff):
         super().__init__(fpath, chunks=chunks)
 
 
-class SingleSupplyCurvePoint:
+class SupplyCurvePoint:
     """Single supply curve point framework"""
 
     def __init__(self, fpath_excl, fpath_gen, excl_row_slice=None,
                  excl_col_slice=None, gid=None, resolution=None,
-                 gen_tree=None, gen_mask=None):
+                 gen_tree=None, gen_mask=None, distance_upper_bound=0.03):
         """
         Parameters
         ----------
@@ -54,7 +57,13 @@ class SingleSupplyCurvePoint:
         gen_mask : pd.Series
             Boolean series mask on generation data that was used to create
             the cKDTree. Required if cKDTree is input.
+        distance_upper_bound : float | None
+            Upper boundary distance for KNN lookup between exclusion points and
+            generation points. None will calculate a good distance based on the
+            generation meta data coordinates. 0.03 is a good value for a 4km
+            resource grid and finer.
         """
+
         self._fpath_excl = None
         self._fpath_gen = None
         self._excl_meta = None
@@ -62,6 +71,7 @@ class SingleSupplyCurvePoint:
         self._lat_lon_lims = None
         self._gen_tree = None
         self._gen_mask = None
+        self._distance_upper_bound = distance_upper_bound
 
         self._parse_sc_point_def(fpath_excl, excl_row_slice, excl_col_slice,
                                  gid, resolution)
@@ -104,7 +114,7 @@ class SingleSupplyCurvePoint:
 
         elif (gid is not None and resolution is not None and
               excl_row_slice is None and excl_col_slice is None):
-            s = SupplyCurvePoints(fpath_excl, resolution=resolution)
+            s = SupplyCurveExtent(fpath_excl, resolution=resolution)
             self._excl_row_slice, self._excl_col_slice = s.get_excl_slices(gid)
 
         else:
@@ -133,7 +143,7 @@ class SingleSupplyCurvePoint:
 
         if isinstance(fpath_gen, str):
             self._fpath_gen = fpath_gen
-            self._gen = Outputs(fpath_gen)
+            self._gen = Outputs(fpath_gen, str_decode=False)
         else:
             raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
                                         'generation output file path, but '
@@ -198,10 +208,18 @@ class SingleSupplyCurvePoint:
     def _reduce_excl_meta(self):
         """Reduce the exclusions meta data to just those points which have
         corresponding generation points, and add a column showing the
-        corresponding generation points.
+        corresponding generation and resource points.
         """
+
         self._excl_meta = self._excl_meta[self._excl_mask]
-        self._excl_meta['global_gen_gid'] = self._gen_ind_global
+        self._excl_meta['gen_gid'] = self._gen_ind_global
+
+        if 'gid' in self.gen.meta:
+            self._excl_meta['resource_gid'] = self.gen.meta.loc[
+                self._gen_ind_global, 'gid'].values
+        else:
+            warn('Generation output file does not have resource "gid" field: '
+                 '"{}"'.format(self._fpath_gen), OutputWarning)
 
         if self._excl_meta.empty:
             msg = ('Supply curve point with row/col slices {}/{} at centroid '
@@ -263,17 +281,6 @@ class SingleSupplyCurvePoint:
         return base_excl_meta
 
     @property
-    def gen(self):
-        """Get the generation output object.
-
-        Returns
-        -------
-        _gen : Outputs
-            reV generation outputs object
-        """
-        return self._gen
-
-    @property
     def distance_upper_bound(self):
         """Get the upper bound on NN distance between excl and gen points.
 
@@ -284,11 +291,12 @@ class SingleSupplyCurvePoint:
             generation points. Calculated as half of the diagonal between
             closest generation points, with an extra 5% margin.
         """
-        lats = self.gen.meta.loc[self.gen_mask, 'latitude'].values
-        dists = np.abs(lats - (lats[0] * np.ones_like(lats)))
-        dists = dists[(dists != 0)]
-        distance_upper_bound = 1.05 * (2 ** 0.5) * (dists.min() / 2)
-        return distance_upper_bound
+        if self._distance_upper_bound is None:
+            lats = self.gen.meta.loc[self.gen_mask, 'latitude'].values
+            dists = np.abs(lats - (lats[0] * np.ones_like(lats)))
+            dists = dists[(dists != 0)]
+            self._distance_upper_bound = 1.05 * (2 ** 0.5) * (dists.min() / 2)
+        return self._distance_upper_bound
 
     @property
     def lat_lon_lims(self):
@@ -326,6 +334,17 @@ class SingleSupplyCurvePoint:
         centroid = (np.sum(self.lat_lon_lims[0]) / 2,
                     np.sum(self.lat_lon_lims[1]) / 2)
         return centroid
+
+    @property
+    def gen(self):
+        """Get the generation output object.
+
+        Returns
+        -------
+        _gen : Outputs
+            reV generation outputs object
+        """
+        return self._gen
 
     @property
     def gen_mask(self):
@@ -374,8 +393,8 @@ class SingleSupplyCurvePoint:
         return self._gen_tree
 
 
-class SupplyCurvePoints:
-    """Supply curve points framework."""
+class SupplyCurveExtent:
+    """Supply curve full extent framework."""
 
     def __init__(self, fpath_excl, resolution=64):
         """
@@ -419,6 +438,13 @@ class SupplyCurvePoints:
         self.close()
         if type is not None:
             raise
+
+    def __getitem__(self, gid):
+        """Get SC extent meta data corresponding to an SC point gid."""
+        if gid >= len(self):
+            raise KeyError('SC extent with {} points does not contain SC '
+                           'point gid {}.'.format(len(self), gid))
+        return self.points.loc[gid]
 
     def close(self):
         """Close all file handlers."""
@@ -568,10 +594,10 @@ class SupplyCurvePoints:
             Single SC point object corresponding to the gid.
         """
         row_slice, col_slice = self.get_excl_slices(gid)
-        sc_point = SingleSupplyCurvePoint(self._fpath_excl, fpath_gen,
-                                          excl_row_slice=row_slice,
-                                          excl_col_slice=col_slice,
-                                          **kwargs)
+        sc_point = SupplyCurvePoint(self._fpath_excl, fpath_gen,
+                                    excl_row_slice=row_slice,
+                                    excl_col_slice=col_slice,
+                                    **kwargs)
         return sc_point
 
     def get_excl_slices(self, gid):

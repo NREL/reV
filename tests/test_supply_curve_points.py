@@ -7,16 +7,18 @@ Created on Wed Jun 19 15:37:05 2019
 import pytest
 import os
 from scipy.spatial import cKDTree
-from reV.supply_curve.points import SingleSupplyCurvePoint, SupplyCurvePoints
+from reV.supply_curve.aggregation import Aggregation
+from reV.supply_curve.points import SupplyCurvePoint, SupplyCurveExtent
 from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
 
 
-def test_points_calc(resolution=64):
+@pytest.mark.parametrize('resolution', [7, 32, 50, 64, 163])
+def test_points_calc(resolution):
     """Test the calculation of the SC points setup from exclusions tiff."""
     fpath = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
 
-    with SupplyCurvePoints(fpath, resolution=resolution) as sc:
+    with SupplyCurveExtent(fpath, resolution=resolution) as sc:
         assert sc.n_cols >= (sc.exclusions.n_cols / resolution)
         assert sc.n_rows >= (sc.exclusions.n_rows / resolution)
         assert len(sc) == (sc.n_rows * sc.n_cols)
@@ -32,16 +34,34 @@ def test_single_point_kdtree(gid=2, resolution=64):
         gen_mask = (o.meta['latitude'] > 41.5)
         gen_tree = cKDTree(o.meta.loc[gen_mask, ['latitude', 'longitude']])
 
-    with SingleSupplyCurvePoint(fpath_excl, fpath_gen, gid=gid,
-                                resolution=resolution) as sc1:
+    with SupplyCurvePoint(fpath_excl, fpath_gen, gid=gid,
+                          resolution=resolution) as sc1:
         meta1 = sc1.exclusion_meta
 
-    with SingleSupplyCurvePoint(fpath_excl, fpath_gen, gid=gid,
-                                resolution=resolution, gen_tree=gen_tree,
-                                gen_mask=gen_mask) as sc2:
+    with SupplyCurvePoint(fpath_excl, fpath_gen, gid=gid,
+                          resolution=resolution, gen_tree=gen_tree,
+                          gen_mask=gen_mask) as sc2:
         meta2 = sc2.exclusion_meta
 
     assert all((meta1 == meta2))
+
+
+def test_sc_aggregation(resolution=64):
+    """Get the SC points aggregation summary and test that there are expected
+    columns and that all 100 resource gids were found"""
+
+    fpath_excl = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
+    fpath_gen = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
+
+    summary = Aggregation.summary(fpath_excl, fpath_gen, resolution=resolution)
+    all_res_gids = []
+    for gids in summary['resource_gids']:
+        all_res_gids += gids
+
+    assert 'col_ind' in summary
+    assert 'row_ind' in summary
+    assert 'gen_gids' in summary
+    assert len(set(all_res_gids)) == 100
 
 
 def plot_all_sc_points(resolution=64):
@@ -55,7 +75,7 @@ def plot_all_sc_points(resolution=64):
     fpath_gen = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 
     _, axs = plt.subplots(1, 1)
-    with SupplyCurvePoints(fpath_excl, resolution=resolution) as sc:
+    with SupplyCurveExtent(fpath_excl, resolution=resolution) as sc:
         colors *= len(sc)
         for gid in range(len(sc)):
             excl_meta = sc.get_excl_points('meta', gid)
@@ -79,8 +99,8 @@ def plot_single_sc_point(gid=2, resolution=64):
     fpath_gen = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 
     _, axs = plt.subplots(1, 1)
-    with SingleSupplyCurvePoint(fpath_excl, fpath_gen, gid=gid,
-                                resolution=resolution) as sc:
+    with SupplyCurvePoint(fpath_excl, fpath_gen, gid=gid,
+                          resolution=resolution) as sc:
 
         base_meta = sc.get_base_excl_meta()
 

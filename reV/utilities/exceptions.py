@@ -73,6 +73,13 @@ class SupplyCurveError(Exception):
     pass
 
 
+class EmptySupplyCurvePointError(SupplyCurveError):
+    """
+    Execution error for SAM simulations
+    """
+    pass
+
+
 class SupplyCurveInputError(SupplyCurveError):
     """
     Execution error for SAM simulations
