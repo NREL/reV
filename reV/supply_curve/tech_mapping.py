@@ -247,7 +247,7 @@ class TechMapping:
 
         return ind_out, coords_out
 
-    def save_tech_map(self, ind, coords, fpath_out, chunks=(5000, 5000)):
+    def save_tech_map(self, ind, coords, fpath_out, chunks=(128, 128)):
         """Save tech mapping indices and coordinates to an h5 output file.
 
         Parameters
@@ -258,10 +258,8 @@ class TechMapping:
             Un-projected latitude, longitude array of tech exclusion points.
         fpath_out : str
             .h5 filepath to save tech mapping results.
-        ind_chunks : tuple
-            Chunk shape of the 1D index array dataset.
-        coord_chunks : tuple
-            Chunk shape of the 2D coordinate array dataset.
+        chunks : tuple
+            Chunk shape of the 2D output datasets.
         """
 
         if not fpath_out.endswith('.h5'):

@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 import logging
+import time
 
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.points import SupplyCurvePoint, SupplyCurveExtent
@@ -141,6 +142,7 @@ class Aggregation:
                         .format(gids[0], gids[-1], resolution))
 
             for gid in gids:
+                t0 = time.time()
                 try:
                     pointsum = SupplyCurvePointSummary.summary(
                         gid, fpath_excl, fpath_gen, fpath_techmap,
@@ -155,6 +157,10 @@ class Aggregation:
                     pointsum['col_ind'] = sc[gid]['col_ind']
                     series = pd.Series(pointsum, name=gid)
                     summary = summary.append(series)
+
+                t1 = time.time() - t0
+                logger.debug('Aggregating gid {} took {} seconds'
+                             .format(gid, t1))
 
         return summary
 
@@ -195,8 +201,8 @@ class Aggregation:
                 gids = np.array(range(len(sc)), dtype=np.uint32)
 
         logger.info('Running parallel supply curve point aggregation for '
-                    'sc points {} through {} at a resolution of {}'
-                    .format(gids[0], gids[-1], resolution))
+                    'sc points {} through {} at a resolution of {} on {} cores'
+                    .format(gids[0], gids[-1], resolution, n_cores))
 
         chunks = np.array_split(gids, n_cores)
 

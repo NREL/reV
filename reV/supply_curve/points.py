@@ -153,11 +153,11 @@ class SupplyCurvePoint:
         lons = self._techmap['longitude'][self._rows, self._cols].flatten()
         self._centroid = (lats.mean(), lons.mean())
 
-        self._meta = pd.DataFrame({'latitude': lats[valid_points],
-                                   'longitude': lons[valid_points]})
-
-        self._meta['gen_gid'] = gen_gids
-        self._meta['res_gid'] = self.gen.meta['gid'].values[gen_gids]
+        self._meta = pd.DataFrame(
+            {'latitude': lats[valid_points],
+             'longitude': lons[valid_points],
+             'gen_gid': gen_gids,
+             'res_gid': self.gen.meta['gid'].values[gen_gids]})
 
     def __enter__(self):
         return self
