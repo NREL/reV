@@ -1,15 +1,15 @@
 """
 reV Supply Curve Points
 """
+import os
+import h5py
 import pandas as pd
 import numpy as np
-from scipy.spatial import cKDTree
 from warnings import warn
 
 from reV.handlers.outputs import Outputs
 from reV.handlers.geotiff import Geotiff
 from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
-                                      OutputWarning,
                                       EmptySupplyCurvePointError)
 
 
@@ -32,38 +32,25 @@ class ExclusionPoints(Geotiff):
 class SupplyCurvePoint:
     """Single supply curve point framework"""
 
-    def __init__(self, fpath_excl, fpath_gen, excl_row_slice=None,
-                 excl_col_slice=None, gid=None, resolution=None,
-                 gen_tree=None, gen_mask=None, distance_upper_bound=0.03):
+    def __init__(self, gid, fpath_excl, fpath_gen, fpath_techmap,
+                 resolution=64):
         """
         Parameters
         ----------
+        gid : int
+            gid for supply curve point to analyze.
         fpath_excl : str
             Filepath to exclusions geotiff.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
-        excl_row_slice/excl_col_slice : slice | None
-            Exclusions row/column slice belonging to this supply curve point.
-            Prefered point definition option over gid+resolution.
-        gid : int | None
-            gid for supply curve point to analyze. Prefered option is to use
-            the row/col slices to define the SC point instead.
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and generation results
+            (created using the reV TechMapping framework).
         resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        gen_tree : cKDTree
-            Pre-initialized cKDTree of the generation meta data. None will
-            cause this object to make its own cKDTree.
-        gen_mask : pd.Series
-            Boolean series mask on generation data that was used to create
-            the cKDTree. Required if cKDTree is input.
-        distance_upper_bound : float | None
-            Upper boundary distance for KNN lookup between exclusion points and
-            generation points. None will calculate a good distance based on the
-            generation meta data coordinates. 0.03 is a good value for a 4km
-            resource grid and finer.
+            SC resolution, must be input in combination with gid.
         """
 
+        self._gid = gid
         self._fpath_excl = None
         self._fpath_gen = None
         self._excl_meta = None
@@ -71,58 +58,28 @@ class SupplyCurvePoint:
         self._lat_lon_lims = None
         self._gen_tree = None
         self._gen_mask = None
-        self._distance_upper_bound = distance_upper_bound
 
-        self._parse_sc_point_def(fpath_excl, excl_row_slice, excl_col_slice,
-                                 gid, resolution)
-        self._parse_fpaths(fpath_excl, fpath_gen)
-        self._parse_gen_tree_mask(gen_tree, gen_mask)
+        self._parse_sc_point_def(gid, fpath_excl, resolution)
+        self._parse_fpaths(fpath_excl, fpath_gen, fpath_techmap)
+        self._init_meta()
 
-        # set the base exlcusions meta, query the NN to gen points, reduce
-        # the exclusions meta and add data about gen NN
-        self._excl_meta = self.get_base_excl_meta()
-        self._excl_mask, self._gen_ind_global = self._query_excl_nn()
-        self._reduce_excl_meta()
-
-    def _parse_sc_point_def(self, fpath_excl, excl_row_slice, excl_col_slice,
-                            gid, resolution):
+    def _parse_sc_point_def(self, gid, fpath_excl, resolution):
         """Parse inputs for the definition of this SC point.
 
         Parameters
         ----------
+        gid : int | None
+            gid for supply curve point to analyze.
         fpath_excl : str
             Filepath to exclusions geotiff.
-        excl_row_slice/excl_col_slice : slice | None
-            Exclusions row/column slice belonging to this supply curve point.
-            Prefered point definition option over gid+resolution.
-        gid : int | None
-            gid for supply curve point to analyze. Prefered option is to use
-            the row/col slices to define the SC point instead.
         resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
+            SC resolution, must be input in combination with gid.
         """
 
-        if excl_row_slice is not None and excl_col_slice is not None:
-            self._excl_row_slice = excl_row_slice
-            self._excl_col_slice = excl_col_slice
+        self._sc = SupplyCurveExtent(fpath_excl, resolution=resolution)
+        self._excl_ind = self._sc.get_flat_excl_ind(gid)
 
-        elif gid is None and excl_row_slice is None and excl_col_slice is None:
-            raise SupplyCurveInputError('SingleSupplyCurvePoint needs either '
-                                        'a gid or a row/col slice input but '
-                                        'received None.')
-
-        elif (gid is not None and resolution is not None and
-              excl_row_slice is None and excl_col_slice is None):
-            s = SupplyCurveExtent(fpath_excl, resolution=resolution)
-            self._excl_row_slice, self._excl_col_slice = s.get_excl_slices(gid)
-
-        else:
-            raise SupplyCurveInputError('Cannot parse the combination of gid, '
-                                        'resolution and exclusions row/col '
-                                        'slices.')
-
-    def _parse_fpaths(self, fpath_excl, fpath_gen):
+    def _parse_fpaths(self, fpath_excl, fpath_gen, fpath_techmap):
         """Parse filepath inputs and set to attributes.
 
         Parameters
@@ -131,6 +88,9 @@ class SupplyCurvePoint:
             Filepath to exclusions geotiff.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and generation results
+            (created using the reV TechMapping framework).
         """
 
         if isinstance(fpath_excl, str):
@@ -150,84 +110,53 @@ class SupplyCurvePoint:
                                         'received: {}'
                                         .format(type(fpath_gen)))
 
-    def _parse_gen_tree_mask(self, gen_tree, gen_mask):
-        """Verify generation tree/mask and set to attributes.
+        if isinstance(fpath_techmap, str):
+            self._fpath_techmap = fpath_techmap
+            self._techmap = h5py.File(fpath_techmap, 'r')
 
-        Parameters
-        ----------
-        gen_tree : cKDTree
-            Pre-initialized cKDTree of the generation meta data. None will
-            cause this object to make its own cKDTree.
-        gen_mask : pd.Series
-            Boolean series mask on generation data that was used to create
-            the cKDTree. Required if cKDTree is input.
-        """
+            map_attrs = dict(self._techmap.attrs)
 
-        if gen_tree is not None and gen_mask is None:
-            raise SupplyCurveInputError('SingleSupplyCurvePoint received a '
-                                        'pre-built gen ckdtree but no '
-                                        'corresponding gen mask.')
-        elif gen_tree is not None and gen_mask is not None:
-            if len(gen_tree.indices) != gen_mask.sum():
-                msg = ('The {} indices in the gen_tree does not correspond to '
-                       'the {} True values in the gen_mask. The gen_mask must '
-                       'correspond to the tree that was created!'
-                       .format(len(gen_tree.indices), gen_mask.sum()))
-                raise SupplyCurveInputError(msg)
+            if (os.path.basename(fpath_gen) !=
+                    os.path.basename(map_attrs['fpath_gen'])):
+                warn('Input generation file name ("{}") does not match tech '
+                     'file attribute ("{}")'
+                     .format(os.path.basename(fpath_gen),
+                             os.path.basename(map_attrs['fpath_gen'])))
 
-        self._gen_tree = gen_tree
-        self._gen_mask = gen_mask
+            if (os.path.basename(fpath_excl) !=
+                    os.path.basename(map_attrs['fpath_excl'])):
+                warn('Input exclusion file name ("{}") does not match tech '
+                     'file attribute ("{}")'
+                     .format(os.path.basename(fpath_excl),
+                             os.path.basename(map_attrs['fpath_excl'])))
 
-    def _query_excl_nn(self):
-        """Run the tree query and get the exclusions mask and gen indices.
-
-        Returns
-        -------
-        excl_mask : np.ndarray
-            Boolean 1D array showing which exclusion points have valid
-            corresponding generation points.
-        gen_ind_global : np.ndarray
-            Global generation index values for gen points corresponding to the
-            valid exclusion points
-        """
-
-        dist, ind = self.gen_tree.query(
-            self.exclusion_meta[['latitude', 'longitude']])
-
-        excl_mask = (dist < self.distance_upper_bound)
-        ind = ind[excl_mask]
-
-        # pylint: disable-msg=C0121
-        gen_ind_global = self.gen_mask[(self.gen_mask == True)]\
-            .iloc[ind].index.values  # noqa: E712
-
-        gen_ind_global[(ind < 0)] = -1
-
-        return excl_mask, gen_ind_global
-
-    def _reduce_excl_meta(self):
-        """Reduce the exclusions meta data to just those points which have
-        corresponding generation points, and add a column showing the
-        corresponding generation and resource points.
-        """
-
-        self._excl_meta = self._excl_meta[self._excl_mask]
-        self._excl_meta['gen_gid'] = self._gen_ind_global
-
-        if 'gid' in self.gen.meta:
-            self._excl_meta['resource_gid'] = self.gen.meta.loc[
-                self._gen_ind_global, 'gid'].values
         else:
-            warn('Generation output file does not have resource "gid" field: '
-                 '"{}"'.format(self._fpath_gen), OutputWarning)
+            raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
+                                        'techmap file path, but '
+                                        'received: {}'
+                                        .format(type(fpath_techmap)))
 
-        if self._excl_meta.empty:
-            msg = ('Supply curve point with row/col slices {}/{} at centroid '
-                   'lat/lon {} has no viable exclusion points based on '
-                   'exclusion and gen files: "{}", "{}"'
-                   .format(self._excl_row_slice, self._excl_col_slice,
-                           self.centroid, self._fpath_excl, self._fpath_gen))
+    def _init_meta(self):
+        """Initialize a SC point meta data object from the the tech map."""
+
+        gen_gids = self._techmap['gen_ind'][list(self._excl_ind)]
+        valid_points = (gen_gids != -1)
+        gen_gids = gen_gids[valid_points]
+
+        if gen_gids.size == 0:
+            msg = ('Supply curve point gid {} has no viable exclusion points '
+                   'based on exclusion and gen files: "{}", "{}"'
+                   .format(self._gid, self._fpath_excl, self._fpath_gen))
             raise EmptySupplyCurvePointError(msg)
+
+        coords = self._techmap['coordinates'][self._excl_ind, :]
+        self._centroid = (coords[:, 0].mean(), coords[:, 1].mean())
+
+        self._meta = pd.DataFrame(coords[valid_points])
+        self._meta.columns = ['latitude', 'longitude']
+
+        self._meta['gen_gid'] = gen_gids
+        self._meta['res_gid'] = self.gen.meta['gid'].values[gen_gids]
 
     def __enter__(self):
         return self
@@ -241,6 +170,19 @@ class SupplyCurvePoint:
         """Close all file handlers."""
         self._exclusions.close()
         self._gen.close()
+        self._techmap.close()
+
+    @property
+    def meta(self):
+        """Get the meta data related to this supply curve point.
+
+        Returns
+        -------
+        meta : pd.DataFrame
+            Meta data for this supply curve point based on the tech exclusion
+            points that make up this sc point.
+        """
+        return self._meta
 
     @property
     def exclusions(self):
@@ -254,74 +196,6 @@ class SupplyCurvePoint:
         return self._exclusions
 
     @property
-    def exclusion_meta(self):
-        """Get the filtered exclusions meta data.
-
-        Returns
-        -------
-        excl_points : pd.DataFrame
-            Exclusions meta data reduced to just the exclusion points
-            associated with the current supply curve point. Also gets filtered
-            to just exclusion points with corresponding generation points.
-        """
-        return self._excl_meta
-
-    def get_base_excl_meta(self):
-        """Get the base exclusions meta data for all excl point in SC point.
-
-        Returns
-        -------
-        base_excl_meta : pd.DataFrame
-            Exclusions meta data reduced to just the exclusion points
-            associated with the current supply curve point.
-        """
-        base_excl_meta = self.exclusions['meta',
-                                         self._excl_row_slice,
-                                         self._excl_col_slice]
-        return base_excl_meta
-
-    @property
-    def distance_upper_bound(self):
-        """Get the upper bound on NN distance between excl and gen points.
-
-        Returns
-        -------
-        distance_upper_bound : float
-            Estimate of the upper bound distance based on the distance between
-            generation points. Calculated as half of the diagonal between
-            closest generation points, with an extra 5% margin.
-        """
-        if self._distance_upper_bound is None:
-            lats = self.gen.meta.loc[self.gen_mask, 'latitude'].values
-            dists = np.abs(lats - (lats[0] * np.ones_like(lats)))
-            dists = dists[(dists != 0)]
-            self._distance_upper_bound = 1.05 * (2 ** 0.5) * (dists.min() / 2)
-        return self._distance_upper_bound
-
-    @property
-    def lat_lon_lims(self):
-        """Get the supply curve point lat/lon limits.
-
-        Format is ((lat_min, lat_max), (lon_min, lon_max))
-
-        Returns
-        -------
-        lat_lon_limts : tuple
-            Minimum/maximum latitude/longitude value in the exclusion points
-            for this sc point.
-        """
-
-        if self._lat_lon_lims is None:
-            meta = self.get_base_excl_meta()
-            lat_min = meta['latitude'].min()
-            lat_max = meta['latitude'].max()
-            lon_min = meta['longitude'].min()
-            lon_max = meta['longitude'].max()
-            self._lat_lon_lims = ((lat_min, lat_max), (lon_min, lon_max))
-
-        return self._lat_lon_lims
-
-    @property
     def centroid(self):
         """Get the supply curve point centroid coordinate.
 
@@ -331,9 +205,7 @@ class SupplyCurvePoint:
             SC point centroid (lat, lon).
         """
 
-        centroid = (np.sum(self.lat_lon_lims[0]) / 2,
-                    np.sum(self.lat_lon_lims[1]) / 2)
-        return centroid
+        return self._centroid
 
     @property
     def gen(self):
@@ -347,50 +219,15 @@ class SupplyCurvePoint:
         return self._gen
 
     @property
-    def gen_mask(self):
-        """Get the generation mask based on coordinates close to excl points.
+    def techmap(self):
+        """Get the reV technology mapping object.
 
         Returns
         -------
-        _gen_mask : pd.Series
-            Boolean mask for the generation sites close to the exclusion
-            points.
+        _techmap : h5py.File
+            reV techmap file object.
         """
-        if self._gen_mask is None:
-            # margin is the extra distance (in decimal lat/lon) to allow
-            margin = 0.5
-            lat_min = np.min(self.lat_lon_lims[0])
-            lat_max = np.max(self.lat_lon_lims[0])
-            lon_min = np.min(self.lat_lon_lims[1])
-            lon_max = np.max(self.lat_lon_lims[1])
-            self._gen_mask = ((self.gen.meta['latitude'] > lat_min - margin) &
-                              (self.gen.meta['latitude'] < lat_max + margin) &
-                              (self.gen.meta['longitude'] > lon_min - margin) &
-                              (self.gen.meta['longitude'] < lon_max + margin))
-
-            if self._gen_mask.sum() == 0:
-                msg = ('Supply curve point with row/col slices {}/{} at '
-                       'centroid lat/lon {} has no viable generation points '
-                       'based on exclusion and gen files: "{}", "{}"'
-                       .format(self._excl_row_slice, self._excl_col_slice,
-                               self.centroid, self._fpath_excl,
-                               self._fpath_gen))
-                raise EmptySupplyCurvePointError(msg)
-        return self._gen_mask
-
-    @property
-    def gen_tree(self):
-        """Get the generation meta ckdtree.
-
-        Returns
-        -------
-        _gen_tree : ckdtree
-            Spatial ckdtree built on the generation meta data.
-        """
-        if self._gen_tree is None:
-            self._gen_tree = cKDTree(
-                self.gen.meta.loc[self.gen_mask, ['latitude', 'longitude']])
-        return self._gen_tree
+        return self._techmap
 
 
 class SupplyCurveExtent:

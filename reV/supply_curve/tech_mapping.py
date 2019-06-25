@@ -249,8 +249,8 @@ class TechMapping:
 
         return ind_out, coords_out
 
-    def save_tech_map(self, ind, coords, fpath_out, ind_chunks=(500000,),
-                      coord_chunks=(250000, 2)):
+    def save_tech_map(self, ind, coords, fpath_out, ind_chunks=(10000,),
+                      coord_chunks=(10000, 2)):
         """Save tech mapping indices and coordinates to an h5 output file.
 
         Parameters

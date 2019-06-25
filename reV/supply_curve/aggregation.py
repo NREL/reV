@@ -8,12 +8,15 @@ import concurrent.futures as cf
 import os
 import numpy as np
 import pandas as pd
-from scipy.spatial import cKDTree
 from warnings import warn
+import logging
 
+from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.points import SupplyCurvePoint, SupplyCurveExtent
-from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import EmptySupplyCurvePointError, OutputWarning
+
+
+logger = logging.getLogger(__name__)
 
 
 class SupplyCurvePointSummary(SupplyCurvePoint):
@@ -25,9 +28,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     def longitude(self):
         """Get the SC point longitude"""
-        return self.centroid[0]
+        return self.centroid[1]
 
-    def resource_gids(self):
+    def res_gids(self):
         """Get the list of resource gids corresponding to this sc point.
 
         Returns
@@ -35,7 +38,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         res_gids : list
             List of resource gids.
         """
-        return list(self.exclusion_meta['resource_gid'].unique())
+        return list(self.meta['res_gid'].unique())
 
     def gen_gids(self):
         """Get the list of generation gids corresponding to this sc point.
@@ -45,18 +48,24 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         gen_gids : list
             List of generation gids.
         """
-        return list(self.exclusion_meta['gen_gid'].unique())
+        return list(self.meta['gen_gid'].unique())
 
     @classmethod
-    def summary(cls, fpath_excl, fpath_gen, args=None, **kwargs):
+    def summary(cls, gid, fpath_excl, fpath_gen, fpath_techmap, args=None,
+                **kwargs):
         """Get a summary dictionary of a supply curve point.
 
         Parameters
         ----------
+        gid : int
+            gid for supply curve point to analyze.
         fpath_excl : str
             Filepath to exclusions geotiff.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and generation results
+            (created using the reV TechMapping framework).
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
@@ -69,9 +78,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        point = cls(fpath_excl, fpath_gen, **kwargs)
+        point = cls(gid, fpath_excl, fpath_gen, fpath_techmap, **kwargs)
 
-        ARGS = {'resource_gids': point.resource_gids,
+        ARGS = {'resource_gids': point.res_gids,
                 'gen_gids': point.gen_gids,
                 'latitude': point.latitude,
                 'longitude': point.longitude,
@@ -94,7 +103,8 @@ class Aggregation:
     """Supply points aggregation framework."""
 
     @staticmethod
-    def _serial_summary(fpath_excl, fpath_gen, resolution=64, gids=None):
+    def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, resolution=64,
+                        gids=None):
         """Hidden summary method that can be parallelized.
 
         Parameters
@@ -103,6 +113,9 @@ class Aggregation:
             Filepath to exclusions geotiff.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and generation results
+            (created using the reV TechMapping framework).
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -118,20 +131,20 @@ class Aggregation:
 
         summary = pd.DataFrame()
 
-        with Outputs(fpath_gen) as o:
-            gen_mask = (o.meta['latitude'] > -1000)
-            gen_tree = cKDTree(o.meta.loc[gen_mask, ['latitude', 'longitude']])
-
         with SupplyCurveExtent(fpath_excl, resolution=resolution) as sc:
 
             if gids is None:
                 gids = range(len(sc))
 
+            logger.info('Running serial supply curve point aggregation for '
+                        'sc points {} through {} at a resolution of {}'
+                        .format(gids[0], gids[-1], resolution))
+
             for gid in gids:
                 try:
                     pointsum = SupplyCurvePointSummary.summary(
-                        fpath_excl, fpath_gen, gid=gid, resolution=resolution,
-                        gen_tree=gen_tree, gen_mask=gen_mask)
+                        gid, fpath_excl, fpath_gen, fpath_techmap,
+                        resolution=resolution)
 
                 except EmptySupplyCurvePointError as _:
                     pass
@@ -146,8 +159,8 @@ class Aggregation:
         return summary
 
     @classmethod
-    def _parallel_summary(cls, fpath_excl, fpath_gen, resolution=64, gids=None,
-                          n_cores=None):
+    def _parallel_summary(cls, fpath_excl, fpath_gen, fpath_techmap,
+                          resolution=64, gids=None, n_cores=None):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -156,6 +169,9 @@ class Aggregation:
             Filepath to exclusions geotiff.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and generation results
+            (created using the reV TechMapping framework).
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -178,6 +194,10 @@ class Aggregation:
             with SupplyCurveExtent(fpath_excl, resolution=resolution) as sc:
                 gids = np.array(range(len(sc)), dtype=np.uint32)
 
+        logger.info('Running parallel supply curve point aggregation for '
+                    'sc points {} through {} at a resolution of {}'
+                    .format(gids[0], gids[-1], resolution))
+
         chunks = np.array_split(gids, n_cores)
 
         futures = []
@@ -190,6 +210,7 @@ class Aggregation:
                 # submit executions and append to futures list
                 futures.append(executor.submit(Aggregation._serial_summary,
                                                fpath_excl, fpath_gen,
+                                               fpath_techmap,
                                                resolution=resolution,
                                                gids=gid_set))
             # gather results
@@ -199,8 +220,8 @@ class Aggregation:
         return summary
 
     @classmethod
-    def summary(cls, fpath_excl, fpath_gen, resolution=64, gids=None,
-                n_cores=1):
+    def summary(cls, fpath_excl, fpath_gen, fpath_techmap, resolution=64,
+                gids=None, n_cores=1):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -209,6 +230,9 @@ class Aggregation:
             Filepath to exclusions geotiff.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and generation results
+            The tech mapping module will be run if this file does not exist.
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -224,11 +248,18 @@ class Aggregation:
         summary : pd.DataFrame
             Summary dataframe of the SC points.
         """
+
+        if not os.path.exists(fpath_techmap):
+            logger.info('Supply curve point aggregation could not find the '
+                        'tech map file, so running the TechMapping module.')
+            TechMapping.run_map(fpath_excl, fpath_gen, fpath_techmap)
+
         if n_cores == 1:
-            summary = cls._serial_summary(fpath_excl, fpath_gen,
+            summary = cls._serial_summary(fpath_excl, fpath_gen, fpath_techmap,
                                           resolution=resolution, gids=gids)
         else:
             summary = cls._parallel_summary(fpath_excl, fpath_gen,
+                                            fpath_techmap,
                                             resolution=resolution, gids=gids,
                                             n_cores=n_cores)
         return summary
