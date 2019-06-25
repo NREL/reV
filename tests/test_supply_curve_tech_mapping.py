@@ -20,7 +20,7 @@ F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_OUT = os.path.join(TESTDATADIR, 'sc_out/tech_map.h5')
 F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
 
-PURGE_OUT = False
+PURGE_OUT = True
 
 
 def test_tech_mapping():
@@ -44,7 +44,7 @@ def test_tech_mapping():
                 assert np.array_equal(f_baseline[d][...], f_test[d][...]), msg2
 
                 if d == 'gen_ind':
-                    inds = f_test[d][...]
+                    inds = f_test[d][...].flatten()
                     msg = 'Tech mapping didnt find all 100 generation points!'
                     assert len(set(inds)) == 101, msg
 
@@ -61,15 +61,16 @@ def plot_tech_mapping():
     TechMapping.run_map(F_EXCL, F_GEN, F_OUT, n_cores=2)
 
     with h5py.File(F_OUT, 'r') as f:
-        ind = f['gen_ind'][...]
-        coords = f['coordinates'][...]
+        ind = f['gen_ind'][...].flatten()
+        lats = f['latitude'][...].flatten()
+        lons = f['longitude'][...].flatten()
     os.remove(F_OUT)
 
     with Outputs(F_GEN) as fgen:
         gen_meta = fgen.meta
 
-    df = pd.DataFrame({'latitude': coords[:, 0],
-                       'longitude': coords[:, 1],
+    df = pd.DataFrame({'latitude': lats,
+                       'longitude': lons,
                        'gen_ind': ind})
 
     _, axs = plt.subplots(1, 1)

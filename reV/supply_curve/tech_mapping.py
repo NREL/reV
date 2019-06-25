@@ -21,9 +21,6 @@ logger = logging.getLogger(__name__)
 class TechMapping:
     """Framework to create map between tech layer (exclusions) and gen."""
 
-    OUTPUT_INDEX_LABEL = 'gen_ind'
-    OUTPUT_COORD_LABEL = 'coordinates'
-
     def __init__(self, fpath_excl, fpath_gen, distance_upper_bound=0.03,
                  resolution=2560, n_cores=None):
         """
@@ -228,6 +225,7 @@ class TechMapping:
                 (gen_meta[:, 0] < lat_range[1] + margin) &
                 (gen_meta[:, 1] > lon_range[0] - margin) &
                 (gen_meta[:, 1] < lon_range[1] + margin))
+
         # pylint: disable-msg=C0121
         mask_ind = np.where(mask == True)[0]  # noqa: E712
 
@@ -249,8 +247,7 @@ class TechMapping:
 
         return ind_out, coords_out
 
-    def save_tech_map(self, ind, coords, fpath_out, ind_chunks=(10000,),
-                      coord_chunks=(10000, 2)):
+    def save_tech_map(self, ind, coords, fpath_out, chunks=(5000, 5000)):
         """Save tech mapping indices and coordinates to an h5 output file.
 
         Parameters
@@ -272,16 +269,19 @@ class TechMapping:
 
         logger.info('Writing tech map to {}'.format(fpath_out))
 
-        ind_chunks = (np.min((len(ind), ind_chunks[0])), )
-        coord_chunks = (np.min((len(coords), coord_chunks[0])),
-                        coord_chunks[1])
+        shape = self._sc.exclusions.shape
+        chunks = (np.min((shape[0], chunks[0])), np.min((shape[1], chunks[1])))
 
         with h5py.File(fpath_out, 'w') as f:
-            f.create_dataset(TechMapping.OUTPUT_INDEX_LABEL, shape=ind.shape,
-                             dtype=ind.dtype, data=ind, chunks=ind_chunks)
-            f.create_dataset(TechMapping.OUTPUT_COORD_LABEL,
-                             shape=coords.shape, dtype=coords.dtype,
-                             data=coords, chunks=coord_chunks)
+
+            f.create_dataset('gen_ind', shape=shape, dtype=ind.dtype,
+                             data=ind.reshape(shape), chunks=chunks)
+
+            f.create_dataset('latitude', shape=shape, dtype=coords.dtype,
+                             data=coords[:, 0].reshape(shape), chunks=chunks)
+
+            f.create_dataset('longitude', shape=shape, dtype=coords.dtype,
+                             data=coords[:, 1].reshape(shape), chunks=chunks)
 
             f.attrs['resolution'] = self._resolution
             f.attrs['fpath_excl'] = self._fpath_excl

@@ -77,7 +77,7 @@ class SupplyCurvePoint:
         """
 
         self._sc = SupplyCurveExtent(fpath_excl, resolution=resolution)
-        self._excl_ind = self._sc.get_flat_excl_ind(gid)
+        self._rows, self._cols = self._sc.get_excl_slices(gid)
 
     def _parse_fpaths(self, fpath_excl, fpath_gen, fpath_techmap):
         """Parse filepath inputs and set to attributes.
@@ -139,7 +139,7 @@ class SupplyCurvePoint:
     def _init_meta(self):
         """Initialize a SC point meta data object from the the tech map."""
 
-        gen_gids = self._techmap['gen_ind'][list(self._excl_ind)]
+        gen_gids = self._techmap['gen_ind'][self._rows, self._cols].flatten()
         valid_points = (gen_gids != -1)
         gen_gids = gen_gids[valid_points]
 
@@ -149,11 +149,12 @@ class SupplyCurvePoint:
                    .format(self._gid, self._fpath_excl, self._fpath_gen))
             raise EmptySupplyCurvePointError(msg)
 
-        coords = self._techmap['coordinates'][self._excl_ind, :]
-        self._centroid = (coords[:, 0].mean(), coords[:, 1].mean())
+        lats = self._techmap['latitude'][self._rows, self._cols].flatten()
+        lons = self._techmap['longitude'][self._rows, self._cols].flatten()
+        self._centroid = (lats.mean(), lons.mean())
 
-        self._meta = pd.DataFrame(coords[valid_points])
-        self._meta.columns = ['latitude', 'longitude']
+        self._meta = pd.DataFrame({'latitude': lats[valid_points],
+                                   'longitude': lons[valid_points]})
 
         self._meta['gen_gid'] = gen_gids
         self._meta['res_gid'] = self.gen.meta['gid'].values[gen_gids]
