@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 class TechMapping:
     """Framework to create map between tech layer (exclusions) and gen."""
 
+    OUTPUT_INDEX_LABEL = 'gen_ind'
+    OUTPUT_COORD_LABEL = 'coordinates'
+
     def __init__(self, fpath_excl, fpath_gen, distance_upper_bound=0.03,
                  resolution=2560, n_cores=None):
         """
@@ -225,6 +228,8 @@ class TechMapping:
                 (gen_meta[:, 0] < lat_range[1] + margin) &
                 (gen_meta[:, 1] > lon_range[0] - margin) &
                 (gen_meta[:, 1] < lon_range[1] + margin))
+        # pylint: disable-msg=C0121
+        mask_ind = np.where(mask == True)[0]  # noqa: E712
 
         if np.sum(mask) > 0:
             gen_tree = cKDTree(gen_meta[mask, :])
@@ -233,6 +238,7 @@ class TechMapping:
                          .format(gids[0], gids[-1]))
             for i, gid in enumerate(gids):
                 dist, ind = gen_tree.query(coords_out[i])
+                ind = mask_ind[ind]
                 ind[(dist > distance_upper_bound)] = -1
                 ind_out.append(ind)
         else:
@@ -243,8 +249,7 @@ class TechMapping:
 
         return ind_out, coords_out
 
-    @staticmethod
-    def save_tech_map(ind, coords, fpath_out, ind_chunks=(500000,),
+    def save_tech_map(self, ind, coords, fpath_out, ind_chunks=(500000,),
                       coord_chunks=(250000, 2)):
         """Save tech mapping indices and coordinates to an h5 output file.
 
@@ -272,11 +277,16 @@ class TechMapping:
                         coord_chunks[1])
 
         with h5py.File(fpath_out, 'w') as f:
-            f.create_dataset('tech_map', shape=ind.shape, dtype=ind.dtype,
-                             data=ind, chunks=ind_chunks)
-            f.create_dataset('coordinates', shape=coords.shape,
-                             dtype=coords.dtype, data=coords,
-                             chunks=coord_chunks)
+            f.create_dataset(TechMapping.OUTPUT_INDEX_LABEL, shape=ind.shape,
+                             dtype=ind.dtype, data=ind, chunks=ind_chunks)
+            f.create_dataset(TechMapping.OUTPUT_COORD_LABEL,
+                             shape=coords.shape, dtype=coords.dtype,
+                             data=coords, chunks=coord_chunks)
+
+            f.attrs['resolution'] = self._resolution
+            f.attrs['fpath_excl'] = self._fpath_excl
+            f.attrs['fpath_gen'] = self._fpath_gen
+            f.attrs['distance_upper_bound'] = self.distance_upper_bound
 
         logger.info('Successfully saved tech map to {}'.format(fpath_out))
 
