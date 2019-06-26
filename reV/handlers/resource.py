@@ -239,6 +239,24 @@ class Resource:
         """
         return self._h5[dset].attrs.get(self.UNIT_ATTR, None)
 
+    def get_meta_arr(self, rec_name, rows=slice(None)):
+        """Get a meta array by name (faster than DataFrame extraction).
+
+        Parameters
+        ----------
+        rec_name : str
+            Named record from the meta data to retrieve.
+        rows : slice
+            Rows of the record to extract.
+
+        Returns
+        -------
+        arr : np.ndarray
+            Extracted array from the meta data record name.
+        """
+
+        return self._h5['meta'][rec_name, rows]
+
     def _get_time_index(self, *ds_slice):
         """
         Extract and convert time_index to pandas Datetime Index

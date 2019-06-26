@@ -89,7 +89,7 @@ class TechMapping:
         if self._distance_upper_bound is None:
 
             with Outputs(self._fpath_gen, str_decode=False) as o:
-                lats = o.meta['latitude'].values
+                lats = o.get_meta_arr('latitude')
 
             dists = np.abs(lats - np.roll(lats, 1))
             dists = dists[(dists != 0)]
@@ -127,11 +127,12 @@ class TechMapping:
         elif isinstance(gids, (list, tuple)):
             gids = np.array(gids, dtype=np.uint32)
 
-        gid_chunks = np.array_split(gids, self._n_cores)
+        gid_chunks = np.array_split(gids, int(np.ceil(len(gids) / 2)))
 
         # init full output arrays
         ind_all, coords_all = self._init_out_arrays()
 
+        n_finished = 0
         futures = {}
         with cf.ProcessPoolExecutor(max_workers=self._n_cores) as executor:
 
@@ -146,15 +147,15 @@ class TechMapping:
                                         self._resolution)] = i
 
             for future in cf.as_completed(futures):
+                n_finished += 1
+                logger.info('Parallel TechMapping futures collected: '
+                            '{} out of {}'
+                            .format(n_finished, len(futures)))
+
                 i = futures[future]
                 result = future.result()
-                logger.info('Collecting tech map result for chunks {} '
-                            'through {}'
-                            .format(gid_chunks[i][0], gid_chunks[i][-1]))
-
                 for j, gid in enumerate(gid_chunks[i]):
                     i_out_arr = self._sc.get_flat_excl_ind(gid)
-
                     ind_all[i_out_arr] = result[0][j]
                     coords_all[i_out_arr, :] = result[1][j]
 
@@ -219,7 +220,8 @@ class TechMapping:
                 lon_range[1] = np.max((lon_range[1], np.max(emeta[:, 1])))
 
         with Outputs(fpath_gen, str_decode=False) as o:
-            gen_meta = o.meta[coord_labels].values
+            gen_meta = np.vstack((o.get_meta_arr(coord_labels[0]),
+                                  o.get_meta_arr(coord_labels[1]))).T
 
         mask = ((gen_meta[:, 0] > lat_range[0] - margin) &
                 (gen_meta[:, 0] < lat_range[1] + margin) &

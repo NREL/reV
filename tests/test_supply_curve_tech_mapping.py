@@ -64,6 +64,7 @@ def plot_tech_mapping():
         ind = f['gen_ind'][...].flatten()
         lats = f['latitude'][...].flatten()
         lons = f['longitude'][...].flatten()
+
     os.remove(F_OUT)
 
     with Outputs(F_GEN) as fgen:
@@ -98,6 +99,7 @@ def plot_tech_mapping():
 
     axs.axis('equal')
     plt.show()
+    return df
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -27,6 +27,23 @@ def test_points_calc(resolution):
         assert len(sc) == (sc.n_rows * sc.n_cols)
 
 
+@pytest.mark.parametrize('gids, resolution',
+                         [(range(361), 64), (range(12), 377)])
+def test_slicer(gids, resolution):
+    """Run tests on the different extent slicing algorithms."""
+
+    with SupplyCurveExtent(F_EXCL, resolution=resolution) as sc:
+
+        for gid in gids:
+            row_slice0, col_slice0 = sc.get_excl_slices(gid)
+            row_slice1, col_slice1 = SupplyCurvePoint.get_agg_slices(
+                gid, sc.exclusions.shape, resolution)
+            msg = ('Slicing failed for gid {} and res {}'
+                   .format(gid, resolution))
+            assert row_slice0 == row_slice1, msg
+            assert col_slice0 == col_slice1, msg
+
+
 def test_sc_aggregation(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
     columns and that all 100 resource gids were found"""
@@ -49,7 +66,8 @@ def test_parallel_agg(resolution=64):
 
     gids = list(range(50, 70))
     summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP,
-                                         resolution=resolution, gids=gids)
+                                         resolution=resolution, gids=gids,
+                                         n_cores=1)
     summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP,
                                            resolution=resolution, gids=gids,
                                            n_cores=3)
@@ -90,13 +108,16 @@ def plot_single_sc_point(gid=2, resolution=64):
     with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP,
                           resolution=resolution) as sc:
 
-        all_gen_gids = sc.meta['gen_gid'].unique()
+        all_gen_gids = list(set(sc._gen_gids))
+
+        excl_meta = sc.exclusions['meta', sc.rows, sc.cols]
+        excl_meta = excl_meta[sc._excl_mask]
 
         for i, gen_gid in enumerate(all_gen_gids):
             if gen_gid != -1:
-                mask = (sc.meta['gen_gid'] == gen_gid)
-                axs.scatter(sc.meta.loc[mask, 'longitude'],
-                            sc.meta.loc[mask, 'latitude'],
+                mask = (sc._gen_gids == gen_gid)
+                axs.scatter(excl_meta.loc[mask, 'longitude'],
+                            excl_meta.loc[mask, 'latitude'],
                             marker='s', c=colors[i], s=1)
 
                 axs.scatter(sc.gen.meta.loc[gen_gid, 'longitude'],
@@ -127,5 +148,3 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 if __name__ == '__main__':
     execute_pytest()
-#    plot_all_sc_points()
-#    plot_single_sc_point()

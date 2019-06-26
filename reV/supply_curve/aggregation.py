@@ -6,14 +6,16 @@ Created on Fri Jun 21 13:24:31 2019
 """
 import concurrent.futures as cf
 import os
+import h5py
 import numpy as np
 import pandas as pd
 from warnings import warn
 import logging
-import time
 
+from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.supply_curve.points import SupplyCurvePoint, SupplyCurveExtent
+from reV.supply_curve.points import (ExclusionPoints, SupplyCurvePoint,
+                                     SupplyCurveExtent)
 from reV.utilities.exceptions import EmptySupplyCurvePointError, OutputWarning
 
 
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class SupplyCurvePointSummary(SupplyCurvePoint):
-    """Supply curve point summary with extra method for summary calc."""
+    """Supply curve summary framework with extra methods for summary calc."""
 
     def latitude(self):
         """Get the SC point latitude"""
@@ -39,7 +41,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         res_gids : list
             List of resource gids.
         """
-        return list(self.meta['res_gid'].unique())
+        return list(set(self._res_gids))
 
     def gen_gids(self):
         """Get the list of generation gids corresponding to this sc point.
@@ -49,12 +51,12 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         gen_gids : list
             List of generation gids.
         """
-        return list(self.meta['gen_gid'].unique())
+        return list(set(self._gen_gids))
 
     @classmethod
     def summary(cls, gid, fpath_excl, fpath_gen, fpath_techmap, args=None,
                 **kwargs):
-        """Get a summary dictionary of a supply curve point.
+        """Get a summary dictionary of a single supply curve point.
 
         Parameters
         ----------
@@ -79,24 +81,25 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        point = cls(gid, fpath_excl, fpath_gen, fpath_techmap, **kwargs)
+        with cls(gid, fpath_excl, fpath_gen, fpath_techmap, **kwargs) as point:
 
-        ARGS = {'resource_gids': point.res_gids,
-                'gen_gids': point.gen_gids,
-                'latitude': point.latitude,
-                'longitude': point.longitude,
-                }
+            ARGS = {'resource_gids': point.res_gids,
+                    'gen_gids': point.gen_gids,
+                    'latitude': point.latitude,
+                    'longitude': point.longitude,
+                    }
 
-        if args is None:
-            args = list(ARGS.keys())
+            if args is None:
+                args = list(ARGS.keys())
 
-        summary = {}
-        for arg in args:
-            if arg in ARGS:
-                summary[arg] = ARGS[arg]()
-            else:
-                warn('Cannot find "{}" as an available SC point summary '
-                     'output', OutputWarning)
+            summary = {}
+            for arg in args:
+                if arg in ARGS:
+                    summary[arg] = ARGS[arg]()
+                else:
+                    warn('Cannot find "{}" as an available SC point summary '
+                         'output', OutputWarning)
+
         return summary
 
 
@@ -106,7 +109,7 @@ class Aggregation:
     @staticmethod
     def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, resolution=64,
                         gids=None):
-        """Hidden summary method that can be parallelized.
+        """Standalone method to create agg summary - can be parallelized.
 
         Parameters
         ----------
@@ -126,48 +129,45 @@ class Aggregation:
 
         Returns
         -------
-        summary : pd.DataFrame
-            Summary dataframe of the SC points.
+        summary : dict
+            Summary dictionary of the SC points keyed by SC point gid.
         """
 
-        summary = pd.DataFrame()
+        summary = {}
 
         with SupplyCurveExtent(fpath_excl, resolution=resolution) as sc:
 
             if gids is None:
                 gids = range(len(sc))
 
-            logger.info('Running serial supply curve point aggregation for '
-                        'sc points {} through {} at a resolution of {}'
-                        .format(gids[0], gids[-1], resolution))
+            # pre-extract handlers so they are not repeatedly initialized
+            with ExclusionPoints(fpath_excl) as excl:
+                with Outputs(fpath_gen, mode='r') as gen:
+                    with h5py.File(fpath_techmap, 'r') as techmap:
 
-            for gid in gids:
-                t0 = time.time()
-                try:
-                    pointsum = SupplyCurvePointSummary.summary(
-                        gid, fpath_excl, fpath_gen, fpath_techmap,
-                        resolution=resolution)
+                        for gid in gids:
+                            try:
+                                pointsum = SupplyCurvePointSummary.summary(
+                                    gid, excl, gen, techmap,
+                                    resolution=resolution,
+                                    exclusion_shape=sc.exclusions.shape,
+                                    close=False)
 
-                except EmptySupplyCurvePointError as _:
-                    pass
+                            except EmptySupplyCurvePointError as _:
+                                pass
 
-                else:
-                    pointsum['gid'] = gid
-                    pointsum['row_ind'] = sc[gid]['row_ind']
-                    pointsum['col_ind'] = sc[gid]['col_ind']
-                    series = pd.Series(pointsum, name=gid)
-                    summary = summary.append(series)
-
-                t1 = time.time() - t0
-                logger.debug('Aggregating gid {} took {} seconds'
-                             .format(gid, t1))
+                            else:
+                                pointsum['sc_gid'] = gid
+                                pointsum['sc_row_ind'] = sc[gid]['row_ind']
+                                pointsum['sc_col_ind'] = sc[gid]['col_ind']
+                                summary[gid] = pointsum
 
         return summary
 
-    @classmethod
-    def _parallel_summary(cls, fpath_excl, fpath_gen, fpath_techmap,
+    @staticmethod
+    def _parallel_summary(fpath_excl, fpath_gen, fpath_techmap,
                           resolution=64, gids=None, n_cores=None):
-        """Get the supply curve points aggregation summary.
+        """Get the supply curve points aggregation summary using futures.
 
         Parameters
         ----------
@@ -189,8 +189,8 @@ class Aggregation:
 
         Returns
         -------
-        summary : pd.DataFrame
-            Summary dataframe of the SC points.
+        summary : dict
+            Summary dictionary of the SC points keyed by SC point gid.
         """
 
         if n_cores is None:
@@ -200,14 +200,17 @@ class Aggregation:
             with SupplyCurveExtent(fpath_excl, resolution=resolution) as sc:
                 gids = np.array(range(len(sc)), dtype=np.uint32)
 
-        logger.info('Running parallel supply curve point aggregation for '
-                    'sc points {} through {} at a resolution of {} on {} cores'
-                    .format(gids[0], gids[-1], resolution, n_cores))
+        chunks = np.array_split(gids, int(np.ceil(len(gids) / 1000)))
 
-        chunks = np.array_split(gids, n_cores)
+        logger.info('Running supply curve point aggregation for '
+                    'points {} through {} at a resolution of {} '
+                    'on {} cores in {} chunks.'
+                    .format(gids[0], gids[-1], resolution, n_cores,
+                            len(chunks)))
 
+        n_finished = 0
         futures = []
-        summary = pd.DataFrame()
+        summary = {}
 
         with cf.ProcessPoolExecutor(max_workers=n_cores) as executor:
 
@@ -220,14 +223,18 @@ class Aggregation:
                                                resolution=resolution,
                                                gids=gid_set))
             # gather results
-            for future in futures:
-                summary = summary.append(future.result())
+            for future in cf.as_completed(futures):
+                n_finished += 1
+                logger.info('Parallel aggregation futures collected: '
+                            '{} out of {}'
+                            .format(n_finished, len(chunks)))
+                summary.update(future.result())
 
         return summary
 
     @classmethod
     def summary(cls, fpath_excl, fpath_gen, fpath_techmap, resolution=64,
-                gids=None, n_cores=1):
+                gids=None, n_cores=None, option='dataframe'):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -245,19 +252,22 @@ class Aggregation:
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
-        n_cores : int
+        n_cores : int | None
             Number of cores to run summary on. 1 is serial, None is all
             available cpus.
+        option : str
+            Output dtype option (dict, dataframe).
 
         Returns
         -------
-        summary : pd.DataFrame
-            Summary dataframe of the SC points.
+        summary : dict | DataFrame
+            Summary of the SC points keyed by SC point gid.
         """
 
         if not os.path.exists(fpath_techmap):
             logger.info('Supply curve point aggregation could not find the '
-                        'tech map file, so running the TechMapping module.')
+                        'tech map file; running the TechMapping module '
+                        'with output: {}'.format(fpath_techmap))
             TechMapping.run_map(fpath_excl, fpath_gen, fpath_techmap)
 
         if n_cores == 1:
@@ -268,4 +278,8 @@ class Aggregation:
                                             fpath_techmap,
                                             resolution=resolution, gids=gids,
                                             n_cores=n_cores)
+        if 'dataframe' in option.lower():
+            summary = pd.DataFrame(summary).T
+            summary = summary.set_index('sc_gid', drop=True).sort_index()
+
         return summary

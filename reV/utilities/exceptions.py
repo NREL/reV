@@ -120,3 +120,10 @@ class HandlerWarning(Warning):
     Warning during .h5 handling
     """
     pass
+
+
+class FileInputWarning(Warning):
+    """
+    Warning during input file checks.
+    """
+    pass
