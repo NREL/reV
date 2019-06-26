@@ -17,6 +17,13 @@ class ConfigError(Exception):
     pass
 
 
+class FileInputError(Exception):
+    """
+    Error during input file checks.
+    """
+    pass
+
+
 class ExecutionError(Exception):
     """
     Error for execution failure

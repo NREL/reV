@@ -19,6 +19,7 @@ F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_OUT = os.path.join(TESTDATADIR, 'sc_out/tech_map.h5')
 F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
+DSET = 'gen_ri_pv'
 
 PURGE_OUT = True
 
@@ -26,7 +27,7 @@ PURGE_OUT = True
 def test_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
 
-    TechMapping.run_map(F_EXCL, F_GEN, F_OUT, n_cores=2)
+    TechMapping.run_map(F_EXCL, F_GEN, F_OUT, DSET, n_cores=2)
 
     with h5py.File(F_BASELINE, 'r') as f_baseline:
         with h5py.File(F_OUT, 'r') as f_test:
@@ -58,10 +59,10 @@ def plot_tech_mapping():
 
     import matplotlib.pyplot as plt
 
-    TechMapping.run_map(F_EXCL, F_GEN, F_OUT, n_cores=2)
+    TechMapping.run_map(F_EXCL, F_GEN, F_OUT, DSET, n_cores=2)
 
     with h5py.File(F_OUT, 'r') as f:
-        ind = f['gen_ind'][...].flatten()
+        ind = f[DSET][...].flatten()
         lats = f['latitude'][...].flatten()
         lons = f['longitude'][...].flatten()
 
@@ -72,26 +73,26 @@ def plot_tech_mapping():
 
     df = pd.DataFrame({'latitude': lats,
                        'longitude': lons,
-                       'gen_ind': ind})
+                       DSET: ind})
 
     _, axs = plt.subplots(1, 1)
     colors = ['b', 'g', 'c', 'm', 'k', 'y']
     colors *= 100
 
-    for i, ind in enumerate(df['gen_ind'].unique()):
+    for i, ind in enumerate(df[DSET].unique()):
         if ind != -1:
-            mask = df['gen_ind'] == ind
+            mask = df[DSET] == ind
             axs.scatter(df.loc[mask, 'longitude'],
                         df.loc[mask, 'latitude'],
                         c=colors[i], s=0.001)
 
         elif ind == -1:
-            mask = df['gen_ind'] == ind
+            mask = df[DSET] == ind
             axs.scatter(df.loc[mask, 'longitude'],
                         df.loc[mask, 'latitude'],
                         c='r', s=0.001)
 
-    for ind in df['gen_ind'].unique():
+    for ind in df[DSET].unique():
         if ind != -1:
             axs.scatter(gen_meta.loc[ind, 'longitude'],
                         gen_meta.loc[ind, 'latitude'],

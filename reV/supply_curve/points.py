@@ -33,8 +33,8 @@ class ExclusionPoints(Geotiff):
 class SupplyCurvePoint:
     """Single supply curve point framework"""
 
-    def __init__(self, gid, f_excl, f_gen, f_techmap, resolution=64,
-                 exclusion_shape=None, close=True):
+    def __init__(self, gid, f_excl, f_gen, f_techmap, techmap_dset,
+                 resolution=64, exclusion_shape=None, close=True):
         """
         Parameters
         ----------
@@ -46,9 +46,12 @@ class SupplyCurvePoint:
             Filepath to .h5 reV generation output results or reV Outputs file
             handler.
         f_techmap : str | h5py.File
-            Filepath to tech mapping between exclusions and generation results
+            Filepath to tech mapping between exclusions and resource data
             (created using the reV TechMapping framework) or an h5py file
             handler object.
+        techmap_dset : str
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
@@ -65,6 +68,7 @@ class SupplyCurvePoint:
         self._fpath_excl = None
         self._fpath_gen = None
         self._fpath_techmap = None
+        self._techmap_dset = techmap_dset
 
         # handler objects
         self._exclusions = None
@@ -76,8 +80,8 @@ class SupplyCurvePoint:
         self._parse_files_tm(f_techmap)
         self._rows, self._cols = self._parse_slices(gid, f_excl, resolution,
                                                     exclusion_shape)
-        self._gen_gids, self._excl_mask = self._parse_tech_map()
-        self._res_gids = self._parse_res_gids()
+        self._res_gids, self._excl_mask = self._parse_tech_map()
+        self._gen_gids = self._parse_gen_gids()
         self._centroid = self._parse_centroid()
 
     def _parse_files_ge(self, f_excl, f_gen):
@@ -121,7 +125,7 @@ class SupplyCurvePoint:
         Parameters
         ----------
         f_techmap : str | h5py.File
-            Filepath to tech mapping between exclusions and generation results
+            Filepath to tech mapping between exclusions and resource data
             (created using the reV TechMapping framework) or an h5py file
             handler object.
         """
@@ -138,13 +142,6 @@ class SupplyCurvePoint:
                                         .format(type(f_techmap)))
 
         # check file paths against tech map file meta attrs
-        if self._fpath_gen is not None:
-            tm_fgen = os.path.basename(self.techmap.attrs['fpath_gen'])
-            if (os.path.basename(self._fpath_gen) != tm_fgen):
-                warn('Input generation file name ("{}") does not match tech '
-                     'file attribute ("{}")'
-                     .format(os.path.basename(self._fpath_gen), tm_fgen),
-                     FileInputWarning)
         if self._fpath_excl is not None:
             tm_fexcl = os.path.basename(self.techmap.attrs['fpath_excl'])
             if (os.path.basename(self._fpath_excl) != tm_fexcl):
@@ -187,42 +184,55 @@ class SupplyCurvePoint:
         return rows, cols
 
     def _parse_tech_map(self):
-        """Parse data from the tech map file (exclusions to gen mapping).
+        """Parse data from the tech map file (exclusions to resource mapping).
+
+        Returns
+        -------
+        res_gids : np.ndarray
+            Resource gids from the techmap file corresponding to the resource
+            sites that are in this supply curve point
+        valid_points : np.ndarray
+            Boolean mask for valid exclusion points (with corresponding gen
+            point).
+        """
+
+        res_gids = self.techmap[self._techmap_dset][self.rows, self.cols]
+        res_gids = res_gids.flatten()
+        valid_points = (res_gids != -1)
+        res_gids = res_gids[valid_points]
+
+        if res_gids.size == 0:
+            msg = ('Supply curve point gid {} has no viable exclusion points '
+                   'based on techmap file: "{}"'
+                   .format(self._gid, self._fpath_techmap))
+            raise EmptySupplyCurvePointError(msg)
+
+        return res_gids, valid_points
+
+    def _parse_gen_gids(self):
+        """Get the generation gid's based on the generation file and res gids.
 
         Returns
         -------
         gen_gids : np.ndarray
             reV generation gids from the fpath_gen file corresponding to the
             tech exclusions
-        valid_points : np.ndarray
-            Boolean mask for valid exclusion points (with corresponding gen
-            point).
         """
 
-        gen_gids = self.techmap['gen_ind'][self.rows, self.cols].flatten()
-        valid_points = (gen_gids != -1)
-        gen_gids = gen_gids[valid_points]
+        gen_gids = np.arange(len(self.gen))
+        gen_res_ids = self.gen.get_meta_arr('gid')
+        gen_gids = gen_gids[np.isin(gen_res_ids, self._res_gids)]
 
         if gen_gids.size == 0:
             msg = ('Supply curve point gid {} has no viable exclusion points '
-                   'based on exclusion and gen files: "{}", "{}"'
-                   .format(self._gid, self._fpath_excl, self._fpath_gen))
+                   'based on techmap file: "{}"'
+                   .format(self._gid, self._fpath_techmap))
             raise EmptySupplyCurvePointError(msg)
 
-        return gen_gids, valid_points
+        # also remove res gids that weren't in the gen run
+        self._res_gids = self._res_gids[np.isin(self._res_gids, gen_res_ids)]
 
-    def _parse_res_gids(self):
-        """Get the resource gid's based on the generation file and gen gids.
-
-        Returns
-        -------
-        res_gids : np.ndarray
-            reV resource gids from the fpath_gen file corresponding to the
-            tech exclusions
-        """
-
-        res_gids = self.gen.get_meta_arr('gid')[self._gen_gids]
-        return res_gids
+        return gen_gids
 
     def _parse_centroid(self):
         """Get the SC point centroid from the technology map.
@@ -573,29 +583,6 @@ class SupplyCurveExtent:
                                          'col_ind': sc_col_ind.flatten()})
             self._points.index.name = 'gid'
         return self._points
-
-    def get_sc_point_obj(self, gid, f_gen, **kwargs):
-        """Get the single-supply curve point object for the sc point gid.
-
-        Parameters
-        ----------
-        gid : int
-            Supply curve point gid.
-        f_gen : str | reV.handlers.Outputs
-            Filepath to .h5 reV generation output results or reV Outputs file
-            handler.
-
-        Returns
-        -------
-        sc_point : SingleSupplyCurvePoint
-            Single SC point object corresponding to the gid.
-        """
-        row_slice, col_slice = self.get_excl_slices(gid)
-        sc_point = SupplyCurvePoint(self._exclusions, f_gen,
-                                    excl_row_slice=row_slice,
-                                    excl_col_slice=col_slice,
-                                    **kwargs)
-        return sc_point
 
     def get_excl_slices(self, gid):
         """Get the row and column slices of the exclusions grid corresponding
