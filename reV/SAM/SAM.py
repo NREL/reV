@@ -323,9 +323,9 @@ class SiteOutput(SlottedDict):
     """Slotted memory dictionary emulator for SAM single-site outputs."""
 
     # make attribute slots for all SAM output variable names
-    __slots__ = ['cf_mean', 'cf_profile', 'annual_energy', 'energy_yield',
-                 'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr', 'npv',
-                 'lcoe_nom', 'lcoe_real']
+    __slots__ = ['cf_mean', 'cf_profile', 'ws_mean', 'dni_mean', 'ghi_mean',
+                 'annual_energy', 'energy_yield', 'gen_profile', 'poa',
+                 'ppa_price', 'lcoe_fcr', 'npv', 'lcoe_nom', 'lcoe_real']
 
 
 class SAM:
@@ -348,6 +348,8 @@ class SAM:
 
         Parameters
         ----------
+        resource : pd.DataFrame
+            2D table with resource data. Must have time_index column.
         meta : pd.DataFrame
             1D table with resource meta data.
         parameters : dict or ParametersManager()

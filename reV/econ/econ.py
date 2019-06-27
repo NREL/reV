@@ -49,7 +49,7 @@ class Econ(Gen):
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
-                 output_request='lcoe_fcr', fout=None, dirout='./econ_out',
+                 output_request=('lcoe_fcr',), fout=None, dirout='./econ_out',
                  mem_util_lim=0.4):
         """Initialize an econ instance.
 
@@ -111,16 +111,17 @@ class Econ(Gen):
 
         Returns
         -------
-        output_request : tuple
+        output_request : list
             Output variables requested from SAM.
         """
 
-        if isinstance(req, str):
-            # single output request, make tuple
-            output_request = (req,)
-        elif isinstance(req, (list, tuple)):
-            # ensure output request is tuple
-            output_request = tuple(req)
+        # type check and ensure list for manipulation
+        if isinstance(req, list):
+            output_request = req
+        if isinstance(req, tuple):
+            output_request = list(req)
+        elif isinstance(req, str):
+            output_request = [req]
         else:
             raise TypeError('Output request must be str, list, or tuple but '
                             'received: {}'.format(type(req)))
@@ -279,9 +280,9 @@ class Econ(Gen):
             Additional input parameters for the SAM run module.
         """
 
-        # make sure output request is a tuple
+        # make sure output request is a list
         if isinstance(output_request, str):
-            output_request = (output_request,)
+            output_request = [output_request]
 
         # Extract the site df from the project points df.
         site_df = pc.project_points.df
