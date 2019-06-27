@@ -215,12 +215,12 @@ class SupplyCurvePoint:
         Returns
         -------
         gen_gids : np.ndarray
-            reV generation gids from the fpath_gen file corresponding to the
-            tech exclusions
+            reV generation gids (gen results index) from the fpath_gen file
+            corresponding to the tech exclusions
         """
 
-        gen_gids = np.arange(len(self.gen))
-        gen_res_ids = self.gen.get_meta_arr('gid')
+        gen_gids = self.gen.meta.index.values
+        gen_res_ids = self.gen.meta['gid'].values
         gen_gids = gen_gids[np.isin(gen_res_ids, self._res_gids)]
 
         if gen_gids.size == 0:

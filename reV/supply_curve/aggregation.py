@@ -202,6 +202,8 @@ class Aggregation:
 
         with SupplyCurveExtent(fpath_excl, resolution=resolution) as sc:
 
+            exclusion_shape = sc.exclusions.shape
+
             if gids is None:
                 gids = range(len(sc))
 
@@ -210,12 +212,15 @@ class Aggregation:
                 with Outputs(fpath_gen, mode='r') as gen:
                     with h5py.File(fpath_techmap, 'r') as techmap:
 
+                        # pre-extract meta before iter
+                        _ = gen.meta
+
                         for gid in gids:
                             try:
                                 pointsum = SupplyCurvePointSummary.summary(
                                     gid, excl, gen, techmap, techmap_dset,
                                     resolution=resolution,
-                                    exclusion_shape=sc.exclusions.shape,
+                                    exclusion_shape=exclusion_shape,
                                     close=False)
 
                             except EmptySupplyCurvePointError as _:
@@ -223,8 +228,10 @@ class Aggregation:
 
                             else:
                                 pointsum['sc_gid'] = gid
-                                pointsum['sc_row_ind'] = sc[gid]['row_ind']
-                                pointsum['sc_col_ind'] = sc[gid]['col_ind']
+                                pointsum['sc_row_ind'] = \
+                                    sc.points.loc[gid, 'row_ind']
+                                pointsum['sc_col_ind'] = \
+                                    sc.points.loc[gid, 'col_ind']
                                 summary[gid] = pointsum
 
         return summary
