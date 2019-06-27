@@ -63,6 +63,7 @@ class SupplyCurvePoint:
 
         self._gid = gid
         self._close = close
+        self._centroid = None
 
         # filepaths
         self._fpath_excl = None
@@ -78,11 +79,9 @@ class SupplyCurvePoint:
         # Parse inputs
         self._parse_files_ge(f_excl, f_gen)
         self._parse_files_tm(f_techmap)
-        self._rows, self._cols = self._parse_slices(gid, f_excl, resolution,
-                                                    exclusion_shape)
-        self._res_gids, self._excl_mask = self._parse_tech_map()
-        self._gen_gids = self._parse_gen_gids()
-        self._centroid = self._parse_centroid()
+        self._rows, self._cols = self._parse_slices(
+            gid, f_excl, resolution, exclusion_shape=exclusion_shape)
+        self._gen_gids, self._res_gids, self._excl_mask = self._parse_techmap()
 
     def _parse_files_ge(self, f_excl, f_gen):
         """Parse gen + excl filepath input or handler object and set to attrs.
@@ -150,7 +149,7 @@ class SupplyCurvePoint:
                      .format(os.path.basename(self._fpath_excl), tm_fexcl),
                      FileInputWarning)
 
-    def _parse_slices(self, gid, f_excl, resolution, exclusion_shape):
+    def _parse_slices(self, gid, f_excl, resolution, exclusion_shape=None):
         """Parse inputs for the definition of this SC point.
 
         Parameters
@@ -183,11 +182,14 @@ class SupplyCurvePoint:
 
         return rows, cols
 
-    def _parse_tech_map(self):
+    def _parse_techmap(self):
         """Parse data from the tech map file (exclusions to resource mapping).
 
         Returns
         -------
+        gen_gids : np.ndarray
+            reV generation gids (gen results index) from the fpath_gen file
+            corresponding to the tech exclusions
         res_gids : np.ndarray
             Resource gids from the techmap file corresponding to the resource
             sites that are in this supply curve point
@@ -201,52 +203,23 @@ class SupplyCurvePoint:
         valid_points = (res_gids != -1)
         res_gids = res_gids[valid_points]
 
+        emsg = ('Supply curve point gid {} has no viable exclusion points '
+                'based on techmap file: "{}"'
+                .format(self._gid, self._fpath_techmap))
         if res_gids.size == 0:
-            msg = ('Supply curve point gid {} has no viable exclusion points '
-                   'based on techmap file: "{}"'
-                   .format(self._gid, self._fpath_techmap))
-            raise EmptySupplyCurvePointError(msg)
-
-        return res_gids, valid_points
-
-    def _parse_gen_gids(self):
-        """Get the generation gid's based on the generation file and res gids.
-
-        Returns
-        -------
-        gen_gids : np.ndarray
-            reV generation gids (gen results index) from the fpath_gen file
-            corresponding to the tech exclusions
-        """
+            raise EmptySupplyCurvePointError(emsg)
 
         gen_gids = self.gen.meta.index.values
         gen_res_ids = self.gen.meta['gid'].values
-        gen_gids = gen_gids[np.isin(gen_res_ids, self._res_gids)]
+        gen_gids = gen_gids[np.isin(gen_res_ids, res_gids)]
 
         if gen_gids.size == 0:
-            msg = ('Supply curve point gid {} has no viable exclusion points '
-                   'based on techmap file: "{}"'
-                   .format(self._gid, self._fpath_techmap))
-            raise EmptySupplyCurvePointError(msg)
+            raise EmptySupplyCurvePointError(emsg)
 
         # also remove res gids that weren't in the gen run
-        self._res_gids = self._res_gids[np.isin(self._res_gids, gen_res_ids)]
+        res_gids = res_gids[np.isin(res_gids, gen_res_ids)]
 
-        return gen_gids
-
-    def _parse_centroid(self):
-        """Get the SC point centroid from the technology map.
-
-        Returns
-        -------
-        centroid : tuple
-            SC point centroid (lat, lon).
-        """
-
-        lats = self.techmap['latitude'][self.rows, self.cols]
-        lons = self.techmap['longitude'][self.rows, self.cols]
-        centroid = (lats.mean(), lons.mean())
-        return centroid
+        return gen_gids, res_gids, valid_points
 
     def __enter__(self):
         return self
@@ -345,6 +318,11 @@ class SupplyCurvePoint:
         centroid : tuple
             SC point centroid (lat, lon).
         """
+
+        if self._centroid is None:
+            lats = self.techmap['latitude'][self.rows, self.cols]
+            lons = self.techmap['longitude'][self.rows, self.cols]
+            self._centroid = (lats.mean(), lons.mean())
 
         return self._centroid
 

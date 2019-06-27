@@ -255,7 +255,10 @@ class Resource:
             Extracted array from the meta data record name.
         """
 
-        return self._h5['meta'][rec_name, rows]
+        meta_arr = self._h5['meta'][rec_name, rows]
+        if self._str_decode and np.issubdtype(meta_arr.dtype, np.bytes_):
+            meta_arr = np.char.decode(meta_arr, encoding='utf-8')
+        return meta_arr
 
     def _get_time_index(self, *ds_slice):
         """

@@ -107,8 +107,13 @@ class Geotiff:
 
         return row_ind, col_ind
 
-    def _get_meta(self, *yx_slice):
+    def _get_meta(self, *ds_slice):
         """Get the geotiff meta dataframe in standard WGS84 projection.
+
+        Parameters
+        ----------
+        *ds_slice : tuple
+            Slicing args for meta data.
 
         Returns
         -------
@@ -116,14 +121,7 @@ class Geotiff:
             Flattened meta data with same format as reV resource meta data.
         """
 
-        if len(yx_slice) == 1:
-            y_slice = yx_slice[0]
-            x_slice = slice(None, None, None)
-        elif len(yx_slice) == 2:
-            y_slice = yx_slice[0]
-            x_slice = yx_slice[1]
-        else:
-            raise HandlerKeyError('Cannot do 3D slicing on GeoTiff meta.')
+        y_slice, x_slice = self._unpack_slices(*ds_slice)
 
         lon = self._src.coords['x'].values.astype(np.float32)[x_slice]
         lat = self._src.coords['y'].values.astype(np.float32)[y_slice]
@@ -156,17 +154,38 @@ class Geotiff:
         data : np.ndarray
             1D array of flattened data corresponding to meta data.
         """
-        if len(ds_slice) == 1:
-            y_slice = ds_slice[0]
-            x_slice = slice(None, None, None)
-        elif len(ds_slice) == 2:
-            y_slice = ds_slice[0]
-            x_slice = ds_slice[1]
-        else:
-            raise HandlerKeyError('Cannot do 3D slicing of GeoTiff data '
-                                  'within a layer')
+
+        y_slice, x_slice = self._unpack_slices(*ds_slice)
 
         return self._src.data[ds, y_slice, x_slice].flatten()
+
+    @staticmethod
+    def _unpack_slices(*yx_slice):
+        """Get the flattened geotiff layer data.
+
+        Parameters
+        ----------
+        *yx_slice : tuple
+            Slicing args for data
+
+        Returns
+        -------
+        y_slice : slice
+            Row slice.
+        x_slice : slice
+            Col slice.
+        """
+
+        if len(yx_slice) == 1:
+            y_slice = yx_slice[0]
+            x_slice = slice(None, None, None)
+        elif len(yx_slice) == 2:
+            y_slice = yx_slice[0]
+            x_slice = yx_slice[1]
+        else:
+            raise HandlerKeyError('Cannot do 3D slicing on GeoTiff meta.')
+
+        return y_slice, x_slice
 
     @property
     def iarr(self):
