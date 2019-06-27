@@ -43,3 +43,22 @@ def parse_year(inp, option='raise'):
             raise RuntimeError('Cannot parse year from {}'.format(inp))
 
     return out
+
+
+def mean_irrad(arr):
+    """Calc the annual irradiance at a site given an irradiance timeseries.
+
+    Parameters
+    ----------
+    arr : np.ndarray | pd.Series
+        Annual irradiance array in W/m2. Row dimension is time.
+
+    Returns
+    -------
+    mean : float | np.ndarray
+        Mean irradiance values in kWh/m2/day. Float if the input array is
+        1D, 1darray if the input array is 2D (multi-site).
+    """
+
+    mean = arr.mean(axis=0) / 1000 * 24
+    return mean

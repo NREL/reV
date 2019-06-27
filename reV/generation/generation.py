@@ -41,6 +41,15 @@ class Gen:
                  'cf_profile': {'scale_factor': 1000, 'units': 'unitless',
                                 'dtype': 'uint16', 'chunks': (None, 100),
                                 'type': 'array'},
+                 'dni_mean': {'scale_factor': 1000, 'units': 'kWh/m2/day',
+                              'dtype': 'uint16', 'chunks': None,
+                              'type': 'scalar'},
+                 'ghi_mean': {'scale_factor': 1000, 'units': 'kWh/m2/day',
+                              'dtype': 'uint16', 'chunks': None,
+                              'type': 'scalar'},
+                 'ws_mean': {'scale_factor': 1000, 'units': 'm/s',
+                             'dtype': 'uint16', 'chunks': None,
+                             'type': 'scalar'},
                  'annual_energy': {'scale_factor': 1, 'units': 'kWh',
                                    'dtype': 'float32', 'chunks': None,
                                    'type': 'scalar'},
@@ -101,6 +110,7 @@ class Gen:
         self._year = None
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
+
         self._output_request = self._parse_output_request(output_request)
 
         if downscale is not None:
@@ -133,24 +143,22 @@ class Gen:
 
         Returns
         -------
-        output_request : tuple
+        output_request : list
             Output variables requested from SAM.
         """
-        if 'cf_mean' not in req:
-            # ensure that cf_mean is requested from output
-            if isinstance(req, list):
-                req += ['cf_mean']
-            elif isinstance(req, tuple):
-                req += ('cf_mean',)
 
+        # type check and ensure list for manipulation
         if isinstance(req, list):
-            # ensure output request is tuple
-            output_request = tuple(req)
-        elif isinstance(req, tuple):
             output_request = req
+        elif isinstance(req, tuple):
+            output_request = list(req)
+        elif isinstance(req, str):
+            output_request = [req]
         else:
             raise TypeError('Output request must be str, list, or tuple but '
                             'received: {}'.format(type(req)))
+
+        output_request = self._add_out_reqs(output_request)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
@@ -159,6 +167,35 @@ class Gen:
                                  'in "{}": "{}"'
                                  .format(request, self.__class__,
                                          list(self.OUT_ATTRS.keys())))
+
+        return output_request
+
+    def _add_out_reqs(self, output_request):
+        """Add additional output requests as needed.
+
+        Parameters
+        ----------
+        output_request : list
+            Output variables requested from SAM.
+
+        Returns
+        -------
+        output_request : list
+            Output variable list with cf_mean and resource mean out vars.
+        """
+
+        if 'cf_mean' not in output_request:
+            # ensure that cf_mean is requested from output
+            output_request.append('cf_mean')
+
+        if 'wind' in self.tech.lower():
+            if 'ws_mean' not in output_request:
+                output_request.append('ws_mean')
+        else:
+            if 'dni_mean' not in output_request:
+                output_request.append('dni_mean')
+            if 'ghi_mean' not in output_request:
+                output_request.append('ghi_mean')
 
         return output_request
 
@@ -290,7 +327,7 @@ class Gen:
 
         Returns
         -------
-        output_request : tuple
+        output_request : list
             Output variables requested from SAM.
         """
         return self._output_request
@@ -346,7 +383,7 @@ class Gen:
             # (for better understanding of array overhead)
             n = 100
             self._site_mem = 0
-            for request in self._output_request:
+            for request in self.output_request:
                 dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
                 if self.OUT_ATTRS[request]['type'] == 'array':
                     ti_len = len(self.time_index)
