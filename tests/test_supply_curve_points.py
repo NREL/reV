@@ -15,7 +15,8 @@ from reV import TESTDATADIR
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_TECHMAP = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
-DSET = 'gen_ri_pv'
+DSET_RES = 'res_ri_pv'
+DSET_GEN = 'gen_ri_pv'
 
 
 @pytest.mark.parametrize('resolution', [7, 32, 50, 64, 163])
@@ -49,8 +50,9 @@ def test_sc_aggregation(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
     columns and that all 100 resource gids were found"""
 
-    summary = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET,
+    summary = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN, DSET_RES,
                                   resolution=resolution)
+
     all_res_gids = []
     for gids in summary['resource_gids']:
         all_res_gids += gids
@@ -66,12 +68,12 @@ def test_parallel_agg(resolution=64):
     aggregation."""
 
     gids = list(range(50, 70))
-    summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET,
-                                         resolution=resolution, gids=gids,
-                                         n_cores=1)
-    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET,
-                                           resolution=resolution, gids=gids,
-                                           n_cores=3)
+    summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN,
+                                         DSET_RES, resolution=resolution,
+                                         gids=gids, n_cores=1)
+    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN,
+                                           DSET_RES, resolution=resolution,
+                                           gids=gids, n_cores=3)
 
     assert all(summary_serial == summary_parallel)
 
@@ -106,13 +108,12 @@ def plot_single_sc_point(gid=2, resolution=64):
     colors *= 100
 
     _, axs = plt.subplots(1, 1)
-    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET,
+    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_GEN, DSET_RES,
                           resolution=resolution) as sc:
 
         all_gen_gids = list(set(sc._gen_gids))
 
         excl_meta = sc.exclusions['meta', sc.rows, sc.cols]
-        excl_meta = excl_meta[sc._excl_mask]
 
         for i, gen_gid in enumerate(all_gen_gids):
             if gen_gid != -1:

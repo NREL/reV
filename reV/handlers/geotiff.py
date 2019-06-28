@@ -135,7 +135,8 @@ class Geotiff:
                              Proj({"init": "epsg:4326"}),
                              lon, lat)
 
-        meta = pd.DataFrame({'latitude': lat, 'longitude': lon,
+        meta = pd.DataFrame({'latitude': lat.astype(np.float32),
+                             'longitude': lon.astype(np.float32),
                              'row_ind': row_ind, 'col_ind': col_ind})
         return meta
 

@@ -1,17 +1,14 @@
 """
 reV Supply Curve Points
 """
-import os
 import h5py
 import pandas as pd
 import numpy as np
-from warnings import warn
 
 from reV.handlers.outputs import Outputs
 from reV.handlers.geotiff import Geotiff
 from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
-                                      EmptySupplyCurvePointError,
-                                      FileInputWarning)
+                                      EmptySupplyCurvePointError)
 
 
 class ExclusionPoints(Geotiff):
@@ -33,7 +30,7 @@ class ExclusionPoints(Geotiff):
 class SupplyCurvePoint:
     """Single supply curve point framework"""
 
-    def __init__(self, gid, f_excl, f_gen, f_techmap, techmap_dset,
+    def __init__(self, gid, f_excl, f_gen, f_techmap, tm_dset_gen, tm_dset_res,
                  resolution=64, exclusion_shape=None, close=True):
         """
         Parameters
@@ -49,7 +46,10 @@ class SupplyCurvePoint:
             Filepath to tech mapping between exclusions and resource data
             (created using the reV TechMapping framework) or an h5py file
             handler object.
-        techmap_dset : str
+        tm_dset_gen : str
+            Dataset name in the techmap file containing the
+            exclusions-to-generation mapping data.
+        tm_dset_res : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         resolution : int | None
@@ -69,7 +69,8 @@ class SupplyCurvePoint:
         self._fpath_excl = None
         self._fpath_gen = None
         self._fpath_techmap = None
-        self._techmap_dset = techmap_dset
+        self._tm_dset_gen = tm_dset_gen
+        self._tm_dset_res = tm_dset_res
 
         # handler objects
         self._exclusions = None
@@ -77,13 +78,12 @@ class SupplyCurvePoint:
         self._techmap = None
 
         # Parse inputs
-        self._parse_files_ge(f_excl, f_gen)
-        self._parse_files_tm(f_techmap)
+        self._parse_files(f_excl, f_gen, f_techmap)
         self._rows, self._cols = self._parse_slices(
             gid, f_excl, resolution, exclusion_shape=exclusion_shape)
-        self._gen_gids, self._res_gids, self._excl_mask = self._parse_techmap()
+        self._gen_gids, self._res_gids = self._parse_techmap()
 
-    def _parse_files_ge(self, f_excl, f_gen):
+    def _parse_files(self, f_excl, f_gen, f_techmap):
         """Parse gen + excl filepath input or handler object and set to attrs.
 
         Parameters
@@ -93,6 +93,10 @@ class SupplyCurvePoint:
         f_gen : str | reV.handlers.Outputs
             Filepath to .h5 reV generation output results or reV Outputs file
             handler.
+        f_techmap : str | h5py.File
+            Filepath to tech mapping between exclusions and resource data
+            (created using the reV TechMapping framework) or an h5py file
+            handler object.
         """
 
         if isinstance(f_excl, str):
@@ -118,17 +122,6 @@ class SupplyCurvePoint:
                                         'output handler, but received: {}'
                                         .format(type(f_gen)))
 
-    def _parse_files_tm(self, f_techmap):
-        """Parse techmap filepath input or handler object and set to attrs.
-
-        Parameters
-        ----------
-        f_techmap : str | h5py.File
-            Filepath to tech mapping between exclusions and resource data
-            (created using the reV TechMapping framework) or an h5py file
-            handler object.
-        """
-
         if isinstance(f_techmap, str):
             self._fpath_techmap = f_techmap
         elif isinstance(f_techmap, h5py.File):
@@ -139,15 +132,6 @@ class SupplyCurvePoint:
                                         'techmap file path or h5py file '
                                         'handler, but received: {}'
                                         .format(type(f_techmap)))
-
-        # check file paths against tech map file meta attrs
-        if self._fpath_excl is not None:
-            tm_fexcl = os.path.basename(self.techmap.attrs['fpath_excl'])
-            if (os.path.basename(self._fpath_excl) != tm_fexcl):
-                warn('Input exclusion file name ("{}") does not match tech '
-                     'file attribute ("{}")'
-                     .format(os.path.basename(self._fpath_excl), tm_fexcl),
-                     FileInputWarning)
 
     def _parse_slices(self, gid, f_excl, resolution, exclusion_shape=None):
         """Parse inputs for the definition of this SC point.
@@ -188,38 +172,28 @@ class SupplyCurvePoint:
         Returns
         -------
         gen_gids : np.ndarray
-            reV generation gids (gen results index) from the fpath_gen file
-            corresponding to the tech exclusions
+            1D array with length == number of exclusion points. reV generation
+            gids (gen results index) from the fpath_gen file corresponding to
+            the tech exclusions.
         res_gids : np.ndarray
-            Resource gids from the techmap file corresponding to the resource
-            sites that are in this supply curve point
-        valid_points : np.ndarray
-            Boolean mask for valid exclusion points (with corresponding gen
-            point).
+            1D array with length == number of exclusion points. reV resource
+            gids (native resource index) from the original resource data
+            corresponding to the tech exclusions.
         """
 
-        res_gids = self.techmap[self._techmap_dset][self.rows, self.cols]
-        res_gids = res_gids.flatten()
-        valid_points = (res_gids != -1)
-        res_gids = res_gids[valid_points]
+        gen_gids = self.techmap[self._tm_dset_gen][self.rows, self.cols]
+        gen_gids = gen_gids.astype(np.int32).flatten()
 
-        emsg = ('Supply curve point gid {} has no viable exclusion points '
-                'based on techmap file: "{}"'
-                .format(self._gid, self._fpath_techmap))
-        if res_gids.size == 0:
+        if (gen_gids != -1).sum() == 0:
+            emsg = ('Supply curve point gid {} has no viable exclusion points '
+                    'based on techmap file: "{}"'
+                    .format(self._gid, self._fpath_techmap))
             raise EmptySupplyCurvePointError(emsg)
 
-        gen_gids = self.gen.meta.index.values
-        gen_res_ids = self.gen.meta['gid'].values
-        gen_gids = gen_gids[np.isin(gen_res_ids, res_gids)]
+        res_gids = self.techmap[self._tm_dset_res][self.rows, self.cols]
+        res_gids = res_gids.astype(np.int32).flatten()
 
-        if gen_gids.size == 0:
-            raise EmptySupplyCurvePointError(emsg)
-
-        # also remove res gids that weren't in the gen run
-        res_gids = res_gids[np.isin(res_gids, gen_res_ids)]
-
-        return gen_gids, res_gids, valid_points
+        return gen_gids, res_gids
 
     def __enter__(self):
         return self

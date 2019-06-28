@@ -16,18 +16,22 @@ from reV.supply_curve.tech_mapping import TechMapping
 
 
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
+F_RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_OUT = os.path.join(TESTDATADIR, 'sc_out/tech_map.h5')
 F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
-DSET = 'gen_ri_pv'
+RES_DSET = 'res_ri_pv'
+GEN_DSET = 'gen_ri_pv'
 
 PURGE_OUT = True
 
 
-def test_tech_mapping():
+def test_resource_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
 
-    TechMapping.run_map(F_EXCL, F_GEN, F_OUT, DSET, n_cores=2)
+    TechMapping.run_resource_map(F_EXCL, F_RES, F_OUT, RES_DSET, n_cores=2)
+    TechMapping.run_gen_map(F_EXCL, F_GEN, F_OUT, GEN_DSET, RES_DSET,
+                            n_cores=2)
 
     with h5py.File(F_BASELINE, 'r') as f_baseline:
         with h5py.File(F_OUT, 'r') as f_test:
@@ -44,10 +48,29 @@ def test_tech_mapping():
                 assert d in list(f_baseline), msg1
                 assert np.array_equal(f_baseline[d][...], f_test[d][...]), msg2
 
-                if d == 'gen_ind':
+                if d == RES_DSET:
                     inds = f_test[d][...].flatten()
                     msg = 'Tech mapping didnt find all 100 generation points!'
                     assert len(set(inds)) == 101, msg
+
+    if PURGE_OUT:
+        os.remove(F_OUT)
+
+
+def test_gen_tech_mapping():
+    """Run the supply curve technology mapping and compare to baseline file"""
+
+    TechMapping.run_resource_map(F_EXCL, F_GEN, F_OUT, RES_DSET, n_cores=2)
+    TechMapping.run_gen_map(F_EXCL, F_GEN, F_OUT, GEN_DSET, RES_DSET,
+                            n_cores=2)
+
+    with h5py.File(F_OUT, 'r') as f:
+        res = f[RES_DSET][...].flatten()
+        gen = f[GEN_DSET][...].flatten()
+
+        msg = 'Resource and generation tech mappings are not equal!'
+
+        assert np.array_equal(res, gen), msg
 
     if PURGE_OUT:
         os.remove(F_OUT)
@@ -59,10 +82,10 @@ def plot_tech_mapping():
 
     import matplotlib.pyplot as plt
 
-    TechMapping.run_map(F_EXCL, F_GEN, F_OUT, DSET, n_cores=2)
+    TechMapping.run_resource_map(F_EXCL, F_GEN, F_OUT, RES_DSET, n_cores=2)
 
     with h5py.File(F_OUT, 'r') as f:
-        ind = f[DSET][...].flatten()
+        ind = f[RES_DSET][...].flatten()
         lats = f['latitude'][...].flatten()
         lons = f['longitude'][...].flatten()
 
@@ -73,26 +96,26 @@ def plot_tech_mapping():
 
     df = pd.DataFrame({'latitude': lats,
                        'longitude': lons,
-                       DSET: ind})
+                       RES_DSET: ind})
 
     _, axs = plt.subplots(1, 1)
     colors = ['b', 'g', 'c', 'm', 'k', 'y']
     colors *= 100
 
-    for i, ind in enumerate(df[DSET].unique()):
+    for i, ind in enumerate(df[RES_DSET].unique()):
         if ind != -1:
-            mask = df[DSET] == ind
+            mask = df[RES_DSET] == ind
             axs.scatter(df.loc[mask, 'longitude'],
                         df.loc[mask, 'latitude'],
                         c=colors[i], s=0.001)
 
         elif ind == -1:
-            mask = df[DSET] == ind
+            mask = df[RES_DSET] == ind
             axs.scatter(df.loc[mask, 'longitude'],
                         df.loc[mask, 'latitude'],
                         c='r', s=0.001)
 
-    for ind in df[DSET].unique():
+    for ind in df[RES_DSET].unique():
         if ind != -1:
             axs.scatter(gen_meta.loc[ind, 'longitude'],
                         gen_meta.loc[ind, 'latitude'],

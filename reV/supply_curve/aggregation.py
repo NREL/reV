@@ -41,7 +41,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         res_gids : list
             List of resource gids.
         """
-        return list(set(self._res_gids))
+        res_gids = list(set(self._res_gids))
+        if -1 in res_gids:
+            res_gids.remove(-1)
+        return res_gids
 
     def gen_gids(self):
         """Get the list of generation gids corresponding to this sc point.
@@ -51,11 +54,14 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         gen_gids : list
             List of generation gids.
         """
-        return list(set(self._gen_gids))
+        gen_gids = list(set(self._gen_gids))
+        if -1 in gen_gids:
+            gen_gids.remove(-1)
+        return gen_gids
 
     @classmethod
-    def summary(cls, gid, fpath_excl, fpath_gen, fpath_techmap, techmap_dset,
-                args=None, **kwargs):
+    def summary(cls, gid, fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
+                tm_dset_res, args=None, **kwargs):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -69,7 +75,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         fpath_techmap : str
             Filepath to tech mapping between exclusions and generation results
             (created using the reV TechMapping framework).
-        techmap_dset : str
+        tm_dset_gen : str
+            Dataset name in the techmap file containing the
+            exclusions-to-generation mapping data.
+        tm_dset_res : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         args : tuple | list | None
@@ -84,8 +93,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        with cls(gid, fpath_excl, fpath_gen, fpath_techmap, techmap_dset,
-                 **kwargs) as point:
+        with cls(gid, fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
+                 tm_dset_res, **kwargs) as point:
 
             ARGS = {'resource_gids': point.res_gids,
                     'gen_gids': point.gen_gids,
@@ -110,8 +119,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 class Aggregation:
     """Supply points aggregation framework."""
 
-    def __init__(self, fpath_excl, fpath_gen, fpath_techmap, techmap_dset,
-                 resolution=64, gids=None, n_cores=None):
+    def __init__(self, fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
+                 tm_dset_res, resolution=64, gids=None, n_cores=None):
         """
         Parameters
         ----------
@@ -122,7 +131,10 @@ class Aggregation:
         fpath_techmap : str
             Filepath to tech mapping between exclusions and generation results
             The tech mapping module will be run if this file does not exist.
-        techmap_dset : str
+        tm_dset_gen : str
+            Dataset name in the techmap file containing the
+            exclusions-to-generation mapping data.
+        tm_dset_res : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         resolution : int | None
@@ -139,7 +151,8 @@ class Aggregation:
         self._fpath_excl = fpath_excl
         self._fpath_gen = fpath_gen
         self._fpath_techmap = fpath_techmap
-        self._techmap_dset = techmap_dset
+        self._tm_dset_gen = tm_dset_gen
+        self._tm_dset_res = tm_dset_res
         self._resolution = resolution
 
         if n_cores is None:
@@ -162,15 +175,27 @@ class Aggregation:
             if not os.path.exists(fpath):
                 raise FileNotFoundError('Could not find required input file: '
                                         '{}'.format(fpath))
+
         with h5py.File(self._fpath_techmap, 'r') as f:
-            if self._techmap_dset not in f:
+            if self._tm_dset_gen not in f:
                 raise FileInputError('Could not find "{}" in techmap file: {}'
-                                     .format(self._techmap_dset,
+                                     .format(self._tm_dset_gen,
+                                             self._fpath_techmap))
+            if self._tm_dset_res not in f:
+                raise FileInputError('Could not find "{}" in techmap file: {}'
+                                     .format(self._tm_dset_res,
                                              self._fpath_techmap))
 
+            tmf = os.path.basename(f[self._tm_dset_gen].attrs['fpath'])
+            if (os.path.basename(self._fpath_gen) != tmf):
+                raise FileInputError('Input generation file name ("{}") does '
+                                     'not match tech file attribute ("{}")'
+                                     .format(os.path.basename(self._fpath_gen),
+                                             tmf))
+
     @staticmethod
-    def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, techmap_dset,
-                        resolution=64, gids=None):
+    def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
+                        tm_dset_res, resolution=64, gids=None):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -182,7 +207,10 @@ class Aggregation:
         fpath_techmap : str
             Filepath to tech mapping between exclusions and generation results
             (created using the reV TechMapping framework).
-        techmap_dset : str
+        tm_dset_gen : str
+            Dataset name in the techmap file containing the
+            exclusions-to-generation mapping data.
+        tm_dset_res : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         resolution : int | None
@@ -218,8 +246,8 @@ class Aggregation:
                         for gid in gids:
                             try:
                                 pointsum = SupplyCurvePointSummary.summary(
-                                    gid, excl, gen, techmap, techmap_dset,
-                                    resolution=resolution,
+                                    gid, excl, gen, techmap, tm_dset_gen,
+                                    tm_dset_res, resolution=resolution,
                                     exclusion_shape=exclusion_shape,
                                     close=False)
 
@@ -267,7 +295,8 @@ class Aggregation:
                                                self._fpath_excl,
                                                self._fpath_gen,
                                                self._fpath_techmap,
-                                               self._techmap_dset,
+                                               self._tm_dset_gen,
+                                               self._tm_dset_res,
                                                resolution=self._resolution,
                                                gids=gid_set))
             # gather results
@@ -281,8 +310,9 @@ class Aggregation:
         return summary
 
     @classmethod
-    def summary(cls, fpath_excl, fpath_gen, fpath_techmap, techmap_dset,
-                resolution=64, gids=None, n_cores=None, option='dataframe'):
+    def summary(cls, fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
+                tm_dset_res, resolution=64, gids=None, n_cores=None,
+                option='dataframe'):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -294,7 +324,10 @@ class Aggregation:
         fpath_techmap : str
             Filepath to tech mapping between exclusions and generation results
             The tech mapping module will be run if this file does not exist.
-        techmap_dset : str
+        tm_dset_gen : str
+            Dataset name in the techmap file containing the
+            exclusions-to-generation mapping data.
+        tm_dset_res : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         resolution : int | None
@@ -315,13 +348,15 @@ class Aggregation:
             Summary of the SC points keyed by SC point gid.
         """
 
-        agg = cls(fpath_excl, fpath_gen, fpath_techmap, techmap_dset,
-                  resolution=resolution, gids=gids, n_cores=n_cores)
+        agg = cls(fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
+                  tm_dset_res, resolution=resolution, gids=gids,
+                  n_cores=n_cores)
 
         if n_cores == 1:
             summary = agg._serial_summary(agg._fpath_excl, agg._fpath_gen,
                                           agg._fpath_techmap,
-                                          agg._techmap_dset,
+                                          agg._tm_dset_gen,
+                                          agg._tm_dset_res,
                                           resolution=agg._resolution,
                                           gids=gids)
         else:
