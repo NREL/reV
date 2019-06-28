@@ -41,9 +41,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         res_gids : list
             List of resource gids.
         """
-        res_gids = list(set(self._res_gids))
-        if -1 in res_gids:
-            res_gids.remove(-1)
+        res_gids = list(set(self._res_gids[np.isin(self._res_gids,
+                                                   self.gen.meta['gid'])]))
         return res_gids
 
     def gen_gids(self):
