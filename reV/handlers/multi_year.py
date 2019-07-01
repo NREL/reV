@@ -138,8 +138,8 @@ class MultiYear(Outputs):
         """
         dset = dset_out.split("-")[0]
         my_dset = ["{}-{}".format(dset, val) for val in ['means', 'std']]
-        source_dsets = [ds for ds in self.dsets if dset in ds and
-                        ds not in my_dset]
+        source_dsets = [ds for ds in self.dsets if dset in ds
+                        and ds not in my_dset]
         if dset_out in source_dsets:
             source_dsets.remove(dset_out)
 

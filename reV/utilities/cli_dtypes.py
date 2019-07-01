@@ -63,8 +63,8 @@ class ProjectPointsType(click.ParamType):
                 numeric = [int(x) if str(x) != 'None' else None for x in list0]
                 return slice(*numeric)
 
-            elif (('[' in value and ']' in value) or
-                  ('(' in value and ')' in value)):
+            elif (('[' in value and ']' in value)
+                  or ('(' in value and ')' in value)):
                 # project points is a list or tuple.
                 value = sanitize_str(value, subs=['=', '(', ')', ' ', '[', ']',
                                                   '"', "'"])

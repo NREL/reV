@@ -318,8 +318,8 @@ class SAMResource:
         # list if the var_slice has a second entry (column slice of sites)
         arr_sites = self.sites
         if not isinstance(var_slice, slice):
-            if (len(var_slice) > 1 and
-                    not isinstance(var_slice[1], slice)):
+            if (len(var_slice) > 1
+                    and not isinstance(var_slice[1], slice)):
                 arr_sites = list(np.array(self.sites)[np.array(var_slice[1])])
 
         if self._res_type == 'wind':

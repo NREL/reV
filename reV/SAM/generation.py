@@ -229,8 +229,8 @@ class Solar(Generation):
                          SAMInputWarning)
                     set_tilt = True
                 else:
-                    if (parameters['tilt'] == 'lat' or
-                            parameters['tilt'] == 'latitude'):
+                    if (parameters['tilt'] == 'lat'
+                            or parameters['tilt'] == 'latitude'):
                         set_tilt = True
 
         if set_tilt:

@@ -144,8 +144,8 @@ class Resource:
         """
 
         for col in df:
-            if (np.issubdtype(df[col].dtype, np.object_) and
-                    isinstance(df[col].values[0], bytes)):
+            if (np.issubdtype(df[col].dtype, np.object_)
+                    and isinstance(df[col].values[0], bytes)):
                 df[col] = df[col].copy().str.decode('utf-8', 'ignore')
 
         return df
@@ -721,8 +721,8 @@ class WindResource(Resource):
             ts_1, ts_2 = ts_2, ts_1
 
         if mean:
-            alpha = (np.log(ts_2.mean() / ts_1.mean()) /
-                     np.log(h_2 / h_1))
+            alpha = (np.log(ts_2.mean() / ts_1.mean())
+                     / np.log(h_2 / h_1))
 
             if alpha < 0.06:
                 warnings.warn('Alpha is < 0.06', RuntimeWarning)

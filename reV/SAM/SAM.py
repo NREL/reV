@@ -574,10 +574,10 @@ class SAM:
         """
 
         if hasattr(resource, 'index'):
-            if (hasattr(resource.index, 'month') and
-                    hasattr(resource.index, 'day')):
-                leap_day = ((resource.index.month == 2) &
-                            (resource.index.day == 29))
+            if (hasattr(resource.index, 'month')
+                    and hasattr(resource.index, 'day')):
+                leap_day = ((resource.index.month == 2)
+                            & (resource.index.day == 29))
                 resource = resource.drop(resource.index[leap_day])
         return resource
 
@@ -727,8 +727,8 @@ class SAM:
         # Roll back to native timezone if resource meta has a timezone
         if self._meta is not None:
             if 'timezone' in self.meta:
-                gen = np.roll(gen, -1 * int(self.meta['timezone'] *
-                                            self.time_interval))
+                gen = np.roll(gen, -1 * int(self.meta['timezone']
+                                            * self.time_interval))
         return gen
 
     def poa(self):
@@ -745,8 +745,8 @@ class SAM:
         # Roll back to native timezone if resource meta has a timezone
         if self._meta is not None:
             if 'timezone' in self.meta:
-                poa = np.roll(poa, -1 * int(self.meta['timezone'] *
-                                            self.time_interval))
+                poa = np.roll(poa, -1 * int(self.meta['timezone']
+                                            * self.time_interval))
         return poa
 
     def ppa_price(self):

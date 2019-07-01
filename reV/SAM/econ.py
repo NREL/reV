@@ -65,8 +65,8 @@ class Economic(SAM):
         offshore = False
         if site_parameters is not None:
             if 'offshore' in site_parameters:
-                offshore = (bool(site_parameters['offshore']) and
-                            not np.isnan(site_parameters['offshore']))
+                offshore = (bool(site_parameters['offshore'])
+                            and not np.isnan(site_parameters['offshore']))
 
         if isinstance(output_request, (list, tuple)):
             self.output_request = output_request
@@ -118,10 +118,10 @@ class Economic(SAM):
             System nameplate capacity in native units (SAM is kW, ORCA is MW).
         """
 
-        if ('system_capacity' not in inputs and
-                'turbine_capacity' not in inputs and
-                'system_capacity' not in site_df and
-                'turbine_capacity' not in site_df):
+        if ('system_capacity' not in inputs
+                and 'turbine_capacity' not in inputs
+                and 'system_capacity' not in site_df
+                and 'turbine_capacity' not in site_df):
             raise SAMExecutionError('Input parameter "system_capacity" '
                                     'or "turbine_capacity" '
                                     'must be included in the SAM config '
@@ -174,8 +174,8 @@ class Economic(SAM):
         # check to see if this site is offshore
         offshore = False
         if 'offshore' in site_df:
-            offshore = (bool(site_df.loc[site, 'offshore']) and
-                        not np.isnan(site_df.loc[site, 'offshore']))
+            offshore = (bool(site_df.loc[site, 'offshore'])
+                        and not np.isnan(site_df.loc[site, 'offshore']))
 
         # get the index location of the site in question
         isite = site_gids.index(site)
@@ -242,11 +242,11 @@ class Economic(SAM):
             if 'cf_profile' in cfh.dsets:
                 gen = cfh['cf_profile', :, isite] * sys_cap
             elif 'cf_profile-{}'.format(cf_year) in cfh.dsets:
-                gen = (cfh['cf_profile-{}'.format(cf_year), :, isite] *
-                       sys_cap)
+                gen = (cfh['cf_profile-{}'.format(cf_year), :, isite]
+                       * sys_cap)
             elif 'cf_profile_{}'.format(cf_year) in cfh.dsets:
-                gen = (cfh['cf_profile_{}'.format(cf_year), :, isite] *
-                       sys_cap)
+                gen = (cfh['cf_profile_{}'.format(cf_year), :, isite]
+                       * sys_cap)
             else:
                 raise KeyError('Could not find cf_profile values for '
                                'SingleOwner. Available datasets: {}'

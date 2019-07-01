@@ -118,8 +118,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
-        sites_per_core = ceil(len(config.points_control) /
-                              config.execution_control.ppn)
+        sites_per_core = ceil(len(config.points_control)
+                              / config.execution_control.ppn)
         ctx.obj['SITES_PER_CORE'] = sites_per_core
         ctx.invoke(econ_local, n_workers=config.execution_control.ppn,
                    points_range=None, verbose=verbose)

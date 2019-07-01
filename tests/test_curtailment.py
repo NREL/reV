@@ -141,8 +141,8 @@ def test_res_curtailment(year, site):
                      non_curtailed_res.shape[1])
 
     # was the non-curtailed wind speed threshold met?
-    check2 = (non_curtailed_res._res_arrays['windspeed'] <
-              pp.curtailment.wind_speed)
+    check2 = (non_curtailed_res._res_arrays['windspeed']
+              < pp.curtailment.wind_speed)
 
     # was it nighttime?
     check3 = (sza > pp.curtailment.dawn_dusk)

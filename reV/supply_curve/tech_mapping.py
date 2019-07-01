@@ -83,8 +83,8 @@ class TechMapping:
                             'layer it was based on. TechMapping proceeding '
                             'at-risk.')
 
-                if (os.path.basename(f.attrs['fpath_excl']) !=
-                        os.path.basename(self._fpath_excl)):
+                if (os.path.basename(f.attrs['fpath_excl'])
+                        != os.path.basename(self._fpath_excl)):
                     wmsg = ('Exclusions file "{}" used to create the '
                             'pre-existing TechMapping file did not match the '
                             'new input exclusions file "{}". '
@@ -317,10 +317,10 @@ class TechMapping:
             res_meta = np.vstack((res.get_meta_arr(coord_labels[0]),
                                   res.get_meta_arr(coord_labels[1]))).T
 
-        mask = ((res_meta[:, 0] > lat_range[0] - margin) &
-                (res_meta[:, 0] < lat_range[1] + margin) &
-                (res_meta[:, 1] > lon_range[0] - margin) &
-                (res_meta[:, 1] < lon_range[1] + margin))
+        mask = ((res_meta[:, 0] > lat_range[0] - margin)
+                & (res_meta[:, 0] < lat_range[1] + margin)
+                & (res_meta[:, 1] > lon_range[0] - margin)
+                & (res_meta[:, 1] < lon_range[1] + margin))
 
         # pylint: disable-msg=C0121
         mask_ind = np.where(mask == True)[0]  # noqa: E712

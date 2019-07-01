@@ -60,19 +60,19 @@ def curtail(resource, curtailment, random_seed=None):
                          list(resource._res_arrays.keys())),
                  HandlerWarning)
         else:
-            mask = (resource._res_arrays['precipitationrate'] <
-                    curtailment.precipitation)
+            mask = (resource._res_arrays['precipitationrate']
+                    < curtailment.precipitation)
             curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and temperature is high
     if curtailment.temperature:
-        mask = (resource._res_arrays['temperature'] >
-                curtailment.temperature)
+        mask = (resource._res_arrays['temperature']
+                > curtailment.temperature)
         curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and not that windy
-    mask = (resource._res_arrays['windspeed'] <
-            curtailment.wind_speed)
+    mask = (resource._res_arrays['windspeed']
+            < curtailment.wind_speed)
     curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Apply probability mask when curtailment is possible.

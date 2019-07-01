@@ -77,8 +77,8 @@ class PipelineConfig(AnalysisConfig):
         """Check unique status file in dirout."""
 
         for fname in os.listdir(self.dirout):
-            if (fname.endswith('_status.json') and
-                    fname != '{}_status.json'.format(self.name)):
+            if (fname.endswith('_status.json')
+                    and fname != '{}_status.json'.format(self.name)):
                 raise PipelineError('Cannot run pipeline "{}" in directory '
                                     '{}. Another pipeline appears to have '
                                     'been run here with status json: {}'
