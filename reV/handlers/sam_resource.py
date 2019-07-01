@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Module to handle SAM Resource iterator to create site by site resource
 DataFrames

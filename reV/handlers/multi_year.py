@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Classes to handle capacity factor profiles and annual averages
 """

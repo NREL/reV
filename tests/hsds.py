@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 pytests for HSDS resource handling
 requires installing and configuring h5pyd:

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # pylint: skip-file
 """
 Test file for qsub on Eagle. Will not run with pytest

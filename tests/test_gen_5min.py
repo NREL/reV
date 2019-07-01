@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # pylint: skip-file
 """
 PyTest file for PV generation in Rhode Island.

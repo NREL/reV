@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Python SAM Simulation Core (PySSC)
 
 Created with SAM version 2017.9.5

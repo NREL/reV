@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Handler utility to parse slicing keys.
 """

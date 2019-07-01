@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 reV Base analysis Configuration Frameworks
 """

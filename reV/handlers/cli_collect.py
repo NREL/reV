@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Generation CLI entry points.
 """

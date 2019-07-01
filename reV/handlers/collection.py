@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Base class to handle collection of profiles and means across multiple .h5 files
 """

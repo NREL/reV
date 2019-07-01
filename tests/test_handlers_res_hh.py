@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 pytests for resource handlers with a single hub height
 """
