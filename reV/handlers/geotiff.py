@@ -157,8 +157,10 @@ class Geotiff:
         """
 
         y_slice, x_slice = self._unpack_slices(*ds_slice)
-
-        return self._src.data[ds, y_slice, x_slice].flatten()
+        data = self._src.data[ds, y_slice, x_slice].flatten().compute()
+        if np.issubdtype(data.dtype, np.float64):
+            data = data.astype(np.float32)
+        return data
 
     @staticmethod
     def _unpack_slices(*yx_slice):
