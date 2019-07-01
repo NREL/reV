@@ -66,6 +66,7 @@ class SupplyCurvePoint:
         self._gid = gid
         self._close = close
         self._centroid = None
+        self._excl_data = None
 
         # filepaths
         self._fpath_excl = None
@@ -329,6 +330,26 @@ class SupplyCurvePoint:
         if self._exclusions is None:
             self._exclusions = ExclusionPoints(self._fpath_excl)
         return self._exclusions
+
+    @property
+    def excl_data(self):
+        """Get the exclusions data mask.
+
+        Returns
+        -------
+        _excl_data : np.ndarray
+            Exclusions data mask.
+        """
+
+        if self._excl_data is None:
+            self._excl_data = self.exclusions[0, self.rows, self.cols]
+            self._excl_data = self._excl_data
+
+            if self._excl_data.max() > 99:
+                self._excl_data = self._excl_data.astype(np.float32)
+                self._excl_data /= 100
+
+        return self._excl_data
 
     @property
     def gen(self):

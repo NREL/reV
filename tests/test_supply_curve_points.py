@@ -6,7 +6,6 @@ Created on Wed Jun 19 15:37:05 2019
 """
 import pytest
 import os
-from reV.supply_curve.aggregation import Aggregation
 from reV.supply_curve.points import SupplyCurvePoint, SupplyCurveExtent
 from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
@@ -43,38 +42,6 @@ def test_slicer(gids, resolution):
                    .format(gid, resolution))
             assert row_slice0 == row_slice1, msg
             assert col_slice0 == col_slice1, msg
-
-
-def test_sc_aggregation(resolution=64):
-    """Get the SC points aggregation summary and test that there are expected
-    columns and that all 100 resource gids were found"""
-
-    summary = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
-                                  resolution=resolution)
-
-    all_res_gids = []
-    for gids in summary['resource_gids']:
-        all_res_gids += gids
-
-    assert 'sc_col_ind' in summary
-    assert 'sc_row_ind' in summary
-    assert 'gen_gids' in summary
-    assert len(set(all_res_gids)) == 100
-
-
-def test_parallel_agg(resolution=64):
-    """Test that parallel aggregation yields the same results as serial
-    aggregation."""
-
-    gids = list(range(50, 70))
-    summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
-                                         resolution=resolution, gids=gids,
-                                         n_cores=1)
-    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
-                                           resolution=resolution, gids=gids,
-                                           n_cores=3)
-
-    assert all(summary_serial == summary_parallel)
 
 
 def plot_all_sc_points(resolution=64):
