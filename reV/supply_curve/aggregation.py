@@ -593,7 +593,12 @@ class Aggregation:
 
                         # pre-extract data before iteration
                         _ = gen.meta
-                        res_data = gen[res_class_dset]
+
+                        if res_class_dset is None:
+                            res_data = None
+                            res_class_bins = [None]
+                        else:
+                            res_data = gen[res_class_dset]
 
                         if cf_dset in gen.dsets:
                             cf_data = gen[cf_dset]
