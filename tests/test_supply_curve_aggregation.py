@@ -16,8 +16,7 @@ F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_gen.h5')
 F_TECHMAP = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
 F_AGG_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
-DSET_RES = 'res_nsrdb_full'
-DSET_GEN = 'gen_nsrdb_ri'
+DSET_TM = 'res_nsrdb_full'
 RES_CLASS_DSET = 'ghi_mean-means'
 RES_CLASS_BINS = [[0, 4], [4, 10]]
 
@@ -26,13 +25,13 @@ def test_aggregation_extent(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
     columns and that all resource gids were found"""
 
-    summary = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN, DSET_RES,
+    summary = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_TM,
                                   res_class_dset=None,
                                   res_class_bins=None,
                                   resolution=resolution)
 
     all_res_gids = []
-    for gids in summary['resource_gids']:
+    for gids in summary['res_gids']:
         all_res_gids += gids
 
     assert 'sc_col_ind' in summary
@@ -46,14 +45,12 @@ def test_parallel_agg(resolution=64):
     aggregation."""
 
     gids = list(range(50, 70))
-    summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN,
-                                         DSET_RES,
+    summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_TM,
                                          res_class_dset=None,
                                          res_class_bins=None,
                                          resolution=resolution,
                                          gids=gids, n_cores=1)
-    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN,
-                                           DSET_RES,
+    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_TM,
                                            res_class_dset=None,
                                            res_class_bins=None,
                                            resolution=resolution,
@@ -65,7 +62,7 @@ def test_parallel_agg(resolution=64):
 def test_aggregation_summary():
     """Test the aggregation summary method against a baseline file."""
 
-    s = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN, DSET_RES,
+    s = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_TM,
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
                             n_cores=1)

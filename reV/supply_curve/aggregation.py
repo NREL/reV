@@ -30,8 +30,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     def __init__(self, gid, f_excl, f_gen, f_techmap, tm_dset_gen, tm_dset_res,
                  res_class_dset=None, res_class_bin=None, ex_area=0.0081,
-                 power_density=None, cf_dset='cf_mean-means',
-                 lcoe_dset='lcoe_fcr-means', resolution=64,
+                 power_density=None, dset_cf='cf_mean-means',
+                 dset_lcoe='lcoe_fcr-means', resolution=64,
                  exclusion_shape=None,
                  close=False):
         """
@@ -66,10 +66,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         power_density : float | None
             Power density in MW/km2. None will attempt to infer power density
             from the generation meta data technology.
-        cf_dset : str | np.ndarray
+        dset_cf : str | np.ndarray
             Dataset name from f_gen containing capacity factor mean values.
             Can be pre-extracted generation output data in np.ndarray.
-        lcoe_dset : str | np.ndarray
+        dset_lcoe : str | np.ndarray
             Dataset name from f_gen containing LCOE mean values.
             Can be pre-extracted generation output data in np.ndarray.
         resolution : int | None
@@ -83,8 +83,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         self._res_class_dset = res_class_dset
         self._res_class_bin = res_class_bin
-        self._cf_dset = cf_dset
-        self._lcoe_dset = lcoe_dset
+        self._dset_cf = dset_cf
+        self._dset_lcoe = dset_lcoe
         self._res_gid_set = None
         self._gen_gid_set = None
         self._mean_res = None
@@ -205,13 +205,13 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             generation data output file.
         """
 
-        if isinstance(self._cf_dset, np.ndarray):
-            return self._cf_dset
+        if isinstance(self._dset_cf, np.ndarray):
+            return self._dset_cf
 
         else:
             if self._gen_data is None:
-                if self._cf_dset in self.gen.dsets:
-                    self._gen_data = self.gen[self._cf_dset]
+                if self._dset_cf in self.gen.dsets:
+                    self._gen_data = self.gen[self._dset_cf]
 
         return self._gen_data
 
@@ -226,13 +226,13 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             generation data output file.
         """
 
-        if isinstance(self._lcoe_dset, np.ndarray):
-            return self._lcoe_dset
+        if isinstance(self._dset_lcoe, np.ndarray):
+            return self._dset_lcoe
 
         else:
             if self._lcoe_data is None:
-                if self._lcoe_dset in self.gen.dsets:
-                    self._lcoe_data = self.gen[self._lcoe_dset]
+                if self._dset_lcoe in self.gen.dsets:
+                    self._lcoe_data = self.gen[self._dset_lcoe]
 
         return self._lcoe_data
 
@@ -392,7 +392,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         with cls(gid, fpath_excl, fpath_gen, fpath_techmap, dset_tm, gen_index,
                  **kwargs) as point:
 
-            ARGS = {'resource_gids': point.res_gid_set,
+            ARGS = {'res_gids': point.res_gid_set,
                     'gen_gids': point.gen_gid_set,
                     'gid_counts': point.gid_counts,
                     'mean_cf': point.mean_cf,
@@ -422,7 +422,7 @@ class Aggregation:
 
     def __init__(self, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                  res_class_dset=None, res_class_bins=None,
-                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
+                 dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                  resolution=64, gids=None, n_cores=None):
         """
         Parameters
@@ -443,9 +443,9 @@ class Aggregation:
         res_class_bins : list | None
             List of two-entry lists dictating the resource class bins.
             None if no resource classes.
-        cf_dset : str
+        dset_cf : str
             Dataset name from f_gen containing capacity factor mean values.
-        lcoe_dset : str
+        dset_lcoe : str
             Dataset name from f_gen containing LCOE mean values.
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -464,8 +464,8 @@ class Aggregation:
         self._dset_tm = dset_tm
         self._res_class_dset = res_class_dset
         self._res_class_bins = res_class_bins
-        self._cf_dset = cf_dset
-        self._lcoe_dset = lcoe_dset
+        self._dset_cf = dset_cf
+        self._dset_lcoe = dset_lcoe
         self._resolution = resolution
 
         if n_cores is None:
@@ -531,7 +531,7 @@ class Aggregation:
     @staticmethod
     def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                         gen_index, res_class_dset=None, res_class_bins=None,
-                        cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
+                        dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                         resolution=64, gids=None, **kwargs):
         """Standalone method to create agg summary - can be parallelized.
 
@@ -557,9 +557,9 @@ class Aggregation:
         res_class_bins : list | None
             List of two-entry lists dictating the resource class bins.
             None if no resource classes.
-        cf_dset : str
+        dset_cf : str
             Dataset name from f_gen containing capacity factor mean values.
-        lcoe_dset : str
+        dset_lcoe : str
             Dataset name from f_gen containing LCOE mean values.
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -600,20 +600,20 @@ class Aggregation:
                         else:
                             res_data = gen[res_class_dset]
 
-                        if cf_dset in gen.dsets:
-                            cf_data = gen[cf_dset]
+                        if dset_cf in gen.dsets:
+                            cf_data = gen[dset_cf]
                         else:
                             cf_data = None
                             warn('Could not find cf dataset "{}" in '
                                  'generation file: {}'
-                                 .format(cf_dset, fpath_gen), OutputWarning)
-                        if lcoe_dset in gen.dsets:
-                            lcoe_data = gen[lcoe_dset]
+                                 .format(dset_cf, fpath_gen), OutputWarning)
+                        if dset_lcoe in gen.dsets:
+                            lcoe_data = gen[dset_lcoe]
                         else:
                             lcoe_data = None
                             warn('Could not find lcoe dataset "{}" in '
                                  'generation file: {}'
-                                 .format(lcoe_dset, fpath_gen), OutputWarning)
+                                 .format(dset_lcoe, fpath_gen), OutputWarning)
 
                         for gid in gids:
 
@@ -624,8 +624,8 @@ class Aggregation:
                                         dset_tm, gen_index,
                                         res_class_dset=res_data,
                                         res_class_bin=res_bin,
-                                        cf_dset=cf_data,
-                                        lcoe_dset=lcoe_data,
+                                        dset_cf=cf_data,
+                                        dset_lcoe=lcoe_data,
                                         resolution=resolution,
                                         exclusion_shape=exclusion_shape,
                                         **kwargs)
@@ -684,7 +684,7 @@ class Aggregation:
                     self._dset_tm, self._gen_index,
                     res_class_dset=self._res_class_dset,
                     res_class_bins=self._res_class_bins,
-                    cf_dset=self._cf_dset, lcoe_dset=self._lcoe_dset,
+                    dset_cf=self._dset_cf, dset_lcoe=self._dset_lcoe,
                     resolution=self._resolution,
                     gids=gid_set, **kwargs))
 
@@ -701,7 +701,7 @@ class Aggregation:
     @classmethod
     def summary(cls, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                 res_class_dset=None, res_class_bins=None,
-                cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
+                dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                 resolution=64, gids=None, n_cores=None, option='dataframe',
                 **kwargs):
         """Get the supply curve points aggregation summary.
@@ -724,9 +724,9 @@ class Aggregation:
         res_class_bins : list | None
             List of two-entry lists dictating the resource class bins.
             None if no resource classes.
-        cf_dset : str
+        dset_cf : str
             Dataset name from f_gen containing capacity factor mean values.
-        lcoe_dset : str
+        dset_lcoe : str
             Dataset name from f_gen containing LCOE mean values.
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -752,7 +752,7 @@ class Aggregation:
         agg = cls(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                   resolution=resolution, gids=gids,
                   res_class_dset=res_class_dset, res_class_bins=res_class_bins,
-                  cf_dset=cf_dset, lcoe_dset=lcoe_dset, n_cores=n_cores)
+                  dset_cf=dset_cf, dset_lcoe=dset_lcoe, n_cores=n_cores)
 
         if n_cores == 1:
             summary = agg._serial_summary(agg._fpath_excl, agg._fpath_gen,
@@ -760,8 +760,8 @@ class Aggregation:
                                           agg._dset_tm, agg._gen_index,
                                           res_class_dset=agg._res_class_dset,
                                           res_class_bins=agg._res_class_bins,
-                                          cf_dset=agg._cf_dset,
-                                          lcoe_dset=agg._lcoe_dset,
+                                          dset_cf=agg._dset_cf,
+                                          dset_lcoe=agg._dset_lcoe,
                                           resolution=agg._resolution,
                                           gids=gids, **kwargs)
         else:
