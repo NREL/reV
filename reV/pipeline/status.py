@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 reV Base Configuration Frameworks
 """
@@ -242,8 +243,8 @@ class Status(dict):
                     self.data[module][job_name]['job_status'] = 'failed'
 
                 # do not overwrite a successful or failed job status.
-                elif (current != previous and
-                      previous not in self.FROZEN_STATUS):
+                elif (current != previous
+                      and previous not in self.FROZEN_STATUS):
                     self.data[module][job_name]['job_status'] = current
 
             # job does not yet exist

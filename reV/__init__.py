@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 The Renewable Energy Potential Model (v2)
 """

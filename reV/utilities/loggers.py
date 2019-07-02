@@ -199,8 +199,8 @@ def init_mult(name, logdir, modules, verbose=False, node=False):
         # check for redundant loggers in the REV_LOGGERS singleton
         logger = REV_LOGGERS[module]
 
-        if ((not node or (node and log_level == 'DEBUG')) and
-                'log_file' not in logger):
+        if ((not node or (node and log_level == 'DEBUG'))
+                and 'log_file' not in logger):
             # No log file belongs to this logger, init a logger file
             logger = init_logger(module, log_level=log_level,
                                  log_file=log_file)

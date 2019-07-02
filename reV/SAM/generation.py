@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """reV-to-SAM interface module.
 
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
@@ -229,8 +229,8 @@ class Solar(Generation):
                          SAMInputWarning)
                     set_tilt = True
                 else:
-                    if (parameters['tilt'] == 'lat' or
-                            parameters['tilt'] == 'latitude'):
+                    if (parameters['tilt'] == 'lat'
+                            or parameters['tilt'] == 'latitude'):
                         set_tilt = True
 
         if set_tilt:

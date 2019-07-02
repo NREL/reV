@@ -52,8 +52,8 @@ def get_shared_items(x, y):
                 shared_items_2 = get_shared_items(v, y[k])
                 if shared_items_2:
                     shared_items[k] = v
-            elif (isinstance(v, (np.ndarray, list)) and
-                    isinstance(y[k], (np.ndarray, list))):
+            elif (isinstance(v, (np.ndarray, list))
+                    and isinstance(y[k], (np.ndarray, list))):
                 if np.allclose(v, y[k], atol=TOLERANCE, rtol=TOLERANCE):
                     shared_items[k] = v
             elif x[k] == y[k]:

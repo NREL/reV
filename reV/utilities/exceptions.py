@@ -17,6 +17,13 @@ class ConfigError(Exception):
     pass
 
 
+class FileInputError(Exception):
+    """
+    Error during input file checks.
+    """
+    pass
+
+
 class ExecutionError(Exception):
     """
     Error for execution failure
@@ -66,6 +73,27 @@ class SAMExecutionError(Exception):
     pass
 
 
+class SupplyCurveError(Exception):
+    """
+    Execution error for SAM simulations
+    """
+    pass
+
+
+class EmptySupplyCurvePointError(SupplyCurveError):
+    """
+    Execution error for SAM simulations
+    """
+    pass
+
+
+class SupplyCurveInputError(SupplyCurveError):
+    """
+    Execution error for SAM simulations
+    """
+    pass
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data
@@ -97,5 +125,12 @@ class SAMInputWarning(Warning):
 class HandlerWarning(Warning):
     """
     Warning during .h5 handling
+    """
+    pass
+
+
+class FileInputWarning(Warning):
+    """
+    Warning during input file checks.
     """
     pass

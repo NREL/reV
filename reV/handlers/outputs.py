@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Classes to handle capacity factor profiles and annual averages
 """
@@ -20,7 +21,7 @@ class Outputs(Resource):
     """
     Base class to handle reV output data in .h5 format
     """
-    def __init__(self, h5_file, unscale=True, mode='r'):
+    def __init__(self, h5_file, unscale=True, mode='r', str_decode=True):
         """
         Parameters
         ----------
@@ -30,6 +31,9 @@ class Outputs(Resource):
             Boolean flag to automatically unscale variables on extraction
         mode : str
             Mode to instantiate h5py.File instance
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
         """
         self._h5_file = h5_file
         self._h5 = h5py.File(h5_file, mode=mode)
@@ -37,6 +41,7 @@ class Outputs(Resource):
         self._mode = mode
         self._meta = None
         self._time_index = None
+        self._str_decode = str_decode
 
     def __len__(self):
         _len = 0

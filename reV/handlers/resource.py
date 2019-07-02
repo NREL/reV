@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Classes to handle resource data
 """
@@ -7,7 +8,8 @@ import os
 import pandas as pd
 import warnings
 
-from reV.handlers.sam_resource import parse_keys, SAMResource
+from reV.handlers.parse_keys import parse_keys
+from reV.handlers.sam_resource import SAMResource
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
                                       HandlerValueError, ExtrapolationWarning,
                                       HandlerWarning)
@@ -20,7 +22,7 @@ class Resource:
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
 
-    def __init__(self, h5_file, unscale=True, hsds=False):
+    def __init__(self, h5_file, unscale=True, hsds=False, str_decode=True):
         """
         Parameters
         ----------
@@ -31,6 +33,9 @@ class Resource:
         hsds : bool
             Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
             behind HSDS
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
         """
         self._h5_file = h5_file
         if hsds:
@@ -42,6 +47,7 @@ class Resource:
         self._unscale = unscale
         self._meta = None
         self._time_index = None
+        self._str_decode = str_decode
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
@@ -116,7 +122,9 @@ class Resource:
         """
         if self._meta is None:
             self._meta = pd.DataFrame(self._h5['meta'][...])
-            self._meta = self.df_str_decode(self._meta)
+
+            if self._str_decode:
+                self._meta = self.df_str_decode(self._meta)
 
         return self._meta
 
@@ -136,8 +144,8 @@ class Resource:
         """
 
         for col in df:
-            if (np.issubdtype(df[col].dtype, np.object_) and
-                    isinstance(df[col].values[0], bytes)):
+            if (np.issubdtype(df[col].dtype, np.object_)
+                    and isinstance(df[col].values[0], bytes)):
                 df[col] = df[col].copy().str.decode('utf-8', 'ignore')
 
         return df
@@ -232,6 +240,27 @@ class Resource:
         """
         return self._h5[dset].attrs.get(self.UNIT_ATTR, None)
 
+    def get_meta_arr(self, rec_name, rows=slice(None)):
+        """Get a meta array by name (faster than DataFrame extraction).
+
+        Parameters
+        ----------
+        rec_name : str
+            Named record from the meta data to retrieve.
+        rows : slice
+            Rows of the record to extract.
+
+        Returns
+        -------
+        arr : np.ndarray
+            Extracted array from the meta data record name.
+        """
+
+        meta_arr = self._h5['meta'][rec_name, rows]
+        if self._str_decode and np.issubdtype(meta_arr.dtype, np.bytes_):
+            meta_arr = np.char.decode(meta_arr, encoding='utf-8')
+        return meta_arr
+
     def _get_time_index(self, *ds_slice):
         """
         Extract and convert time_index to pandas Datetime Index
@@ -302,7 +331,8 @@ class Resource:
         if len(ds_slice) == 2:
             meta = meta[ds_slice[1]]
 
-        meta = self.df_str_decode(meta)
+        if self._str_decode:
+            meta = self.df_str_decode(meta)
 
         return meta
 
@@ -691,8 +721,8 @@ class WindResource(Resource):
             ts_1, ts_2 = ts_2, ts_1
 
         if mean:
-            alpha = (np.log(ts_2.mean() / ts_1.mean()) /
-                     np.log(h_2 / h_1))
+            alpha = (np.log(ts_2.mean() / ts_1.mean())
+                     / np.log(h_2 / h_1))
 
             if alpha < 0.06:
                 warnings.warn('Alpha is < 0.06', RuntimeWarning)

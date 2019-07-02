@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 pytests for MultiYear collection and computation
 """

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Batch Job CLI entry points.
 """

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # pylint: skip-file
 """reV unit test modul
 """

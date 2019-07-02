@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Exclusions CLI entry points.
 """
