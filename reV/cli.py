@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Generation
+reV command line interface (CLI).
 """
 import click
 

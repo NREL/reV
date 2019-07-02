@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV Base Configuration Frameworks
+reV Base Configuration Framework
 """
 import json
 import logging

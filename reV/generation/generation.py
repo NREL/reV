@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Generation
+reV generation module.
 """
 import logging
 import numpy as np

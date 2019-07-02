@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+"""reV supply curve point aggregation framework.
+
 Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster

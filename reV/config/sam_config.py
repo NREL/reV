@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV Base Configuration Frameworks
+reV configuration framework for SAM config inputs.
 """
 import json
 import logging

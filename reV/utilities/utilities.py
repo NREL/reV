@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Collection of helpful functions
 """

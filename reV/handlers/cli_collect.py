@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Generation CLI entry points.
+File collection CLI entry points.
 """
 import click
 import logging

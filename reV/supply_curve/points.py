@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV Supply Curve Points
+reV supply curve extent and points base frameworks.
 """
 import h5py
 import pandas as pd

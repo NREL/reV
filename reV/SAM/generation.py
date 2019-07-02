@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""reV-to-SAM interface module.
+"""reV-to-SAM generation interface module.
 
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
 SAM software development kit (SDK).
