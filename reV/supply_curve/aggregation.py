@@ -132,13 +132,13 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             outside of current resource class bin.
         """
 
-        if (self._res_class_dset is not None and
-                self._res_class_bin is not None):
+        if (self._res_class_dset is not None
+                and self._res_class_bin is not None):
 
-            rex = ((self.res_data[self._gen_gids] <
-                    np.min(self._res_class_bin)) |
-                   (self.res_data[self._gen_gids] >=
-                    np.max(self._res_class_bin)))
+            rex = ((self.res_data[self._gen_gids]
+                    < np.min(self._res_class_bin))
+                   | (self.res_data[self._gen_gids]
+                      >= np.max(self._res_class_bin)))
 
             boolean_exclude = (boolean_exclude | rex)
 
@@ -295,7 +295,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         Returns
         -------
-        mean_cf : float
+        mean_cf : float | None
             Mean capacity factor value for the non-excluded data.
         """
         mean_cf = None
@@ -309,13 +309,28 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         Returns
         -------
-        mean_lcoe : float
+        mean_lcoe : float | None
             Mean LCOE value for the non-excluded data.
         """
         mean_lcoe = None
         if self.lcoe_data is not None:
             mean_lcoe = self.lcoe_data[self._gen_gids].mean()
         return mean_lcoe
+
+    @property
+    def mean_res(self):
+        """Get the mean resource for the non-excluded data.
+
+        Returns
+        -------
+        mean_res : float | None
+            Mean resource for the non-excluded data.
+        """
+        mean_res = None
+        if (self._res_class_dset is not None
+                and self._res_class_bin is not None):
+            mean_res = self.res_data[self._gen_gids].mean()
+        return mean_res
 
     @property
     def power_density(self):
@@ -398,6 +413,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                     'gid_counts': point.gid_counts,
                     'mean_cf': point.mean_cf,
                     'mean_lcoe': point.mean_lcoe,
+                    'mean_res': point.mean_res,
                     'capacity': point.capacity,
                     'area_sq_km': point.area,
                     'latitude': point.latitude,
@@ -530,6 +546,62 @@ class Aggregation:
         return gen_index
 
     @staticmethod
+    def _get_input_data(gen, fpath_gen, res_class_dset, res_class_bins,
+                        dset_cf, dset_lcoe):
+        """Extract SC point agg input data args from higher level inputs.
+
+        Parameters
+        ----------
+        gen : reV.handlers.outputs.Outputs
+            reV outputs handler.
+        fpath_gen : str
+            Filepath to .h5 reV generation output results.
+        res_class_dset : str | None
+            Dataset in the generation file dictating resource classes.
+            None if no resource classes.
+        res_class_bins : list | None
+            List of two-entry lists dictating the resource class bins.
+            None if no resource classes.
+        dset_cf : str
+            Dataset name from f_gen containing capacity factor mean values.
+        dset_lcoe : str
+            Dataset name from f_gen containing LCOE mean values.
+
+        Returns
+        -------
+        res_data : np.ndarray | None
+            Extracted resource data from res_class_dset
+        res_class_bins : list
+            List of resouce class bin ranges.
+        cf_data : np.ndarray | None
+            Capacity factor data extracted from dset_cf in gen
+        lcoe_data : np.ndarray | None
+            LCOE data extracted from dset_lcoe in gen
+        """
+
+        if res_class_dset is None:
+            res_data = None
+            res_class_bins = [None]
+        else:
+            res_data = gen[res_class_dset]
+
+        if dset_cf in gen.dsets:
+            cf_data = gen[dset_cf]
+        else:
+            cf_data = None
+            warn('Could not find cf dataset "{}" in '
+                 'generation file: {}'
+                 .format(dset_cf, fpath_gen), OutputWarning)
+        if dset_lcoe in gen.dsets:
+            lcoe_data = gen[dset_lcoe]
+        else:
+            lcoe_data = None
+            warn('Could not find lcoe dataset "{}" in '
+                 'generation file: {}'
+                 .format(dset_lcoe, fpath_gen), OutputWarning)
+        return res_data, res_class_bins, cf_data, lcoe_data
+
+    @staticmethod
     def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                         gen_index, res_class_dset=None, res_class_bins=None,
                         dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
@@ -595,38 +667,22 @@ class Aggregation:
                         # pre-extract data before iteration
                         _ = gen.meta
 
-                        if res_class_dset is None:
-                            res_data = None
-                            res_class_bins = [None]
-                        else:
-                            res_data = gen[res_class_dset]
-
-                        if dset_cf in gen.dsets:
-                            cf_data = gen[dset_cf]
-                        else:
-                            cf_data = None
-                            warn('Could not find cf dataset "{}" in '
-                                 'generation file: {}'
-                                 .format(dset_cf, fpath_gen), OutputWarning)
-                        if dset_lcoe in gen.dsets:
-                            lcoe_data = gen[dset_lcoe]
-                        else:
-                            lcoe_data = None
-                            warn('Could not find lcoe dataset "{}" in '
-                                 'generation file: {}'
-                                 .format(dset_lcoe, fpath_gen), OutputWarning)
+                        inputs = Aggregation._get_input_data(gen, fpath_gen,
+                                                             res_class_dset,
+                                                             res_class_bins,
+                                                             dset_cf,
+                                                             dset_lcoe)
 
                         for gid in gids:
-
-                            for ri, res_bin in enumerate(res_class_bins):
+                            for ri, res_bin in enumerate(inputs[1]):
                                 try:
                                     pointsum = SupplyCurvePointSummary.summary(
                                         gid, excl, gen, techmap,
                                         dset_tm, gen_index,
-                                        res_class_dset=res_data,
+                                        res_class_dset=inputs[0],
                                         res_class_bin=res_bin,
-                                        dset_cf=cf_data,
-                                        dset_lcoe=lcoe_data,
+                                        dset_cf=inputs[2],
+                                        dset_lcoe=inputs[3],
                                         resolution=resolution,
                                         exclusion_shape=exclusion_shape,
                                         **kwargs)
