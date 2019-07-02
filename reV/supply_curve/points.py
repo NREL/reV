@@ -207,6 +207,7 @@ class SupplyCurvePoint:
         res_gids[mask] = -1
         gen_gids = gen_index[res_gids]
         gen_gids[mask] = -1
+        res_gids[(gen_gids == -1)] = -1
 
         if (gen_gids != -1).sum() == 0:
             raise EmptySupplyCurvePointError(emsg)

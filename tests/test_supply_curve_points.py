@@ -6,6 +6,7 @@ Created on Wed Jun 19 15:37:05 2019
 """
 import pytest
 import os
+from reV.supply_curve.aggregation import Aggregation
 from reV.supply_curve.points import SupplyCurvePoint, SupplyCurveExtent
 from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
@@ -14,7 +15,7 @@ from reV import TESTDATADIR
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_TECHMAP = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
-DSET_RES = 'res_ri_pv'
+DSET_TM = 'res_ri_pv'
 
 
 @pytest.mark.parametrize('resolution', [7, 32, 50, 64, 163])
@@ -74,7 +75,8 @@ def plot_single_sc_point(gid=2, resolution=64):
     colors *= 100
 
     _, axs = plt.subplots(1, 1)
-    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
+    gen_index = Aggregation._parse_gen_index(F_GEN)
+    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_TM, gen_index,
                           resolution=resolution) as sc:
 
         all_gen_gids = list(set(sc._gen_gids))
