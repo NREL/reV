@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV analysis configs (generation, lcoe, etc...)
+reV config for curtailment inputs.
 
 Created on Mon Jan 28 11:43:27 2019
 

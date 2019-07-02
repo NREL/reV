@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+"""Class to handle geotiff input files.
+
 Created on Thu Jun 20 09:43:34 2019
 
 @author: gbuster

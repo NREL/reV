@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Levelized Cost of Energy
+reV econ module (lcoe-fcr, single owner, etc...)
 """
 import logging
 import pandas as pd

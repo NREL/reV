@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+"""reV config for batch run config.
+
 Created on Mon Jun 10 13:49:53 2019
 
 @author: gbuster

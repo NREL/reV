@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV collection config
+reV file collection config
 
 Created on Mon Jan 28 11:43:27 2019
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+"""Solar resource downscaling utility methods.
+
 Created on April 8 2019
 
 @author: gbuster

@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
+"""reV batching framework for parametric runs.
+
+The batch framework allows users to modify key-value pairs in input jsons files
+based on a batch config file. The batch module will create run directories for
+all combinations of input parametrics, and run the reV pipelines for each job.
+
 Created on Mon Jun 10 13:49:53 2019
 
 @author: gbuster

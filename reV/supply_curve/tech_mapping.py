@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
+"""reV tech mapping framework.
+
+This module manages the exclusions-to-resource mapping.
+The core of this module is a parallel cKDTree.
+
 Created on Fri Jun 21 16:05:47 2019
 
 @author: gbuster

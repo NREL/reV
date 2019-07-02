@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV Base Configuration Frameworks
+reV job status manager.
 """
 import copy
 import os

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Custom Exceptions and Errors for reV
 """

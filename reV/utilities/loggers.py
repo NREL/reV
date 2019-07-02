@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Logging for reV
 """
