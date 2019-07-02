@@ -21,7 +21,6 @@ F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_OUT = os.path.join(TESTDATADIR, 'sc_out/tech_map.h5')
 F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
 RES_DSET = 'res_ri_pv'
-GEN_DSET = 'gen_ri_pv'
 
 PURGE_OUT = True
 
@@ -29,9 +28,7 @@ PURGE_OUT = True
 def test_resource_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
 
-    TechMapping.run_resource_map(F_EXCL, F_RES, F_OUT, RES_DSET, n_cores=2)
-    TechMapping.run_gen_map(F_EXCL, F_GEN, F_OUT, GEN_DSET, RES_DSET,
-                            n_cores=2)
+    TechMapping.run(F_EXCL, F_RES, F_OUT, RES_DSET, n_cores=2)
 
     with h5py.File(F_BASELINE, 'r') as f_baseline:
         with h5py.File(F_OUT, 'r') as f_test:
@@ -57,32 +54,13 @@ def test_resource_tech_mapping():
         os.remove(F_OUT)
 
 
-def test_gen_tech_mapping():
-    """Run the supply curve technology mapping and compare to baseline file"""
-
-    TechMapping.run_resource_map(F_EXCL, F_GEN, F_OUT, RES_DSET, n_cores=2)
-    TechMapping.run_gen_map(F_EXCL, F_GEN, F_OUT, GEN_DSET, RES_DSET,
-                            n_cores=2)
-
-    with h5py.File(F_OUT, 'r') as f:
-        res = f[RES_DSET][...].flatten()
-        gen = f[GEN_DSET][...].flatten()
-
-        msg = 'Resource and generation tech mappings are not equal!'
-
-        assert np.array_equal(res, gen), msg
-
-    if PURGE_OUT:
-        os.remove(F_OUT)
-
-
 def plot_tech_mapping():
     """Run the supply curve technology mapping and plot the resulting mapped
     points."""
 
     import matplotlib.pyplot as plt
 
-    TechMapping.run_resource_map(F_EXCL, F_GEN, F_OUT, RES_DSET, n_cores=2)
+    TechMapping.run(F_EXCL, F_GEN, F_OUT, RES_DSET, n_cores=2)
 
     with h5py.File(F_OUT, 'r') as f:
         ind = f[RES_DSET][...].flatten()

@@ -16,7 +16,6 @@ F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_TECHMAP = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
 DSET_RES = 'res_ri_pv'
-DSET_GEN = 'gen_ri_pv'
 
 
 @pytest.mark.parametrize('resolution', [7, 32, 50, 64, 163])
@@ -50,7 +49,7 @@ def test_sc_aggregation(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
     columns and that all 100 resource gids were found"""
 
-    summary = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN, DSET_RES,
+    summary = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
                                   resolution=resolution)
 
     all_res_gids = []
@@ -68,12 +67,12 @@ def test_parallel_agg(resolution=64):
     aggregation."""
 
     gids = list(range(50, 70))
-    summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN,
-                                         DSET_RES, resolution=resolution,
-                                         gids=gids, n_cores=1)
-    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_GEN,
-                                           DSET_RES, resolution=resolution,
-                                           gids=gids, n_cores=3)
+    summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
+                                         resolution=resolution, gids=gids,
+                                         n_cores=1)
+    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
+                                           resolution=resolution, gids=gids,
+                                           n_cores=3)
 
     assert all(summary_serial == summary_parallel)
 
@@ -108,7 +107,7 @@ def plot_single_sc_point(gid=2, resolution=64):
     colors *= 100
 
     _, axs = plt.subplots(1, 1)
-    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_GEN, DSET_RES,
+    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
                           resolution=resolution) as sc:
 
         all_gen_gids = list(set(sc._gen_gids))

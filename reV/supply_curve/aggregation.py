@@ -59,8 +59,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         return gen_gids
 
     @classmethod
-    def summary(cls, gid, fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
-                tm_dset_res, args=None, **kwargs):
+    def summary(cls, gid, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+                gen_index, args=None, **kwargs):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -74,12 +74,13 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         fpath_techmap : str
             Filepath to tech mapping between exclusions and generation results
             (created using the reV TechMapping framework).
-        tm_dset_gen : str
+        dset_tm : str
             Dataset name in the techmap file containing the
             exclusions-to-generation mapping data.
-        tm_dset_res : str
-            Dataset name in the techmap file containing the
-            exclusions-to-resource mapping data.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
@@ -92,8 +93,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        with cls(gid, fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
-                 tm_dset_res, **kwargs) as point:
+        with cls(gid, fpath_excl, fpath_gen, fpath_techmap, dset_tm, gen_index,
+                 **kwargs) as point:
 
             ARGS = {'resource_gids': point.res_gids,
                     'gen_gids': point.gen_gids,
@@ -118,8 +119,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 class Aggregation:
     """Supply points aggregation framework."""
 
-    def __init__(self, fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
-                 tm_dset_res, resolution=64, gids=None, n_cores=None):
+    def __init__(self, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+                 resolution=64, gids=None, n_cores=None):
         """
         Parameters
         ----------
@@ -130,10 +131,7 @@ class Aggregation:
         fpath_techmap : str
             Filepath to tech mapping between exclusions and generation results
             The tech mapping module will be run if this file does not exist.
-        tm_dset_gen : str
-            Dataset name in the techmap file containing the
-            exclusions-to-generation mapping data.
-        tm_dset_res : str
+        dset_tm : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         resolution : int | None
@@ -150,8 +148,7 @@ class Aggregation:
         self._fpath_excl = fpath_excl
         self._fpath_gen = fpath_gen
         self._fpath_techmap = fpath_techmap
-        self._tm_dset_gen = tm_dset_gen
-        self._tm_dset_res = tm_dset_res
+        self._dset_tm = dset_tm
         self._resolution = resolution
 
         if n_cores is None:
@@ -166,6 +163,7 @@ class Aggregation:
         self._gids = gids
 
         self._check_files()
+        self._gen_index = self._parse_gen_index(self._fpath_gen)
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -176,25 +174,46 @@ class Aggregation:
                                         '{}'.format(fpath))
 
         with h5py.File(self._fpath_techmap, 'r') as f:
-            if self._tm_dset_gen not in f:
+            if self._dset_tm not in f:
                 raise FileInputError('Could not find "{}" in techmap file: {}'
-                                     .format(self._tm_dset_gen,
+                                     .format(self._dset_tm,
                                              self._fpath_techmap))
-            if self._tm_dset_res not in f:
-                raise FileInputError('Could not find "{}" in techmap file: {}'
-                                     .format(self._tm_dset_res,
-                                             self._fpath_techmap))
-
-            tmf = os.path.basename(f[self._tm_dset_gen].attrs['fpath'])
-            if (os.path.basename(self._fpath_gen) != tmf):
-                raise FileInputError('Input generation file name ("{}") does '
-                                     'not match tech file attribute ("{}")'
-                                     .format(os.path.basename(self._fpath_gen),
-                                             tmf))
 
     @staticmethod
-    def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
-                        tm_dset_res, resolution=64, gids=None):
+    def _parse_gen_index(fpath_gen):
+        """Parse gen outputs for an array of generation gids corresponding to
+        the resource gids.
+
+        Parameters
+        ----------
+        fpath_gen : str
+            Filepath to .h5 reV generation output results.
+
+        Returns
+        -------
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
+        """
+
+        with Outputs(fpath_gen, mode='r') as gen:
+            gen_index = gen.meta
+
+        gen_index = gen_index.rename(columns={'gid': 'res_gids'})
+        gen_index['gen_gids'] = gen_index.index
+        gen_index = gen_index[['res_gids', 'gen_gids']]
+        gen_index = gen_index.set_index(keys='res_gids')
+        gen_index = gen_index.reindex(range(gen_index.index.max() + 1))
+        gen_index = gen_index['gen_gids'].values
+        gen_index[np.isnan(gen_index)] = -1
+        gen_index = gen_index.astype(np.int32)
+
+        return gen_index
+
+    @staticmethod
+    def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+                        gen_index, resolution=64, gids=None):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -206,12 +225,13 @@ class Aggregation:
         fpath_techmap : str
             Filepath to tech mapping between exclusions and generation results
             (created using the reV TechMapping framework).
-        tm_dset_gen : str
-            Dataset name in the techmap file containing the
-            exclusions-to-generation mapping data.
-        tm_dset_res : str
+        dset_tm : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -245,8 +265,8 @@ class Aggregation:
                         for gid in gids:
                             try:
                                 pointsum = SupplyCurvePointSummary.summary(
-                                    gid, excl, gen, techmap, tm_dset_gen,
-                                    tm_dset_res, resolution=resolution,
+                                    gid, excl, gen, techmap, dset_tm,
+                                    gen_index, resolution=resolution,
                                     exclusion_shape=exclusion_shape,
                                     close=False)
 
@@ -294,8 +314,8 @@ class Aggregation:
                                                self._fpath_excl,
                                                self._fpath_gen,
                                                self._fpath_techmap,
-                                               self._tm_dset_gen,
-                                               self._tm_dset_res,
+                                               self._dset_tm,
+                                               self._gen_index,
                                                resolution=self._resolution,
                                                gids=gid_set))
             # gather results
@@ -309,8 +329,8 @@ class Aggregation:
         return summary
 
     @classmethod
-    def summary(cls, fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
-                tm_dset_res, resolution=64, gids=None, n_cores=None,
+    def summary(cls, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+                resolution=64, gids=None, n_cores=None,
                 option='dataframe'):
         """Get the supply curve points aggregation summary.
 
@@ -323,10 +343,7 @@ class Aggregation:
         fpath_techmap : str
             Filepath to tech mapping between exclusions and generation results
             The tech mapping module will be run if this file does not exist.
-        tm_dset_gen : str
-            Dataset name in the techmap file containing the
-            exclusions-to-generation mapping data.
-        tm_dset_res : str
+        dset_tm : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         resolution : int | None
@@ -347,15 +364,14 @@ class Aggregation:
             Summary of the SC points keyed by SC point gid.
         """
 
-        agg = cls(fpath_excl, fpath_gen, fpath_techmap, tm_dset_gen,
-                  tm_dset_res, resolution=resolution, gids=gids,
+        agg = cls(fpath_excl, fpath_gen, fpath_techmap,
+                  dset_tm, resolution=resolution, gids=gids,
                   n_cores=n_cores)
 
         if n_cores == 1:
             summary = agg._serial_summary(agg._fpath_excl, agg._fpath_gen,
                                           agg._fpath_techmap,
-                                          agg._tm_dset_gen,
-                                          agg._tm_dset_res,
+                                          agg._dset_tm, agg._gen_index,
                                           resolution=agg._resolution,
                                           gids=gids)
         else:

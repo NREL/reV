@@ -6,7 +6,6 @@ Created on Fri Jun 21 16:05:47 2019
 """
 import h5py
 import concurrent.futures as cf
-import pandas as pd
 import numpy as np
 import os
 from scipy.spatial import cKDTree
@@ -14,7 +13,6 @@ import logging
 from warnings import warn
 
 from reV.handlers.resource import Resource
-from reV.handlers.outputs import Outputs
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.utilities.exceptions import FileInputWarning, FileInputError
 
@@ -26,7 +24,7 @@ class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
     def __init__(self, fpath_excl, fpath_map, fpath_out, dset,
-                 distance_upper_bound=0.03, resolution=2560, n_cores=None):
+                 distance_upper_bound=0.03, map_chunk=2560, n_cores=None):
         """
         Parameters
         ----------
@@ -44,9 +42,8 @@ class TechMapping:
             resource points. None will calculate a good distance based on the
             resource meta data coordinates. 0.03 is a good value for a 4km
             resource grid and finer.
-        resolution : int | None
-            Supply curve resolution used for the tech mapping calc. This is not
-            the final supply curve point resolution.
+        map_chunk : int | None
+            Calculation chunk used for the tech mapping calc.
         n_cores : int | None
             Number of cores to run mapping on. None uses all available cpus.
         """
@@ -58,8 +55,8 @@ class TechMapping:
         self._dset = dset
         self._check_fout()
 
-        self._sc = SupplyCurveExtent(fpath_excl, resolution=resolution)
-        self._resolution = self._sc._res
+        self._sc = SupplyCurveExtent(fpath_excl, resolution=map_chunk)
+        self._map_chunk = self._sc._res
 
         if n_cores is None:
             n_cores = os.cpu_count()
@@ -248,7 +245,7 @@ class TechMapping:
                                         self._fpath_map,
                                         self._fpath_out,
                                         self.distance_upper_bound,
-                                        self._resolution)] = i
+                                        self._map_chunk)] = i
 
             for future in cf.as_completed(futures):
                 n_finished += 1
@@ -267,7 +264,7 @@ class TechMapping:
 
     @staticmethod
     def map_resource_gids(gids, fpath_excl, fpath_res, fpath_out,
-                          distance_upper_bound, resolution, margin=0.1):
+                          distance_upper_bound, map_chunk, margin=0.1):
         """Map exclusion gids to the resource meta.
 
         Parameters
@@ -285,10 +282,8 @@ class TechMapping:
         distance_upper_bound : float | None
             Upper boundary distance for KNN lookup between exclusion points and
             resource points.
-        resolution : int
-            Supply curve resolution used for the tech mapping. Must correspond
-            to the resolution used to make the gids input. This is not
-            the final supply curve point resolution.
+        map_chunk : int
+            Calculation chunk used for the tech mapping calc.
         margin : float
             Margin when reducing the resource lat/lon.
 
@@ -308,7 +303,7 @@ class TechMapping:
         ind_out = []
         coord_labels = ['latitude', 'longitude']
 
-        sc = SupplyCurveExtent(fpath_excl, resolution=resolution)
+        sc = SupplyCurveExtent(fpath_excl, resolution=map_chunk)
 
         coords_out, lat_range, lon_range = TechMapping._unpack_coords(
             gids, sc, fpath_out, coord_labels=coord_labels)
@@ -342,129 +337,6 @@ class TechMapping:
                 ind_out.append(-1)
 
         return ind_out, coords_out
-
-    def _parallel_gen_map(self, res_map_dset):
-        """Map all generation gids to pre-mapped resource gids in parallel.
-
-        Parameters
-        ----------
-        res_map_dset : str
-            Pre-existing dataset name in fpath_out to retrieve
-            resource-mapping results.
-
-        Returns
-        -------
-        ind_all : np.ndarray
-            Index values of the NN gen point. -1 if no gen point found.
-            1D integer array with length equal to the number of tech exclusion
-            points in the supply curve extent.
-        """
-
-        if not os.path.exists(self._fpath_out):
-            raise FileInputError('TechMap file must exist before the '
-                                 'generation mapping can run. Could not '
-                                 'find file: {}'.format(self._fpath_out))
-        with h5py.File(self._fpath_out, 'r') as f:
-            if res_map_dset not in list(f):
-                raise FileInputError('Could not find pre-existing resource '
-                                     'map dataset "{}" in res map file: {}'
-                                     .format(res_map_dset, self._fpath_out))
-
-        gids = np.array(list(range(len(self._sc))), dtype=np.uint32)
-        gid_chunks = np.array_split(gids, int(np.ceil(len(gids) / 2)))
-
-        # init full output arrays
-        gen_gids_all, _ = self._init_out_arrays()
-
-        n_finished = 0
-        futures = {}
-        with cf.ProcessPoolExecutor(max_workers=self._n_cores) as executor:
-
-            # iterate through split executions, submitting each to worker
-            for i, gid_set in enumerate(gid_chunks):
-                # submit executions and append to futures list
-                futures[executor.submit(self.map_gen_gids,
-                                        gid_set,
-                                        self._fpath_excl,
-                                        self._fpath_map,
-                                        self._fpath_out,
-                                        res_map_dset,
-                                        self._resolution)] = i
-
-            for future in cf.as_completed(futures):
-                n_finished += 1
-                logger.info('Parallel TechMapping futures collected: '
-                            '{} out of {}'
-                            .format(n_finished, len(futures)))
-
-                i = futures[future]
-                result = future.result()
-                for j, gid in enumerate(gid_chunks[i]):
-                    i_out_arr = self._sc.get_flat_excl_ind(gid)
-                    gen_gids_all[i_out_arr] = result[j]
-
-        return gen_gids_all
-
-    @staticmethod
-    def map_gen_gids(gids, fpath_excl, fpath_gen, fpath_out, res_map_dset,
-                     resolution):
-        """Map exclusion gids to the resource meta.
-
-        Parameters
-        ----------
-        gids : np.ndarray
-            Supply curve gids with tech exclusion points to map to the
-            resource meta points.
-        fpath_excl : str
-            Filepath to exclusions geotiff (tech layer).
-        fpath_gen : str
-            Filepath to .h5 generation file that we're mapping to.
-        fpath_out : str
-            .h5 filepath to save tech mapping results to, or to read from
-            (if exists).
-        res_map_dset : str
-            Pre-existing dataset name in fpath_out to retrieve
-            resource-mapping results.
-        resolution : int
-            Supply curve resolution used for the tech mapping. Must correspond
-            to the resolution used to make the gids input. This is not
-            the final supply curve point resolution.
-
-        Returns
-        -------
-        gen_gids_out : list
-            List of arrays of generation index values from the NN. List
-            entries correspond to input gids.
-        """
-
-        logger.debug('Getting tech layer coordinates for chunks {} through {}'
-                     .format(gids[0], gids[-1]))
-        gen_gids_out = []
-        sc = SupplyCurveExtent(fpath_excl, resolution=resolution)
-
-        with Outputs(fpath_gen, str_decode=False) as gen:
-            gen_meta = gen.meta[['gid']]
-            gen_meta['gen_gid'] = gen_meta.index.values
-
-        for gid in gids:
-            row_slice, col_slice = sc.get_excl_slices(gid)
-
-            with h5py.File(fpath_out, 'r') as f:
-                res_gid = f[res_map_dset][row_slice, col_slice].flatten()
-
-            res_gid = pd.DataFrame({'res_gid': res_gid})
-            gen_gids = pd.merge(res_gid, gen_meta, left_on='res_gid',
-                                right_on='gid', how='left')['gen_gid'].values
-            gen_gids[np.isnan(gen_gids)] = -1
-            gen_gids.astype(np.int32)
-            gen_gids_out.append(gen_gids)
-        else:
-            logger.debug('No close gen points for chunks {} through {}'
-                         .format(gids[0], gids[-1]))
-            for _ in gids:
-                gen_gids_out.append(-1)
-
-        return gen_gids_out
 
     def save_tech_map(self, ind, coords, fpath_out, dset, chunks=(128, 128)):
         """Save tech mapping indices and coordinates to an h5 output file.
@@ -518,8 +390,8 @@ class TechMapping:
                     .format(dset, fpath_out))
 
     @classmethod
-    def run_resource_map(cls, fpath_excl, fpath_res, fpath_out, res_map_dset,
-                         **kwargs):
+    def run(cls, fpath_excl, fpath_res, fpath_out, res_map_dset,
+            **kwargs):
         """Run parallel mapping and save to h5 file.
 
         Parameters
@@ -539,29 +411,3 @@ class TechMapping:
         mapper = cls(fpath_excl, fpath_res, fpath_out, res_map_dset, **kwargs)
         ind, coords = mapper._parallel_resource_map()
         mapper.save_tech_map(ind, coords, fpath_out, res_map_dset)
-
-    @classmethod
-    def run_gen_map(cls, fpath_excl, fpath_gen, fpath_out, gen_map_dset,
-                    res_map_dset, **kwargs):
-        """Run parallel mapping and save to h5 file.
-
-        Parameters
-        ----------
-        fpath_excl : str
-            Filepath to exclusions geotiff (tech layer).
-        fpath_gen : str
-            Filepath to .h5 gen file that we're mapping to.
-        fpath_out : str
-            .h5 filepath to save tech mapping results.
-        gen_map_dset : str
-            Dataset name in fpath_out to save gen mapping results to.
-        res_map_dset : str
-            Pre-existing dataset name in fpath_out to retrieve
-            resource-mapping results.
-        kwargs : dict
-            Keyword args to initialize the TechMapping object.
-        """
-
-        mapper = cls(fpath_excl, fpath_gen, fpath_out, gen_map_dset, **kwargs)
-        ind = mapper._parallel_gen_map(res_map_dset)
-        mapper.save_tech_map(ind, None, fpath_out, gen_map_dset)

@@ -31,7 +31,7 @@ class ExclusionPoints(Geotiff):
 class SupplyCurvePoint:
     """Single supply curve point framework"""
 
-    def __init__(self, gid, f_excl, f_gen, f_techmap, tm_dset_gen, tm_dset_res,
+    def __init__(self, gid, f_excl, f_gen, f_techmap, dset_tm, gen_index,
                  resolution=64, exclusion_shape=None, close=True):
         """
         Parameters
@@ -47,12 +47,13 @@ class SupplyCurvePoint:
             Filepath to tech mapping between exclusions and resource data
             (created using the reV TechMapping framework) or an h5py file
             handler object.
-        tm_dset_gen : str
-            Dataset name in the techmap file containing the
-            exclusions-to-generation mapping data.
-        tm_dset_res : str
+        dset_tm : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
@@ -70,8 +71,6 @@ class SupplyCurvePoint:
         self._fpath_excl = None
         self._fpath_gen = None
         self._fpath_techmap = None
-        self._tm_dset_gen = tm_dset_gen
-        self._tm_dset_res = tm_dset_res
 
         # handler objects
         self._exclusions = None
@@ -82,7 +81,8 @@ class SupplyCurvePoint:
         self._parse_files(f_excl, f_gen, f_techmap)
         self._rows, self._cols = self._parse_slices(
             gid, f_excl, resolution, exclusion_shape=exclusion_shape)
-        self._gen_gids, self._res_gids = self._parse_techmap()
+        self._gen_gids, self._res_gids = self._parse_techmap(dset_tm,
+                                                             gen_index)
 
     def _parse_files(self, f_excl, f_gen, f_techmap):
         """Parse gen + excl filepath input or handler object and set to attrs.
@@ -167,8 +167,18 @@ class SupplyCurvePoint:
 
         return rows, cols
 
-    def _parse_techmap(self):
+    def _parse_techmap(self, dset_tm, gen_index):
         """Parse data from the tech map file (exclusions to resource mapping).
+
+        Parameters
+        ----------
+        dset_tm : str
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
 
         Returns
         -------
@@ -182,17 +192,23 @@ class SupplyCurvePoint:
             corresponding to the tech exclusions.
         """
 
-        gen_gids = self.techmap[self._tm_dset_gen][self.rows, self.cols]
-        gen_gids = gen_gids.astype(np.int32).flatten()
+        emsg = ('Supply curve point gid {} has no viable exclusion points '
+                'based on techmap file: "{}"'
+                .format(self._gid, self._fpath_techmap))
 
-        if (gen_gids != -1).sum() == 0:
-            emsg = ('Supply curve point gid {} has no viable exclusion points '
-                    'based on techmap file: "{}"'
-                    .format(self._gid, self._fpath_techmap))
+        res_gids = self.techmap[dset_tm][self.rows, self.cols]
+        res_gids = res_gids.astype(np.int32).flatten()
+
+        if (res_gids != -1).sum() == 0:
             raise EmptySupplyCurvePointError(emsg)
 
-        res_gids = self.techmap[self._tm_dset_res][self.rows, self.cols]
-        res_gids = res_gids.astype(np.int32).flatten()
+        mask = (res_gids >= len(gen_index)) | (res_gids == -1)
+        res_gids[mask] = -1
+        gen_gids = gen_index[res_gids]
+        gen_gids[mask] = -1
+
+        if (gen_gids != -1).sum() == 0:
+            raise EmptySupplyCurvePointError(emsg)
 
         return gen_gids, res_gids
 
