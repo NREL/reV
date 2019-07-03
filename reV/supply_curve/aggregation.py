@@ -13,6 +13,7 @@ import pandas as pd
 from warnings import warn
 import logging
 
+from reV.handlers.geotiff import Geotiff
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.points import (ExclusionPoints, SupplyCurvePoint,
                                      SupplyCurveExtent)
@@ -32,7 +33,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
     def __init__(self, gid, f_excl, f_gen, f_techmap, tm_dset_gen, tm_dset_res,
                  res_class_dset=None, res_class_bin=None, ex_area=0.0081,
                  power_density=None, dset_cf='cf_mean-means',
-                 dset_lcoe='lcoe_fcr-means', resolution=64,
+                 dset_lcoe='lcoe_fcr-means', data_layers=None, resolution=64,
                  exclusion_shape=None,
                  close=False):
         """
@@ -73,6 +74,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         dset_lcoe : str | np.ndarray
             Dataset name from f_gen containing LCOE mean values.
             Can be pre-extracted generation output data in np.ndarray.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "band", "method",
+            and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
@@ -86,6 +91,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         self._res_class_bin = res_class_bin
         self._dset_cf = dset_cf
         self._dset_lcoe = dset_lcoe
+        self._data_layers = data_layers
         self._res_gid_set = None
         self._gen_gid_set = None
         self._mean_res = None
@@ -109,8 +115,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         exclude = (self.excl_data == 0)
         exclude = self._resource_exclusion(exclude)
 
-        self._gen_gids = self._gen_gids[~exclude]
-        self._res_gids = self._res_gids[~exclude]
+        self._gen_gids[exclude] = -1
+        self._res_gids[exclude] = -1
 
         if (self._gen_gids != -1).sum() == 0:
             msg = ('Supply curve point gid {} is completely excluded for res '
@@ -173,7 +179,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         area : float
             Non-excluded resource/generation area in square km.
         """
-        return (self._res_gids != -1).sum() * self._ex_area
+        return self.mask.sum() * self._ex_area
 
     @property
     def res_data(self):
@@ -300,7 +306,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         """
         mean_cf = None
         if self.gen_data is not None:
-            mean_cf = self.gen_data[self._gen_gids].mean()
+            mean_cf = self.gen_data[self._gen_gids[self.mask]].mean()
         return mean_cf
 
     @property
@@ -314,7 +320,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         """
         mean_lcoe = None
         if self.lcoe_data is not None:
-            mean_lcoe = self.lcoe_data[self._gen_gids].mean()
+            mean_lcoe = self.lcoe_data[self._gen_gids[self.mask]].mean()
         return mean_lcoe
 
     @property
@@ -329,7 +335,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         mean_res = None
         if (self._res_class_dset is not None
                 and self._res_class_bin is not None):
-            mean_res = self.res_data[self._gen_gids].mean()
+            mean_res = self.res_data[self._gen_gids[self.mask]].mean()
         return mean_res
 
     @property
@@ -372,7 +378,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     @classmethod
     def summary(cls, gid, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
-                gen_index, args=None, **kwargs):
+                gen_index, args=None, data_layers=None, **kwargs):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -396,6 +402,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "band", "method",
+            and "fpath".
         kwargs : dict
             Keyword args to init the SC point.
 
@@ -406,7 +416,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         """
 
         with cls(gid, fpath_excl, fpath_gen, fpath_techmap, dset_tm, gen_index,
-                 **kwargs) as point:
+                 data_layers=data_layers, **kwargs) as point:
 
             ARGS = {'res_gids': point.res_gid_set,
                     'gen_gids': point.gen_gid_set,
@@ -440,6 +450,7 @@ class Aggregation:
     def __init__(self, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                  res_class_dset=None, res_class_bins=None,
                  dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
+                 data_layers=None,
                  resolution=64, gids=None, n_cores=None):
         """
         Parameters
@@ -464,6 +475,10 @@ class Aggregation:
             Dataset name from f_gen containing capacity factor mean values.
         dset_lcoe : str
             Dataset name from f_gen containing LCOE mean values.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "band", "method",
+            and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -484,6 +499,7 @@ class Aggregation:
         self._dset_cf = dset_cf
         self._dset_lcoe = dset_lcoe
         self._resolution = resolution
+        self._data_layers = data_layers
 
         if n_cores is None:
             n_cores = os.cpu_count()
@@ -497,6 +513,7 @@ class Aggregation:
         self._gids = gids
 
         self._check_files()
+        self._check_data_layers()
         self._gen_index = self._parse_gen_index(self._fpath_gen)
 
     def _check_files(self):
@@ -512,6 +529,36 @@ class Aggregation:
                 raise FileInputError('Could not find "{}" in techmap file: {}'
                                      .format(self._dset_tm,
                                              self._fpath_techmap))
+
+    def _check_data_layers(self):
+        """Run pre-flight checks on requested aggregation data layers."""
+
+        if self._data_layers is not None:
+
+            with Geotiff(self._fpath_excl) as f:
+                shape_base = f.shape
+
+            for k, v in self._data_layers.items():
+                if 'band' not in v:
+                    raise KeyError('Data band for aggregation data layer "{}" '
+                                   'must be specified.'.format(k))
+                if 'method' not in v:
+                    raise KeyError('Data aggregation method data layer "{}" '
+                                   'must be specified.'.format(k))
+                if 'fpath' not in v:
+                    raise KeyError('File path (fpath) for aggregation data '
+                                   'layer "{}" must be specified.'.format(k))
+                if not os.path.exists(v['fpath']):
+                    raise FileInputError('Cannot find file path (fpath) for '
+                                         'aggregation data layer "{}".'
+                                         .format(k))
+                with Geotiff(v['fpath']) as f:
+                    if f.shape != shape_base:
+                        raise FileInputError('Geotiff shape of data layer '
+                                             '"{}" is {}, which does not '
+                                             'match the baseline exclusions '
+                                             'shape {}.'
+                                             .format(k, f.shape, shape_base))
 
     @staticmethod
     def _parse_gen_index(fpath_gen):
@@ -605,6 +652,7 @@ class Aggregation:
     def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                         gen_index, res_class_dset=None, res_class_bins=None,
                         dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
+                        data_layers=None,
                         resolution=64, gids=None, **kwargs):
         """Standalone method to create agg summary - can be parallelized.
 
@@ -634,6 +682,10 @@ class Aggregation:
             Dataset name from f_gen containing capacity factor mean values.
         dset_lcoe : str
             Dataset name from f_gen containing LCOE mean values.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "band", "method",
+            and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -683,6 +735,7 @@ class Aggregation:
                                         res_class_bin=res_bin,
                                         dset_cf=inputs[2],
                                         dset_lcoe=inputs[3],
+                                        data_layers=data_layers,
                                         resolution=resolution,
                                         exclusion_shape=exclusion_shape,
                                         **kwargs)
@@ -742,6 +795,7 @@ class Aggregation:
                     res_class_dset=self._res_class_dset,
                     res_class_bins=self._res_class_bins,
                     dset_cf=self._dset_cf, dset_lcoe=self._dset_lcoe,
+                    data_layers=self._data_layers,
                     resolution=self._resolution,
                     gids=gid_set, **kwargs))
 
@@ -759,8 +813,8 @@ class Aggregation:
     def summary(cls, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                 res_class_dset=None, res_class_bins=None,
                 dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
-                resolution=64, gids=None, n_cores=None, option='dataframe',
-                **kwargs):
+                data_layers=None, resolution=64, gids=None, n_cores=None,
+                option='dataframe', **kwargs):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -785,6 +839,10 @@ class Aggregation:
             Dataset name from f_gen containing capacity factor mean values.
         dset_lcoe : str
             Dataset name from f_gen containing LCOE mean values.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "band", "method",
+            and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
@@ -807,9 +865,10 @@ class Aggregation:
         """
 
         agg = cls(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
-                  resolution=resolution, gids=gids,
                   res_class_dset=res_class_dset, res_class_bins=res_class_bins,
-                  dset_cf=dset_cf, dset_lcoe=dset_lcoe, n_cores=n_cores)
+                  dset_cf=dset_cf, dset_lcoe=dset_lcoe,
+                  data_layers=data_layers,
+                  resolution=resolution, gids=gids, n_cores=n_cores)
 
         if n_cores == 1:
             summary = agg._serial_summary(agg._fpath_excl, agg._fpath_gen,
@@ -819,6 +878,7 @@ class Aggregation:
                                           res_class_bins=agg._res_class_bins,
                                           dset_cf=agg._dset_cf,
                                           dset_lcoe=agg._dset_lcoe,
+                                          data_layers=agg._data_layers,
                                           resolution=agg._resolution,
                                           gids=gids, **kwargs)
         else:
