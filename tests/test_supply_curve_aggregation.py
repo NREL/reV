@@ -19,6 +19,10 @@ F_AGG_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
 DSET_TM = 'res_nsrdb_full'
 RES_CLASS_DSET = 'ghi_mean-means'
 RES_CLASS_BINS = [[0, 4], [4, 10]]
+FPATH_SLOPE = os.path.join(TESTDATADIR, "ri_exclusions/ri_srtm_slope.tif")
+DATA_LAYERS = {'pct_slope': {'band': 0,
+                             'method': 'mean',
+                             'fpath': FPATH_SLOPE}}
 
 
 def test_aggregation_extent(resolution=64):
@@ -65,6 +69,7 @@ def test_aggregation_summary():
     s = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_TM,
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
+                            data_layers=DATA_LAYERS,
                             n_cores=1)
 
     if not os.path.exists(F_AGG_BASELINE):
