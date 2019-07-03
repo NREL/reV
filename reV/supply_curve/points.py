@@ -311,11 +311,13 @@ class SupplyCurvePoint:
         centroid : tuple
             SC point centroid (lat, lon).
         """
+        decimals = 3
 
         if self._centroid is None:
             lats = self.techmap['latitude'][self.rows, self.cols]
             lons = self.techmap['longitude'][self.rows, self.cols]
-            self._centroid = (lats.mean(), lons.mean())
+            self._centroid = (np.round(lats.mean(), decimals=decimals),
+                              np.round(lons.mean(), decimals=decimals))
 
         return self._centroid
 
