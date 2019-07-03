@@ -353,6 +353,18 @@ class SupplyCurvePoint:
         return self._excl_data
 
     @property
+    def mask(self):
+        """Get a boolean mask of the exclusion points that have been excluded.
+
+        Returns
+        -------
+        mask : np.ndarray
+            Mask with length equal to the flattened exclusion shape
+        """
+
+        return (self._gen_gids != -1)
+
+    @property
     def gen(self):
         """Get the generation output object.
 

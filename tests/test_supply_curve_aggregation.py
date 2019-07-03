@@ -68,7 +68,7 @@ def test_aggregation_summary():
                             n_cores=1)
 
     if not os.path.exists(F_AGG_BASELINE):
-        s.to_csv(F_AGG_BASELINE)
+        s.to_csv(F_AGG_BASELINE, index=False)
         raise Exception('Aggregation summary baseline file did not exist. '
                         'Created: {}'.format(F_AGG_BASELINE))
 
