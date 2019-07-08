@@ -8,6 +8,7 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 
+from reV.config.output_request import OutputRequest
 from reV.pipeline.pipeline import Pipeline
 from reV.config.base_analysis_config import AnalysisConfig
 
@@ -86,9 +87,7 @@ class CollectionConfig(AnalysisConfig):
         """
 
         if self._dsets is None:
-            self._dsets = self['project_control']['dsets']
-            if not isinstance(self._dsets, list):
-                self._dsets = list(self._dsets)
+            self._dsets = OutputRequest(self['project_control']['dsets'])
         return self._dsets
 
     def _parse_pipeline_prefixes(self):
