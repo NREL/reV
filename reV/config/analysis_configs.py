@@ -10,7 +10,7 @@ import logging
 from math import ceil
 import os
 
-from reV.config.output_request import OutputRequest
+from reV.config.output_request import SAMOutputRequest
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
@@ -110,10 +110,10 @@ class SAMAnalysisConfig(AnalysisConfig):
         """
 
         if self._output_request is None:
-            self._output_request = ['cf_mean']
+            self._output_request = SAMOutputRequest('cf_mean')
             # default output request if not specified
             if 'output_request' in self['project_control']:
-                self._output_request = OutputRequest(
+                self._output_request = SAMOutputRequest(
                     self['project_control']['output_request'])
 
         return self._output_request

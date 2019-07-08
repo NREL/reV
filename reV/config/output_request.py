@@ -13,7 +13,43 @@ from reV.utilities.exceptions import ConfigWarning
 
 
 class OutputRequest(list):
-    """reV output request list with request key correction logic."""
+    """Base output request list framework with request key correction logic."""
+
+    # map of commonly expected typos.
+    # keys are typos, values are correct var names
+    # all available output variables should be in the values
+    CORRECTIONS = {}
+
+    def __init__(self, inp):
+        """
+        Parameters
+        ----------
+        inp : list | tuple | str
+            List of requested reV output variables.
+        """
+
+        if isinstance(inp, str):
+            inp = [inp]
+
+        for request in inp:
+            if request in self.CORRECTIONS.values():
+                self.append(request)
+            elif request in self.CORRECTIONS.keys():
+                self.append(self.CORRECTIONS[request])
+                warn('Correcting output request "{}" to "{}".'
+                     .format(request, self.CORRECTIONS[request]),
+                     ConfigWarning)
+            else:
+                self.append(request)
+                warn('Did not recognize requested output variable "{}". '
+                     'Passing forward, but this may cause a downstream '
+                     'error. Available known output variables are: {}'
+                     .format(request, list(set(self.CORRECTIONS.values()))),
+                     ConfigWarning)
+
+
+class SAMOutputRequest(OutputRequest):
+    """SAM output request framework."""
 
     # map of commonly expected typos.
     # keys are typos, values are correct SAM var names
@@ -43,30 +79,3 @@ class OutputRequest(list):
                    'actual_irr': 'flip_actual_irr',
                    'irr': 'flip_actual_irr',
                    }
-
-    def __init__(self, inp):
-        """
-        Parameters
-        ----------
-        inp : list | tuple | str
-            List of requested reV output variables.
-        """
-
-        if isinstance(inp, str):
-            inp = [inp]
-
-        for request in inp:
-            if request in self.CORRECTIONS.values():
-                self.append(request)
-            elif request in self.CORRECTIONS.keys():
-                self.append(self.CORRECTIONS[request])
-                warn('Correcting output request "{}" to "{}".'
-                     .format(request, self.CORRECTIONS[request]),
-                     ConfigWarning)
-            else:
-                self.append(request)
-                warn('Did not recognize requested output variable "{}". '
-                     'Passing forward, but this may cause a downstream '
-                     'error. Available known output variables are: {}'
-                     .format(request, list(set(self.CORRECTIONS.values()))),
-                     ConfigWarning)
