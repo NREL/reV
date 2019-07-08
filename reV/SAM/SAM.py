@@ -37,7 +37,7 @@ def is_num(n):
     try:
         float(n)
         out = True
-    except Exception as _:
+    except Exception:
         out = False
 
     return out
@@ -62,7 +62,7 @@ def is_str(s):
         try:
             str(s)
             out = True
-        except Exception as _:
+        except Exception:
             out = False
 
     return out
