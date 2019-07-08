@@ -20,6 +20,14 @@ reV.handlers.collection module
     :undoc-members:
     :show-inheritance:
 
+reV.handlers.geotiff module
+---------------------------
+
+.. automodule:: reV.handlers.geotiff
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 reV.handlers.multi\_year module
 -------------------------------
 
@@ -32,6 +40,14 @@ reV.handlers.outputs module
 ---------------------------
 
 .. automodule:: reV.handlers.outputs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+reV.handlers.parse\_keys module
+-------------------------------
+
+.. automodule:: reV.handlers.parse_keys
     :members:
     :undoc-members:
     :show-inheritance:
