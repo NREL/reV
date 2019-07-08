@@ -260,7 +260,7 @@ class SupplyCurvePoint:
             loc = np.where(arr == gid)
             row = loc[0][0]
             col = loc[1][0]
-        except IndexError as _:
+        except IndexError:
             raise IndexError('Gid {} out of bounds for extent shape {} and '
                              'resolution {}.'.format(gid, shape, resolution))
 

@@ -130,7 +130,7 @@ class Status(dict):
                    'peregrine': PBS.check_status}
         try:
             method = options[hardware]
-        except KeyError as _:
+        except KeyError:
             raise KeyError('Could not check job on the requested hardware: '
                            '"{}".'.format(hardware))
         return method
@@ -479,7 +479,7 @@ class Status(dict):
 
         try:
             status = obj.data[module][job_name].get('job_status', None)
-        except KeyError as _:
+        except KeyError:
             status = None
 
         return status

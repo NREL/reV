@@ -37,7 +37,7 @@ def is_num(n):
     try:
         float(n)
         out = True
-    except Exception as _:
+    except Exception:
         out = False
 
     return out
@@ -62,7 +62,7 @@ def is_str(s):
         try:
             str(s)
             out = True
-        except Exception as _:
+        except Exception:
             out = False
 
     return out
@@ -311,7 +311,19 @@ class ParametersManager:
         """
         if more_parameters is not None:
             if isinstance(more_parameters, dict):
-                self._parameters.update(more_parameters)
+
+                for k, v in more_parameters.items():
+
+                    special = False
+
+                    # special treatment of nested lists
+                    if isinstance(v, str):
+                        if '[' in v and ']' in v:
+                            special = True
+                            self._parameters[k] = json.loads(v)
+
+                    if not special:
+                        self._parameters[k] = v
             else:
                 warn('Attempting to update SAM input parameters with non-dict '
                      'input. Cannot perform update operation. Proceeding '
@@ -325,7 +337,8 @@ class SiteOutput(SlottedDict):
     # make attribute slots for all SAM output variable names
     __slots__ = ['cf_mean', 'cf_profile', 'annual_energy', 'energy_yield',
                  'gen_profile', 'poa', 'ppa_price', 'lcoe_fcr', 'npv',
-                 'lcoe_nom', 'lcoe_real']
+                 'lcoe_nom', 'lcoe_real', 'project_return_aftertax_npv',
+                 'flip_actual_irr']
 
 
 class SAM:
@@ -761,7 +774,8 @@ class SAM:
 
         Native units are dollars.
         """
-        return self.ssc.data_get_number(self.data, 'npv')
+        return self.ssc.data_get_number(self.data,
+                                        'project_return_aftertax_npv')
 
     def lcoe_fcr(self):
         """Get LCOE ($/MWh).
@@ -783,6 +797,13 @@ class SAM:
         Native units are cents/kWh, mult by 10 for $/MWh.
         """
         return self.ssc.data_get_number(self.data, 'lcoe_real') * 10
+
+    def flip_actual_irr(self):
+        """Get actual IRR (from PPA/SingleOwner model).
+
+        Native units are %.
+        """
+        return self.ssc.data_get_number(self.data, 'flip_actual_irr')
 
     def execute(self, module_to_run, close=True):
         """Execute a single SAM simulation core by module name.
@@ -841,10 +862,11 @@ class SAM:
                    'gen_profile': self.gen_profile,
                    'poa': self.poa,
                    'ppa_price': self.ppa_price,
-                   'npv': self.npv,
+                   'project_return_aftertax_npv': self.npv,
                    'lcoe_fcr': self.lcoe_fcr,
                    'lcoe_nom': self.lcoe_nom,
                    'lcoe_real': self.lcoe_real,
+                   'flip_actual_irr': self.flip_actual_irr,
                    }
 
         results = SiteOutput()

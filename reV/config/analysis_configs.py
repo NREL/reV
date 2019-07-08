@@ -8,14 +8,14 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 from math import ceil
-from warnings import warn
 import os
 
+from reV.config.output_request import SAMOutputRequest
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
 from reV.config.project_points import PointsControl, ProjectPoints
-from reV.utilities.exceptions import ConfigError, ConfigWarning
+from reV.utilities.exceptions import ConfigError
 from reV.pipeline.pipeline import Pipeline
 
 
@@ -109,54 +109,12 @@ class SAMAnalysisConfig(AnalysisConfig):
             variable names.
         """
 
-        # map of commonly expected typos
-        corrections = {'cf_means': 'cf_mean',
-                       'cf': 'cf_mean',
-                       'capacity_factor': 'cf_mean',
-                       'capacityfactor': 'cf_mean',
-                       'cf_profiles': 'cf_profile',
-                       'profiles': 'cf_profile',
-                       'profile': 'cf_profile',
-                       'generation': 'annual_energy',
-                       'yield': 'energy_yield',
-                       'generation_profile': 'gen_profile',
-                       'generation_profiles': 'gen_profile',
-                       'plane_of_array': 'poa',
-                       'plane_of_array_irradiance': 'poa',
-                       'gen_profiles': 'gen_profile',
-                       'lcoe': 'lcoe_fcr',
-                       'lcoe_nominal': 'lcoe_nom',
-                       'real_lcoe': 'lcoe_real',
-                       'net_present_value': 'npv',
-                       'ppa': 'ppa_price',
-                       'single_owner': 'ppa_price',
-                       'singleowner': 'ppa_price',
-                       }
-
         if self._output_request is None:
-            self._output_request = []
+            self._output_request = SAMOutputRequest('cf_mean')
             # default output request if not specified
-            temp = ['cf_mean']
             if 'output_request' in self['project_control']:
-                temp = self['project_control']['output_request']
-
-            if isinstance(temp, str):
-                temp = [temp]
-
-            for request in temp:
-                if request in corrections.values():
-                    self._output_request.append(request)
-                elif request in corrections.keys():
-                    self._output_request.append(corrections[request])
-                    warn('Correcting output request "{}" to "{}".'
-                         .format(request, corrections[request]), ConfigWarning)
-                else:
-                    self._output_request.append(request)
-                    warn('Did not recognize requested output variable "{}". '
-                         'Passing forward, but this may cause a downstream '
-                         'error. Available known output variables are: {}'
-                         .format(request, list(set(corrections.values()))),
-                         ConfigWarning)
+                self._output_request = SAMOutputRequest(
+                    self['project_control']['output_request'])
 
         return self._output_request
 
@@ -388,7 +346,7 @@ class EconConfig(SAMAnalysisConfig):
                                       '\n\tYears: \n\t\t{}'
                                       .format(self._cf_files, self.years))
                 for year in self.years:
-                    if year not in str(self._cf_files):
+                    if str(year) not in str(self._cf_files):
                         raise ConfigError('Could not find year {} in cf '
                                           'files: {}'
                                           .format(year, self._cf_files))

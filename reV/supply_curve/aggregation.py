@@ -270,7 +270,7 @@ class Aggregation:
                                     exclusion_shape=exclusion_shape,
                                     close=False)
 
-                            except EmptySupplyCurvePointError as _:
+                            except EmptySupplyCurvePointError:
                                 pass
 
                             else:

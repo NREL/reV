@@ -24,8 +24,7 @@ OUT_BASELINE = {'ppa_price': np.array([75.7973, 74.618286, 73.2412,
                                        74.28226, 74.26111, 70.87696,
                                        68.88366, 69.298996, 69.13398,
                                        66.936386], dtype=np.float32),
-                'npv': np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-                                dtype=np.float32),
+                'project_return_aftertax_npv': -0.00982841 * np.ones((10, )),
                 'lcoe_nom': np.array([75.7973, 74.618286, 73.2412, 74.28226,
                                       74.26111, 70.87696, 68.88366, 69.298996,
                                       69.13398, 66.936386], dtype=np.float32),
@@ -40,7 +39,8 @@ def test_single_owner():
     cf_file = os.path.join(TESTDATADIR, 'gen_out/wind_2012_x000.h5')
     sam_files = os.path.join(TESTDATADIR, 'SAM/wind_single_owner.json')
 
-    output_request = ('ppa_price', 'npv', 'lcoe_nom', 'lcoe_real')
+    output_request = ('ppa_price', 'project_return_aftertax_npv', 'lcoe_nom',
+                      'lcoe_real')
 
     obj = Econ.run_direct(points=slice(0, 10), sam_files=sam_files,
                           cf_file=cf_file, cf_year=2012,

@@ -24,9 +24,10 @@ class Econ(Gen):
     # Mapping of reV econ output strings to SAM econ functions
     OPTIONS = {'lcoe_fcr': SAM_LCOE.reV_run,
                'ppa_price': SingleOwner.reV_run,
-               'npv': SingleOwner.reV_run,
+               'project_return_aftertax_npv': SingleOwner.reV_run,
                'lcoe_real': SingleOwner.reV_run,
                'lcoe_nom': SingleOwner.reV_run,
+               'flip_actual_irr': SingleOwner.reV_run,
                }
 
     # Mapping of reV econ outputs to scale factors and units.
@@ -37,15 +38,20 @@ class Econ(Gen):
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
                                'dtype': 'float32', 'chunks': None,
                                'type': 'scalar'},
-                 'npv': {'scale_factor': 1, 'units': 'dol',
-                         'dtype': 'float32', 'chunks': None,
-                         'type': 'scalar'},
+                 'project_return_aftertax_npv': {'scale_factor': 1,
+                                                 'units': 'dol',
+                                                 'dtype': 'float32',
+                                                 'chunks': None,
+                                                 'type': 'scalar'},
                  'lcoe_real': {'scale_factor': 1, 'units': 'dol/MWh',
                                'dtype': 'float32', 'chunks': None,
                                'type': 'scalar'},
                  'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
+                 'flip_actual_irr': {'scale_factor': 1, 'units': 'perc',
+                                     'dtype': 'float32', 'chunks': None,
+                                     'type': 'scalar'},
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,

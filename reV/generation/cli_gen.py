@@ -197,7 +197,7 @@ def make_fout(name, year):
 
     try:
         match = parse_year(name)
-    except RuntimeError as _:
+    except RuntimeError:
         match = False
 
     # if the year isn't in the name, add it before setting the file output

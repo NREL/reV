@@ -100,7 +100,7 @@ class BatchJob:
 
         try:
             match = parse_year('_' + value)
-        except RuntimeError as _:
+        except RuntimeError:
             match = False
 
         if match:
@@ -124,7 +124,7 @@ class BatchJob:
             temp = arg.split('_')
             temp = ''.join([s[0] for s in temp])
 
-            if isinstance(value, (int, str, float)):
+            if isinstance(value, (int, float)):
                 temp += self._tag_value(value)
 
             else:
@@ -133,7 +133,7 @@ class BatchJob:
                     if arg in s['args']:
                         try:
                             i = s['args'][arg].index(value)
-                        except ValueError as _:
+                        except ValueError:
                             pass
                         else:
                             break
