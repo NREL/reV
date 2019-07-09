@@ -336,7 +336,7 @@ class SupplyCurvePoint:
 
     @property
     def excl_data(self):
-        """Get the exclusions data mask.
+        """Get the exclusions mask (normalized with expected range: [0, 1]).
 
         Returns
         -------
@@ -348,7 +348,8 @@ class SupplyCurvePoint:
             self._excl_data = self.exclusions[0, self.rows, self.cols]
             self._excl_data = self._excl_data
 
-            if self._excl_data.max() > 99:
+            # infer exclusions that are scaled percentages from 0 to 100
+            if self._excl_data.max() > 1:
                 self._excl_data = self._excl_data.astype(np.float32)
                 self._excl_data /= 100
 
@@ -356,7 +357,7 @@ class SupplyCurvePoint:
 
     @property
     def mask(self):
-        """Get a boolean mask of the exclusion points that have been excluded.
+        """Get a boolean inclusion mask (True if excl point is not excluded).
 
         Returns
         -------
