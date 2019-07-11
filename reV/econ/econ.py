@@ -124,7 +124,7 @@ class Econ(Gen):
         # type check and ensure list for manipulation
         if isinstance(req, list):
             output_request = req
-        if isinstance(req, tuple):
+        elif isinstance(req, tuple):
             output_request = list(req)
         elif isinstance(req, str):
             output_request = [req]
