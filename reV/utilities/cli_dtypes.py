@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-Generation
+Custom dtypes for Click.
 """
 import click
 import logging

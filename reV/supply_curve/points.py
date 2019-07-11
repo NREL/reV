@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV Supply Curve Points
+reV supply curve extent and points base frameworks.
 """
 import h5py
 import pandas as pd
@@ -66,6 +66,7 @@ class SupplyCurvePoint:
         self._gid = gid
         self._close = close
         self._centroid = None
+        self._excl_data = None
 
         # filepaths
         self._fpath_excl = None
@@ -206,6 +207,7 @@ class SupplyCurvePoint:
         res_gids[mask] = -1
         gen_gids = gen_index[res_gids]
         gen_gids[mask] = -1
+        res_gids[(gen_gids == -1)] = -1
 
         if (gen_gids != -1).sum() == 0:
             raise EmptySupplyCurvePointError(emsg)
@@ -309,11 +311,13 @@ class SupplyCurvePoint:
         centroid : tuple
             SC point centroid (lat, lon).
         """
+        decimals = 3
 
         if self._centroid is None:
             lats = self.techmap['latitude'][self.rows, self.cols]
             lons = self.techmap['longitude'][self.rows, self.cols]
-            self._centroid = (lats.mean(), lons.mean())
+            self._centroid = (np.round(lats.mean(), decimals=decimals),
+                              np.round(lons.mean(), decimals=decimals))
 
         return self._centroid
 
@@ -329,6 +333,39 @@ class SupplyCurvePoint:
         if self._exclusions is None:
             self._exclusions = ExclusionPoints(self._fpath_excl)
         return self._exclusions
+
+    @property
+    def excl_data(self):
+        """Get the exclusions mask (normalized with expected range: [0, 1]).
+
+        Returns
+        -------
+        _excl_data : np.ndarray
+            Exclusions data mask.
+        """
+
+        if self._excl_data is None:
+            self._excl_data = self.exclusions[0, self.rows, self.cols]
+            self._excl_data = self._excl_data
+
+            # infer exclusions that are scaled percentages from 0 to 100
+            if self._excl_data.max() > 1:
+                self._excl_data = self._excl_data.astype(np.float32)
+                self._excl_data /= 100
+
+        return self._excl_data
+
+    @property
+    def mask(self):
+        """Get a boolean inclusion mask (True if excl point is not excluded).
+
+        Returns
+        -------
+        mask : np.ndarray
+            Mask with length equal to the flattened exclusion shape
+        """
+
+        return (self._gen_gids != -1)
 
     @property
     def gen(self):

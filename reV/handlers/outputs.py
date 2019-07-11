@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Classes to handle capacity factor profiles and annual averages
+Classes to handle reV h5 output files.
 """
 import h5py
 import json

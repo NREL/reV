@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+"""Curtailment utility methods.
+
 Created on Fri Mar  1 13:47:30 2019
 
 @author: gbuster

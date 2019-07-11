@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV Configuration
+reV Configuration for Execution Options
 """
 import logging
 

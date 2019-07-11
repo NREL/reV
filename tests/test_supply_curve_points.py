@@ -15,7 +15,7 @@ from reV import TESTDATADIR
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_TECHMAP = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
-DSET_RES = 'res_ri_pv'
+DSET_TM = 'res_ri_pv'
 
 
 @pytest.mark.parametrize('resolution', [7, 32, 50, 64, 163])
@@ -43,38 +43,6 @@ def test_slicer(gids, resolution):
                    .format(gid, resolution))
             assert row_slice0 == row_slice1, msg
             assert col_slice0 == col_slice1, msg
-
-
-def test_sc_aggregation(resolution=64):
-    """Get the SC points aggregation summary and test that there are expected
-    columns and that all 100 resource gids were found"""
-
-    summary = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
-                                  resolution=resolution)
-
-    all_res_gids = []
-    for gids in summary['resource_gids']:
-        all_res_gids += gids
-
-    assert 'sc_col_ind' in summary
-    assert 'sc_row_ind' in summary
-    assert 'gen_gids' in summary
-    assert len(set(all_res_gids)) == 100
-
-
-def test_parallel_agg(resolution=64):
-    """Test that parallel aggregation yields the same results as serial
-    aggregation."""
-
-    gids = list(range(50, 70))
-    summary_serial = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
-                                         resolution=resolution, gids=gids,
-                                         n_cores=1)
-    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
-                                           resolution=resolution, gids=gids,
-                                           n_cores=3)
-
-    assert all(summary_serial == summary_parallel)
 
 
 def plot_all_sc_points(resolution=64):
@@ -107,7 +75,8 @@ def plot_single_sc_point(gid=2, resolution=64):
     colors *= 100
 
     _, axs = plt.subplots(1, 1)
-    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_RES,
+    gen_index = Aggregation._parse_gen_index(F_GEN)
+    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_TM, gen_index,
                           resolution=resolution) as sc:
 
         all_gen_gids = list(set(sc._gen_gids))

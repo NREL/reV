@@ -20,7 +20,7 @@ F_RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_OUT = os.path.join(TESTDATADIR, 'sc_out/tech_map.h5')
 F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
-RES_DSET = 'res_ri_pv'
+DSET_TM = 'res_ri_pv'
 
 PURGE_OUT = True
 
@@ -28,7 +28,7 @@ PURGE_OUT = True
 def test_resource_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
 
-    TechMapping.run(F_EXCL, F_RES, F_OUT, RES_DSET, n_cores=2)
+    TechMapping.run(F_EXCL, F_RES, F_OUT, DSET_TM, n_cores=2)
 
     with h5py.File(F_BASELINE, 'r') as f_baseline:
         with h5py.File(F_OUT, 'r') as f_test:
@@ -45,7 +45,7 @@ def test_resource_tech_mapping():
                 assert d in list(f_baseline), msg1
                 assert np.array_equal(f_baseline[d][...], f_test[d][...]), msg2
 
-                if d == RES_DSET:
+                if d == DSET_TM:
                     inds = f_test[d][...].flatten()
                     msg = 'Tech mapping didnt find all 100 generation points!'
                     assert len(set(inds)) == 101, msg
@@ -60,10 +60,10 @@ def plot_tech_mapping():
 
     import matplotlib.pyplot as plt
 
-    TechMapping.run(F_EXCL, F_GEN, F_OUT, RES_DSET, n_cores=2)
+    TechMapping.run(F_EXCL, F_GEN, F_OUT, DSET_TM, n_cores=2)
 
     with h5py.File(F_OUT, 'r') as f:
-        ind = f[RES_DSET][...].flatten()
+        ind = f[DSET_TM][...].flatten()
         lats = f['latitude'][...].flatten()
         lons = f['longitude'][...].flatten()
 
@@ -74,26 +74,26 @@ def plot_tech_mapping():
 
     df = pd.DataFrame({'latitude': lats,
                        'longitude': lons,
-                       RES_DSET: ind})
+                       DSET_TM: ind})
 
     _, axs = plt.subplots(1, 1)
     colors = ['b', 'g', 'c', 'm', 'k', 'y']
     colors *= 100
 
-    for i, ind in enumerate(df[RES_DSET].unique()):
+    for i, ind in enumerate(df[DSET_TM].unique()):
         if ind != -1:
-            mask = df[RES_DSET] == ind
+            mask = df[DSET_TM] == ind
             axs.scatter(df.loc[mask, 'longitude'],
                         df.loc[mask, 'latitude'],
                         c=colors[i], s=0.001)
 
         elif ind == -1:
-            mask = df[RES_DSET] == ind
+            mask = df[DSET_TM] == ind
             axs.scatter(df.loc[mask, 'longitude'],
                         df.loc[mask, 'latitude'],
                         c='r', s=0.001)
 
-    for ind in df[RES_DSET].unique():
+    for ind in df[DSET_TM].unique():
         if ind != -1:
             axs.scatter(gen_meta.loc[ind, 'longitude'],
                         gen_meta.loc[ind, 'latitude'],

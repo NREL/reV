@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV date pipeline architecture.
+reV data pipeline architecture.
 """
 import time
 import json

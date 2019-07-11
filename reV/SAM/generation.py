@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
-"""reV-to-SAM interface module.
+"""reV-to-SAM generation interface module.
 
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
 SAM software development kit (SDK).
 """
+import copy
 import gc
 import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
 
+from reV.handlers.resource import Resource
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
-from reV.SAM.SAM import SAM
+from reV.utilities.utilities import mean_irrad
+from reV.SAM.SAM import SAM, SiteOutput
 from reV.SAM.econ import LCOE, SingleOwner
 
 
@@ -31,6 +34,55 @@ class Generation(SAM):
 
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
+
+    @staticmethod
+    def get_res_mean(res_file, res_df, output_request):
+        """Get the resource annual means.
+
+        Parameters
+        ----------
+        res_file : str
+            Resource file with full path.
+        res_df : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        output_request : list
+            Outputs to retrieve from SAM.
+
+        Returns
+        -------
+        res_mean : SiteOutput
+            SiteOutput object with variables for resource means.
+        out_req_nomeans : list
+            Output request list with the resource mean entries removed.
+        """
+
+        out_req_nomeans = copy.deepcopy(output_request)
+        res_mean = None
+
+        if 'ws_mean' in out_req_nomeans:
+            out_req_nomeans.remove('ws_mean')
+            res_mean = SiteOutput()
+            res_mean['ws_mean'] = res_df['windspeed'].mean()
+
+        else:
+            if 'dni_mean' in out_req_nomeans:
+                out_req_nomeans.remove('dni_mean')
+                res_mean = SiteOutput()
+                res_mean['dni_mean'] = mean_irrad(res_df['dni'])
+
+            if 'ghi_mean' in out_req_nomeans:
+                out_req_nomeans.remove('ghi_mean')
+                if res_mean is None:
+                    res_mean = SiteOutput()
+
+                if 'ghi' in res_df:
+                    res_mean['ghi_mean'] = mean_irrad(res_df['ghi'])
+                else:
+                    with Resource(res_file) as res:
+                        res_mean['ghi_mean'] = mean_irrad(
+                            res['ghi', :, res_df.name])
+
+        return res_mean, out_req_nomeans
 
     @staticmethod
     def tz_check(parameters, meta):
@@ -138,14 +190,23 @@ class Generation(SAM):
 
         # Use resource object iterator
         for res_df, meta in resources:
+
             # get SAM inputs from project_points based on the current site
             site = res_df.name
             _, inputs = points_control.project_points[site]
+
+            res_mean, out_req_nomeans = cls.get_res_mean(res_file, res_df,
+                                                         output_request)
+
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
-                      output_request=output_request)
+                      output_request=out_req_nomeans)
             sim.gen_exec(cls.MODULE)
+
+            # collect outputs to dictout
             out[site] = sim.outputs
+            if res_mean is not None:
+                out[site].update(res_mean)
 
             del res_df, meta, sim
 

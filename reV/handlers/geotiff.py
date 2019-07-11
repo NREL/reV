@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
+"""Class to handle geotiff input files.
+
 Created on Thu Jun 20 09:43:34 2019
 
 @author: gbuster
@@ -157,8 +158,8 @@ class Geotiff:
         """
 
         y_slice, x_slice = self._unpack_slices(*ds_slice)
-
-        return self._src.data[ds, y_slice, x_slice].flatten()
+        data = self._src.data[ds, y_slice, x_slice].flatten().compute()
+        return data
 
     @staticmethod
     def _unpack_slices(*yx_slice):
