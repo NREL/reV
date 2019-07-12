@@ -35,7 +35,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Clustering_Methods:
+class ClusteringMethods:
     """ Base class of clustering methods """
 
     @staticmethod
@@ -47,18 +47,18 @@ class Clustering_Methods:
         return n_clusters, results.labels_, results.cluster_centers_
 
 
-class RPM_Clusters:
+class RPMClusters:
     """ Base class for RPM clusters """
 
-    def __init__(self, timeseries):  # meta,
+    def __init__(self, ts_arrays):  # meta,
         """
         Parameters
         ----------
         meta: Meta data with gid, latitude, longitude
-        timeseries: Timeseries profiles to cluster with RPM_Wavelets
+        ts_arrays: Timeseries profiles to cluster with RPM_Wavelets
         """
         # self.meta = pd.Dataframe(meta)
-        self.timeseries = timeseries
+        self.ts_arrays = ts_arrays
         self.coefficients = None
         self.n_clusters = None
         self.labels = None
@@ -70,20 +70,20 @@ class RPM_Clusters:
         """ Calculates the wavelet coefficients of each
             timeseries within ndarray """
 
-        self.coefficients = RPM_Wavelets.get_dwt_coefficients(self.timeseries)
+        self.coefficients = RPMWavelets.get_dwt_coefficients(self.ts_arrays)
         return self.coefficients
 
     def apply_clustering(self, args, method="kmeans"):
-        """ Apply a clustering method to <self.timeseries> """
+        """ Apply a clustering method to <self.ts_arrays> """
 
-        if not hasattr(Clustering_Methods, method):
+        if not hasattr(ClusteringMethods, method):
             logger.warning('method does not exist')
             return None
         if self.coefficients is None:
             logger.warning('coefficients do not exist')
             return None
 
-        clustering_function = getattr(Clustering_Methods, method)
+        clustering_function = getattr(ClusteringMethods, method)
         results = clustering_function(self.coefficients, args)
         self.n_clusters, self.labels, self.centers_coefficients = results
         return self.labels
@@ -109,7 +109,7 @@ class RPM_Clusters:
                 return principal_df
 
 
-class RPM_Wavelets:
+class RPMWavelets:
     """Base class for RPM wavelets"""
 
     @classmethod
