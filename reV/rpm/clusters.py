@@ -1,32 +1,47 @@
 """
+RPM Clustering Module
 
-Sample usage:
+#### Sample usage:
 
-    inputs = np.array([
-        np.sin(np.linspace(1,40,200)),
-        np.cos(np.linspace(1,40,200)),
-        0.9 * np.sin(np.linspace(1,40,200)),
-        1.1 * np.cos(np.linspace(1,40,200)),
-        0.8 * np.sin(np.linspace(1,40,200)),
-        1.2 * np.cos(np.linspace(1,40,200)),
-        0.7 * np.sin(np.linspace(1,40,200)),
-        1.3 * np.cos(np.linspace(1,40,200))
-        ])
+meta = pd.DataFrame(data=[(1,1,1),(2,1,2),(3,1,3),(4,1,4),
+                          (5,2,1),(6,2,2),(7,2,3),(8,2,4)],
+                    columns=['gids','latitude','longitude']).to_records()
 
-    clusters = RPM_Clusters(inputs)
-    clusters.calculate_wavelets()
+ts_arrays = np.array([
+    np.sin(np.linspace(1,40,200)),
+    np.cos(np.linspace(1,40,200)),
+    0.9 * np.sin(np.linspace(1,40,200)),
+    1.1 * np.cos(np.linspace(1,40,200)),
+    0.8 * np.sin(np.linspace(1,40,200)),
+    1.2 * np.cos(np.linspace(1,40,200)),
+    0.7 * np.sin(np.linspace(1,40,200)),
+    1.3 * np.cos(np.linspace(1,40,200))
+    ])
 
-    clustering_args = {'k': 2}
-    clusters.apply_clustering(clustering_args, method="kmeans")
-    clusters.principal_component_analysis(plot=True)
+# Initiate
+clusters = RPMClusters(meta['latitude'], meta['longitude'], ts_arrays)
+
+# Wavelets
+clusters.calculate_wavelets()
+
+# Cluster
+clustering_args = {'k': 2}
+clusters.apply_clustering(clustering_args, method="kmeans")
+
+# Representative Profiles
+clusters.get_representative_timeseries()
+clusters.get_centroids_meta()
+
+# Verification & Validation
+clusters.principal_component_analysis(plot=True)
 
 """
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.stats as ss
 from sklearn.cluster import KMeans
-# from sklearn.metrics import mean_squared_error
 from sklearn.decomposition import PCA
 import pywt
 
@@ -50,21 +65,25 @@ class ClusteringMethods:
 class RPMClusters:
     """ Base class for RPM clusters """
 
-    def __init__(self, ts_arrays):  # meta,
+    def __init__(self, latitudes, longitudes, ts_arrays, gids=None):
         """
         Parameters
         ----------
         meta: Meta data with gid, latitude, longitude
-        ts_arrays: Timeseries profiles to cluster with RPM_Wavelets
+        ts_arrays: Timeseries profiles to cluster with RPMWavelets
         """
-        # self.meta = pd.Dataframe(meta)
+        self.gids = gids
+        self.meta = pd.DataFrame(list(zip(latitudes, longitudes)),
+                                 columns=['latitude', 'longitude'])
         self.ts_arrays = ts_arrays
+        self.n_locations = ts_arrays.shape[0]
         self.coefficients = None
         self.n_clusters = None
         self.labels = None
         self.centers_coefficients = None
+        self.ranks = None
         self.representative_timeseries = None
-        self.representative_centroids = None
+        self.centroids_meta = None
 
     def calculate_wavelets(self):
         """ Calculates the wavelet coefficients of each
@@ -86,27 +105,75 @@ class RPMClusters:
         clustering_function = getattr(ClusteringMethods, method)
         results = clustering_function(self.coefficients, args)
         self.n_clusters, self.labels, self.centers_coefficients = results
+        self.meta['cluster_id'] = self.labels
         return self.labels
 
     def principal_component_analysis(self, n_components=2, plot=False):
         """ Principal Component Analysis """
         if self.coefficients is None:
             logger.warning('wavelet coefficients do not exist')
+            return None
+        pca = PCA(n_components=n_components)
+        principal_components = pca.fit_transform(self.coefficients)
+        principal_df = pd.DataFrame(data=principal_components,
+                                    columns=['PC 1', 'PC 2'])
+        if plot is True:
+            _, ax = plt.subplots(nrows=1, ncols=2)
+            ax[0].scatter(self.meta['latitude'], self.meta['longitude'],
+                          c=self.labels, cmap="rainbow")
+            ax[0].set_xlabel('Longitude')
+            ax[0].set_ylabel('Latitude')
+            ax[1].scatter(principal_df['PC 1'], principal_df['PC 2'],
+                          c=self.labels, cmap="rainbow")
+            ax[1].set_xlabel('PC 1')
+            ax[1].set_ylabel('PC 2')
+            plt.tight_layout()
+            plt.show()
+            return None
         else:
-            pca = PCA(n_components=n_components)
-            principal_components = pca.fit_transform(self.coefficients)
-            principal_df = pd.DataFrame(data=principal_components,
-                                        columns=['PC 1', 'PC 2'])
-            if plot is True:
-                if self.labels is None:
-                    principal_df.plot.scatter('PC 1', 'PC 2')
-                else:
-                    principal_df.plot.scatter('PC 1', 'PC 2',
-                                              c=self.labels, cmap="rainbow")
-                plt.show()
-                return None
-            else:
-                return principal_df
+            return principal_df
+
+    def _get_ranks(self):
+        """ Determine the rank of each location within all clusters
+        based on the mean square errors """
+        if self.centers_coefficients is None:
+            logger.warning('no clustering has been applied')
+            return None
+        ranks = np.zeros(self.n_locations, dtype='int')
+        for cluster_ind in range(self.n_clusters):
+            cluster_mask = self.labels == cluster_ind
+            cluster_coefficients = self.coefficients[cluster_mask]
+            n_locations = len(cluster_coefficients)
+            centers_coefficients = self.centers_coefficients[cluster_ind]
+            cc_rep = [centers_coefficients for _ in range(n_locations)]
+            centers_coefficients = np.array(cc_rep)
+            mse = (np.square(cluster_coefficients,
+                             centers_coefficients)).mean(axis=1)
+            ranks[cluster_mask] = ss.rankdata(mse)
+        self.ranks = ranks
+        return self.ranks
+
+    def get_representative_timeseries(self):
+        """ Determine the representative timeseries for each cluster
+        based on the location with the lowest mean square error """
+        if self.centers_coefficients is None:
+            logger.warning('no clustering has been applied')
+            return None
+        self._get_ranks()
+        highest_ranking = self.ranks == 1
+        self.representative_timeseries = self.ts_arrays[highest_ranking]
+        return self.representative_timeseries
+
+    def get_centroids_meta(self):
+        """ Determine the representative spatial centroids of each cluster """
+        if self.labels is None:
+            logger.warning('no clustering has been applied')
+            return None
+        meta = self.meta
+        centroids_meta = meta.groupby('cluster_id').mean()
+        cols = ['latitude', 'longitude', 'cluster_id']
+        centroids_meta = centroids_meta.reset_index().reindex(columns=cols)
+        self.centroids_meta = centroids_meta
 
 
 class RPMWavelets:
