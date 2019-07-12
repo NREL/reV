@@ -24,7 +24,7 @@ with open("README.md", encoding="utf-8") as readme_file:
 with open(os.path.join(here, "reV", "version.py"), encoding="utf-8") as f:
     version = f.read()
 
-version = version.split()[2].strip('"').strip("'")
+version = version.split('=')[-1].strip().strip('"').strip("'")
 
 
 class PostDevelopCommand(develop):
