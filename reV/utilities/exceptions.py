@@ -70,6 +70,12 @@ class RPMValueError(Exception):
     """
 
 
+class RPMRuntimeError(Exception):
+    """
+    ValueError for RPM Pipeline
+    """
+
+
 class SupplyCurveError(Exception):
     """
     Execution error for SAM simulations
@@ -80,7 +86,6 @@ class EmptySupplyCurvePointError(SupplyCurveError):
     """
     Execution error for SAM simulations
     """
-    pass
 
 
 class SupplyCurveInputError(SupplyCurveError):
@@ -93,7 +98,6 @@ class OutputWarning(Warning):
     """
     Warning for suspect output files or data
     """
-    pass
 
 
 class ExtrapolationWarning(Warning):

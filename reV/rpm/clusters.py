@@ -304,6 +304,24 @@ class RPMClusters:
         centroids_meta = centroids_meta.reset_index().reindex(columns=cols)
         self.centroids_meta = centroids_meta
 
+    @classmethod
+    def cluster(cls, cf_h5_path, region_gids, clusters, **kwargs):
+        """
+        Entry point for RPMCluster to get clusters for a given region
+        defined as a list | array of gids
+
+        Parameters
+        ----------
+        cf_h5_path : str
+            Path to .h5 file containing CF profiles
+        region_gids : list | ndarray
+            List or array of gen gids for region of interest
+        clusters : int
+            Number of clusters to find in region of interest
+        kwargs : dict
+            Internal kwargs for clustering
+        """
+
 
 class RPMWavelets:
     """Base class for RPM wavelets"""
