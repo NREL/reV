@@ -24,12 +24,12 @@ clusters = RPMClusters("california",
 clusters.calculate_wavelets()
 
 # Cluster
-clustering_args = {'k': 20}
+clustering_args = {'k': 4}
 clusters.apply_clustering(clustering_args, method="kmeans")
+clusters.recluster_on_centroid()
 
 # Representative Profiles
 clusters.get_representative_timeseries()
-clusters.get_centroids_meta()
 
 # Verification & Validation
 clusters.pca_validation(plot=True)
@@ -40,6 +40,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as ss
+from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import pywt
@@ -83,8 +84,10 @@ class RPMClusters:
         self.ts_arrays = ts_arrays
         self.n_locations = ts_arrays.shape[0]
         self.coefficients = None
+        self.cluster_method = None
         self.n_clusters = None
         self.labels = None
+        self.labels_centroid = None
         self.centers_coefficients = None
         self.ranks = None
         self.representative_timeseries = None
@@ -111,11 +114,26 @@ class RPMClusters:
         results = clustering_function(self.coefficients, args)
         self.n_clusters, self.labels, self.centers_coefficients = results
         self.meta['cluster_id'] = self.labels
+        self.cluster_method = method
         return self.labels
+
+    def recluster_on_centroid(self):
+        """ Recluster points with new labels based on centroid
+        nearest neighbor """
+
+        if self.centroids_meta is None:
+            self.get_centroids_meta()
+        centroids = self.centroids_meta[['latitude', 'longitude']]
+        meta = self.meta[['latitude', 'longitude']]
+        tree = cKDTree(centroids)
+        _, indices = tree.query(meta)
+        self.labels_centroid = indices
+        return self.labels_centroid
 
     @staticmethod
     def get_pca(data, n_components=2):
         """ Principal Component Analysis """
+
         pca = PCA(n_components=n_components)
         principal_components = pca.fit_transform(data)
         columns = ['PC {}'.format(i + 1) for i in range(n_components)]
@@ -136,28 +154,39 @@ class RPMClusters:
 
         if plot is True:
 
+            # PCA
             pca_df_2 = self.get_pca(self.coefficients, n_components=2)
+            pca_df_2['PC 1'] = pca_df_2['PC 1'] / pca_df_2['PC 1'].max()
+            pca_df_2['PC 2'] = pca_df_2['PC 2'] / pca_df_2['PC 2'].max()
             pca_df_3 = self.get_pca(self.coefficients, n_components=3)
             for c, dim in [('R', 'PC 1'), ('G', 'PC 2'), ('B', 'PC 3')]:
                 col = pca_df_3[dim]
                 pca_df_3[c] = (col - col.min()) / (col.max() - col.min())
 
-            _, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
+            # Plotting
+            _, ax = plt.subplots(nrows=1, ncols=4, figsize=(16, 4))
 
             ax[0].scatter(self.meta['longitude'], self.meta['latitude'],
                           c=pca_df_3[['R', 'G', 'B']].to_numpy(), s=8)
             ax[0].set_xlabel('Longitude')
             ax[0].set_ylabel('Latitude')
 
-            ax[1].scatter(self.meta['longitude'], self.meta['latitude'],
-                          c=self.labels, cmap="rainbow", s=8)
-            ax[1].set_xlabel('Longitude')
-            ax[1].set_ylabel('Latitude')
-
-            ax[2].scatter(pca_df_2['PC 1'], pca_df_2['PC 2'],
+            ax[1].scatter(pca_df_2['PC 1'], pca_df_2['PC 2'],
                           c=self.labels, cmap="rainbow", s=5, alpha=0.5)
-            ax[2].set_xlabel('PC 1')
-            ax[2].set_ylabel('PC 2')
+            ax[1].set_xlabel('PC 1')
+            ax[1].set_ylabel('PC 2')
+
+            ax[2].scatter(self.meta['longitude'], self.meta['latitude'],
+                          c=self.labels, cmap="rainbow", s=8)
+            ax[2].set_title('Clustering ({})'.format(self.cluster_method))
+            ax[2].set_xlabel('Longitude')
+            ax[2].set_ylabel('Latitude')
+
+            ax[3].scatter(self.meta['longitude'], self.meta['latitude'],
+                          c=self.labels_centroid, cmap="rainbow", s=8)
+            ax[3].set_title('Reclustered On Centroid')
+            ax[3].set_xlabel('Longitude')
+            ax[3].set_ylabel('Latitude')
 
             plt.tight_layout()
             plt.savefig('{}_{}.png'.format(self.region_name, self.n_clusters))
