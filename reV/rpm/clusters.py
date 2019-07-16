@@ -3,29 +3,28 @@ RPM Clustering Module
 
 #### Sample usage:
 
-meta = pd.DataFrame(data=[(1,1,1),(2,1,2),(3,1,3),(4,1,4),
-                          (5,2,1),(6,2,2),(7,2,3),(8,2,4)],
-                    columns=['gids','latitude','longitude']).to_records()
+h5ls /projects/naris/extreme_events/generation/pv_ca_2012.h5
+cf_profile               Dataset {8760, 26010}
+meta                     Dataset {26010}
+time_index               Dataset {8760}
 
-ts_arrays = np.array([
-    np.sin(np.linspace(1,40,200)),
-    np.cos(np.linspace(1,40,200)),
-    0.9 * np.sin(np.linspace(1,40,200)),
-    1.1 * np.cos(np.linspace(1,40,200)),
-    0.8 * np.sin(np.linspace(1,40,200)),
-    1.2 * np.cos(np.linspace(1,40,200)),
-    0.7 * np.sin(np.linspace(1,40,200)),
-    1.3 * np.cos(np.linspace(1,40,200))
-    ])
+import h5py
+
+fname = '/projects/naris/extreme_events/generation/pv_ca_2012.h5'
+data = h5py.File(fname, 'r')
+meta = pd.DataFrame(data['meta'][...])
+cf_profile = data['cf_profile'][...]
 
 # Initiate
-clusters = RPMClusters(meta['latitude'], meta['longitude'], ts_arrays)
+clusters = RPMClusters("california",
+                       meta['latitude'], meta['longitude'],
+                       cf_profile)
 
 # Wavelets
 clusters.calculate_wavelets()
 
 # Cluster
-clustering_args = {'k': 2}
+clustering_args = {'k': 20}
 clusters.apply_clustering(clustering_args, method="kmeans")
 
 # Representative Profiles
@@ -33,7 +32,7 @@ clusters.get_representative_timeseries()
 clusters.get_centroids_meta()
 
 # Verification & Validation
-clusters.principal_component_analysis(plot=True)
+clusters.pca_validation(plot=True)
 
 """
 
@@ -56,6 +55,7 @@ class ClusteringMethods:
     @staticmethod
     def kmeans(data, args):
         """ Cluster based on kmeans methodology """
+
         n_clusters = args['k']
         kmeans = KMeans(n_clusters=n_clusters)
         results = kmeans.fit(data)
@@ -65,16 +65,21 @@ class ClusteringMethods:
 class RPMClusters:
     """ Base class for RPM clusters """
 
-    def __init__(self, latitudes, longitudes, ts_arrays, gids=None):
+    def __init__(self, region_name, latitude, longitude, ts_arrays, gids=None):
         """
         Parameters
         ----------
         meta: Meta data with gid, latitude, longitude
         ts_arrays: Timeseries profiles to cluster with RPMWavelets
         """
+
+        self.region_name = region_name
         self.gids = gids
-        self.meta = pd.DataFrame(list(zip(latitudes, longitudes)),
+        self.meta = pd.DataFrame(list(zip(latitude, longitude)),
                                  columns=['latitude', 'longitude'])
+        if self.meta.shape[0] != ts_arrays.shape[0]:
+            ts_arrays = ts_arrays.T
+        self.shape = ts_arrays.shape
         self.ts_arrays = ts_arrays
         self.n_locations = ts_arrays.shape[0]
         self.coefficients = None
@@ -108,34 +113,60 @@ class RPMClusters:
         self.meta['cluster_id'] = self.labels
         return self.labels
 
-    def principal_component_analysis(self, n_components=2, plot=False):
+    @staticmethod
+    def get_pca(data, n_components=2):
         """ Principal Component Analysis """
+        pca = PCA(n_components=n_components)
+        principal_components = pca.fit_transform(data)
+        columns = ['PC {}'.format(i + 1) for i in range(n_components)]
+        principal_df = pd.DataFrame(data=principal_components,
+                                    columns=columns)
+        return principal_df
+
+    def pca_validation(self, n_components=2, plot=False):
+        """ Validate clustering assumptions with
+        principal component analysis """
+
         if self.coefficients is None:
             logger.warning('wavelet coefficients do not exist')
             return None
-        pca = PCA(n_components=n_components)
-        principal_components = pca.fit_transform(self.coefficients)
-        principal_df = pd.DataFrame(data=principal_components,
-                                    columns=['PC 1', 'PC 2'])
+
+        if plot is False:
+            return self.get_pca(self.coefficients, n_components=n_components)
+
         if plot is True:
-            _, ax = plt.subplots(nrows=1, ncols=2)
-            ax[0].scatter(self.meta['latitude'], self.meta['longitude'],
-                          c=self.labels, cmap="rainbow")
+
+            pca_df_2 = self.get_pca(self.coefficients, n_components=2)
+            pca_df_3 = self.get_pca(self.coefficients, n_components=3)
+            for c, dim in [('R', 'PC 1'), ('G', 'PC 2'), ('B', 'PC 3')]:
+                col = pca_df_3[dim]
+                pca_df_3[c] = (col - col.min()) / (col.max() - col.min())
+
+            _, ax = plt.subplots(nrows=1, ncols=3, figsize=(12, 5))
+
+            ax[0].scatter(self.meta['longitude'], self.meta['latitude'],
+                          c=pca_df_3[['R', 'G', 'B']].to_numpy(), s=8)
             ax[0].set_xlabel('Longitude')
             ax[0].set_ylabel('Latitude')
-            ax[1].scatter(principal_df['PC 1'], principal_df['PC 2'],
-                          c=self.labels, cmap="rainbow")
-            ax[1].set_xlabel('PC 1')
-            ax[1].set_ylabel('PC 2')
+
+            ax[1].scatter(self.meta['longitude'], self.meta['latitude'],
+                          c=self.labels, cmap="rainbow", s=8)
+            ax[1].set_xlabel('Longitude')
+            ax[1].set_ylabel('Latitude')
+
+            ax[2].scatter(pca_df_2['PC 1'], pca_df_2['PC 2'],
+                          c=self.labels, cmap="rainbow", s=5, alpha=0.5)
+            ax[2].set_xlabel('PC 1')
+            ax[2].set_ylabel('PC 2')
+
             plt.tight_layout()
-            plt.show()
+            plt.savefig('{}_{}.png'.format(self.region_name, self.n_clusters))
             return None
-        else:
-            return principal_df
 
     def _get_ranks(self):
         """ Determine the rank of each location within all clusters
         based on the mean square errors """
+
         if self.centers_coefficients is None:
             logger.warning('no clustering has been applied')
             return None
@@ -156,6 +187,7 @@ class RPMClusters:
     def get_representative_timeseries(self):
         """ Determine the representative timeseries for each cluster
         based on the location with the lowest mean square error """
+
         if self.centers_coefficients is None:
             logger.warning('no clustering has been applied')
             return None
@@ -166,6 +198,7 @@ class RPMClusters:
 
     def get_centroids_meta(self):
         """ Determine the representative spatial centroids of each cluster """
+
         if self.labels is None:
             logger.warning('no clustering has been applied')
             return None
