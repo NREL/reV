@@ -3,30 +3,32 @@ RPM Clustering Module
 
 #### Sample usage:
 
-h5ls /projects/naris/extreme_events/generation/pv_ca_2012.h5
-cf_profile               Dataset {8760, 26010}
-meta                     Dataset {26010}
-time_index               Dataset {8760}
-
 import h5py
 
 fname = '/projects/naris/extreme_events/generation/pv_ca_2012.h5'
+fname = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
 data = h5py.File(fname, 'r')
-meta = pd.DataFrame(data['meta'][...])
-cf_profile = data['cf_profile'][...]
+meta = pd.DataFrame(data['meta'][...][::15])
+cf_profile = data['cf_profile'][...][:,::15]
+
+# Option: Extract county only
+# mask = meta.county == b'San Diego'
+# meta = meta[mask]
+# cf_profile = cf_profile[:,mask]
 
 # Initiate
-clusters = RPMClusters("california",
+clusters = RPMClusters("california_wind",
                        meta['latitude'], meta['longitude'],
                        cf_profile)
 
 # Wavelets
-clusters.calculate_wavelets()
+clusters.calculate_wavelets(normalize=True)
 
 # Cluster
-clustering_args = {'k': 4}
-clusters.apply_clustering(clustering_args, method="kmeans")
-clusters.recluster_on_centroid()
+clustering_args = {'k': 6}
+clusters.apply_clustering(clustering_args, method="kmeans",
+                          include_spatial=True)
+clusters.recluster_by_centroid()
 
 # Representative Profiles
 clusters.get_representative_timeseries()
@@ -74,52 +76,106 @@ class RPMClusters:
         ts_arrays: Timeseries profiles to cluster with RPMWavelets
         """
 
+        # Meta
         self.region_name = region_name
         self.gids = gids
         self.meta = pd.DataFrame(list(zip(latitude, longitude)),
                                  columns=['latitude', 'longitude'])
         if self.meta.shape[0] != ts_arrays.shape[0]:
             ts_arrays = ts_arrays.T
-        self.shape = ts_arrays.shape
+
+        # Data
         self.ts_arrays = ts_arrays
         self.n_locations = ts_arrays.shape[0]
+        self.shape = ts_arrays.shape
+
+        # Wavelets
         self.coefficients = None
+        self.coefficients_normalized = None
+        self.normalized = False
+
+        # Clusters
+        self.included_spatial = False
+        self.clustering_data = None
         self.cluster_method = None
         self.n_clusters = None
         self.labels = None
         self.labels_centroid = None
-        self.centers_coefficients = None
+        self.centers_data = None
         self.ranks = None
         self.representative_timeseries = None
         self.centroids_meta = None
 
-    def calculate_wavelets(self):
+    def calculate_wavelets(self, normalize=False):
         """ Calculates the wavelet coefficients of each
             timeseries within ndarray """
 
-        self.coefficients = RPMWavelets.get_dwt_coefficients(self.ts_arrays)
-        return self.coefficients
+        logger.info('Applying wavelets to region: {}'.format(self.region_name))
 
-    def apply_clustering(self, args, method="kmeans"):
+        coefficients = RPMWavelets.get_dwt_coefficients(self.ts_arrays)
+        self.coefficients = coefficients
+        if normalize is True:
+            coefficients = self.normalize(coefficients)
+            self.normalized = True
+            self.coefficients_normalized = coefficients
+        return coefficients
+
+    def apply_clustering(self, args, method="kmeans",
+                         include_spatial=False, spatial_weight=50):
         """ Apply a clustering method to <self.ts_arrays> """
 
+        coefficients = self._retrieve_coefficients()
         if not hasattr(ClusteringMethods, method):
             logger.warning('method does not exist')
             return None
-        if self.coefficients is None:
+        if coefficients is None:
             logger.warning('coefficients do not exist')
             return None
+        if include_spatial is True:
+            if self.normalized is False:
+                logger.warning('Cannot include spatial clustering without'
+                               ' having normalized the coefficients')
+                return None
+
+        logger.info('Applying {} clustering'
+                    ' to region: {}'.format(method, self.region_name))
+
+        if include_spatial is True:
+            spatial = self.meta[['latitude', 'longitude']].to_numpy()
+            spatial = spatial_weight * self.normalize(spatial)
+            clustering_data = np.concatenate((spatial, coefficients), axis=1)
+            self.included_spatial = True
+
+        else:
+            clustering_data = coefficients
 
         clustering_function = getattr(ClusteringMethods, method)
-        results = clustering_function(self.coefficients, args)
-        self.n_clusters, self.labels, self.centers_coefficients = results
+        results = clustering_function(clustering_data, args)
+        self.n_clusters, self.labels, self.centers_data = results
         self.meta['cluster_id'] = self.labels
         self.cluster_method = method
+        self.clustering_data = clustering_data
         return self.labels
 
-    def recluster_on_centroid(self):
+    @staticmethod
+    def normalize(data, axis=0, on_max_std=False):
+        """ Normalize an ndarray """
+
+        means = np.nanmean(data, axis=axis)
+        stds = np.nanstd(data, axis=axis)
+        if on_max_std is True:
+            data = (data - means) / np.max(stds)
+        else:
+            data = (data - means) / stds
+        data[np.isnan(data)] = 0
+        return data
+
+    def recluster_by_centroid(self):
         """ Recluster points with new labels based on centroid
         nearest neighbor """
+
+        logger.info('Reclustering by centroid'
+                    ' for region: {}'.format(self.region_name))
 
         if self.centroids_meta is None:
             self.get_centroids_meta()
@@ -145,45 +201,47 @@ class RPMClusters:
         """ Validate clustering assumptions with
         principal component analysis """
 
-        if self.coefficients is None:
+        coefficients = self._retrieve_coefficients()
+        if coefficients is None:
             logger.warning('wavelet coefficients do not exist')
             return None
 
         if plot is False:
-            return self.get_pca(self.coefficients, n_components=n_components)
+            return self.get_pca(coefficients, n_components=n_components)
 
         if plot is True:
 
             # PCA
-            pca_df_2 = self.get_pca(self.coefficients, n_components=2)
+            pca_df_2 = self.get_pca(coefficients, n_components=2)
             pca_df_2['PC 1'] = pca_df_2['PC 1'] / pca_df_2['PC 1'].max()
             pca_df_2['PC 2'] = pca_df_2['PC 2'] / pca_df_2['PC 2'].max()
-            pca_df_3 = self.get_pca(self.coefficients, n_components=3)
+            pca_df_3 = self.get_pca(coefficients, n_components=3)
             for c, dim in [('R', 'PC 1'), ('G', 'PC 2'), ('B', 'PC 3')]:
                 col = pca_df_3[dim]
                 pca_df_3[c] = (col - col.min()) / (col.max() - col.min())
 
             # Plotting
             _, ax = plt.subplots(nrows=1, ncols=4, figsize=(16, 4))
+            s = 8
 
             ax[0].scatter(self.meta['longitude'], self.meta['latitude'],
-                          c=pca_df_3[['R', 'G', 'B']].to_numpy(), s=8)
+                          c=pca_df_3[['R', 'G', 'B']].to_numpy(), s=s)
             ax[0].set_xlabel('Longitude')
             ax[0].set_ylabel('Latitude')
 
             ax[1].scatter(pca_df_2['PC 1'], pca_df_2['PC 2'],
-                          c=self.labels, cmap="rainbow", s=5, alpha=0.5)
+                          c=self.labels, cmap="rainbow", s=s, alpha=0.5)
             ax[1].set_xlabel('PC 1')
             ax[1].set_ylabel('PC 2')
 
             ax[2].scatter(self.meta['longitude'], self.meta['latitude'],
-                          c=self.labels, cmap="rainbow", s=8)
+                          c=self.labels, cmap="rainbow", s=s)
             ax[2].set_title('Clustering ({})'.format(self.cluster_method))
             ax[2].set_xlabel('Longitude')
             ax[2].set_ylabel('Latitude')
 
             ax[3].scatter(self.meta['longitude'], self.meta['latitude'],
-                          c=self.labels_centroid, cmap="rainbow", s=8)
+                          c=self.labels_centroid, cmap="rainbow", s=s)
             ax[3].set_title('Reclustered On Centroid')
             ax[3].set_xlabel('Longitude')
             ax[3].set_ylabel('Latitude')
@@ -192,23 +250,32 @@ class RPMClusters:
             plt.savefig('{}_{}.png'.format(self.region_name, self.n_clusters))
             return None
 
+    def _retrieve_coefficients(self):
+        """ Pull the coefficients that were used for clustering """
+        if self.normalized is True:
+            return self.coefficients_normalized
+        else:
+            return self.coefficients
+
     def _get_ranks(self):
         """ Determine the rank of each location within all clusters
         based on the mean square errors """
 
-        if self.centers_coefficients is None:
+        logger.info('Getting ranks for region: {}'.format(self.region_name))
+
+        if self.centers_data is None:
             logger.warning('no clustering has been applied')
             return None
         ranks = np.zeros(self.n_locations, dtype='int')
         for cluster_ind in range(self.n_clusters):
             cluster_mask = self.labels == cluster_ind
-            cluster_coefficients = self.coefficients[cluster_mask]
-            n_locations = len(cluster_coefficients)
-            centers_coefficients = self.centers_coefficients[cluster_ind]
-            cc_rep = [centers_coefficients for _ in range(n_locations)]
-            centers_coefficients = np.array(cc_rep)
-            mse = (np.square(cluster_coefficients,
-                             centers_coefficients)).mean(axis=1)
+            cluster_data = self.clustering_data[cluster_mask]
+            n_locations = len(cluster_data)
+            centers_data = self.centers_data[cluster_ind]
+            cc_rep = [centers_data for _ in range(n_locations)]
+            centers_data = np.array(cc_rep)
+            mse = (np.square(cluster_data,
+                             centers_data)).mean(axis=1)
             ranks[cluster_mask] = ss.rankdata(mse)
         self.ranks = ranks
         return self.ranks
@@ -217,7 +284,7 @@ class RPMClusters:
         """ Determine the representative timeseries for each cluster
         based on the location with the lowest mean square error """
 
-        if self.centers_coefficients is None:
+        if self.centers_data is None:
             logger.warning('no clustering has been applied')
             return None
         self._get_ranks()
