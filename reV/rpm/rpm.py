@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 class RPMClusterManager:
     """
-    Entry point for reV to RPM pipeline. Pipeline:
-    - Creates 'regular' regional RPM 'clusters'
-    - Ranks resource pixels against the cluster 'average'
-    - Extracts representative (post-exclusion) profiles
+    RPM Cluster Manager:
+    - Extracts gids for all RPM regions
+    - Runs RPMClusters in parallel for all regions
+    - Save results to disk
     """
     def __init__(self, cf_profiles, rpm_meta, rpm_region_col=None):
         """
@@ -198,3 +198,35 @@ class RPMClusterManager:
             rpm_clusters.to_json(out_file)
         else:
             raise RPMValueError('out_file must be a .csv or .json')
+
+    @classmethod
+    def run(cls, cf_profiles, rpm_meta, out_file,
+            rpm_region_col=None, parallel=True, **kwargs):
+        """
+        RPM Cluster Manager:
+        - Extracts gids for all RPM regions
+        - Runs RPMClusters in parallel for all regions
+        - Save results to disk
+
+        Parameters
+        ----------
+        cf_profiles : str
+            Path to reV .h5 files containing desired capacity factor profiles
+        rpm_meta : pandas.DataFrame | str
+            DataFrame or path to .csv or .json containing the RPM meta data:
+            - Regions of interest
+            - # of clusters per region
+            - cf or resource GIDs if region is not in default meta data
+        out_file : str
+            Path to file to save clusters too, should be a .csv or .json
+        rpm_region_col : str | Nonetype
+            If not None, the meta-data filed to map RPM regions to
+        parallel : bool
+            Run clustering of each region in parallel
+        **kwargs : dict
+            RPMClusters kwargs
+        """
+        rpm = cls(cf_profiles, rpm_meta, rpm_region_col=rpm_region_col)
+        rpm._cluster(parallel=parallel, **kwargs)
+        rpm.save_clusters(out_file)
+        return rpm
