@@ -156,3 +156,44 @@ class RPMClusterManager:
                 result = RPMClusters.cluster(self._cf_h5, gids, clusters,
                                              **kwargs)
                 self._rpm_regions[region].update({'clusters': result})
+
+    @staticmethod
+    def _combine_region_clusters(rpm_regions):
+        """
+        Combine clusters for all rpm regions and create unique cluster ids
+
+        Parameters
+        ----------
+        rpm_regions : dict
+            Dictionary with RPM region info
+
+        Returns
+        -------
+        rpm_clusters : pandas.DataFrame
+            Single DataFrame with (region, gid, cluster_id, rank)
+        """
+        rpm_clusters = []
+        for region, r_dict in rpm_regions.items():
+            r_df = r_dict['clusters']
+            ids = region + '-' + r_df.loc[:, 'cluster_id'].astype(str).values
+            r_df.loc[:, 'cluster_id'] = ids
+            rpm_clusters.append(r_df)
+
+        rpm_clusters = pd.concat(rpm_clusters)
+
+    def save_clusters(self, out_file):
+        """
+        Save cluster results to disk
+
+        Parameters
+        ----------
+        out_file : str
+            Path to file to save clusters too, should be a .csv or .json
+        """
+        rpm_clusters = self._combine_region_clusters(self._rpm_regions)
+        if out_file.endswith('.csv'):
+            rpm_clusters.to_csv(out_file, index=False)
+        elif out_file.endswith('.json'):
+            rpm_clusters.to_json(out_file)
+        else:
+            raise RPMValueError('out_file must be a .csv or .json')
