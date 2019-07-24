@@ -117,7 +117,7 @@ class RPMClusterManager:
                                       .format(region))
 
             region_map['cluster_num'] = clusters[0]
-            region_map['gen_gids'] = region_meta['gen_gid']
+            region_map['gen_gids'] = region_meta['gen_gid'].values
             rpm_regions[region] = region_map
 
         return rpm_regions
