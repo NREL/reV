@@ -188,11 +188,11 @@ class RPMClusters:
         with Outputs(cf_h5_path, mode='r', unscale=False) as cfs:
             meta = cfs.meta.loc[gids, ['latitude', 'longitude']]
             gid_slice, gid_idx = RPMClusters._gid_pos(gids)
-            cf_profiles = cfs['cf_profile', :, gid_slice][:, gid_idx]
+            coeff = cfs['cf_profile', :, gid_slice][:, gid_idx]
 
         meta['gid'] = gids
         meta = meta.reset_index(drop=True)
-        coeff = RPMClusters._calculate_wavelets(cf_profiles)
+        coeff = RPMClusters._calculate_wavelets(coeff.T)
         return meta, coeff
 
     @staticmethod
@@ -232,7 +232,9 @@ class RPMClusters:
         logger.debug('Applying {} clustering '.format(method))
 
         c_func = getattr(ClusteringMethods, method)
-        self._meta['cluster_id'] = c_func(self.coefficients, **kwargs)
+        labels = c_func(self.coefficients, n_clusters=self.n_clusters,
+                        **kwargs)
+        self._meta['cluster_id'] = labels
 
     @staticmethod
     def _normalize_values(arr, norm=None, axis=None):
