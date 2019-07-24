@@ -12,7 +12,7 @@ from reV.utilities.exceptions import RPMValueError, RPMRuntimeError
 logger = logging.getLogger(__name__)
 
 
-class RPM:
+class RPMClusterManager:
     """
     Entry point for reV to RPM pipeline. Pipeline:
     - Creates 'regular' regional RPM 'clusters'
