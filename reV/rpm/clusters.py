@@ -5,37 +5,25 @@ RPM Clustering Module
 
 import h5py
 
-fname = '/projects/naris/extreme_events/generation/pv_ca_2012.h5'
-fname = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
-data = h5py.File(fname, 'r')
-meta = pd.DataFrame(data['meta'][...][::15])
-cf_profile = data['cf_profile'][...][:,::15]
-
-# Option: Extract county only
-# mask = meta.county == b'San Diego'
-# meta = meta[mask]
-# cf_profile = cf_profile[:,mask]
+fname = '/scratch/mrossol/reV/v90_full_ca_2012.h5'
+with h5py.File(fname, 'r') as f:
+    wind_meta = pd.DataFrame(f['meta'][...])
+    wind_gids = wind_meta.iloc[::15].index.values
 
 # Initiate
-clusters = RPMClusters("california_wind",
-                       meta['latitude'], meta['longitude'],
-                       cf_profile)
+clusters = RPMClusters(fname, wind_gids, n_clusters=6)
 
-# Wavelets
-clusters.calculate_wavelets(normalize=True)
+# Cluster on wavelet coefficients
+labels = clusters._cluster_coefficients(**method_kwargs)
 
-# Cluster
-clustering_args = {'k': 6}
-clusters.apply_clustering(clustering_args, method="kmeans",
-                          include_spatial=True)
-clusters.recluster_by_centroid()
+# Optimize clusters by minimizing distance and rmse to cluster centers
+new_labels = clusters._dist_rank_optimization(**dist_rmse_kwargs)
 
-# Representative Profiles
-clusters.get_representative_timeseries()
+# Run multistep clustering
+clusters._cluster(**kwargs)
 
-# Verification & Validation
-clusters.pca_validation(plot=True)
-
+# classmethod
+cluster_df = RPMClusters.cluster(fname, wind_gids, n_clusters=6, **kwargs)
 """
 import logging
 import pywt
@@ -234,7 +222,7 @@ class RPMClusters:
         c_func = getattr(ClusteringMethods, method)
         labels = c_func(self.coefficients, n_clusters=self.n_clusters,
                         **kwargs)
-        self._meta['cluster_id'] = labels
+        return labels
 
     @staticmethod
     def _normalize_values(arr, norm=None, axis=None):
@@ -327,7 +315,8 @@ class RPMClusters:
         """
         if method_kwargs is None:
             method_kwargs = {}
-        self._cluster_coefficients(method=method, **method_kwargs)
+        labels = self._cluster_coefficients(method=method, **method_kwargs)
+        self._meta['cluster_id'] = labels
 
         if dist_rmse_kwargs is None:
             dist_rmse_kwargs = {}
