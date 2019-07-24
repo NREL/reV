@@ -191,7 +191,7 @@ class RPMClusters:
             coeff = cfs['cf_profile', :, gid_slice][:, gid_idx]
 
         meta['gid'] = gids
-        meta = meta.reset_index(drop=True)
+        meta = meta[['gid', 'latitude', 'longitude']].reset_index(drop=True)
         coeff = RPMClusters._calculate_wavelets(coeff.T)
         return meta, coeff
 
@@ -324,11 +324,6 @@ class RPMClusters:
             Kwargs for running _dist_rank_optimization
         intersect_kwargs : dict
             Kwargs for running Rob's new method
-
-        Returns
-        -------
-        pandas.DataFrame
-            Cluster results: (gid, cluster_id, rank)
         """
         if method_kwargs is None:
             method_kwargs = {}
@@ -344,8 +339,6 @@ class RPMClusters:
         # Rob your new method here
 
         self._calculate_ranks()
-
-        return self.meta[['gid', 'cluster_id', 'rank']]
 
     @classmethod
     def cluster(cls, cf_h5_path, region_gids, n_clusters, **kwargs):
@@ -367,11 +360,11 @@ class RPMClusters:
         Returns
         -------
         out : pandas.DataFrame
-            Cluster results: (gid, cluster_id, rank)
+            Cluster results: (gid, lon, lat, cluster_id, rank)
         """
         clusters = cls(cf_h5_path, region_gids, n_clusters)
-        out = clusters._cluster(**kwargs)
-        return out
+        clusters._cluster(**kwargs)
+        return clusters.meta
 
 
 class RPMWavelets:

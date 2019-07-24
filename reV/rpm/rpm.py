@@ -174,12 +174,13 @@ class RPMClusterManager:
         """
         rpm_clusters = []
         for region, r_dict in rpm_regions.items():
-            r_df = r_dict['clusters']
-            ids = region + '-' + r_df.loc[:, 'cluster_id'].astype(str).values
+            r_df = r_dict['clusters'].copy()
+            ids = region + '-' + r_df.copy()['cluster_id'].astype(str).values
             r_df.loc[:, 'cluster_id'] = ids
             rpm_clusters.append(r_df)
 
         rpm_clusters = pd.concat(rpm_clusters)
+        return rpm_clusters
 
     def save_clusters(self, out_file):
         """
