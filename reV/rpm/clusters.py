@@ -188,7 +188,7 @@ class RPMClusters:
         with Outputs(cf_h5_path, mode='r', unscale=False) as cfs:
             meta = cfs.meta.loc[gids, ['latitude', 'longitude']]
             gid_slice, gid_idx = RPMClusters._gid_pos(gids)
-            cf_profiles = cfs['cf_profile', :, gid_slice][gid_idx]
+            cf_profiles = cfs['cf_profile', :, gid_slice][:, gid_idx]
 
         meta['gid'] = gids
         meta = meta.reset_index(drop=True)
