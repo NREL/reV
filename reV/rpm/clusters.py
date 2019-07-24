@@ -100,7 +100,7 @@ class RPMClusters:
             - cluster_id
             - rank
         """
-        return self._coefficients
+        return self._meta
 
     @property
     def n_clusters(self):
@@ -125,7 +125,7 @@ class RPMClusters:
             cluster_coeffs = []
             for _, cdf in self._meta.groupby('cluster_id'):
                 idx = cdf.index.values
-                cluster_coeffs.append(self.coordinates[idx].mean(axis=1))
+                cluster_coeffs.append(self.coefficients[idx].mean(axis=0))
 
             cluster_coeffs = np.array(cluster_coeffs)
 
@@ -281,12 +281,8 @@ class RPMClusters:
         cluster_centroids = self.cluster_coordinates
         rmse = []
         dist = []
-        idx = []
-        for i, cdf in self.meta.groupby('cluster_id'):
-            centroid = cluster_centroids[i]
-            rep_coeff = cluster_coeffs[i]
-            idx.append(cdf.index.values)
-            c_rmse = np.mean((self.coefficients - rep_coeff) ** 2,
+        for centroid, rep_coeffs in zip(cluster_centroids, cluster_coeffs):
+            c_rmse = np.mean((self.coefficients - rep_coeffs) ** 2,
                              axis=1) ** 0.5
             rmse.append(c_rmse)
             c_dist = np.linalg.norm(self.coordinates - centroid, axis=1)
@@ -295,8 +291,8 @@ class RPMClusters:
         rmse = self._normalize_values(np.array(rmse), **kwargs)
         dist = self._normalize_values(np.array(dist), **kwargs)
         err = (dist + rmse**2)
-        new_labels = np.argmin(err, axis=1)
-        return new_labels[idx]
+        new_labels = np.argmin(err, axis=0)
+        return new_labels
 
     def _calculate_ranks(self):
         """ Determine the rank of each location within all clusters
@@ -328,6 +324,11 @@ class RPMClusters:
             Kwargs for running _dist_rank_optimization
         intersect_kwargs : dict
             Kwargs for running Rob's new method
+
+        Returns
+        -------
+        pandas.DataFrame
+            Cluster results: (gid, cluster_id, rank)
         """
         if method_kwargs is None:
             method_kwargs = {}
@@ -362,6 +363,11 @@ class RPMClusters:
             Number of clusters to identify
         kwargs : dict
             Internal kwargs for clustering
+
+        Returns
+        -------
+        out : pandas.DataFrame
+            Cluster results: (gid, cluster_id, rank)
         """
         clusters = cls(cf_h5_path, region_gids, n_clusters)
         out = clusters._cluster(**kwargs)
