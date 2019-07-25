@@ -1,0 +1,14 @@
+{
+  "logging": {
+    "log_file": null,
+    "log_level": "DEBUG"
+  },
+  "pipeline": [
+    {
+      "econ": "./config_econ.json"
+    },
+    {
+      "collect": "./config_collect.json"
+    }
+  ]
+}

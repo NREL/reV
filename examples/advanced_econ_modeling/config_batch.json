@@ -1,0 +1,17 @@
+{
+  "pipeline_config": "./config_pipeline.json",
+  "sets": [
+    {
+      "args": {
+        "cf_file": [
+          "/scratch/ngilroy/rev2/projects/wind_curtailment_2012_rev2/hi_curt_{}.h5",
+          "/scratch/ngilroy/rev2/projects/wind_curtailment_2012_rev2/med_curt_{}.h5",
+          "/scratch/ngilroy/rev2/projects/wind_curtailment_2012_rev2/no_curt_{}.h5"
+        ]
+      },
+      "files": [
+        "./config_econ.json"
+      ]
+    }
+  ]
+}
