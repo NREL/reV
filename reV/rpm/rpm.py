@@ -118,6 +118,7 @@ class RPMClusterManager:
 
             region_map['cluster_num'] = clusters[0]
             region_map['gen_gids'] = region_meta['gen_gid'].values
+            region_map['gids'] = region_meta.index.values
             rpm_regions[region] = region_map
 
         return rpm_regions
@@ -177,6 +178,7 @@ class RPMClusterManager:
             r_df = r_dict['clusters'].copy()
             ids = region + '-' + r_df.copy()['cluster_id'].astype(str).values
             r_df.loc[:, 'cluster_id'] = ids
+            r_df['gid'] = r_dict['gids']
             rpm_clusters.append(r_df)
 
         rpm_clusters = pd.concat(rpm_clusters)
