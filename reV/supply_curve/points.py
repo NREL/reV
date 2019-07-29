@@ -346,7 +346,6 @@ class SupplyCurvePoint:
 
         if self._excl_data is None:
             self._excl_data = self.exclusions[0, self.rows, self.cols]
-            self._excl_data = self._excl_data
 
             # infer exclusions that are scaled percentages from 0 to 100
             if self._excl_data.max() > 1:
