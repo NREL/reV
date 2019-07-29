@@ -138,10 +138,10 @@ class RPMClusterManager:
             with cf.ProcessPoolExecutor() as executor:
                 for region, region_map in self._rpm_regions.items():
                     clusters = region_map['cluster_num']
-                    gids = region_map['gen_gids']
+                    gen_gids = region_map['gen_gids']
 
                     future = executor.submit(RPMClusters.cluster, self._cf_h5,
-                                             gids, clusters, **kwargs)
+                                             gen_gids, clusters, **kwargs)
                     future_to_region[future] = region
 
                 for future in cf.as_completed(future_to_region):
@@ -152,8 +152,8 @@ class RPMClusterManager:
         else:
             for region, region_map in self._rpm_regions.items():
                 clusters = region_map['clusters']
-                gids = region_map['gen_gids']
-                result = RPMClusters.cluster(self._cf_h5, gids, clusters,
+                gen_gids = region_map['gen_gids']
+                result = RPMClusters.cluster(self._cf_h5, gen_gids, clusters,
                                              **kwargs)
                 self._rpm_regions[region].update({'clusters': result})
 
@@ -204,7 +204,7 @@ class RPMClusterManager:
             rpm_region_col=None, parallel=True, **kwargs):
         """
         RPM Cluster Manager:
-        - Extracts gids for all RPM regions
+        - Extracts gen_gids for all RPM regions
         - Runs RPMClusters in parallel for all regions
         - Save results to disk
 

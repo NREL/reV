@@ -8,10 +8,10 @@ import h5py
 fname = '/scratch/mrossol/reV/v90_full_ca_2012.h5'
 with h5py.File(fname, 'r') as f:
     wind_meta = pd.DataFrame(f['meta'][...])
-    wind_gids = wind_meta.iloc[::15].index.values
+    wind_gen_gids = wind_meta.iloc[::15].index.values
 
 # Initiate
-clusters = RPMClusters(fname, wind_gids, n_clusters=6)
+clusters = RPMClusters(fname, wind_gen_gids, n_clusters=6)
 
 # Cluster on wavelet coefficients
 labels = clusters._cluster_coefficients(**method_kwargs)
@@ -23,7 +23,7 @@ new_labels = clusters._dist_rank_optimization(**dist_rmse_kwargs)
 clusters._cluster(**kwargs)
 
 # classmethod
-cluster_df = RPMClusters.cluster(fname, wind_gids, n_clusters=6, **kwargs)
+cluster_df = RPMClusters.cluster(fname, wind_gen_gids, n_clusters=6, **kwargs)
 """
 import logging
 import pywt
@@ -50,19 +50,19 @@ class ClusteringMethods:
 
 class RPMClusters:
     """ Base class for RPM clusters """
-    def __init__(self, cf_h5_path, gids, n_clusters):
+    def __init__(self, cf_h5_path, gen_gids, n_clusters):
         """
         Parameters
         ----------
         cf_h5_path : str
             Path to reV .h5 files containing desired capacity factor profiles
-        gids : list | ndarray
-            List or vector of gids to cluster on
+        gen_gids : list | ndarray
+            List or vector of gen_gids to cluster on
         n_clusters : int
             Number of clusters to identify
         """
         self._meta, self._coefficients = self._parse_data(cf_h5_path,
-                                                          gids)
+                                                          gen_gids)
         self._n_clusters = n_clusters
 
     @property
@@ -71,7 +71,7 @@ class RPMClusters:
         Returns
         -------
         _coefficients : ndarray
-            Array of wavelet coefficients for each gid
+            Array of wavelet coefficients for each gen_gid
         """
         return self._coefficients
 
@@ -82,7 +82,7 @@ class RPMClusters:
         -------
         _meta : pandas.DataFrame
             DataFrame of meta data:
-            - gid
+            - gen_gid
             - latitude
             - longitude
             - cluster_id
@@ -125,7 +125,7 @@ class RPMClusters:
         Returns
         -------
         cluster_ids : ndarray
-            Cluster cluster_id for each gid
+            Cluster cluster_id for each gen_gid
         """
         cluster_ids = None
         if 'cluster_id' in self._meta:
@@ -154,57 +154,58 @@ class RPMClusters:
         Returns
         -------
         coords : ndarray
-            lon, lat coordinates for each gid
+            lon, lat coordinates for each gen_gid
         """
         coords = self._meta[['longitude', 'latitude']].values
         return coords
 
     @staticmethod
-    def _parse_data(cf_h5_path, gids):
+    def _parse_data(cf_h5_path, gen_gids):
         """
-        Extract lat, lon coordinates for given gids
+        Extract lat, lon coordinates for given gen_gids
         Extract and convert cf_profiles into wavelet coefficients
 
         Parameters
         ----------
         cf_h5_path : str
             Path to reV .h5 files containing desired capacity factor profiles
-        gids : list | ndarray
-            List or vector of gids to cluster on
+        gen_gids : list | ndarray
+            List or vector of gen_gids to cluster on
         """
 
         with Outputs(cf_h5_path, mode='r', unscale=False) as cfs:
-            meta = cfs.meta.loc[gids, ['latitude', 'longitude']]
-            gid_slice, gid_idx = RPMClusters._gid_pos(gids)
+            meta = cfs.meta.loc[gen_gids, ['latitude', 'longitude']]
+            gid_slice, gid_idx = RPMClusters._gid_pos(gen_gids)
             coeff = cfs['cf_profile', :, gid_slice][:, gid_idx]
 
-        meta['gid'] = gids
-        meta = meta[['gid', 'latitude', 'longitude']].reset_index(drop=True)
+        meta['gen_gid'] = gen_gids
+        cols = ['gen_gid', 'latitude', 'longitude']
+        meta = meta[cols].reset_index(drop=True)
         coeff = RPMClusters._calculate_wavelets(coeff.T)
         return meta, coeff
 
     @staticmethod
-    def _gid_pos(gids):
+    def _gid_pos(gen_gids):
         """
         Parameters
         ----------
-        gids : list | ndarray
-            List or vector of gids to cluster on
+        gen_gids : list | ndarray
+            List or vector of gen_gids to cluster on
 
         Returns
         -------
         gid_slice : slice
-            Slice that encompasses the entire gid range
+            Slice that encompasses the entire gen_gid range
         gid_idx : ndarray
-            Adjusted list to extract gids of interest from slice
+            Adjusted list to extract gen_gids of interest from slice
         """
-        if isinstance(gids, list):
-            gids = np.array(gids)
+        if isinstance(gen_gids, list):
+            gen_gids = np.array(gen_gids)
 
-        s = gids.min()
-        e = gids.max() + 1
+        s = gen_gids.min()
+        e = gen_gids.max() + 1
         gid_slice = slice(s, e, None)
-        gid_idx = gids - s
+        gid_idx = gen_gids - s
 
         return gid_slice, gid_idx
 
@@ -330,17 +331,17 @@ class RPMClusters:
         self._calculate_ranks()
 
     @classmethod
-    def cluster(cls, cf_h5_path, region_gids, n_clusters, **kwargs):
+    def cluster(cls, cf_h5_path, region_gen_gids, n_clusters, **kwargs):
         """
         Entry point for RPMCluster to get clusters for a given region
-        defined as a list | array of gids
+        defined as a list | array of gen_gids
 
         Parameters
         ----------
         cf_h5_path : str
             Path to reV .h5 files containing desired capacity factor profiles
-        region_gids : list | ndarray
-            List or vector of gids to cluster on
+        region_gen_gids : list | ndarray
+            List or vector of gen_gids to cluster on
         n_clusters : int
             Number of clusters to identify
         kwargs : dict
@@ -349,9 +350,9 @@ class RPMClusters:
         Returns
         -------
         out : pandas.DataFrame
-            Cluster results: (gid, lon, lat, cluster_id, rank)
+            Cluster results: (gen_gid, lon, lat, cluster_id, rank)
         """
-        clusters = cls(cf_h5_path, region_gids, n_clusters)
+        clusters = cls(cf_h5_path, region_gen_gids, n_clusters)
         clusters._cluster(**kwargs)
         return clusters.meta
 
