@@ -1,6 +1,7 @@
 """
 Pipeline between reV and RPM
 """
+import os
 import concurrent.futures as cf
 import logging
 import numpy as np
@@ -237,7 +238,8 @@ class RPMClusterManager:
 class RPMExclusions:
     """Framework to apply exclusions to RPM clustering results."""
 
-    def __init__(self, rpm_clusters, fpath_excl, fpath_techmap, dset_techmap):
+    def __init__(self, rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
+                 excl_area=0.0081):
         """
         Parameters
         ----------
@@ -250,21 +252,53 @@ class RPMExclusions:
         dset_techmap : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        excl_area : float
+            Area in km2 of one exclusion pixel.
         """
 
         self._clusters = rpm_clusters
         self._fpath_excl = fpath_excl
         self._fpath_techmap = fpath_techmap
         self._dset_techmap = dset_techmap
+        self.excl_area = excl_area
 
         self._excl_lat = None
         self._excl_lon = None
+        self._full_lat_slice = None
+        self._full_lon_slice = None
+        self._init_lat_lon()
 
-    def _get_tm_data(self, lat_slice, lon_slice):
+    def _init_lat_lon(self):
+        """Initialize the lat/lon arrays and reduce their size."""
+        self._full_lat_slice, self._full_lon_slice = self._get_lat_lon_slices(
+            cluster_id=None, margin=3)
+
+        logger.debug('Initial lat/lon shape is {} and {} and '
+                     'range is {} - {} and {} - {}'
+                     .format(self.excl_lat.shape, self.excl_lon.shape,
+                             self.excl_lat.min(), self._excl_lat.max(),
+                             self.excl_lon.min(), self._excl_lon.max()))
+        self._excl_lat = self._excl_lat[self._full_lat_slice,
+                                        self._full_lon_slice]
+        self._excl_lon = self._excl_lon[self._full_lat_slice,
+                                        self._full_lon_slice]
+        logger.debug('Reduced lat/lon shape is {} and {} and '
+                     'range is {} - {} and {} - {}'
+                     .format(self.excl_lat.shape, self.excl_lon.shape,
+                             self.excl_lat.min(), self._excl_lat.max(),
+                             self.excl_lon.min(), self._excl_lon.max()))
+
+    @staticmethod
+    def _get_tm_data(fpath_techmap, dset_techmap, lat_slice, lon_slice):
         """Get the techmap data.
 
         Parameters
         ----------
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and resource data.
+        dset_techmap : str
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
         lat_slice : slice
             The latitude (row) slice to extract from the exclusions or
             techmap 2D datasets.
@@ -278,15 +312,18 @@ class RPMExclusions:
             Techmap data mapping exclusions grid to resource gid (flattened).
         """
 
-        with Outputs(self._fpath_techmap) as tm:
-            techmap = tm[self._dset_techmap, lat_slice, lon_slice]
+        with Outputs(fpath_techmap) as tm:
+            techmap = tm[dset_techmap, lat_slice, lon_slice].astype(np.int32)
         return techmap.flatten()
 
-    def _get_excl_data(self, lat_slice, lon_slice, band=0):
+    @staticmethod
+    def _get_excl_data(fpath_excl, lat_slice, lon_slice, band=0):
         """Get the exclusions data from a geotiff file.
 
         Parameters
         ----------
+        fpath_excl : str
+            Filepath to exclusions data (must match the techmap grid).
         lat_slice : slice
             The latitude (row) slice to extract from the exclusions or
             techmap 2D datasets.
@@ -299,10 +336,10 @@ class RPMExclusions:
         Returns
         -------
         excl_data : np.ndarray
-            Exclusions data normalized from 0 to 1 (1 is included).
+            Exclusions data flattened and normalized from 0 to 1 (1 is incld).
         """
 
-        with Geotiff(self._fpath_excl) as excl:
+        with Geotiff(fpath_excl) as excl:
             excl_data = excl[band, lat_slice, lon_slice]
 
         # infer exclusions that are scaled percentages from 0 to 100
@@ -312,13 +349,13 @@ class RPMExclusions:
 
         return excl_data
 
-    def _get_lat_lon_slices(self, cluster_id, margin=5.0):
+    def _get_lat_lon_slices(self, cluster_id=None, margin=0.5):
         """Get the slice args to locate exclusion/techmap data of interest.
 
         Parameters
         ----------
-        cluster_id : str
-            Single cluster ID of interest.
+        cluster_id : str | None
+            Single cluster ID of interest or None for full region.
         margin : float
             Extra margin around the cluster lat/lon box.
 
@@ -332,116 +369,210 @@ class RPMExclusions:
             techmap 2D datasets.
         """
 
-        cbox = self._get_coord_box(cluster_id)
+        box = self._get_coord_box(cluster_id)
 
-        lat_mask = ((self.excl_lat > np.min(cbox['latitude']) - margin)
-                    & (self.excl_lat < np.max(cbox['latitude']) + margin))
-        lon_mask = ((self.excl_lon > np.min(cbox['longitude']) - margin)
-                    & (self.excl_lon < np.max(cbox['longitude']) + margin))
+        mask = ((self.excl_lat > np.min(box['latitude']) - margin)
+                & (self.excl_lat < np.max(box['latitude']) + margin)
+                & (self.excl_lon > np.min(box['longitude']) - margin)
+                & (self.excl_lon < np.max(box['longitude']) + margin))
 
-        lat_locs = np.where(lat_mask)[0]
-        lon_locs = np.where(lon_mask)[0]
+        lat_locs, lon_locs = np.where(mask)
 
-        lat_slice = slice(np.min(lat_locs), 1 + np.max(lat_locs))
-        lon_slice = slice(np.min(lon_locs), 1 + np.max(lon_locs))
+        if self._full_lat_slice is None and self._full_lon_slice is None:
+            lat_slice = slice(np.min(lat_locs), 1 + np.max(lat_locs))
+            lon_slice = slice(np.min(lon_locs), 1 + np.max(lon_locs))
+        else:
+            lat_slice = slice(
+                self._full_lat_slice.start + np.min(lat_locs),
+                1 + self._full_lat_slice.start + np.max(lat_locs))
+            lon_slice = slice(
+                self._full_lon_slice.start + np.min(lon_locs),
+                1 + self._full_lon_slice.start + np.max(lon_locs))
 
         return lat_slice, lon_slice
 
-    def _get_coord_box(self, cluster_id):
+    def _get_coord_box(self, cluster_id=None):
         """Get the RPM cluster latitude/longitude range.
 
         Parameters
         ----------
-        cluster_id : str
-            Single cluster ID of interest.
+        cluster_id : str | None
+            Single cluster ID of interest or None for all clusters in
+            self._clusters.
 
         Returns
         -------
         coord_box : dict
-            Bounding box of the cluster:
+            Bounding box of the cluster or region:
                 {'latitude': (lat_min, lat_max),
                  'longitude': (lon_min, lon_max)}
         """
 
-        mask = (self._clusters['cluster_id'] == cluster_id)
+        if cluster_id is not None:
+            mask = (self._clusters['cluster_id'] == cluster_id)
+        else:
+            mask = len(self._clusters) * [True]
+
         lat_range = (self._clusters.loc[mask, 'latitude'].min(),
                      self._clusters.loc[mask, 'latitude'].max())
         lon_range = (self._clusters.loc[mask, 'longitude'].min(),
                      self._clusters.loc[mask, 'longitude'].max())
-        return {'latitude': lat_range, 'longitude': lon_range}
+        box = {'latitude': lat_range, 'longitude': lon_range}
+        return box
 
     @property
     def excl_lat(self):
-        """Get a 1D array of latitudes of the exclusion grid.
+        """Get the full 2D array of latitudes of the exclusion grid.
 
         Returns
         -------
         _excl_lat : np.ndarray
-            1D array representing the latitudes of each row in the
-            exclusion grid.
+            2D array representing the latitudes at each exclusion grid cell
         """
 
         if self._excl_lat is None:
             with Outputs(self._fpath_techmap) as f:
-                shape, _, _ = f.get_dset_properties('longitude')
-                self._excl_lat = f['latitude', :, int(shape[1] / 2)]
+                logger.debug('Importing Latitude data from techmap...')
+                self._excl_lat = f['latitude']
         return self._excl_lat
 
     @property
     def excl_lon(self):
-        """Get a 1D array of longitudes of the exclusion grid.
+        """Get the full 2D array of longitudes of the exclusion grid.
 
         Returns
         -------
         _excl_lon : np.ndarray
-            1D array representing the longitudes of each column in the
-            exclusion grid.
+            2D array representing the latitudes at each exclusion grid cell
         """
 
         if self._excl_lon is None:
             with Outputs(self._fpath_techmap) as f:
-                shape, _, _ = f.get_dset_properties('longitude')
-                self._excl_lon = f['longitude', int(shape[0] / 2), :]
+                logger.debug('Importing Longitude data from techmap...')
+                self._excl_lon = f['longitude']
         return self._excl_lon
 
-    def calc_exclusions(self, cluster_id):
+    @staticmethod
+    def _single_excl(cluster_id, clusters, fpath_excl, fpath_techmap,
+                     dset_techmap, lat_slice, lon_slice):
         """Calculate the exclusions for each resource GID in a cluster.
 
         Parameters
         ----------
         cluster_id : str
             Single cluster ID of interest.
+        clusters : pandas.DataFrame
+            Single DataFrame with (region, gid, gen_gid, cluster_id, rank)
+        fpath_excl : str
+            Filepath to exclusions data (must match the techmap grid).
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and resource data.
+        dset_techmap : str
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
+        lat_slice : slice
+            The latitude (row) slice to extract from the exclusions or
+            techmap 2D datasets.
+        lon_slice : slice
+            The longitude (col) slice to extract from the exclusions or
+            techmap 2D datasets.
 
         Returns
         -------
-        single_cluster : pd.DataFrame
-            DataFrame of resource gids in the cluster with added
-            inclusions fraction field.
+        inclusions : np.ndarray
+            1D array of inclusions fraction corresponding to the indexed
+            cluster provided by cluster_id.
+        n_inclusions : np.ndarray
+            1D array of number of included pixels corresponding to each
+            gid in cluster_id.
+        n_points : np.ndarray
+            1D array of the total number of techmap pixels corresponding to
+            each gid in cluster_id.
         """
 
-        cluster_mask = (self._clusters['cluster_id'] == cluster_id)
-        single_cluster = self._clusters[cluster_mask].copy()
-        single_cluster['incl_frac'] = 0.0
+        mask = (clusters['cluster_id'] == cluster_id)
+        locs = np.where(mask)[0]
+        inclusions = np.zeros((len(locs), ), dtype=np.float32)
+        n_inclusions = np.zeros((len(locs), ), dtype=np.float32)
+        n_points = np.zeros((len(locs), ), dtype=np.uint16)
 
-        lat_slice, lon_slice = self._get_lat_lon_slices(cluster_id)
-        excl_data = self._get_excl_data(lat_slice, lon_slice)
-        techmap = self._get_tm_data(lat_slice, lon_slice)
+        techmap = RPMExclusions._get_tm_data(fpath_techmap, dset_techmap,
+                                             lat_slice, lon_slice)
+        exclusions = RPMExclusions._get_excl_data(fpath_excl, lat_slice,
+                                                  lon_slice)
 
-        for i in single_cluster.index.values:
-            techmap_locs = np.where(techmap == single_cluster.loc[i, 'gid'])[0]
-            gid_excl_data = excl_data[techmap_locs]
-            single_cluster.loc[i, 'incl_frac'] = (np.sum(gid_excl_data)
-                                                  / len(gid_excl_data))
+        for i, ind in enumerate(clusters.loc[mask, :].index.values):
+            techmap_locs = np.where(
+                techmap == int(clusters.loc[ind, 'gid']))[0]
+            gid_excl_data = exclusions[techmap_locs]
 
-        return single_cluster
+            if gid_excl_data.size > 0:
+                inclusions[i] = np.sum(gid_excl_data) / len(gid_excl_data)
+                n_inclusions[i] = np.sum(gid_excl_data)
+                n_points[i] = len(gid_excl_data)
+            else:
+                inclusions[i] = np.nan
+                n_inclusions[i] = np.nan
+                n_points[i] = 0
+
+        return inclusions, n_inclusions, n_points
+
+    def calc_excl(self, parallel=True):
+        """Calculate exclusions for all clusters."""
+
+        static_clusters = self._clusters.copy()
+        self._clusters['included_frac'] = 0.0
+        self._clusters['included_area_km2'] = 0.0
+        self._clusters['n_pixels'] = 0
+        futures = {}
+
+        if parallel is True:
+            max_workers = os.cpu_count()
+        elif parallel is False:
+            max_workers = 1
+        else:
+            max_workers = parallel
+
+        with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
+
+            for i, cluster_id in enumerate(rpm_clusters.cluster_id.unique()):
+
+                lat_s, lon_s = self._get_lat_lon_slices(cluster_id=cluster_id)
+                future = exe.submit(self._single_excl, cluster_id,
+                                    static_clusters, self._fpath_excl,
+                                    self._fpath_techmap, self._dset_techmap,
+                                    lat_s, lon_s)
+                futures[future] = cluster_id
+                logger.debug('Kicked off cluster "{}", {} out of {}.'
+                             .format(cluster_id, i + 1,
+                                     len(rpm_clusters.cluster_id.unique())))
+
+            for i, future in enumerate(cf.as_completed(futures)):
+                cluster_id = futures[future]
+                logger.debug('Finished exclusions for cluster "{}", {} out '
+                             'of {} futures.'
+                             .format(cluster_id, i + 1, len(futures)))
+                incl, n_incl, n_pix = future.result()
+                mask = (self._clusters['cluster_id'] == cluster_id)
+
+                self._clusters.loc[mask, 'included_frac'] = incl
+                self._clusters.loc[mask, 'included_area_km2'] = \
+                    n_incl * self.excl_area
+                self._clusters.loc[mask, 'n_pixels'] = n_pix
 
 
 if __name__ == '__main__':
+
+    from reV.utilities.loggers import init_logger
+    init_logger(__name__, log_level='DEBUG', log_file=None)
+
     fn_rpm_clusters = '/scratch/gbuster/rev/rpm/rpm_clusters.csv'
-    fpath_excl = '/scratch/gbuster/rev/test_sc_agg/_windready_conus.tif'
-    fpath_techmap = '/scratch/gbuster/rev/test_sc_agg/tech_map_conus.h5'
+    fpath_excl = '/scratch/gbuster/rev/rpm/_windready_conus.tif'
+    fpath_techmap = '/scratch/gbuster/rev/rpm/tech_map_conus.h5'
     dset_techmap = 'wtk'
     rpm_clusters = pd.read_csv(fn_rpm_clusters)
 
+    fn_out = '/scratch/gbuster/rev/rpm/rpm_clusters_out.csv'
     rpme = RPMExclusions(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap)
-    c1 = rpme.calc_exclusions('Alameda-0')
+    rpme.calc_excl(parallel=True)
+    rpme._clusters.to_csv(fn_out, index=False)
