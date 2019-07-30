@@ -653,6 +653,33 @@ class RPMOutput:
 
         return s
 
+    def make_shape_files(self, out_dir):
+        """Make shape files for all clusters.
+
+        Parameters
+        ----------
+        out_dir : str
+            Directory to dump output files. New shape_files subdir will be
+            created in out_dir.
+        """
+
+        shp_dir = os.path.join(out_dir, 'shape_files/')
+        if not os.path.exists(shp_dir):
+            os.makedirs(shp_dir)
+
+        # Geopandas doesnt like writing booleans
+        if 'representative' in self._clusters:
+            self._clusters['representative'] = \
+                self._clusters['representative'].astype(int)
+
+        for cluster_id, df in self._clusters.groupby('cluster_id'):
+            fpath = os.path.join(shp_dir, '{}.shp'.format(cluster_id))
+            RPMClusters._generate_shapefile(df, fpath)
+
+        if 'representative' in self._clusters:
+            self._clusters['representative'] = \
+                self._clusters['representative'].astype(bool)
+
     def export(self, out_dir, tag=None):
         """Run RPM output algorithms and write to CSV's.
 
@@ -682,6 +709,9 @@ class RPMOutput:
         logger.info('Saved {}'.format(fn_sum))
         self._clusters.to_csv(os.path.join(out_dir, fn_out), index=False)
         logger.info('Saved {}'.format(fn_out))
+        self.make_shape_files(out_dir)
+        logger.info('Saved shape files to {}'
+                    .format(os.path.join(out_dir, 'shape_files/')))
 
 
 if __name__ == '__main__':
@@ -695,6 +725,7 @@ if __name__ == '__main__':
     dset_techmap = 'wtk'
     fpath_gen = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
     rpm_clusters = pd.read_csv(fn_rpm_clusters)
+    rpm_clusters = rpm_clusters.iloc[0:1000, :]
 
     rpme = RPMOutput(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
                      fpath_gen)
