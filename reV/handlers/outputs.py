@@ -10,7 +10,7 @@ import pandas as pd
 import time
 
 from reV.handlers.resource import Resource
-from reV.handlers.sam_resource import parse_keys
+from reV.handlers.parse_keys import parse_keys
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
                                       HandlerValueError)
 
