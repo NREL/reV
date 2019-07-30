@@ -680,7 +680,7 @@ class RPMOutput:
             self._clusters['representative'] = \
                 self._clusters['representative'].astype(bool)
 
-    def export(self, out_dir, tag=None):
+    def export_all(self, out_dir, tag=None):
         """Run RPM output algorithms and write to CSV's.
 
         Parameters
@@ -725,8 +725,7 @@ if __name__ == '__main__':
     dset_techmap = 'wtk'
     fpath_gen = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
     rpm_clusters = pd.read_csv(fn_rpm_clusters)
-    rpm_clusters = rpm_clusters.iloc[0:1000, :]
 
     rpme = RPMOutput(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
                      fpath_gen)
-    rpme.export('/scratch/gbuster/rev/rpm/')
+    rpme.export_all('/scratch/gbuster/rev/rpm/')
