@@ -5,7 +5,8 @@ RPM Clustering Module
 
 import h5py
 
-fname = '/scratch/mrossol/reV/v90_full_ca_2012.h5'
+fname = '/projects/naris/extreme_events/generation/pv_ca_2012.h5'
+fname = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
 with h5py.File(fname, 'r') as f:
     wind_meta = pd.DataFrame(f['meta'][...])
     wind_gen_gids = wind_meta.iloc[::15].index.values
@@ -24,12 +25,32 @@ clusters._cluster(**kwargs)
 
 # classmethod
 cluster_df = RPMClusters.cluster(fname, wind_gen_gids, n_clusters=6, **kwargs)
+
+# Shapefiles
+RPMClusters._generate_shapefile(clusters.meta, fpath='./test.shp')
+
+
+#### Testing:
+
+from reV.rpm.rpm import *
+import h5py
+
+fname = '/projects/naris/extreme_events/generation/pv_ca_2012.h5'
+with h5py.File(fname, 'r') as f:
+    wind_meta = pd.DataFrame(f['meta'][...])
+    wind_gen_gids = wind_meta.index.values
+
+cluster_df = RPMClusters.cluster(fname, wind_gen_gids, n_clusters=6)
+
 """
 import logging
 import pywt
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import normalize
+from scipy.spatial import cKDTree
+import geopandas as gpd
+from shapely.geometry import Point
 
 from reV.handlers.outputs import Outputs
 
@@ -283,6 +304,86 @@ class RPMClusters:
         new_labels = np.argmin(err, axis=0)
         return new_labels
 
+    def _contiguous_filter(self):
+        """
+        Re-classify clusters by making contigous cluster polygons
+        """
+        meta = self._meta
+
+        geometry = [Point(xy) for xy in zip(meta.longitude, meta.latitude)]
+        gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
+
+        clusters = self._get_cluster_geom(gdf_points, buffer=False)
+        clusters.to_file('clusters.shp')
+        gdf_points.to_file('gdf_points.shp')
+
+        intersected = gpd.sjoin(gdf_points, clusters,
+                                how="left", op='intersects')
+
+        # drop duplicate rows
+        gid_counts = intersected.groupby('gid_left').size()
+        duplicate_gids = gid_counts[gid_counts > 1].index
+        mask = intersected['gid_left'].isin(duplicate_gids)
+        intersected.loc[mask, 'cluster_id_right'] = None
+        intersected = intersected.drop_duplicates(subset=['gid_left'])
+
+        mask = np.isnan(intersected.cluster_id_right)
+        assigned = intersected[~mask].reset_index()
+        unassigned = intersected[mask]
+
+        lookup = assigned[['latitude_left', 'longitude_left']]
+        target = unassigned[['latitude_left', 'longitude_left']]
+        tree = cKDTree(lookup)
+        _, inds = tree.query(target, k=1)
+
+        for i, ind in enumerate(list(unassigned.index)):
+            nearest_cluster_id = assigned.loc[inds[i], 'cluster_id_left']
+            intersected.loc[ind, 'cluster_id_left'] = nearest_cluster_id
+
+        new_labels = intersected['cluster_id_left']
+
+        return new_labels
+
+    @staticmethod
+    def _generate_shapefile(meta, fpath):
+        """
+        Generate cluster polygons and save to shapefile
+        """
+        geometry = [Point(xy) for xy in zip(meta.longitude, meta.latitude)]
+        gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
+
+        clusters = RPMClusters._get_cluster_geom(gdf_points, buffer=True)
+        clusters.to_file(fpath)
+        return fpath
+
+    @staticmethod
+    def _get_cluster_geom(gdf_points, buffer=False):
+        """
+        Generate cluster polygons as a geopandas dataframe
+        """
+        lookup = gdf_points[['latitude', 'longitude']]
+        tree = cKDTree(lookup)
+        dists, _ = tree.query(lookup, k=2)
+        mean_dist = dists.T[1].mean()
+        gdf_poly = gdf_points.copy()
+        gdf_poly.geometry = gdf_poly.geometry.buffer(mean_dist)
+        clusters = gdf_poly.dissolve(by='cluster_id').reset_index()
+        clusters.geometry = clusters.geometry.buffer(-mean_dist / 2)
+
+        # Drop Islands
+        for index, _ in clusters.iterrows():
+            geom = clusters.loc[index, 'geometry']
+            if geom.geom_type == 'MultiPolygon':
+                clusters.loc[index, 'geometry'] = max(geom,
+                                                      key=lambda a: a.area)
+
+        # Buffer
+        if buffer is True:
+            clusters.geometry = clusters.geometry.buffer(-mean_dist)
+            clusters.geometry = clusters.geometry.buffer(mean_dist)
+
+        return clusters
+
     def _calculate_ranks(self):
         """ Determine the rank of each location within all clusters
         based on the mean square errors """
@@ -296,7 +397,7 @@ class RPMClusters:
             self._meta.loc[pos, 'rank'] = rank
 
     def _cluster(self, method='kmeans', method_kwargs=None,
-                 dist_rmse_kwargs=None, intersect_kwargs=None):
+                 dist_rmse_kwargs=None):
         """
         Run three step RPM clustering procedure:
         1) Cluster on wavelet coefficients
@@ -324,9 +425,8 @@ class RPMClusters:
         new_labels = self._dist_rank_optimization(**dist_rmse_kwargs)
         self._meta['cluster_id'] = new_labels
 
-        if intersect_kwargs is None:
-            intersect_kwargs = {}
-        # Rob your new method here
+        new_labels = self._contiguous_filter()
+        self._meta['cluster_id'] = new_labels
 
         self._calculate_ranks()
 
