@@ -235,11 +235,11 @@ class RPMClusterManager:
         return rpm
 
 
-class RPMExclusions:
-    """Framework to apply exclusions to RPM clustering results."""
+class RPMOutput:
+    """Framework to format and process RPM clustering results."""
 
     def __init__(self, rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
-                 excl_area=0.0081):
+                 fpath_gen, excl_area=0.0081, include_threshold=0.001):
         """
         Parameters
         ----------
@@ -252,15 +252,22 @@ class RPMExclusions:
         dset_techmap : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        fpath_gen : str
+            reV generation output file.
         excl_area : float
             Area in km2 of one exclusion pixel.
+        include_threshold : float
+            Inclusion threshold. Resource pixels included more than this
+            threshold will be considered in the representative profiles.
         """
 
         self._clusters = rpm_clusters
         self._fpath_excl = fpath_excl
         self._fpath_techmap = fpath_techmap
         self._dset_techmap = dset_techmap
+        self._fpath_gen = fpath_gen
         self.excl_area = excl_area
+        self.include_threshold = include_threshold
 
         self._excl_lat = None
         self._excl_lon = None
@@ -496,10 +503,9 @@ class RPMExclusions:
         n_inclusions = np.zeros((len(locs), ), dtype=np.float32)
         n_points = np.zeros((len(locs), ), dtype=np.uint16)
 
-        techmap = RPMExclusions._get_tm_data(fpath_techmap, dset_techmap,
-                                             lat_slice, lon_slice)
-        exclusions = RPMExclusions._get_excl_data(fpath_excl, lat_slice,
-                                                  lon_slice)
+        techmap = RPMOutput._get_tm_data(fpath_techmap, dset_techmap,
+                                         lat_slice, lon_slice)
+        exclusions = RPMOutput._get_excl_data(fpath_excl, lat_slice, lon_slice)
 
         for i, ind in enumerate(clusters.loc[mask, :].index.values):
             techmap_locs = np.where(
@@ -517,13 +523,26 @@ class RPMExclusions:
 
         return inclusions, n_inclusions, n_points
 
-    def calc_excl(self, parallel=True):
-        """Calculate exclusions for all clusters."""
+    def apply_exclusions(self, parallel=True):
+        """Calculate exclusions for clusters, adding data to self._clusters.
 
+        Parameters
+        ----------
+        Parallel : bool | int
+            Flag to apply exclusions in parallel. Integer is interpreted as
+            max number of workers. True uses all available.
+
+        Returns
+        -------
+        clusters : pd.DataFrame
+            Copy of self._clusters with new columns for exclusions data.
+        """
+
+        clusters = self._clusters.copy()
         static_clusters = self._clusters.copy()
-        self._clusters['included_frac'] = 0.0
-        self._clusters['included_area_km2'] = 0.0
-        self._clusters['n_pixels'] = 0
+        clusters['included_frac'] = 0.0
+        clusters['included_area_km2'] = 0.0
+        clusters['n_pixels'] = 0
         futures = {}
 
         if parallel is True:
@@ -553,12 +572,116 @@ class RPMExclusions:
                              'of {} futures.'
                              .format(cluster_id, i + 1, len(futures)))
                 incl, n_incl, n_pix = future.result()
-                mask = (self._clusters['cluster_id'] == cluster_id)
+                mask = (clusters['cluster_id'] == cluster_id)
 
-                self._clusters.loc[mask, 'included_frac'] = incl
-                self._clusters.loc[mask, 'included_area_km2'] = \
+                clusters.loc[mask, 'included_frac'] = incl
+                clusters.loc[mask, 'included_area_km2'] = \
                     n_incl * self.excl_area
-                self._clusters.loc[mask, 'n_pixels'] = n_pix
+                clusters.loc[mask, 'n_pixels'] = n_pix
+
+        return clusters
+
+    def make_profile_df(self):
+        """Make the representative profile dataframe.
+
+        Returns
+        -------
+        profile_df : pd.DataFrame
+            Dataframe of representative profiles. Index is timeseries,
+            columns are cluster ids.
+        """
+
+        if 'included_frac' not in self._clusters:
+            raise KeyError('Exclusions must be applied before representative '
+                           'profiles can be determined.')
+
+        self._clusters['representative'] = False
+        with Outputs(self._fpath_gen) as f:
+            ti = f.time_index
+        cols = self._clusters.cluster_id.unique()
+        profile_df = pd.DataFrame(index=ti, columns=cols)
+
+        for i, df in self._clusters.groupby('cluster_id'):
+            mask = (df['included_frac'] > self.include_threshold)
+            if any(mask):
+                rep = df[mask].sort_values(by='rank').iloc[0, :]
+                gen_gid = rep['gen_gid']
+                mask = (self._clusters['gen_gid'] == gen_gid)
+                self._clusters.loc[mask, 'representative'] = True
+
+                with Outputs(self._fpath_gen) as f:
+                    profile_df.loc[:, i] = f['cf_profile', :, gen_gid]
+
+        return profile_df
+
+    def make_cluster_summary(self):
+        """Make a summary dataframe with cluster_id primary key.
+
+        Returns
+        -------
+        s : pd.DataFrame
+            Summary dataframe with a row for each cluster id.
+        """
+
+        if 'included_frac' not in self._clusters:
+            raise KeyError('Exclusions must be applied before representative '
+                           'profiles can be determined.')
+        if 'representative' not in self._clusters:
+            raise KeyError('Representative profiles must be determined before '
+                           'summary table can be created.')
+
+        ind = self._clusters.cluster_id.unique()
+        cols = ['latitude',
+                'longitude',
+                'included_frac',
+                'included_area_km2',
+                'representative_gid',
+                'representative_gen_gid']
+        s = pd.DataFrame(index=ind, columns=cols)
+
+        for i, df in self._clusters.groupby('cluster_id'):
+            s.loc[i, 'latitude'] = df['latitude'].mean()
+            s.loc[i, 'longitude'] = df['longitude'].mean()
+            s.loc[i, 'included_frac'] = df['included_frac'].mean()
+            s.loc[i, 'included_area_km2'] = df['included_area_km2'].sum()
+
+            if df['representative'].any():
+                s.loc[i, 'representative_gid'] = \
+                    df.loc[df['representative'], 'gid'].values[0]
+                s.loc[i, 'representative_gen_gid'] = \
+                    df.loc[df['representative'], 'gen_gid'].values[0]
+
+        return s
+
+    def export(self, out_dir, tag=None):
+        """Run RPM output algorithms and write to CSV's.
+
+        Parameters
+        ----------
+        out_dir : str
+            Directory to dump output files.
+        tag : str | None
+            Optional tag to add to the csvs being saved.
+        """
+
+        fn_out = 'rpm_cluster_output.csv'
+        fn_pro = 'rpm_profiles.csv'
+        fn_sum = 'rpm_cluster_summary.csv'
+
+        if tag is not None:
+            fn_out = fn_out.replace('.csv', '_{}.csv'.format(tag))
+            fn_pro = fn_pro.replace('.csv', '_{}.csv'.format(tag))
+            fn_sum = fn_sum.replace('.csv', '_{}.csv'.format(tag))
+
+        if 'included_frac' not in self._clusters:
+            self._clusters = self.apply_exclusions()
+
+        self.make_profile_df().to_csv(os.path.join(out_dir, fn_pro))
+        logger.info('Saved {}'.format(fn_pro))
+        self.make_cluster_summary().to_csv(os.path.join(out_dir, fn_sum))
+        logger.info('Saved {}'.format(fn_sum))
+        self._clusters.to_csv(os.path.join(out_dir, fn_out), index=False)
+        logger.info('Saved {}'.format(fn_out))
 
 
 if __name__ == '__main__':
@@ -570,9 +693,9 @@ if __name__ == '__main__':
     fpath_excl = '/scratch/gbuster/rev/rpm/_windready_conus.tif'
     fpath_techmap = '/scratch/gbuster/rev/rpm/tech_map_conus.h5'
     dset_techmap = 'wtk'
+    fpath_gen = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
     rpm_clusters = pd.read_csv(fn_rpm_clusters)
 
-    fn_out = '/scratch/gbuster/rev/rpm/rpm_clusters_out.csv'
-    rpme = RPMExclusions(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap)
-    rpme.calc_excl(parallel=True)
-    rpme._clusters.to_csv(fn_out, index=False)
+    rpme = RPMOutput(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
+                     fpath_gen)
+    rpme.export('/scratch/gbuster/rev/rpm/')
