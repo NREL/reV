@@ -313,7 +313,8 @@ class RPMClusters:
         geometry = [Point(xy) for xy in zip(meta.longitude, meta.latitude)]
         gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
 
-        clusters = self._get_cluster_geom(gdf_points, buffer=False)
+        clusters = self._get_cluster_geom(gdf_points,
+                                          drop_islands=True, add_buffer=False)
         clusters.to_file('clusters.shp')
         gdf_points.to_file('gdf_points.shp')
 
@@ -352,12 +353,14 @@ class RPMClusters:
         geometry = [Point(xy) for xy in zip(meta.longitude, meta.latitude)]
         gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
 
-        clusters = RPMClusters._get_cluster_geom(gdf_points, buffer=True)
+        clusters = RPMClusters._get_cluster_geom(gdf_points,
+                                                 drop_islands=False,
+                                                 add_buffer=True)
         clusters.to_file(fpath)
         return fpath
 
     @staticmethod
-    def _get_cluster_geom(gdf_points, buffer=False):
+    def _get_cluster_geom(gdf_points, drop_islands=False, add_buffer=False):
         """
         Generate cluster polygons as a geopandas dataframe
         """
@@ -371,14 +374,15 @@ class RPMClusters:
         clusters.geometry = clusters.geometry.buffer(-mean_dist / 2)
 
         # Drop Islands
-        for index, _ in clusters.iterrows():
-            geom = clusters.loc[index, 'geometry']
-            if geom.geom_type == 'MultiPolygon':
-                clusters.loc[index, 'geometry'] = max(geom,
-                                                      key=lambda a: a.area)
+        if drop_islands is True:
+            for index, _ in clusters.iterrows():
+                geom = clusters.loc[index, 'geometry']
+                if geom.geom_type == 'MultiPolygon':
+                    clusters.loc[index, 'geometry'] = max(geom,
+                                                          key=lambda a: a.area)
 
         # Buffer
-        if buffer is True:
+        if add_buffer is True:
             clusters.geometry = clusters.geometry.buffer(-mean_dist)
             clusters.geometry = clusters.geometry.buffer(mean_dist)
 
@@ -397,6 +401,7 @@ class RPMClusters:
             self._meta.loc[pos, 'rank'] = rank
 
     def _cluster(self, method='kmeans', method_kwargs=None,
+                 optimize_dist_rank=True, contiguous_filter=True,
                  dist_rmse_kwargs=None):
         """
         Run three step RPM clustering procedure:
@@ -420,13 +425,17 @@ class RPMClusters:
         labels = self._cluster_coefficients(method=method, **method_kwargs)
         self._meta['cluster_id'] = labels
 
-        if dist_rmse_kwargs is None:
-            dist_rmse_kwargs = {}
-        new_labels = self._dist_rank_optimization(**dist_rmse_kwargs)
-        self._meta['cluster_id'] = new_labels
+        # Optimize Distance & Rank
+        if optimize_dist_rank is True:
+            if dist_rmse_kwargs is None:
+                dist_rmse_kwargs = {}
+            new_labels = self._dist_rank_optimization(**dist_rmse_kwargs)
+            self._meta['cluster_id'] = new_labels
 
-        new_labels = self._contiguous_filter()
-        self._meta['cluster_id'] = new_labels
+        # Apply contiguous filter
+        if contiguous_filter is True:
+            new_labels = self._contiguous_filter()
+            self._meta['cluster_id'] = new_labels
 
         self._calculate_ranks()
 
