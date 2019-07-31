@@ -239,7 +239,8 @@ class RPMOutput:
     """Framework to format and process RPM clustering results."""
 
     def __init__(self, rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
-                 fpath_gen, excl_area=0.0081, include_threshold=0.001):
+                 fpath_gen, excl_area=0.0081, include_threshold=0.001,
+                 rerank=True):
         """
         Parameters
         ----------
@@ -260,6 +261,9 @@ class RPMOutput:
         include_threshold : float
             Inclusion threshold. Resource pixels included more than this
             threshold will be considered in the representative profiles.
+        rerank : bool
+            Flag to rerank representative generation profiles after removing
+            excluded generation pixels.
         """
 
         self._clusters = self._parse_cluster_arg(rpm_clusters)
@@ -269,6 +273,7 @@ class RPMOutput:
         self._fpath_gen = fpath_gen
         self.excl_area = excl_area
         self.include_threshold = include_threshold
+        self.rerank = rerank
 
         self._excl_lat = None
         self._excl_lon = None
@@ -293,7 +298,10 @@ class RPMOutput:
             latitude, longitude)
         """
 
-        if isinstance(rpm_clusters, RPMClusterManager):
+        if isinstance(rpm_clusters, pd.DataFrame):
+            clusters = rpm_clusters
+
+        elif isinstance(rpm_clusters, RPMClusterManager):
             clusters = rpm_clusters._combine_region_clusters(
                 rpm_clusters._rpm_regions)
 
@@ -303,7 +311,7 @@ class RPMOutput:
             elif rpm_clusters.endswith('.json'):
                 clusters = pd.read_json(rpm_clusters)
 
-        elif not isinstance(rpm_clusters, pd.DataFrame):
+        else:
             raise TypeError('Expected a DataFrame, RPMClusterManager, or str '
                             'but received {}'.format(type(rpm_clusters)))
 
@@ -589,17 +597,17 @@ class RPMOutput:
 
         Returns
         -------
-        clusters : pd.DataFrame
-            Copy of self._clusters with new columns for exclusions data.
+        self._clusters : pd.DataFrame
+            self._clusters with new columns for exclusions data.
         """
 
         logger.info('Working on applying exclusions...')
 
-        clusters = self._clusters.copy()
+        unique_clusters = self._clusters['cluster_id'].unique()
         static_clusters = self._clusters.copy()
-        clusters['included_frac'] = 0.0
-        clusters['included_area_km2'] = 0.0
-        clusters['n_pixels'] = 0
+        self._clusters['included_frac'] = 0.0
+        self._clusters['included_area_km2'] = 0.0
+        self._clusters['n_pixels'] = 0
         futures = {}
 
         if parallel is True:
@@ -611,7 +619,7 @@ class RPMOutput:
 
         with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
 
-            for i, cid in enumerate(clusters['cluster_id'].unique()):
+            for i, cid in enumerate(unique_clusters):
 
                 lat_s, lon_s = self._get_lat_lon_slices(cluster_id=cid)
                 future = exe.submit(self._single_excl, cid,
@@ -620,23 +628,41 @@ class RPMOutput:
                                     lat_s, lon_s)
                 futures[future] = cid
                 logger.debug('Kicked off cluster "{}", {} out of {}.'
-                             .format(cid, i + 1,
-                                     len(clusters['cluster_id'].unique())))
+                             .format(cid, i + 1, len(unique_clusters)))
 
             for i, future in enumerate(cf.as_completed(futures)):
                 cid = futures[future]
                 logger.debug('Finished exclusions for cluster "{}", {} out '
-                             'of {} futures.'
-                             .format(cid, i + 1, len(futures)))
+                             'of {} futures.'.format(cid, i + 1, len(futures)))
                 incl, n_incl, n_pix = future.result()
-                mask = (clusters['cluster_id'] == cid)
+                mask = (self._clusters['cluster_id'] == cid)
 
-                clusters.loc[mask, 'included_frac'] = incl
-                clusters.loc[mask, 'included_area_km2'] = \
+                self._clusters.loc[mask, 'included_frac'] = incl
+                self._clusters.loc[mask, 'included_area_km2'] = \
                     n_incl * self.excl_area
-                clusters.loc[mask, 'n_pixels'] = n_pix
+                self._clusters.loc[mask, 'n_pixels'] = n_pix
 
-        return clusters
+        logger.info('Finished applying exclusions.')
+
+        if self.rerank:
+            self.run_rerank()
+
+        return self._clusters
+
+    def run_rerank(self):
+        """Re-rank rep profiles for just the included resource gids."""
+        logger.info('Re-ranking representative profiles...')
+        self._clusters['rank_included'] = np.nan
+        for _, df in self._clusters.groupby('cluster_id'):
+            mask = (df['included_frac'] > self.include_threshold)
+            if any(mask):
+                gen_gids = df.loc[mask, 'gen_gid']
+                new = RPMClusters.cluster(self._fpath_gen, gen_gids, 1,
+                                          optimize_dist_rank=False,
+                                          contiguous_filter=False)
+                mask = self._clusters['gid'].isin(df.loc[mask, 'gid'])
+                self._clusters.loc[mask, 'rank_included'] = new['rank'].values
+        logger.info('Finished re-ranking representative profiles.')
 
     def make_profile_df(self):
         """Make the representative profile dataframe.
@@ -659,9 +685,9 @@ class RPMOutput:
         profile_df = pd.DataFrame(index=ti, columns=cols)
 
         for i, df in self._clusters.groupby('cluster_id'):
-            mask = (df['included_frac'] > self.include_threshold)
+            mask = ~df['rank_included'].isnull()
             if any(mask):
-                rep = df[mask].sort_values(by='rank').iloc[0, :]
+                rep = df[mask].sort_values(by='rank_included').iloc[0, :]
                 gen_gid = rep['gen_gid']
                 mask = (self._clusters['gen_gid'] == gen_gid)
                 self._clusters.loc[mask, 'representative'] = True
@@ -710,13 +736,13 @@ class RPMOutput:
 
         return s
 
-    def make_shape_files(self, shape_dir):
-        """Make shape files for all clusters.
+    def make_shape_file(self, fpath_shp):
+        """Make shape file containing all clusters.
 
         Parameters
         ----------
-        shape_dir : str
-            Directory to dump shape_files.
+        fpath_shp : str
+            Filepath to write shape_file to.
         """
 
         # Geopandas doesnt like writing booleans
@@ -724,44 +750,40 @@ class RPMOutput:
             self._clusters['representative'] = \
                 self._clusters['representative'].astype(int)
 
-        for cluster_id, df in self._clusters.groupby('cluster_id'):
-            fpath = os.path.join(shape_dir, '{}.shp'.format(cluster_id))
-            RPMClusters._generate_shapefile(df, fpath)
+        RPMClusters._generate_shapefile(self._clusters, fpath_shp)
 
         if 'representative' in self._clusters:
             self._clusters['representative'] = \
                 self._clusters['representative'].astype(bool)
 
-    def export_all(self, out_dir, tag=None):
+    def export_all(self, out_dir, job_tag=None):
         """Run RPM output algorithms and write to CSV's.
 
         Parameters
         ----------
         out_dir : str
             Directory to dump output files.
-        tag : str | None
-            Optional tag to add to the csvs being saved.
+        job_tag : str | None
+            Optional name tag to add to the csvs being saved.
+            Format is "rpm_cluster_output_{tag}.csv".
         """
 
         fn_out = 'rpm_cluster_output.csv'
-        fn_pro = 'rpm_profiles.csv'
+        fn_pro = 'rpm_rep_profiles.csv'
         fn_sum = 'rpm_cluster_summary.csv'
-        shape_dir = os.path.join(out_dir, 'shape_files/')
+        fn_shp = 'rpm_cluster_shapes.shp'
 
-        if tag is not None:
-            fn_out = fn_out.replace('.csv', '_{}.csv'.format(tag))
-            fn_pro = fn_pro.replace('.csv', '_{}.csv'.format(tag))
-            fn_sum = fn_sum.replace('.csv', '_{}.csv'.format(tag))
-            shape_dir = shape_dir.replace('shape_files',
-                                          'shape_files_{}'.format(tag))
+        if job_tag is not None:
+            fn_out = fn_out.replace('.csv', '_{}.csv'.format(job_tag))
+            fn_pro = fn_pro.replace('.csv', '_{}.csv'.format(job_tag))
+            fn_sum = fn_sum.replace('.csv', '_{}.csv'.format(job_tag))
+            fn_shp = fn_shp.replace('.shp', '_{}.shp'.format(job_tag))
 
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
-        if not os.path.exists(shape_dir):
-            os.makedirs(shape_dir)
 
         if 'included_frac' not in self._clusters:
-            self._clusters = self.apply_exclusions()
+            self.apply_exclusions()
 
         self.make_profile_df().to_csv(os.path.join(out_dir, fn_pro))
         logger.info('Saved {}'.format(fn_pro))
@@ -772,12 +794,13 @@ class RPMOutput:
         self._clusters.to_csv(os.path.join(out_dir, fn_out), index=False)
         logger.info('Saved {}'.format(fn_out))
 
-        self.make_shape_files(shape_dir)
-        logger.info('Saved shape files to {}'.format(shape_dir))
+        self.make_shape_file(os.path.join(out_dir, fn_shp))
+        logger.info('Saved {}'.format(fn_shp))
 
     @classmethod
-    def run(cls, rpm_clusters, fpath_excl, fpath_techmap,
-            dset_techmap, fpath_gen, out_dir, tag=None, **kwargs):
+    def process_outputs(cls, rpm_clusters, fpath_excl, fpath_techmap,
+                        dset_techmap, fpath_gen, out_dir, job_tag=None,
+                        **kwargs):
         """Perform output processing on clusters and write results to disk.
 
         Parameters
@@ -796,13 +819,14 @@ class RPMOutput:
             reV generation output file.
         out_dir : str
             Directory to dump output files.
-        tag : str | None
-            Optional tag to add to the csvs being saved.
+        job_tag : str | None
+            Optional name tag to add to the output files.
+            Format is "rpm_cluster_output_{tag}.csv".
         """
 
         rpmo = cls(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
                    fpath_gen, **kwargs)
-        rpmo.export_all(out_dir, tag=tag)
+        rpmo.export_all(out_dir, job_tag=job_tag)
 
 
 if __name__ == '__main__':
@@ -815,8 +839,9 @@ if __name__ == '__main__':
     fpath_techmap = '/scratch/gbuster/rev/rpm/tech_map_conus.h5'
     dset_techmap = 'wtk'
     fpath_gen = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
-    out_dir = '/scratch/gbuster/rev/rpm/'
-    tag = 'test'
+    out_dir = '/scratch/gbuster/rev/rpm/output/'
+    job_tag = 'test'
 
-    rpme = RPMOutput.run(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
-                         fpath_gen, out_dir, tag=tag)
+    rpme = RPMOutput.process_outputs(rpm_clusters, fpath_excl, fpath_techmap,
+                                     dset_techmap, fpath_gen, out_dir,
+                                     job_tag=job_tag)
