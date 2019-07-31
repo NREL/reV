@@ -70,6 +70,12 @@ class RPMValueError(Exception):
     """
 
 
+class RPMTypeError(Exception):
+    """
+    ValueError for RPM Pipeline
+    """
+
+
 class RPMRuntimeError(Exception):
     """
     ValueError for RPM Pipeline

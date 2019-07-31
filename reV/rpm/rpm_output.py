@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-Pipeline between reV and RPM
+RPM output handler.
 """
 import os
 import concurrent.futures as cf
@@ -10,229 +11,9 @@ import pandas as pd
 from reV.handlers.geotiff import Geotiff
 from reV.handlers.outputs import Outputs
 from reV.rpm.clusters import RPMClusters
-from reV.utilities.exceptions import RPMValueError, RPMRuntimeError
+from reV.utilities.exceptions import RPMRuntimeError, RPMTypeError
 
 logger = logging.getLogger(__name__)
-
-
-class RPMClusterManager:
-    """
-    RPM Cluster Manager:
-    - Extracts gids for all RPM regions
-    - Runs RPMClusters in parallel for all regions
-    - Save results to disk
-    """
-    def __init__(self, cf_profiles, rpm_meta, rpm_region_col=None):
-        """
-        Parameters
-        ----------
-        cf_profiles : str
-            Path to reV .h5 files containing desired capacity factor profiles
-        rpm_meta : pandas.DataFrame | str
-            DataFrame or path to .csv or .json containing the RPM meta data:
-            - Regions of interest
-            - # of clusters per region
-            - cf or resource GIDs if region is not in default meta data
-        rpm_region_col : str | Nonetype
-            If not None, the meta-data filed to map RPM regions to
-        """
-        self._cf_h5 = cf_profiles
-        self._rpm_regions = self._map_rpm_regions(rpm_meta,
-                                                  region_col=rpm_region_col)
-
-    @staticmethod
-    def _parse_rpm_meta(rpm_meta):
-        """
-        Extract rpm meta and map it to the cf profile data
-
-        Parameters
-        ----------
-        rpm_meta : pandas.DataFrame | str
-            DataFrame or path to .csv or .json containing the RPM meta data:
-            - Regions of interest
-            - # of clusters per region
-            - cf or resource GIDs if region is not in default meta data
-
-        Returns
-        -------
-        rpm_meta : pandas.DataFrame
-            DataFrame of RPM regional meta data (clusters and cf/resource GIDs)
-        """
-        if isinstance(rpm_meta, str):
-            if rpm_meta.endswith('.csv'):
-                rpm_meta = pd.read_csv(rpm_meta)
-            elif rpm_meta.endswith('.json'):
-                rpm_meta = pd.read_json(rpm_meta)
-            else:
-                raise RPMValueError("Cannot read RPM meta, "
-                                    "file must be a '.csv' or '.json'")
-        elif not isinstance(rpm_meta, pd.DataFrame):
-            raise RPMValueError("RPM meta must be supplied as a pandas "
-                                "DataFrame or as a .csv, or .json file")
-
-        return rpm_meta
-
-    def _map_rpm_regions(self, rpm_meta, region_col=None):
-        """
-        Map RPM meta to cf_profile gids
-
-        Parameters
-        ----------
-        rpm_meta : pandas.DataFrame | str
-            DataFrame or path to .csv or .json containing the RPM meta data:
-            - Regions of interest
-            - # of clusters per region
-            - cf or resource GIDs if region is not in default meta data
-        region_col : str | Nonetype
-            If not None, the meta-data filed to map RPM regions to
-
-        Returns
-        -------
-        rpm_regions : dict
-            Dictionary mapping rpm regions to cf GIDs and number of
-            clusters
-        """
-        rpm_meta = self._parse_rpm_meta(rpm_meta)
-
-        with Outputs(self._cf_h5, mode='r') as cfs:
-            cf_meta = cfs.meta
-
-        cf_meta.index.name = 'gen_gid'
-        cf_meta = cf_meta.reset_index().set_index('gid')
-
-        rpm_regions = {}
-        for region, region_df in rpm_meta.groupby('region'):
-            region_map = {}
-            if 'gid' in region_df:
-                region_meta = cf_meta.loc[region_df['gid'].values]
-            elif region_col in cf_meta:
-                pos = cf_meta[region_col] == region
-                region_meta = cf_meta.loc[pos]
-            else:
-                raise RPMRuntimeError("Resource gids or a valid resource "
-                                      "meta-data field must be supplied "
-                                      "to map RPM regions")
-
-            clusters = region_df['clusters'].unique()
-            if len(clusters) > 1:
-                raise RPMRuntimeError("Multiple values for 'clusters' "
-                                      "were provided for region {}"
-                                      .format(region))
-
-            region_map['cluster_num'] = clusters[0]
-            region_map['gen_gids'] = region_meta['gen_gid'].values
-            rpm_regions[region] = region_map
-
-        return rpm_regions
-
-    def _cluster(self, parallel=True, **kwargs):
-        """
-        Cluster all RPM regions
-
-        Parameters
-        ----------
-        parallel : bool
-            Run clustering of each region in parallel
-        kwargs : dict
-            RPMCluster kwargs
-        """
-        if parallel:
-            future_to_region = {}
-            with cf.ProcessPoolExecutor() as executor:
-                for region, region_map in self._rpm_regions.items():
-                    clusters = region_map['cluster_num']
-                    gen_gids = region_map['gen_gids']
-
-                    future = executor.submit(RPMClusters.cluster, self._cf_h5,
-                                             gen_gids, clusters, **kwargs)
-                    future_to_region[future] = region
-
-                for future in cf.as_completed(future_to_region):
-                    region = future_to_region[future]
-                    result = future.result()
-                    self._rpm_regions[region].update({'clusters': result})
-
-        else:
-            for region, region_map in self._rpm_regions.items():
-                clusters = region_map['clusters']
-                gen_gids = region_map['gen_gids']
-                result = RPMClusters.cluster(self._cf_h5, gen_gids, clusters,
-                                             **kwargs)
-                self._rpm_regions[region].update({'clusters': result})
-
-    @staticmethod
-    def _combine_region_clusters(rpm_regions):
-        """
-        Combine clusters for all rpm regions and create unique cluster ids
-
-        Parameters
-        ----------
-        rpm_regions : dict
-            Dictionary with RPM region info
-
-        Returns
-        -------
-        rpm_clusters : pandas.DataFrame
-            Single DataFrame with (region, gid, cluster_id, rank)
-        """
-        rpm_clusters = []
-        for region, r_dict in rpm_regions.items():
-            r_df = r_dict['clusters'].copy()
-            ids = region + '-' + r_df.copy()['cluster_id'].astype(str).values
-            r_df.loc[:, 'cluster_id'] = ids
-            rpm_clusters.append(r_df)
-
-        rpm_clusters = pd.concat(rpm_clusters)
-        return rpm_clusters
-
-    def save_clusters(self, out_file):
-        """
-        Save cluster results to disk
-
-        Parameters
-        ----------
-        out_file : str
-            Path to file to save clusters too, should be a .csv or .json
-        """
-        rpm_clusters = self._combine_region_clusters(self._rpm_regions)
-        if out_file.endswith('.csv'):
-            rpm_clusters.to_csv(out_file, index=False)
-        elif out_file.endswith('.json'):
-            rpm_clusters.to_json(out_file)
-        else:
-            raise RPMValueError('out_file must be a .csv or .json')
-
-    @classmethod
-    def run(cls, cf_profiles, rpm_meta, out_file,
-            rpm_region_col=None, parallel=True, **kwargs):
-        """
-        RPM Cluster Manager:
-        - Extracts gen_gids for all RPM regions
-        - Runs RPMClusters in parallel for all regions
-        - Save results to disk
-
-        Parameters
-        ----------
-        cf_profiles : str
-            Path to reV .h5 files containing desired capacity factor profiles
-        rpm_meta : pandas.DataFrame | str
-            DataFrame or path to .csv or .json containing the RPM meta data:
-            - Regions of interest
-            - # of clusters per region
-            - cf or resource GIDs if region is not in default meta data
-        out_file : str
-            Path to file to save clusters too, should be a .csv or .json
-        rpm_region_col : str | Nonetype
-            If not None, the meta-data filed to map RPM regions to
-        parallel : bool
-            Run clustering of each region in parallel
-        **kwargs : dict
-            RPMClusters kwargs
-        """
-        rpm = cls(cf_profiles, rpm_meta, rpm_region_col=rpm_region_col)
-        rpm._cluster(parallel=parallel, **kwargs)
-        rpm.save_clusters(out_file)
-        return rpm
 
 
 class RPMOutput:
@@ -244,9 +25,9 @@ class RPMOutput:
         """
         Parameters
         ----------
-        rpm_clusters : pd.DataFrame | RPMClusterManager | str
+        rpm_clusters : pd.DataFrame | str
             Single DataFrame with (gid, gen_gid, cluster_id, rank),
-            or RPMClusterManager with the cluster data, or str to file.
+            or str to file.
         fpath_excl : str
             Filepath to exclusions data (must match the techmap grid).
         fpath_techmap : str
@@ -287,9 +68,9 @@ class RPMOutput:
 
         Parameters
         ----------
-        rpm_clusters : pd.DataFrame | RPMClusterManager | str
+        rpm_clusters : pd.DataFrame | str
             Single DataFrame with (gid, gen_gid, cluster_id, rank),
-            or RPMClusterManager with the cluster data, or str to file.
+            or str to file.
 
         Returns
         -------
@@ -301,10 +82,6 @@ class RPMOutput:
         if isinstance(rpm_clusters, pd.DataFrame):
             clusters = rpm_clusters
 
-        elif isinstance(rpm_clusters, RPMClusterManager):
-            clusters = rpm_clusters._combine_region_clusters(
-                rpm_clusters._rpm_regions)
-
         elif isinstance(rpm_clusters, str):
             if rpm_clusters.endswith('.csv'):
                 clusters = pd.read_csv(rpm_clusters)
@@ -312,8 +89,8 @@ class RPMOutput:
                 clusters = pd.read_json(rpm_clusters)
 
         else:
-            raise TypeError('Expected a DataFrame, RPMClusterManager, or str '
-                            'but received {}'.format(type(rpm_clusters)))
+            raise RPMTypeError('Expected a DataFrame or str but received {}'
+                               .format(type(rpm_clusters)))
 
         RPMOutput._check_cluster_cols(clusters)
 
@@ -335,8 +112,8 @@ class RPMOutput:
             if c not in df:
                 missing.append(c)
         if any(missing):
-            raise KeyError('Missing the following columns in RPM clusters '
-                           'input df: {}'.format(missing))
+            raise RPMRuntimeError('Missing the following columns in RPM '
+                                  'clusters input df: {}'.format(missing))
 
     def _init_lat_lon(self):
         """Initialize the lat/lon arrays and reduce their size."""
@@ -591,7 +368,7 @@ class RPMOutput:
 
         Parameters
         ----------
-        Parallel : bool | int
+        parallel : bool | int
             Flag to apply exclusions in parallel. Integer is interpreted as
             max number of workers. True uses all available.
 
@@ -675,8 +452,9 @@ class RPMOutput:
         """
 
         if 'included_frac' not in self._clusters:
-            raise KeyError('Exclusions must be applied before representative '
-                           'profiles can be determined.')
+            raise RPMRuntimeError('Exclusions must be applied before '
+                                  'representative profiles can be '
+                                  'determined.')
 
         self._clusters['representative'] = False
         with Outputs(self._fpath_gen) as f:
@@ -707,11 +485,11 @@ class RPMOutput:
         """
 
         if 'included_frac' not in self._clusters:
-            raise KeyError('Exclusions must be applied before representative '
-                           'profiles can be determined.')
+            raise RPMRuntimeError('Exclusions must be applied before '
+                                  'representative profiles can be determined.')
         if 'representative' not in self._clusters:
-            raise KeyError('Representative profiles must be determined before '
-                           'summary table can be created.')
+            raise RPMRuntimeError('Representative profiles must be determined '
+                                  'before summary table can be created.')
 
         ind = self._clusters.cluster_id.unique()
         cols = ['latitude',
@@ -756,7 +534,7 @@ class RPMOutput:
             self._clusters['representative'] = \
                 self._clusters['representative'].astype(bool)
 
-    def export_all(self, out_dir, job_tag=None):
+    def export_all(self, out_dir, job_tag=None, parallel=True):
         """Run RPM output algorithms and write to CSV's.
 
         Parameters
@@ -766,6 +544,9 @@ class RPMOutput:
         job_tag : str | None
             Optional name tag to add to the csvs being saved.
             Format is "rpm_cluster_output_{tag}.csv".
+        parallel : bool | int
+            Flag to apply exclusions in parallel. Integer is interpreted as
+            max number of workers. True uses all available.
         """
 
         fn_out = 'rpm_cluster_output.csv'
@@ -783,7 +564,7 @@ class RPMOutput:
             os.makedirs(out_dir)
 
         if 'included_frac' not in self._clusters:
-            self.apply_exclusions()
+            self.apply_exclusions(parallel=parallel)
 
         self.make_profile_df().to_csv(os.path.join(out_dir, fn_pro))
         logger.info('Saved {}'.format(fn_pro))
@@ -800,14 +581,14 @@ class RPMOutput:
     @classmethod
     def process_outputs(cls, rpm_clusters, fpath_excl, fpath_techmap,
                         dset_techmap, fpath_gen, out_dir, job_tag=None,
-                        **kwargs):
+                        parallel=True, **kwargs):
         """Perform output processing on clusters and write results to disk.
 
         Parameters
         ----------
-        rpm_clusters : pd.DataFrame | RPMClusterManager | str
+        rpm_clusters : pd.DataFrame | str
             Single DataFrame with (gid, gen_gid, cluster_id, rank),
-            or RPMClusterManager with the cluster data, or str to file.
+            or str to file.
         fpath_excl : str
             Filepath to exclusions data (must match the techmap grid).
         fpath_techmap : str
@@ -822,26 +603,11 @@ class RPMOutput:
         job_tag : str | None
             Optional name tag to add to the output files.
             Format is "rpm_cluster_output_{tag}.csv".
+        parallel : bool | int
+            Flag to apply exclusions in parallel. Integer is interpreted as
+            max number of workers. True uses all available.
         """
 
         rpmo = cls(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
                    fpath_gen, **kwargs)
-        rpmo.export_all(out_dir, job_tag=job_tag)
-
-
-if __name__ == '__main__':
-
-    from reV.utilities.loggers import init_logger
-    init_logger(__name__, log_level='DEBUG', log_file=None)
-
-    rpm_clusters = '/scratch/gbuster/rev/rpm/rpm_clusters.csv'
-    fpath_excl = '/scratch/gbuster/rev/rpm/_windready_conus.tif'
-    fpath_techmap = '/scratch/gbuster/rev/rpm/tech_map_conus.h5'
-    dset_techmap = 'wtk'
-    fpath_gen = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
-    out_dir = '/scratch/gbuster/rev/rpm/output/'
-    job_tag = 'test'
-
-    rpme = RPMOutput.process_outputs(rpm_clusters, fpath_excl, fpath_techmap,
-                                     dset_techmap, fpath_gen, out_dir,
-                                     job_tag=job_tag)
+        rpmo.export_all(out_dir, job_tag=job_tag, parallel=parallel)
