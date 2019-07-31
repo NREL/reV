@@ -5,6 +5,7 @@ Pipeline between reV and RPM
 import concurrent.futures as cf
 import logging
 import pandas as pd
+from warnings import warn
 
 from reV.handlers.outputs import Outputs
 from reV.rpm.clusters import RPMClusters
@@ -118,9 +119,13 @@ class RPMClusterManager:
                                       "were provided for region {}"
                                       .format(region))
 
-            region_map['cluster_num'] = clusters[0]
-            region_map['gen_gids'] = region_meta['gen_gid'].values
-            rpm_regions[region] = region_map
+            if region_meta['gen_gid'].empty:
+                warn('Could not locate any generation in region "{}".'
+                     .format(region))
+            else:
+                region_map['cluster_num'] = clusters[0]
+                region_map['gen_gids'] = region_meta['gen_gid'].values
+                rpm_regions[region] = region_map
 
         return rpm_regions
 
