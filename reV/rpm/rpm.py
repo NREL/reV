@@ -243,8 +243,9 @@ class RPMOutput:
         """
         Parameters
         ----------
-        rpm_clusters : pandas.DataFrame
-            Single DataFrame with (region, gid, gen_gid, cluster_id, rank)
+        rpm_clusters : pd.DataFrame | RPMClusterManager | str
+            Single DataFrame with (gid, gen_gid, cluster_id, rank),
+            or RPMClusterManager with the cluster data, or str to file.
         fpath_excl : str
             Filepath to exclusions data (must match the techmap grid).
         fpath_techmap : str
@@ -261,7 +262,7 @@ class RPMOutput:
             threshold will be considered in the representative profiles.
         """
 
-        self._clusters = rpm_clusters
+        self._clusters = self._parse_cluster_arg(rpm_clusters)
         self._fpath_excl = fpath_excl
         self._fpath_techmap = fpath_techmap
         self._dset_techmap = dset_techmap
@@ -275,10 +276,64 @@ class RPMOutput:
         self._full_lon_slice = None
         self._init_lat_lon()
 
+    @staticmethod
+    def _parse_cluster_arg(rpm_clusters):
+        """Parse dataframe from cluster input arg.
+
+        Parameters
+        ----------
+        rpm_clusters : pd.DataFrame | RPMClusterManager | str
+            Single DataFrame with (gid, gen_gid, cluster_id, rank),
+            or RPMClusterManager with the cluster data, or str to file.
+
+        Returns
+        -------
+        clusters : pd.DataFrame
+            Single DataFrame with (gid, gen_gid, cluster_id, rank,
+            latitude, longitude)
+        """
+
+        if isinstance(rpm_clusters, RPMClusterManager):
+            clusters = rpm_clusters._combine_region_clusters(
+                rpm_clusters._rpm_regions)
+
+        elif isinstance(rpm_clusters, str):
+            if rpm_clusters.endswith('.csv'):
+                clusters = pd.read_csv(rpm_clusters)
+            elif rpm_clusters.endswith('.json'):
+                clusters = pd.read_json(rpm_clusters)
+
+        elif not isinstance(rpm_clusters, pd.DataFrame):
+            raise TypeError('Expected a DataFrame, RPMClusterManager, or str '
+                            'but received {}'.format(type(rpm_clusters)))
+
+        RPMOutput._check_cluster_cols(clusters)
+
+        return clusters
+
+    @staticmethod
+    def _check_cluster_cols(df, required=('gen_gid', 'gid', 'latitude',
+                                          'longitude', 'cluster_id', 'rank')):
+        """Check for required columns in the rpm cluster dataframe.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Single DataFrame with columns to check
+        """
+
+        missing = []
+        for c in required:
+            if c not in df:
+                missing.append(c)
+        if any(missing):
+            raise KeyError('Missing the following columns in RPM clusters '
+                           'input df: {}'.format(missing))
+
     def _init_lat_lon(self):
         """Initialize the lat/lon arrays and reduce their size."""
         self._full_lat_slice, self._full_lon_slice = self._get_lat_lon_slices(
-            cluster_id=None, margin=3)
+            cluster_id=None)
 
         logger.debug('Initial lat/lon shape is {} and {} and '
                      'range is {} - {} and {} - {}'
@@ -356,7 +411,7 @@ class RPMOutput:
 
         return excl_data
 
-    def _get_lat_lon_slices(self, cluster_id=None, margin=0.5):
+    def _get_lat_lon_slices(self, cluster_id=None, margin=0.1):
         """Get the slice args to locate exclusion/techmap data of interest.
 
         Parameters
@@ -469,7 +524,7 @@ class RPMOutput:
         cluster_id : str
             Single cluster ID of interest.
         clusters : pandas.DataFrame
-            Single DataFrame with (region, gid, gen_gid, cluster_id, rank)
+            Single DataFrame with (gid, gen_gid, cluster_id, rank)
         fpath_excl : str
             Filepath to exclusions data (must match the techmap grid).
         fpath_techmap : str
@@ -538,6 +593,8 @@ class RPMOutput:
             Copy of self._clusters with new columns for exclusions data.
         """
 
+        logger.info('Working on applying exclusions...')
+
         clusters = self._clusters.copy()
         static_clusters = self._clusters.copy()
         clusters['included_frac'] = 0.0
@@ -554,25 +611,25 @@ class RPMOutput:
 
         with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
 
-            for i, cluster_id in enumerate(rpm_clusters.cluster_id.unique()):
+            for i, cid in enumerate(clusters['cluster_id'].unique()):
 
-                lat_s, lon_s = self._get_lat_lon_slices(cluster_id=cluster_id)
-                future = exe.submit(self._single_excl, cluster_id,
+                lat_s, lon_s = self._get_lat_lon_slices(cluster_id=cid)
+                future = exe.submit(self._single_excl, cid,
                                     static_clusters, self._fpath_excl,
                                     self._fpath_techmap, self._dset_techmap,
                                     lat_s, lon_s)
-                futures[future] = cluster_id
+                futures[future] = cid
                 logger.debug('Kicked off cluster "{}", {} out of {}.'
-                             .format(cluster_id, i + 1,
-                                     len(rpm_clusters.cluster_id.unique())))
+                             .format(cid, i + 1,
+                                     len(clusters['cluster_id'].unique())))
 
             for i, future in enumerate(cf.as_completed(futures)):
-                cluster_id = futures[future]
+                cid = futures[future]
                 logger.debug('Finished exclusions for cluster "{}", {} out '
                              'of {} futures.'
-                             .format(cluster_id, i + 1, len(futures)))
+                             .format(cid, i + 1, len(futures)))
                 incl, n_incl, n_pix = future.result()
-                mask = (clusters['cluster_id'] == cluster_id)
+                mask = (clusters['cluster_id'] == cid)
 
                 clusters.loc[mask, 'included_frac'] = incl
                 clusters.loc[mask, 'included_area_km2'] = \
@@ -653,19 +710,14 @@ class RPMOutput:
 
         return s
 
-    def make_shape_files(self, out_dir):
+    def make_shape_files(self, shape_dir):
         """Make shape files for all clusters.
 
         Parameters
         ----------
-        out_dir : str
-            Directory to dump output files. New shape_files subdir will be
-            created in out_dir.
+        shape_dir : str
+            Directory to dump shape_files.
         """
-
-        shp_dir = os.path.join(out_dir, 'shape_files/')
-        if not os.path.exists(shp_dir):
-            os.makedirs(shp_dir)
 
         # Geopandas doesnt like writing booleans
         if 'representative' in self._clusters:
@@ -673,7 +725,7 @@ class RPMOutput:
                 self._clusters['representative'].astype(int)
 
         for cluster_id, df in self._clusters.groupby('cluster_id'):
-            fpath = os.path.join(shp_dir, '{}.shp'.format(cluster_id))
+            fpath = os.path.join(shape_dir, '{}.shp'.format(cluster_id))
             RPMClusters._generate_shapefile(df, fpath)
 
         if 'representative' in self._clusters:
@@ -694,24 +746,63 @@ class RPMOutput:
         fn_out = 'rpm_cluster_output.csv'
         fn_pro = 'rpm_profiles.csv'
         fn_sum = 'rpm_cluster_summary.csv'
+        shape_dir = os.path.join(out_dir, 'shape_files/')
 
         if tag is not None:
             fn_out = fn_out.replace('.csv', '_{}.csv'.format(tag))
             fn_pro = fn_pro.replace('.csv', '_{}.csv'.format(tag))
             fn_sum = fn_sum.replace('.csv', '_{}.csv'.format(tag))
+            shape_dir = shape_dir.replace('shape_files',
+                                          'shape_files_{}'.format(tag))
+
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+        if not os.path.exists(shape_dir):
+            os.makedirs(shape_dir)
 
         if 'included_frac' not in self._clusters:
             self._clusters = self.apply_exclusions()
 
         self.make_profile_df().to_csv(os.path.join(out_dir, fn_pro))
         logger.info('Saved {}'.format(fn_pro))
+
         self.make_cluster_summary().to_csv(os.path.join(out_dir, fn_sum))
         logger.info('Saved {}'.format(fn_sum))
+
         self._clusters.to_csv(os.path.join(out_dir, fn_out), index=False)
         logger.info('Saved {}'.format(fn_out))
-        self.make_shape_files(out_dir)
-        logger.info('Saved shape files to {}'
-                    .format(os.path.join(out_dir, 'shape_files/')))
+
+        self.make_shape_files(shape_dir)
+        logger.info('Saved shape files to {}'.format(shape_dir))
+
+    @classmethod
+    def run(cls, rpm_clusters, fpath_excl, fpath_techmap,
+            dset_techmap, fpath_gen, out_dir, tag=None, **kwargs):
+        """Perform output processing on clusters and write results to disk.
+
+        Parameters
+        ----------
+        rpm_clusters : pd.DataFrame | RPMClusterManager | str
+            Single DataFrame with (gid, gen_gid, cluster_id, rank),
+            or RPMClusterManager with the cluster data, or str to file.
+        fpath_excl : str
+            Filepath to exclusions data (must match the techmap grid).
+        fpath_techmap : str
+            Filepath to tech mapping between exclusions and resource data.
+        dset_techmap : str
+            Dataset name in the techmap file containing the
+            exclusions-to-resource mapping data.
+        fpath_gen : str
+            reV generation output file.
+        out_dir : str
+            Directory to dump output files.
+        tag : str | None
+            Optional tag to add to the csvs being saved.
+        """
+
+        rpmo = cls(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
+                   fpath_gen, **kwargs)
+        rpmo.export_all(out_dir, tag=tag)
 
 
 if __name__ == '__main__':
@@ -719,13 +810,13 @@ if __name__ == '__main__':
     from reV.utilities.loggers import init_logger
     init_logger(__name__, log_level='DEBUG', log_file=None)
 
-    fn_rpm_clusters = '/scratch/gbuster/rev/rpm/rpm_clusters.csv'
+    rpm_clusters = '/scratch/gbuster/rev/rpm/rpm_clusters.csv'
     fpath_excl = '/scratch/gbuster/rev/rpm/_windready_conus.tif'
     fpath_techmap = '/scratch/gbuster/rev/rpm/tech_map_conus.h5'
     dset_techmap = 'wtk'
     fpath_gen = '/projects/naris/extreme_events/generation/v90_full_ca_2012.h5'
-    rpm_clusters = pd.read_csv(fn_rpm_clusters)
+    out_dir = '/scratch/gbuster/rev/rpm/'
+    tag = 'test'
 
-    rpme = RPMOutput(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
-                     fpath_gen)
-    rpme.export_all('/scratch/gbuster/rev/rpm/')
+    rpme = RPMOutput.run(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
+                         fpath_gen, out_dir, tag=tag)
