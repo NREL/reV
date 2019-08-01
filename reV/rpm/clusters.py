@@ -421,6 +421,11 @@ class RPMClusters:
         intersect_kwargs : dict
             Kwargs for running Rob's new method
         """
+
+        if self.n_clusters <= 1:
+            optimize_dist_rank = False
+            contiguous_filter = False
+
         if method_kwargs is None:
             method_kwargs = {}
         labels = self._cluster_coefficients(method=method, **method_kwargs)

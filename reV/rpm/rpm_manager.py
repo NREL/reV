@@ -195,7 +195,7 @@ class RPMClusterManager:
             r_df['gid'] = r_dict['gids']
             rpm_clusters.append(r_df)
 
-        rpm_clusters = pd.concat(rpm_clusters)
+        rpm_clusters = pd.concat(rpm_clusters, sort=False)
         rpm_clusters = rpm_clusters.reset_index(drop=True)
 
         if 'geometry' in rpm_clusters:
