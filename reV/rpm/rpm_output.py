@@ -2,6 +2,7 @@
 """
 RPM output handler.
 """
+import psutil
 import os
 import concurrent.futures as cf
 import logging
@@ -260,6 +261,37 @@ class RPMOutput:
 
         return lat_slice, lon_slice
 
+    def _get_all_lat_lon_slices(self, margin=0.1, free_mem=True):
+        """Get the slice args for all clusters.
+
+        Parameters
+        ----------
+        margin : float
+            Extra margin around the cluster lat/lon box.
+        free_mem : bool
+            Flag to free lat/lon arrays from memory to clear space for later
+            exclusion processing.
+
+        Returns
+        -------
+        slices : dict
+            Dictionary of tuples - (lat, lon) slices keyed by cluster id.
+        """
+
+        slices = {}
+        for cid in self._clusters['cluster_id'].unique():
+            slices[cid] = self._get_lat_lon_slices(cluster_id=cid,
+                                                   margin=margin)
+
+        if free_mem:
+            # free up memory
+            self._excl_lat = None
+            self._excl_lon = None
+            self._full_lat_slice = None
+            self._full_lon_slice = None
+
+        return slices
+
     def _get_coord_box(self, cluster_id=None):
         """Get the RPM cluster latitude/longitude range.
 
@@ -402,23 +434,29 @@ class RPMOutput:
         self._clusters['n_excl_pixels'] = 0
         futures = {}
 
+        slices = self._get_all_lat_lon_slices()
+
         with cf.ProcessPoolExecutor(max_workers=self.max_workers) as exe:
 
             for i, cid in enumerate(unique_clusters):
 
-                lat_s, lon_s = self._get_lat_lon_slices(cluster_id=cid)
+                lat_s, lon_s = slices[cid]
                 future = exe.submit(self._single_excl, cid,
                                     static_clusters, self._fpath_excl,
                                     self._fpath_techmap, self._dset_techmap,
                                     lat_s, lon_s)
                 futures[future] = cid
-                logger.info('Kicked off exclusions for cluster "{}", {} out '
-                            'of {}.'.format(cid, i + 1, len(unique_clusters)))
+                logger.debug('Kicked off exclusions for cluster "{}", {} out '
+                             'of {}.'.format(cid, i + 1, len(unique_clusters)))
 
             for i, future in enumerate(cf.as_completed(futures)):
                 cid = futures[future]
-                logger.debug('Finished exclusions for cluster "{}", {} out '
-                             'of {} futures.'.format(cid, i + 1, len(futures)))
+                mem = psutil.virtual_memory()
+                logger.info('Finished exclusions for cluster "{}", {} out '
+                            'of {} futures. '
+                            'Memory usage is {:.2f} out of {:.2f} GB.'
+                            .format(cid, i + 1, len(futures),
+                                    mem.used / 1e9, mem.total / 1e9))
                 incl, n_incl, n_pix = future.result()
                 mask = (self._clusters['cluster_id'] == cid)
 
@@ -457,8 +495,11 @@ class RPMOutput:
 
             for i, future in enumerate(cf.as_completed(futures)):
                 cid = futures[future]
+                mem = psutil.virtual_memory()
                 logger.info('Finished re-ranking "{}", {} out of {}.'
-                            .format(cid, i, len(futures)))
+                            'Memory usage is {:.2f} out of {:.2f} GB.'
+                            .format(cid, i, len(futures),
+                                    mem.used / 1e9, mem.total / 1e9))
                 new = future.result()
                 mask = ((self._clusters['cluster_id'] == cid)
                         & (self._clusters['included_frac']
@@ -523,6 +564,7 @@ class RPMOutput:
         ind = self._clusters.cluster_id.unique()
         cols = ['latitude',
                 'longitude',
+                'n_gen_gids',
                 'included_frac',
                 'included_area_km2',
                 'representative_gid',
@@ -533,6 +575,7 @@ class RPMOutput:
         for i, df in self._clusters.groupby('cluster_id'):
             s.loc[i, 'latitude'] = df['latitude'].mean()
             s.loc[i, 'longitude'] = df['longitude'].mean()
+            s.loc[i, 'n_gen_gids'] = len(df)
             s.loc[i, 'included_frac'] = df['included_frac'].mean()
             s.loc[i, 'included_area_km2'] = df['included_area_km2'].sum()
 

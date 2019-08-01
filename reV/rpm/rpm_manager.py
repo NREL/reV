@@ -2,6 +2,7 @@
 """
 Pipeline between reV and RPM
 """
+import psutil
 import os
 import concurrent.futures as cf
 import logging
@@ -172,9 +173,12 @@ class RPMClusterManager:
                     future_to_region[future] = region
 
                 for i, future in enumerate(cf.as_completed(future_to_region)):
+                    mem = psutil.virtual_memory()
                     region = future_to_region[future]
-                    logger.info('Finished clustering "{}", {} out of {}.'
-                                .format(region, i + 1, len(future_to_region)))
+                    logger.info('Finished clustering "{}", {} out of {}. '
+                                'Memory usage is {:.2f} out of {:.2f} GB.'
+                                .format(region, i + 1, len(future_to_region),
+                                        mem.used / 1e9, mem.total / 1e9))
                     result = future.result()
                     self._rpm_regions[region].update({'clusters': result})
 
@@ -263,14 +267,31 @@ class RPMClusterManager:
             RPMClusters kwargs
         """
 
-        rpm = cls(fpath_gen, rpm_meta, rpm_region_col=rpm_region_col,
-                  parallel=parallel)
-        rpm._cluster(**cluster_kwargs)
-        rpm_clusters = rpm._combine_region_clusters(rpm._rpm_regions)
+        # intermediate job file
+        f_int = os.path.join(out_dir, 'rpm_cluster_temp.csv')
+        if job_tag is not None:
+            f_int = f_int.replace('.csv', '_{}.csv'.format(job_tag))
+
+        if not os.path.exists(f_int):
+            rpm = cls(fpath_gen, rpm_meta, rpm_region_col=rpm_region_col,
+                      parallel=parallel)
+            rpm._cluster(**cluster_kwargs)
+            rpm_clusters = rpm._combine_region_clusters(rpm._rpm_regions)
+
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
+            rpm_clusters.to_csv(f_int, index=False)
+
+        else:
+            logger.info('Importing intermediate cluster results from: {}'
+                        .format(f_int))
+            rpm_clusters = f_int
+            rpm = None
 
         RPMOutput.process_outputs(rpm_clusters, fpath_excl, fpath_techmap,
                                   dset_techmap, fpath_gen, out_dir,
                                   job_tag=job_tag, parallel=parallel,
                                   include_threshold=include_threshold,
                                   cluster_kwargs=cluster_kwargs)
+        logger.info('reV-to-RPM processing is complete.')
         return rpm
