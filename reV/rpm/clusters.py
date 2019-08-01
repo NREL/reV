@@ -323,11 +323,11 @@ class RPMClusters:
                                 how="left", op='intersects')
 
         # drop duplicate rows
-        gid_counts = intersected.groupby('gid_left').size()
+        gid_counts = intersected.groupby('gen_gid_left').size()
         duplicate_gids = gid_counts[gid_counts > 1].index
-        mask = intersected['gid_left'].isin(duplicate_gids)
+        mask = intersected['gen_gid_left'].isin(duplicate_gids)
         intersected.loc[mask, 'cluster_id_right'] = None
-        intersected = intersected.drop_duplicates(subset=['gid_left'])
+        intersected = intersected.drop_duplicates(subset=['gen_gid_left'])
 
         mask = np.isnan(intersected.cluster_id_right)
         assigned = intersected[~mask].reset_index()
