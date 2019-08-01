@@ -21,7 +21,7 @@ class RPMOutput:
 
     def __init__(self, rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
                  fpath_gen, excl_area=0.0081, include_threshold=0.001,
-                 rerank=True):
+                 rerank=True, cluster_kwargs=None):
         """
         Parameters
         ----------
@@ -45,6 +45,8 @@ class RPMOutput:
         rerank : bool
             Flag to rerank representative generation profiles after removing
             excluded generation pixels.
+        cluster_kwargs : dict
+            RPMClusters kwargs
         """
 
         self._clusters = self._parse_cluster_arg(rpm_clusters)
@@ -55,6 +57,11 @@ class RPMOutput:
         self.excl_area = excl_area
         self.include_threshold = include_threshold
         self.rerank = rerank
+
+        if cluster_kwargs is None:
+            self.cluster_kwargs = {}
+        else:
+            self.cluster_kwargs = cluster_kwargs
 
         self._excl_lat = None
         self._excl_lon = None
@@ -434,9 +441,10 @@ class RPMOutput:
             mask = (df['included_frac'] > self.include_threshold)
             if any(mask):
                 gen_gids = df.loc[mask, 'gen_gid']
+                self.cluster_kwargs['optimize_dist_rank'] = False
+                self.cluster_kwargs['contiguous_filter'] = False
                 new = RPMClusters.cluster(self._fpath_gen, gen_gids, 1,
-                                          optimize_dist_rank=False,
-                                          contiguous_filter=False)
+                                          **self.cluster_kwargs)
                 mask = self._clusters['gid'].isin(df.loc[mask, 'gid'])
                 self._clusters.loc[mask, 'rank_included'] = new['rank'].values
         logger.info('Finished re-ranking representative profiles.')
@@ -581,7 +589,7 @@ class RPMOutput:
     @classmethod
     def process_outputs(cls, rpm_clusters, fpath_excl, fpath_techmap,
                         dset_techmap, fpath_gen, out_dir, job_tag=None,
-                        parallel=True, **kwargs):
+                        parallel=True, cluster_kwargs=None, **kwargs):
         """Perform output processing on clusters and write results to disk.
 
         Parameters
@@ -606,8 +614,10 @@ class RPMOutput:
         parallel : bool | int
             Flag to apply exclusions in parallel. Integer is interpreted as
             max number of workers. True uses all available.
+        cluster_kwargs : dict
+            RPMClusters kwargs
         """
 
         rpmo = cls(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
-                   fpath_gen, **kwargs)
+                   fpath_gen, cluster_kwargs=cluster_kwargs, **kwargs)
         rpmo.export_all(out_dir, job_tag=job_tag, parallel=parallel)

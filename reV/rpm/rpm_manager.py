@@ -36,6 +36,9 @@ class RPMClusterManager:
         rpm_region_col : str | Nonetype
             If not None, the meta-data filed to map RPM regions to
         """
+        if rpm_region_col is not None:
+            logger.info('Initializing RPM clustering on regional column "{}".'
+                        .format(rpm_region_col))
         self._cf_h5 = cf_profiles
         self._rpm_regions = self._map_rpm_regions(rpm_meta,
                                                   region_col=rpm_region_col)
@@ -145,6 +148,8 @@ class RPMClusterManager:
             future_to_region = {}
             with cf.ProcessPoolExecutor() as executor:
                 for region, region_map in self._rpm_regions.items():
+                    logger.info('Kicking off clustering for "{}".'
+                                .format(region))
                     clusters = region_map['cluster_num']
                     gen_gids = region_map['gen_gids']
 
@@ -154,11 +159,13 @@ class RPMClusterManager:
 
                 for future in cf.as_completed(future_to_region):
                     region = future_to_region[future]
+                    logger.info('Finished clustering "{}".'.format(region))
                     result = future.result()
                     self._rpm_regions[region].update({'clusters': result})
 
         else:
             for region, region_map in self._rpm_regions.items():
+                logger.info('Kicking off clustering for "{}".'.format(region))
                 clusters = region_map['clusters']
                 gen_gids = region_map['gen_gids']
                 result = RPMClusters.cluster(self._cf_h5, gen_gids, clusters,
@@ -189,12 +196,17 @@ class RPMClusterManager:
             rpm_clusters.append(r_df)
 
         rpm_clusters = pd.concat(rpm_clusters)
+        rpm_clusters = rpm_clusters.reset_index(drop=True)
+
+        if 'geometry' in rpm_clusters:
+            rpm_clusters = rpm_clusters.drop('geometry', axis=1)
+
         return rpm_clusters
 
     @classmethod
     def run(cls, rpm_meta, fpath_gen, fpath_excl, fpath_techmap,
             dset_techmap, out_dir, include_threshold=0.001, job_tag=None,
-            rpm_region_col=None, parallel=True, **kwargs):
+            rpm_region_col=None, parallel=True, **cluster_kwargs):
         """
         RPM Cluster Manager:
         - Extracts gen_gids for all RPM regions
@@ -229,16 +241,17 @@ class RPMClusterManager:
             If not None, the meta-data filed to map RPM regions to
         parallel : bool
             Run clustering of each region in parallel
-        **kwargs : dict
+        **cluster_kwargs : dict
             RPMClusters kwargs
         """
 
         rpm = cls(fpath_gen, rpm_meta, rpm_region_col=rpm_region_col)
-        rpm._cluster(parallel=parallel, **kwargs)
-
+        rpm._cluster(parallel=parallel, **cluster_kwargs)
         rpm_clusters = rpm._combine_region_clusters(rpm._rpm_regions)
+
         RPMOutput.process_outputs(rpm_clusters, fpath_excl, fpath_techmap,
                                   dset_techmap, fpath_gen, out_dir,
                                   job_tag=job_tag, parallel=parallel,
-                                  include_threshold=include_threshold)
+                                  include_threshold=include_threshold,
+                                  cluster_kwargs=cluster_kwargs)
         return rpm
