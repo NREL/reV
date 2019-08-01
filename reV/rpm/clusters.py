@@ -468,7 +468,12 @@ class RPMClusters:
             Cluster results: (gen_gid, lon, lat, cluster_id, rank)
         """
         clusters = cls(cf_h5_path, region_gen_gids, n_clusters)
-        clusters._cluster(**kwargs)
+        try:
+            clusters._cluster(**kwargs)
+        except Exception as e:
+            logger.exception('Clustering failed on gen_gids {} through {}: {}'
+                             .format(np.min(region_gen_gids),
+                                     np.max(region_gen_gids), e))
         return clusters.meta
 
 
@@ -492,8 +497,8 @@ class RPMWavelets:
         _wavelet = pywt.Wavelet(wavelet)
 
         # multi-level with default depth
-        logger.info('Calculating wavelet coefficients'
-                    ' with {w} wavelet'.format(w=_wavelet.family_name))
+        logger.debug('Calculating wavelet coefficients'
+                     ' with {w} wavelet'.format(w=_wavelet.family_name))
 
         _wavedec = pywt.wavedec(data=x, wavelet=_wavelet, axis=1, level=level)
 
@@ -519,14 +524,14 @@ class RPMWavelets:
             _coefficient_count += _shape[1]
 
         _combined_wc = np.empty(shape=(gid_count, _coefficient_count),
-                                dtype=np.int)
+                                dtype=np.int32)
 
         logger.debug('{c:d} coefficients'.format(c=_coefficient_count))
 
         _i_start = 0
         for _index in indices:
             _i_end = _i_start + x[_index].shape[1]
-            _combined_wc[:, _i_start:_i_end] = np.round(x[_index], 2) * 100
+            _combined_wc[:, _i_start:_i_end] = np.round(x[_index])
             _i_start = _i_end
 
         return _combined_wc

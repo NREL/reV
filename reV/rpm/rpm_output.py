@@ -21,7 +21,7 @@ class RPMOutput:
 
     def __init__(self, rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
                  fpath_gen, excl_area=0.0081, include_threshold=0.001,
-                 rerank=True, cluster_kwargs=None):
+                 rerank=True, cluster_kwargs=None, parallel=True):
         """
         Parameters
         ----------
@@ -42,12 +42,19 @@ class RPMOutput:
         include_threshold : float
             Inclusion threshold. Resource pixels included more than this
             threshold will be considered in the representative profiles.
+            Set to zero to find representative profile on all resource, not
+            just included.
         rerank : bool
             Flag to rerank representative generation profiles after removing
             excluded generation pixels.
         cluster_kwargs : dict
             RPMClusters kwargs
+        parallel : bool | int
+            Flag to apply exclusions in parallel. Integer is interpreted as
+            max number of workers. True uses all available.
         """
+
+        logger.info('Initializing RPM output processing...')
 
         self._clusters = self._parse_cluster_arg(rpm_clusters)
         self._fpath_excl = fpath_excl
@@ -57,6 +64,14 @@ class RPMOutput:
         self.excl_area = excl_area
         self.include_threshold = include_threshold
         self.rerank = rerank
+
+        self.parallel = parallel
+        if self.parallel is True:
+            self.max_workers = os.cpu_count()
+        elif self.parallel is False:
+            self.max_workers = 1
+        else:
+            self.max_workers = self.parallel
 
         if cluster_kwargs is None:
             self.cluster_kwargs = {}
@@ -370,15 +385,8 @@ class RPMOutput:
 
         return inclusions, n_inclusions, n_points
 
-    def apply_exclusions(self, parallel=True):
+    def apply_exclusions(self):
         """Calculate exclusions for clusters, adding data to self._clusters.
-
-        Parameters
-        ----------
-        parallel : bool | int
-            Flag to apply exclusions in parallel. Integer is interpreted as
-            max number of workers. True uses all available.
-
         Returns
         -------
         self._clusters : pd.DataFrame
@@ -391,17 +399,10 @@ class RPMOutput:
         static_clusters = self._clusters.copy()
         self._clusters['included_frac'] = 0.0
         self._clusters['included_area_km2'] = 0.0
-        self._clusters['n_pixels'] = 0
+        self._clusters['n_excl_pixels'] = 0
         futures = {}
 
-        if parallel is True:
-            max_workers = os.cpu_count()
-        elif parallel is False:
-            max_workers = 1
-        else:
-            max_workers = parallel
-
-        with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
+        with cf.ProcessPoolExecutor(max_workers=self.max_workers) as exe:
 
             for i, cid in enumerate(unique_clusters):
 
@@ -411,8 +412,8 @@ class RPMOutput:
                                     self._fpath_techmap, self._dset_techmap,
                                     lat_s, lon_s)
                 futures[future] = cid
-                logger.debug('Kicked off cluster "{}", {} out of {}.'
-                             .format(cid, i + 1, len(unique_clusters)))
+                logger.info('Kicked off exclusions for cluster "{}", {} out '
+                            'of {}.'.format(cid, i + 1, len(unique_clusters)))
 
             for i, future in enumerate(cf.as_completed(futures)):
                 cid = futures[future]
@@ -424,7 +425,7 @@ class RPMOutput:
                 self._clusters.loc[mask, 'included_frac'] = incl
                 self._clusters.loc[mask, 'included_area_km2'] = \
                     n_incl * self.excl_area
-                self._clusters.loc[mask, 'n_pixels'] = n_pix
+                self._clusters.loc[mask, 'n_excl_pixels'] = n_pix
 
         logger.info('Finished applying exclusions.')
 
@@ -435,19 +436,34 @@ class RPMOutput:
 
     def run_rerank(self):
         """Re-rank rep profiles for just the included resource gids."""
-        logger.info('Re-ranking representative profiles...')
-        self._clusters['rank_included'] = np.nan
-        for _, df in self._clusters.groupby('cluster_id'):
-            mask = (df['included_frac'] > self.include_threshold)
-            if any(mask):
-                gen_gids = df.loc[mask, 'gen_gid']
-                self.cluster_kwargs['optimize_dist_rank'] = False
-                self.cluster_kwargs['contiguous_filter'] = False
-                new = RPMClusters.cluster(self._fpath_gen, gen_gids, 1,
-                                          **self.cluster_kwargs)
-                mask = self._clusters['gid'].isin(df.loc[mask, 'gid'])
+
+        futures = {}
+
+        with cf.ProcessPoolExecutor(max_workers=self.max_workers) as exe:
+
+            for cid, df in self._clusters.groupby('cluster_id'):
+                mask = (df['included_frac'] >= self.include_threshold)
+                if any(mask) and not all(mask):
+                    gen_gids = df.loc[mask, 'gen_gid']
+                    self.cluster_kwargs['optimize_dist_rank'] = False
+                    self.cluster_kwargs['contiguous_filter'] = False
+                    future = exe.submit(RPMClusters.cluster, self._fpath_gen,
+                                        gen_gids, 1, **self.cluster_kwargs)
+                    futures[future] = cid
+
+            if futures:
+                logger.info('Re-ranking representative profiles...')
+                self._clusters['rank_included'] = np.nan
+
+            for i, future in enumerate(cf.as_completed(futures)):
+                cid = futures[future]
+                logger.info('Finished re-ranking "{}", {} out of {}.'
+                            .format(cid, i, len(futures)))
+                new = future.result()
+                mask = ((self._clusters['cluster_id'] == cid)
+                        & (self._clusters['included_frac']
+                           > self.include_threshold))
                 self._clusters.loc[mask, 'rank_included'] = new['rank'].values
-        logger.info('Finished re-ranking representative profiles.')
 
     def make_profile_df(self):
         """Make the representative profile dataframe.
@@ -469,11 +485,16 @@ class RPMOutput:
             ti = f.time_index
         cols = self._clusters.cluster_id.unique()
         profile_df = pd.DataFrame(index=ti, columns=cols)
+        profile_df.index.name = 'time_index'
+
+        key = 'rank'
+        if 'rank_included' in self._clusters:
+            key = 'rank_included'
 
         for i, df in self._clusters.groupby('cluster_id'):
-            mask = ~df['rank_included'].isnull()
+            mask = ~df[key].isnull()
             if any(mask):
-                rep = df[mask].sort_values(by='rank_included').iloc[0, :]
+                rep = df[mask].sort_values(by=key).iloc[0, :]
                 gen_gid = rep['gen_gid']
                 mask = (self._clusters['gen_gid'] == gen_gid)
                 self._clusters.loc[mask, 'representative'] = True
@@ -507,6 +528,7 @@ class RPMOutput:
                 'representative_gid',
                 'representative_gen_gid']
         s = pd.DataFrame(index=ind, columns=cols)
+        s.index.name = 'cluster_id'
 
         for i, df in self._clusters.groupby('cluster_id'):
             s.loc[i, 'latitude'] = df['latitude'].mean()
@@ -542,7 +564,7 @@ class RPMOutput:
             self._clusters['representative'] = \
                 self._clusters['representative'].astype(bool)
 
-    def export_all(self, out_dir, job_tag=None, parallel=True):
+    def export_all(self, out_dir, job_tag=None):
         """Run RPM output algorithms and write to CSV's.
 
         Parameters
@@ -552,9 +574,6 @@ class RPMOutput:
         job_tag : str | None
             Optional name tag to add to the csvs being saved.
             Format is "rpm_cluster_output_{tag}.csv".
-        parallel : bool | int
-            Flag to apply exclusions in parallel. Integer is interpreted as
-            max number of workers. True uses all available.
         """
 
         fn_out = 'rpm_cluster_output.csv'
@@ -572,7 +591,7 @@ class RPMOutput:
             os.makedirs(out_dir)
 
         if 'included_frac' not in self._clusters:
-            self.apply_exclusions(parallel=parallel)
+            self.apply_exclusions()
 
         self.make_profile_df().to_csv(os.path.join(out_dir, fn_pro))
         logger.info('Saved {}'.format(fn_pro))
@@ -619,5 +638,6 @@ class RPMOutput:
         """
 
         rpmo = cls(rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
-                   fpath_gen, cluster_kwargs=cluster_kwargs, **kwargs)
-        rpmo.export_all(out_dir, job_tag=job_tag, parallel=parallel)
+                   fpath_gen, cluster_kwargs=cluster_kwargs, parallel=parallel,
+                   **kwargs)
+        rpmo.export_all(out_dir, job_tag=job_tag)
