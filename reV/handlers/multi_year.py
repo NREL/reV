@@ -16,8 +16,27 @@ logger = logging.getLogger(__name__)
 
 class MultiYear(Outputs):
     """
-    Class to handle multiple years of data
+    Class to handle multiple years of data and:
+    - collect datasets from multiple years
+    - compute multi-year means
+    - compute multi-year standard deviations
+    - compute multi-year coefficient of variations
+
     """
+    def __init__(self, h5_file, group=None, **kwargs):
+        """
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 resource file
+        group : str
+            Group to collect datasets into
+        kwargs : dict
+            kwargs to initialize class
+        """
+        super().__init__(h5_file, **kwargs)
+        self._group = group
+
     @staticmethod
     def create_dset_out(source_h5, dset):
         """
@@ -41,6 +60,25 @@ class MultiYear(Outputs):
         dset_out = "{}-{}".format(dset, year)
         return dset_out
 
+    def _adjust_group(self, dset):
+        """
+        If group was provided during initialization, add group to dset
+
+        Parameters
+        ----------
+        dset : str
+            Dataset name
+
+        Returns
+        -------
+        dset : str
+            Modified dataset name
+        """
+        if self._group is not None:
+            dset = '{}/{}'.format(self._group, dset)
+
+        return dset
+
     def _copy_time_index(self, source_h5):
         """
         Copy time_index from source_h5 to time_index_{year} in multiyear .h5
@@ -50,7 +88,7 @@ class MultiYear(Outputs):
         source_h5 : str
             Path to source .h5 file to copy data from
         """
-        dset = 'time_index'
+        dset = self._adjust_group('time_index')
         dset_out = self.create_dset_out(source_h5, dset)
         if dset_out not in self.dsets:
             logger.debug("- Collecting time_index from {}"
@@ -74,7 +112,7 @@ class MultiYear(Outputs):
         meta : pandas.DataFrame
             If provided confirm that source meta matches given meta
         """
-        dset_out = self.create_dset_out(source_h5, dset)
+        dset_out = self._adjust_group(self.create_dset_out(source_h5, dset))
         if dset_out not in self.dsets:
             logger.debug("- Collecting {} from {}"
                          .format(dset, os.path.basename(source_h5)))
@@ -94,7 +132,7 @@ class MultiYear(Outputs):
 
     def collect(self, h5_files, dset, profiles=False):
         """
-        Collect dataset dset from all give list of h5 files
+        Collect dataset dset from given list of h5 files
 
         Parameters
         ----------
@@ -112,7 +150,8 @@ class MultiYear(Outputs):
 
         if 'meta' not in self.dsets:
             logger.debug("Copying meta")
-            self._create_dset('meta', meta.shape, meta.dtype,
+            ds_name = self._adjust_group('meta')
+            self._create_dset(ds_name, meta.shape, meta.dtype,
                               data=meta)
 
         meta = pd.DataFrame(meta)
@@ -156,15 +195,16 @@ class MultiYear(Outputs):
         dset_data : ndarray
             Dataset data to write to disc
         """
-        if dset_out in self.dsets:
-            logger.debug("- Updating {}".format(dset_out))
-            self[dset_out] = dset_data
+        dset_name = self._adjust_group(dset_out)
+        if dset_name in self.dsets:
+            logger.debug("- Updating {}".format(dset_name))
+            self[dset_name] = dset_data
         else:
-            logger.debug("- Creating {}".format(dset_out))
+            logger.debug("- Creating {}".format(dset_name))
             source_dset = self._get_source_dsets(dset_out)[0]
             _, ds_dtype, ds_chunks = self.get_dset_properties(source_dset)
             ds_attrs = self.get_attrs(dset=source_dset)
-            self._add_dset(dset_out, dset_data, ds_dtype,
+            self._add_dset(dset_name, dset_data, ds_dtype,
                            chunks=ds_chunks, attrs=ds_attrs)
 
     def _compute_means(self, dset_out):
@@ -296,40 +336,44 @@ class MultiYear(Outputs):
         return MY_cv
 
     @classmethod
-    def collect_means(cls, my_file, h5_files, dset):
+    def collect_means(cls, my_file, h5_files, dset, group=None):
         """
         Collect and compute multi-year means for given dataset
 
         Parameters
         ----------
         my_file : str
-            Path to .h5 resource file
+            Path to multi-year .h5 file
         h5_files : list
             List of .h5 files to collect datasets from
         dset : str
             Dataset to collect
+        group : str
+            Group to collect datasets into
         """
         logger.info('Collecting {} into {} '.format(dset, my_file),
                     'and computing multi-year means and standard deviation.')
-        with cls(my_file, mode='a') as my:
+        with cls(my_file, mode='a', group=group) as my:
             my.collect(h5_files, dset)
             means = my._compute_means("{}-means".format(dset))
             my._compute_std("{}-std".format(dset), means=means)
 
     @classmethod
-    def collect_profiles(cls, my_file, h5_files, dset):
+    def collect_profiles(cls, my_file, h5_files, dset, group=None):
         """
         Collect multi-year profiles associated with given dataset
 
         Parameters
         ----------
         my_file : str
-            Path to .h5 resource file
+            Path to multi-year .h5 file
         h5_files : list
             List of .h5 files to collect datasets from
         dset : str
             Profiles dataset to collect
+        group : str
+            Group to collect datasets into
         """
         logger.info('Collecting {} into {}'.format(dset, my_file))
-        with cls(my_file, mode='a') as my:
+        with cls(my_file, mode='a', group=group) as my:
             my.collect(h5_files, dset, profiles=True)
