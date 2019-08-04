@@ -75,7 +75,8 @@ class MultiYear(Outputs):
             Modified dataset name
         """
         if self._group is not None:
-            dset = '{}/{}'.format(self._group, dset)
+            if not dset.startswith(self._group):
+                dset = '{}/{}'.format(self._group, dset)
 
         return dset
 
@@ -130,13 +131,13 @@ class MultiYear(Outputs):
             self._create_dset(dset_out, ds_data.shape, ds_dtype,
                               chunks=ds_chunks, attrs=ds_attrs, data=ds_data)
 
-    def collect(self, h5_files, dset, profiles=False):
+    def collect(self, source_files, dset, profiles=False):
         """
         Collect dataset dset from given list of h5 files
 
         Parameters
         ----------
-        h5_files : list
+        source_files : list
             List of .h5 files to collect datasets from
             NOTE: .h5 file names much indicate the year the data pertains to
         dset : str
@@ -145,7 +146,7 @@ class MultiYear(Outputs):
             Boolean flag to indicate if profiles are being collected
             If True also collect time_index
         """
-        with Outputs(h5_files[0], mode='r') as f_in:
+        with Outputs(source_files[0], mode='r') as f_in:
             meta = f_in._h5['meta'][...]
 
         if 'meta' not in self.dsets:
@@ -155,7 +156,7 @@ class MultiYear(Outputs):
                               data=meta)
 
         meta = pd.DataFrame(meta)
-        for year_h5 in h5_files:
+        for year_h5 in source_files:
             if profiles:
                 self._copy_time_index(year_h5)
 
@@ -250,7 +251,7 @@ class MultiYear(Outputs):
         MY_means : ndarray
             Array of multi-year means for dataset of interest
         """
-        my_dset = "{}-means".format(dset)
+        my_dset = self._adjust_group("{}-means".format(dset))
         if my_dset in self.dsets:
             MY_means = self[my_dset]
         else:
@@ -307,7 +308,7 @@ class MultiYear(Outputs):
         MY_std : ndarray
             Array of multi-year standard deviation for dataset of interest
         """
-        my_dset = "{}-std".format(dset)
+        my_dset = self._adjust_group("{}-stdev".format(dset))
         if my_dset in self.dsets:
             MY_std = self[my_dset]
         else:
@@ -336,7 +337,7 @@ class MultiYear(Outputs):
         return MY_cv
 
     @classmethod
-    def collect_means(cls, my_file, h5_files, dset, group=None):
+    def collect_means(cls, my_file, source_files, dset, group=None):
         """
         Collect and compute multi-year means for given dataset
 
@@ -344,7 +345,7 @@ class MultiYear(Outputs):
         ----------
         my_file : str
             Path to multi-year .h5 file
-        h5_files : list
+        source_files : list
             List of .h5 files to collect datasets from
         dset : str
             Dataset to collect
@@ -352,14 +353,14 @@ class MultiYear(Outputs):
             Group to collect datasets into
         """
         logger.info('Collecting {} into {} '.format(dset, my_file),
-                    'and computing multi-year means and standard deviation.')
+                    'and computing multi-year means and standard deviations.')
         with cls(my_file, mode='a', group=group) as my:
-            my.collect(h5_files, dset)
+            my.collect(source_files, dset)
             means = my._compute_means("{}-means".format(dset))
-            my._compute_std("{}-std".format(dset), means=means)
+            my._compute_std("{}-stdev".format(dset), means=means)
 
     @classmethod
-    def collect_profiles(cls, my_file, h5_files, dset, group=None):
+    def collect_profiles(cls, my_file, source_files, dset, group=None):
         """
         Collect multi-year profiles associated with given dataset
 
@@ -367,7 +368,7 @@ class MultiYear(Outputs):
         ----------
         my_file : str
             Path to multi-year .h5 file
-        h5_files : list
+        source_files : list
             List of .h5 files to collect datasets from
         dset : str
             Profiles dataset to collect
@@ -376,4 +377,4 @@ class MultiYear(Outputs):
         """
         logger.info('Collecting {} into {}'.format(dset, my_file))
         with cls(my_file, mode='a', group=group) as my:
-            my.collect(h5_files, dset, profiles=True)
+            my.collect(source_files, dset, profiles=True)
