@@ -29,10 +29,12 @@ class RPMOutput:
         rpm_clusters : pd.DataFrame | str
             Single DataFrame with (gid, gen_gid, cluster_id, rank),
             or str to file.
-        fpath_excl : str
+        fpath_excl : str | None
             Filepath to exclusions data (must match the techmap grid).
-        fpath_techmap : str
+            None will not apply exclusions.
+        fpath_techmap : str | None
             Filepath to tech mapping between exclusions and resource data.
+            None will not apply exclusions.
         dset_techmap : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
@@ -140,23 +142,26 @@ class RPMOutput:
 
     def _init_lat_lon(self):
         """Initialize the lat/lon arrays and reduce their size."""
-        self._full_lat_slice, self._full_lon_slice = self._get_lat_lon_slices(
-            cluster_id=None)
 
-        logger.debug('Initial lat/lon shape is {} and {} and '
-                     'range is {} - {} and {} - {}'
-                     .format(self.excl_lat.shape, self.excl_lon.shape,
-                             self.excl_lat.min(), self._excl_lat.max(),
-                             self.excl_lon.min(), self._excl_lon.max()))
-        self._excl_lat = self._excl_lat[self._full_lat_slice,
-                                        self._full_lon_slice]
-        self._excl_lon = self._excl_lon[self._full_lat_slice,
-                                        self._full_lon_slice]
-        logger.debug('Reduced lat/lon shape is {} and {} and '
-                     'range is {} - {} and {} - {}'
-                     .format(self.excl_lat.shape, self.excl_lon.shape,
-                             self.excl_lat.min(), self._excl_lat.max(),
-                             self.excl_lon.min(), self._excl_lon.max()))
+        if self._fpath_techmap is not None:
+
+            self._full_lat_slice, self._full_lon_slice = \
+                self._get_lat_lon_slices(cluster_id=None)
+
+            logger.debug('Initial lat/lon shape is {} and {} and '
+                         'range is {} - {} and {} - {}'
+                         .format(self.excl_lat.shape, self.excl_lon.shape,
+                                 self.excl_lat.min(), self._excl_lat.max(),
+                                 self.excl_lon.min(), self._excl_lon.max()))
+            self._excl_lat = self._excl_lat[self._full_lat_slice,
+                                            self._full_lon_slice]
+            self._excl_lon = self._excl_lon[self._full_lat_slice,
+                                            self._full_lon_slice]
+            logger.debug('Reduced lat/lon shape is {} and {} and '
+                         'range is {} - {} and {} - {}'
+                         .format(self.excl_lat.shape, self.excl_lon.shape,
+                                 self.excl_lat.min(), self._excl_lat.max(),
+                                 self.excl_lon.min(), self._excl_lon.max()))
 
     @staticmethod
     def _get_tm_data(fpath_techmap, dset_techmap, lat_slice, lon_slice):
@@ -331,7 +336,7 @@ class RPMOutput:
             2D array representing the latitudes at each exclusion grid cell
         """
 
-        if self._excl_lat is None:
+        if self._excl_lat is None and self._fpath_techmap is not None:
             with Outputs(self._fpath_techmap) as f:
                 logger.debug('Importing Latitude data from techmap...')
                 self._excl_lat = f['latitude']
@@ -347,7 +352,7 @@ class RPMOutput:
             2D array representing the latitudes at each exclusion grid cell
         """
 
-        if self._excl_lon is None:
+        if self._excl_lon is None and self._fpath_techmap is not None:
             with Outputs(self._fpath_techmap) as f:
                 logger.debug('Importing Longitude data from techmap...')
                 self._excl_lon = f['longitude']
@@ -506,8 +511,9 @@ class RPMOutput:
                            > self.include_threshold))
                 self._clusters.loc[mask, 'rank_included'] = new['rank'].values
 
-    def make_profile_df(self):
-        """Make the representative profile dataframe.
+    @property
+    def representative_profiles(self):
+        """Representative profile timeseries dataframe.
 
         Returns
         -------
@@ -516,7 +522,9 @@ class RPMOutput:
             columns are cluster ids.
         """
 
-        if 'included_frac' not in self._clusters:
+        if ('included_frac' not in self._clusters
+                and self._fpath_excl is not None
+                and self._fpath_techmap is not None):
             raise RPMRuntimeError('Exclusions must be applied before '
                                   'representative profiles can be '
                                   'determined.')
@@ -545,8 +553,9 @@ class RPMOutput:
 
         return profile_df
 
-    def make_cluster_summary(self):
-        """Make a summary dataframe with cluster_id primary key.
+    @property
+    def cluster_summary(self):
+        """Summary dataframe with cluster_id primary key.
 
         Returns
         -------
@@ -554,7 +563,9 @@ class RPMOutput:
             Summary dataframe with a row for each cluster id.
         """
 
-        if 'included_frac' not in self._clusters:
+        if ('included_frac' not in self._clusters
+                and self._fpath_excl is not None
+                and self._fpath_techmap is not None):
             raise RPMRuntimeError('Exclusions must be applied before '
                                   'representative profiles can be determined.')
         if 'representative' not in self._clusters:
@@ -576,8 +587,10 @@ class RPMOutput:
             s.loc[i, 'latitude'] = df['latitude'].mean()
             s.loc[i, 'longitude'] = df['longitude'].mean()
             s.loc[i, 'n_gen_gids'] = len(df)
-            s.loc[i, 'included_frac'] = df['included_frac'].mean()
-            s.loc[i, 'included_area_km2'] = df['included_area_km2'].sum()
+
+            if 'included_frac' in df:
+                s.loc[i, 'included_frac'] = df['included_frac'].mean()
+                s.loc[i, 'included_area_km2'] = df['included_area_km2'].sum()
 
             if df['representative'].any():
                 s.loc[i, 'representative_gid'] = \
@@ -633,13 +646,15 @@ class RPMOutput:
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
-        if 'included_frac' not in self._clusters:
+        if ('included_frac' not in self._clusters
+                and self._fpath_excl is not None
+                and self._fpath_techmap is not None):
             self.apply_exclusions()
 
-        self.make_profile_df().to_csv(os.path.join(out_dir, fn_pro))
+        self.representative_profiles.to_csv(os.path.join(out_dir, fn_pro))
         logger.info('Saved {}'.format(fn_pro))
 
-        self.make_cluster_summary().to_csv(os.path.join(out_dir, fn_sum))
+        self.cluster_summary.to_csv(os.path.join(out_dir, fn_sum))
         logger.info('Saved {}'.format(fn_sum))
 
         self._clusters.to_csv(os.path.join(out_dir, fn_out), index=False)
@@ -659,10 +674,12 @@ class RPMOutput:
         rpm_clusters : pd.DataFrame | str
             Single DataFrame with (gid, gen_gid, cluster_id, rank),
             or str to file.
-        fpath_excl : str
+        fpath_excl : str | None
             Filepath to exclusions data (must match the techmap grid).
-        fpath_techmap : str
+            None will not apply exclusions.
+        fpath_techmap : str | None
             Filepath to tech mapping between exclusions and resource data.
+            None will not apply exclusions.
         dset_techmap : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.

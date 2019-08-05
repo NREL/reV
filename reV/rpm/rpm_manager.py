@@ -241,10 +241,12 @@ class RPMClusterManager:
             - cf or resource GIDs if region is not in default meta data
         fpath_gen : str
             Path to reV .h5 files containing desired capacity factor profiles
-        fpath_excl : str
+        fpath_excl : str | None
             Filepath to exclusions data (must match the techmap grid).
-        fpath_techmap : str
+            None will not apply exclusions.
+        fpath_techmap : str | None
             Filepath to tech mapping between exclusions and resource data.
+            None will not apply exclusions.
         dset_techmap : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
