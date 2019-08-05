@@ -15,14 +15,13 @@ from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
 from reV.utilities.execution import SubprocessManager, SLURM
 
-
 logger = logging.getLogger(__name__)
 
 
 @click.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
-              help='reV generation configuration json file.')
+              help='reV collection configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context

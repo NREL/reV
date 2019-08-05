@@ -7,14 +7,72 @@ import logging
 import os
 import time
 
+from reV.config.multi_year import MultiYearConfig
 from reV.handlers.multi_year import MultiYear
+from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import STR, STRLIST, PATHLIST
 from reV.utilities.loggers import init_mult
-from reV.pipeline.status import Status
 from reV.utilities.execution import SubprocessManager, SLURM
 
-
 logger = logging.getLogger(__name__)
+
+
+@click.command()
+@click.option('--config_file', '-c', required=True,
+              type=click.Path(exists=True),
+              help='reV multi-year configuration json file.')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def from_config(ctx, config_file, verbose):
+    """Run reV gen from a config file."""
+    name = ctx.obj['NAME']
+
+    # Instantiate the config object
+    config = MultiYearConfig(config_file)
+
+    # take name from config if not default
+    if config.name.lower() != 'rev':
+        name = config.name
+        ctx.obj['NAME'] = name
+
+    # Enforce verbosity if logging level is specified in the config
+    if config.logging_level == logging.DEBUG:
+        verbose = True
+
+    # make output directory if does not exist
+    if not os.path.exists(config.dirout):
+        os.makedirs(config.dirout)
+
+    # initialize loggers.
+    init_mult(name, config.logdir,
+              modules=[__name__, 'reV.handlers.multi_year'],
+              verbose=verbose)
+
+    # Initial log statements
+    logger.info('Running reV 2.0 multi-year from config file: "{}"'
+                .format(config_file))
+    logger.info('Target output directory: "{}"'.format(config.dirout))
+    logger.info('Target logging directory: "{}"'.format(config.logdir))
+
+    for group_name, group in config.group_params.items():
+        # set config objects to be passed through invoke to direct methods
+        ctx.obj['NAME'] = "{}-{}".format(config.name, group_name)
+        ctx.obj['MY_FILE'] = config.my_file
+        ctx.obj['SOURCE_FILES'] = group.source_files
+        ctx.obj['DSETS'] = group.dsets
+        ctx.obj['GROUP'] = group.name
+
+        if config.execution_control.option == 'local':
+            ctx.invoke(collect)
+        elif config.execution_control.option == 'eagle':
+            ctx.invoke(collect_eagle,
+                       alloc=config.execution_control.alloc,
+                       walltime=config.execution_control.walltime,
+                       feature=config.execution_control.feature,
+                       memory=config.execution_control.node_mem,
+                       stdout_path=os.path.join(config.logdir, 'stdout'),
+                       verbose=verbose)
 
 
 @click.group()
