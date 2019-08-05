@@ -1,0 +1,36 @@
+{
+  "directories": {
+    "logging_directory": "/scratch/gbuster/rev/test_pipeline",
+    "output_directory": "/scratch/gbuster/rev/test_pipeline"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "memory": 90,
+    "option": "eagle",
+    "walltime": 0.5
+  },
+  "groups": {
+    "scenario1": {
+      "dsets": [
+        "cf_mean",
+        "cf_profile"
+      ],
+      "source_dir": "./scenario1",
+      "source_files": null,
+      "source_prefix": "scenario1"
+    },
+    "scenario2": {
+      "dsets": [
+        "cf_mean",
+        "cf_profile"
+      ],
+      "source_dir": "./scenario2",
+      "source_files": null,
+      "source_prefix": "scenario2"
+    }
+  },
+  "project_control": {
+    "logging_level": "INFO"
+  }
+}

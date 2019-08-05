@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help=('Dataset names to be collected. If means, multi-year '
                     'means will be computed.'))
-@click.option('--group', '-g', required=True, type=STR, default=None,
+@click.option('--group', '-g', type=STR, default=None,
               help=('Group to collect into. Useful for collecting multiple '
                     'scenarios into a single file.'))
 @click.option('-v', '--verbose', is_flag=True,
