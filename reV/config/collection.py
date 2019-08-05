@@ -112,8 +112,13 @@ class CollectionConfig(AnalysisConfig):
 
         if self._file_prefixes is None:
             self._file_prefixes = self['project_control']['file_prefixes']
+
             if 'PIPELINE' in self._file_prefixes:
                 self._file_prefixes = self._parse_pipeline_prefixes()
-            if not isinstance(self._file_prefixes, list):
+
+            if isinstance(self._file_prefixes, str):
+                self._file_prefixes = [self._file_prefixes]
+            else:
                 self._file_prefixes = list(self._file_prefixes)
+
         return self._file_prefixes
