@@ -37,6 +37,36 @@ class MultiYear(Outputs):
         super().__init__(h5_file, **kwargs)
         self._group = group
 
+    def __len__(self):
+        _len = 0
+        ds = self._adjust_group('meta')
+        if ds in self.dsets:
+            _len = self._h5[ds].shape[0]
+
+            return _len
+
+    @property
+    def dsets(self):
+        """
+        Datasets available in h5_file
+
+        Returns
+        -------
+        dsets : list
+            List of datasets in h5_file
+        """
+        dsets = list(self._h5)
+
+        if self._group is not None:
+            if self._mode in ['a', 'w', 'w-', 'x']:
+                if self._group not in dsets:
+                    self._h5.create_group(self._group)
+
+            dsets = ['{}/{}'.format(self._group, ds)
+                     for ds in self._h5[self._group]]
+
+        return dsets
+
     @staticmethod
     def create_dset_out(source_h5, dset):
         """
@@ -55,7 +85,7 @@ class MultiYear(Outputs):
         dset_out : str
             Ouput dataset name
         """
-        f_name = os.path.join(source_h5)
+        f_name = os.path.basename(source_h5)
         year = parse_year(f_name)
         dset_out = "{}-{}".format(dset, year)
         return dset_out
@@ -89,8 +119,8 @@ class MultiYear(Outputs):
         source_h5 : str
             Path to source .h5 file to copy data from
         """
-        dset = self._adjust_group('time_index')
-        dset_out = self.create_dset_out(source_h5, dset)
+        dset_out = self.create_dset_out(source_h5, 'time_index')
+        dset_out = self._adjust_group(dset_out)
         if dset_out not in self.dsets:
             logger.debug("- Collecting time_index from {}"
                          .format(os.path.basename(source_h5)))
@@ -113,7 +143,8 @@ class MultiYear(Outputs):
         meta : pandas.DataFrame
             If provided confirm that source meta matches given meta
         """
-        dset_out = self._adjust_group(self.create_dset_out(source_h5, dset))
+        dset_out = self.create_dset_out(source_h5, dset)
+        dset_out = self._adjust_group(dset_out)
         if dset_out not in self.dsets:
             logger.debug("- Collecting {} from {}"
                          .format(dset, os.path.basename(source_h5)))
@@ -149,9 +180,9 @@ class MultiYear(Outputs):
         with Outputs(source_files[0], mode='r') as f_in:
             meta = f_in._h5['meta'][...]
 
-        if 'meta' not in self.dsets:
+        ds_name = self._adjust_group('meta')
+        if ds_name not in self.dsets:
             logger.debug("Copying meta")
-            ds_name = self._adjust_group('meta')
             self._create_dset(ds_name, meta.shape, meta.dtype,
                               data=meta)
 
@@ -176,8 +207,11 @@ class MultiYear(Outputs):
         source_dsets : list
             List of annual datasets
         """
-        dset = dset_out.split("-")[0]
-        my_dset = ["{}-{}".format(dset, val) for val in ['means', 'std']]
+        dset_out = self._adjust_group(dset_out)
+        dset = os.path.basename(dset_out).split("-")[0]
+        dset = self._adjust_group(dset)
+        logger.debug('-- source_dset root = {}'.format(dset))
+        my_dset = ["{}-{}".format(dset, val) for val in ['means', 'stdev']]
         source_dsets = [ds for ds in self.dsets if dset in ds
                         and ds not in my_dset]
         if dset_out in source_dsets:
@@ -196,16 +230,16 @@ class MultiYear(Outputs):
         dset_data : ndarray
             Dataset data to write to disc
         """
-        dset_name = self._adjust_group(dset_out)
-        if dset_name in self.dsets:
-            logger.debug("- Updating {}".format(dset_name))
-            self[dset_name] = dset_data
+        dset_out = self._adjust_group(dset_out)
+        if dset_out in self.dsets:
+            logger.debug("- Updating {}".format(dset_out))
+            self[dset_out] = dset_data
         else:
-            logger.debug("- Creating {}".format(dset_name))
+            logger.debug("- Creating {}".format(dset_out))
             source_dset = self._get_source_dsets(dset_out)[0]
             _, ds_dtype, ds_chunks = self.get_dset_properties(source_dset)
             ds_attrs = self.get_attrs(dset=source_dset)
-            self._add_dset(dset_name, dset_data, ds_dtype,
+            self._add_dset(dset_out, dset_data, ds_dtype,
                            chunks=ds_chunks, attrs=ds_attrs)
 
     def _compute_means(self, dset_out):
@@ -223,6 +257,7 @@ class MultiYear(Outputs):
             Array of multi-year means
         """
         source_dsets = self._get_source_dsets(dset_out)
+        logger.debug('\t- Computing {} from {}'.format(dset_out, source_dsets))
 
         MY_means = np.zeros(len(self), dtype='float32')
         for ds in source_dsets:
@@ -259,20 +294,20 @@ class MultiYear(Outputs):
 
         return MY_means
 
-    def _compute_std(self, dset_out, means=None):
+    def _compute_stdev(self, dset_out, means=None):
         """
         Compute multi-year standard deviation for given dataset
 
         Parameters
         ----------
         dset_out : str
-            Multi-year std dataset name
+            Multi-year stdev dataset name
         means : ndarray
             Array of pre-computed means
 
         Returns
         -------
-        my_std : ndarray
+        my_stdev : ndarray
             Array of multi-year standard deviations
         """
         if means is None:
@@ -280,21 +315,21 @@ class MultiYear(Outputs):
 
         source_dsets = self._get_source_dsets(dset_out)
 
-        MY_std = np.zeros(means.shape, dtype='float32')
+        MY_stdev = np.zeros(means.shape, dtype='float32')
         for ds in source_dsets:
-            if self._h5[ds].shape == MY_std.shape:
-                MY_std += (self[ds] - means)**2
+            if self._h5[ds].shape == MY_stdev.shape:
+                MY_stdev += (self[ds] - means)**2
             else:
                 raise HandlerRuntimeError("{} shape {} should be {}"
                                           .format(ds, self._h5[ds].shape,
-                                                  MY_std.shape))
+                                                  MY_stdev.shape))
 
-        MY_std = np.sqrt(MY_std / len(source_dsets))
-        self._update_dset(dset_out, MY_std)
+        MY_stdev = np.sqrt(MY_stdev / len(source_dsets))
+        self._update_dset(dset_out, MY_stdev)
 
-        return MY_std
+        return MY_stdev
 
-    def std(self, dset):
+    def stdev(self, dset):
         """
         Extract or compute multi-year standard deviation for given source dset
 
@@ -305,17 +340,17 @@ class MultiYear(Outputs):
 
         Returns
         -------
-        MY_std : ndarray
+        MY_stdev : ndarray
             Array of multi-year standard deviation for dataset of interest
         """
         my_dset = self._adjust_group("{}-stdev".format(dset))
         if my_dset in self.dsets:
-            MY_std = self[my_dset]
+            MY_stdev = self[my_dset]
         else:
             MY_means = self.means(dset)
-            MY_std = self._compute_std(my_dset, means=MY_means)
+            MY_stdev = self._compute_stdev(my_dset, means=MY_means)
 
-        return MY_std
+        return MY_stdev
 
     def CV(self, dset):
         """
@@ -333,7 +368,7 @@ class MultiYear(Outputs):
             Array of multi-year coefficient of variation for
             dataset of interest
         """
-        MY_cv = self.std(dset) / self.means(dset)
+        MY_cv = self.stdev(dset) / self.means(dset)
         return MY_cv
 
     @classmethod
@@ -357,7 +392,7 @@ class MultiYear(Outputs):
         with cls(my_file, mode='a', group=group) as my:
             my.collect(source_files, dset)
             means = my._compute_means("{}-means".format(dset))
-            my._compute_std("{}-stdev".format(dset), means=means)
+            my._compute_stdev("{}-stdev".format(dset), means=means)
 
     @classmethod
     def collect_profiles(cls, my_file, source_files, dset, group=None):
