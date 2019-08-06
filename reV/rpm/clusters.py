@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 RPM Clustering Module
 
@@ -322,11 +323,11 @@ class RPMClusters:
                                 how="left", op='intersects')
 
         # drop duplicate rows
-        gid_counts = intersected.groupby('gid_left').size()
+        gid_counts = intersected.groupby('gen_gid_left').size()
         duplicate_gids = gid_counts[gid_counts > 1].index
-        mask = intersected['gid_left'].isin(duplicate_gids)
+        mask = intersected['gen_gid_left'].isin(duplicate_gids)
         intersected.loc[mask, 'cluster_id_right'] = None
-        intersected = intersected.drop_duplicates(subset=['gid_left'])
+        intersected = intersected.drop_duplicates(subset=['gen_gid_left'])
 
         mask = np.isnan(intersected.cluster_id_right)
         assigned = intersected[~mask].reset_index()
@@ -420,6 +421,11 @@ class RPMClusters:
         intersect_kwargs : dict
             Kwargs for running Rob's new method
         """
+
+        if self.n_clusters <= 1:
+            optimize_dist_rank = False
+            contiguous_filter = False
+
         if method_kwargs is None:
             method_kwargs = {}
         labels = self._cluster_coefficients(method=method, **method_kwargs)
@@ -462,7 +468,12 @@ class RPMClusters:
             Cluster results: (gen_gid, lon, lat, cluster_id, rank)
         """
         clusters = cls(cf_h5_path, region_gen_gids, n_clusters)
-        clusters._cluster(**kwargs)
+        try:
+            clusters._cluster(**kwargs)
+        except Exception as e:
+            logger.exception('Clustering failed on gen_gids {} through {}: {}'
+                             .format(np.min(region_gen_gids),
+                                     np.max(region_gen_gids), e))
         return clusters.meta
 
 
@@ -486,8 +497,8 @@ class RPMWavelets:
         _wavelet = pywt.Wavelet(wavelet)
 
         # multi-level with default depth
-        logger.info('Calculating wavelet coefficients'
-                    ' with {w} wavelet'.format(w=_wavelet.family_name))
+        logger.debug('Calculating wavelet coefficients'
+                     ' with {w} wavelet'.format(w=_wavelet.family_name))
 
         _wavedec = pywt.wavedec(data=x, wavelet=_wavelet, axis=1, level=level)
 
@@ -513,14 +524,14 @@ class RPMWavelets:
             _coefficient_count += _shape[1]
 
         _combined_wc = np.empty(shape=(gid_count, _coefficient_count),
-                                dtype=np.int)
+                                dtype=np.int32)
 
         logger.debug('{c:d} coefficients'.format(c=_coefficient_count))
 
         _i_start = 0
         for _index in indices:
             _i_end = _i_start + x[_index].shape[1]
-            _combined_wc[:, _i_start:_i_end] = np.round(x[_index], 2) * 100
+            _combined_wc[:, _i_start:_i_end] = np.round(x[_index])
             _i_start = _i_end
 
         return _combined_wc
