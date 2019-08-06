@@ -3,6 +3,7 @@
 Multi-year means CLI entry points.
 """
 import click
+import json
 import logging
 import os
 import time
@@ -55,24 +56,25 @@ def from_config(ctx, config_file, verbose):
     logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.logdir))
 
-    for group_name, group in config.group_params.items():
-        # set config objects to be passed through invoke to direct methods
-        ctx.obj['NAME'] = "{}-{}".format(config.name, group_name)
-        ctx.obj['MY_FILE'] = config.my_file
-        ctx.obj['SOURCE_FILES'] = group.source_files
-        ctx.obj['DSETS'] = group.dsets
-        ctx.obj['GROUP'] = group.name
+    ctx.obj['MY_FILE'] = config.my_file
+    if config.execution_control.option == 'local':
+        for group_name, group in config.group_params.items():
+            # set config objects to be passed through invoke to direct methods
+            ctx.obj['NAME'] = "{}-{}".format(name, group_name)
+            ctx.invoke(collect, group=group['group'],
+                       source_files=group['source_files'],
+                       dsets=group['dsets'])
 
-        if config.execution_control.option == 'local':
-            ctx.invoke(collect)
-        elif config.execution_control.option == 'eagle':
-            ctx.invoke(collect_eagle,
-                       alloc=config.execution_control.alloc,
-                       walltime=config.execution_control.walltime,
-                       feature=config.execution_control.feature,
-                       memory=config.execution_control.node_mem,
-                       stdout_path=os.path.join(config.logdir, 'stdout'),
-                       verbose=verbose)
+    elif config.execution_control.option == 'eagle':
+        ctx.obj['NAME'] = name
+        ctx.invoke(collect_eagle,
+                   alloc=config.execution_control.alloc,
+                   walltime=config.execution_control.walltime,
+                   feature=config.execution_control.feature,
+                   memory=config.execution_control.node_mem,
+                   stdout_path=os.path.join(config.logdir, 'stdout'),
+                   group_params=json.dumps(config.group_params),
+                   verbose=verbose)
 
 
 @click.group()
@@ -80,40 +82,34 @@ def from_config(ctx, config_file, verbose):
               help='Multi-year job name. Default is "reV_multi-year".')
 @click.option('--my_file', '-f', required=True, type=click.Path(),
               help='h5 file to use for multi-year collection.')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def main(ctx, name, my_file, verbose):
+    """Main entry point for collection with context passing."""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['MY_FILE'] = my_file
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+@click.option('--group', '-g', type=STR, default=None,
+              help=('Group to collect into. Useful for collecting multiple '
+                    'scenarios into a single file.'))
 @click.option('--source_files', '-sf', required=True, type=PATHLIST,
               help='List of files to collect from.')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help=('Dataset names to be collected. If means, multi-year '
                     'means will be computed.'))
-@click.option('--group', '-g', type=STR, default=None,
-              help=('Group to collect into. Useful for collecting multiple '
-                    'scenarios into a single file.'))
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def main(ctx, name, my_file, source_files, dsets, group, verbose):
-    """Main entry point for collection with context passing."""
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
-    ctx.obj['MY_FILE'] = my_file
-    ctx.obj['SOURCE_FILES'] = source_files
-    ctx.obj['DSETS'] = dsets
-    ctx.obj['GROUP'] = group
-    ctx.obj['VERBOSE'] = verbose
-
-
-@main.command()
-@click.option('-v', '--verbose', is_flag=True,
-              help='Flag to turn on debug logging.')
-@click.pass_context
-def collect(ctx, verbose):
+def collect(ctx, group, source_files, dsets, verbose):
     """Run collection on local worker."""
 
     name = ctx.obj['NAME']
     my_file = ctx.obj['MY_FILE']
-    source_files = ctx.obj['SOURCE_FILES']
-    dsets = ctx.obj['DSETS']
-    group = ctx.obj['GROUP']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -148,8 +144,8 @@ def collect(ctx, verbose):
     Status.make_job_file(os.path.dirname(my_file), 'multi-year', name, status)
 
 
-def get_node_cmd(name, my_file, source_files, dsets, group=None,
-                 verbose=False):
+def get_collect_cmd(name, my_file, source_files, dsets, group=None,
+                    verbose=False):
     """Make a reV multi-year collection local CLI call string.
 
     Parameters
@@ -173,30 +169,65 @@ def get_node_cmd(name, my_file, source_files, dsets, group=None,
     cmd : str
         Single line command line argument to call the following CLI with
         appropriately formatted arguments based on input args:
-            python -m reV.handlers.cli_collect [args] collect
+            python -m reV.handlers.cli_multi_year [args] collect [args]
     """
 
     # make a cli arg string for direct() in this module
-    arg_main = ('-n {name} '
-                '-f {my_file} '
-                '-sf {h5_dir} '
-                '-ds {dsets} '
-                '-g {group} '
-                '{v}'
-                .format(name=SubprocessManager.s(name),
-                        my_file=SubprocessManager.s(my_file),
-                        h5_dir=SubprocessManager.s(source_files),
-                        dsets=SubprocessManager.s(dsets),
-                        group=SubprocessManager.s(group),
-                        v='-v ' if verbose else '',
-                        ))
+    main_args = ('-n {name} '
+                 '-f {my_file} '
+                 '{v}'
+                 .format(name=SubprocessManager.s(name),
+                         my_file=SubprocessManager.s(my_file),
+                         v='-v ' if verbose else '',
+                         ))
+
+    collect_args = ('-g {group} '
+                    '-sf {source_files} '
+                    '-ds {dsets} '
+                    .format(group=SubprocessManager.s(group),
+                            source_files=SubprocessManager.s(source_files),
+                            dsets=SubprocessManager.s(dsets),
+                            ))
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
-    cmd = ('python -m reV.handlers.cli_multi_year {arg_main} collect'
-           .format(arg_main=arg_main))
-    logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
+    cmd = ('python -m reV.handlers.cli_multi_year {} collect {}'
+           .format(main_args, collect_args))
     return cmd
+
+
+def get_slurm_cmd(name, my_file, group_params, verbose=False):
+    """Make a reV multi-year collection local CLI call string.
+
+    Parameters
+    ----------
+    name : str
+        reV collection jobname.
+    my_file : str
+        Path to .h5 file to use for multi-year collection.
+    group_params : list
+        List of groups and their parameters to collect
+    verbose : bool
+        Flag to turn on DEBUG logging
+
+    Returns
+    -------
+    slurm_cmd : str
+        Argument to call the neccesary CLI calls on the node to collect
+        desired groups
+    """
+    slurm_cmd = []
+    for group_names, group in json.loads(group_params):
+        g_name = "{}-{}".format(name, group_names)
+        cmd = get_collect_cmd(g_name, my_file, group['source_files'],
+                              group['dsets'], group=group['group'],
+                              verbose=verbose)
+        slurm_cmd.append(cmd)
+
+    slurm_cmd = '\n'.join(slurm_cmd)
+    logger.debug('Creating the following command line call:\n\t{}'
+                 .format(slurm_cmd))
+    return slurm_cmd
 
 
 @main.command()
@@ -211,21 +242,19 @@ def get_node_cmd(name, my_file, source_files, dsets, group=None,
               help='Eagle node memory request in GB. Default is 90')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               help='Subprocess standard output path. Default is ./out/stdout')
+@click.option('--group_params', '-gp', required=True, type=str,
+              help=('List of groups and their parameters'
+                    '(group, source_files, dsets) to collect'))
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def collect_eagle(ctx, alloc, walltime, feature, memory, stdout_path, verbose):
+def collect_eagle(ctx, alloc, walltime, feature, memory, stdout_path,
+                  group_params, verbose):
     """Run collection on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
     my_file = ctx.obj['MY_FILE']
-    source_files = ctx.obj['SOURCE_FILES']
-    dsets = ctx.obj['DSETS']
-    group = ctx.obj['GROUP']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-
-    cmd = get_node_cmd(name, my_file, source_files, dsets, group=group,
-                       verbose=verbose)
 
     status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
                                         name)
@@ -235,10 +264,11 @@ def collect_eagle(ctx, alloc, walltime, feature, memory, stdout_path, verbose):
                .format(name, os.path.dirname(my_file)))
     else:
         logger.info('Running reV multi-year collection on Eagle with node '
-                    ' name "{}", collecting "{}" to "{}" from "{}".'
-                    .format(name, dsets, my_file, source_files))
+                    ' name "{}", collecting into "{}".'
+                    .format(name, my_file))
         # create and submit the SLURM job
-        slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
+        slurm_cmd = get_slurm_cmd(name, my_file, group_params, verbose=verbose)
+        slurm = SLURM(slurm_cmd, alloc=alloc, memory=memory, walltime=walltime,
                       feature=feature, name=name, stdout_path=stdout_path)
         if slurm.id:
             msg = ('Kicked off reV multi-year collection job "{}" '

@@ -61,14 +61,13 @@ class MultiYearConfig(AnalysisConfig):
         group_params : dict
             Dictionary of group parameters: name, source_files, dsets
         """
-        if self._groups is None:
-            self._groups = MultiYearGroup.factory(self.dirout, self['groups'])
-
         group_params = {}
-        for name, group in self._groups.items():
-            group_params[name] = {'name': group.name,
+        for name in self.group_names:
+            group = self._groups[name]
+            group_params[name] = {'group': group.name,
                                   'dsets': group.dsets,
                                   'source_files': group.source_files}
+
         return group_params
 
 
@@ -78,7 +77,7 @@ class MultiYearGroup:
     """
     def __init__(self, name, out_dir, source_files="PIPELINE",
                  source_dir=None, source_prefix=None,
-                 dsets=('cf_mean', 'cf_profile')):
+                 dsets=('cf_mean',)):
         """
         Parameters
         ----------
@@ -112,7 +111,7 @@ class MultiYearGroup:
         name : str
             Group name
         """
-        name = self._name if self._name != "None" else None
+        name = self._name if self._name.lower() != "none" else None
         return name
 
     @property
@@ -127,7 +126,8 @@ class MultiYearGroup:
             if isinstance(self._source_files, (list, tuple)):
                 source_files = self._source_files
             elif self._source_files == "PIPELINE":
-                source_files = Pipeline.parse_previous(self._dirout, 'collect',
+                source_files = Pipeline.parse_previous(self._dirout,
+                                                       'multi-year',
                                                        target='fpath')
             else:
                 raise ConfigError("source_files must be a list, tuple, "
@@ -136,7 +136,8 @@ class MultiYearGroup:
             if self._source_dir and self._source_prefix:
                 source_files = []
                 for file in os.listdir(self._source_dir):
-                    if file.startswith(self._source_prefix):
+                    if (file.startswith(self._source_prefix)
+                       and '_node' not in file):
                         source_files.append(os.path.join(self._source_dir,
                                                          file))
             else:
