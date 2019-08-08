@@ -305,6 +305,49 @@ class RPMClusters:
         new_labels = np.argmin(err, axis=0)
         return new_labels
 
+    @staticmethod
+    def _get_cluster_geom(gdf_points, drop_islands=False, add_buffer=False):
+        """
+        Generate cluster polygons as a geopandas dataframe
+        """
+        lookup = gdf_points[['latitude', 'longitude']]
+        tree = cKDTree(lookup)
+        dists, _ = tree.query(lookup, k=2)
+        mean_dist = dists.T[1].mean()
+        gdf_poly = gdf_points.copy()
+        gdf_poly.geometry = gdf_poly.geometry.buffer(mean_dist)
+        clusters = gdf_poly.dissolve(by='cluster_id').reset_index()
+        clusters.geometry = clusters.geometry.buffer(-mean_dist / 2)
+
+        # Drop Islands
+        if drop_islands is True:
+            for index, _ in clusters.iterrows():
+                geom = clusters.loc[index, 'geometry']
+                if geom.geom_type == 'MultiPolygon':
+                    clusters.loc[index, 'geometry'] = max(geom,
+                                                          key=lambda a: a.area)
+
+        # Buffer
+        if add_buffer is True:
+            clusters.geometry = clusters.geometry.buffer(-mean_dist)
+            clusters.geometry = clusters.geometry.buffer(mean_dist)
+
+        return clusters
+
+    @staticmethod
+    def _generate_shapefile(meta, fpath, drop_islands=False, add_buffer=True):
+        """
+        Generate cluster polygons and save to shapefile
+        """
+        geometry = [Point(xy) for xy in zip(meta.longitude, meta.latitude)]
+        gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
+
+        clusters = RPMClusters._get_cluster_geom(gdf_points,
+                                                 drop_islands=drop_islands,
+                                                 add_buffer=add_buffer)
+        clusters.to_file(fpath)
+        return fpath
+
     def _contiguous_filter(self, drop_islands=True, add_buffer=False):
         """
         Re-classify clusters by making contigous cluster polygons
@@ -344,49 +387,6 @@ class RPMClusters:
         new_labels = intersected['cluster_id_left']
 
         return new_labels
-
-    @staticmethod
-    def _generate_shapefile(meta, fpath):
-        """
-        Generate cluster polygons and save to shapefile
-        """
-        geometry = [Point(xy) for xy in zip(meta.longitude, meta.latitude)]
-        gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
-
-        clusters = RPMClusters._get_cluster_geom(gdf_points,
-                                                 drop_islands=False,
-                                                 add_buffer=True)
-        clusters.to_file(fpath)
-        return fpath
-
-    @staticmethod
-    def _get_cluster_geom(gdf_points, drop_islands=False, add_buffer=False):
-        """
-        Generate cluster polygons as a geopandas dataframe
-        """
-        lookup = gdf_points[['latitude', 'longitude']]
-        tree = cKDTree(lookup)
-        dists, _ = tree.query(lookup, k=2)
-        mean_dist = dists.T[1].mean()
-        gdf_poly = gdf_points.copy()
-        gdf_poly.geometry = gdf_poly.geometry.buffer(mean_dist)
-        clusters = gdf_poly.dissolve(by='cluster_id').reset_index()
-        clusters.geometry = clusters.geometry.buffer(-mean_dist / 2)
-
-        # Drop Islands
-        if drop_islands is True:
-            for index, _ in clusters.iterrows():
-                geom = clusters.loc[index, 'geometry']
-                if geom.geom_type == 'MultiPolygon':
-                    clusters.loc[index, 'geometry'] = max(geom,
-                                                          key=lambda a: a.area)
-
-        # Buffer
-        if add_buffer is True:
-            clusters.geometry = clusters.geometry.buffer(-mean_dist)
-            clusters.geometry = clusters.geometry.buffer(mean_dist)
-
-        return clusters
 
     def _calculate_ranks(self):
         """ Determine the rank of each location within all clusters
