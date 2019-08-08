@@ -44,6 +44,7 @@ with h5py.File(fname, 'r') as f:
 cluster_df = RPMClusters.cluster(fname, wind_gen_gids, n_clusters=6)
 
 """
+from copy import deepcopy
 import logging
 import pywt
 import numpy as np
@@ -284,7 +285,7 @@ class RPMClusters:
 
         return arr
 
-    def _dist_rank_optimization(self, powers=(2, 2), **kwargs):
+    def _dist_rank_optimization(self, **kwargs):
         """
         Re-cluster data by minimizing the sum of the:
         - distance between each point and each cluster centroid
@@ -292,8 +293,6 @@ class RPMClusters:
 
         Parameters
         ----------
-        powers : tuple
-            Powers applied to dist and rank prior to minimization
         kwargs : dict
             _normalize_values kwargs
 
@@ -315,8 +314,48 @@ class RPMClusters:
 
         rmse = self._normalize_values(np.array(rmse), **kwargs)
         dist = self._normalize_values(np.array(dist), **kwargs)
-        err = (dist**powers[0] + rmse**powers[1])
+        err = (dist**2 + rmse**2)
         new_labels = np.argmin(err, axis=0)
+        return new_labels
+
+    def _dist_rank_filter(self, iterate=True, **kwargs):
+        """
+        Re-cluster data by minimizing the sum of the:
+        - distance between each point and each cluster centroid
+        - distance between each point and each
+
+        Parameters
+        ----------
+        iterate : bool
+            Iterate on _dist_rank_optimization until cluster centroids and
+            profiles start to converge
+        kwargs : dict
+            _normalize_values kwargs
+
+        Returns
+        -------
+        new_labels : ndarray
+            New cluster labels
+        """
+        clusters = deepcopy(self)
+        coeffs = clusters.cluster_coefficients
+        centroids = clusters.cluster_coordinates
+        dist, rmse = 0, 0
+        while True:
+            new_labels = clusters._dist_rank_optimization(**kwargs)
+            clusters._meta['cluster_id'] = new_labels
+            if iterate:
+                c_coeffs = clusters.cluster_coefficients
+                c_centroids = clusters.cluster_coordinates
+                dist_i = np.linalg.norm(c_centroids - centroids)
+                rmse_i = np.mean((c_coeffs - coeffs) ** 2) ** 0.5
+                if (dist_i < dist and rmse_i < rmse):
+                    break
+                else:
+                    dist, rmse = dist_i, rmse_i
+            else:
+                break
+
         return new_labels
 
     @staticmethod
@@ -414,7 +453,7 @@ class RPMClusters:
             self._meta.loc[pos, 'rank'] = rank
 
     def _cluster(self, method='kmeans', method_kwargs=None,
-                 optimize_dist_rank=True, dist_rmse_kwargs=None,
+                 dist_rank_filter=True, dist_rmse_kwargs=None,
                  contiguous_filter=True, contiguous_kwargs=None):
         """
         Run three step RPM clustering procedure:
@@ -439,7 +478,7 @@ class RPMClusters:
         """
 
         if self.n_clusters <= 1:
-            optimize_dist_rank = False
+            dist_rank_filter = False
             contiguous_filter = False
 
         if method_kwargs is None:
@@ -447,16 +486,14 @@ class RPMClusters:
 
         labels = self._cluster_coefficients(method=method, **method_kwargs)
         self._meta['cluster_id'] = labels
-        self._meta['id_0'] = labels
 
         # Optimize Distance & Rank
-        if optimize_dist_rank is True:
+        if dist_rank_filter is True:
             if dist_rmse_kwargs is None:
                 dist_rmse_kwargs = {}
 
-            new_labels = self._dist_rank_optimization(**dist_rmse_kwargs)
+            new_labels = self._dist_rank_filter(**dist_rmse_kwargs)
             self._meta['cluster_id'] = new_labels
-            self._meta['id_1'] = new_labels
 
         # Apply contiguous filter
         if contiguous_filter is True:
@@ -465,7 +502,6 @@ class RPMClusters:
 
             new_labels = self._contiguous_filter(**contiguous_kwargs)
             self._meta['cluster_id'] = new_labels
-            self._meta['id_2'] = new_labels
 
         self._calculate_ranks()
 
