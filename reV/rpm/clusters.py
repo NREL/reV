@@ -305,7 +305,7 @@ class RPMClusters:
         new_labels = np.argmin(err, axis=0)
         return new_labels
 
-    def _contiguous_filter(self):
+    def _contiguous_filter(self, drop_islands=True, add_buffer=False):
         """
         Re-classify clusters by making contigous cluster polygons
         """
@@ -315,9 +315,8 @@ class RPMClusters:
         gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
 
         clusters = self._get_cluster_geom(gdf_points,
-                                          drop_islands=True, add_buffer=False)
-        clusters.to_file('clusters.shp')
-        gdf_points.to_file('gdf_points.shp')
+                                          drop_islands=drop_islands,
+                                          add_buffer=add_buffer)
 
         intersected = gpd.sjoin(gdf_points, clusters,
                                 how="left", op='intersects')
@@ -403,7 +402,7 @@ class RPMClusters:
 
     def _cluster(self, method='kmeans', method_kwargs=None,
                  optimize_dist_rank=True, contiguous_filter=True,
-                 dist_rmse_kwargs=None):
+                 dist_rmse_kwargs=None, contiguous_kwargs=None):
         """
         Run three step RPM clustering procedure:
         1) Cluster on wavelet coefficients
@@ -418,8 +417,8 @@ class RPMClusters:
             Kwargs for running _cluster_coefficients
         dist_rmse_kwargs : dict
             Kwargs for running _dist_rank_optimization
-        intersect_kwargs : dict
-            Kwargs for running Rob's new method
+        contiguous_kwargs : dict
+            Kwargs for _contiguous_filter
         """
 
         if self.n_clusters <= 1:
@@ -428,20 +427,28 @@ class RPMClusters:
 
         if method_kwargs is None:
             method_kwargs = {}
+
         labels = self._cluster_coefficients(method=method, **method_kwargs)
         self._meta['cluster_id'] = labels
+        self._meta['id_0'] = labels
 
         # Optimize Distance & Rank
         if optimize_dist_rank is True:
             if dist_rmse_kwargs is None:
                 dist_rmse_kwargs = {}
+
             new_labels = self._dist_rank_optimization(**dist_rmse_kwargs)
             self._meta['cluster_id'] = new_labels
+            self._meta['id_1'] = new_labels
 
         # Apply contiguous filter
         if contiguous_filter is True:
-            new_labels = self._contiguous_filter()
+            if contiguous_kwargs is None:
+                contiguous_kwargs = {}
+
+            new_labels = self._contiguous_filter(**contiguous_kwargs)
             self._meta['cluster_id'] = new_labels
+            self._meta['id_2'] = new_labels
 
         self._calculate_ranks()
 
