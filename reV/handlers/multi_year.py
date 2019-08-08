@@ -368,6 +368,36 @@ class MultiYear(Outputs):
         my_cv = self.stdev(dset) / self.means(dset)
         return my_cv
 
+    @staticmethod
+    def is_profile(source_files, dset):
+        """
+        Check dataset in source files to see if it is a profile.
+
+        Parameters
+        ----------
+        source_files : list
+            List of .h5 files to collect datasets from
+        dset : str
+            Dataset to collect
+
+        Returns
+        -------
+        is_profile : bool
+            True if profile, False if not.
+        """
+        with Outputs(source_files[0]) as f:
+            if dset not in f.dsets:
+                raise KeyError('Dataset "{}" not found in source file: "{}"'
+                               .format(dset, source_files[0]))
+            else:
+                shape, _, _ = f.get_dset_properties(dset)
+
+        if len(shape) == 2:
+            is_profile = True
+        else:
+            is_profile = False
+        return is_profile
+
     @classmethod
     def collect_means(cls, my_file, source_files, dset, group=None):
         """
@@ -384,8 +414,9 @@ class MultiYear(Outputs):
         group : str
             Group to collect datasets into
         """
-        logger.info('Collecting {} into {} '.format(dset, my_file),
-                    'and computing multi-year means and standard deviations.')
+        logger.info('Collecting {} into {} '
+                    'and computing multi-year means and standard deviations.'
+                    .format(dset, my_file))
         with cls(my_file, mode='a', group=group) as my:
             my.collect(source_files, dset)
             means = my._compute_means("{}-means".format(dset))

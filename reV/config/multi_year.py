@@ -137,7 +137,7 @@ class MultiYearGroup:
                 source_files = []
                 for file in os.listdir(self._source_dir):
                     if (file.startswith(self._source_prefix)
-                       and '_node' not in file):
+                            and file.endswith('.h5') and '_node' not in file):
                         source_files.append(os.path.join(self._source_dir,
                                                          file))
             else:

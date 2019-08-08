@@ -127,11 +127,12 @@ def collect(ctx, group, source_files, dsets, verbose):
     t0 = time.time()
 
     for dset in dsets:
-        if 'mean' in dset:
-            MultiYear.collect_means(my_file, source_files, dset, group=group)
-        else:
+        if MultiYear.is_profile(source_files, dset):
             MultiYear.collect_profiles(my_file, source_files, dset,
                                        group=group)
+        else:
+            MultiYear.collect_means(my_file, source_files, dset, group=group)
+
     runtime = (time.time() - t0) / 60
     logger.info('Multi-year collection completed in: {:.2f} min.'
                 .format(runtime))

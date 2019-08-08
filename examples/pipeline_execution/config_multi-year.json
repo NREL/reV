@@ -11,17 +11,26 @@
     "walltime": 0.5
   },
   "groups": {
-    "None": {
+    "econ": {
+      "dsets": [
+        "lcoe_fcr"
+      ],
+      "source_dir": "./",
+      "source_files": null,
+      "source_prefix": "econ"
+    },
+    "generation": {
       "dsets": [
         "cf_mean",
         "cf_profile"
       ],
-      "source_dir": null,
-      "source_files": "PIPELINE",
-      "source_prefix": null
+      "source_dir": "./",
+      "source_files": null,
+      "source_prefix": "gen"
     }
   },
   "project_control": {
-    "logging_level": "INFO"
+    "logging_level": "INFO",
+    "name": "multi-year"
   }
 }
