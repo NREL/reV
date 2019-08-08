@@ -251,6 +251,7 @@ class RPMClusters:
     def _normalize_values(arr, norm=None, axis=None):
         """
         Normalize values in array by column
+
         Parameters
         ----------
         arr : ndarray
@@ -258,6 +259,7 @@ class RPMClusters:
             shape (n samples, with m features)
         norm : str
             Normalization method to use, see sklearn.preprocessing.normalize
+
         Returns
         ---------
         arr : ndarray
@@ -282,11 +284,23 @@ class RPMClusters:
 
         return arr
 
-    def _dist_rank_optimization(self, **kwargs):
+    def _dist_rank_optimization(self, powers=(2, 2), **kwargs):
         """
         Re-cluster data by minimizing the sum of the:
         - distance between each point and each cluster centroid
         - distance between each point and each
+
+        Parameters
+        ----------
+        powers : tuple
+            Powers applied to dist and rank prior to minimization
+        kwargs : dict
+            _normalize_values kwargs
+
+        Returns
+        -------
+        new_labels : ndarray
+            New cluster labels
         """
         cluster_coeffs = self.cluster_coefficients
         cluster_centroids = self.cluster_coordinates
@@ -301,7 +315,7 @@ class RPMClusters:
 
         rmse = self._normalize_values(np.array(rmse), **kwargs)
         dist = self._normalize_values(np.array(dist), **kwargs)
-        err = (dist + rmse**2)
+        err = (dist**powers[0] + rmse**powers[1])
         new_labels = np.argmin(err, axis=0)
         return new_labels
 
@@ -400,8 +414,8 @@ class RPMClusters:
             self._meta.loc[pos, 'rank'] = rank
 
     def _cluster(self, method='kmeans', method_kwargs=None,
-                 optimize_dist_rank=True, contiguous_filter=True,
-                 dist_rmse_kwargs=None, contiguous_kwargs=None):
+                 optimize_dist_rank=True, dist_rmse_kwargs=None,
+                 contiguous_filter=True, contiguous_kwargs=None):
         """
         Run three step RPM clustering procedure:
         1) Cluster on wavelet coefficients
@@ -414,8 +428,12 @@ class RPMClusters:
             Method to use to cluster coefficients
         method_kwargs : dict
             Kwargs for running _cluster_coefficients
+        optimize_dist_rank : bool
+            Run _optimize_dist_rank
         dist_rmse_kwargs : dict
             Kwargs for running _dist_rank_optimization
+        contiguous_filter : bool
+            Run _contiguous_filter
         contiguous_kwargs : dict
             Kwargs for _contiguous_filter
         """
