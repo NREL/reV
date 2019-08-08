@@ -353,6 +353,7 @@ class RPMClusters:
                     break
                 else:
                     dist, rmse = dist_i, rmse_i
+                    coeffs, centroids = c_coeffs, c_centroids
             else:
                 break
 
