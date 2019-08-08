@@ -391,7 +391,7 @@ class RPMClusters:
         clusters.to_file(fpath)
         return fpath
 
-    def _contiguous_filter(self, drop_islands=True, buffer_weight=10):
+    def _contiguous_filter(self, drop_islands=True, buffer_weight=2):
         """
         Re-classify clusters by making contigous cluster polygons
         """

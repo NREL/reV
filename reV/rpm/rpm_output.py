@@ -11,7 +11,7 @@ import pandas as pd
 
 from reV.handlers.geotiff import Geotiff
 from reV.handlers.outputs import Outputs
-from reV.rpm.clusters import RPMClusters
+from reV.rpm.rpm_clusters import RPMClusters
 from reV.utilities.exceptions import RPMRuntimeError, RPMTypeError
 
 logger = logging.getLogger(__name__)

@@ -10,7 +10,7 @@ import pandas as pd
 from warnings import warn
 
 from reV.handlers.outputs import Outputs
-from reV.rpm.clusters import RPMClusters
+from reV.rpm.rpm_clusters import RPMClusters
 from reV.rpm.rpm_output import RPMOutput
 from reV.utilities.exceptions import RPMValueError, RPMRuntimeError
 
