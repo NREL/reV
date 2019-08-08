@@ -319,7 +319,7 @@ class RPMClusters:
         clusters = gdf_poly.dissolve(by='cluster_id').reset_index()
         clusters.geometry = clusters.geometry.buffer(-mean_dist / 2)
 
-        return clusters
+        return clusters, mean_dist
 
     @staticmethod
     def _generate_shapefile(meta, fpath, beautify=False):
@@ -329,20 +329,16 @@ class RPMClusters:
         geometry = [Point(xy) for xy in zip(meta.longitude, meta.latitude)]
         gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
 
-        clusters = RPMClusters._get_cluster_geom(gdf_points)
+        clusters, mean_dist = RPMClusters._get_cluster_geom(gdf_points)
 
-        if beautify is True:
-            lookup = gdf_points[['latitude', 'longitude']]
-            tree = cKDTree(lookup)
-            dists, _ = tree.query(lookup, k=2)
-            mean_dist = dists.T[1].mean()
+        if beautify:
             clusters.geometry = clusters.geometry.buffer(-mean_dist)
             clusters.geometry = clusters.geometry.buffer(mean_dist)
 
         clusters.to_file(fpath)
         return fpath
 
-    def _contiguous_filter(self, drop_islands=True):
+    def _contiguous_filter(self, drop_islands=True, buffer_weight=10):
         """
         Re-classify clusters by making contigous cluster polygons
         """
@@ -351,10 +347,13 @@ class RPMClusters:
         geometry = [Point(xy) for xy in zip(meta.longitude, meta.latitude)]
         gdf_points = gpd.GeoDataFrame(meta, geometry=geometry)
 
-        clusters = self._get_cluster_geom(gdf_points)
+        clusters, mean_dist = self._get_cluster_geom(gdf_points)
 
         # Drop Islands
-        if drop_islands is True:
+        if drop_islands:
+            buffer = buffer_weight * mean_dist
+            clusters.geometry = clusters.geometry.buffer(-buffer)
+            clusters.geometry = clusters.geometry.buffer(buffer)
             for index, _ in clusters.iterrows():
                 geom = clusters.loc[index, 'geometry']
                 if geom.geom_type == 'MultiPolygon':
