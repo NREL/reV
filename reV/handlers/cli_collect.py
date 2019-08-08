@@ -159,7 +159,7 @@ def collect(ctx, verbose):
                                   parallel=parallel)
 
     runtime = (time.time() - t0) / 60
-    logger.info('Collection completed in: {1:.2f} min.'.format(runtime))
+    logger.info('Collection completed in: {:.2f} min.'.format(runtime))
 
     # add job to reV status file.
     status = {'dirout': os.path.dirname(h5_file),

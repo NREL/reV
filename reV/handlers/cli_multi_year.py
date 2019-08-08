@@ -217,7 +217,7 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
         desired groups
     """
     slurm_cmd = []
-    for group_names, group in json.loads(group_params):
+    for group_names, group in json.loads(group_params).items():
         g_name = "{}-{}".format(name, group_names)
         cmd = get_collect_cmd(g_name, my_file, group['source_files'],
                               group['dsets'], group=group['group'],
