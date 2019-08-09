@@ -621,11 +621,12 @@ class RPMOutput:
                 s.loc[i, 'included_frac'] = df['included_frac'].mean()
                 s.loc[i, 'included_area_km2'] = df['included_area_km2'].sum()
 
-            if df['representative'].any():
+            key = 'representative'
+            if df[key].any():
                 s.loc[i, 'representative_gid'] = \
-                    df.loc[df['representative'], 'gid'].values[0]
+                    df.loc[df[key], 'gid'].sort_values(by=key).values[0]
                 s.loc[i, 'representative_gen_gid'] = \
-                    df.loc[df['representative'], 'gen_gid'].values[0]
+                    df.loc[df[key], 'gen_gid'].sort_values(by=key).values[0]
 
         return s
 
