@@ -488,7 +488,7 @@ class RPMOutput:
                 mask = (df['included_frac'] >= self.include_threshold)
                 if any(mask) and not all(mask):
                     gen_gids = df.loc[mask, 'gen_gid']
-                    self.cluster_kwargs['optimize_dist_rank'] = False
+                    self.cluster_kwargs['dist_rank_filter'] = False
                     self.cluster_kwargs['contiguous_filter'] = False
                     future = exe.submit(RPMClusters.cluster, self._fpath_gen,
                                         gen_gids, 1, **self.cluster_kwargs)

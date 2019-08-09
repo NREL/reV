@@ -468,7 +468,7 @@ class RPMClusters:
             Method to use to cluster coefficients
         method_kwargs : dict
             Kwargs for running _cluster_coefficients
-        optimize_dist_rank : bool
+        dist_rank_filter : bool
             Run _optimize_dist_rank
         dist_rmse_kwargs : dict
             Kwargs for running _dist_rank_optimization
