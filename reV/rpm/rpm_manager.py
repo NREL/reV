@@ -33,9 +33,11 @@ class RPMClusterManager:
             Path to reV .h5 files containing desired capacity factor profiles
         rpm_meta : pandas.DataFrame | str
             DataFrame or path to .csv or .json containing the RPM meta data:
+            (region, gid | gen_gid, clusters)
             - Regions of interest
             - # of clusters per region
             - cf or resource GIDs if region is not in default meta data
+
         rpm_region_col : str | Nonetype
             If not None, the meta-data filed to map RPM regions to
         parallel : bool | int
@@ -67,6 +69,7 @@ class RPMClusterManager:
         ----------
         rpm_meta : pandas.DataFrame | str
             DataFrame or path to .csv or .json containing the RPM meta data:
+            (region, gid | gen_gid, clusters)
             - Regions of interest
             - # of clusters per region
             - cf or resource GIDs if region is not in default meta data
@@ -123,6 +126,9 @@ class RPMClusterManager:
             region_map = {}
             if 'gid' in region_df:
                 region_meta = cf_meta.loc[region_df['gid'].values]
+            elif 'gen_gid' in region_df:
+                pos = cf_meta.loc['gen_gid'].isin(region_df['gen_gid'].values)
+                region_meta = cf_meta.loc[pos]
             elif region_col in cf_meta:
                 pos = cf_meta[region_col] == region
                 region_meta = cf_meta.loc[pos]
@@ -138,7 +144,8 @@ class RPMClusterManager:
                                       .format(region))
 
             if region_meta['gen_gid'].empty:
-                wmsg = ('Could not locate any generation in region "{}".'
+                wmsg = ('Could not locate any generation in region "{}". '
+                        'Region will be excluded.'
                         .format(region))
                 warn(wmsg)
                 logger.warning(wmsg)
