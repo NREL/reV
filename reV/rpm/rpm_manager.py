@@ -119,15 +119,16 @@ class RPMClusterManager:
             cf_meta = cfs.meta
 
         cf_meta.index.name = 'gen_gid'
-        cf_meta = cf_meta.reset_index().set_index('gid')
+        cf_meta = cf_meta.reset_index()
 
         rpm_regions = {}
         for region, region_df in rpm_meta.groupby('region'):
             region_map = {}
             if 'gid' in region_df:
-                region_meta = cf_meta.loc[region_df['gid'].values]
+                pos = cf_meta['gid'].isin(region_df['gid'].values)
+                region_meta = cf_meta.loc[pos]
             elif 'gen_gid' in region_df:
-                pos = cf_meta.loc['gen_gid'].isin(region_df['gen_gid'].values)
+                pos = cf_meta['gen_gid'].isin(region_df['gen_gid'].values)
                 region_meta = cf_meta.loc[pos]
             elif region_col in cf_meta:
                 pos = cf_meta[region_col] == region
@@ -152,7 +153,7 @@ class RPMClusterManager:
             else:
                 region_map['cluster_num'] = clusters[0]
                 region_map['gen_gids'] = region_meta['gen_gid'].values
-                region_map['gids'] = region_meta.index.values
+                region_map['gids'] = region_meta['gid'].values
                 rpm_regions[region] = region_map
 
         return rpm_regions
