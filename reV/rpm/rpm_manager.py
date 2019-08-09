@@ -232,8 +232,8 @@ class RPMClusterManager:
 
     @classmethod
     def run(cls, rpm_meta, fpath_gen, fpath_excl, fpath_techmap,
-            dset_techmap, out_dir, include_threshold=0.001, job_tag=None,
-            rpm_region_col=None, parallel=True, **cluster_kwargs):
+            dset_techmap, out_dir, job_tag=None, rpm_region_col=None,
+            parallel=True, output_kwargs=None, **cluster_kwargs):
         """
         RPM Cluster Manager:
         - Extracts gen_gids for all RPM regions
@@ -260,11 +260,6 @@ class RPMClusterManager:
             exclusions-to-resource mapping data.
         out_dir : str
             Directory to dump output files.
-        include_threshold : float
-            Inclusion threshold. Resource pixels included more than this
-            threshold will be considered in the representative profiles.
-            Set to zero to find representative profile on all resource, not
-            just included.
         job_tag : str | None
             Optional name tag to add to the output files.
             Format is "rpm_cluster_output_{tag}.csv".
@@ -273,6 +268,8 @@ class RPMClusterManager:
         parallel : bool | int
             Flag to apply exclusions in parallel. Integer is interpreted as
             max number of workers. True uses all available.
+        output_kwargs : dict | None
+            Kwargs for the RPM outputs manager.
         **cluster_kwargs : dict
             RPMClusters kwargs
         """
@@ -298,10 +295,13 @@ class RPMClusterManager:
             rpm_clusters = f_int
             rpm = None
 
+        if output_kwargs is None:
+            output_kwargs = {}
+
         RPMOutput.process_outputs(rpm_clusters, fpath_excl, fpath_techmap,
                                   dset_techmap, fpath_gen, out_dir,
                                   job_tag=job_tag, parallel=parallel,
-                                  include_threshold=include_threshold,
-                                  cluster_kwargs=cluster_kwargs)
+                                  cluster_kwargs=cluster_kwargs,
+                                  **output_kwargs)
         logger.info('reV-to-RPM processing is complete.')
         return rpm

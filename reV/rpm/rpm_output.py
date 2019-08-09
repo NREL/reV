@@ -22,7 +22,8 @@ class RPMOutput:
 
     def __init__(self, rpm_clusters, fpath_excl, fpath_techmap, dset_techmap,
                  fpath_gen, excl_area=0.0081, include_threshold=0.001,
-                 rerank=True, cluster_kwargs=None, parallel=True):
+                 n_profiles=1, rerank=True, cluster_kwargs=None,
+                 parallel=True):
         """
         Parameters
         ----------
@@ -47,6 +48,8 @@ class RPMOutput:
             threshold will be considered in the representative profiles.
             Set to zero to find representative profile on all resource, not
             just included.
+        n_profiles : int
+            Number of representative profiles to output.
         rerank : bool
             Flag to rerank representative generation profiles after removing
             excluded generation pixels.
@@ -66,6 +69,7 @@ class RPMOutput:
         self._fpath_gen = fpath_gen
         self.excl_area = excl_area
         self.include_threshold = include_threshold
+        self.n_profiles = n_profiles
         self.rerank = rerank
 
         self.parallel = parallel
@@ -511,9 +515,13 @@ class RPMOutput:
                            > self.include_threshold))
                 self._clusters.loc[mask, 'rank_included'] = new['rank'].values
 
-    @property
-    def representative_profiles(self):
-        """Representative profile timeseries dataframe.
+    def _get_rep_profile(self, n=0):
+        """Get a single representative profile timeseries dataframe.
+
+        Parameters
+        ----------
+        n : int
+            Rank of profile to get. Zero is the most representative profile.
 
         Returns
         -------
@@ -522,14 +530,6 @@ class RPMOutput:
             columns are cluster ids.
         """
 
-        if ('included_frac' not in self._clusters
-                and self._fpath_excl is not None
-                and self._fpath_techmap is not None):
-            raise RPMRuntimeError('Exclusions must be applied before '
-                                  'representative profiles can be '
-                                  'determined.')
-
-        self._clusters['representative'] = False
         with Outputs(self._fpath_gen) as f:
             ti = f.time_index
         cols = self._clusters.cluster_id.unique()
@@ -543,15 +543,44 @@ class RPMOutput:
         for i, df in self._clusters.groupby('cluster_id'):
             mask = ~df[key].isnull()
             if any(mask):
-                rep = df[mask].sort_values(by=key).iloc[0, :]
-                gen_gid = rep['gen_gid']
-                mask = (self._clusters['gen_gid'] == gen_gid)
-                self._clusters.loc[mask, 'representative'] = True
+                df_ranked = df[mask].sort_values(by=key)
+                if n < len(df_ranked):
+                    rep = df_ranked.iloc[n, :]
+                    gen_gid = rep['gen_gid']
+                    mask = (self._clusters['gen_gid'] == gen_gid)
+                    self._clusters.loc[mask, 'representative'] = True
 
-                with Outputs(self._fpath_gen) as f:
-                    profile_df.loc[:, i] = f['cf_profile', :, gen_gid]
+                    with Outputs(self._fpath_gen) as f:
+                        profile_df.loc[:, i] = f['cf_profile', :, gen_gid]
 
         return profile_df
+
+    @property
+    def representative_profiles(self):
+        """Representative profile timeseries dataframe.
+
+        Returns
+        -------
+        profiles : dict
+            Dictionary of dataframes of representative profiles. Keyed by
+            rank.
+        """
+
+        if ('included_frac' not in self._clusters
+                and self._fpath_excl is not None
+                and self._fpath_techmap is not None):
+            raise RPMRuntimeError('Exclusions must be applied before '
+                                  'representative profiles can be '
+                                  'determined.')
+
+        if 'representative' not in self._clusters:
+            self._clusters['representative'] = False
+
+        profiles = {}
+        for n in range(self.n_profiles):
+            profiles[n] = self._get_rep_profile(n=n)
+
+        return profiles
 
     @property
     def cluster_summary(self):
@@ -651,8 +680,10 @@ class RPMOutput:
                 and self._fpath_techmap is not None):
             self.apply_exclusions()
 
-        self.representative_profiles.to_csv(os.path.join(out_dir, fn_pro))
-        logger.info('Saved {}'.format(fn_pro))
+        for i, profile in self.representative_profiles.items():
+            fn_pro_i = fn_pro.replace('.csv', '_{}.csv'.format(i))
+            profile.to_csv(os.path.join(out_dir, fn_pro_i))
+            logger.info('Saved {}'.format(fn_pro_i))
 
         self.cluster_summary.to_csv(os.path.join(out_dir, fn_sum))
         logger.info('Saved {}'.format(fn_sum))
