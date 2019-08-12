@@ -267,7 +267,6 @@ def collect_eagle(ctx, alloc, walltime, feature, memory, stdout_path,
 
     name = ctx.obj['NAME']
     my_file = ctx.obj['MY_FILE']
-    ctx.obj['GROUP_PARAMS'] = group_params
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
