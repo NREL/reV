@@ -1,0 +1,1674 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.config package &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.econ package" href="reV.econ.html" />
+    <link rel="prev" title="reV.batch package" href="reV.batch.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reV.html">reV</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">reV2</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../reV.html">reV</a> &raquo;</li>
+        
+          <li><a href="modules.html">reV2</a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+      <li>reV.config package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reV/reV.config.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rev-config-package">
+<h1>reV.config package<a class="headerlink" href="#rev-config-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-reV.config.analysis_configs">
+<span id="rev-config-analysis-configs-module"></span><h2>reV.config.analysis_configs module<a class="headerlink" href="#module-reV.config.analysis_configs" title="Permalink to this headline">¶</a></h2>
+<p>reV analysis configs (generation, lcoe, etc…)</p>
+<p>Created on Mon Jan 28 11:43:27 2019</p>
+<p>&#64;author: gbuster</p>
+<dl class="class">
+<dt id="reV.config.analysis_configs.SAMAnalysisConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.analysis_configs.</code><code class="sig-name descname">SAMAnalysisConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/analysis_configs.html#SAMAnalysisConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.analysis_configs.SAMAnalysisConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_analysis_config.AnalysisConfig" title="reV.config.base_analysis_config.AnalysisConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_analysis_config.AnalysisConfig</span></code></a></p>
+<p>SAM-based analysis config (generation, lcoe, etc…).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.analysis_configs.SAMAnalysisConfig.tech">
+<em class="property">property </em><code class="sig-name descname">tech</code><a class="headerlink" href="#reV.config.analysis_configs.SAMAnalysisConfig.tech" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the tech property from the config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_tech</strong> – reV technology string to analyze (e.g. pv, csp, wind, etc…).</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.SAMAnalysisConfig.sam_config">
+<em class="property">property </em><code class="sig-name descname">sam_config</code><a class="headerlink" href="#reV.config.analysis_configs.SAMAnalysisConfig.sam_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SAM configuration object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sam_gen</strong> – SAM config object. This object emulates a dictionary.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>reV.config.sam.SAMConfig</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.SAMAnalysisConfig.points_control">
+<em class="property">property </em><code class="sig-name descname">points_control</code><a class="headerlink" href="#reV.config.analysis_configs.SAMAnalysisConfig.points_control" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the generation points control object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_pc</strong> – PointsControl object based on specified project points and
+execution control option.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#reV.config.project_points.PointsControl" title="reV.config.project_points.PointsControl">reV.config.project_points.PointsControl</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.SAMAnalysisConfig.output_request">
+<em class="property">property </em><code class="sig-name descname">output_request</code><a class="headerlink" href="#reV.config.analysis_configs.SAMAnalysisConfig.output_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of requested output variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_output_request</strong> – List of requested reV output variables corresponding to SAM
+variable names.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="reV.config.analysis_configs.GenConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.analysis_configs.</code><code class="sig-name descname">GenConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/analysis_configs.html#GenConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.analysis_configs.GenConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.analysis_configs.SAMAnalysisConfig" title="reV.config.analysis_configs.SAMAnalysisConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.analysis_configs.SAMAnalysisConfig</span></code></a></p>
+<p>Class to import and manage user configuration inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="reV.config.analysis_configs.GenConfig.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'gen'</em><a class="headerlink" href="#reV.config.analysis_configs.GenConfig.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.GenConfig.curtailment">
+<em class="property">property </em><code class="sig-name descname">curtailment</code><a class="headerlink" href="#reV.config.analysis_configs.GenConfig.curtailment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the curtailment config object that the gen config points to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_curtailment</strong> – Returns None if no curtailment config is specified. If one is
+specified, this returns the reV curtailment config object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>NoneType | reV.config.curtailment.Curtailment</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.GenConfig.downscale">
+<em class="property">property </em><code class="sig-name descname">downscale</code><a class="headerlink" href="#reV.config.analysis_configs.GenConfig.downscale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the resource downscale request (nsrdb only!).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_downscale</strong> – Returns None if no downscaling is requested. Otherwise, expects a
+downscale variable in the project_control section in the Pandas
+frequency format, e.g. ‘5min’.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>NoneType | str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.GenConfig.res_files">
+<em class="property">property </em><code class="sig-name descname">res_files</code><a class="headerlink" href="#reV.config.analysis_configs.GenConfig.res_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of the resource files with years filled in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_res_files</strong> – List of config-specified resource files. Resource files with {}
+formatting will be filled with the specified year(s). This return
+value is a list with len=1 for a single year run.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="reV.config.analysis_configs.ExclConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.analysis_configs.</code><code class="sig-name descname">ExclConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/analysis_configs.html#ExclConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.analysis_configs.ExclConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_analysis_config.AnalysisConfig" title="reV.config.base_analysis_config.AnalysisConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_analysis_config.AnalysisConfig</span></code></a></p>
+<p>Class to import and manage user exclusion configuration inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.analysis_configs.ExclConfig.exclusions">
+<em class="property">property </em><code class="sig-name descname">exclusions</code><a class="headerlink" href="#reV.config.analysis_configs.ExclConfig.exclusions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the exclusions layer config object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_exclusions</strong> – Returns None if no exclusions config is specified. If one is
+specified, this returns the reV exclusions config object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>NoneType | dict list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.ExclConfig.fout">
+<em class="property">property </em><code class="sig-name descname">fout</code><a class="headerlink" href="#reV.config.analysis_configs.ExclConfig.fout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the exclusions output filename.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_fout</strong> – Returns None if no fout is specified. If one is
+specified, this returns the reV fout object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>NoneType | dict list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.ExclConfig.use_blocks">
+<em class="property">property </em><code class="sig-name descname">use_blocks</code><a class="headerlink" href="#reV.config.analysis_configs.ExclConfig.use_blocks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the use_blocks config object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_use_blocks</strong> – Returns None if no use_blocks config is specified.
+If one is specified, this returns the reV use_blocks
+config object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>NoneType | dict list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.ExclConfig.filter">
+<em class="property">property </em><code class="sig-name descname">filter</code><a class="headerlink" href="#reV.config.analysis_configs.ExclConfig.filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get filter config object that the gen config points to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_filter</strong> – Returns None if no filter config is specified. If one is
+specified, this returns the reV filter config object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>NoneType | dict list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="reV.config.analysis_configs.EconConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.analysis_configs.</code><code class="sig-name descname">EconConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/analysis_configs.html#EconConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.analysis_configs.EconConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.analysis_configs.SAMAnalysisConfig" title="reV.config.analysis_configs.SAMAnalysisConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.analysis_configs.SAMAnalysisConfig</span></code></a></p>
+<p>Class to import and manage configuration inputs for econ analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="reV.config.analysis_configs.EconConfig.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'econ'</em><a class="headerlink" href="#reV.config.analysis_configs.EconConfig.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.EconConfig.cf_files">
+<em class="property">property </em><code class="sig-name descname">cf_files</code><a class="headerlink" href="#reV.config.analysis_configs.EconConfig.cf_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the capacity factor files (reV generation output data).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_cf_files</strong> – Target paths for capacity factor files (reV generation output
+data) for input to reV LCOE calculation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.analysis_configs.EconConfig.site_data">
+<em class="property">property </em><code class="sig-name descname">site_data</code><a class="headerlink" href="#reV.config.analysis_configs.EconConfig.site_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the site-specific data file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_site_data</strong> – Target path for site-specific data file.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str | NoneType</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.base_analysis_config">
+<span id="rev-config-base-analysis-config-module"></span><h2>reV.config.base_analysis_config module<a class="headerlink" href="#module-reV.config.base_analysis_config" title="Permalink to this headline">¶</a></h2>
+<p>reV Base analysis Configuration Frameworks</p>
+<dl class="class">
+<dt id="reV.config.base_analysis_config.AnalysisConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.base_analysis_config.</code><code class="sig-name descname">AnalysisConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/base_analysis_config.html#AnalysisConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.base_analysis_config.AnalysisConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_config.BaseConfig" title="reV.config.base_config.BaseConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_config.BaseConfig</span></code></a></p>
+<p>Base analysis config (generation, lcoe, etc…).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="reV.config.base_analysis_config.AnalysisConfig.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = None</em><a class="headerlink" href="#reV.config.base_analysis_config.AnalysisConfig.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_analysis_config.AnalysisConfig.years">
+<em class="property">property </em><code class="sig-name descname">years</code><a class="headerlink" href="#reV.config.base_analysis_config.AnalysisConfig.years" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the analysis years.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_years</strong> – List of years to analyze. If this is a single year run, this return
+value is a single entry list. If no analysis_years are specified,
+the code will look anticipate a year in the input files.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_analysis_config.AnalysisConfig.dirout">
+<em class="property">property </em><code class="sig-name descname">dirout</code><a class="headerlink" href="#reV.config.base_analysis_config.AnalysisConfig.dirout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_dirout</strong> – Target path for reV output files.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_analysis_config.AnalysisConfig.logdir">
+<em class="property">property </em><code class="sig-name descname">logdir</code><a class="headerlink" href="#reV.config.base_analysis_config.AnalysisConfig.logdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the logging directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_logdir</strong> – Target path for reV log files.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_analysis_config.AnalysisConfig.execution_control">
+<em class="property">property </em><code class="sig-name descname">execution_control</code><a class="headerlink" href="#reV.config.base_analysis_config.AnalysisConfig.execution_control" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the execution control object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_ec</strong> – reV execution config object specific to the execution_control
+option.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>BaseExecutionConfig | PeregrineConfig | EagleConfig</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_analysis_config.AnalysisConfig.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#reV.config.base_analysis_config.AnalysisConfig.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the job name, defaults to the output directory name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_name</strong> – reV job name.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.base_config">
+<span id="rev-config-base-config-module"></span><h2>reV.config.base_config module<a class="headerlink" href="#module-reV.config.base_config" title="Permalink to this headline">¶</a></h2>
+<p>reV Base Configuration Framework</p>
+<dl class="class">
+<dt id="reV.config.base_config.BaseConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.base_config.</code><code class="sig-name descname">BaseConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/base_config.html#BaseConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.base_config.BaseConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<p>Base class for configuration frameworks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.base_config.BaseConfig.check_files">
+<em class="property">static </em><code class="sig-name descname">check_files</code><span class="sig-paren">(</span><em class="sig-param">flist</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/base_config.html#BaseConfig.check_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.base_config.BaseConfig.check_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure all files in the input file list exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flist</strong> (<em>list</em>) – List of files (with paths) to check existance of.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_config.BaseConfig.load_json">
+<em class="property">static </em><code class="sig-name descname">load_json</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/base_config.html#BaseConfig.load_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.base_config.BaseConfig.load_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load json config into config class instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fname</strong> (<em>str</em>) – JSON filename (with path).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>config</strong> – JSON file contents loaded as a python dictionary.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_config.BaseConfig.str_replace">
+<em class="property">static </em><code class="sig-name descname">str_replace</code><span class="sig-paren">(</span><em class="sig-param">d</em>, <em class="sig-param">strrep</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/base_config.html#BaseConfig.str_replace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.base_config.BaseConfig.str_replace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a deep string replacement in d.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> (<em>dict</em>) – Config dictionary potentially containing strings to replace.</p></li>
+<li><p><strong>strrep</strong> (<em>dict</em>) – Replacement mapping where keys are strings to search for and values
+are the new values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>d</strong> – Config dictionary with replaced strings.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_config.BaseConfig.set_self_dict">
+<code class="sig-name descname">set_self_dict</code><span class="sig-paren">(</span><em class="sig-param">dictlike</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/base_config.html#BaseConfig.set_self_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.base_config.BaseConfig.set_self_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a dict-like variable as object instance dictionary items.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dictlike</strong> (<em>dict</em>) – Python namespace object to set to this dictionary-emulating class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_config.BaseConfig.get_file">
+<code class="sig-name descname">get_file</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/base_config.html#BaseConfig.get_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.base_config.BaseConfig.get_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fname</strong> (<em>str</em>) – Full path + filename. Must be a .json file.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>config</strong> – Config data.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_config.BaseConfig.logging_level">
+<em class="property">property </em><code class="sig-name descname">logging_level</code><a class="headerlink" href="#reV.config.base_config.BaseConfig.logging_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get user-specified logging level in “project_control” namespace.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_logging_level</strong> – Python logging module level (integer format) corresponding to the
+config-specified logging level string.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.base_config.BaseConfig.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#reV.config.base_config.BaseConfig.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the project name in “project_control” namespace.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_name</strong> – Config-specified project control name.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.batch">
+<span id="rev-config-batch-module"></span><h2>reV.config.batch module<a class="headerlink" href="#module-reV.config.batch" title="Permalink to this headline">¶</a></h2>
+<p>reV config for batch run config.</p>
+<p>Created on Mon Jun 10 13:49:53 2019</p>
+<p>&#64;author: gbuster</p>
+<dl class="class">
+<dt id="reV.config.batch.BatchConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.batch.</code><code class="sig-name descname">BatchConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/batch.html#BatchConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.batch.BatchConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_config.BaseConfig" title="reV.config.base_config.BaseConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_config.BaseConfig</span></code></a></p>
+<p>Config for reV batch jobs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str</em>) – File path to config json (str).</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.batch.BatchConfig.config_pipeline">
+<em class="property">property </em><code class="sig-name descname">config_pipeline</code><a class="headerlink" href="#reV.config.batch.BatchConfig.config_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the base pipeline config file with full file path.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.collection">
+<span id="rev-config-collection-module"></span><h2>reV.config.collection module<a class="headerlink" href="#module-reV.config.collection" title="Permalink to this headline">¶</a></h2>
+<p>reV file collection config</p>
+<p>Created on Mon Jan 28 11:43:27 2019</p>
+<p>&#64;author: gbuster</p>
+<dl class="class">
+<dt id="reV.config.collection.CollectionConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.collection.</code><code class="sig-name descname">CollectionConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/collection.html#CollectionConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.collection.CollectionConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_analysis_config.AnalysisConfig" title="reV.config.base_analysis_config.AnalysisConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_analysis_config.AnalysisConfig</span></code></a></p>
+<p>File collection config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="reV.config.collection.CollectionConfig.NAME">
+<code class="sig-name descname">NAME</code><em class="property"> = 'collect'</em><a class="headerlink" href="#reV.config.collection.CollectionConfig.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="reV.config.collection.CollectionConfig.coldir">
+<em class="property">property </em><code class="sig-name descname">coldir</code><a class="headerlink" href="#reV.config.collection.CollectionConfig.coldir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the directory to collect files from.
+:returns: <strong>_coldir</strong> – Target path to collect h5 files from.
+:rtype: str</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.collection.CollectionConfig.project_points">
+<em class="property">property </em><code class="sig-name descname">project_points</code><a class="headerlink" href="#reV.config.collection.CollectionConfig.project_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the collection project points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_project_points</strong> – Target path for project points file.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.collection.CollectionConfig.parallel">
+<em class="property">property </em><code class="sig-name descname">parallel</code><a class="headerlink" href="#reV.config.collection.CollectionConfig.parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the flag to do a parallel collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_parallel</strong> – Flag to collect data in parallel.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.collection.CollectionConfig.dsets">
+<em class="property">property </em><code class="sig-name descname">dsets</code><a class="headerlink" href="#reV.config.collection.CollectionConfig.dsets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get dset names to collect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_dsets</strong> – list of dset names to collect.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.collection.CollectionConfig.file_prefixes">
+<em class="property">property </em><code class="sig-name descname">file_prefixes</code><a class="headerlink" href="#reV.config.collection.CollectionConfig.file_prefixes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the file prefixes to collect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_file_prefixes</strong> – list of file prefixes to collect.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.curtailment">
+<span id="rev-config-curtailment-module"></span><h2>reV.config.curtailment module<a class="headerlink" href="#module-reV.config.curtailment" title="Permalink to this headline">¶</a></h2>
+<p>reV config for curtailment inputs.</p>
+<p>Created on Mon Jan 28 11:43:27 2019</p>
+<p>&#64;author: gbuster</p>
+<dl class="class">
+<dt id="reV.config.curtailment.Curtailment">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.curtailment.</code><code class="sig-name descname">Curtailment</code><span class="sig-paren">(</span><em class="sig-param">curtailment_parameters</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/curtailment.html#Curtailment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.curtailment.Curtailment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_config.BaseConfig" title="reV.config.base_config.BaseConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_config.BaseConfig</span></code></a></p>
+<p>Config for generation curtailment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>curtailment_parameters</strong> (<em>str | dict</em>) – Configuration json file (with path) containing curtailment
+information. Could also be a pre-extracted curtailment config
+dictionary (the contents of the curtailment json).</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.curtailment.Curtailment.wind_speed">
+<em class="property">property </em><code class="sig-name descname">wind_speed</code><a class="headerlink" href="#reV.config.curtailment.Curtailment.wind_speed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the wind speed threshold below which curtailment is possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_wind_speed</strong> – Wind speed threshold below which curtailment is possible. Will
+default to 5.0 m/s (curtailment when wspd &lt; 5.0 m/s).</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.curtailment.Curtailment.dawn_dusk">
+<em class="property">property </em><code class="sig-name descname">dawn_dusk</code><a class="headerlink" href="#reV.config.curtailment.Curtailment.dawn_dusk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the solar zenith angle that signifies dawn and dusk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_dawn_dusk</strong> – Solar zenith angle at dawn and dusk. Default is nautical, 12
+degrees below the horizon (sza=102).</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.curtailment.Curtailment.months">
+<em class="property">property </em><code class="sig-name descname">months</code><a class="headerlink" href="#reV.config.curtailment.Curtailment.months" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the months during which curtailment is possible (inclusive).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_months</strong> – Tuple of month integers. These are the months during which
+curtailment could be in effect. Default is April through July.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.curtailment.Curtailment.temperature">
+<em class="property">property </em><code class="sig-name descname">temperature</code><a class="headerlink" href="#reV.config.curtailment.Curtailment.temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the temperature (C) over which curtailment is possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_temperature</strong> – Temperature over which curtailment is possible. Defaults to None.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float | NoneType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.curtailment.Curtailment.precipitation">
+<em class="property">property </em><code class="sig-name descname">precipitation</code><a class="headerlink" href="#reV.config.curtailment.Curtailment.precipitation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the precip rate (mm/hour) under which curtailment is possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_precipitation</strong> – Precipitation rate under which curtailment is possible. This is
+compared to the WTK resource dataset “precipitationrate_0m” in
+mm/hour. Defaults to None.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float | NoneType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.curtailment.Curtailment.probability">
+<em class="property">property </em><code class="sig-name descname">probability</code><a class="headerlink" href="#reV.config.curtailment.Curtailment.probability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the probability that curtailment is in-effect if all other
+screening criteria are met.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_probability</strong> – Fractional probability that curtailment is in-effect if all other
+screening criteria are met. Defaults to 1 (curtailment is always
+in effect if all other criteria are met).</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.execution">
+<span id="rev-config-execution-module"></span><h2>reV.config.execution module<a class="headerlink" href="#module-reV.config.execution" title="Permalink to this headline">¶</a></h2>
+<p>reV Configuration for Execution Options</p>
+<dl class="class">
+<dt id="reV.config.execution.BaseExecutionConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.execution.</code><code class="sig-name descname">BaseExecutionConfig</code><span class="sig-paren">(</span><em class="sig-param">config_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/execution.html#BaseExecutionConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.execution.BaseExecutionConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_config.BaseConfig" title="reV.config.base_config.BaseConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_config.BaseConfig</span></code></a></p>
+<p>Base class to handle execution configuration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.execution.BaseExecutionConfig.option">
+<em class="property">property </em><code class="sig-name descname">option</code><a class="headerlink" href="#reV.config.execution.BaseExecutionConfig.option" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the hardware run option.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_option</strong> – Execution control option, e.g. local, peregrine, eagle…</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.execution.BaseExecutionConfig.nodes">
+<em class="property">property </em><code class="sig-name descname">nodes</code><a class="headerlink" href="#reV.config.execution.BaseExecutionConfig.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of nodes property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_nodes</strong> – Number of available nodes. Default is 1 node.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.execution.BaseExecutionConfig.ppn">
+<em class="property">property </em><code class="sig-name descname">ppn</code><a class="headerlink" href="#reV.config.execution.BaseExecutionConfig.ppn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the process per node (ppn) property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_ppn</strong> – Processes per node. Default is 1 ppn.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.execution.BaseExecutionConfig.mem_util_lim">
+<em class="property">property </em><code class="sig-name descname">mem_util_lim</code><a class="headerlink" href="#reV.config.execution.BaseExecutionConfig.mem_util_lim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the node memory utilization limit property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_mem_util_lim</strong> – Memory utilization limit (fractional). Key in the config json is
+“memory_utilization_limit”.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="reV.config.execution.HPCConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.execution.</code><code class="sig-name descname">HPCConfig</code><span class="sig-paren">(</span><em class="sig-param">config_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/execution.html#HPCConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.execution.HPCConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.execution.BaseExecutionConfig" title="reV.config.execution.BaseExecutionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.execution.BaseExecutionConfig</span></code></a></p>
+<p>Class to handle HPC configuration inputs.</p>
+<dl class="method">
+<dt id="reV.config.execution.HPCConfig.alloc">
+<em class="property">property </em><code class="sig-name descname">alloc</code><a class="headerlink" href="#reV.config.execution.HPCConfig.alloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the HPC allocation property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_hpc_alloc</strong> – Name of the HPC allocation account for the specified job.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.execution.HPCConfig.feature">
+<em class="property">property </em><code class="sig-name descname">feature</code><a class="headerlink" href="#reV.config.execution.HPCConfig.feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get feature request str.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p><strong>_feature</strong> – Feature request string.</p>
+<p>For EAGLE, a full additional flag.
+Config should look like:</p>
+<blockquote>
+<div><p>”feature”: “–qos=high”
+“feature”: “–depend=[state:job_id]”</p>
+</div></blockquote>
+<p>For PEREGRINE, everything following the -l flag.
+Config should look like:</p>
+<blockquote>
+<div><p>”feature”: “qos=high”
+“feature”: “feature=256GB”</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str | NoneType</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="reV.config.execution.PeregrineConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.execution.</code><code class="sig-name descname">PeregrineConfig</code><span class="sig-paren">(</span><em class="sig-param">config_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/execution.html#PeregrineConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.execution.PeregrineConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.execution.HPCConfig" title="reV.config.execution.HPCConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.execution.HPCConfig</span></code></a></p>
+<p>Class to handle Peregrine configuration inputs.</p>
+<dl class="method">
+<dt id="reV.config.execution.PeregrineConfig.node_mem">
+<em class="property">property </em><code class="sig-name descname">node_mem</code><a class="headerlink" href="#reV.config.execution.PeregrineConfig.node_mem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Peregrine node memory property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_hpc_node_mem</strong> – Single node memory request, e.g. 32GB, 64GB, etc…</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.execution.PeregrineConfig.walltime">
+<em class="property">property </em><code class="sig-name descname">walltime</code><a class="headerlink" href="#reV.config.execution.PeregrineConfig.walltime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Peregrine node walltime property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_hpc_walltime</strong> – Single node job time request, e.g. ‘04:00:00’.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.execution.PeregrineConfig.queue">
+<em class="property">property </em><code class="sig-name descname">queue</code><a class="headerlink" href="#reV.config.execution.PeregrineConfig.queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Peregrine queue property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_hpc_queue</strong> – Peregrine queue request, e.g. ‘short’ or ‘long’.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="reV.config.execution.EagleConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.execution.</code><code class="sig-name descname">EagleConfig</code><span class="sig-paren">(</span><em class="sig-param">config_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/execution.html#EagleConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.execution.EagleConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.execution.HPCConfig" title="reV.config.execution.HPCConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.execution.HPCConfig</span></code></a></p>
+<p>Class to handle Eagle configuration inputs.</p>
+<dl class="method">
+<dt id="reV.config.execution.EagleConfig.node_mem">
+<em class="property">property </em><code class="sig-name descname">node_mem</code><a class="headerlink" href="#reV.config.execution.EagleConfig.node_mem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the requested Eagle node memory property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_hpc_node_mem</strong> – Requested node memory in GB.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.execution.EagleConfig.walltime">
+<em class="property">property </em><code class="sig-name descname">walltime</code><a class="headerlink" href="#reV.config.execution.EagleConfig.walltime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the requested Eagle node walltime property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_hpc_walltime</strong> – Requested single node job time in hours.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.output_request">
+<span id="rev-config-output-request-module"></span><h2>reV.config.output_request module<a class="headerlink" href="#module-reV.config.output_request" title="Permalink to this headline">¶</a></h2>
+<p>Output request config to handle user output requests.</p>
+<p>This module will allow for aliases and fix some typos.</p>
+<p>Created on Mon Jul  8 09:37:23 2019</p>
+<p>&#64;author: gbuster</p>
+<dl class="class">
+<dt id="reV.config.output_request.OutputRequest">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.output_request.</code><code class="sig-name descname">OutputRequest</code><span class="sig-paren">(</span><em class="sig-param">inp</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/output_request.html#OutputRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.output_request.OutputRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+<p>Base output request list framework with request key correction logic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inp</strong> (<em>list | tuple | str</em>) – List of requested reV output variables.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="reV.config.output_request.OutputRequest.CORRECTIONS">
+<code class="sig-name descname">CORRECTIONS</code><em class="property"> = {}</em><a class="headerlink" href="#reV.config.output_request.OutputRequest.CORRECTIONS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="reV.config.output_request.SAMOutputRequest">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.output_request.</code><code class="sig-name descname">SAMOutputRequest</code><span class="sig-paren">(</span><em class="sig-param">inp</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/output_request.html#SAMOutputRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.output_request.SAMOutputRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.output_request.OutputRequest" title="reV.config.output_request.OutputRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.output_request.OutputRequest</span></code></a></p>
+<p>SAM output request framework.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>inp</strong> (<em>list | tuple | str</em>) – List of requested reV output variables.</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="reV.config.output_request.SAMOutputRequest.CORRECTIONS">
+<code class="sig-name descname">CORRECTIONS</code><em class="property"> = {'actual_irr': 'flip_actual_irr', 'capacity_factor': 'cf_mean', 'capacityfactor': 'cf_mean', 'cf': 'cf_mean', 'cf_means': 'cf_mean', 'cf_profiles': 'cf_profile', 'dni': 'dni_mean', 'dni_means': 'dni_mean', 'gen_profiles': 'gen_profile', 'generation': 'annual_energy', 'generation_profile': 'gen_profile', 'generation_profiles': 'gen_profile', 'ghi': 'ghi_mean', 'ghi_means': 'ghi_mean', 'irr': 'flip_actual_irr', 'lcoe': 'lcoe_fcr', 'lcoe_nominal': 'lcoe_nom', 'net_present_value': 'project_return_aftertax_npv', 'npv': 'project_return_aftertax_npv', 'plane_of_array': 'poa', 'plane_of_array_irradiance': 'poa', 'ppa': 'ppa_price', 'profile': 'cf_profile', 'profiles': 'cf_profile', 'real_lcoe': 'lcoe_real', 'single_owner': 'ppa_price', 'singleowner': 'ppa_price', 'ws': 'ws_mean', 'ws_means': 'ws_mean', 'yield': 'energy_yield'}</em><a class="headerlink" href="#reV.config.output_request.SAMOutputRequest.CORRECTIONS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.pipeline">
+<span id="rev-config-pipeline-module"></span><h2>reV.config.pipeline module<a class="headerlink" href="#module-reV.config.pipeline" title="Permalink to this headline">¶</a></h2>
+<p>reV pipeline config</p>
+<p>Created on May 28 2019</p>
+<p>&#64;author: gbuster</p>
+<dl class="class">
+<dt id="reV.config.pipeline.PipelineConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.pipeline.</code><code class="sig-name descname">PipelineConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/pipeline.html#PipelineConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.pipeline.PipelineConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_analysis_config.AnalysisConfig" title="reV.config.base_analysis_config.AnalysisConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_analysis_config.AnalysisConfig</span></code></a></p>
+<p>SAM-based analysis config (generation, lcoe, etc…).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str | dict</em>) – File path to config json (str), serialized json object (str),
+or dictionary with pre-extracted config.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.pipeline.PipelineConfig.pipeline_steps">
+<em class="property">property </em><code class="sig-name descname">pipeline_steps</code><a class="headerlink" href="#reV.config.pipeline.PipelineConfig.pipeline_steps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the pipeline steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_pipeline_steps</strong> – reV pipeline run steps. Should be a list of (command, config)
+pairs.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.pipeline.PipelineConfig.status_file">
+<em class="property">property </em><code class="sig-name descname">status_file</code><a class="headerlink" href="#reV.config.pipeline.PipelineConfig.status_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get status file path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_status_file</strong> – reV status file path.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.pipeline.PipelineConfig.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#reV.config.pipeline.PipelineConfig.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the pipeline name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_name</strong> – reV pipeline name.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.project_points">
+<span id="rev-config-project-points-module"></span><h2>reV.config.project_points module<a class="headerlink" href="#module-reV.config.project_points" title="Permalink to this headline">¶</a></h2>
+<p>reV Project Points Configuration</p>
+<dl class="class">
+<dt id="reV.config.project_points.PointsControl">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.project_points.</code><code class="sig-name descname">PointsControl</code><span class="sig-paren">(</span><em class="sig-param">project_points</em>, <em class="sig-param">sites_per_split=100</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#PointsControl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.PointsControl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to manage and split ProjectPoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_points</strong> (<em>reV.config.ProjectPoints</em>) – ProjectPoints instance to be split between execution workers.</p></li>
+<li><p><strong>sites_per_split</strong> (<em>int</em>) – Sites per project points split instance returned in the __next__
+iterator function.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.project_points.PointsControl.N">
+<em class="property">property </em><code class="sig-name descname">N</code><a class="headerlink" href="#reV.config.project_points.PointsControl.N" title="Permalink to this definition">¶</a></dt>
+<dd><p>Length of current iterator list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>N</strong> – Number of iterators in list</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.PointsControl.sites_per_split">
+<em class="property">property </em><code class="sig-name descname">sites_per_split</code><a class="headerlink" href="#reV.config.project_points.PointsControl.sites_per_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of sites per split.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sites_per_split</strong> – Sites per split iter object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Get the iterator increment</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.PointsControl.project_points">
+<em class="property">property </em><code class="sig-name descname">project_points</code><a class="headerlink" href="#reV.config.project_points.PointsControl.project_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the project points property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_project_points</strong> – ProjectPoints instance corresponding to this PointsControl
+instance.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints" title="reV.config.project_points.ProjectPoints">reV.config.project_points.ProjectPoints</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.PointsControl.sites">
+<em class="property">property </em><code class="sig-name descname">sites</code><a class="headerlink" href="#reV.config.project_points.PointsControl.sites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the project points sites for this instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>sites</strong> – List of sites belonging to the _project_points attribute.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.PointsControl.split_range">
+<em class="property">property </em><code class="sig-name descname">split_range</code><a class="headerlink" href="#reV.config.project_points.PointsControl.split_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current split range property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_split_range</strong> – Two-entry list that indicates the starting and finishing
+(inclusive, exclusive, respectively) indices of a split instance
+of the PointsControl object. This is set in the iterator dunder
+methods of PointsControl.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.PointsControl.split">
+<em class="property">classmethod </em><code class="sig-name descname">split</code><span class="sig-paren">(</span><em class="sig-param">i0</em>, <em class="sig-param">i1</em>, <em class="sig-param">project_points</em>, <em class="sig-param">sites_per_split=100</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#PointsControl.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.PointsControl.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split this execution by splitting the project points attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i0/i1</strong> (<em>int</em>) – Beginning/end (inclusive/exclusive, respectively) index split
+parameters for ProjectPoints.split.</p></li>
+<li><p><strong>project_points</strong> (<em>reV.config.ProjectPoints</em>) – Project points instance that will be split.</p></li>
+<li><p><strong>sites_per_split</strong> (<em>int</em>) – Sites per project points split instance returned in the __next__
+iterator function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sub</strong> – New instance of PointsControl with a subset of the original
+project points.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#reV.config.project_points.PointsControl" title="reV.config.project_points.PointsControl">PointsControl</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="reV.config.project_points.ProjectPoints">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.project_points.</code><code class="sig-name descname">ProjectPoints</code><span class="sig-paren">(</span><em class="sig-param">points</em>, <em class="sig-param">sam_config</em>, <em class="sig-param">tech</em>, <em class="sig-param">res_file=None</em>, <em class="sig-param">curtailment=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to manage site and SAM input configuration requests.</p>
+<p><a class="reference external" href="mailto:config_id&#37;&#52;&#48;site0">config_id<span>&#64;</span>site0</a>, <a class="reference external" href="mailto:SAM_config_dict&#37;&#52;&#48;site0">SAM_config_dict<span>&#64;</span>site0</a> = ProjectPoints[0]
+site_list_or_slice = ProjectPoints.sites
+site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
+ProjectPoints_sub = ProjectPoints.split(0, 10, project_points)
+h_list = ProjectPoints.h</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>slice | str | pd.DataFrame | dict</em>) – Slice specifying project points, string pointing to a project
+points csv, or a dataframe containing the effective csv contents.</p></li>
+<li><p><strong>sam_config</strong> (<em>dict | str</em>) – SAM input configuration ID(s) and file path(s). Keys are the SAM
+config ID(s), top level value is the SAM path. Can also be a single
+config file str. If it’s a list, it is mapped to the sorted list
+of unique configs requested by points csv.</p></li>
+<li><p><strong>tech</strong> (<em>str</em>) – reV technology being executed.</p></li>
+<li><p><strong>res_file</strong> (<em>str | NoneType</em>) – Optional resource file to find maximum length of project points if
+points slice stop is None.</p></li>
+<li><p><strong>curtailment</strong> (<em>NoneType | dict | str | config.curtailment.Curtailment</em>) – <p>Inputs for curtailment parameters. If not None, curtailment inputs
+are expected. Can be:</p>
+<blockquote>
+<div><ul>
+<li><p>Explicit namespace of curtailment variables (dict)</p></li>
+<li><p>Pointer to curtailment config json file with path (str)</p></li>
+<li><p>Instance of curtailment config object
+(config.curtailment.Curtailment)</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.df">
+<em class="property">property </em><code class="sig-name descname">df</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.df" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the project points dataframe property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_df</strong> – Table of sites and corresponding SAM configuration IDs.
+Has columns ‘gid’ and ‘config’.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.sam_files">
+<em class="property">property </em><code class="sig-name descname">sam_files</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SAM files dictionary property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sam_files</strong> – Multi-level dictionary containing multiple SAM input config files.
+The top level key is the SAM config ID, top level value is the SAM
+config file path</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.sam_config_obj">
+<em class="property">property </em><code class="sig-name descname">sam_config_obj</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_config_obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SAM config object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sam_config_obj</strong> – SAM configuration object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#reV.config.sam_config.SAMConfig" title="reV.config.sam_config.SAMConfig">reV.config.sam_config.SAMConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.sam_configs">
+<em class="property">property </em><code class="sig-name descname">sam_configs</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sam_configs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SAM configs dictionary property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sam_configs</strong> – Multi-level dictionary containing multiple SAM input
+configurations. The top level key is the SAM config ID, top level
+value is the SAM config. Each SAM config is a dictionary with keys
+equal to input names, values equal to the actual inputs.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.sites">
+<em class="property">property </em><code class="sig-name descname">sites</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the sites belonging to this instance of ProjectPoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_sites</strong> – List of sites belonging to this instance of ProjectPoints. The type
+is list if possible. Will be a slice only if slice stop is None.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list | slice</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.sites_as_slice">
+<em class="property">property </em><code class="sig-name descname">sites_as_slice</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.sites_as_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the sites in slice format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>sites_as_slice</strong> – Sites slice belonging to this instance of ProjectPoints.
+The type is slice if possible. Will be a list only if sites are
+non-sequential.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list | slice</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.tech">
+<em class="property">property </em><code class="sig-name descname">tech</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.tech" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the tech property from the config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_tech</strong> – reV technology being executed.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.h">
+<em class="property">property </em><code class="sig-name descname">h</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the hub heights corresponding to the site list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_h</strong> – Hub heights corresponding to each site, taken from the sam config
+for each site. This is None if the technology is not wind.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list | NoneType</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.curtailment">
+<em class="property">property </em><code class="sig-name descname">curtailment</code><a class="headerlink" href="#reV.config.project_points.ProjectPoints.curtailment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the curtailment config object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_curtailment</strong> – None if no curtailment, reV curtailment config object if
+curtailment is being assessed.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>NoneType | reV.config.curtailment.Curtailment</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.join_df">
+<code class="sig-name descname">join_df</code><span class="sig-paren">(</span><em class="sig-param">df2</em>, <em class="sig-param">key='gid'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.join_df"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.join_df" title="Permalink to this definition">¶</a></dt>
+<dd><p>Join new df2 to the _df attribute using the _df’s gid as pkey.</p>
+<p>This can be used to add site-specific data to the project_points,
+taking advantage of the points_control iterator/split functions such
+that only the relevant site data is passed to the analysis functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df2</strong> (<em>pd.DataFrame</em>) – Dataframe to be joined to the _df attribute. This likely contains
+site-specific inputs that are to be passed to parallel workers.</p></li>
+<li><p><strong>key</strong> (<em>str | pd.DataFrame.index</em>) – Primary key of df2 to be joined to the _df attribute. Primary key
+of the _df attribute is fixed as the gid column.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.get_sites_from_config">
+<code class="sig-name descname">get_sites_from_config</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.get_sites_from_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.get_sites_from_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a site list that corresponds to a config key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>str</em>) – SAM configuration ID associated with sites.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sites</strong> – List of sites associated with the requested configuration ID. If
+the configuration ID is not recognized, an empty list is returned.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.project_points.ProjectPoints.split">
+<em class="property">classmethod </em><code class="sig-name descname">split</code><span class="sig-paren">(</span><em class="sig-param">i0</em>, <em class="sig-param">i1</em>, <em class="sig-param">project_points</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/project_points.html#ProjectPoints.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.project_points.ProjectPoints.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return split instance of a ProjectPoints instance w/ site subset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i0</strong> (<em>int</em>) – Starting INDEX (not site number) (inclusive) of the site property
+attribute to include in the split instance. This is not necessarily
+the same as the starting site number, for instance if ProjectPoints
+is sites 20:100, i0=0 i1=10 will result in sites 20:30.</p></li>
+<li><p><strong>i1</strong> (<em>int</em>) – Ending INDEX (not site number) (exclusive) of the site property
+attribute to include in the split instance. This is not necessarily
+the same as the final site number, for instance if ProjectPoints is
+sites 20:100, i0=0 i1=10 will result in sites 20:30.</p></li>
+<li><p><strong>project_points</strong> (<a class="reference internal" href="#reV.config.project_points.ProjectPoints" title="reV.config.project_points.ProjectPoints"><em>ProjectPoints</em></a>) – Instance of project points to split.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>sub</strong> – New instance of ProjectPoints with a subset of the following
+attributes: sites, project points df, and the self dictionary data
+struct.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#reV.config.project_points.ProjectPoints" title="reV.config.project_points.ProjectPoints">ProjectPoints</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config.sam_config">
+<span id="rev-config-sam-config-module"></span><h2>reV.config.sam_config module<a class="headerlink" href="#module-reV.config.sam_config" title="Permalink to this headline">¶</a></h2>
+<p>reV configuration framework for SAM config inputs.</p>
+<dl class="class">
+<dt id="reV.config.sam_config.SAMConfig">
+<em class="property">class </em><code class="sig-prename descclassname">reV.config.sam_config.</code><code class="sig-name descname">SAMConfig</code><span class="sig-paren">(</span><em class="sig-param">SAM_configs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/config/sam_config.html#SAMConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.config.sam_config.SAMConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#reV.config.base_config.BaseConfig" title="reV.config.base_config.BaseConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">reV.config.base_config.BaseConfig</span></code></a></p>
+<p>Class to handle the SAM section of config input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>SAM_configs</strong> (<em>dict</em>) – Keys are config ID’s, values are filepaths to the SAM configs.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="reV.config.sam_config.SAMConfig.clearsky">
+<em class="property">property </em><code class="sig-name descname">clearsky</code><a class="headerlink" href="#reV.config.sam_config.SAMConfig.clearsky" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a boolean for whether solar resource requires clearsky irrad.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>_clearsky</strong> – Flag set in the SAM config input with key “clearsky” for solar
+analysis to process generation for clearsky irradiance.
+Defaults to False (normal all-sky irradiance).</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.config.sam_config.SAMConfig.inputs">
+<em class="property">property </em><code class="sig-name descname">inputs</code><a class="headerlink" href="#reV.config.sam_config.SAMConfig.inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SAM input file(s) (JSON) and return as a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>_inputs</strong> (<em>dict</em>) – The keys of this dictionary are the “configuration ID’s”.
+The values are the imported json SAM input dictionaries.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.config">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-reV.config" title="Permalink to this headline">¶</a></h2>
+<p>reV Configuration</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="reV.econ.html" class="btn btn-neutral float-right" title="reV.econ package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="reV.batch.html" class="btn btn-neutral float-left" title="reV.batch package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

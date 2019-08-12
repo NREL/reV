@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.config.output_request &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.config.output_request</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.config.output_request</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Output request config to handle user output requests.</span>
+
+<span class="sd">This module will allow for aliases and fix some typos.</span>
+
+<span class="sd">Created on Mon Jul  8 09:37:23 2019</span>
+
+<span class="sd">@author: gbuster</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="n">ConfigWarning</span>
+
+
+<div class="viewcode-block" id="OutputRequest"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.output_request.OutputRequest">[docs]</a><span class="k">class</span> <span class="nc">OutputRequest</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base output request list framework with request key correction logic.&quot;&quot;&quot;</span>
+
+    <span class="c1"># map of commonly expected typos.</span>
+    <span class="c1"># keys are typos, values are correct var names</span>
+    <span class="c1"># all available output variables should be in the values</span>
+    <span class="n">CORRECTIONS</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : list | tuple | str</span>
+<span class="sd">            List of requested reV output variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">inp</span> <span class="o">=</span> <span class="p">[</span><span class="n">inp</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CORRECTIONS</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CORRECTIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CORRECTIONS</span><span class="p">[</span><span class="n">request</span><span class="p">])</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Correcting output request &quot;</span><span class="si">{}</span><span class="s1">&quot; to &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">CORRECTIONS</span><span class="p">[</span><span class="n">request</span><span class="p">]),</span>
+                     <span class="n">ConfigWarning</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Did not recognize requested output variable &quot;</span><span class="si">{}</span><span class="s1">&quot;. &#39;</span>
+                     <span class="s1">&#39;Passing forward, but this may cause a downstream &#39;</span>
+                     <span class="s1">&#39;error. Available known output variables are: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CORRECTIONS</span><span class="o">.</span><span class="n">values</span><span class="p">()))),</span>
+                     <span class="n">ConfigWarning</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SAMOutputRequest"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.output_request.SAMOutputRequest">[docs]</a><span class="k">class</span> <span class="nc">SAMOutputRequest</span><span class="p">(</span><span class="n">OutputRequest</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;SAM output request framework.&quot;&quot;&quot;</span>
+
+    <span class="c1"># map of commonly expected typos.</span>
+    <span class="c1"># keys are typos, values are correct SAM var names</span>
+    <span class="c1"># all available SAM output variables should be in the values</span>
+    <span class="n">CORRECTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cf_means&#39;</span><span class="p">:</span> <span class="s1">&#39;cf_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;cf&#39;</span><span class="p">:</span> <span class="s1">&#39;cf_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;capacity_factor&#39;</span><span class="p">:</span> <span class="s1">&#39;cf_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;capacityfactor&#39;</span><span class="p">:</span> <span class="s1">&#39;cf_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;cf_profiles&#39;</span><span class="p">:</span> <span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;profiles&#39;</span><span class="p">:</span> <span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;profile&#39;</span><span class="p">:</span> <span class="s1">&#39;cf_profile&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;dni&#39;</span><span class="p">:</span> <span class="s1">&#39;dni_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;dni_means&#39;</span><span class="p">:</span> <span class="s1">&#39;dni_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;ghi&#39;</span><span class="p">:</span> <span class="s1">&#39;ghi_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;ghi_means&#39;</span><span class="p">:</span> <span class="s1">&#39;ghi_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;ws&#39;</span><span class="p">:</span> <span class="s1">&#39;ws_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;ws_means&#39;</span><span class="p">:</span> <span class="s1">&#39;ws_mean&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;generation&#39;</span><span class="p">:</span> <span class="s1">&#39;annual_energy&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;yield&#39;</span><span class="p">:</span> <span class="s1">&#39;energy_yield&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;generation_profile&#39;</span><span class="p">:</span> <span class="s1">&#39;gen_profile&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;generation_profiles&#39;</span><span class="p">:</span> <span class="s1">&#39;gen_profile&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;plane_of_array&#39;</span><span class="p">:</span> <span class="s1">&#39;poa&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;plane_of_array_irradiance&#39;</span><span class="p">:</span> <span class="s1">&#39;poa&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;gen_profiles&#39;</span><span class="p">:</span> <span class="s1">&#39;gen_profile&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;lcoe&#39;</span><span class="p">:</span> <span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;lcoe_nominal&#39;</span><span class="p">:</span> <span class="s1">&#39;lcoe_nom&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;real_lcoe&#39;</span><span class="p">:</span> <span class="s1">&#39;lcoe_real&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;net_present_value&#39;</span><span class="p">:</span> <span class="s1">&#39;project_return_aftertax_npv&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;npv&#39;</span><span class="p">:</span> <span class="s1">&#39;project_return_aftertax_npv&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;ppa&#39;</span><span class="p">:</span> <span class="s1">&#39;ppa_price&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;single_owner&#39;</span><span class="p">:</span> <span class="s1">&#39;ppa_price&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;singleowner&#39;</span><span class="p">:</span> <span class="s1">&#39;ppa_price&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;actual_irr&#39;</span><span class="p">:</span> <span class="s1">&#39;flip_actual_irr&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;irr&#39;</span><span class="p">:</span> <span class="s1">&#39;flip_actual_irr&#39;</span><span class="p">,</span>
+                   <span class="p">}</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

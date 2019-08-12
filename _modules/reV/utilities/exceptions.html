@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.utilities.exceptions &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.utilities.exceptions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.utilities.exceptions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Custom Exceptions and Errors for reV</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="reVError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.reVError">[docs]</a><span class="k">class</span> <span class="nc">reVError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic Error for reV</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ConfigError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.ConfigError">[docs]</a><span class="k">class</span> <span class="nc">ConfigError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error for bad configuration inputs</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="FileInputError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.FileInputError">[docs]</a><span class="k">class</span> <span class="nc">FileInputError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error during input file checks.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ExecutionError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.ExecutionError">[docs]</a><span class="k">class</span> <span class="nc">ExecutionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error for execution failure</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="PipelineError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.PipelineError">[docs]</a><span class="k">class</span> <span class="nc">PipelineError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error for pipeline execution failure</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HandlerKeyError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.HandlerKeyError">[docs]</a><span class="k">class</span> <span class="nc">HandlerKeyError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    KeyError for Handlers</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HandlerRuntimeError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.HandlerRuntimeError">[docs]</a><span class="k">class</span> <span class="nc">HandlerRuntimeError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RuntimeError for Handlers</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HandlerValueError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.HandlerValueError">[docs]</a><span class="k">class</span> <span class="nc">HandlerValueError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ValueError for Handlers</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ResourceError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.ResourceError">[docs]</a><span class="k">class</span> <span class="nc">ResourceError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Error for poorly formatted resource.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="SAMExecutionError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.SAMExecutionError">[docs]</a><span class="k">class</span> <span class="nc">SAMExecutionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execution error for SAM simulations</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="SupplyCurveError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.SupplyCurveError">[docs]</a><span class="k">class</span> <span class="nc">SupplyCurveError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execution error for SAM simulations</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="EmptySupplyCurvePointError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.EmptySupplyCurvePointError">[docs]</a><span class="k">class</span> <span class="nc">EmptySupplyCurvePointError</span><span class="p">(</span><span class="n">SupplyCurveError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execution error for SAM simulations</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="SupplyCurveInputError"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.SupplyCurveInputError">[docs]</a><span class="k">class</span> <span class="nc">SupplyCurveInputError</span><span class="p">(</span><span class="n">SupplyCurveError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Execution error for SAM simulations</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="OutputWarning"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.OutputWarning">[docs]</a><span class="k">class</span> <span class="nc">OutputWarning</span><span class="p">(</span><span class="ne">Warning</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Warning for suspect output files or data</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ExtrapolationWarning"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.ExtrapolationWarning">[docs]</a><span class="k">class</span> <span class="nc">ExtrapolationWarning</span><span class="p">(</span><span class="ne">Warning</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Warning for when value will be extrapolated</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ConfigWarning"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.ConfigWarning">[docs]</a><span class="k">class</span> <span class="nc">ConfigWarning</span><span class="p">(</span><span class="ne">Warning</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Warning for unclear or default configuration inputs</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="SAMInputWarning"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.SAMInputWarning">[docs]</a><span class="k">class</span> <span class="nc">SAMInputWarning</span><span class="p">(</span><span class="ne">Warning</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Warning for bad SAM inputs</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="HandlerWarning"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.HandlerWarning">[docs]</a><span class="k">class</span> <span class="nc">HandlerWarning</span><span class="p">(</span><span class="ne">Warning</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Warning during .h5 handling</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="FileInputWarning"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.exceptions.FileInputWarning">[docs]</a><span class="k">class</span> <span class="nc">FileInputWarning</span><span class="p">(</span><span class="ne">Warning</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Warning during input file checks.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

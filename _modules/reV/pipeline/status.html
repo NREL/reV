@@ -1,0 +1,752 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.pipeline.status &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.pipeline.status</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.pipeline.status</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV job status manager.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.utilities.execution</span> <span class="k">import</span> <span class="n">SLURM</span><span class="p">,</span> <span class="n">PBS</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Status"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.status.Status">[docs]</a><span class="k">class</span> <span class="nc">Status</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for reV data pipeline health and status information.&quot;&quot;&quot;</span>
+
+    <span class="n">FROZEN_STATUS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;successful&#39;</span><span class="p">,</span> <span class="s1">&#39;failed&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status_dir</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory to with json status file.</span>
+<span class="sd">        name : str | None</span>
+<span class="sd">            Optional job name for status. Will look for the file</span>
+<span class="sd">            &quot;{name}_status.json&quot; in the status_dir.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status_dir</span> <span class="o">=</span> <span class="n">status_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_fpath</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_fpath</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the status filepath from the status directory and jobname.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory to with json status file.</span>
+<span class="sd">        name : str | None</span>
+<span class="sd">            Optional job name for status. Will look for the file</span>
+<span class="sd">            &quot;{name}_status.json&quot; in the status_dir.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        fpath : str</span>
+<span class="sd">            Filepath to job status json.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">status_dir</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Need a directory containing a status json, &#39;</span>
+                            <span class="s1">&#39;not a status json: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">status_dir</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="s1">&#39;rev_status.json&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">status_dir</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">fn</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_status.json&#39;</span><span class="p">):</span>
+                    <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_status.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">fpath</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_load</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load status json.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------</span>
+<span class="sd">        fpath : str</span>
+<span class="sd">            Filepath to job status json.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : dict</span>
+<span class="sd">            JSON file contents loaded as a python dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">_dump</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load json config into config class instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : dict</span>
+<span class="sd">            reV data pipeline status info.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sort_by_index</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;: &#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_sort_by_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sort modules in data dictionary by pipeline index.&quot;&quot;&quot;</span>
+
+        <span class="n">sortable</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s1">&#39;pipeline_index&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">sortable</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">sortable</span><span class="p">:</span>
+            <span class="n">sorted_keys</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s1">&#39;pipeline_index&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sorted_keys</span><span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_check_method</span><span class="p">(</span><span class="n">hardware</span><span class="o">=</span><span class="s1">&#39;eagle&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a method to check job status on the specified hardware.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hardware : str</span>
+<span class="sd">            Hardware specification that determines how jobs are monitored.</span>
+<span class="sd">            Options are found in the options dictionary below.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;eagle&#39;</span><span class="p">:</span> <span class="n">SLURM</span><span class="o">.</span><span class="n">check_status</span><span class="p">,</span>
+                   <span class="s1">&#39;peregrine&#39;</span><span class="p">:</span> <span class="n">PBS</span><span class="o">.</span><span class="n">check_status</span><span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">options</span><span class="p">[</span><span class="n">hardware</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Could not check job on the requested hardware: &#39;</span>
+                           <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hardware</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">method</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_job_status</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">hardware</span><span class="o">=</span><span class="s1">&#39;eagle&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the job status using pre-defined hardware-specific methods.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job_id : str | int</span>
+<span class="sd">            SLURM or PBS job submission id.</span>
+<span class="sd">        hardware : str</span>
+<span class="sd">            Hardware option, either eagle or peregrine.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        status : str | None</span>
+<span class="sd">            Job status from qstat/squeue. None if no job found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">job_id</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">_get_check_method</span><span class="p">(</span><span class="n">hardware</span><span class="o">=</span><span class="n">hardware</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">status</span>
+
+    <span class="k">def</span> <span class="nf">_check_all_job_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Look for all single-job job status files in the target status_dir</span>
+<span class="sd">        and update status.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory to look for completion file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">status_dir</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">fname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;jobstatus_&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fname</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">):</span>
+                <span class="c1"># wait one second to make sure file is finished being written</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">fname</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">status</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">fname</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_job_file</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">job_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Look for a single-job job status file in the target status_dir.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory to look for completion file.</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Job name.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        status : dict | None</span>
+<span class="sd">            Job status dictionary if completion file found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">target_fname</span> <span class="o">=</span> <span class="s1">&#39;jobstatus_</span><span class="si">{}</span><span class="s1">.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">job_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">status_dir</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">fname</span> <span class="o">==</span> <span class="n">target_fname</span><span class="p">:</span>
+                <span class="c1"># wait one second to make sure file is finished being written</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">fname</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">status</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">fname</span><span class="p">))</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">status</span>
+
+    <span class="k">def</span> <span class="nf">_update_job_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">hardware</span><span class="o">=</span><span class="s1">&#39;eagle&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update HPC job and respective job status to the status obj instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        module : str</span>
+<span class="sd">            reV module that the job belongs to.</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Unique job name identification.</span>
+<span class="sd">        hardware : str</span>
+<span class="sd">            Hardware option, either eagle or peregrine.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># look for completion file.</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_job_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status_dir</span><span class="p">,</span> <span class="n">job_name</span><span class="p">)</span>
+
+        <span class="c1"># Update status data dict recursively if job file was found</span>
+        <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">update_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
+
+        <span class="c1"># check job status via hardware if job file not found.</span>
+        <span class="k">elif</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="c1"># job exists</span>
+            <span class="k">if</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">]:</span>
+
+                <span class="c1"># init defaults in case job/module not in status file yet</span>
+                <span class="n">previous</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job_status&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">job_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job_id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">hardware</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;hardware&#39;</span><span class="p">,</span>
+                                                           <span class="n">hardware</span><span class="p">)</span>
+
+                <span class="c1"># get job status from hardware</span>
+                <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_job_status</span><span class="p">(</span><span class="n">job_id</span><span class="p">,</span> <span class="n">hardware</span><span class="o">=</span><span class="n">hardware</span><span class="p">)</span>
+
+                <span class="c1"># No current status and job was not successful: failed!</span>
+                <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">previous</span> <span class="o">!=</span> <span class="s1">&#39;successful&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">][</span><span class="s1">&#39;job_status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;failed&#39;</span>
+
+                <span class="c1"># do not overwrite a successful or failed job status.</span>
+                <span class="k">elif</span> <span class="p">(</span><span class="n">current</span> <span class="o">!=</span> <span class="n">previous</span>
+                      <span class="ow">and</span> <span class="n">previous</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">FROZEN_STATUS</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">][</span><span class="s1">&#39;job_status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current</span>
+
+            <span class="c1"># job does not yet exist</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">_set_job_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set an updated job status to the object instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        module : str</span>
+<span class="sd">            reV module that the job belongs to.</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Unique job name identification.</span>
+<span class="sd">        status : str</span>
+<span class="sd">            Status string to set. Must be a status string in</span>
+<span class="sd">            the FROZEN_STATUS class attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;reV pipeline status has not been initialized &#39;</span>
+                           <span class="s1">&#39;for &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">job_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;reV pipeline status has not been initialized &#39;</span>
+                           <span class="s1">&#39;for &quot;</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">][</span><span class="s1">&#39;job_status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_attr_list</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;job_id&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all job attribute values from the status data dict.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : dict</span>
+<span class="sd">            Job status dictionary.</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Key to get values for.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : list</span>
+<span class="sd">            List of values corresponding to the input key for all jobs in inp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">inp</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inp</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">_get_attr_list</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">temp</span><span class="p">):</span>
+                            <span class="n">out</span> <span class="o">+=</span> <span class="n">temp</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">job_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get list of job ids.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attr_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;job_id&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hardware</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get list of job hardware.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attr_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;hardware&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Status.update_dict"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.status.Status.update_dict">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update a dictionary recursively.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        d : dict</span>
+<span class="sd">            Base dictionary to update.</span>
+<span class="sd">        u : dict</span>
+<span class="sd">            New dictionary with data to add to d.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        d : dict</span>
+<span class="sd">            d with data updated from u.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">u</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">Status</span><span class="o">.</span><span class="n">update_dict</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="Status.make_job_file"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.status.Status.make_job_file">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">make_job_file</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a json file recording the status of a single job.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory to put json status file.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            reV module that the job belongs to.</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Unique job name identification.</span>
+<span class="sd">        attrs : str</span>
+<span class="sd">            Dictionary of job attributes that represent the job status</span>
+<span class="sd">            attributes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">job_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+            <span class="n">job_name</span> <span class="o">=</span> <span class="n">job_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="p">{</span><span class="n">module</span><span class="p">:</span> <span class="p">{</span><span class="n">job_name</span><span class="p">:</span> <span class="n">attrs</span><span class="p">}}</span>
+        <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="s1">&#39;jobstatus_</span><span class="si">{}</span><span class="s1">.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">job_name</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                      <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;: &#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Status.add_job"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.status.Status.add_job">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">add_job</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">status_dir</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">job_attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a job to status json.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory containing json status file.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            reV module that the job belongs to.</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Unique job name identification.</span>
+<span class="sd">        replace : bool</span>
+<span class="sd">            Flag to force replacement of pre-existing job status.</span>
+<span class="sd">        job_attrs : dict</span>
+<span class="sd">            Job attributes. Should include &#39;job_id&#39; if running on HPC.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">job_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+            <span class="n">job_name</span> <span class="o">=</span> <span class="n">job_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">status_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">job_attrs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">job_attrs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="s1">&#39;hardware&#39;</span> <span class="ow">in</span> <span class="n">job_attrs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">job_attrs</span><span class="p">[</span><span class="s1">&#39;hardware&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;eagle&#39;</span><span class="p">,</span> <span class="s1">&#39;peregrine&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="s1">&#39;job_id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">job_attrs</span><span class="p">:</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Key &quot;job_id&quot; should be in kwargs for &quot;</span><span class="si">{}</span><span class="s1">&quot; if &#39;</span>
+                         <span class="s1">&#39;adding job from an eagle or peregrine node.&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">job_name</span><span class="p">))</span>
+
+        <span class="c1"># check to see if job exists yet</span>
+        <span class="n">exists</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">job_exists</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">job_name</span><span class="p">)</span>
+
+        <span class="c1"># job exists and user has requested forced replacement</span>
+        <span class="k">if</span> <span class="n">replace</span> <span class="ow">and</span> <span class="n">exists</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">]</span>
+
+        <span class="c1"># new job attribute data will be written if either:</span>
+        <span class="c1">#  A) the user requested forced replacement or</span>
+        <span class="c1">#  B) if the job does not exist</span>
+        <span class="k">if</span> <span class="n">replace</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">job_name</span><span class="p">:</span> <span class="n">job_attrs</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">job_attrs</span>
+
+            <span class="k">if</span> <span class="s1">&#39;job_status&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">job_attrs</span><span class="p">:</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">][</span><span class="s1">&#39;job_status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;submitted&#39;</span>
+
+            <span class="n">obj</span><span class="o">.</span><span class="n">_dump</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Status.job_exists"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.status.Status.job_exists">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">job_exists</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">status_dir</span><span class="p">,</span> <span class="n">job_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check whether a job exists and return a bool.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory containing json status file.</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Unique job name identification.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        exists : bool</span>
+<span class="sd">            True if the job exists in the status json.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">job_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+            <span class="n">job_name</span> <span class="o">=</span> <span class="n">job_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">status_dir</span><span class="p">)</span>
+        <span class="n">exists</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">jobs</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">jobs</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">jobs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">job_name</span><span class="p">:</span>
+                            <span class="n">exists</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">exists</span></div>
+
+<div class="viewcode-block" id="Status.retrieve_job_status"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.status.Status.retrieve_job_status">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">retrieve_job_status</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">status_dir</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update and retrieve job status.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory containing json status file.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            reV module that the job belongs to.</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Unique job name identification.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        status : str | None</span>
+<span class="sd">            Status string or None if job/module not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">job_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+            <span class="n">job_name</span> <span class="o">=</span> <span class="n">job_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">status_dir</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_update_job_status</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;job_status&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">status</span></div>
+
+<div class="viewcode-block" id="Status.set_job_status"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.status.Status.set_job_status">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">set_job_status</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">status_dir</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Force set a job status to a frozen status and save to status file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory containing json status file.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            reV module that the job belongs to.</span>
+<span class="sd">        job_name : str</span>
+<span class="sd">            Unique job name identification.</span>
+<span class="sd">        status : str</span>
+<span class="sd">            Status string to set. Must be a status string in</span>
+<span class="sd">            the FROZEN_STATUS class attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">job_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+            <span class="n">job_name</span> <span class="o">=</span> <span class="n">job_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">status_dir</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_set_job_status</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_dump</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Status.update"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.status.Status.update">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">status_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update all job statuses and dump to json.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory containing json status file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">status_dir</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">job_name</span> <span class="o">!=</span> <span class="s1">&#39;pipeline_index&#39;</span><span class="p">:</span>
+                    <span class="n">obj</span><span class="o">.</span><span class="n">_update_job_status</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_check_all_job_files</span><span class="p">(</span><span class="n">status_dir</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_dump</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,743 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.exclusions.exclusions &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.exclusions.exclusions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.exclusions.exclusions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Basic reV Exclusions</span>
+
+<span class="sd">Sample Usage:</span>
+
+<span class="sd">    exclusions = Exclusions()</span>
+
+<span class="sd">    layer = ExclusionLayer(&quot;ri_srtm_slope.tif&quot;, max_thresh=5)</span>
+<span class="sd">    exclusions.add_layer(layer)</span>
+
+<span class="sd">    layer = ExclusionLayer(&quot;ri_padus.tif&quot;, classes_exclude=[1])</span>
+<span class="sd">    exclusions.add_layer(layer)</span>
+
+<span class="sd">    exclusions.apply_all_layers()</span>
+<span class="sd">    exclusions.apply_filter(&#39;queen&#39;)</span>
+<span class="sd">    exclusions.export(fpath=&#39;exclusions.tif&#39;)</span>
+
+<span class="sd">    --- OR ---</span>
+
+<span class="sd">    exclusions = Exclusions([{&quot;fpath&quot;: &quot;ri_srtm_slope.tif&quot;,</span>
+<span class="sd">                             &quot;max_thresh&quot;: 5,</span>
+<span class="sd">                            },</span>
+<span class="sd">                            {&quot;fpath&quot;: &quot;ri_padus.tif&quot;,</span>
+<span class="sd">                             &quot;classes_exclude&quot;: [1],</span>
+<span class="sd">                            }],</span>
+<span class="sd">                            use_blocks = True,</span>
+<span class="sd">                            contiguous_filter = &#39;queen&#39;)</span>
+<span class="sd">    exclusions.build_from_config()</span>
+<span class="sd">    exclusions.export(fpath=&#39;exclusions.tif&#39;)</span>
+
+<span class="sd">    --- OR ---</span>
+
+<span class="sd">    Exclusions.run(config = [{&quot;fpath&quot;: &quot;ri_srtm_slope.tif&quot;,</span>
+<span class="sd">                              &quot;max_thresh&quot;: 5,</span>
+<span class="sd">                             },</span>
+<span class="sd">                             {&quot;fpath&quot;: &quot;ri_padus.tif&quot;,</span>
+<span class="sd">                              &quot;classes_exclude&quot;: [1],</span>
+<span class="sd">                             }],</span>
+<span class="sd">                   use_blocks = True,</span>
+<span class="sd">                   contiguous_filter = &#39;queen&#39;,</span>
+<span class="sd">                   output_fpath = &#39;exclusions.tif&#39;)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">rasterio</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">ndimage</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ExclusionLayer"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.ExclusionLayer">[docs]</a><span class="k">class</span> <span class="nc">ExclusionLayer</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base class for all input exclusion layers&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">band</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">layer_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layer_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">min_thresh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_thresh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">classes_exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">classes_include</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath : str</span>
+<span class="sd">            Layer file with path.</span>
+<span class="sd">        band : integer</span>
+<span class="sd">            GeoTiff band to read from file.</span>
+<span class="sd">        layer_name : str | None</span>
+<span class="sd">            Name of the exclusion layer (optional).</span>
+<span class="sd">        layer_type : str | None</span>
+<span class="sd">            Type of exclusion layer (optional).</span>
+<span class="sd">        min_thresh : float | int | None</span>
+<span class="sd">            Create exclusion based on a minimum value.</span>
+<span class="sd">            Conflicts with classes_include and classes_exclude.</span>
+<span class="sd">        max_thresh : float | int | None</span>
+<span class="sd">            Create exclusion based on a maximum value.</span>
+<span class="sd">            Conflicts with classes_include and classes_exclude.</span>
+<span class="sd">        classes_exclude : integer list | None</span>
+<span class="sd">            Create exclusion based on discrete classes to exclude.</span>
+<span class="sd">            Conflicts with min_thresh, max_thresh, and classes_include.</span>
+<span class="sd">        classes_include : integer list | None</span>
+<span class="sd">            Create exclusion based on discrete classes to include.</span>
+<span class="sd">            Conflicts with min_thresh, max_thresh, and classes_exclude.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span> <span class="o">=</span> <span class="n">fpath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_band</span> <span class="o">=</span> <span class="n">band</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">layer_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="n">layer_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_thresh</span> <span class="o">=</span> <span class="n">min_thresh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_thresh</span> <span class="o">=</span> <span class="n">max_thresh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_classes_include</span> <span class="o">=</span> <span class="n">classes_include</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_classes_exclude</span> <span class="o">=</span> <span class="n">classes_exclude</span>
+
+        <span class="n">meta_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_tiff_meta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_block_windows</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_windows</span> <span class="o">=</span> <span class="n">meta_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fpath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the file path for layer &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">band</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the file band for layer &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_band</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the layer type &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_type</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">min_thresh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the minimumum threshold for layer &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_thresh</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_thresh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the maximum threshold for layer &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_thresh</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">classes_include</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the classes to include for layer &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classes_include</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">classes_exclude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the classes to exclude for layer &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_classes_exclude</span>
+
+<div class="viewcode-block" id="ExclusionLayer.extract_tiff_meta"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.ExclusionLayer.extract_tiff_meta">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">extract_tiff_meta</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">band</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read the meta data from a tiff file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath : str</span>
+<span class="sd">            Layer file with path.</span>
+<span class="sd">        band : integer</span>
+<span class="sd">            GeoTiff band to read from file.</span>
+
+<span class="sd">        Outputs</span>
+<span class="sd">        -------</span>
+<span class="sd">        profile : rasterio._profiles._Profile</span>
+<span class="sd">            Meta data for the tiff file</span>
+<span class="sd">        block_windows : tuples list</span>
+<span class="sd">            Delineation of tiff windows</span>
+<span class="sd">        num_windows : int</span>
+<span class="sd">            The number of windows</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">profile</span>
+            <span class="n">block_windows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">block_windows</span><span class="p">(</span><span class="n">band</span><span class="p">))</span>
+            <span class="n">num_windows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">block_windows</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">profile</span><span class="p">,</span> <span class="n">block_windows</span><span class="p">,</span> <span class="n">num_windows</span></div>
+
+    <span class="k">def</span> <span class="nf">_read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read in entire dataset from Tiff</span>
+
+<span class="sd">        Outputs</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : numpy.ndarray</span>
+<span class="sd">            Layer&#39;s entire data array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_band</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">_read_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window_index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read in a single block dataset from Tiff</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        window_index : integer</span>
+<span class="sd">            list index of window</span>
+
+<span class="sd">        Outputs</span>
+<span class="sd">        -------</span>
+<span class="sd">        data : numpy.ndarray</span>
+<span class="sd">            Layer&#39;s data array for the current layer window</span>
+<span class="sd">        window_slice : tuple</span>
+<span class="sd">            The tuple that slices out the current window</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">window</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_windows</span><span class="p">[</span><span class="n">window_index</span><span class="p">]</span>
+        <span class="n">col_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">col_off</span><span class="p">,</span> <span class="n">window</span><span class="o">.</span><span class="n">col_off</span> <span class="o">+</span> <span class="n">window</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+        <span class="n">row_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">row_off</span><span class="p">,</span> <span class="n">window</span><span class="o">.</span><span class="n">row_off</span> <span class="o">+</span> <span class="n">window</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+        <span class="n">window_slice</span> <span class="o">=</span> <span class="p">(</span><span class="n">row_slice</span><span class="p">,</span> <span class="n">col_slice</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_band</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">window_slice</span></div>
+
+
+<div class="viewcode-block" id="Exclusions"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.Exclusions">[docs]</a><span class="k">class</span> <span class="nc">Exclusions</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base class for single output exclusion layer&quot;&quot;&quot;</span>
+
+    <span class="n">FILTER_KERNELS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;queen&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                           <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]),</span>
+        <span class="s1">&#39;rook&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                          <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_configs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_blocks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">contiguous_filter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        layer_configs : dictionary | list | None</span>
+<span class="sd">            Optional configs list for the addition of layers</span>
+<span class="sd">        use_blocks : boolean</span>
+<span class="sd">            Use blocks when applying layers to exclusions</span>
+<span class="sd">        contiguous_filter : str | None</span>
+<span class="sd">            Contiguous filter method to use on final exclusion</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># validate and set use_blocks argument</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_blocks</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_use_blocks</span> <span class="o">=</span> <span class="n">use_blocks</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;use_blocks argument must be a boolean&#39;</span><span class="p">)</span>
+        <span class="c1"># validate and set contiguous filter argument</span>
+        <span class="k">if</span> <span class="n">contiguous_filter</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;queen&quot;</span><span class="p">,</span> <span class="s2">&quot;rook&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_filter</span> <span class="o">=</span> <span class="n">contiguous_filter</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;contiguous_filter must be &quot;queen&quot; or &quot;rook&quot;&#39;</span><span class="p">)</span>
+        <span class="c1"># validate and set layer_configs argument</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer_configs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_layer_configs</span> <span class="o">=</span> <span class="n">layer_configs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;layer_configs argument must be a list or None&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the layers for exclusion &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the data for exclusion &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">profile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the profile for exclusion &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">use_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the blocks setting for exclusion &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_blocks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">contiguous_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the contiguous filter method for exclusion &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_filter</span>
+
+<div class="viewcode-block" id="Exclusions.build_from_config"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.Exclusions.build_from_config">[docs]</a>    <span class="k">def</span> <span class="nf">build_from_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_configs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">contiguous_filter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Build and apply exclusion layers from config if it exists</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        layer_configs : dictionary | list | None</span>
+<span class="sd">            Configs list for the addition of layers</span>
+<span class="sd">            Provided as either an argument or predefined instance attribute</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">layer_configs</span><span class="p">:</span>
+            <span class="n">layer_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_configs</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">contiguous_filter</span><span class="p">:</span>
+            <span class="n">contiguous_filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_filter</span>
+        <span class="k">if</span> <span class="n">layer_configs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">layer_configs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="s1">&#39;fpath&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;fpath key is not defined in config&#39;</span><span class="p">)</span>
+                    <span class="n">layer</span> <span class="o">=</span> <span class="n">ExclusionLayer</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Layer config must be a dictionary&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">apply_all_layers</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">contiguous_filter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">apply_filter</span><span class="p">(</span><span class="n">contiguous_filter</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Object has no configs: self._layer_configs&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Exclusions.add_layer"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.Exclusions.add_layer">[docs]</a>    <span class="k">def</span> <span class="nf">add_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Append a layer object to the list of exclusion layers &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">ExclusionLayer</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_create_profile</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_layer_compatibility</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Layers must be an instance of ExclusionLayer&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_layer_compatibility</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Validate that all layers are the same shape</span>
+
+<span class="sd">        Outputs</span>
+<span class="sd">        -------</span>
+<span class="sd">        compatibility : boolean</span>
+<span class="sd">            Validates whether all layers are compatible with eachother</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">compatibility</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">widths</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">heights</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">:</span>
+            <span class="n">widths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">_profile</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span>
+            <span class="n">heights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">_profile</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">widths</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">compatibility</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">heights</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">compatibility</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">compatibility</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Layers are not compatible&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">compatibility</span>
+
+    <span class="k">def</span> <span class="nf">_create_profile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create the Tiff profile meta for output file from first layer &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Start from the profile of the first layer</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_profile</span>
+            <span class="c1"># Modifications for output</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">uint8</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">[</span><span class="s1">&#39;nodata&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_data</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Exclusion has no layers &#39;</span>
+                                 <span class="s1">&#39;(i.e. self.add_layer(layer))&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_initialize_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initiate the array for the output exclusion data &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Profile has not been created yet &#39;</span>
+                                 <span class="s1">&#39;(i.e. self._create_profile())&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_method_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Generate a mask based on config method specified</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : np.array</span>
+<span class="sd">            data to be masked</span>
+<span class="sd">        layer : reV.exclusions.exclusions.ExclusionLayer</span>
+<span class="sd">            exclusion layer object</span>
+
+<span class="sd">        Outputs</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : numpy.ndarray</span>
+<span class="sd">            float mask (0 to 1) to be applied to the final exclusion layer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">_classes_exclude</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_classes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                                      <span class="n">layer</span><span class="o">.</span><span class="n">_classes_exclude</span><span class="p">,</span>
+                                      <span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">layer</span><span class="o">.</span><span class="n">_classes_include</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_classes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                                      <span class="n">layer</span><span class="o">.</span><span class="n">_classes_include</span><span class="p">,</span>
+                                      <span class="kc">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">layer</span><span class="o">.</span><span class="n">_min_thresh</span> <span class="ow">or</span> <span class="n">layer</span><span class="o">.</span><span class="n">_max_thresh</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_interval</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>
+                                       <span class="n">layer</span><span class="o">.</span><span class="n">_min_thresh</span><span class="p">,</span>
+                                       <span class="n">layer</span><span class="o">.</span><span class="n">_max_thresh</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mask</span>
+
+<div class="viewcode-block" id="Exclusions.apply_layer"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.Exclusions.apply_layer">[docs]</a>    <span class="k">def</span> <span class="nf">apply_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read, process, and apply an input layer to the</span>
+<span class="sd">        final output layer</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        layer : reV.exclusions.exclusions.ExclusionLayer</span>
+<span class="sd">            exclusion layer object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_blocks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">window_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">_num_windows</span><span class="p">):</span>
+                <span class="n">layer_data</span><span class="p">,</span> <span class="n">window_slice</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">_read_window</span><span class="p">(</span><span class="n">window_index</span><span class="p">)</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_method_mask</span><span class="p">(</span><span class="n">layer_data</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">block_data</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">window_slice</span><span class="p">]</span> <span class="o">*</span> <span class="n">mask</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">window_slice</span><span class="p">]</span> <span class="o">=</span> <span class="n">block_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Failed to mask </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">layer_data</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">_read</span><span class="p">()</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_method_mask</span><span class="p">(</span><span class="n">layer_data</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">*</span> <span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Failed to mask </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Exclusions.apply_all_layers"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.Exclusions.apply_all_layers">[docs]</a>    <span class="k">def</span> <span class="nf">apply_all_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read, process, and apply all input layers to the</span>
+<span class="sd">        final output layer &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">apply_layer</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_mask_interval</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">min_thresh</span><span class="p">,</span> <span class="n">max_thresh</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Provide a mask between a range of thresholds</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        min_thresh : float | int | None</span>
+<span class="sd">            Create exclusion based on a minimum value.</span>
+<span class="sd">        max_thresh : float | int | None</span>
+<span class="sd">            Create exclusion based on a maximum value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">min_thresh</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">*=</span> <span class="p">(</span><span class="n">data</span> <span class="o">&gt;=</span> <span class="n">min_thresh</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int8&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_thresh</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">*=</span> <span class="p">(</span><span class="n">data</span> <span class="o">&lt;=</span> <span class="n">max_thresh</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mask</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_mask_classes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Provide a mask from integer classes</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        classes : integer list | None</span>
+<span class="sd">            Create exclusion based on discrete classes to include/exclude.</span>
+<span class="sd">        exclude : boolean</span>
+<span class="sd">            Use classes as inclusions or exclusions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">classes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exclude</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">mask</span>
+        <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int8&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Exclusions.apply_filter"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.Exclusions.apply_filter">[docs]</a>    <span class="k">def</span> <span class="nf">apply_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contiguous_filter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Read, process, and apply an input layer to the</span>
+<span class="sd">        final output layer</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        contiguous_filter : str | None</span>
+<span class="sd">            Contiguous filter method to use on final exclusion</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">contiguous_filter</span><span class="p">:</span>
+            <span class="n">contiguous_filter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_filter</span>
+        <span class="k">if</span> <span class="n">contiguous_filter</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;queen&quot;</span><span class="p">,</span> <span class="s2">&quot;rook&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;contiguous_filter must be &quot;queen&quot; or &quot;rook&quot;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Exclusion has not been created yet&#39;</span>
+                                 <span class="s1">&#39;(i.e. self.apply_layer())&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">contiguous_filter</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">)):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;No contiguous filter provided&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int8&#39;</span><span class="p">)</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FILTER_KERNELS</span><span class="p">[</span><span class="n">contiguous_filter</span><span class="p">]</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Exclusions.export"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.Exclusions.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath</span><span class="o">=</span><span class="s1">&#39;exclusions.tif&#39;</span><span class="p">,</span> <span class="n">band</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Save the output exclusion layer as a Tiff</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath : str</span>
+<span class="sd">            Output file with path.</span>
+<span class="sd">        band : integer</span>
+<span class="sd">            GeoTiff band to write to file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">band</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Profile has not been created yet &#39;</span>
+                                 <span class="s1">&#39;(i.e. self._create_profile())&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Exclusions.run"><a class="viewcode-back" href="../../../reV/reV.exclusions.html#reV.exclusions.exclusions.Exclusions.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">output_fpath</span><span class="p">,</span>
+            <span class="n">use_blocks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">contiguous_filter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Apply Exclusions from config and save to disc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : dictionary | list | None</span>
+<span class="sd">            Optional configs list for the addition of layers</span>
+<span class="sd">        output_fpath : str</span>
+<span class="sd">            Output file with path.</span>
+<span class="sd">        use_blocks : boolean</span>
+<span class="sd">            Use blocks when applying layers to exclusions</span>
+<span class="sd">        contiguous_filter : str | None</span>
+<span class="sd">            Contiguous filter method to use on final exclusion</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">exclusions</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">use_blocks</span><span class="o">=</span><span class="n">use_blocks</span><span class="p">,</span>
+                         <span class="n">contiguous_filter</span><span class="o">=</span><span class="n">contiguous_filter</span><span class="p">)</span>
+        <span class="n">exclusions</span><span class="o">.</span><span class="n">build_from_config</span><span class="p">()</span>
+        <span class="n">exclusions</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">fpath</span><span class="o">=</span><span class="n">output_fpath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

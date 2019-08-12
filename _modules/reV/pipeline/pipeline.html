@@ -1,0 +1,694 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.pipeline.pipeline &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.pipeline.pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.pipeline.pipeline</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV data pipeline architecture.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.config.base_analysis_config</span> <span class="k">import</span> <span class="n">AnalysisConfig</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.execution</span> <span class="k">import</span> <span class="n">SubprocessManager</span><span class="p">,</span> <span class="n">SLURM</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="n">ExecutionError</span>
+<span class="kn">from</span> <span class="nn">reV.pipeline.status</span> <span class="k">import</span> <span class="n">Status</span>
+<span class="kn">from</span> <span class="nn">reV.config.pipeline</span> <span class="k">import</span> <span class="n">PipelineConfig</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.loggers</span> <span class="k">import</span> <span class="n">init_logger</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.pipeline.Pipeline">[docs]</a><span class="k">class</span> <span class="nc">Pipeline</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;reV pipeline execution framework.&quot;&quot;&quot;</span>
+
+    <span class="n">COMMANDS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;generation&#39;</span><span class="p">,</span> <span class="s1">&#39;econ&#39;</span><span class="p">,</span> <span class="s1">&#39;collect&#39;</span><span class="p">,</span> <span class="s1">&#39;exclusions&#39;</span><span class="p">)</span>
+    <span class="n">RETURN_CODES</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;successful&#39;</span><span class="p">,</span>
+                    <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;running&#39;</span><span class="p">,</span>
+                    <span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;failed&#39;</span><span class="p">,</span>
+                    <span class="mi">3</span><span class="p">:</span> <span class="s1">&#39;complete&#39;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipeline : str | dict</span>
+<span class="sd">            Pipeline config file path or dictionary.</span>
+<span class="sd">        monitor : bool</span>
+<span class="sd">            Flag to perform continuous monitoring of the pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span> <span class="o">=</span> <span class="n">monitor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">PipelineConfig</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">pipeline_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_status</span><span class="p">()</span>
+
+        <span class="c1"># init logger for pipeline module if requested in input config</span>
+        <span class="k">if</span> <span class="s1">&#39;logging&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">:</span>
+            <span class="n">init_logger</span><span class="p">(</span><span class="s1">&#39;reV.pipeline&#39;</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s1">&#39;logging&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_init_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the status json in the output directory.&quot;&quot;&quot;</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status_obj</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_list</span><span class="p">):</span>
+
+            <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">module_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">module</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;pipeline_index&#39;</span><span class="p">:</span> <span class="n">i</span><span class="p">}}</span>
+                <span class="n">status</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">update_dict</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">module_dict</span><span class="p">)</span>
+
+        <span class="n">status</span><span class="o">.</span><span class="n">_dump</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_cancel_all_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cancel all jobs in this pipeline via SLURM scancel.&quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status_obj</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">job_id</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">job_ids</span><span class="p">:</span>
+            <span class="n">SLURM</span><span class="o">.</span><span class="n">scancel</span><span class="p">(</span><span class="n">job_id</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate through run list submitting steps while monitoring status&quot;&quot;&quot;</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_list</span><span class="p">):</span>
+            <span class="n">return_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_step_completed</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">return_code</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Based on successful end state in reV status &#39;</span>
+                             <span class="s1">&#39;file, not running pipeline step </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">step</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">return_code</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_submit_step</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+                <span class="c1"># do not enter while loop for continuous monitoring</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">while</span> <span class="n">return_code</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">monitor</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+                    <span class="n">return_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_step_completed</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">return_code</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">module</span><span class="p">,</span> <span class="n">f_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_command_config</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s1">&#39;reV pipeline failed at step &#39;</span>
+                                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> &quot;</span><span class="si">{}</span><span class="s1">&quot; </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">f_config</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">return_code</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Pipeline job &quot;</span><span class="si">{}</span><span class="s1">&quot; is complete. Output directory is: &#39;</span>
+                        <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">dirout</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_submit_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submit a step in the pipeline.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Step index in the pipeline run list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">command</span><span class="p">,</span> <span class="n">f_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_command_config</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cmd</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">f_config</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;reV pipeline submitting subprocess:</span><span class="se">\n\t</span><span class="s1">&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+        <span class="n">SubprocessManager</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_step_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if a pipeline step has been completed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Step index in the pipeline run list.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        return_code : int</span>
+<span class="sd">            Pipeline step return code.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">module</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_command_config</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status_obj</span><span class="p">()</span>
+        <span class="n">submitted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_jobs_submitted</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">submitted</span><span class="p">:</span>
+            <span class="n">return_code</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">return_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_module_return_code</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">return_code</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_jobs_submitted</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check whether jobs have been submitted for a given module.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status : reV.pipeline.status.Status</span>
+<span class="sd">            reV job status object.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            reV module.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        submitted : bool</span>
+<span class="sd">            Boolean check to see if jobs have been submitted for the module arg</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">submitted</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="n">jobs</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">job</span> <span class="o">!=</span> <span class="s1">&#39;pipeline_index&#39;</span><span class="p">:</span>
+                    <span class="n">submitted</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+        <span class="k">return</span> <span class="n">submitted</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_config_obj</span><span class="p">(</span><span class="n">f_config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an analysis config object form a config json file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f_config : str</span>
+<span class="sd">            File path for config.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        config_obj : AnalysisConfig</span>
+<span class="sd">            reV analysis config object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">f_config</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">config_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">AnalysisConfig</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_status_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a reV pipeline status object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        status : reV.pipeline.status.Status</span>
+<span class="sd">            reV job status object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="n">Status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">status</span>
+
+    <span class="k">def</span> <span class="nf">_get_module_return_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a return code for a full module based on a status object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status : reV.pipeline.status.Status</span>
+<span class="sd">            reV job status object.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            reV module.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        return_code : int</span>
+<span class="sd">            Pipeline step return code (for the full module in the pipeline</span>
+<span class="sd">            step).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># initialize return code array</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">check_failed</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="c1"># assume running</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">job_name</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">job_name</span> <span class="o">!=</span> <span class="s1">&#39;pipeline_index&#39;</span><span class="p">:</span>
+
+                    <span class="c1"># update the job status and get the status string</span>
+                    <span class="n">status</span><span class="o">.</span><span class="n">_update_job_status</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">job_name</span><span class="p">)</span>
+                    <span class="n">js</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">job_name</span><span class="p">][</span><span class="s1">&#39;job_status&#39;</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">js</span> <span class="o">==</span> <span class="s1">&#39;successful&#39;</span><span class="p">:</span>
+                        <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">js</span> <span class="o">==</span> <span class="s1">&#39;failed&#39;</span><span class="p">:</span>
+                        <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                        <span class="n">check_failed</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">elif</span> <span class="n">js</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">status</span><span class="o">.</span><span class="n">_dump</span><span class="p">()</span>
+
+        <span class="n">return_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_code_array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+
+        <span class="n">fail_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">check_failed</span><span class="p">:</span>
+            <span class="n">fail_str</span> <span class="o">=</span> <span class="s1">&#39;, but some jobs have failed&#39;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;reV </span><span class="si">{}</span><span class="s1"> is </span><span class="si">{}{}</span><span class="s1">.&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">Pipeline</span><span class="o">.</span><span class="n">RETURN_CODES</span><span class="p">[</span><span class="n">return_code</span><span class="p">],</span>
+                             <span class="n">fail_str</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">return_code</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_code_array</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse array of return codes to get single return code for module.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr : list | np.ndarray</span>
+<span class="sd">            List or array of integer return codes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        return_code : int</span>
+<span class="sd">            Single return code for the module represented by the input array of</span>
+<span class="sd">            return codes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check to see if all have completed, or any have failed</span>
+        <span class="n">check_success</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">check_complete</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">check_failed</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># only return success if all have succeeded.</span>
+        <span class="k">if</span> <span class="n">check_success</span><span class="p">:</span>
+            <span class="n">return_code</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Only return failed when all have finished.</span>
+        <span class="k">elif</span> <span class="n">check_complete</span> <span class="o">&amp;</span> <span class="n">check_failed</span><span class="p">:</span>
+            <span class="n">return_code</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="c1"># only return complete when all have completed</span>
+        <span class="c1"># (but some should have succeeded or failed)</span>
+        <span class="k">elif</span> <span class="n">check_complete</span><span class="p">:</span>
+            <span class="n">return_code</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="c1"># otherwise, jobs are still running</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">return_code</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">return_code</span>
+
+    <span class="k">def</span> <span class="nf">_get_command_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the (command, config) key pair.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Step index in the pipeline run list.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        key_pair : list</span>
+<span class="sd">            Two-entry list containing [command, config_file].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key_pair</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">key_pair</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_cmd</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">f_config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the python cli call string based on the command and config arg.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        command : str</span>
+<span class="sd">            reV cli command which should be a reV module.</span>
+<span class="sd">        f_config : str</span>
+<span class="sd">            File path for the config file corresponding to the command.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cmd : str</span>
+<span class="sd">            Python reV CLI call string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">command</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Pipeline</span><span class="o">.</span><span class="n">COMMANDS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Could not recongize command &quot;</span><span class="si">{}</span><span class="s1">&quot;. &#39;</span>
+                           <span class="s1">&#39;Available commands are: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">Pipeline</span><span class="o">.</span><span class="n">COMMANDS</span><span class="p">))</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;python -m reV.cli -c </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f_config</span><span class="p">,</span> <span class="n">command</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">cmd</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_module_status</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the status dict for the module with the given pipeline index.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status : reV.pipeline.status.Status</span>
+<span class="sd">            reV job status object.</span>
+<span class="sd">        i : int</span>
+<span class="sd">            pipeline index of desired module.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict</span>
+<span class="sd">            Status dictionary for the module with pipeline index i.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># iterate through modules and find the one that was run previously</span>
+        <span class="k">for</span> <span class="n">module_status</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">i_current</span> <span class="o">=</span> <span class="n">module_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;pipeline_index&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">99</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">i_current</span><span class="p">):</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">module_status</span>
+                <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_job_status</span><span class="p">(</span><span class="n">module_status</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a job status dict from the module status dict.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        module_status : dict</span>
+<span class="sd">            Status dictionary for a full reV module containing one or more</span>
+<span class="sd">            job status dict.</span>
+<span class="sd">        option : str</span>
+<span class="sd">            Option to retrieve one or many jobs from the module status dict.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict | list</span>
+<span class="sd">            Job status(es).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># find the preceding job (1st is used, should be one job in most cases)</span>
+        <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;first&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">job</span><span class="p">,</span> <span class="n">job_status</span> <span class="ow">in</span> <span class="n">module_status</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">job</span> <span class="o">!=</span> <span class="s1">&#39;pipeline_index&#39;</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="n">job_status</span>
+                    <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">job</span><span class="p">,</span> <span class="n">job_status</span> <span class="ow">in</span> <span class="n">module_status</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">job</span> <span class="o">!=</span> <span class="s1">&#39;pipeline_index&#39;</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job_status</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Did not recognize pipeline job status request &#39;</span>
+                           <span class="s1">&#39;for &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">option</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+<div class="viewcode-block" id="Pipeline.parse_previous"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.pipeline.Pipeline.parse_previous">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">parse_previous</span><span class="p">(</span><span class="n">status_dir</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;fpath&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse output file paths from the previous pipeline step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        status_dir : str</span>
+<span class="sd">            Directory containing the status file to parse.</span>
+<span class="sd">        module : str</span>
+<span class="sd">            Current module (i.e. current pipeline step).</span>
+<span class="sd">        target : str</span>
+<span class="sd">            Parsing target of previous module.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : list</span>
+<span class="sd">            Arguments parsed from the status file in status_dir from</span>
+<span class="sd">            the module preceding the input module arg.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="n">Status</span><span class="p">(</span><span class="n">status_dir</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Could not parse data regarding &quot;</span><span class="si">{}</span><span class="s1">&quot; from reV status file in &#39;</span>
+               <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">status_dir</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;pipeline_index&#39;</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">]:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">i1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="s1">&#39;pipeline_index&#39;</span><span class="p">])</span>
+        <span class="n">i0</span> <span class="o">=</span> <span class="n">i1</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">i0</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">i0</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Module &quot;</span><span class="si">{0}</span><span class="s1">&quot; is attempting to parse a previous pipeline &#39;</span>
+                 <span class="s1">&#39;step, but it appears to be the first step. Attempting to &#39;</span>
+                 <span class="s1">&#39;parse data from </span><span class="si">{0}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module</span><span class="p">))</span>
+
+        <span class="n">module_status</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="o">.</span><span class="n">_get_module_status</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">i0</span><span class="p">)</span>
+        <span class="n">job_statuses</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="o">.</span><span class="n">_get_job_status</span><span class="p">(</span><span class="n">module_status</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="s1">&#39;fpath&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">job_statuses</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;dirout&#39;</span><span class="p">],</span> <span class="n">status</span><span class="p">[</span><span class="s1">&#39;fout&#39;</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">job_statuses</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">status</span><span class="p">[</span><span class="n">target</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Pipeline.cancel_all"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.pipeline.Pipeline.cancel_all">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">cancel_all</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cancel all jobs via SLURM scancel corresponding to pipeline.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipeline : str | dict</span>
+<span class="sd">            Pipeline config file path or dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">pipe</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span>
+        <span class="n">pipe</span><span class="o">.</span><span class="n">_cancel_all_jobs</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Pipeline.run"><a class="viewcode-back" href="../../../reV/reV.pipeline.html#reV.pipeline.pipeline.Pipeline.run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the reV pipeline.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pipeline : str | dict</span>
+<span class="sd">            Pipeline config file path or dictionary.</span>
+<span class="sd">        monitor : bool</span>
+<span class="sd">            Flag to perform continuous monitoring of the pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">pipe</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">monitor</span><span class="o">=</span><span class="n">monitor</span><span class="p">)</span>
+        <span class="n">pipe</span><span class="o">.</span><span class="n">_main</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

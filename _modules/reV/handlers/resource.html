@@ -1,0 +1,1372 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.handlers.resource &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.handlers.resource</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.handlers.resource</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes to handle resource data</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">reV.handlers.parse_keys</span> <span class="k">import</span> <span class="n">parse_keys</span>
+<span class="kn">from</span> <span class="nn">reV.handlers.sam_resource</span> <span class="k">import</span> <span class="n">SAMResource</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="p">(</span><span class="n">HandlerKeyError</span><span class="p">,</span> <span class="n">HandlerRuntimeError</span><span class="p">,</span>
+                                      <span class="n">HandlerValueError</span><span class="p">,</span> <span class="n">ExtrapolationWarning</span><span class="p">,</span>
+                                      <span class="n">HandlerWarning</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Resource"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource">[docs]</a><span class="k">class</span> <span class="nc">Resource</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class to handle resource .h5 files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">SCALE_ATTR</span> <span class="o">=</span> <span class="s1">&#39;scale_factor&#39;</span>
+    <span class="n">UNIT_ATTR</span> <span class="o">=</span> <span class="s1">&#39;units&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">unscale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">str_decode</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to .h5 resource file</span>
+<span class="sd">        unscale : bool</span>
+<span class="sd">            Boolean flag to automatically unscale variables on extraction</span>
+<span class="sd">        hsds : bool</span>
+<span class="sd">            Boolean flag to use h5pyd to handle .h5 &#39;files&#39; hosted on AWS</span>
+<span class="sd">            behind HSDS</span>
+<span class="sd">        str_decode : bool</span>
+<span class="sd">            Boolean flag to decode the bytestring meta data into normal</span>
+<span class="sd">            strings. Setting this to False will speed up the meta data read.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5_file</span> <span class="o">=</span> <span class="n">h5_file</span>
+        <span class="k">if</span> <span class="n">hsds</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">h5pyd</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span> <span class="o">=</span> <span class="n">h5pyd</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unscale</span> <span class="o">=</span> <span class="n">unscale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_str_decode</span> <span class="o">=</span> <span class="n">str_decode</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5_file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">msg</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+        <span class="n">ds</span><span class="p">,</span> <span class="n">ds_slice</span> <span class="o">=</span> <span class="n">parse_keys</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ds</span> <span class="o">==</span> <span class="s1">&#39;time_index&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_time_index</span><span class="p">(</span><span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ds</span> <span class="o">==</span> <span class="s1">&#39;meta&#39;</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_meta</span><span class="p">(</span><span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;SAM&#39;</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+            <span class="n">site</span> <span class="o">=</span> <span class="n">ds_slice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_SAM_df</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">site</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Can only extract SAM DataFrame for a single site&quot;</span>
+                <span class="k">raise</span> <span class="n">HandlerRuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dsets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Datasets available in h5_file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of datasets in h5_file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resource shape (timesteps, sites)</span>
+<span class="sd">        shape = (len(time_index), len(meta))</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        shape : tuple</span>
+<span class="sd">            Shape of resource variable arrays (timesteps, sites)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;time_index&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">_shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Meta data DataFrame</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meta : pandas.DataFrame</span>
+<span class="sd">            Resource Meta Data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str_decode</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_str_decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span>
+
+<div class="viewcode-block" id="Resource.df_str_decode"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource.df_str_decode">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">df_str_decode</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decode a dataframe with byte string columns into ordinary str cols.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        df : pd.DataFrame</span>
+<span class="sd">            Dataframe with some columns being byte strings.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        df : pd.DataFrame</span>
+<span class="sd">            DataFrame with str columns instead of byte str columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">object_</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">bytes</span><span class="p">)):</span>
+                <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        DatetimeIndex</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        time_index : pandas.DatetimeIndex</span>
+<span class="sd">            Resource datetime index</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ti</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;time_index&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">ti</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span>
+
+<div class="viewcode-block" id="Resource.get_attrs"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource.get_attrs">[docs]</a>    <span class="k">def</span> <span class="nf">get_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get h5 attributes either from file or dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset to get attributes for, if None get file (global) attributes</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        attrs : dict</span>
+<span class="sd">            Dataset or file attributes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">attrs</span></div>
+
+<div class="viewcode-block" id="Resource.get_dset_properties"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource.get_dset_properties">[docs]</a>    <span class="k">def</span> <span class="nf">get_dset_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get dataset properties (shape, dtype, chunks)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset to get scale factor for</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        shape : tuple</span>
+<span class="sd">            Dataset array shape</span>
+<span class="sd">        dtype : str</span>
+<span class="sd">            Dataset array dtype</span>
+<span class="sd">        chunks : tuple</span>
+<span class="sd">            Dataset chunk size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ds</span><span class="o">.</span><span class="n">chunks</span></div>
+
+<div class="viewcode-block" id="Resource.get_scale"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource.get_scale">[docs]</a>    <span class="k">def</span> <span class="nf">get_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get dataset scale factor</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset to get scale factor for</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Dataset scale factor, used to unscale int values to floats</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SCALE_ATTR</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Resource.get_units"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource.get_units">[docs]</a>    <span class="k">def</span> <span class="nf">get_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get dataset units</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset to get units for</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Dataset units, None if not defined</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">UNIT_ATTR</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Resource.get_meta_arr"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource.get_meta_arr">[docs]</a>    <span class="k">def</span> <span class="nf">get_meta_arr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec_name</span><span class="p">,</span> <span class="n">rows</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Get a meta array by name (faster than DataFrame extraction).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rec_name : str</span>
+<span class="sd">            Named record from the meta data to retrieve.</span>
+<span class="sd">        rows : slice</span>
+<span class="sd">            Rows of the record to extract.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        arr : np.ndarray</span>
+<span class="sd">            Extracted array from the meta data record name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">meta_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="n">rec_name</span><span class="p">,</span> <span class="n">rows</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str_decode</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">meta_arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bytes_</span><span class="p">):</span>
+            <span class="n">meta_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">meta_arr</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">meta_arr</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract and convert time_index to pandas Datetime Index</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        self[&#39;time_index&#39;, 1]</span>
+<span class="sd">            - Get a single timestep This returns a Timestamp</span>
+<span class="sd">        self[&#39;time_index&#39;, :10]</span>
+<span class="sd">            - Get the first 10 timesteps</span>
+<span class="sd">        self[&#39;time_index&#39;, [1, 3, 5, 7, 9]]</span>
+<span class="sd">            - Get a list of timesteps</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_slice : tuple of int | list | slice</span>
+<span class="sd">            tuple describing slice of time_index to extract</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        time_index : pandas.DatetimeIndex</span>
+<span class="sd">            Vector of datetime stamps</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;time_index&#39;</span><span class="p">][</span><span class="n">ds_slice</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">time_index</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">time_index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract and convert meta to a pandas DataFrame</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        self[&#39;meta&#39;, 1]</span>
+<span class="sd">            - Get site 1</span>
+<span class="sd">        self[&#39;meta&#39;, :10]</span>
+<span class="sd">            - Get the first 10 sites</span>
+<span class="sd">        self[&#39;meta&#39;, [1, 3, 5, 7, 9]]</span>
+<span class="sd">            - Get the first 5 odd numbered sites</span>
+<span class="sd">        self[&#39;meta&#39;, :, &#39;timezone&#39;]</span>
+<span class="sd">            - Get timezone for all sites</span>
+<span class="sd">        self[&#39;meta&#39;, :, [&#39;latitude&#39;, &#39;longitdue&#39;]]</span>
+<span class="sd">            - Get (&#39;latitude&#39;, &#39;longitude&#39;) for all sites</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_slice : tuple of int | list | slice</span>
+<span class="sd">            Pandas slicing describing which sites and columns to extract</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meta : pandas.Dataframe</span>
+<span class="sd">            Dataframe of location meta data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sites</span> <span class="o">=</span> <span class="n">ds_slice</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sites</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">sites</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">sites</span><span class="p">,</span> <span class="n">sites</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="n">sites</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sites</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">sites</span><span class="o">.</span><span class="n">stop</span><span class="p">:</span>
+                <span class="n">sites</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">sites</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">sites</span><span class="o">.</span><span class="n">stop</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sites</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">meta</span><span class="p">)))</span>
+
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">sites</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ds_slice</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="n">ds_slice</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str_decode</span><span class="p">:</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_str_decode</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">meta</span>
+
+    <span class="k">def</span> <span class="nf">_get_SAM_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="n">site</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Placeholder for get_SAM_df method that it resource specific</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            &#39;Dataset&#39; name == SAM</span>
+<span class="sd">        site : int</span>
+<span class="sd">            Site to extract SAM DataFrame for</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_get_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract data from given dataset</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        self[&#39;dni&#39;, :, 1]</span>
+<span class="sd">            - Get &#39;dni&#39;timeseries for site 1</span>
+<span class="sd">        self[&#39;dni&#39;, ::2, :]</span>
+<span class="sd">            - Get hourly &#39;dni&#39; timeseries for all sites (NSRDB)</span>
+<span class="sd">        self[&#39;windspeed_100m&#39;, :, [1, 3, 5, 7, 9]]</span>
+<span class="sd">            - Get &#39;windspeed_100m&#39; timeseries for select sites</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            Variable dataset to be extracted</span>
+<span class="sd">        ds_slice : tuple of int | list | slice</span>
+<span class="sd">            tuple describing slice of dataset array to extract</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ds : ndarray</span>
+<span class="sd">            ndarray of variable timeseries data</span>
+<span class="sd">            If unscale, returned in native units else in scaled units</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ds_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HandlerKeyError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> not in </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">))</span>
+
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">ds_name</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">ds_slice</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unscale</span><span class="p">:</span>
+            <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SCALE_ATTR</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">/=</span> <span class="n">scale_factor</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+<div class="viewcode-block" id="Resource.close"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Close h5 instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Resource.preload_SAM"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.Resource.preload_SAM">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">preload_SAM</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Placeholder for classmethod that will pre-load project_points for SAM</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            h5_file to extract resource from</span>
+<span class="sd">        project_points : reV.config.ProjectPoints</span>
+<span class="sd">            Projects points to be pre-loaded from Resource for SAM</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="SolarResource"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.SolarResource">[docs]</a><span class="k">class</span> <span class="nc">SolarResource</span><span class="p">(</span><span class="n">Resource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to handle Solar Resource .h5 files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_get_SAM_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="n">site</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get SAM wind resource DataFrame for given site</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            &#39;Dataset&#39; name == SAM</span>
+<span class="sd">        site : int</span>
+<span class="sd">            Site to extract SAM DataFrame for</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_df : pandas.DataFrame</span>
+<span class="sd">            time-series DataFrame of resource variables needed to run SAM</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unscale</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HandlerValueError</span><span class="p">(</span><span class="s2">&quot;SAM requires unscaled values&quot;</span><span class="p">)</span>
+
+        <span class="n">res_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">)</span>
+        <span class="n">res_df</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="n">site</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dni&#39;</span><span class="p">,</span> <span class="s1">&#39;dhi&#39;</span><span class="p">,</span> <span class="s1">&#39;wind_speed&#39;</span><span class="p">,</span> <span class="s1">&#39;air_temperature&#39;</span><span class="p">]:</span>
+            <span class="n">var_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">site</span><span class="p">)</span>
+            <span class="n">res_df</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">SAMResource</span><span class="o">.</span><span class="n">check_units</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">var_array</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res_df</span>
+
+<div class="viewcode-block" id="SolarResource.preload_SAM"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.SolarResource.preload_SAM">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">preload_SAM</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">clearsky</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Placeholder for classmethod that will pre-load project_points for SAM</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            h5_file to extract resource from</span>
+<span class="sd">        project_points : reV.config.ProjectPoints</span>
+<span class="sd">            Projects points to be pre-loaded from Resource for SAM</span>
+<span class="sd">        clearsky : bool</span>
+<span class="sd">            Boolean flag to pull clearsky instead of real irradiance</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Kwargs to pass to cls</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SAM_res : SAMResource</span>
+<span class="sd">            Instance of SAMResource pre-loaded with Solar resource for sites</span>
+<span class="sd">            in project_points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">SAM_res</span> <span class="o">=</span> <span class="n">SAMResource</span><span class="p">(</span><span class="n">project_points</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;time_index&#39;</span><span class="p">])</span>
+            <span class="n">sites_slice</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">sites_as_slice</span>
+            <span class="n">SAM_res</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="n">sites_slice</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">SAM_res</span><span class="o">.</span><span class="n">var_list</span><span class="p">:</span>
+                <span class="n">ds</span> <span class="o">=</span> <span class="n">var</span>
+                <span class="k">if</span> <span class="n">clearsky</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dni&#39;</span><span class="p">,</span> <span class="s1">&#39;dhi&#39;</span><span class="p">]:</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="s1">&#39;clearsky_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+                <span class="n">SAM_res</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">ds</span><span class="p">,</span> <span class="p">:,</span> <span class="n">sites_slice</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">SAM_res</span></div></div>
+
+
+<div class="viewcode-block" id="NSRDB"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.NSRDB">[docs]</a><span class="k">class</span> <span class="nc">NSRDB</span><span class="p">(</span><span class="n">SolarResource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to handle NSRDB .h5 files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ADD_ATTR</span> <span class="o">=</span> <span class="s1">&#39;psm_add_offset&#39;</span>
+    <span class="n">SCALE_ATTR</span> <span class="o">=</span> <span class="s1">&#39;psm_scale_factor&#39;</span>
+    <span class="n">UNIT_ATTR</span> <span class="o">=</span> <span class="s1">&#39;psm_units&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_get_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract data from given dataset</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        self[&#39;dni&#39;, :, 1]</span>
+<span class="sd">            - Get &#39;dni&#39;timeseries for site 1</span>
+<span class="sd">        self[&#39;dni&#39;, ::2, :]</span>
+<span class="sd">            - Get hourly &#39;dni&#39; timeseries for all sites (NSRDB)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            Variable dataset to be extracted</span>
+<span class="sd">        ds_slice : tuple of int | list | slice</span>
+<span class="sd">            tuple describing slice of dataset array to extract</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ds : ndarray</span>
+<span class="sd">            ndarray of variable timeseries data</span>
+<span class="sd">            If unscale, returned in native units else in scaled units</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">ds_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HandlerKeyError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> not in </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">))</span>
+
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">ds_name</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">ds_slice</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unscale</span><span class="p">:</span>
+            <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SCALE_ATTR</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">adder</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ADD_ATTR</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">adder</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># special scaling for cloud properties</span>
+                <span class="n">out</span> <span class="o">*=</span> <span class="n">scale_factor</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="n">adder</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">/=</span> <span class="n">scale_factor</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+<div class="viewcode-block" id="NSRDB.preload_SAM"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.NSRDB.preload_SAM">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">preload_SAM</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">clearsky</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">downscale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Placeholder for classmethod that will pre-load project_points for SAM</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            h5_file to extract resource from</span>
+<span class="sd">        project_points : reV.config.ProjectPoints</span>
+<span class="sd">            Projects points to be pre-loaded from Resource for SAM</span>
+<span class="sd">        clearsky : bool</span>
+<span class="sd">            Boolean flag to pull clearsky instead of real irradiance</span>
+<span class="sd">        downscale : NoneType | str</span>
+<span class="sd">            Option for NSRDB resource downscaling to higher temporal</span>
+<span class="sd">            resolution. Expects a string in the Pandas frequency format,</span>
+<span class="sd">            e.g. &#39;5min&#39;.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Kwargs to pass to cls</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SAM_res : SAMResource</span>
+<span class="sd">            Instance of SAMResource pre-loaded with Solar resource for sites</span>
+<span class="sd">            in project_points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">SAM_res</span> <span class="o">=</span> <span class="n">SAMResource</span><span class="p">(</span><span class="n">project_points</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;time_index&#39;</span><span class="p">])</span>
+            <span class="n">sites_slice</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">sites_as_slice</span>
+            <span class="n">SAM_res</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="n">sites_slice</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">downscale</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">SAM_res</span><span class="o">.</span><span class="n">var_list</span><span class="p">:</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="n">var</span>
+                    <span class="k">if</span> <span class="n">clearsky</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dni&#39;</span><span class="p">,</span> <span class="s1">&#39;dhi&#39;</span><span class="p">]:</span>
+                        <span class="n">ds</span> <span class="o">=</span> <span class="s1">&#39;clearsky_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+                    <span class="n">SAM_res</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">ds</span><span class="p">,</span> <span class="p">:,</span> <span class="n">sites_slice</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># contingent import to avoid dependencies</span>
+                <span class="kn">from</span> <span class="nn">reV.utilities.downscale</span> <span class="k">import</span> <span class="n">downscale_nsrdb</span>
+                <span class="n">SAM_res</span> <span class="o">=</span> <span class="n">downscale_nsrdb</span><span class="p">(</span><span class="n">SAM_res</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span>
+                                          <span class="n">downscale</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">SAM_res</span></div></div>
+
+
+<div class="viewcode-block" id="WindResource"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.WindResource">[docs]</a><span class="k">class</span> <span class="nc">WindResource</span><span class="p">(</span><span class="n">Resource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to handle Wind Resource .h5 files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">unscale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            Path to .h5 resource file</span>
+<span class="sd">        unscale : bool</span>
+<span class="sd">            Boolean flag to automatically unscale variables on extraction</span>
+<span class="sd">        hsds : bool</span>
+<span class="sd">            Boolean flag to use h5pyd to handle .h5 &#39;files&#39; hosted on AWS</span>
+<span class="sd">            behind HSDS</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_heights</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="n">unscale</span><span class="o">=</span><span class="n">unscale</span><span class="p">,</span> <span class="n">hsds</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_name</span><span class="p">(</span><span class="n">ds_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract dataset name and height from dataset name</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            Dataset name</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Variable name</span>
+<span class="sd">        h : int | float</span>
+<span class="sd">            Height of variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">ds_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">ds_name</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="n">h</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">heights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract available heights for pressure, temperature, windspeed, precip,</span>
+<span class="sd">        and winddirection variables. Used for interpolation/extrapolation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self._heights : list</span>
+<span class="sd">            List of available heights for:</span>
+<span class="sd">            windspeed, winddirection, temperature, and pressure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dsets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">)</span>
+            <span class="n">heights</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pressure&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                       <span class="s1">&#39;temperature&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                       <span class="s1">&#39;windspeed&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                       <span class="s1">&#39;winddirection&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                       <span class="s1">&#39;precipitationrate&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+            <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">dsets</span><span class="p">:</span>
+                <span class="n">ds_name</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_name</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ds_name</span> <span class="ow">in</span> <span class="n">heights</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">heights</span><span class="p">[</span><span class="n">ds_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_heights</span> <span class="o">=</span> <span class="n">heights</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heights</span>
+
+<div class="viewcode-block" id="WindResource.get_nearest_h"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.WindResource.get_nearest_h">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_nearest_h</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">heights</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get two nearest h values in heights.</span>
+<span class="sd">        Determine if h is inside or outside the range of heights</span>
+<span class="sd">        (requiring extrapolation instead of interpolation)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h : int | float</span>
+<span class="sd">            Height value of interest</span>
+<span class="sd">        heights : list</span>
+<span class="sd">            List of available heights</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nearest_h : list</span>
+<span class="sd">            list of 1st and 2nd nearest height in heights</span>
+<span class="sd">        extrapolate : bool</span>
+<span class="sd">            Flag as to whether h is inside or outside heights range</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">heights</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">heights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">heights</span><span class="p">)</span>
+
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">heights</span> <span class="o">-</span> <span class="n">h</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">nearest_h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">heights</span><span class="p">[</span><span class="n">pos</span><span class="p">])</span>
+        <span class="n">extrapolate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">h</span> <span class="o">&lt;</span> <span class="n">heights</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">h</span> <span class="o">&gt;</span> <span class="n">heights</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extrapolate</span><span class="p">:</span>
+            <span class="n">h_min</span><span class="p">,</span> <span class="n">h_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">heights</span><span class="p">)[[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> is outside the height range&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h</span><span class="p">),</span>
+                   <span class="s1">&#39;(</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h_min</span><span class="p">,</span> <span class="n">h_max</span><span class="p">),</span>
+                   <span class="s1">&#39;Extrapolation to be used.&#39;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">),</span> <span class="n">ExtrapolationWarning</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">nearest_h</span><span class="p">,</span> <span class="n">extrapolate</span></div>
+
+<div class="viewcode-block" id="WindResource.power_law_interp"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.WindResource.power_law_interp">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">power_law_interp</span><span class="p">(</span><span class="n">ts_1</span><span class="p">,</span> <span class="n">h_1</span><span class="p">,</span> <span class="n">ts_2</span><span class="p">,</span> <span class="n">h_2</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Power-law interpolate/extrapolate time-series data to height h</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ts_1 : ndarray</span>
+<span class="sd">            Time-series array at height h_1</span>
+<span class="sd">        h_1 : int | float</span>
+<span class="sd">            Height corresponding to time-seris ts_1</span>
+<span class="sd">        ts_2 : ndarray</span>
+<span class="sd">            Time-series array at height h_2</span>
+<span class="sd">        h_2 : int | float</span>
+<span class="sd">            Height corresponding to time-seris ts_2</span>
+<span class="sd">        h : int | float</span>
+<span class="sd">            Height of desired time-series</span>
+<span class="sd">        mean : bool</span>
+<span class="sd">            Calculate average alpha versus point by point alpha</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ndarray</span>
+<span class="sd">            Time-series array at height h</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">h_1</span> <span class="o">&gt;</span> <span class="n">h_2</span><span class="p">:</span>
+            <span class="n">h_1</span><span class="p">,</span> <span class="n">h_2</span> <span class="o">=</span> <span class="n">h_2</span><span class="p">,</span> <span class="n">h_1</span>
+            <span class="n">ts_1</span><span class="p">,</span> <span class="n">ts_2</span> <span class="o">=</span> <span class="n">ts_2</span><span class="p">,</span> <span class="n">ts_1</span>
+
+        <span class="k">if</span> <span class="n">mean</span><span class="p">:</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ts_2</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">/</span> <span class="n">ts_1</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+                     <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">h_2</span> <span class="o">/</span> <span class="n">h_1</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">alpha</span> <span class="o">&lt;</span> <span class="mf">0.06</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Alpha is &lt; 0.06&#39;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">alpha</span> <span class="o">&gt;</span> <span class="mf">0.6</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Alpha is &gt; 0.6&#39;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Replace zero values for alpha calculation</span>
+            <span class="n">ts_1</span><span class="p">[</span><span class="n">ts_1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.001</span>
+            <span class="n">ts_2</span><span class="p">[</span><span class="n">ts_2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.001</span>
+
+            <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ts_2</span> <span class="o">/</span> <span class="n">ts_1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">h_2</span> <span class="o">/</span> <span class="n">h_1</span><span class="p">)</span>
+            <span class="c1"># The Hellmann exponent varies from 0.06 to 0.6</span>
+            <span class="n">alpha</span><span class="p">[</span><span class="n">alpha</span> <span class="o">&lt;</span> <span class="mf">0.06</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.06</span>
+            <span class="n">alpha</span><span class="p">[</span><span class="n">alpha</span> <span class="o">&gt;</span> <span class="mf">0.6</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.6</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">ts_1</span> <span class="o">*</span> <span class="p">(</span><span class="n">h</span> <span class="o">/</span> <span class="n">h_1</span><span class="p">)</span><span class="o">**</span><span class="n">alpha</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="WindResource.linear_interp"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.WindResource.linear_interp">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">linear_interp</span><span class="p">(</span><span class="n">ts_1</span><span class="p">,</span> <span class="n">h_1</span><span class="p">,</span> <span class="n">ts_2</span><span class="p">,</span> <span class="n">h_2</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Linear interpolate/extrapolate time-series data to height h</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ts_1 : ndarray</span>
+<span class="sd">            Time-series array at height h_1</span>
+<span class="sd">        h_1 : int | float</span>
+<span class="sd">            Height corresponding to time-seris ts_1</span>
+<span class="sd">        ts_2 : ndarray</span>
+<span class="sd">            Time-series array at height h_2</span>
+<span class="sd">        h_2 : int | float</span>
+<span class="sd">            Height corresponding to time-seris ts_2</span>
+<span class="sd">        h : int | float</span>
+<span class="sd">            Height of desired time-series</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ndarray</span>
+<span class="sd">            Time-series array at height h</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">h_1</span> <span class="o">&gt;</span> <span class="n">h_2</span><span class="p">:</span>
+            <span class="n">h_1</span><span class="p">,</span> <span class="n">h_2</span> <span class="o">=</span> <span class="n">h_2</span><span class="p">,</span> <span class="n">h_1</span>
+            <span class="n">ts_1</span><span class="p">,</span> <span class="n">ts_2</span> <span class="o">=</span> <span class="n">ts_2</span><span class="p">,</span> <span class="n">ts_1</span>
+
+        <span class="c1"># Calculate slope for every posiiton in variable arrays</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">ts_2</span> <span class="o">-</span> <span class="n">ts_1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">h_2</span> <span class="o">-</span> <span class="n">h_1</span><span class="p">)</span>
+        <span class="c1"># Calculate intercept for every position in variable arrays</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">ts_2</span> <span class="o">-</span> <span class="n">m</span> <span class="o">*</span> <span class="n">h_2</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">m</span> <span class="o">*</span> <span class="n">h</span> <span class="o">+</span> <span class="n">b</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="WindResource.shortest_angle"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.WindResource.shortest_angle">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">shortest_angle</span><span class="p">(</span><span class="n">a0</span><span class="p">,</span> <span class="n">a1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the shortest angle distance between a0 and a1</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a0 : int | float</span>
+<span class="sd">            angle 0 in degrees</span>
+<span class="sd">        a1 : int | float</span>
+<span class="sd">            angle 1 in degrees</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        da : int | float</span>
+<span class="sd">            shortest angle distance between a0 and a1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">da</span> <span class="o">=</span> <span class="p">(</span><span class="n">a1</span> <span class="o">-</span> <span class="n">a0</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span>
+        <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">da</span> <span class="o">%</span> <span class="mi">360</span> <span class="o">-</span> <span class="n">da</span></div>
+
+<div class="viewcode-block" id="WindResource.circular_interp"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.WindResource.circular_interp">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">circular_interp</span><span class="p">(</span><span class="n">ts_1</span><span class="p">,</span> <span class="n">h_1</span><span class="p">,</span> <span class="n">ts_2</span><span class="p">,</span> <span class="n">h_2</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Circular interpolate/extrapolate time-series data to height h</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ts_1 : ndarray</span>
+<span class="sd">            Time-series array at height h_1</span>
+<span class="sd">        h_1 : int | float</span>
+<span class="sd">            Height corresponding to time-seris ts_1</span>
+<span class="sd">        ts_2 : ndarray</span>
+<span class="sd">            Time-series array at height h_2</span>
+<span class="sd">        h_2 : int | float</span>
+<span class="sd">            Height corresponding to time-seris ts_2</span>
+<span class="sd">        h : int | float</span>
+<span class="sd">            Height of desired time-series</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ndarray</span>
+<span class="sd">            Time-series array at height h</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">h_f</span> <span class="o">=</span> <span class="p">(</span><span class="n">h</span> <span class="o">-</span> <span class="n">h_1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">h_2</span> <span class="o">-</span> <span class="n">h_1</span><span class="p">)</span>
+
+        <span class="n">da</span> <span class="o">=</span> <span class="n">WindResource</span><span class="o">.</span><span class="n">shortest_angle</span><span class="p">(</span><span class="n">ts_1</span><span class="p">,</span> <span class="n">ts_2</span><span class="p">)</span> <span class="o">*</span> <span class="n">h_f</span>
+        <span class="n">da</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">da</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">da</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">(</span><span class="n">ts_2</span> <span class="o">+</span> <span class="n">da</span><span class="p">)</span> <span class="o">%</span> <span class="mi">360</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+    <span class="k">def</span> <span class="nf">_check_hub_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check requested hub-height against available windspeed hub-heights</span>
+<span class="sd">        If only one hub-height is available change request to match available</span>
+<span class="sd">        hub-height</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h : int | float</span>
+<span class="sd">            Requested hub-height</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        h : int | float</span>
+<span class="sd">            Hub-height to extract</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="s1">&#39;windspeed&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">heights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">heights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Wind speed is only available at </span><span class="si">{h}</span><span class="s1">m, &#39;</span>
+                          <span class="s1">&#39;all variables will be extracted at </span><span class="si">{h}</span><span class="s1">m&#39;</span>
+                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h</span><span class="o">=</span><span class="n">h</span><span class="p">),</span> <span class="n">HandlerWarning</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">h</span>
+
+    <span class="k">def</span> <span class="nf">_get_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract data from given dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            Variable dataset to be extracted</span>
+<span class="sd">        ds_slice : tuple of int | list | slice</span>
+<span class="sd">            tuple describing list ds_slice to extract</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ndarray</span>
+<span class="sd">            ndarray of variable timeseries data</span>
+<span class="sd">            If unscale, returned in native units else in scaled units</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">var_name</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_name</span><span class="p">(</span><span class="n">ds_name</span><span class="p">)</span>
+        <span class="n">heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">heights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">heights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ds_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">m&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Only one hub-height available, returning </span><span class="si">{}</span><span class="s1">&#39;</span>
+                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds_name</span><span class="p">),</span> <span class="n">HandlerWarning</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">heights</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">),</span> <span class="n">extrapolate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nearest_h</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">heights</span><span class="p">)</span>
+            <span class="n">ts1</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">m&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">h1</span><span class="p">),</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+            <span class="n">ts2</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">m&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">h2</span><span class="p">),</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">var_name</span> <span class="o">==</span> <span class="s1">&#39;windspeed&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">extrapolate</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_law_interp</span><span class="p">(</span><span class="n">ts1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">ts2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">var_name</span> <span class="o">==</span> <span class="s1">&#39;winddirection&#39;</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">circular_interp</span><span class="p">(</span><span class="n">ts1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">ts2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_interp</span><span class="p">(</span><span class="n">ts1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">ts2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">_get_SAM_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="n">site</span><span class="p">,</span> <span class="n">require_wind_dir</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get SAM wind resource DataFrame for given site</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            &#39;Dataset&#39; name == SAM</span>
+<span class="sd">        site : int</span>
+<span class="sd">            Site to extract SAM DataFrame for</span>
+<span class="sd">        require_wind_dir : bool</span>
+<span class="sd">            Boolean flag as to whether wind direction will be loaded.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_df : pandas.DataFrame</span>
+<span class="sd">            time-series DataFrame of resource variables needed to run SAM</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unscale</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HandlerValueError</span><span class="p">(</span><span class="s2">&quot;SAM requires unscaled values&quot;</span><span class="p">)</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_name</span><span class="p">(</span><span class="n">ds_name</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_hub_height</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+        <span class="n">res_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">)</span>
+        <span class="n">res_df</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">site</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;winddirection&#39;</span><span class="p">,</span> <span class="s1">&#39;windspeed&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">require_wind_dir</span><span class="p">:</span>
+            <span class="n">variables</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;winddirection&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="n">var_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">m&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+            <span class="n">var_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                                     <span class="n">site</span><span class="p">)</span>
+            <span class="n">res_df</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">SAMResource</span><span class="o">.</span><span class="n">check_units</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">var_array</span><span class="p">)</span>
+            <span class="n">res_df</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">SAMResource</span><span class="o">.</span><span class="n">enforce_arr_range</span><span class="p">(</span>
+                <span class="n">var</span><span class="p">,</span> <span class="n">res_df</span><span class="p">[</span><span class="n">var_name</span><span class="p">],</span>
+                <span class="n">SAMResource</span><span class="o">.</span><span class="n">WIND_DATA_RANGES</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="p">[</span><span class="n">site</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">res_df</span>
+
+<div class="viewcode-block" id="WindResource.preload_SAM"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.WindResource.preload_SAM">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">preload_SAM</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">h5_file</span><span class="p">,</span> <span class="n">project_points</span><span class="p">,</span> <span class="n">require_wind_dir</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">precip_rate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Placeholder for classmethod that will pre-load project_points for SAM</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_file : str</span>
+<span class="sd">            h5_file to extract resource from</span>
+<span class="sd">        project_points : reV.config.ProjectPoints</span>
+<span class="sd">            Projects points to be pre-loaded from Resource for SAM</span>
+<span class="sd">        require_wind_dir : bool</span>
+<span class="sd">            Boolean flag as to whether wind direction will be loaded.</span>
+<span class="sd">        precip_rate : bool</span>
+<span class="sd">            Boolean flag as to whether precipitationrate_0m will be preloaded</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Kwargs to pass to cls</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SAM_res : SAMResource</span>
+<span class="sd">            Instance of SAMResource pre-loaded with Solar resource for sites</span>
+<span class="sd">            in project_points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">SAM_res</span> <span class="o">=</span> <span class="n">SAMResource</span><span class="p">(</span><span class="n">project_points</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;time_index&#39;</span><span class="p">],</span>
+                                  <span class="n">require_wind_dir</span><span class="o">=</span><span class="n">require_wind_dir</span><span class="p">)</span>
+            <span class="n">sites_slice</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">sites_as_slice</span>
+            <span class="n">SAM_res</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="n">sites_slice</span><span class="p">]</span>
+            <span class="n">var_list</span> <span class="o">=</span> <span class="n">SAM_res</span><span class="o">.</span><span class="n">var_list</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">require_wind_dir</span><span class="p">:</span>
+                <span class="n">var_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;winddirection&#39;</span><span class="p">)</span>
+
+            <span class="n">h</span> <span class="o">=</span> <span class="n">project_points</span><span class="o">.</span><span class="n">h</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">_check_hub_height</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">var_list</span><span class="p">:</span>
+                    <span class="n">ds_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">m&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+                    <span class="n">SAM_res</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">ds_name</span><span class="p">,</span> <span class="p">:,</span> <span class="n">sites_slice</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">unq_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">unq_h</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">h</span><span class="p">)))</span>
+
+                <span class="n">site_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">project_points</span><span class="o">.</span><span class="n">sites</span><span class="p">)</span>
+                <span class="n">height_slices</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">h_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unq_h</span><span class="p">):</span>
+                    <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">unq_idx</span> <span class="o">==</span> <span class="n">i</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">height_slices</span><span class="p">[</span><span class="n">h_i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">site_list</span><span class="p">[</span><span class="n">pos</span><span class="p">],</span> <span class="n">pos</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">var_list</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">h_i</span><span class="p">,</span> <span class="p">(</span><span class="n">h_pos</span><span class="p">,</span> <span class="n">sam_pos</span><span class="p">)</span> <span class="ow">in</span> <span class="n">height_slices</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">ds_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">m&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">h_i</span><span class="p">)</span>
+                        <span class="n">SAM_res</span><span class="p">[</span><span class="n">var</span><span class="p">,</span> <span class="p">:,</span> <span class="n">sam_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">ds_name</span><span class="p">,</span> <span class="p">:,</span> <span class="n">h_pos</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">precip_rate</span><span class="p">:</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;precipitationrate&#39;</span>
+                <span class="n">ds_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_0m&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+                <span class="n">SAM_res</span><span class="o">.</span><span class="n">append_var_list</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+                <span class="n">SAM_res</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">ds_name</span><span class="p">,</span> <span class="p">:,</span> <span class="n">sites_slice</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">SAM_res</span></div></div>
+
+
+<div class="viewcode-block" id="FiveMinWTK"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.FiveMinWTK">[docs]</a><span class="k">class</span> <span class="nc">FiveMinWTK</span><span class="p">(</span><span class="n">WindResource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to handle 5min WIND Toolkit data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_dir</span><span class="p">,</span> <span class="n">hourly_h5</span><span class="p">,</span> <span class="n">unscale</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_dir : str</span>
+<span class="sd">            Path to directory containing 5min .h5 files</span>
+<span class="sd">        hourly_h5 : str</span>
+<span class="sd">            Path to hourly .h5 file</span>
+<span class="sd">        unscale : bool</span>
+<span class="sd">            Boolean flag to automatically unscale variables on extraction</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Init on hourly_h5 file</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">hourly_h5</span><span class="p">,</span> <span class="n">unscale</span><span class="o">=</span><span class="n">unscale</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hourly_time_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_index</span>
+
+        <span class="c1"># Find 5min wind files</span>
+        <span class="n">wind_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wind_files</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wind_files</span> <span class="o">=</span> <span class="n">wind_files</span>
+        <span class="c1"># Substitute wind hub_heights</span>
+        <span class="n">wind_h</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">wind_files</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="s1">&#39;windspeed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wind_h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="s1">&#39;winddirection&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wind_h</span>
+        <span class="c1"># Substitute hourly for 5min time_index</span>
+        <span class="k">with</span> <span class="n">Resource</span><span class="p">(</span><span class="n">wind_files</span><span class="p">[</span><span class="n">wind_h</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">time_index</span>
+
+<div class="viewcode-block" id="FiveMinWTK.get_wind_files"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.resource.FiveMinWTK.get_wind_files">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_wind_files</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find .h5 files for wind hub-heights in h5_dir</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_dir : str</span>
+<span class="sd">            Path to directory containing 5min .h5 files</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wind_files : dict</span>
+<span class="sd">            Dictionary mapping wind files to hub-heights</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">wind_files</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;wind&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">):</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">WindResource</span><span class="o">.</span><span class="n">_parse_name</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">wind_files</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">h5_dir</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wind_files</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_wind_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract 5min wind data</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            5min wind variable dataset to be extracted</span>
+<span class="sd">        ds_slice : tuple of int | list | slice</span>
+<span class="sd">            tuple describing list ds_slice to extract</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ndarray</span>
+<span class="sd">            ndarray of variable timeseries data</span>
+<span class="sd">            If unscale, returned in native units else in scaled units</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">var_name</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_name</span><span class="p">(</span><span class="n">ds_name</span><span class="p">)</span>
+        <span class="n">heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heights</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">heights</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">heights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ds_name</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">m&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Only one hub-height available, returning </span><span class="si">{}</span><span class="s1">&#39;</span>
+                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds_name</span><span class="p">),</span> <span class="n">HandlerWarning</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">heights</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wind_files</span><span class="p">[</span><span class="n">h</span><span class="p">],</span> <span class="n">unscale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unscale</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">),</span> <span class="n">extrapolate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nearest_h</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">heights</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wind_files</span><span class="p">[</span><span class="n">h1</span><span class="p">],</span> <span class="n">unscale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unscale</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">ts1</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">m&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">h1</span><span class="p">),</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">Resource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wind_files</span><span class="p">[</span><span class="n">h2</span><span class="p">],</span> <span class="n">unscale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_unscale</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">ts2</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">m&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">h2</span><span class="p">),</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">var_name</span> <span class="o">==</span> <span class="s1">&#39;windspeed&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">extrapolate</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_law_interp</span><span class="p">(</span><span class="n">ts1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">ts2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">var_name</span> <span class="o">==</span> <span class="s1">&#39;winddirection&#39;</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">circular_interp</span><span class="p">(</span><span class="n">ts1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">ts2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_interp</span><span class="p">(</span><span class="n">ts1</span><span class="p">,</span> <span class="n">h1</span><span class="p">,</span> <span class="n">ts2</span><span class="p">,</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">_interp_hourly_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract and interp hourly data to 5min</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            Hourly variable dataset to be extracted</span>
+<span class="sd">        ds_slice : tuple of int | list | slice</span>
+<span class="sd">            tuple describing list ds_slice to extract</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ndarray</span>
+<span class="sd">            ndarray of variable timeseries data</span>
+<span class="sd">            If unscale, returned in native units else in scaled units</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_ds</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_hourly_time_index</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">)</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">_get_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract data from given dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ds_name : str</span>
+<span class="sd">            Variable dataset to be extracted</span>
+<span class="sd">        ds_slice : tuple of int | list | slice</span>
+<span class="sd">            tuple describing list ds_slice to extract</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ndarray</span>
+<span class="sd">            ndarray of variable timeseries data</span>
+<span class="sd">            If unscale, returned in native units else in scaled units</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">var_name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_name</span><span class="p">(</span><span class="n">ds_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;windspeed&#39;</span><span class="p">,</span> <span class="s1">&#39;winddirection&#39;</span><span class="p">]:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_wind_ds</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interp_hourly_ds</span><span class="p">(</span><span class="n">ds_name</span><span class="p">,</span> <span class="o">*</span><span class="n">ds_slice</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,678 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.utilities.solar_position &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.utilities.solar_position</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.utilities.solar_position</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module to compute solar zenith angle outside of SAM</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+
+<div class="viewcode-block" id="SolarPosition"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.solar_position.SolarPosition">[docs]</a><span class="k">class</span> <span class="nc">SolarPosition</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to compute solar position for time(s) and site(s)</span>
+<span class="sd">    Based off of SAM Solar Position Function:</span>
+<span class="sd">    https://github.com/NREL/ssc/blob/develop/shared/lib_irradproc.cpp</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_index</span><span class="p">,</span> <span class="n">lat_lon</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_index : ndarray | pandas.DatetimeIndex | str</span>
+<span class="sd">            Datetime stamps of interest</span>
+<span class="sd">        lat_lon : ndarray</span>
+<span class="sd">            (latitude, longitude) for site(s) of interest</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="p">[</span><span class="n">time_index</span><span class="p">]</span>
+
+            <span class="n">time_index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="n">time_index</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lat_lon</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">lat_lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat_lon</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lat_lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">lat_lon</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Datetime stamp(s) of interest</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        time_index : pandas.DatetimeIndex</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">latitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Latitudes of site(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lat : ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lat_lon</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">lat</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">longitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        longitude of site(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lon : ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lat_lon</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">lon</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_parse_time</span><span class="p">(</span><span class="n">time_index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert UTC datetime index into:</span>
+<span class="sd">        - Days since Greenwhich Noon</span>
+<span class="sd">        - Zulu hour</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_index : pandas.DatetimeIndex</span>
+<span class="sd">            Datetime stamps of interest</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        n : ndarray</span>
+<span class="sd">            Days since Greenwich Noon</span>
+<span class="sd">        zulu : ndarray</span>
+<span class="sd">            Decimal hour in UTC (Zulu Hour)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_index</span><span class="o">.</span><span class="n">to_julian_date</span><span class="p">()</span> <span class="o">-</span> <span class="mi">2451545</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">zulu</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_index</span><span class="o">.</span><span class="n">hour</span> <span class="o">+</span> <span class="n">time_index</span><span class="o">.</span><span class="n">minute</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="k">return</span> <span class="n">n</span><span class="p">,</span> <span class="n">zulu</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calc_right_ascension</span><span class="p">(</span><span class="n">eclong</span><span class="p">,</span> <span class="n">oblqec</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute Right Ascension angle in radians</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        eclong : ndarray</span>
+<span class="sd">            Ecliptic longitude in radians</span>
+<span class="sd">        oblqec : ndarray</span>
+<span class="sd">            Obliquity of ecliptic in radians</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ra : ndarray</span>
+<span class="sd">            Right Ascension angle in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">oblqec</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">eclong</span><span class="p">)</span>
+        <span class="n">den</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">eclong</span><span class="p">)</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">den</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ra</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calc_sun_pos</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute right ascension and declination angles of the sun in radians</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : ndarray</span>
+<span class="sd">            Days since Grenwich Noon</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ra : ndarray</span>
+<span class="sd">            Right ascension angle of the sun in radians</span>
+<span class="sd">        dec : ndarray</span>
+<span class="sd">            Declination angle of the sun in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Mean Longitude in degrees</span>
+        <span class="n">mnlong</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">(</span><span class="mf">280.460</span> <span class="o">+</span> <span class="mf">0.9856474</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="mi">360</span><span class="p">)</span>
+        <span class="c1"># Mean anomaly in radians</span>
+        <span class="n">mnanom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">(</span><span class="mf">357.528</span> <span class="o">+</span> <span class="mf">0.9856003</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="mi">360</span><span class="p">))</span>
+        <span class="c1"># Ecliptic longitude in radians</span>
+        <span class="n">eclong</span> <span class="o">=</span> <span class="n">mnlong</span> <span class="o">+</span> <span class="mf">1.915</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">mnanom</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.02</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">mnanom</span><span class="p">)</span>
+        <span class="n">eclong</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">(</span><span class="n">eclong</span><span class="p">,</span> <span class="mi">360</span><span class="p">))</span>
+        <span class="c1"># Obliquity of ecliptic in radians</span>
+        <span class="n">oblqec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mf">23.439</span> <span class="o">-</span> <span class="mf">0.0000004</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+        <span class="c1"># Right ascension angle in radians</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_right_ascension</span><span class="p">(</span><span class="n">eclong</span><span class="p">,</span> <span class="n">oblqec</span><span class="p">)</span>
+        <span class="c1"># Declination angle in radians</span>
+        <span class="n">dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">oblqec</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">eclong</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calc_hour_angle</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">zulu</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">lon</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the hour angle of the sun</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : ndarray</span>
+<span class="sd">            Days since Greenwich Noon</span>
+<span class="sd">        zulu : ndarray</span>
+<span class="sd">            Decimal hour in UTC (Zulu Hour)</span>
+<span class="sd">        ra : ndarray</span>
+<span class="sd">            Right Ascension angle in radians</span>
+<span class="sd">        lon : float</span>
+<span class="sd">            Longitude in degrees</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ha : ndarray</span>
+<span class="sd">            Hour angle in radians between -pi and pi</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Greenwich mean sidereal time in degrees</span>
+        <span class="n">gmst</span> <span class="o">=</span> <span class="p">(</span><span class="mf">6.697375</span> <span class="o">+</span> <span class="mf">0.06570982441908</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="mf">1.00273790935</span> <span class="o">*</span> <span class="n">zulu</span><span class="p">)</span> <span class="o">*</span> <span class="mi">15</span>
+        <span class="c1"># Local mean sidereal time in radians</span>
+        <span class="n">lmst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">(</span><span class="n">gmst</span> <span class="o">+</span> <span class="n">lon</span><span class="p">,</span> <span class="mi">360</span><span class="p">))</span>
+        <span class="c1"># Hour angle in radians</span>
+        <span class="n">ha</span> <span class="o">=</span> <span class="n">lmst</span> <span class="o">-</span> <span class="n">ra</span>
+        <span class="c1"># Ensure hour angle falls between -pi and pi</span>
+        <span class="n">ha</span><span class="p">[</span><span class="n">ha</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">ha</span><span class="p">[</span><span class="n">ha</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+        <span class="k">return</span> <span class="n">ha</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calc_elevation</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the solar elevation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dec : ndarray</span>
+<span class="sd">            Declination angle of the sun in radians</span>
+<span class="sd">        ha : ndarray</span>
+<span class="sd">            Hour angle in radians</span>
+<span class="sd">        lat : float</span>
+<span class="sd">            Latitude in degrees</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        elv : ndarray</span>
+<span class="sd">            Solar elevation in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+               <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ha</span><span class="p">))</span>
+        <span class="n">elv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+        <span class="n">elv</span><span class="p">[</span><span class="n">arg</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">elv</span><span class="p">[</span><span class="n">arg</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="n">elv</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_elevation</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute solar elevation angle from time_index and location</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_index : pandas.DatetimeIndex</span>
+<span class="sd">            Datetime stamp(s) of interest</span>
+<span class="sd">        lat : ndarray</span>
+<span class="sd">            Latitude of site(s) of interest</span>
+<span class="sd">        lon : ndarray</span>
+<span class="sd">            Longitude of site(s) of interest</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        elevation : ndarray</span>
+<span class="sd">            Solar elevation angle in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">zulu</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_parse_time</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_sun_pos</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">ha</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_hour_angle</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">zulu</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
+        <span class="n">elevation</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_elevation</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">elevation</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_atm_correction</span><span class="p">(</span><span class="n">elv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply atmospheric correction to elevation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        elv : ndarray</span>
+<span class="sd">            Solar elevation in radians</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        elv : ndarray</span>
+<span class="sd">            Atmospheric corrected elevation in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">elv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">elv</span><span class="p">)</span>
+        <span class="n">refrac</span> <span class="o">=</span> <span class="p">(</span><span class="mf">3.51561</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.1594</span> <span class="o">+</span> <span class="mf">0.0196</span> <span class="o">*</span> <span class="n">elv</span> <span class="o">+</span> <span class="mf">0.00002</span> <span class="o">*</span> <span class="n">elv</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                  <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">0.505</span> <span class="o">*</span> <span class="n">elv</span> <span class="o">+</span> <span class="mf">0.0845</span> <span class="o">*</span> <span class="n">elv</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">refrac</span><span class="p">[</span><span class="n">elv</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.56</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.56</span>
+
+        <span class="n">elv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">elv</span> <span class="o">+</span> <span class="n">refrac</span><span class="p">)</span>
+        <span class="n">elv</span><span class="p">[</span><span class="n">elv</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="n">elv</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calc_azimuth</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the solar azimuth angle from solar position variables</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dec : ndarray</span>
+<span class="sd">            Declination angle of the sun in radians</span>
+<span class="sd">        ha : ndarray</span>
+<span class="sd">            Hour angle in radians</span>
+<span class="sd">        lat : float</span>
+<span class="sd">            Latitude in degrees</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        azm : ndarray</span>
+<span class="sd">            Solar azimuth in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">elv</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_elevation</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">elv</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">))</span>
+               <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">elv</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">)))</span>
+
+        <span class="n">azm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="c1"># Assign azzimuth = 180 deg if elv == 90 or -90</span>
+        <span class="n">azm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">elv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">azm</span><span class="p">[</span><span class="n">arg</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">azm</span><span class="p">[</span><span class="n">arg</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+        <span class="k">return</span> <span class="n">azm</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_azimuth</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute solar azimuth angle from time_index and location</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_index : pandas.DatetimeIndex</span>
+<span class="sd">            Datetime stamp(s) of interest</span>
+<span class="sd">        lat : ndarray</span>
+<span class="sd">            Latitude of site(s) of interest</span>
+<span class="sd">        lon : ndarray</span>
+<span class="sd">            Longitude of site(s) of interest</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        azimuth : ndarray</span>
+<span class="sd">            Solar azimuth angle in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">zulu</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_parse_time</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_sun_pos</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">ha</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_hour_angle</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">zulu</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
+        <span class="n">azimuth</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_azimuth</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">azimuth</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_calc_zenith</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">lat</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the solar zenith angle from solar position variables</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dec : ndarray</span>
+<span class="sd">            Declination angle of the sun in radians</span>
+<span class="sd">        ha : ndarray</span>
+<span class="sd">            Hour angle in radians</span>
+<span class="sd">        lat : float</span>
+<span class="sd">            Latitude in degrees</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        zen : ndarray</span>
+<span class="sd">            Solar azimuth in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">elv</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_elevation</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        <span class="c1"># Atmospheric correct elevation</span>
+        <span class="n">elv</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_atm_correction</span><span class="p">(</span><span class="n">elv</span><span class="p">)</span>
+
+        <span class="n">zen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">elv</span>
+
+        <span class="k">return</span> <span class="n">zen</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_zenith</span><span class="p">(</span><span class="n">time_index</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute solar zenith angle from time_index and location</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_index : pandas.DatetimeIndex</span>
+<span class="sd">            Datetime stamp(s) of interest</span>
+<span class="sd">        lat : ndarray</span>
+<span class="sd">            Latitude of site(s) of interest</span>
+<span class="sd">        lon : ndarray</span>
+<span class="sd">            Longitude of site(s) of interest</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        zenith : ndarray</span>
+<span class="sd">            Solar zenith angle in radians</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">zulu</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_parse_time</span><span class="p">(</span><span class="n">time_index</span><span class="p">)</span>
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_sun_pos</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">ha</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_hour_angle</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">zulu</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
+        <span class="n">zenith</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="o">.</span><span class="n">_calc_zenith</span><span class="p">(</span><span class="n">dec</span><span class="p">,</span> <span class="n">ha</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">zenith</span>
+
+    <span class="k">def</span> <span class="nf">_format_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format radians array for output:</span>
+<span class="sd">        - Convert to degrees</span>
+<span class="sd">        - Transpose if needed</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr : ndarray</span>
+<span class="sd">            Data array in radians</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        arr : ndarray</span>
+<span class="sd">            Data array in degrees and formatted as (time x sites)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span><span class="p">):</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="k">return</span> <span class="n">arr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">azimuth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solar azimuth angle</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        azimuth : ndarray</span>
+<span class="sd">            Solar azimuth angle in degrees</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">azimuth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_azimuth</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_output</span><span class="p">(</span><span class="n">azimuth</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">elevation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solar elevation angle</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        elevation : ndarray</span>
+<span class="sd">            Solar elevation angle in degrees</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">elevation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elevation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_output</span><span class="p">(</span><span class="n">elevation</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">apparent_elevation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Refracted solar elevation angle</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        elevation : ndarray</span>
+<span class="sd">            Solar elevation angle in degrees</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">elevation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_elevation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">)</span>
+        <span class="n">elevation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atm_correction</span><span class="p">(</span><span class="n">elevation</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_output</span><span class="p">(</span><span class="n">elevation</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">zenith</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solar zenith angle</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        zenith : ndarray</span>
+<span class="sd">            Solar zenith angle in degrees</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">zenith</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zenith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_output</span><span class="p">(</span><span class="n">zenith</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

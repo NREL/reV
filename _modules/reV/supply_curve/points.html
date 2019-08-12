@@ -1,0 +1,935 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.supply_curve.points &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.supply_curve.points</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.supply_curve.points</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV supply curve extent and points base frameworks.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">reV.handlers.outputs</span> <span class="k">import</span> <span class="n">Outputs</span>
+<span class="kn">from</span> <span class="nn">reV.handlers.geotiff</span> <span class="k">import</span> <span class="n">Geotiff</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="p">(</span><span class="n">SupplyCurveError</span><span class="p">,</span> <span class="n">SupplyCurveInputError</span><span class="p">,</span>
+                                      <span class="n">EmptySupplyCurvePointError</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ExclusionPoints"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.ExclusionPoints">[docs]</a><span class="k">class</span> <span class="nc">ExclusionPoints</span><span class="p">(</span><span class="n">Geotiff</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exclusion points framework&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fpath : str</span>
+<span class="sd">            Path to .tiff file.</span>
+<span class="sd">        chunks : tuple</span>
+<span class="sd">            GeoTIFF chunk (tile) shape/size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">chunks</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SupplyCurvePoint"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurvePoint">[docs]</a><span class="k">class</span> <span class="nc">SupplyCurvePoint</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Single supply curve point framework&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">f_excl</span><span class="p">,</span> <span class="n">f_gen</span><span class="p">,</span> <span class="n">f_techmap</span><span class="p">,</span> <span class="n">dset_tm</span><span class="p">,</span> <span class="n">gen_index</span><span class="p">,</span>
+                 <span class="n">resolution</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">exclusion_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gid : int</span>
+<span class="sd">            gid for supply curve point to analyze.</span>
+<span class="sd">        f_excl : str | ExclusionPoints</span>
+<span class="sd">            Filepath to exclusions geotiff or ExclusionPoints file handler.</span>
+<span class="sd">        f_gen : str | reV.handlers.Outputs</span>
+<span class="sd">            Filepath to .h5 reV generation output results or reV Outputs file</span>
+<span class="sd">            handler.</span>
+<span class="sd">        f_techmap : str | h5py.File</span>
+<span class="sd">            Filepath to tech mapping between exclusions and resource data</span>
+<span class="sd">            (created using the reV TechMapping framework) or an h5py file</span>
+<span class="sd">            handler object.</span>
+<span class="sd">        dset_tm : str</span>
+<span class="sd">            Dataset name in the techmap file containing the</span>
+<span class="sd">            exclusions-to-resource mapping data.</span>
+<span class="sd">        gen_index : np.ndarray</span>
+<span class="sd">            Array of generation gids with array index equal to resource gid.</span>
+<span class="sd">            Array value is -1 if the resource index was not used in the</span>
+<span class="sd">            generation run.</span>
+<span class="sd">        resolution : int | None</span>
+<span class="sd">            SC resolution, must be input in combination with gid.</span>
+<span class="sd">        exclusion_shape : tuple</span>
+<span class="sd">            Shape of the exclusions extent (rows, cols). Inputing this will</span>
+<span class="sd">            speed things up considerably.</span>
+<span class="sd">        close : bool</span>
+<span class="sd">            Flag to close object file handlers on exit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gid</span> <span class="o">=</span> <span class="n">gid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_close</span> <span class="o">=</span> <span class="n">close</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excl_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># filepaths</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_excl</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_gen</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_techmap</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># handler objects</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_techmap</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Parse inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_files</span><span class="p">(</span><span class="n">f_excl</span><span class="p">,</span> <span class="n">f_gen</span><span class="p">,</span> <span class="n">f_techmap</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_slices</span><span class="p">(</span>
+            <span class="n">gid</span><span class="p">,</span> <span class="n">f_excl</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">exclusion_shape</span><span class="o">=</span><span class="n">exclusion_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_techmap</span><span class="p">(</span><span class="n">dset_tm</span><span class="p">,</span>
+                                                             <span class="n">gen_index</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f_excl</span><span class="p">,</span> <span class="n">f_gen</span><span class="p">,</span> <span class="n">f_techmap</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse gen + excl filepath input or handler object and set to attrs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f_excl : str | ExclusionPoints</span>
+<span class="sd">            Filepath to exclusions geotiff or ExclusionPoints file handler</span>
+<span class="sd">        f_gen : str | reV.handlers.Outputs</span>
+<span class="sd">            Filepath to .h5 reV generation output results or reV Outputs file</span>
+<span class="sd">            handler.</span>
+<span class="sd">        f_techmap : str | h5py.File</span>
+<span class="sd">            Filepath to tech mapping between exclusions and resource data</span>
+<span class="sd">            (created using the reV TechMapping framework) or an h5py file</span>
+<span class="sd">            handler object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_excl</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_excl</span> <span class="o">=</span> <span class="n">f_excl</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_excl</span><span class="p">,</span> <span class="n">ExclusionPoints</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_excl</span> <span class="o">=</span> <span class="n">f_excl</span><span class="o">.</span><span class="n">_fpath</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="o">=</span> <span class="n">f_excl</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveInputError</span><span class="p">(</span><span class="s1">&#39;SupplyCurvePoints needs an &#39;</span>
+                                        <span class="s1">&#39;exclusions file path, or &#39;</span>
+                                        <span class="s1">&#39;ExclusionPoints handler but &#39;</span>
+                                        <span class="s1">&#39;received: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">f_excl</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_gen</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_gen</span> <span class="o">=</span> <span class="n">f_gen</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_gen</span><span class="p">,</span> <span class="n">Outputs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_gen</span> <span class="o">=</span> <span class="n">f_gen</span><span class="o">.</span><span class="n">_h5_file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="n">f_gen</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveInputError</span><span class="p">(</span><span class="s1">&#39;SingleSupplyCurvePoint needs a &#39;</span>
+                                        <span class="s1">&#39;generation output file path or &#39;</span>
+                                        <span class="s1">&#39;output handler, but received: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">f_gen</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_techmap</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_techmap</span> <span class="o">=</span> <span class="n">f_techmap</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_techmap</span><span class="p">,</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_techmap</span> <span class="o">=</span> <span class="n">f_techmap</span><span class="o">.</span><span class="n">filename</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_techmap</span> <span class="o">=</span> <span class="n">f_techmap</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveInputError</span><span class="p">(</span><span class="s1">&#39;SingleSupplyCurvePoint needs a &#39;</span>
+                                        <span class="s1">&#39;techmap file path or h5py file &#39;</span>
+                                        <span class="s1">&#39;handler, but received: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">f_techmap</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_parse_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">f_excl</span><span class="p">,</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">exclusion_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse inputs for the definition of this SC point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gid : int | None</span>
+<span class="sd">            gid for supply curve point to analyze.</span>
+<span class="sd">        f_excl : str | ExclusionPoints</span>
+<span class="sd">            Filepath to exclusions geotiff or ExclusionPoints file handler</span>
+<span class="sd">        resolution : int | None</span>
+<span class="sd">            SC resolution, must be input in combination with gid.</span>
+<span class="sd">        exclusion_shape : tuple</span>
+<span class="sd">            Shape of the exclusions extent (rows, cols). Inputing this will</span>
+<span class="sd">            speed things up considerably.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rows : slice</span>
+<span class="sd">            Row slice to index the high-res layer (exclusions) for the gid in</span>
+<span class="sd">            the agg layer (supply curve).</span>
+<span class="sd">        cols : slice</span>
+<span class="sd">            Col slice to index the high-res layer (exclusions) for the gid in</span>
+<span class="sd">            the agg layer (supply curve).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">exclusion_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sc</span> <span class="o">=</span> <span class="n">SupplyCurveExtent</span><span class="p">(</span><span class="n">f_excl</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_excl_slices</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_agg_slices</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="n">exclusion_shape</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span>
+
+    <span class="k">def</span> <span class="nf">_parse_techmap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset_tm</span><span class="p">,</span> <span class="n">gen_index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse data from the tech map file (exclusions to resource mapping).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset_tm : str</span>
+<span class="sd">            Dataset name in the techmap file containing the</span>
+<span class="sd">            exclusions-to-resource mapping data.</span>
+<span class="sd">        gen_index : np.ndarray</span>
+<span class="sd">            Array of generation gids with array index equal to resource gid.</span>
+<span class="sd">            Array value is -1 if the resource index was not used in the</span>
+<span class="sd">            generation run.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gen_gids : np.ndarray</span>
+<span class="sd">            1D array with length == number of exclusion points. reV generation</span>
+<span class="sd">            gids (gen results index) from the fpath_gen file corresponding to</span>
+<span class="sd">            the tech exclusions.</span>
+<span class="sd">        res_gids : np.ndarray</span>
+<span class="sd">            1D array with length == number of exclusion points. reV resource</span>
+<span class="sd">            gids (native resource index) from the original resource data</span>
+<span class="sd">            corresponding to the tech exclusions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">emsg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Supply curve point gid </span><span class="si">{}</span><span class="s1"> has no viable exclusion points &#39;</span>
+                <span class="s1">&#39;based on techmap file: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_techmap</span><span class="p">))</span>
+
+        <span class="n">res_gids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">techmap</span><span class="p">[</span><span class="n">dset_tm</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+        <span class="n">res_gids</span> <span class="o">=</span> <span class="n">res_gids</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">res_gids</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EmptySupplyCurvePointError</span><span class="p">(</span><span class="n">emsg</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">res_gids</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gen_index</span><span class="p">))</span> <span class="o">|</span> <span class="p">(</span><span class="n">res_gids</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">res_gids</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">gen_gids</span> <span class="o">=</span> <span class="n">gen_index</span><span class="p">[</span><span class="n">res_gids</span><span class="p">]</span>
+        <span class="n">gen_gids</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">res_gids</span><span class="p">[(</span><span class="n">gen_gids</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">gen_gids</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EmptySupplyCurvePointError</span><span class="p">(</span><span class="n">emsg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">gen_gids</span><span class="p">,</span> <span class="n">res_gids</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span>
+
+<div class="viewcode-block" id="SupplyCurvePoint.close"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurvePoint.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close all file handlers.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_close</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_techmap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_techmap</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SupplyCurvePoint.get_agg_slices"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurvePoint.get_agg_slices">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_agg_slices</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">resolution</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the row, col slices of an aggregation gid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gid : int</span>
+<span class="sd">            Gid of interest in the aggregated layer.</span>
+<span class="sd">        shape : tuple</span>
+<span class="sd">            (row, col) shape tuple of the underlying high-res layer.</span>
+<span class="sd">        resolution : int</span>
+<span class="sd">            Resolution of the aggregation: number of pixels in 1D being</span>
+<span class="sd">            aggregated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        row_slice : slice</span>
+<span class="sd">            Row slice to index the high-res layer for the gid in the agg layer.</span>
+<span class="sd">        col_slice : slice</span>
+<span class="sd">            Col slice to index the high-res layer for the gid in the agg layer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">nrows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">))</span>
+        <span class="n">ncols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">))</span>
+        <span class="n">super_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nrows</span> <span class="o">*</span> <span class="n">ncols</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">super_shape</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">arr</span> <span class="o">==</span> <span class="n">gid</span><span class="p">)</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Gid </span><span class="si">{}</span><span class="s1"> out of bounds for extent shape </span><span class="si">{}</span><span class="s1"> and &#39;</span>
+                             <span class="s1">&#39;resolution </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">resolution</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">row</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">!=</span> <span class="n">nrows</span><span class="p">:</span>
+            <span class="n">row_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">row</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">,</span> <span class="p">(</span><span class="n">row</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">row_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">row</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">col</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">!=</span> <span class="n">ncols</span><span class="p">:</span>
+            <span class="n">col_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">col</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">,</span> <span class="p">(</span><span class="n">col</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">col_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">col</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">row_slice</span><span class="p">,</span> <span class="n">col_slice</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the rows of the exclusions layer associated with this SC point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        rows : slice</span>
+<span class="sd">            Row slice to index the high-res layer (exclusions layer) for the</span>
+<span class="sd">            gid in the agg layer (supply curve layer).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the cols of the exclusions layer associated with this SC point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cols : slice</span>
+<span class="sd">            Column slice to index the high-res layer (exclusions layer) for the</span>
+<span class="sd">            gid in the agg layer (supply curve layer).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the supply curve point centroid coordinate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        centroid : tuple</span>
+<span class="sd">            SC point centroid (lat, lon).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">decimals</span> <span class="o">=</span> <span class="mi">3</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">techmap</span><span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+            <span class="n">lons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">techmap</span><span class="p">[</span><span class="s1">&#39;longitude&#39;</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">lats</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">),</span>
+                              <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">lons</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">decimals</span><span class="o">=</span><span class="n">decimals</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_centroid</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the exclusions object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _exclusions : ExclusionPoints</span>
+<span class="sd">            Exclusions geotiff handler object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="o">=</span> <span class="n">ExclusionPoints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fpath_excl</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">excl_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the exclusions mask (normalized with expected range: [0, 1]).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _excl_data : np.ndarray</span>
+<span class="sd">            Exclusions data mask.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_excl_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+
+            <span class="c1"># infer exclusions that are scaled percentages from 0 to 100</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_data</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_excl_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_excl_data</span> <span class="o">/=</span> <span class="mi">100</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_excl_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a boolean inclusion mask (True if excl point is not excluded).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mask : np.ndarray</span>
+<span class="sd">            Mask with length equal to the flattened exclusion shape</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the generation output object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _gen : Outputs</span>
+<span class="sd">            reV generation outputs object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span> <span class="o">=</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fpath_gen</span><span class="p">,</span> <span class="n">str_decode</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">techmap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the reV technology mapping object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _techmap : h5py.File</span>
+<span class="sd">            reV techmap file object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_techmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_techmap</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fpath_techmap</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_techmap</span></div>
+
+
+<div class="viewcode-block" id="SupplyCurveExtent"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurveExtent">[docs]</a><span class="k">class</span> <span class="nc">SupplyCurveExtent</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Supply curve full extent framework.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f_excl</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        f_excl : str | ExclusionPoints</span>
+<span class="sd">            File path to the exclusions grid, or pre-initialized</span>
+<span class="sd">            ExclusionPoints. The exclusions dictate the SC analysis extent.</span>
+<span class="sd">        resolution : int</span>
+<span class="sd">            Number of exclusion points per SC point along an axis.</span>
+<span class="sd">            This number**2 is the total number of exclusion points per</span>
+<span class="sd">            SC point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resolution</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveInputError</span><span class="p">(</span><span class="s1">&#39;Supply Curve resolution needs to be &#39;</span>
+                                        <span class="s1">&#39;an integer but received: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">resolution</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_excl</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_excl</span> <span class="o">=</span> <span class="n">f_excl</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="o">=</span> <span class="n">ExclusionPoints</span><span class="p">(</span><span class="n">f_excl</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f_excl</span><span class="p">,</span> <span class="n">ExclusionPoints</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fpath_excl</span> <span class="o">=</span> <span class="n">f_excl</span><span class="o">.</span><span class="n">_fpath</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="o">=</span> <span class="n">f_excl</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveInputError</span><span class="p">(</span><span class="s1">&#39;SupplyCurvePoints needs an &#39;</span>
+                                        <span class="s1">&#39;exclusions file path, or &#39;</span>
+                                        <span class="s1">&#39;ExclusionPoints handler but &#39;</span>
+                                        <span class="s1">&#39;received: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">f_excl</span><span class="p">)))</span>
+
+        <span class="c1"># limit the resolution to the exclusion shape.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">resolution</span><span class="p">,</span> <span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cols_of_excl</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows_of_excl</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total number of supply curve points.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_rows</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cols</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get SC extent meta data corresponding to an SC point gid.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gid</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;SC extent with </span><span class="si">{}</span><span class="s1"> points does not contain SC &#39;</span>
+                           <span class="s1">&#39;point gid </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">gid</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gid</span><span class="p">]</span>
+
+<div class="viewcode-block" id="SupplyCurveExtent.close"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurveExtent.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close all file handlers.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the Supply curve shape tuple (n_rows, n_cols).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        shape : tuple</span>
+<span class="sd">            2-entry tuple representing the full supply curve extent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_cols</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the exclusions object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _exclusions : ExclusionPoints</span>
+<span class="sd">            Exclusions geotiff handler object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the 1D resolution.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _res : int</span>
+<span class="sd">            Number of exclusion points per SC point along an axis.</span>
+<span class="sd">            This number**2 is the total number of exclusion points per</span>
+<span class="sd">            SC point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">excl_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the unique row indices identifying the exclusion points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        excl_rows : np.ndarray</span>
+<span class="sd">            Array of exclusion row indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span><span class="o">.</span><span class="n">n_rows</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">excl_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the unique column indices identifying the exclusion points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        excl_cols : np.ndarray</span>
+<span class="sd">            Array of exclusion column indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span><span class="o">.</span><span class="n">n_cols</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rows_of_excl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List representing the supply curve points rows and which</span>
+<span class="sd">        exclusions rows belong to each supply curve row.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _rows_of_excl : list</span>
+<span class="sd">            List representing the supply curve points rows. Each list entry</span>
+<span class="sd">            contains the exclusion row indices that are included in the sc</span>
+<span class="sd">            point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows_of_excl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rows_of_excl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_excl</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">excl_rows</span><span class="p">,</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows_of_excl</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cols_of_excl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;List representing the supply curve points columns and which</span>
+<span class="sd">        exclusions columns belong to each supply curve column.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _cols_of_excl : list</span>
+<span class="sd">            List representing the supply curve points columns. Each list entry</span>
+<span class="sd">            contains the exclusion column indices that are included in the sc</span>
+<span class="sd">            point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols_of_excl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cols_of_excl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_excl</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">excl_cols</span><span class="p">,</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols_of_excl</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of supply curve grid rows.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        n_rows : int</span>
+<span class="sd">            Number of row entries in the full supply curve grid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span><span class="o">.</span><span class="n">n_rows</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of supply curve grid columns.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        n_cols : int</span>
+<span class="sd">            Number of column entries in the full supply curve grid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span><span class="o">.</span><span class="n">n_cols</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolution</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the summary dataframe of supply curve points.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _points : pd.DataFrame</span>
+<span class="sd">            Supply curve points with columns for attributes of each sc point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sc_col_ind</span><span class="p">,</span> <span class="n">sc_row_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cols</span><span class="p">),</span>
+                                                 <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_rows</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;row_ind&#39;</span><span class="p">:</span> <span class="n">sc_row_ind</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                                         <span class="s1">&#39;col_ind&#39;</span><span class="p">:</span> <span class="n">sc_col_ind</span><span class="o">.</span><span class="n">flatten</span><span class="p">()})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;gid&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span>
+
+<div class="viewcode-block" id="SupplyCurveExtent.get_excl_slices"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurveExtent.get_excl_slices">[docs]</a>    <span class="k">def</span> <span class="nf">get_excl_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the row and column slices of the exclusions grid corresponding</span>
+<span class="sd">        to the supply curve point gid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gid : int</span>
+<span class="sd">            Supply curve point gid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        row_slice : int</span>
+<span class="sd">            Exclusions grid row index slice corresponding to the sc point gid.</span>
+<span class="sd">        col_slice : int</span>
+<span class="sd">            Exclusions grid col index slice corresponding to the sc point gid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">gid</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SupplyCurveError</span><span class="p">(</span><span class="s1">&#39;Requested gid &quot;</span><span class="si">{}</span><span class="s1">&quot; is out of bounds for &#39;</span>
+                                   <span class="s1">&#39;supply curve points with length &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span>
+                                   <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+
+        <span class="n">sc_row_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gid</span><span class="p">,</span> <span class="s1">&#39;row_ind&#39;</span><span class="p">]</span>
+        <span class="n">sc_col_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">gid</span><span class="p">,</span> <span class="s1">&#39;col_ind&#39;</span><span class="p">]</span>
+        <span class="n">excl_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows_of_excl</span><span class="p">[</span><span class="n">sc_row_ind</span><span class="p">]</span>
+        <span class="n">excl_cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols_of_excl</span><span class="p">[</span><span class="n">sc_col_ind</span><span class="p">]</span>
+        <span class="n">row_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">excl_rows</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">excl_rows</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">col_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">excl_cols</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">excl_cols</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">row_slice</span><span class="p">,</span> <span class="n">col_slice</span></div>
+
+<div class="viewcode-block" id="SupplyCurveExtent.get_flat_excl_ind"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurveExtent.get_flat_excl_ind">[docs]</a>    <span class="k">def</span> <span class="nf">get_flat_excl_ind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the index values of the flattened exclusions grid corresponding</span>
+<span class="sd">        to the supply curve point gid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gid : int</span>
+<span class="sd">            Supply curve point gid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        excl_ind : np.ndarray</span>
+<span class="sd">            Index values of the flattened exclusions grid corresponding to</span>
+<span class="sd">            the SC gid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">row_slice</span><span class="p">,</span> <span class="n">col_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_excl_slices</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="n">excl_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span><span class="o">.</span><span class="n">iarr</span><span class="p">[</span><span class="n">row_slice</span><span class="p">,</span> <span class="n">col_slice</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">excl_ind</span></div>
+
+<div class="viewcode-block" id="SupplyCurveExtent.get_excl_points"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurveExtent.get_excl_points">[docs]</a>    <span class="k">def</span> <span class="nf">get_excl_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset</span><span class="p">,</span> <span class="n">gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the exclusions data corresponding to a supply curve gid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset : str | int</span>
+<span class="sd">            Used as the first arg in the exclusions __getitem__ slice.</span>
+<span class="sd">            String can be &quot;meta&quot;, integer can be layer number.</span>
+<span class="sd">        gid : int</span>
+<span class="sd">            Supply curve point gid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        excl_points : pd.DataFrame</span>
+<span class="sd">            Exclusions data reduced to just the exclusion points associated</span>
+<span class="sd">            with the requested supply curve gid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">row_slice</span><span class="p">,</span> <span class="n">col_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_excl_slices</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclusions</span><span class="p">[</span><span class="n">dset</span><span class="p">,</span> <span class="n">row_slice</span><span class="p">,</span> <span class="n">col_slice</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SupplyCurveExtent.get_coord"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.points.SupplyCurveExtent.get_coord">[docs]</a>    <span class="k">def</span> <span class="nf">get_coord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the centroid coordinate for the supply curve gid point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gid : int</span>
+<span class="sd">            Supply curve point gid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        coord : tuple</span>
+<span class="sd">            Two entry coordinate tuple: (latitude, longitude)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">excl_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_excl_points</span><span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="n">gid</span><span class="p">)</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="p">(</span><span class="n">excl_meta</span><span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">excl_meta</span><span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="p">(</span><span class="n">excl_meta</span><span class="p">[</span><span class="s1">&#39;longitude&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">excl_meta</span><span class="p">[</span><span class="s1">&#39;longitude&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_chunk_excl</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">resolution</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Split an array into a list of arrays with len == resolution.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr : np.ndarray</span>
+<span class="sd">            1D array to be split into chunks.</span>
+<span class="sd">        resolution : int</span>
+<span class="sd">            Resolution of the chunks.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        chunks : list</span>
+<span class="sd">            List of arrays, each with length equal to self.resolution</span>
+<span class="sd">            (except for the last array in the list which is the remainder).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">chunks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">resolution</span><span class="p">])</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="n">i</span> <span class="o">+</span> <span class="n">resolution</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">chunks</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

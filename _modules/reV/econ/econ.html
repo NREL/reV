@@ -1,0 +1,721 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.econ.econ &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.econ.econ</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.econ.econ</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV econ module (lcoe-fcr, single owner, etc...)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.SAM.econ</span> <span class="k">import</span> <span class="n">LCOE</span> <span class="k">as</span> <span class="n">SAM_LCOE</span>
+<span class="kn">from</span> <span class="nn">reV.SAM.econ</span> <span class="k">import</span> <span class="n">SingleOwner</span>
+<span class="kn">from</span> <span class="nn">reV.handlers.outputs</span> <span class="k">import</span> <span class="n">Outputs</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.execution</span> <span class="k">import</span> <span class="p">(</span><span class="n">execute_parallel</span><span class="p">,</span> <span class="n">execute_single</span><span class="p">,</span>
+                                     <span class="n">SmartParallelJob</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">reV.generation.generation</span> <span class="k">import</span> <span class="n">Gen</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Econ"><a class="viewcode-back" href="../../../reV/reV.econ.html#reV.econ.econ.Econ">[docs]</a><span class="k">class</span> <span class="nc">Econ</span><span class="p">(</span><span class="n">Gen</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base econ class&quot;&quot;&quot;</span>
+
+    <span class="c1"># Mapping of reV econ output strings to SAM econ functions</span>
+    <span class="n">OPTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">:</span> <span class="n">SAM_LCOE</span><span class="o">.</span><span class="n">reV_run</span><span class="p">,</span>
+               <span class="s1">&#39;ppa_price&#39;</span><span class="p">:</span> <span class="n">SingleOwner</span><span class="o">.</span><span class="n">reV_run</span><span class="p">,</span>
+               <span class="s1">&#39;project_return_aftertax_npv&#39;</span><span class="p">:</span> <span class="n">SingleOwner</span><span class="o">.</span><span class="n">reV_run</span><span class="p">,</span>
+               <span class="s1">&#39;lcoe_real&#39;</span><span class="p">:</span> <span class="n">SingleOwner</span><span class="o">.</span><span class="n">reV_run</span><span class="p">,</span>
+               <span class="s1">&#39;lcoe_nom&#39;</span><span class="p">:</span> <span class="n">SingleOwner</span><span class="o">.</span><span class="n">reV_run</span><span class="p">,</span>
+               <span class="s1">&#39;flip_actual_irr&#39;</span><span class="p">:</span> <span class="n">SingleOwner</span><span class="o">.</span><span class="n">reV_run</span><span class="p">,</span>
+               <span class="p">}</span>
+
+    <span class="c1"># Mapping of reV econ outputs to scale factors and units.</span>
+    <span class="c1"># Type is scalar or array and corresponds to the SAM single-site output</span>
+    <span class="n">OUT_ATTRS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;dol/MWh&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                              <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;scalar&#39;</span><span class="p">},</span>
+                 <span class="s1">&#39;ppa_price&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;dol/MWh&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                               <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;scalar&#39;</span><span class="p">},</span>
+                 <span class="s1">&#39;project_return_aftertax_npv&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                                                 <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;dol&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                                 <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;scalar&#39;</span><span class="p">},</span>
+                 <span class="s1">&#39;lcoe_real&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;dol/MWh&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                               <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;scalar&#39;</span><span class="p">},</span>
+                 <span class="s1">&#39;lcoe_nom&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;dol/MWh&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                              <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;scalar&#39;</span><span class="p">},</span>
+                 <span class="s1">&#39;flip_actual_irr&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;perc&#39;</span><span class="p">,</span>
+                                     <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;chunks&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                     <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;scalar&#39;</span><span class="p">},</span>
+                 <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points_control</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span> <span class="n">cf_year</span><span class="p">,</span> <span class="n">site_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">,),</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirout</span><span class="o">=</span><span class="s1">&#39;./econ_out&#39;</span><span class="p">,</span>
+                 <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.4</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize an econ instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points_control : reV.config.PointsControl</span>
+<span class="sd">            Project points control instance for site and SAM config spec.</span>
+<span class="sd">        cf_file : str</span>
+<span class="sd">            reV generation capacity factor output file with path.</span>
+<span class="sd">        cf_year : int | str | None</span>
+<span class="sd">            reV generation year to calculate econ for. Looks for cf_mean_{year}</span>
+<span class="sd">            or cf_profile_{year}. None will default to a non-year-specific cf</span>
+<span class="sd">            dataset (cf_mean, cf_profile).</span>
+<span class="sd">        site_data : str | pd.DataFrame | None</span>
+<span class="sd">            Site-specific data for econ calculation. Str points to csv,</span>
+<span class="sd">            DataFrame is pre-extracted data. Rows match sites, columns are</span>
+<span class="sd">            variables. Input as None if the only site data required is present</span>
+<span class="sd">            in the cf_file.</span>
+<span class="sd">        output_request : str | list | tuple</span>
+<span class="sd">            Economic output variable(s) requested from SAM.</span>
+<span class="sd">        fout : str | None</span>
+<span class="sd">            Optional .h5 output file specification.</span>
+<span class="sd">        dirout : str | None</span>
+<span class="sd">            Optional output directory specification. The directory will be</span>
+<span class="sd">            created if it does not already exist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_points_control</span> <span class="o">=</span> <span class="n">points_control</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf_file</span> <span class="o">=</span> <span class="n">cf_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_year</span> <span class="o">=</span> <span class="n">cf_year</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site_limit</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site_mem</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fout</span> <span class="o">=</span> <span class="n">fout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dirout</span> <span class="o">=</span> <span class="n">dirout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fpath</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mem_util_lim</span> <span class="o">=</span> <span class="n">mem_util_lim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_output_request</span><span class="p">(</span><span class="n">output_request</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_site_data</span><span class="p">(</span><span class="n">site_data</span><span class="p">)</span>
+
+        <span class="c1"># pre-initialize output arrays to store results when available.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_out</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_finished_sites</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_out_n_sites</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_out_chunk</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_out_arrays</span><span class="p">()</span>
+
+        <span class="c1"># initialize output file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_fpath</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_h5</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_parse_output_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the output variables requested from generation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        req : str| list | tuple</span>
+<span class="sd">            Output variables requested from SAM.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Output variables requested from SAM.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># type check and ensure list for manipulation</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">output_request</span> <span class="o">=</span> <span class="n">req</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">output_request</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">output_request</span> <span class="o">=</span> <span class="p">[</span><span class="n">req</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Output request must be str, list, or tuple but &#39;</span>
+                            <span class="s1">&#39;received: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">req</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">output_request</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">request</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OUT_ATTRS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;User output request &quot;</span><span class="si">{}</span><span class="s1">&quot; not recognized. &#39;</span>
+                                 <span class="s1">&#39;The following output requests are available &#39;</span>
+                                 <span class="s1">&#39;in &quot;</span><span class="si">{}</span><span class="s1">&quot;: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
+                                         <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OUT_ATTRS</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="n">request</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="n">output_request</span><span class="p">[</span><span class="mi">0</span><span class="p">]]:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Econ outputs requested from different SAM modules not &#39;</span>
+                       <span class="s1">&#39;currently supported. Output request variables &quot;</span><span class="si">{}</span><span class="s1">&quot; &#39;</span>
+                       <span class="s1">&#39;and &quot;</span><span class="si">{}</span><span class="s1">&quot; require SAM modules &quot;</span><span class="si">{}</span><span class="s1">&quot; and &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span>
+                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">output_request</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="n">request</span><span class="p">],</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="n">output_request</span><span class="p">[</span><span class="mi">0</span><span class="p">]]))</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output_request</span>
+
+    <span class="k">def</span> <span class="nf">_parse_site_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse site-specific data from input arg</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inp : str | pd.DataFrame | None</span>
+<span class="sd">            Site data in .csv or pre-extracted dataframe format. None signifies</span>
+<span class="sd">            that there is no extra site-specific data and that everything will</span>
+<span class="sd">            be taken from the cf_file (generation outputs).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        site_data : pd.DataFrame</span>
+<span class="sd">            Site-specific data for econ calculation. Rows correspond to sites,</span>
+<span class="sd">            columns are variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">inp</span><span class="p">:</span>
+            <span class="c1"># no input, just initialize dataframe with site gids as index</span>
+            <span class="n">site_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">sites</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># explicit input, initialize df</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">inp</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
+                    <span class="n">site_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                <span class="n">site_data</span> <span class="o">=</span> <span class="n">inp</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># site data was not able to be set. Raise error.</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Site data input must be .csv or &#39;</span>
+                                <span class="s1">&#39;dataframe, but received: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inp</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="s1">&#39;gid&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">site_data</span> <span class="ow">and</span> <span class="n">site_data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s1">&#39;gid&#39;</span><span class="p">:</span>
+                <span class="c1"># require gid as column label or index</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Site data input must have &quot;gid&quot; column &#39;</span>
+                               <span class="s1">&#39;to match reV site gid.&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">site_data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s1">&#39;gid&#39;</span><span class="p">:</span>
+                <span class="c1"># make gid the dataframe index if not already</span>
+                <span class="n">site_data</span> <span class="o">=</span> <span class="n">site_data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;gid&#39;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># add offshore if necessary</span>
+        <span class="k">if</span> <span class="s1">&#39;offshore&#39;</span> <span class="ow">in</span> <span class="n">site_data</span><span class="p">:</span>
+            <span class="c1"># offshore is already in site data df, just make sure it&#39;s boolean</span>
+            <span class="n">site_data</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">site_data</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># offshore not yet in site data df, check to see if in meta</span>
+            <span class="k">if</span> <span class="s1">&#39;offshore&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Found &quot;offshore&quot; data in meta. Interpreting &#39;</span>
+                             <span class="s1">&#39;as wind sites that may be analyzed using &#39;</span>
+                             <span class="s1">&#39;ORCA.&#39;</span><span class="p">)</span>
+                <span class="c1"># save offshore flags as boolean array</span>
+                <span class="n">site_data</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;offshore&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">site_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cf_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the capacity factor output filename and path.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cf_file : str</span>
+<span class="sd">            reV generation capacity factor output file with path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf_file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">site_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the site-specific dataframe.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _site_data : pd.DataFrame</span>
+<span class="sd">            Site-specific data for econ calculation. Rows match sites,</span>
+<span class="sd">            columns are variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_data</span>
+
+<div class="viewcode-block" id="Econ.add_site_data_to_pp"><a class="viewcode-back" href="../../../reV/reV.econ.html#reV.econ.econ.Econ.add_site_data_to_pp">[docs]</a>    <span class="k">def</span> <span class="nf">add_site_data_to_pp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add the site df (site-specific inputs) to project points dataframe.</span>
+
+<span class="sd">        This ensures that only the relevant site&#39;s data will be passed through</span>
+<span class="sd">        to parallel workers when points_control is iterated and split.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">join_df</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">site_data</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">site_data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get meta data from the source capacity factors file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _meta : pd.DataFrame</span>
+<span class="sd">            Meta data from capacity factor outputs file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">cfh</span><span class="p">:</span>
+                <span class="c1"># only take meta that belongs to this project&#39;s site list</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">cfh</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span>
+                    <span class="n">cfh</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points_control</span><span class="o">.</span><span class="n">sites</span><span class="p">)]</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Meta shape is </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the generation resource time index data.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cf_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">cfh</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;time_index&#39;</span> <span class="ow">in</span> <span class="n">cfh</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span> <span class="o">=</span> <span class="n">cfh</span><span class="o">.</span><span class="n">time_index</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_index</span>
+
+<div class="viewcode-block" id="Econ.run"><a class="viewcode-back" href="../../../reV/reV.econ.html#reV.econ.econ.Econ.run">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">output_request</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the SAM econ calculation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pc : reV.config.project_points.PointsControl</span>
+<span class="sd">            Iterable points control object from reV config module.</span>
+<span class="sd">            Must have project_points with df property with all relevant</span>
+<span class="sd">            site-specific inputs and a &#39;gid&#39; column. By passing site-specific</span>
+<span class="sd">            inputs in this dataframe, which was split using points_control,</span>
+<span class="sd">            only the data relevant to the current sites is passed.</span>
+<span class="sd">        output_request : str | list | tuple</span>
+<span class="sd">            Economic output variable(s) requested from SAM.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Additional input parameters for the SAM run module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># make sure output request is a list</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_request</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">output_request</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_request</span><span class="p">]</span>
+
+        <span class="c1"># Extract the site df from the project points df.</span>
+        <span class="n">site_df</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">df</span>
+
+        <span class="c1"># check that there is a gid column</span>
+        <span class="k">if</span> <span class="s1">&#39;gid&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">site_df</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Econ input &quot;site_df&quot; (in project_points.df) does not have &#39;</span>
+                 <span class="s1">&#39;a label corresponding to site gid. This may cause an &#39;</span>
+                 <span class="s1">&#39;incorrect interpretation of site id.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># extract site df from project points df and set gid as index</span>
+            <span class="n">site_df</span> <span class="o">=</span> <span class="n">site_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;gid&#39;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># SAM execute econ analysis based on output request</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">Econ</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="n">output_request</span><span class="p">[</span><span class="mi">0</span><span class="p">]](</span><span class="n">pc</span><span class="p">,</span> <span class="n">site_df</span><span class="p">,</span>
+                                              <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">,</span>
+                                              <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="Econ.run_direct"><a class="viewcode-back" href="../../../reV/reV.econ.html#reV.econ.econ.Econ.run_direct">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run_direct</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sam_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cf_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">cf_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">,),</span>
+                   <span class="n">n_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sites_per_split</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">points_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirout</span><span class="o">=</span><span class="s1">&#39;./econ_out&#39;</span><span class="p">,</span> <span class="n">return_obj</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute a econ run directly from source files without config.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points : slice | str | reV.config.project_points.PointsControl</span>
+<span class="sd">            Slice specifying project points, or string pointing to a project</span>
+<span class="sd">            points csv, or a fully instantiated PointsControl object.</span>
+<span class="sd">        sam_files : dict | str | list</span>
+<span class="sd">            Site-agnostic input data.</span>
+<span class="sd">            Dict contains SAM input configuration ID(s) and file path(s).</span>
+<span class="sd">            Keys are the SAM config ID(s), top level value is the SAM path.</span>
+<span class="sd">            Can also be a single config file str. If it&#39;s a list, it is mapped</span>
+<span class="sd">            to the sorted list of unique configs requested by points csv.</span>
+<span class="sd">        cf_file : str</span>
+<span class="sd">            reV generation capacity factor output file with path.</span>
+<span class="sd">        cf_year : int | str | None</span>
+<span class="sd">            reV generation year to calculate econ for. Looks for cf_mean_{year}</span>
+<span class="sd">            or cf_profile_{year}. None will default to a non-year-specific cf</span>
+<span class="sd">            dataset (cf_mean, cf_profile).</span>
+<span class="sd">        site_data : str | pd.DataFrame | None</span>
+<span class="sd">            Site-specific data for econ calculation. Str points to csv,</span>
+<span class="sd">            DataFrame is pre-extracted data. Rows match sites, columns are</span>
+<span class="sd">            variables. Input as None if the only site data required is present</span>
+<span class="sd">            in the cf_file.</span>
+<span class="sd">        output_request : str | list | tuple</span>
+<span class="sd">            Economic output variable(s) requested from SAM.</span>
+<span class="sd">        n_workers : int</span>
+<span class="sd">            Number of local workers to run on.</span>
+<span class="sd">        sites_per_split : int</span>
+<span class="sd">            Number of sites to run in series on a core.</span>
+<span class="sd">        points_range : list | None</span>
+<span class="sd">            Optional two-entry list specifying the index range of the sites to</span>
+<span class="sd">            analyze. To be taken from the reV.config.PointsControl.split_range</span>
+<span class="sd">            property.</span>
+<span class="sd">        fout : str | None</span>
+<span class="sd">            Optional .h5 output file specification.</span>
+<span class="sd">        dirout : str | None</span>
+<span class="sd">            Optional output directory specification. The directory will be</span>
+<span class="sd">            created if it does not already exist.</span>
+<span class="sd">        return_obj : bool</span>
+<span class="sd">            Option to return the Gen object instance.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        econ : reV.econ.Econ</span>
+<span class="sd">            Econ object instance with outputs stored in .out attribute.</span>
+<span class="sd">            Only returned if return_obj is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get a points control instance</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_pc</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">points_range</span><span class="p">,</span> <span class="n">sam_files</span><span class="p">,</span> <span class="n">tech</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># make a Gen class instance to operate with</span>
+        <span class="n">econ</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span> <span class="n">cf_year</span><span class="o">=</span><span class="n">cf_year</span><span class="p">,</span> <span class="n">site_data</span><span class="o">=</span><span class="n">site_data</span><span class="p">,</span>
+                   <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span> <span class="n">dirout</span><span class="o">=</span><span class="n">dirout</span><span class="p">)</span>
+
+        <span class="n">diff</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">sites</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">econ</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">diff</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;The following analysis sites were requested &#39;</span>
+                            <span class="s1">&#39;through project points for econ but are not &#39;</span>
+                            <span class="s1">&#39;found in the CF file (&quot;</span><span class="si">{}</span><span class="s1">&quot;): </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">econ</span><span class="o">.</span><span class="n">cf_file</span><span class="p">,</span> <span class="n">diff</span><span class="p">))</span>
+
+        <span class="c1"># make a kwarg dict</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;output_request&#39;</span><span class="p">:</span> <span class="n">output_request</span><span class="p">,</span>
+                  <span class="s1">&#39;cf_file&#39;</span><span class="p">:</span> <span class="n">cf_file</span><span class="p">,</span>
+                  <span class="s1">&#39;cf_year&#39;</span><span class="p">:</span> <span class="n">cf_year</span><span class="p">}</span>
+
+        <span class="c1"># add site_df to project points dataframe</span>
+        <span class="n">econ</span><span class="o">.</span><span class="n">add_site_data_to_pp</span><span class="p">()</span>
+
+        <span class="c1"># use serial or parallel execution control based on n_workers</span>
+        <span class="k">if</span> <span class="n">n_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Running serial generation for: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pc</span><span class="p">))</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">execute_single</span><span class="p">(</span><span class="n">econ</span><span class="o">.</span><span class="n">run</span><span class="p">,</span> <span class="n">pc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Running parallel generation for: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pc</span><span class="p">))</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">execute_parallel</span><span class="p">(</span><span class="n">econ</span><span class="o">.</span><span class="n">run</span><span class="p">,</span> <span class="n">pc</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="n">n_workers</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># save output data to object attribute</span>
+        <span class="n">econ</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">out</span>
+
+        <span class="c1"># flush output data (will only write to disk if fout is a str)</span>
+        <span class="n">econ</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="c1"># optionally return Gen object (useful for debugging and hacking)</span>
+        <span class="k">if</span> <span class="n">return_obj</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">econ</span></div>
+
+<div class="viewcode-block" id="Econ.run_smart"><a class="viewcode-back" href="../../../reV/reV.econ.html#reV.econ.econ.Econ.run_smart">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run_smart</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">points</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sam_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cf_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">cf_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">site_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">,),</span>
+                  <span class="n">n_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sites_per_split</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">points_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirout</span><span class="o">=</span><span class="s1">&#39;./econ_out&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute a econ run directly from source files without config.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points : slice | str | reV.config.project_points.PointsControl</span>
+<span class="sd">            Slice specifying project points, or string pointing to a project</span>
+<span class="sd">            points csv, or a fully instantiated PointsControl object.</span>
+<span class="sd">        sam_files : dict | str | list</span>
+<span class="sd">            Site-agnostic input data.</span>
+<span class="sd">            Dict contains SAM input configuration ID(s) and file path(s).</span>
+<span class="sd">            Keys are the SAM config ID(s), top level value is the SAM path.</span>
+<span class="sd">            Can also be a single config file str. If it&#39;s a list, it is mapped</span>
+<span class="sd">            to the sorted list of unique configs requested by points csv.</span>
+<span class="sd">        cf_file : str</span>
+<span class="sd">            reV generation capacity factor output file with path.</span>
+<span class="sd">        cf_year : int | str | None</span>
+<span class="sd">            reV generation year to calculate econ for. Looks for cf_mean_{year}</span>
+<span class="sd">            or cf_profile_{year}. None will default to a non-year-specific cf</span>
+<span class="sd">            dataset (cf_mean, cf_profile).</span>
+<span class="sd">        site_data : str | pd.DataFrame | None</span>
+<span class="sd">            Site-specific data for econ calculation. Str points to csv,</span>
+<span class="sd">            DataFrame is pre-extracted data. Rows match sites, columns are</span>
+<span class="sd">            variables. Input as None if the only site data required is present</span>
+<span class="sd">            in the cf_file.</span>
+<span class="sd">        output_request : str | list | tuple</span>
+<span class="sd">            Economic output variable(s) requested from SAM.</span>
+<span class="sd">        n_workers : int</span>
+<span class="sd">            Number of local workers to run on.</span>
+<span class="sd">        sites_per_split : int</span>
+<span class="sd">            Number of sites to run in series on a core.</span>
+<span class="sd">        points_range : list | None</span>
+<span class="sd">            Optional two-entry list specifying the index range of the sites to</span>
+<span class="sd">            analyze. To be taken from the reV.config.PointsControl.split_range</span>
+<span class="sd">            property.</span>
+<span class="sd">        fout : str | None</span>
+<span class="sd">            Optional .h5 output file specification.</span>
+<span class="sd">        dirout : str | None</span>
+<span class="sd">            Optional output directory specification. The directory will be</span>
+<span class="sd">            created if it does not already exist.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        econ : reV.econ.Econ</span>
+<span class="sd">            Econ object instance with outputs stored in .out attribute.</span>
+<span class="sd">            Only returned if return_obj is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get a points control instance</span>
+        <span class="n">pc</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_pc</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">points_range</span><span class="p">,</span> <span class="n">sam_files</span><span class="p">,</span> <span class="n">tech</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># make a Gen class instance to operate with</span>
+        <span class="n">econ</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">cf_file</span><span class="p">,</span> <span class="n">cf_year</span><span class="o">=</span><span class="n">cf_year</span><span class="p">,</span> <span class="n">site_data</span><span class="o">=</span><span class="n">site_data</span><span class="p">,</span>
+                   <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="n">fout</span><span class="p">,</span> <span class="n">dirout</span><span class="o">=</span><span class="n">dirout</span><span class="p">)</span>
+
+        <span class="n">diff</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">sites</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">econ</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;gid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">diff</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;The following analysis sites were requested &#39;</span>
+                            <span class="s1">&#39;through project points for econ but are not &#39;</span>
+                            <span class="s1">&#39;found in the CF file (&quot;</span><span class="si">{}</span><span class="s1">&quot;): </span><span class="si">{}</span><span class="s1">&#39;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">econ</span><span class="o">.</span><span class="n">cf_file</span><span class="p">,</span> <span class="n">diff</span><span class="p">))</span>
+
+        <span class="c1"># make a kwarg dict</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;output_request&#39;</span><span class="p">:</span> <span class="n">output_request</span><span class="p">,</span>
+                  <span class="s1">&#39;cf_file&#39;</span><span class="p">:</span> <span class="n">cf_file</span><span class="p">,</span>
+                  <span class="s1">&#39;cf_year&#39;</span><span class="p">:</span> <span class="n">cf_year</span><span class="p">}</span>
+
+        <span class="c1"># add site_df to project points dataframe</span>
+        <span class="n">econ</span><span class="o">.</span><span class="n">add_site_data_to_pp</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Running parallel econ with smart data flushing &#39;</span>
+                    <span class="s1">&#39;for: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pc</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The following project points were specified: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The following SAM configs are available to this run:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">sam_files</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The SAM output variables have been requested:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_request</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># use SmartParallelJob to manage runs, but set mem limit to 1</span>
+            <span class="c1"># because Econ() will manage the sites in-memory</span>
+            <span class="n">SmartParallelJob</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">econ</span><span class="p">,</span> <span class="n">pc</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="n">n_workers</span><span class="p">,</span>
+                                     <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;SmartParallelJob.execute() failed.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

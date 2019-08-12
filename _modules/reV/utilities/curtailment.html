@@ -1,0 +1,314 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.utilities.curtailment &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.utilities.curtailment</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.utilities.curtailment</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Curtailment utility methods.</span>
+
+<span class="sd">Created on Fri Mar  1 13:47:30 2019</span>
+
+<span class="sd">@author: gbuster</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="n">HandlerWarning</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.solar_position</span> <span class="k">import</span> <span class="n">SolarPosition</span>
+
+
+<div class="viewcode-block" id="curtail"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.curtailment.curtail">[docs]</a><span class="k">def</span> <span class="nf">curtail</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="n">curtailment</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Curtail the SAM wind resource object based on project points.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    resource : reV.handlers.sam_resource.SAMResource</span>
+<span class="sd">        SAM resource object for WIND resource.</span>
+<span class="sd">    curtailment : reV.config.curtailment.Curtailment</span>
+<span class="sd">        Curtailment config object.</span>
+<span class="sd">    random_seed : int | NoneType</span>
+<span class="sd">        Number to seed the numpy random number generator. Used to generate</span>
+<span class="sd">        reproducable psuedo-random results if the probability of curtailment</span>
+<span class="sd">        is not set to 1. Numpy random will be seeded with the system time if</span>
+<span class="sd">        this is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    resource : reV.handlers.sam_resource.SAMResource</span>
+<span class="sd">        Same as the input argument but with the wind speed dataset set to zero</span>
+<span class="sd">        where curtailment is in effect.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">resource</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># start with curtailment everywhere</span>
+    <span class="n">curtail_mult</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># Curtail resource when in curtailment months</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">time_index</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">months</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">curtail_mult</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">curtail_mult</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Curtail resource when curtailment is possible and is nighttime</span>
+    <span class="n">sza</span> <span class="o">=</span> <span class="n">SolarPosition</span><span class="p">(</span>
+        <span class="n">resource</span><span class="o">.</span><span class="n">time_index</span><span class="p">,</span>
+        <span class="n">resource</span><span class="o">.</span><span class="n">meta</span><span class="p">[[</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">zenith</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">sza</span> <span class="o">&gt;</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">dawn_dusk</span><span class="p">)</span>
+    <span class="n">curtail_mult</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">curtail_mult</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Curtail resource when curtailment is possible and not raining</span>
+    <span class="k">if</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">precipitation</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;precipitationrate&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resource</span><span class="o">.</span><span class="n">_res_arrays</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Curtailment has a precipitation threshold of &quot;</span><span class="si">{}</span><span class="s1">&quot;, but &#39;</span>
+                 <span class="s1">&#39;&quot;precipitationrate&quot; was not found in the SAM resource &#39;</span>
+                 <span class="s1">&#39;variables. The following resource variables were &#39;</span>
+                 <span class="s1">&#39;available: </span><span class="si">{}</span><span class="s1">.&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">curtailment</span><span class="o">.</span><span class="n">precipitation</span><span class="p">,</span>
+                         <span class="nb">list</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">_res_arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">())),</span>
+                 <span class="n">HandlerWarning</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">_res_arrays</span><span class="p">[</span><span class="s1">&#39;precipitationrate&#39;</span><span class="p">]</span>
+                    <span class="o">&lt;</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">precipitation</span><span class="p">)</span>
+            <span class="n">curtail_mult</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">curtail_mult</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Curtail resource when curtailment is possible and temperature is high</span>
+    <span class="k">if</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">temperature</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">_res_arrays</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">]</span>
+                <span class="o">&gt;</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">temperature</span><span class="p">)</span>
+        <span class="n">curtail_mult</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">curtail_mult</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Curtail resource when curtailment is possible and not that windy</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">_res_arrays</span><span class="p">[</span><span class="s1">&#39;windspeed&#39;</span><span class="p">]</span>
+            <span class="o">&lt;</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">wind_speed</span><span class="p">)</span>
+    <span class="n">curtail_mult</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">curtail_mult</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Apply probability mask when curtailment is possible.</span>
+    <span class="k">if</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">probability</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">random_seed</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">curtailment</span><span class="o">.</span><span class="n">probability</span>
+        <span class="n">curtail_mult</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">curtail_mult</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Apply curtailment multiplier directly to resource</span>
+    <span class="n">resource</span><span class="o">.</span><span class="n">curtail_windspeed</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">sites</span><span class="p">,</span> <span class="n">curtail_mult</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">resource</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,595 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.config.analysis_configs &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.config.analysis_configs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.config.analysis_configs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV analysis configs (generation, lcoe, etc...)</span>
+
+<span class="sd">Created on Mon Jan 28 11:43:27 2019</span>
+
+<span class="sd">@author: gbuster</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">ceil</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">reV.config.output_request</span> <span class="k">import</span> <span class="n">SAMOutputRequest</span>
+<span class="kn">from</span> <span class="nn">reV.config.base_analysis_config</span> <span class="k">import</span> <span class="n">AnalysisConfig</span>
+<span class="kn">from</span> <span class="nn">reV.config.sam_config</span> <span class="k">import</span> <span class="n">SAMConfig</span>
+<span class="kn">from</span> <span class="nn">reV.config.curtailment</span> <span class="k">import</span> <span class="n">Curtailment</span>
+<span class="kn">from</span> <span class="nn">reV.config.project_points</span> <span class="k">import</span> <span class="n">PointsControl</span><span class="p">,</span> <span class="n">ProjectPoints</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="n">ConfigError</span>
+<span class="kn">from</span> <span class="nn">reV.pipeline.pipeline</span> <span class="k">import</span> <span class="n">Pipeline</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SAMAnalysisConfig"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.analysis_configs.SAMAnalysisConfig">[docs]</a><span class="k">class</span> <span class="nc">SAMAnalysisConfig</span><span class="p">(</span><span class="n">AnalysisConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;SAM-based analysis config (generation, lcoe, etc...).&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str | dict</span>
+<span class="sd">            File path to config json (str), serialized json object (str),</span>
+<span class="sd">            or dictionary with pre-extracted config.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tech</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sam_config</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_request</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tech</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the tech property from the config.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _tech : str</span>
+<span class="sd">            reV technology string to analyze (e.g. pv, csp, wind, etc...).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tech</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tech</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;project_control&#39;</span><span class="p">][</span><span class="s1">&#39;technology&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tech</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tech</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tech</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sam_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the SAM configuration object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _sam_gen : reV.config.sam.SAMConfig</span>
+<span class="sd">            SAM config object. This object emulates a dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sam_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sam_config</span> <span class="o">=</span> <span class="n">SAMConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;sam_files&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sam_config</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">points_control</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the generation points control object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _pc : reV.config.project_points.PointsControl</span>
+<span class="sd">            PointsControl object based on specified project points and</span>
+<span class="sd">            execution control option.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># make an instance of project points</span>
+            <span class="n">pp</span> <span class="o">=</span> <span class="n">ProjectPoints</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;project_points&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;sam_files&#39;</span><span class="p">],</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">tech</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;peregrine&#39;</span>
+                    <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;eagle&#39;</span><span class="p">):</span>
+                <span class="c1"># sites per split on peregrine or eagle is the number of sites</span>
+                <span class="c1"># in project points / number of nodes. This is for the initial</span>
+                <span class="c1"># division of the project sites between HPC nodes (jobs)</span>
+                <span class="n">sites_per_split</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;local&#39;</span><span class="p">:</span>
+                <span class="c1"># sites per split on local is number of sites / # of processes</span>
+                <span class="n">sites_per_split</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">execution_control</span><span class="o">.</span><span class="n">ppn</span><span class="p">)</span>
+
+            <span class="c1"># make an instance of points control and set to protected attribute</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pc</span> <span class="o">=</span> <span class="n">PointsControl</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="n">sites_per_split</span><span class="o">=</span><span class="n">sites_per_split</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pc</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the list of requested output variables.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _output_request : list</span>
+<span class="sd">            List of requested reV output variables corresponding to SAM</span>
+<span class="sd">            variable names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_request</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_request</span> <span class="o">=</span> <span class="n">SAMOutputRequest</span><span class="p">(</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">)</span>
+            <span class="c1"># default output request if not specified</span>
+            <span class="k">if</span> <span class="s1">&#39;output_request&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;project_control&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_output_request</span> <span class="o">=</span> <span class="n">SAMOutputRequest</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;project_control&#39;</span><span class="p">][</span><span class="s1">&#39;output_request&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_request</span></div>
+
+
+<div class="viewcode-block" id="GenConfig"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.analysis_configs.GenConfig">[docs]</a><span class="k">class</span> <span class="nc">GenConfig</span><span class="p">(</span><span class="n">SAMAnalysisConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to import and manage user configuration inputs.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s1">&#39;gen&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str | dict</span>
+<span class="sd">            File path to config json (str), serialized json object (str),</span>
+<span class="sd">            or dictionary with pre-extracted config.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_curtailment</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_downscale</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_files</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">curtailment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the curtailment config object that the gen config points to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _curtailment : NoneType | reV.config.curtailment.Curtailment</span>
+<span class="sd">            Returns None if no curtailment config is specified. If one is</span>
+<span class="sd">            specified, this returns the reV curtailment config object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_curtailment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;curtailment&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;curtailment&#39;</span><span class="p">]:</span>
+                    <span class="c1"># curtailment was specified and is not None or False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_curtailment</span> <span class="o">=</span> <span class="n">Curtailment</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;curtailment&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_curtailment</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">downscale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the resource downscale request (nsrdb only!).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _downscale : NoneType | str</span>
+<span class="sd">            Returns None if no downscaling is requested. Otherwise, expects a</span>
+<span class="sd">            downscale variable in the project_control section in the Pandas</span>
+<span class="sd">            frequency format, e.g. &#39;5min&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_downscale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;downscale&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;project_control&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;project_control&#39;</span><span class="p">][</span><span class="s1">&#39;downscale&#39;</span><span class="p">]:</span>
+                    <span class="c1"># downscaling was requested and is not None or False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_downscale</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;project_control&#39;</span><span class="p">][</span><span class="s1">&#39;downscale&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_downscale</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">res_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of the resource files with years filled in.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _res_files : list</span>
+<span class="sd">            List of config-specified resource files. Resource files with {}</span>
+<span class="sd">            formatting will be filled with the specified year(s). This return</span>
+<span class="sd">            value is a list with len=1 for a single year run.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_files</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># get base filename, may have {} for year format</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;resource_file&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">fname</span><span class="p">:</span>
+                <span class="c1"># need to make list of res files for each year</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_res_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fname</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">years</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># only one resource file request, still put in list</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_res_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fname</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_files</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_files</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">years</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="s1">&#39;The number of resource files does not match &#39;</span>
+                              <span class="s1">&#39;the number of analysis years!&#39;</span>
+                              <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">Resource files: </span><span class="se">\n\t\t</span><span class="si">{}</span><span class="s1">&#39;</span>
+                              <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">Years: </span><span class="se">\n\t\t</span><span class="si">{}</span><span class="s1">&#39;</span>
+                              <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">years</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_files</span></div>
+
+
+<div class="viewcode-block" id="ExclConfig"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.analysis_configs.ExclConfig">[docs]</a><span class="k">class</span> <span class="nc">ExclConfig</span><span class="p">(</span><span class="n">AnalysisConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to import and manage user exclusion configuration inputs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str | dict</span>
+<span class="sd">            File path to config json (str), serialized json object (str),</span>
+<span class="sd">            or dictionary with pre-extracted config.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fout</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use_blocks</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filter</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the exclusions layer config object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _exclusions : NoneType | dict list</span>
+<span class="sd">            Returns None if no exclusions config is specified. If one is</span>
+<span class="sd">            specified, this returns the reV exclusions config object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;exclusions&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;exclusions&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exclusions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the exclusions output filename.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _fout : NoneType | dict list</span>
+<span class="sd">            Returns None if no fout is specified. If one is</span>
+<span class="sd">            specified, this returns the reV fout object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;fout&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="n">fout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;fout&#39;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span>
+                                    <span class="s1">&#39;exclusions.tif&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fout</span> <span class="o">=</span> <span class="n">fout</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fout</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">use_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the use_blocks config object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _use_blocks : NoneType | dict list</span>
+<span class="sd">            Returns None if no use_blocks config is specified.</span>
+<span class="sd">            If one is specified, this returns the reV use_blocks</span>
+<span class="sd">            config object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_blocks</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;use_blocks&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="n">use_blocks</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s1">&#39;use_blocks&#39;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_use_blocks</span> <span class="o">=</span> <span class="n">use_blocks</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_blocks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get filter config object that the gen config points to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _filter : NoneType | dict list</span>
+<span class="sd">            Returns None if no filter config is specified. If one is</span>
+<span class="sd">            specified, this returns the reV filter config object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;filter&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_filter</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter</span></div>
+
+
+<div class="viewcode-block" id="EconConfig"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.analysis_configs.EconConfig">[docs]</a><span class="k">class</span> <span class="nc">EconConfig</span><span class="p">(</span><span class="n">SAMAnalysisConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to import and manage configuration inputs for econ analysis.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s1">&#39;econ&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str | dict</span>
+<span class="sd">            File path to config json (str), serialized json object (str),</span>
+<span class="sd">            or dictionary with pre-extracted config.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_site_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cf_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the capacity factor files (reV generation output data).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _cf_files : list</span>
+<span class="sd">            Target paths for capacity factor files (reV generation output</span>
+<span class="sd">            data) for input to reV LCOE calculation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># get base filename, may have {} for year format</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;cf_file&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">fname</span><span class="p">:</span>
+                <span class="c1"># need to make list of res files for each year</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fname</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">years</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="s1">&#39;PIPELINE&#39;</span> <span class="ow">in</span> <span class="n">fname</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="o">.</span><span class="n">parse_previous</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dirout</span><span class="p">,</span>
+                                                         <span class="s1">&#39;econ&#39;</span><span class="p">,</span>
+                                                         <span class="n">target</span><span class="o">=</span><span class="s1">&#39;fpath&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># only one resource file request, still put in list</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">fname</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span><span class="p">)</span>
+
+            <span class="c1"># check year/cf_file matching if not a pipeline input</span>
+            <span class="k">if</span> <span class="s1">&#39;PIPELINE&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fname</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">years</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="s1">&#39;The number of cf files does not match &#39;</span>
+                                      <span class="s1">&#39;the number of analysis years!&#39;</span>
+                                      <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">CF files: </span><span class="se">\n\t\t</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                      <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">Years: </span><span class="se">\n\t\t</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">years</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">years</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">year</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="n">ConfigError</span><span class="p">(</span><span class="s1">&#39;Could not find year </span><span class="si">{}</span><span class="s1"> in cf &#39;</span>
+                                          <span class="s1">&#39;files: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cf_files</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">site_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the site-specific data file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _site_data : str | NoneType</span>
+<span class="sd">            Target path for site-specific data file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_site_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="s1">&#39;site_data&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_site_data</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;site_data&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_site_data</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

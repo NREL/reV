@@ -1,0 +1,717 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.SAM.generation &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.SAM.generation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.SAM.generation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;reV-to-SAM generation interface module.</span>
+
+<span class="sd">Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the</span>
+<span class="sd">SAM software development kit (SDK).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.handlers.resource</span> <span class="k">import</span> <span class="n">Resource</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="n">SAMInputWarning</span><span class="p">,</span> <span class="n">SAMExecutionError</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.curtailment</span> <span class="k">import</span> <span class="n">curtail</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.utilities</span> <span class="k">import</span> <span class="n">mean_irrad</span>
+<span class="kn">from</span> <span class="nn">reV.SAM.SAM</span> <span class="k">import</span> <span class="n">SAM</span><span class="p">,</span> <span class="n">SiteOutput</span>
+<span class="kn">from</span> <span class="nn">reV.SAM.econ</span> <span class="k">import</span> <span class="n">LCOE</span><span class="p">,</span> <span class="n">SingleOwner</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Generation"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Generation">[docs]</a><span class="k">class</span> <span class="nc">Generation</span><span class="p">(</span><span class="n">SAM</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for SAM generation simulations.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM generation object.&quot;&quot;&quot;</span>
+
+        <span class="c1"># check timezone input and set missing timezone from json if necessary</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tz_check</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="n">resource</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Generation.get_res_mean"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Generation.get_res_mean">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_res_mean</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span> <span class="n">res_df</span><span class="p">,</span> <span class="n">output_request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the resource annual means.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Resource file with full path.</span>
+<span class="sd">        res_df : pd.DataFrame</span>
+<span class="sd">            2D table with resource data. Available columns must have solar_vars</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Outputs to retrieve from SAM.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_mean : SiteOutput</span>
+<span class="sd">            SiteOutput object with variables for resource means.</span>
+<span class="sd">        out_req_nomeans : list</span>
+<span class="sd">            Output request list with the resource mean entries removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">out_req_nomeans</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">output_request</span><span class="p">)</span>
+        <span class="n">res_mean</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="s1">&#39;ws_mean&#39;</span> <span class="ow">in</span> <span class="n">out_req_nomeans</span><span class="p">:</span>
+            <span class="n">out_req_nomeans</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;ws_mean&#39;</span><span class="p">)</span>
+            <span class="n">res_mean</span> <span class="o">=</span> <span class="n">SiteOutput</span><span class="p">()</span>
+            <span class="n">res_mean</span><span class="p">[</span><span class="s1">&#39;ws_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;windspeed&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;dni_mean&#39;</span> <span class="ow">in</span> <span class="n">out_req_nomeans</span><span class="p">:</span>
+                <span class="n">out_req_nomeans</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;dni_mean&#39;</span><span class="p">)</span>
+                <span class="n">res_mean</span> <span class="o">=</span> <span class="n">SiteOutput</span><span class="p">()</span>
+                <span class="n">res_mean</span><span class="p">[</span><span class="s1">&#39;dni_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_irrad</span><span class="p">(</span><span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;dni&#39;</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="s1">&#39;ghi_mean&#39;</span> <span class="ow">in</span> <span class="n">out_req_nomeans</span><span class="p">:</span>
+                <span class="n">out_req_nomeans</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;ghi_mean&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res_mean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">res_mean</span> <span class="o">=</span> <span class="n">SiteOutput</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="s1">&#39;ghi&#39;</span> <span class="ow">in</span> <span class="n">res_df</span><span class="p">:</span>
+                    <span class="n">res_mean</span><span class="p">[</span><span class="s1">&#39;ghi_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_irrad</span><span class="p">(</span><span class="n">res_df</span><span class="p">[</span><span class="s1">&#39;ghi&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">Resource</span><span class="p">(</span><span class="n">res_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+                        <span class="n">res_mean</span><span class="p">[</span><span class="s1">&#39;ghi_mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_irrad</span><span class="p">(</span>
+                            <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ghi&#39;</span><span class="p">,</span> <span class="p">:,</span> <span class="n">res_df</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">res_mean</span><span class="p">,</span> <span class="n">out_req_nomeans</span></div>
+
+<div class="viewcode-block" id="Generation.tz_check"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Generation.tz_check">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">tz_check</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check timezone input and use json config tz if not in resource meta.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameters : dict</span>
+<span class="sd">            SAM model input parameters.</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            1D table with resource meta data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            1D table with resource meta data. If meta was not originally set in</span>
+<span class="sd">            the resource meta data, but was set as &quot;tz&quot; or &quot;timezone&quot; in the</span>
+<span class="sd">            SAM model input parameters json file, timezone will be added to</span>
+<span class="sd">            this instance of meta.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;timezone&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;tz&#39;</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+                    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;timezone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;tz&#39;</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="s1">&#39;timezone&#39;</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+                    <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;timezone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;timezone&#39;</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Need timezone input to run SAM gen. Not found in &#39;</span>
+                           <span class="s1">&#39;resource meta or technology json input config.&#39;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">SAMExecutionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">meta</span></div>
+
+<div class="viewcode-block" id="Generation.gen_exec"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Generation.gen_exec">[docs]</a>    <span class="k">def</span> <span class="nf">gen_exec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module_to_run</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run SAM generation with possibility for follow on econ analysis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        module_to_run : str</span>
+<span class="sd">            SAM module name (e.g., &#39;pvwattsv5&#39;, &#39;tcsmolten_salt&#39;, &#39;windpower&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;lcoe_fcr&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span><span class="p">:</span>
+            <span class="c1"># econ outputs requested, run LCOE model after generation.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">module_to_run</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">lcoe</span> <span class="o">=</span> <span class="n">LCOE</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+                        <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;lcoe_fcr&#39;</span><span class="p">,))</span>
+            <span class="n">lcoe</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">LCOE</span><span class="o">.</span><span class="n">MODULE</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">lcoe</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="s1">&#39;ppa_price&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_request</span><span class="p">:</span>
+            <span class="c1"># econ outputs requested, run SingleOwner model after generation.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">module_to_run</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">so</span> <span class="o">=</span> <span class="n">SingleOwner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span>
+                             <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;ppa_price&#39;</span><span class="p">,))</span>
+            <span class="n">so</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">so</span><span class="o">.</span><span class="n">MODULE</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">so</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># normal run, no econ analysis</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">module_to_run</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Generation.reV_run"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Generation.reV_run">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">reV_run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">points_control</span><span class="p">,</span> <span class="n">res_file</span><span class="p">,</span> <span class="n">output_request</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;cf_mean&#39;</span><span class="p">,),</span>
+                <span class="n">downscale</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute SAM generation based on a reV points control instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points_control : config.PointsControl</span>
+<span class="sd">            PointsControl instance containing project points site and SAM</span>
+<span class="sd">            config info.</span>
+<span class="sd">        res_file : str</span>
+<span class="sd">            Resource file with full path.</span>
+<span class="sd">        output_request : list | tuple</span>
+<span class="sd">            Outputs to retrieve from SAM.</span>
+<span class="sd">        downscale : NoneType | str</span>
+<span class="sd">            Option for NSRDB resource downscaling to higher temporal</span>
+<span class="sd">            resolution. Expects a string in the Pandas frequency format,</span>
+<span class="sd">            e.g. &#39;5min&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : dict</span>
+<span class="sd">            Nested dictionaries where the top level key is the site index,</span>
+<span class="sd">            the second level key is the variable name, second level value is</span>
+<span class="sd">            the output variable value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># initialize output dictionary</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Get the SAM resource object</span>
+        <span class="n">resources</span> <span class="o">=</span> <span class="n">SAM</span><span class="o">.</span><span class="n">get_sam_res</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span>
+                                    <span class="n">points_control</span><span class="o">.</span><span class="n">project_points</span><span class="p">,</span>
+                                    <span class="n">points_control</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">tech</span><span class="p">,</span>
+                                    <span class="n">downscale</span><span class="o">=</span><span class="n">downscale</span><span class="p">)</span>
+
+        <span class="c1"># run resource through curtailment filter if applicable</span>
+        <span class="n">curtailment</span> <span class="o">=</span> <span class="n">points_control</span><span class="o">.</span><span class="n">project_points</span><span class="o">.</span><span class="n">curtailment</span>
+        <span class="k">if</span> <span class="n">curtailment</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">resources</span> <span class="o">=</span> <span class="n">curtail</span><span class="p">(</span><span class="n">resources</span><span class="p">,</span> <span class="n">curtailment</span><span class="p">)</span>
+
+        <span class="c1"># Use resource object iterator</span>
+        <span class="k">for</span> <span class="n">res_df</span><span class="p">,</span> <span class="n">meta</span> <span class="ow">in</span> <span class="n">resources</span><span class="p">:</span>
+
+            <span class="c1"># get SAM inputs from project_points based on the current site</span>
+            <span class="n">site</span> <span class="o">=</span> <span class="n">res_df</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">=</span> <span class="n">points_control</span><span class="o">.</span><span class="n">project_points</span><span class="p">[</span><span class="n">site</span><span class="p">]</span>
+
+            <span class="n">res_mean</span><span class="p">,</span> <span class="n">out_req_nomeans</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_res_mean</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span> <span class="n">res_df</span><span class="p">,</span>
+                                                         <span class="n">output_request</span><span class="p">)</span>
+
+            <span class="c1"># iterate through requested sites.</span>
+            <span class="n">sim</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="n">res_df</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+                      <span class="n">output_request</span><span class="o">=</span><span class="n">out_req_nomeans</span><span class="p">)</span>
+            <span class="n">sim</span><span class="o">.</span><span class="n">gen_exec</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">MODULE</span><span class="p">)</span>
+
+            <span class="c1"># collect outputs to dictout</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">]</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">outputs</span>
+            <span class="k">if</span> <span class="n">res_mean</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">site</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">res_mean</span><span class="p">)</span>
+
+            <span class="k">del</span> <span class="n">res_df</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">sim</span>
+
+        <span class="k">del</span> <span class="n">resources</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">out</span></div></div>
+
+
+<div class="viewcode-block" id="Solar"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Solar">[docs]</a><span class="k">class</span> <span class="nc">Solar</span><span class="p">(</span><span class="n">Generation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base Class for Solar generation from SAM</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop_leap</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM solar object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        resource : pd.DataFrame</span>
+<span class="sd">            2D table with resource data. Available columns must have solar_vars</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            1D table with resource meta data.</span>
+<span class="sd">        parameters : dict or ParametersManager()</span>
+<span class="sd">            SAM model input parameters.</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Requested SAM outputs (e.g., &#39;cf_mean&#39;, &#39;annual_energy&#39;,</span>
+<span class="sd">            &#39;cf_profile&#39;, &#39;gen_profile&#39;, &#39;energy_yield&#39;, &#39;ppa_price&#39;,</span>
+<span class="sd">            &#39;lcoe_fcr&#39;).</span>
+<span class="sd">        drop_leap : bool</span>
+<span class="sd">            Drops February 29th from the resource data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># drop the leap day</span>
+        <span class="k">if</span> <span class="n">drop_leap</span><span class="p">:</span>
+            <span class="n">resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_leap</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+
+        <span class="c1"># set PV tilt to latitude if applicable</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_latitude_tilt_az</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span>
+
+        <span class="c1"># don&#39;t pass resource to base class, set in set_nsrdb instead.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span>
+
+        <span class="c1"># Set the site number using resource</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_site</span> <span class="o">=</span> <span class="n">resource</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_site</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">resource</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># if no resource input data is specified, you need a resource file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">require_resource_file</span><span class="p">(</span><span class="n">res_type</span><span class="o">=</span><span class="s1">&#39;solar&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">resource</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_nsrdb</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Solar.set_latitude_tilt_az"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Solar.set_latitude_tilt_az">[docs]</a>    <span class="k">def</span> <span class="nf">set_latitude_tilt_az</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if tilt is specified as latitude and set tilt=lat, az=180 or 0</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parameters : dict</span>
+<span class="sd">            SAM model input parameters.</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            1D table with resource meta data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        parameters : dict</span>
+<span class="sd">            SAM model input parameters. If for a pv simulation the &quot;tilt&quot;</span>
+<span class="sd">            parameter was originally not present or set to &#39;lat&#39; or &#39;latitude&#39;,</span>
+<span class="sd">            the tilt will be set to the absolute value of the latitude found</span>
+<span class="sd">            in meta and the azimuth will be 180 if lat&gt;0, 0 if lat&lt;0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">set_tilt</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="s1">&#39;pv&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">MODULE</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;tilt&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No tilt specified, setting at latitude.&#39;</span><span class="p">,</span>
+                         <span class="n">SAMInputWarning</span><span class="p">)</span>
+                    <span class="n">set_tilt</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;tilt&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;lat&#39;</span>
+                            <span class="ow">or</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;tilt&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;latitude&#39;</span><span class="p">):</span>
+                        <span class="n">set_tilt</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">set_tilt</span><span class="p">:</span>
+            <span class="c1"># set tilt to abs(latitude)</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;tilt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># above the equator, az = 180</span>
+                <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;azimuth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">180</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># below the equator, az = 0</span>
+                <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;azimuth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Tilt specified at &quot;latitude&quot;, setting tilt to: </span><span class="si">{}</span><span class="s1">, &#39;</span>
+                         <span class="s1">&#39;azimuth to: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;tilt&#39;</span><span class="p">],</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;azimuth&#39;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">parameters</span></div>
+
+<div class="viewcode-block" id="Solar.set_nsrdb"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Solar.set_nsrdb">[docs]</a>    <span class="k">def</span> <span class="nf">set_nsrdb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set SSC NSRDB resource data arrays.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        resource : pd.DataFrame</span>
+<span class="sd">            2D table with resource data. Available columns must have var_list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># call generic set resource method from the base class</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_resource</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="n">resource</span><span class="p">)</span>
+
+        <span class="c1"># map resource data names to SAM required data names</span>
+        <span class="n">var_map</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;dni&#39;</span><span class="p">:</span> <span class="s1">&#39;dn&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;dhi&#39;</span><span class="p">:</span> <span class="s1">&#39;df&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;ghi&#39;</span><span class="p">:</span> <span class="s1">&#39;gh&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;wind_speed&#39;</span><span class="p">:</span> <span class="s1">&#39;wspd&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;air_temperature&#39;</span><span class="p">:</span> <span class="s1">&#39;tdry&#39;</span><span class="p">,</span>
+                   <span class="p">}</span>
+
+        <span class="c1"># set resource variables</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">resource</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">var</span> <span class="o">!=</span> <span class="s1">&#39;time_index&#39;</span><span class="p">:</span>
+                <span class="c1"># ensure that resource array length is multiple of 8760</span>
+                <span class="n">res_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ensure_res_len</span><span class="p">(</span><span class="n">resource</span><span class="p">[</span><span class="n">var</span><span class="p">]),</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;timezone&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;dni&#39;</span><span class="p">,</span> <span class="s1">&#39;dhi&#39;</span><span class="p">,</span> <span class="s1">&#39;ghi&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">res_arr</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Solar irradiance variable &quot;</span><span class="si">{}</span><span class="s1">&quot; has a minimum &#39;</span>
+                             <span class="s1">&#39;value of </span><span class="si">{}</span><span class="s1">. Truncating to zero.&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">res_arr</span><span class="p">)),</span> <span class="n">SAMInputWarning</span><span class="p">)</span>
+                        <span class="n">res_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">res_arr</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">res_arr</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="o">.</span><span class="n">data_set_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">,</span> <span class="n">var_map</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">res_arr</span><span class="p">)</span>
+
+        <span class="c1"># add resource data to self.data and clear</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="o">.</span><span class="n">data_set_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;solar_resource_data&#39;</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="o">.</span><span class="n">data_free</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PV"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.PV">[docs]</a><span class="k">class</span> <span class="nc">PV</span><span class="p">(</span><span class="n">Solar</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Photovoltaic (PV) generation with pvwattsv5.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="s1">&#39;pvwattsv5&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM solar PV object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        resource : pd.DataFrame</span>
+<span class="sd">            2D table with resource data. Available columns must have solar_vars</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            1D table with resource meta data.</span>
+<span class="sd">        parameters : dict or ParametersManager()</span>
+<span class="sd">            SAM model input parameters.</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Requested SAM outputs (e.g., &#39;cf_mean&#39;, &#39;annual_energy&#39;,</span>
+<span class="sd">            &#39;cf_profile&#39;, &#39;gen_profile&#39;, &#39;energy_yield&#39;, &#39;ppa_price&#39;,</span>
+<span class="sd">            &#39;lcoe_fcr&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="n">resource</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CSP"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.CSP">[docs]</a><span class="k">class</span> <span class="nc">CSP</span><span class="p">(</span><span class="n">Solar</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Concentrated Solar Power (CSP) generation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="s1">&#39;tcsmolten_salt&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM concentrated solar power (CSP) object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="n">resource</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Wind"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Wind">[docs]</a><span class="k">class</span> <span class="nc">Wind</span><span class="p">(</span><span class="n">Generation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for Wind generation from SAM</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop_leap</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM wind object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        resource : pd.DataFrame</span>
+<span class="sd">            2D table with resource data. Available columns must have wind_vars</span>
+<span class="sd">        meta : pd.DataFrame</span>
+<span class="sd">            1D table with resource meta data.</span>
+<span class="sd">        parameters : dict</span>
+<span class="sd">            SAM model input parameters.</span>
+<span class="sd">        output_request : list</span>
+<span class="sd">            Requested SAM outputs (e.g., &#39;cf_mean&#39;, &#39;annual_energy&#39;,</span>
+<span class="sd">            &#39;cf_profile&#39;, &#39;gen_profile&#39;, &#39;energy_yield&#39;, &#39;ppa_price&#39;,</span>
+<span class="sd">            &#39;lcoe_fcr&#39;).</span>
+<span class="sd">        drop_leap : bool</span>
+<span class="sd">            Drops February 29th from the resource data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># drop the leap day</span>
+        <span class="k">if</span> <span class="n">drop_leap</span><span class="p">:</span>
+            <span class="n">resource</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_leap</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+
+        <span class="c1"># don&#39;t pass resource to base class, set in set_wtk instead.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span>
+
+        <span class="c1"># Set the site number using resource</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_site</span> <span class="o">=</span> <span class="n">resource</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_site</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">resource</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">meta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># if no resource input data is specified, you need a resource file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">require_resource_file</span><span class="p">(</span><span class="n">res_type</span><span class="o">=</span><span class="s1">&#39;wind&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">resource</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_wtk</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Wind.set_wtk"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.Wind.set_wtk">[docs]</a>    <span class="k">def</span> <span class="nf">set_wtk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set SSC WTK resource data arrays.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        resource : pd.DataFrame</span>
+<span class="sd">            2D table with resource data. Available columns must have var_list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># call generic set resource method from the base class</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_resource</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="n">resource</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="o">.</span><span class="n">data_set_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">,</span> <span class="s1">&#39;fields&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="o">.</span><span class="n">data_set_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">,</span> <span class="s1">&#39;heights&#39;</span><span class="p">,</span>
+                                <span class="mi">4</span> <span class="o">*</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;wind_turbine_hub_ht&#39;</span><span class="p">]])</span>
+
+        <span class="c1"># must be set as matrix in [temperature, pres, speed, direction] order</span>
+        <span class="c1"># ensure that resource array length is multiple of 8760</span>
+        <span class="c1"># roll the truncated resource array to local timezone</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ensure_res_len</span><span class="p">(</span><span class="n">resource</span><span class="p">[[</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;pressure&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;windspeed&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;winddirection&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span><span class="p">),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;timezone&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_interval</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="o">.</span><span class="n">data_set_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+
+        <span class="c1"># add resource data to self.data and clear</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="o">.</span><span class="n">data_set_table</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;wind_resource_data&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssc</span><span class="o">.</span><span class="n">data_free</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="LandBasedWind"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.LandBasedWind">[docs]</a><span class="k">class</span> <span class="nc">LandBasedWind</span><span class="p">(</span><span class="n">Wind</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Onshore wind generation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="s1">&#39;windpower&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM land based wind object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="n">resource</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OffshoreWind"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.generation.OffshoreWind">[docs]</a><span class="k">class</span> <span class="nc">OffshoreWind</span><span class="p">(</span><span class="n">LandBasedWind</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Offshore wind generation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MODULE</span> <span class="o">=</span> <span class="s1">&#39;windpower&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">output_request</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a SAM offshore wind object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">resource</span><span class="o">=</span><span class="n">resource</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+                         <span class="n">output_request</span><span class="o">=</span><span class="n">output_request</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

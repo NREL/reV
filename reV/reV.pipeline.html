@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.pipeline package &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reV.supply_curve package" href="reV.supply_curve.html" />
+    <link rel="prev" title="reV.handlers package" href="reV.handlers.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reV.html">reV</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">reV2</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="reV.html">reV package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="reV.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../reV.html">reV</a> &raquo;</li>
+        
+          <li><a href="modules.html">reV2</a> &raquo;</li>
+        
+          <li><a href="reV.html">reV package</a> &raquo;</li>
+        
+      <li>reV.pipeline package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reV/reV.pipeline.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rev-pipeline-package">
+<h1>reV.pipeline package<a class="headerlink" href="#rev-pipeline-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-reV.pipeline.cli_pipeline">
+<span id="rev-pipeline-cli-pipeline-module"></span><h2>reV.pipeline.cli_pipeline module<a class="headerlink" href="#module-reV.pipeline.cli_pipeline" title="Permalink to this headline">¶</a></h2>
+<p>Pipeline CLI entry points.</p>
+</div>
+<div class="section" id="module-reV.pipeline.pipeline">
+<span id="rev-pipeline-pipeline-module"></span><h2>reV.pipeline.pipeline module<a class="headerlink" href="#module-reV.pipeline.pipeline" title="Permalink to this headline">¶</a></h2>
+<p>reV data pipeline architecture.</p>
+<dl class="class">
+<dt id="reV.pipeline.pipeline.Pipeline">
+<em class="property">class </em><code class="sig-prename descclassname">reV.pipeline.pipeline.</code><code class="sig-name descname">Pipeline</code><span class="sig-paren">(</span><em class="sig-param">pipeline</em>, <em class="sig-param">monitor=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/pipeline.html#Pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.pipeline.Pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>reV pipeline execution framework.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pipeline</strong> (<em>str | dict</em>) – Pipeline config file path or dictionary.</p></li>
+<li><p><strong>monitor</strong> (<em>bool</em>) – Flag to perform continuous monitoring of the pipeline.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="reV.pipeline.pipeline.Pipeline.COMMANDS">
+<code class="sig-name descname">COMMANDS</code><em class="property"> = ('generation', 'econ', 'collect', 'exclusions')</em><a class="headerlink" href="#reV.pipeline.pipeline.Pipeline.COMMANDS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="reV.pipeline.pipeline.Pipeline.RETURN_CODES">
+<code class="sig-name descname">RETURN_CODES</code><em class="property"> = {0: 'successful', 1: 'running', 2: 'failed', 3: 'complete'}</em><a class="headerlink" href="#reV.pipeline.pipeline.Pipeline.RETURN_CODES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.pipeline.Pipeline.parse_previous">
+<em class="property">static </em><code class="sig-name descname">parse_previous</code><span class="sig-paren">(</span><em class="sig-param">status_dir</em>, <em class="sig-param">module</em>, <em class="sig-param">target='fpath'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/pipeline.html#Pipeline.parse_previous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.pipeline.Pipeline.parse_previous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse output file paths from the previous pipeline step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status_dir</strong> (<em>str</em>) – Directory containing the status file to parse.</p></li>
+<li><p><strong>module</strong> (<em>str</em>) – Current module (i.e. current pipeline step).</p></li>
+<li><p><strong>target</strong> (<em>str</em>) – Parsing target of previous module.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> – Arguments parsed from the status file in status_dir from
+the module preceding the input module arg.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.pipeline.Pipeline.cancel_all">
+<em class="property">classmethod </em><code class="sig-name descname">cancel_all</code><span class="sig-paren">(</span><em class="sig-param">pipeline</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/pipeline.html#Pipeline.cancel_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.pipeline.Pipeline.cancel_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel all jobs via SLURM scancel corresponding to pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pipeline</strong> (<em>str | dict</em>) – Pipeline config file path or dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.pipeline.Pipeline.run">
+<em class="property">classmethod </em><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">pipeline</em>, <em class="sig-param">monitor=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/pipeline.html#Pipeline.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.pipeline.Pipeline.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the reV pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pipeline</strong> (<em>str | dict</em>) – Pipeline config file path or dictionary.</p></li>
+<li><p><strong>monitor</strong> (<em>bool</em>) – Flag to perform continuous monitoring of the pipeline.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.pipeline.status">
+<span id="rev-pipeline-status-module"></span><h2>reV.pipeline.status module<a class="headerlink" href="#module-reV.pipeline.status" title="Permalink to this headline">¶</a></h2>
+<p>reV job status manager.</p>
+<dl class="class">
+<dt id="reV.pipeline.status.Status">
+<em class="property">class </em><code class="sig-prename descclassname">reV.pipeline.status.</code><code class="sig-name descname">Status</code><span class="sig-paren">(</span><em class="sig-param">status_dir</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/status.html#Status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.status.Status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<p>Base class for reV data pipeline health and status information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status_dir</strong> (<em>str</em>) – Directory to with json status file.</p></li>
+<li><p><strong>name</strong> (<em>str | None</em>) – Optional job name for status. Will look for the file
+“{name}_status.json” in the status_dir.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="reV.pipeline.status.Status.FROZEN_STATUS">
+<code class="sig-name descname">FROZEN_STATUS</code><em class="property"> = ('successful', 'failed')</em><a class="headerlink" href="#reV.pipeline.status.Status.FROZEN_STATUS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.job_ids">
+<em class="property">property </em><code class="sig-name descname">job_ids</code><a class="headerlink" href="#reV.pipeline.status.Status.job_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of job ids.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.hardware">
+<em class="property">property </em><code class="sig-name descname">hardware</code><a class="headerlink" href="#reV.pipeline.status.Status.hardware" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of job hardware.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.update_dict">
+<em class="property">static </em><code class="sig-name descname">update_dict</code><span class="sig-paren">(</span><em class="sig-param">d</em>, <em class="sig-param">u</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/status.html#Status.update_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.status.Status.update_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a dictionary recursively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d</strong> (<em>dict</em>) – Base dictionary to update.</p></li>
+<li><p><strong>u</strong> (<em>dict</em>) – New dictionary with data to add to d.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>d</strong> – d with data updated from u.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.make_job_file">
+<em class="property">static </em><code class="sig-name descname">make_job_file</code><span class="sig-paren">(</span><em class="sig-param">status_dir</em>, <em class="sig-param">module</em>, <em class="sig-param">job_name</em>, <em class="sig-param">attrs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/status.html#Status.make_job_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.status.Status.make_job_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a json file recording the status of a single job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status_dir</strong> (<em>str</em>) – Directory to put json status file.</p></li>
+<li><p><strong>module</strong> (<em>str</em>) – reV module that the job belongs to.</p></li>
+<li><p><strong>job_name</strong> (<em>str</em>) – Unique job name identification.</p></li>
+<li><p><strong>attrs</strong> (<em>str</em>) – Dictionary of job attributes that represent the job status
+attributes.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.add_job">
+<em class="property">classmethod </em><code class="sig-name descname">add_job</code><span class="sig-paren">(</span><em class="sig-param">status_dir</em>, <em class="sig-param">module</em>, <em class="sig-param">job_name</em>, <em class="sig-param">replace=False</em>, <em class="sig-param">job_attrs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/status.html#Status.add_job"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.status.Status.add_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a job to status json.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status_dir</strong> (<em>str</em>) – Directory containing json status file.</p></li>
+<li><p><strong>module</strong> (<em>str</em>) – reV module that the job belongs to.</p></li>
+<li><p><strong>job_name</strong> (<em>str</em>) – Unique job name identification.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em>) – Flag to force replacement of pre-existing job status.</p></li>
+<li><p><strong>job_attrs</strong> (<em>dict</em>) – Job attributes. Should include ‘job_id’ if running on HPC.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.job_exists">
+<em class="property">classmethod </em><code class="sig-name descname">job_exists</code><span class="sig-paren">(</span><em class="sig-param">status_dir</em>, <em class="sig-param">job_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/status.html#Status.job_exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.status.Status.job_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether a job exists and return a bool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status_dir</strong> (<em>str</em>) – Directory containing json status file.</p></li>
+<li><p><strong>job_name</strong> (<em>str</em>) – Unique job name identification.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>exists</strong> – True if the job exists in the status json.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.retrieve_job_status">
+<em class="property">classmethod </em><code class="sig-name descname">retrieve_job_status</code><span class="sig-paren">(</span><em class="sig-param">status_dir</em>, <em class="sig-param">module</em>, <em class="sig-param">job_name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/status.html#Status.retrieve_job_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.status.Status.retrieve_job_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update and retrieve job status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status_dir</strong> (<em>str</em>) – Directory containing json status file.</p></li>
+<li><p><strong>module</strong> (<em>str</em>) – reV module that the job belongs to.</p></li>
+<li><p><strong>job_name</strong> (<em>str</em>) – Unique job name identification.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>status</strong> – Status string or None if job/module not found.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.set_job_status">
+<em class="property">classmethod </em><code class="sig-name descname">set_job_status</code><span class="sig-paren">(</span><em class="sig-param">status_dir</em>, <em class="sig-param">module</em>, <em class="sig-param">job_name</em>, <em class="sig-param">status</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/status.html#Status.set_job_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.status.Status.set_job_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force set a job status to a frozen status and save to status file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status_dir</strong> (<em>str</em>) – Directory containing json status file.</p></li>
+<li><p><strong>module</strong> (<em>str</em>) – reV module that the job belongs to.</p></li>
+<li><p><strong>job_name</strong> (<em>str</em>) – Unique job name identification.</p></li>
+<li><p><strong>status</strong> (<em>str</em>) – Status string to set. Must be a status string in
+the FROZEN_STATUS class attribute.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="reV.pipeline.status.Status.update">
+<em class="property">classmethod </em><code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">status_dir</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/reV/pipeline/status.html#Status.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#reV.pipeline.status.Status.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update all job statuses and dump to json.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>status_dir</strong> (<em>str</em>) – Directory containing json status file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-reV.pipeline">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-reV.pipeline" title="Permalink to this headline">¶</a></h2>
+<p>reV data pipeline architecture.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="reV.supply_curve.html" class="btn btn-neutral float-right" title="reV.supply_curve package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="reV.handlers.html" class="btn btn-neutral float-left" title="reV.handlers package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

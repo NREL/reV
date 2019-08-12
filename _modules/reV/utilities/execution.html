@@ -1,0 +1,1029 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.utilities.execution &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.utilities.execution</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.utilities.execution</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Execution utilities.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">concurrent.futures</span> <span class="k">as</span> <span class="nn">cf</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">call</span><span class="p">,</span> <span class="n">Popen</span><span class="p">,</span> <span class="n">PIPE</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">floor</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">psutil</span>
+<span class="kn">import</span> <span class="nn">getpass</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="n">ExecutionError</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="log_mem"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.log_mem">[docs]</a><span class="k">def</span> <span class="nf">log_mem</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Print memory status to debug logger.&quot;&quot;&quot;</span>
+    <span class="n">mem</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0:.3f}</span><span class="s1"> GB used of </span><span class="si">{1:.3f}</span><span class="s1"> GB total (</span><span class="si">{2:.1f}% u</span><span class="s1">sed) &#39;</span>
+                 <span class="s1">&#39;(</span><span class="si">{3:.3f}</span><span class="s1"> GB free) (</span><span class="si">{4:.3f}</span><span class="s1"> GB available).&#39;</span>
+                 <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">,</span>
+                           <span class="n">mem</span><span class="o">.</span><span class="n">total</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">,</span>
+                           <span class="mi">100</span> <span class="o">*</span> <span class="n">mem</span><span class="o">.</span><span class="n">used</span> <span class="o">/</span> <span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="p">,</span>
+                           <span class="n">mem</span><span class="o">.</span><span class="n">free</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">,</span>
+                           <span class="n">mem</span><span class="o">.</span><span class="n">available</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SubprocessManager"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SubprocessManager">[docs]</a><span class="k">class</span> <span class="nc">SubprocessManager</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base class to handle subprocess execution.&quot;&quot;&quot;</span>
+
+    <span class="c1"># get username as class attribute.</span>
+    <span class="n">USER</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getuser</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SubprocessManager.make_path"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SubprocessManager.make_path">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">make_path</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a directory tree if it doesn&#39;t exist.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        d : str</span>
+<span class="sd">            Directory tree to check and potentially create.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SubprocessManager.make_sh"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SubprocessManager.make_sh">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">make_sh</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">script</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a shell script (.sh file) to execute a subprocess.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fname : str</span>
+<span class="sd">            Name of the .sh file to create.</span>
+<span class="sd">        script : str</span>
+<span class="sd">            Contents to be written into the .sh file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;The shell script &quot;</span><span class="si">{n}</span><span class="s1">&quot; contains the following:</span><span class="se">\n</span><span class="s1">&#39;</span>
+                     <span class="s1">&#39;~~~~~~~~~~ </span><span class="si">{n}</span><span class="s1"> ~~~~~~~~~~</span><span class="se">\n</span><span class="s1">&#39;</span>
+                     <span class="s1">&#39;</span><span class="si">{s}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                     <span class="s1">&#39;~~~~~~~~~~ </span><span class="si">{n}</span><span class="s1"> ~~~~~~~~~~&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">fname</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">script</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">script</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SubprocessManager.rm"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SubprocessManager.rm">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">rm</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fname : str</span>
+<span class="sd">            Filename (with path) to remove.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SubprocessManager.submit"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SubprocessManager.submit">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="n">cmd</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open a subprocess and submit a command.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cmd : str</span>
+<span class="sd">            Command to be submitted using python subprocess.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        stdout : str</span>
+<span class="sd">            Subprocess standard output. This is decoded from the subprocess</span>
+<span class="sd">            stdout with rstrip.</span>
+<span class="sd">        stderr : str</span>
+<span class="sd">            Subprocess standard error. This is decoded from the subprocess</span>
+<span class="sd">            stderr with rstrip. After decoding/rstrip, this will be empty if</span>
+<span class="sd">            the subprocess doesn&#39;t return an error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+
+        <span class="c1"># use subprocess to submit command and get piped o/e</span>
+        <span class="n">process</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">PIPE</span><span class="p">)</span>
+        <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+        <span class="n">stderr</span> <span class="o">=</span> <span class="n">stderr</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+        <span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">process</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Subprocess submission failed with return code </span><span class="si">{}</span><span class="s1"> &#39;</span>
+                          <span class="s1">&#39;and stderr:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">stderr</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span></div>
+
+<div class="viewcode-block" id="SubprocessManager.s"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SubprocessManager.s">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">s</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Format input as str w/ appropriate quote types for python cli entry.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">            list, tuple -&gt; &quot;[&#39;one&#39;, &#39;two&#39;]&quot;</span>
+<span class="sd">            dict -&gt; &quot;{&#39;key&#39;: &#39;val&#39;}&quot;</span>
+<span class="sd">            int, float, None -&gt; &#39;0&#39;</span>
+<span class="sd">            str, other -&gt; &#39;string&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+            <span class="k">return</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SubprocessManager.walltime"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SubprocessManager.walltime">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">walltime</span><span class="p">(</span><span class="n">hours</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the SLURM walltime string in format &quot;HH:MM:SS&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hours : float | int</span>
+<span class="sd">            Requested number of job hours.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        walltime : str</span>
+<span class="sd">            SLURM walltime request in format &quot;HH:MM:SS&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">m_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0:02d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mi">60</span> <span class="o">*</span> <span class="p">(</span><span class="n">hours</span> <span class="o">%</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="n">h_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0:02d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">floor</span><span class="p">(</span><span class="n">hours</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">:00&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">h_str</span><span class="p">,</span> <span class="n">m_str</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PBS"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.PBS">[docs]</a><span class="k">class</span> <span class="nc">PBS</span><span class="p">(</span><span class="n">SubprocessManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subclass for PBS subprocess jobs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">alloc</span><span class="p">,</span> <span class="n">queue</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reV&#39;</span><span class="p">,</span>
+                 <span class="n">feature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stdout_path</span><span class="o">=</span><span class="s1">&#39;./stdout&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize and submit a PBS job.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cmd : str</span>
+<span class="sd">            Command to be submitted in PBS shell script. Example:</span>
+<span class="sd">                &#39;python -m reV.generation.cli_gen&#39;</span>
+<span class="sd">        alloc : str</span>
+<span class="sd">            HPC allocation account. Example: &#39;rev&#39;.</span>
+<span class="sd">        queue : str</span>
+<span class="sd">            HPC queue to submit job to. Example: &#39;short&#39;, &#39;batch-h&#39;, etc...</span>
+<span class="sd">        name : str</span>
+<span class="sd">            PBS job name.</span>
+<span class="sd">        feature : str | None</span>
+<span class="sd">            PBS feature request (-l {feature}).</span>
+<span class="sd">            Example: &#39;feature=24core&#39;, &#39;qos=high&#39;, etc...</span>
+<span class="sd">        stdout_path : str</span>
+<span class="sd">            Path to print .stdout and .stderr files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_path</span><span class="p">(</span><span class="n">stdout_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">qsub</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span>
+                                      <span class="n">alloc</span><span class="o">=</span><span class="n">alloc</span><span class="p">,</span>
+                                      <span class="n">queue</span><span class="o">=</span><span class="n">queue</span><span class="p">,</span>
+                                      <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                      <span class="n">feature</span><span class="o">=</span><span class="n">feature</span><span class="p">,</span>
+                                      <span class="n">stdout_path</span><span class="o">=</span><span class="n">stdout_path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PBS.check_status"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.PBS.check_status">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check_status</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check the status of this PBS job using qstat.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job : str</span>
+<span class="sd">            Job name or ID number.</span>
+<span class="sd">        var : str</span>
+<span class="sd">            Identity/type of job identification input arg (&#39;id&#39; or &#39;name&#39;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : str or NoneType</span>
+<span class="sd">            Qstat job status character or None if not found.</span>
+<span class="sd">            Common status codes: Q, R, C (queued, running, complete).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># column location of various job identifiers</span>
+        <span class="n">col_loc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+        <span class="n">qstat_rows</span> <span class="o">=</span> <span class="n">PBS</span><span class="o">.</span><span class="n">qstat</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">qstat_rows</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># reverse the list so most recent jobs are first</span>
+            <span class="n">qstat_rows</span> <span class="o">=</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">qstat_rows</span><span class="p">)</span>
+
+        <span class="c1"># update job status from qstat list</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">qstat_rows</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="c1"># make sure the row is long enough to be a job status listing</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">col_loc</span><span class="p">[</span><span class="n">var</span><span class="p">]]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="n">job</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                    <span class="c1"># Job status is located at the -2 index</span>
+                    <span class="n">status</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Job with </span><span class="si">{}</span><span class="s1"> &quot;</span><span class="si">{}</span><span class="s1">&quot; has status: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">job</span><span class="p">,</span> <span class="n">status</span><span class="p">))</span>
+                    <span class="k">return</span> <span class="n">status</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="PBS.qstat"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.PBS.qstat">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">qstat</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;Run the PBS qstat command and return the stdout split to rows.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        qstat_rows : list | None</span>
+<span class="sd">            List of strings where each string is a row in the qstat printout.</span>
+<span class="sd">            Returns None if qstat is empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;qstat -u </span><span class="si">{user}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">PBS</span><span class="o">.</span><span class="n">USER</span><span class="p">)</span>
+        <span class="n">stdout</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">PBS</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">stdout</span><span class="p">:</span>
+            <span class="c1"># No jobs are currently running.</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">qstat_rows</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">qstat_rows</span></div>
+
+<div class="viewcode-block" id="PBS.qsub"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.PBS.qsub">[docs]</a>    <span class="k">def</span> <span class="nf">qsub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">alloc</span><span class="p">,</span> <span class="n">queue</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reV&#39;</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">stdout_path</span><span class="o">=</span><span class="s1">&#39;./stdout&#39;</span><span class="p">,</span> <span class="n">keep_sh</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submit a PBS job via qsub command and PBS shell script</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cmd : str</span>
+<span class="sd">            Command to be submitted in PBS shell script. Example:</span>
+<span class="sd">                &#39;python -m reV.generation.cli_gen&#39;</span>
+<span class="sd">        alloc : str</span>
+<span class="sd">            HPC allocation account. Example: &#39;rev&#39;.</span>
+<span class="sd">        queue : str</span>
+<span class="sd">            HPC queue to submit job to. Example: &#39;short&#39;, &#39;batch-h&#39;, etc...</span>
+<span class="sd">        name : str</span>
+<span class="sd">            PBS job name.</span>
+<span class="sd">        feature : str | None</span>
+<span class="sd">            PBS feature request (-l {feature}).</span>
+<span class="sd">            Example: &#39;feature=24core&#39;, &#39;qos=high&#39;, etc...</span>
+<span class="sd">        stdout_path : str</span>
+<span class="sd">            Path to print .stdout and .stderr files.</span>
+<span class="sd">        keep_sh : bool</span>
+<span class="sd">            Boolean to keep the .sh files. Default is to remove these files</span>
+<span class="sd">            after job submission.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : str</span>
+<span class="sd">            qsub standard output, this is typically the PBS job ID.</span>
+<span class="sd">        err : str</span>
+<span class="sd">            qsub standard error, this is typically an empty string if the job</span>
+<span class="sd">            was submitted successfully.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_status</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Q&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">):</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Not submitting job &quot;</span><span class="si">{}</span><span class="s1">&quot; because it is already in &#39;</span>
+                 <span class="s1">&#39;qstat with status: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">status</span><span class="p">))</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="s1">&#39;already_running&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feature_str</span> <span class="o">=</span> <span class="s1">&#39;#PBS -l </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.sh&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">script</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;#!/bin/bash</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#PBS -N </span><span class="si">{n}</span><span class="s1"> # job name</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#PBS -A </span><span class="si">{a}</span><span class="s1"> # allocation account</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#PBS -q </span><span class="si">{q}</span><span class="s1"> # queue (debug, short, batch, or long)</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#PBS -o </span><span class="si">{p}</span><span class="s1">/</span><span class="si">{n}</span><span class="s1">_$PBS_JOBID.o</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#PBS -e </span><span class="si">{p}</span><span class="s1">/</span><span class="si">{n}</span><span class="s1">_$PBS_JOBID.e</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;</span><span class="si">{L}</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;echo Running on: $HOSTNAME, Machine Type: $MACHTYPE</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;</span><span class="si">{cmd}</span><span class="s1">&#39;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">alloc</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">queue</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">stdout_path</span><span class="p">,</span>
+                              <span class="n">L</span><span class="o">=</span><span class="n">feature_str</span> <span class="k">if</span> <span class="n">feature</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                              <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">))</span>
+
+            <span class="c1"># write the shell script file and submit as qsub job</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">make_sh</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">script</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="s1">&#39;qsub </span><span class="si">{script}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">script</span><span class="o">=</span><span class="n">fname</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;PBS job &quot;</span><span class="si">{}</span><span class="s1">&quot; with id #</span><span class="si">{}</span><span class="s1"> submitted successfully&#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_sh</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">rm</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">err</span></div></div>
+
+
+<div class="viewcode-block" id="SLURM"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SLURM">[docs]</a><span class="k">class</span> <span class="nc">SLURM</span><span class="p">(</span><span class="n">SubprocessManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Subclass for SLURM subprocess jobs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">alloc</span><span class="p">,</span> <span class="n">memory</span><span class="p">,</span> <span class="n">walltime</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reV&#39;</span><span class="p">,</span> <span class="n">stdout_path</span><span class="o">=</span><span class="s1">&#39;./stdout&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize and submit a PBS job.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cmd : str</span>
+<span class="sd">            Command to be submitted in PBS shell script. Example:</span>
+<span class="sd">                &#39;python -m reV.generation.cli_gen&#39;</span>
+<span class="sd">        alloc : str</span>
+<span class="sd">            HPC project (allocation) handle. Example: &#39;rev&#39;.</span>
+<span class="sd">        memory : int</span>
+<span class="sd">            Node memory request in GB.</span>
+<span class="sd">        walltime : float</span>
+<span class="sd">            Node walltime request in hours.</span>
+<span class="sd">        feature : str</span>
+<span class="sd">            Additional flags for SLURM job. Format is &quot;--qos=high&quot;</span>
+<span class="sd">            or &quot;--depend=[state:job_id]&quot;. Default is None.</span>
+<span class="sd">        name : str</span>
+<span class="sd">            SLURM job name.</span>
+<span class="sd">        stdout_path : str</span>
+<span class="sd">            Path to print .stdout and .stderr files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_path</span><span class="p">(</span><span class="n">stdout_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sbatch</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span>
+                                         <span class="n">alloc</span><span class="o">=</span><span class="n">alloc</span><span class="p">,</span>
+                                         <span class="n">memory</span><span class="o">=</span><span class="n">memory</span><span class="p">,</span>
+                                         <span class="n">walltime</span><span class="o">=</span><span class="n">walltime</span><span class="p">,</span>
+                                         <span class="n">feature</span><span class="o">=</span><span class="n">feature</span><span class="p">,</span>
+                                         <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                                         <span class="n">stdout_path</span><span class="o">=</span><span class="n">stdout_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SLURM.check_status"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SLURM.check_status">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check_status</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check the status of this PBS job using qstat.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job : str</span>
+<span class="sd">            Job name or ID number.</span>
+<span class="sd">        var : str</span>
+<span class="sd">            Identity/type of job identification input arg (&#39;id&#39; or &#39;name&#39;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : str | NoneType</span>
+<span class="sd">            squeue job status str or None if not found.</span>
+<span class="sd">            Common status codes: PD, R, CG (pending, running, complete).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># column location of various job identifiers</span>
+        <span class="n">col_loc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">var</span> <span class="o">==</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span>
+            <span class="c1"># check for specific name</span>
+            <span class="n">squeue_rows</span> <span class="o">=</span> <span class="n">SLURM</span><span class="o">.</span><span class="n">squeue</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">job</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">squeue_rows</span> <span class="o">=</span> <span class="n">SLURM</span><span class="o">.</span><span class="n">squeue</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">squeue_rows</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># reverse the list so most recent jobs are first</span>
+            <span class="n">squeue_rows</span> <span class="o">=</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">squeue_rows</span><span class="p">)</span>
+
+        <span class="c1"># update job status from qstat list</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">squeue_rows</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="c1"># make sure the row is long enough to be a job status listing</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">7</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="n">col_loc</span><span class="p">[</span><span class="n">var</span><span class="p">]]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">in</span> <span class="n">job</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                    <span class="c1"># Job status is located at the 4 index</span>
+                    <span class="n">status</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Job with </span><span class="si">{}</span><span class="s1"> &quot;</span><span class="si">{}</span><span class="s1">&quot; has status: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">job</span><span class="p">,</span> <span class="n">status</span><span class="p">))</span>
+                    <span class="k">return</span> <span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="SLURM.squeue"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SLURM.squeue">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">squeue</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the SLURM squeue command and return the stdout split to rows.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str | None</span>
+<span class="sd">            Optional to check the squeue for a specific job name (not limited</span>
+<span class="sd">            to the 8 shown characters) or show users whole squeue.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        squeue_rows : list | None</span>
+<span class="sd">            List of strings where each string is a row in the squeue printout.</span>
+<span class="sd">            Returns None if squeue is empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;squeue -u </span><span class="si">{user}{job_name}</span><span class="s1">&#39;</span>
+               <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">SLURM</span><span class="o">.</span><span class="n">USER</span><span class="p">,</span>
+                       <span class="n">job_name</span><span class="o">=</span><span class="s1">&#39; -n </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+        <span class="n">stdout</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">SLURM</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">stdout</span><span class="p">:</span>
+            <span class="c1"># No jobs are currently running.</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">squeue_rows</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">squeue_rows</span></div>
+
+<div class="viewcode-block" id="SLURM.scancel"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SLURM.scancel">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">scancel</span><span class="p">(</span><span class="n">job_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Cancel a slurm job.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job_id : int</span>
+<span class="sd">            SLURM job id to cancel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;scancel </span><span class="si">{job_id}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">job_id</span><span class="o">=</span><span class="n">job_id</span><span class="p">))</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="n">call</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SLURM.sbatch"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SLURM.sbatch">[docs]</a>    <span class="k">def</span> <span class="nf">sbatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="n">alloc</span><span class="p">,</span> <span class="n">memory</span><span class="p">,</span> <span class="n">walltime</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reV&#39;</span><span class="p">,</span>
+               <span class="n">stdout_path</span><span class="o">=</span><span class="s1">&#39;./stdout&#39;</span><span class="p">,</span> <span class="n">keep_sh</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submit a SLURM job via sbatch command and SLURM shell script</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cmd : str</span>
+<span class="sd">            Command to be submitted in PBS shell script. Example:</span>
+<span class="sd">                &#39;python -m reV.generation.cli_gen&#39;</span>
+<span class="sd">        alloc : str</span>
+<span class="sd">            HPC project (allocation) handle. Example: &#39;rev&#39;.</span>
+<span class="sd">        memory : int</span>
+<span class="sd">            Node memory request in GB.</span>
+<span class="sd">        walltime : float</span>
+<span class="sd">            Node walltime request in hours.</span>
+<span class="sd">        feature : str</span>
+<span class="sd">            Additional flags for SLURM job. Format is &quot;--qos=high&quot;</span>
+<span class="sd">            or &quot;--depend=[state:job_id]&quot;. Default is None.</span>
+<span class="sd">        name : str</span>
+<span class="sd">            SLURM job name.</span>
+<span class="sd">        stdout_path : str</span>
+<span class="sd">            Path to print .stdout and .stderr files.</span>
+<span class="sd">        keep_sh : bool</span>
+<span class="sd">            Boolean to keep the .sh files. Default is to remove these files</span>
+<span class="sd">            after job submission.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : str</span>
+<span class="sd">            sbatch standard output, this is typically the SLURM job ID.</span>
+<span class="sd">        err : str</span>
+<span class="sd">            sbatch standard error, this is typically an empty string if the job</span>
+<span class="sd">            was submitted successfully.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_status</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;PD&#39;</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">):</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Not submitting job &quot;</span><span class="si">{}</span><span class="s1">&quot; because it is already in &#39;</span>
+                 <span class="s1">&#39;squeue with status: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">status</span><span class="p">))</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="s1">&#39;already_running&#39;</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">feature_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">if</span> <span class="n">feature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">feature_str</span> <span class="o">=</span> <span class="s1">&#39;#SBATCH </span><span class="si">{}</span><span class="s1">  # extra feature</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+            <span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.sh&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">script</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;#!/bin/bash</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#SBATCH --account=</span><span class="si">{a}</span><span class="s1">  # allocation account</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#SBATCH --time=</span><span class="si">{t}</span><span class="s1">  # walltime</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#SBATCH --job-name=</span><span class="si">{n}</span><span class="s1">  # job name</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#SBATCH --nodes=1  # number of nodes</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#SBATCH --mem=</span><span class="si">{m}</span><span class="s1">  # node RAM in MB</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#SBATCH --output=</span><span class="si">{p}</span><span class="s1">/</span><span class="si">{n}</span><span class="s1">_%j.o</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;#SBATCH --error=</span><span class="si">{p}</span><span class="s1">/</span><span class="si">{n}</span><span class="s1">_%j.e</span><span class="se">\n</span><span class="si">{f}</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;echo Running on: $HOSTNAME, Machine Type: $MACHTYPE</span><span class="se">\n</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;</span><span class="si">{cmd}</span><span class="s1">&#39;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">alloc</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">walltime</span><span class="p">(</span><span class="n">walltime</span><span class="p">),</span> <span class="n">n</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                              <span class="n">m</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">memory</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">p</span><span class="o">=</span><span class="n">stdout_path</span><span class="p">,</span>
+                              <span class="n">f</span><span class="o">=</span><span class="n">feature_str</span><span class="p">,</span> <span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">))</span>
+
+            <span class="c1"># write the shell script file and submit as qsub job</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">make_sh</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">script</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="s1">&#39;sbatch </span><span class="si">{script}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">script</span><span class="o">=</span><span class="n">fname</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">err</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;SLURM job &quot;</span><span class="si">{}</span><span class="s1">&quot; with id #</span><span class="si">{}</span><span class="s1"> submitted &#39;</span>
+                             <span class="s1">&#39;successfully&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">out</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_sh</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">rm</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">err</span></div></div>
+
+
+<div class="viewcode-block" id="execute_parallel"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.execute_parallel">[docs]</a><span class="k">def</span> <span class="nf">execute_parallel</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">execution_iter</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Execute concurrent futures with an established cluster.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fun : function</span>
+<span class="sd">        Python function object that will be submitted to futures. See</span>
+<span class="sd">        downstream execution methods for arg passing structure.</span>
+<span class="sd">    execution_iter : iter</span>
+<span class="sd">        Python iterator that controls the futures submitted in parallel.</span>
+<span class="sd">    n_workers : int</span>
+<span class="sd">        Number of workers to run in parallel</span>
+<span class="sd">    **kwargs : dict</span>
+<span class="sd">        Key word arguments passed to the fun.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    results : list</span>
+<span class="sd">        List of futures results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">futures</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># initialize a client based on the input cluster.</span>
+    <span class="k">with</span> <span class="n">cf</span><span class="o">.</span><span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">n_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+
+        <span class="c1"># iterate through split executions, submitting each to worker</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">exec_slice</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">execution_iter</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Kicking off serial worker #</span><span class="si">{}</span><span class="s1"> for: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">exec_slice</span><span class="p">))</span>
+            <span class="c1"># submit executions and append to futures list</span>
+            <span class="n">futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">execute_single</span><span class="p">,</span> <span class="n">fun</span><span class="p">,</span> <span class="n">exec_slice</span><span class="p">,</span>
+                                           <span class="n">worker</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+        <span class="c1"># gather results</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="execute_single"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.execute_single">[docs]</a><span class="k">def</span> <span class="nf">execute_single</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">input_obj</span><span class="p">,</span> <span class="n">worker</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Execute a serial compute on a single core.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fun : function</span>
+<span class="sd">        Function to execute.</span>
+<span class="sd">    input_obj : object</span>
+<span class="sd">        Object passed as first argument to fun. Typically a project control</span>
+<span class="sd">        object that can be the result of iteration in the parallel execution</span>
+<span class="sd">        framework.</span>
+<span class="sd">    worker : int</span>
+<span class="sd">        Worker number (for debugging purposes).</span>
+<span class="sd">    **kwargs : dict</span>
+<span class="sd">        Key word arguments passed to fun.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Running single serial execution on worker #</span><span class="si">{}</span><span class="s1"> for: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="n">input_obj</span><span class="p">))</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">input_obj</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">log_mem</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="SmartParallelJob"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SmartParallelJob">[docs]</a><span class="k">class</span> <span class="nc">SmartParallelJob</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Single node parallel compute manager with smart data flushing.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">execution_iter</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Single node parallel compute manager with smart data flushing.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        obj : object</span>
+<span class="sd">            Python object that will be submitted to futures. Must have methods</span>
+<span class="sd">            run(arg) and flush(). run(arg) must take the iteration result of</span>
+<span class="sd">            execution_iter as the single positional argument. Additionally,</span>
+<span class="sd">            the results of obj.run(arg) will be pa ssed to obj.out. obj.out</span>
+<span class="sd">            will be passed None when the memory is to be cleared. It is</span>
+<span class="sd">            advisable that obj.run() be a @staticmethod for dramatically</span>
+<span class="sd">            faster submission in parallel.</span>
+<span class="sd">        execution_iter : iter</span>
+<span class="sd">            Python iterator that controls the futures submitted in parallel.</span>
+<span class="sd">        n_workers : int</span>
+<span class="sd">            Number of workers to use in parallel. None will use all</span>
+<span class="sd">            available workers.</span>
+<span class="sd">        mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). If the used memory divided</span>
+<span class="sd">            by the total memory is greater than this value, the obj.out will</span>
+<span class="sd">            be flushed and the local node memory will be cleared.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;flush&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ExecutionError</span><span class="p">(</span><span class="s1">&#39;Parallel execution with object: &quot;</span><span class="si">{}</span><span class="s1">&quot; &#39;</span>
+                                 <span class="s1">&#39;failed. The target object must have methods &#39;</span>
+                                 <span class="s1">&#39;run() and flush()&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_execution_iter</span> <span class="o">=</span> <span class="n">execution_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_workers</span> <span class="o">=</span> <span class="n">n_workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mem_util_lim</span> <span class="o">=</span> <span class="n">mem_util_lim</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">execution_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the iterator object that controls the parallel execution.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _execution_iter : iterable</span>
+<span class="sd">            Iterable object that controls the processes of the parallel job.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execution_iter</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mem_util_lim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the memory utilization limit (fractional).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _mem_util_lim : float</span>
+<span class="sd">            Fractional memory utilization limit. If the used memory divided</span>
+<span class="sd">            by the total memory is greater than this value, the obj.out will</span>
+<span class="sd">            be flushed and the local node memory will be cleared.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_util_lim</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of workers in the local cluster.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _n_workers : int</span>
+<span class="sd">            Number of workers. Default value is the number of CPU&#39;s.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_workers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_n_workers</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_workers</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the main python object that will be submitted to futures.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _obj : Object</span>
+<span class="sd">            Python object that will be submitted to futures. Must have methods</span>
+<span class="sd">            run(arg) and flush(). run(arg) must take the iteration result of</span>
+<span class="sd">            execution_iter as the single positional argument. Additionally,</span>
+<span class="sd">            the results of obj.run(arg) will be passed to obj.out. obj.out</span>
+<span class="sd">            will be passed None when the memory is to be cleared. It is</span>
+<span class="sd">            advisable that obj.run() be a @staticmethod for dramatically</span>
+<span class="sd">            faster submission in parallel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
+
+<div class="viewcode-block" id="SmartParallelJob.flush"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SmartParallelJob.flush">[docs]</a>    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Flush obj.out to disk, set obj.out=None, and garbage collect.&quot;&quot;&quot;</span>
+        <span class="c1"># memory utilization limit exceeded, flush memory to disk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SmartParallelJob.gather_and_flush"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SmartParallelJob.gather_and_flush">[docs]</a>    <span class="k">def</span> <span class="nf">gather_and_flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">futures</span><span class="p">,</span> <span class="n">force_flush</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wait on futures, potentially update obj.out and flush to disk.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        i : int | str</span>
+<span class="sd">            Iteration number (for logging purposes).</span>
+<span class="sd">        futures : list</span>
+<span class="sd">            List of parallel future objects to wait on or gather.</span>
+<span class="sd">        force_flush : bool</span>
+<span class="sd">            Option to force a disk flush. Useful for end-of-iteration. If this</span>
+<span class="sd">            is False, will only flush to disk if the memory utilization exceeds</span>
+<span class="sd">            the mem_util_lim.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        futures : list</span>
+<span class="sd">            List of parallel future objects. If the memory was flushed, this is</span>
+<span class="sd">            a cleared list: futures.clear()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># gather on each iteration so there is no big mem spike during flush</span>
+        <span class="c1"># (obj.out should be a property setter that will append new data.)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">]</span>
+        <span class="n">futures</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="c1"># useful log statements</span>
+        <span class="n">mem</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Parallel run at iteration </span><span class="si">{0}</span><span class="s1">. &#39;</span>
+                    <span class="s1">&#39;Memory utilization is </span><span class="si">{1:.3f}</span><span class="s1"> GB out of </span><span class="si">{2:.3f}</span><span class="s1"> GB &#39;</span>
+                    <span class="s1">&#39;total (</span><span class="si">{3:.1f}% u</span><span class="s1">sed, limit of </span><span class="si">{4:.1f}</span><span class="s1">%)&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">mem</span><span class="o">.</span><span class="n">used</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">,</span> <span class="n">mem</span><span class="o">.</span><span class="n">total</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">,</span>
+                            <span class="mi">100</span> <span class="o">*</span> <span class="n">mem</span><span class="o">.</span><span class="n">used</span> <span class="o">/</span> <span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="p">,</span>
+                            <span class="mi">100</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mem_util_lim</span><span class="p">))</span>
+
+        <span class="c1"># check memory utilization against the limit</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span> <span class="o">/</span> <span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mem_util_lim</span><span class="p">)</span> <span class="ow">or</span> <span class="n">force_flush</span><span class="p">:</span>
+
+            <span class="c1"># restart client to free up memory</span>
+            <span class="c1"># also seems to sync stderr messages (including warnings)</span>
+            <span class="c1"># flush data to disk</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Flushing memory to disk. The memory utilization is &#39;</span>
+                        <span class="s1">&#39;</span><span class="si">{0:.2f}% a</span><span class="s1">nd the limit is </span><span class="si">{1:.2f}</span><span class="s1">%.&#39;</span>
+                        <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">mem</span><span class="o">.</span><span class="n">used</span> <span class="o">/</span> <span class="n">mem</span><span class="o">.</span><span class="n">total</span><span class="p">),</span>
+                                <span class="mi">100</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mem_util_lim</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">futures</span></div>
+
+<div class="viewcode-block" id="SmartParallelJob.run"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SmartParallelJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run ParallelSmartJobs</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Keyword arguments to be passed to obj.run(). Makes it easier to</span>
+<span class="sd">            have obj.run() as a @staticmethod.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Executing parallel run on a local cluster with &#39;</span>
+                    <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1"> workers over </span><span class="si">{1}</span><span class="s1"> total iterations.&#39;</span>
+                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">execution_iter</span><span class="p">)))</span>
+        <span class="n">log_mem</span><span class="p">()</span>
+
+        <span class="c1"># initialize a client based on the input cluster.</span>
+        <span class="k">with</span> <span class="n">cf</span><span class="o">.</span><span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># iterate through split executions, submitting each to worker</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">exec_slice</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">execution_iter</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Kicking off serial worker #</span><span class="si">{0}</span><span class="s1"> for: </span><span class="si">{1}</span><span class="s1">. &#39;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">exec_slice</span><span class="p">))</span>
+
+                <span class="c1"># submit executions and append to futures list</span>
+                <span class="n">futures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">run</span><span class="p">,</span> <span class="n">exec_slice</span><span class="p">,</span>
+                                               <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+                <span class="c1"># Take a pause after one complete set of workers</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">futures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gather_and_flush</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">futures</span><span class="p">)</span>
+
+            <span class="c1"># All futures complete</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gather_and_flush</span><span class="p">(</span><span class="s1">&#39;END&#39;</span><span class="p">,</span> <span class="n">futures</span><span class="p">,</span> <span class="n">force_flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Smart parallel job complete. Returning execution &#39;</span>
+                         <span class="s1">&#39;control to higher level processes.&#39;</span><span class="p">)</span>
+            <span class="n">log_mem</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SmartParallelJob.execute"><a class="viewcode-back" href="../../../reV/reV.utilities.html#reV.utilities.execution.SmartParallelJob.execute">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">execution_iter</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">mem_util_lim</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute the smart parallel run with data flushing.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        obj : object</span>
+<span class="sd">            Python object that will be submitted to futures. Must have methods</span>
+<span class="sd">            run(arg) and flush(). run(arg) must take the iteration result of</span>
+<span class="sd">            execution_iter as the single positional argument. Additionally,</span>
+<span class="sd">            the results of obj.run(arg) will be passed to obj.out. obj.out</span>
+<span class="sd">            will be passed None when the memory is to be cleared. It is</span>
+<span class="sd">            advisable that obj.run() be a @staticmethod for dramatically</span>
+<span class="sd">            faster submission in parallel.</span>
+<span class="sd">        execution_iter : iter</span>
+<span class="sd">            Python iterator that controls the futures submitted in parallel.</span>
+<span class="sd">        n_workers : int</span>
+<span class="sd">            Number of workers to scale the cluster to. None will use all</span>
+<span class="sd">            available workers in a local cluster.</span>
+<span class="sd">        mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). If the used memory divided</span>
+<span class="sd">            by the total memory is greater than this value, the obj.out will</span>
+<span class="sd">            be flushed and the local node memory will be cleared.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Keyword arguments to be passed to obj.run(). Makes it easier to</span>
+<span class="sd">            have obj.run() as a @staticmethod.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">manager</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">execution_iter</span><span class="p">,</span> <span class="n">n_workers</span><span class="o">=</span><span class="n">n_workers</span><span class="p">,</span>
+                      <span class="n">mem_util_lim</span><span class="o">=</span><span class="n">mem_util_lim</span><span class="p">)</span>
+        <span class="n">manager</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

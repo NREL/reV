@@ -1,0 +1,502 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.config.execution &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.config.execution</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.config.execution</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">reV Configuration for Execution Options</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">reV.config.base_config</span> <span class="k">import</span> <span class="n">BaseConfig</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BaseExecutionConfig"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.execution.BaseExecutionConfig">[docs]</a><span class="k">class</span> <span class="nc">BaseExecutionConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class to handle execution configuration&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : str | dict</span>
+<span class="sd">            File path to config json (str), serialized json object (str),</span>
+<span class="sd">            or dictionary with pre-extracted config.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_option</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ppn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mem_util_lim</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">option</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the hardware run option.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _option : str</span>
+<span class="sd">            Execution control option, e.g. local, peregrine, eagle...</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_option</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_option</span> <span class="o">=</span> <span class="s1">&#39;local&#39;</span>
+            <span class="k">if</span> <span class="s1">&#39;option&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;option&#39;</span><span class="p">]:</span>
+                    <span class="c1"># config-specified, set to attribute</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_option</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;option&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_option</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of nodes property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _nodes : int</span>
+<span class="sd">            Number of available nodes. Default is 1 node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># set default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="s1">&#39;nodes&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ppn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the process per node (ppn) property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _ppn : int</span>
+<span class="sd">            Processes per node. Default is 1 ppn.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ppn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># set default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ppn</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="s1">&#39;ppn&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ppn</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;ppn&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ppn</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mem_util_lim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the node memory utilization limit property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _mem_util_lim : float</span>
+<span class="sd">            Memory utilization limit (fractional). Key in the config json is</span>
+<span class="sd">            &quot;memory_utilization_limit&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_util_lim</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;memory_utilization_limit&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mem_util_lim</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;memory_utilization_limit&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mem_util_lim</span> <span class="o">=</span> <span class="mf">0.4</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_util_lim</span></div>
+
+
+<div class="viewcode-block" id="HPCConfig"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.execution.HPCConfig">[docs]</a><span class="k">class</span> <span class="nc">HPCConfig</span><span class="p">(</span><span class="n">BaseExecutionConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to handle HPC configuration inputs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_alloc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_feature</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">alloc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the HPC allocation property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _hpc_alloc : str</span>
+<span class="sd">            Name of the HPC allocation account for the specified job.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_alloc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_alloc</span> <span class="o">=</span> <span class="s1">&#39;rev&#39;</span>
+            <span class="k">if</span> <span class="s1">&#39;allocation&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;allocation&#39;</span><span class="p">]:</span>
+                    <span class="c1"># config-specified, set to attribute</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_alloc</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;allocation&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_alloc</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">feature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get feature request str.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _feature : str | NoneType</span>
+<span class="sd">            Feature request string.</span>
+
+<span class="sd">            For EAGLE, a full additional flag.</span>
+<span class="sd">            Config should look like:</span>
+<span class="sd">                &quot;feature&quot;: &quot;--qos=high&quot;</span>
+<span class="sd">                &quot;feature&quot;: &quot;--depend=[state:job_id]&quot;</span>
+
+<span class="sd">            For PEREGRINE, everything following the -l flag.</span>
+<span class="sd">            Config should look like:</span>
+<span class="sd">                &quot;feature&quot;: &quot;qos=high&quot;</span>
+<span class="sd">                &quot;feature&quot;: &quot;feature=256GB&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># default option if not specified</span>
+            <span class="k">if</span> <span class="s1">&#39;feature&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;feature&#39;</span><span class="p">]:</span>
+                    <span class="c1"># config-specified, set to attribute</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_feature</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;feature&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feature</span></div>
+
+
+<div class="viewcode-block" id="PeregrineConfig"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.execution.PeregrineConfig">[docs]</a><span class="k">class</span> <span class="nc">PeregrineConfig</span><span class="p">(</span><span class="n">HPCConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to handle Peregrine configuration inputs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_queue</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">node_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the Peregrine node memory property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _hpc_node_mem : str</span>
+<span class="sd">            Single node memory request, e.g. 32GB, 64GB, etc...</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;short&#39;</span><span class="p">:</span> <span class="s1">&#39;32GB&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;debug&#39;</span><span class="p">:</span> <span class="s1">&#39;32GB&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;batch&#39;</span><span class="p">:</span> <span class="s1">&#39;32GB&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;batch-h&#39;</span><span class="p">:</span> <span class="s1">&#39;64GB&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;long&#39;</span><span class="p">:</span> <span class="s1">&#39;32GB&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;bigmem&#39;</span><span class="p">:</span> <span class="s1">&#39;64GB&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;data-transfer&#39;</span><span class="p">:</span> <span class="s1">&#39;32GB&#39;</span><span class="p">,</span>
+                    <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span> <span class="o">=</span> <span class="n">defaults</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;memory&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]:</span>
+                    <span class="c1"># config-specified, set to attribute</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">walltime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the Peregrine node walltime property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _hpc_walltime : str</span>
+<span class="sd">            Single node job time request, e.g. &#39;04:00:00&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;short&#39;</span><span class="p">:</span> <span class="s1">&#39;04:00:00&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;debug&#39;</span><span class="p">:</span> <span class="s1">&#39;01:00:00&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;batch&#39;</span><span class="p">:</span> <span class="s1">&#39;48:00:00&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;batch-h&#39;</span><span class="p">:</span> <span class="s1">&#39;48:00:00&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;long&#39;</span><span class="p">:</span> <span class="s1">&#39;240:00:00&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;bigmem&#39;</span><span class="p">:</span> <span class="s1">&#39;240:00:00&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;data-transfer&#39;</span><span class="p">:</span> <span class="s1">&#39;120:00:00&#39;</span><span class="p">,</span>
+                    <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span> <span class="o">=</span> <span class="n">defaults</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;walltime&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;walltime&#39;</span><span class="p">]:</span>
+                    <span class="c1"># config-specified, set to attribute</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;walltime&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">queue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the Peregrine queue property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _hpc_queue : str</span>
+<span class="sd">            Peregrine queue request, e.g. &#39;short&#39; or &#39;long&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_queue</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_queue</span> <span class="o">=</span> <span class="s1">&#39;short&#39;</span>
+            <span class="k">if</span> <span class="s1">&#39;queue&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;queue&#39;</span><span class="p">]:</span>
+                    <span class="c1"># config-specified, set to attribute</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_queue</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;queue&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_queue</span></div>
+
+
+<div class="viewcode-block" id="EagleConfig"><a class="viewcode-back" href="../../../reV/reV.config.html#reV.config.execution.EagleConfig">[docs]</a><span class="k">class</span> <span class="nc">EagleConfig</span><span class="p">(</span><span class="n">HPCConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to handle Eagle configuration inputs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">node_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the requested Eagle node memory property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _hpc_node_mem : int</span>
+<span class="sd">            Requested node memory in GB.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span> <span class="o">=</span> <span class="mi">90</span>
+            <span class="k">if</span> <span class="s1">&#39;memory&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]:</span>
+                    <span class="c1"># config-specified, set to attribute</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;memory&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_node_mem</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">walltime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the requested Eagle node walltime property.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _hpc_walltime : int</span>
+<span class="sd">            Requested single node job time in hours.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># default option if not specified</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="s1">&#39;walltime&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;walltime&#39;</span><span class="p">]:</span>
+                    <span class="c1"># config-specified, set to attribute</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;walltime&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hpc_walltime</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

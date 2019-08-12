@@ -1,0 +1,699 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.supply_curve.point_summary &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.supply_curve.point_summary</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.supply_curve.point_summary</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;reV supply curve single point data summary framework.</span>
+
+<span class="sd">Created on Fri Jun 21 13:24:31 2019</span>
+
+<span class="sd">@author: gbuster</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">stats</span>
+
+<span class="kn">from</span> <span class="nn">reV.handlers.geotiff</span> <span class="k">import</span> <span class="n">Geotiff</span>
+<span class="kn">from</span> <span class="nn">reV.supply_curve.points</span> <span class="k">import</span> <span class="n">SupplyCurvePoint</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="p">(</span><span class="n">EmptySupplyCurvePointError</span><span class="p">,</span>
+                                      <span class="n">OutputWarning</span><span class="p">)</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SupplyCurvePointSummary"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.point_summary.SupplyCurvePointSummary">[docs]</a><span class="k">class</span> <span class="nc">SupplyCurvePointSummary</span><span class="p">(</span><span class="n">SupplyCurvePoint</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Supply curve summary framework with extra methods for summary calc.&quot;&quot;&quot;</span>
+
+    <span class="c1"># technology-dependent power density estimates in MW/km2</span>
+    <span class="n">POWER_DENSITY</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pv&#39;</span><span class="p">:</span> <span class="mi">36</span><span class="p">,</span> <span class="s1">&#39;wind&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">f_excl</span><span class="p">,</span> <span class="n">f_gen</span><span class="p">,</span> <span class="n">f_techmap</span><span class="p">,</span> <span class="n">tm_dset_gen</span><span class="p">,</span> <span class="n">tm_dset_res</span><span class="p">,</span>
+                 <span class="n">res_class_dset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">res_class_bin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ex_area</span><span class="o">=</span><span class="mf">0.0081</span><span class="p">,</span>
+                 <span class="n">power_density</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dset_cf</span><span class="o">=</span><span class="s1">&#39;cf_mean-means&#39;</span><span class="p">,</span>
+                 <span class="n">dset_lcoe</span><span class="o">=</span><span class="s1">&#39;lcoe_fcr-means&#39;</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                 <span class="n">exclusion_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gid : int</span>
+<span class="sd">            gid for supply curve point to analyze.</span>
+<span class="sd">        f_excl : str | ExclusionPoints</span>
+<span class="sd">            Filepath to exclusions geotiff or ExclusionPoints file handler.</span>
+<span class="sd">        f_gen : str | reV.handlers.Outputs</span>
+<span class="sd">            Filepath to .h5 reV generation output results or reV Outputs file</span>
+<span class="sd">            handler.</span>
+<span class="sd">        f_techmap : str | h5py.File</span>
+<span class="sd">            Filepath to tech mapping between exclusions and resource data</span>
+<span class="sd">            (created using the reV TechMapping framework) or an h5py file</span>
+<span class="sd">            handler object.</span>
+<span class="sd">        tm_dset_gen : str</span>
+<span class="sd">            Dataset name in the techmap file containing the</span>
+<span class="sd">            exclusions-to-generation mapping data.</span>
+<span class="sd">        tm_dset_res : str</span>
+<span class="sd">            Dataset name in the techmap file containing the</span>
+<span class="sd">            exclusions-to-resource mapping data.</span>
+<span class="sd">        res_class_dset : str | np.ndarray | None</span>
+<span class="sd">            Dataset in the generation file dictating resource classes.</span>
+<span class="sd">            Can be pre-extracted resource data in np.ndarray.</span>
+<span class="sd">            None if no resource classes.</span>
+<span class="sd">        res_class_bin : list | None</span>
+<span class="sd">            Two-entry lists dictating the single resource class bin.</span>
+<span class="sd">            None if no resource classes.</span>
+<span class="sd">        ex_area : float</span>
+<span class="sd">            Area of an exclusion cell (square km).</span>
+<span class="sd">        power_density : float | None</span>
+<span class="sd">            Power density in MW/km2. None will attempt to infer power density</span>
+<span class="sd">            from the generation meta data technology.</span>
+<span class="sd">        dset_cf : str | np.ndarray</span>
+<span class="sd">            Dataset name from f_gen containing capacity factor mean values.</span>
+<span class="sd">            Can be pre-extracted generation output data in np.ndarray.</span>
+<span class="sd">        dset_lcoe : str | np.ndarray</span>
+<span class="sd">            Dataset name from f_gen containing LCOE mean values.</span>
+<span class="sd">            Can be pre-extracted generation output data in np.ndarray.</span>
+<span class="sd">        resolution : int | None</span>
+<span class="sd">            SC resolution, must be input in combination with gid.</span>
+<span class="sd">        exclusion_shape : tuple</span>
+<span class="sd">            Shape of the exclusions extent (rows, cols). Inputing this will</span>
+<span class="sd">            speed things up considerably.</span>
+<span class="sd">        close : bool</span>
+<span class="sd">            Flag to close object file handlers on exit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span> <span class="o">=</span> <span class="n">res_class_dset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bin</span> <span class="o">=</span> <span class="n">res_class_bin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dset_cf</span> <span class="o">=</span> <span class="n">dset_cf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dset_lcoe</span> <span class="o">=</span> <span class="n">dset_lcoe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_gid_set</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gid_set</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mean_res</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lcoe_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ex_area</span> <span class="o">=</span> <span class="n">ex_area</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span> <span class="o">=</span> <span class="n">power_density</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="n">f_excl</span><span class="p">,</span> <span class="n">f_gen</span><span class="p">,</span> <span class="n">f_techmap</span><span class="p">,</span> <span class="n">tm_dset_gen</span><span class="p">,</span>
+                         <span class="n">tm_dset_res</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+                         <span class="n">exclusion_shape</span><span class="o">=</span><span class="n">exclusion_shape</span><span class="p">,</span> <span class="n">close</span><span class="o">=</span><span class="n">close</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_apply_exclusions</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_apply_exclusions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply exclusions by masking the generation and resource gid arrays.</span>
+<span class="sd">        This removes all res/gen entries that are masked by the exclusions or</span>
+<span class="sd">        resource bin.&quot;&quot;&quot;</span>
+
+        <span class="n">exclude</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">excl_data</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">exclude</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resource_exclusion</span><span class="p">(</span><span class="n">exclude</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span><span class="p">[</span><span class="n">exclude</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_res_gids</span><span class="p">[</span><span class="n">exclude</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Supply curve point gid </span><span class="si">{}</span><span class="s1"> is completely excluded for res &#39;</span>
+                   <span class="s1">&#39;bin: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bin</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">EmptySupplyCurvePointError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_resource_exclusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">boolean_exclude</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Include the resource exclusion into a pre-existing bool exclusion.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        boolean_exclude : np.ndarray</span>
+<span class="sd">            Boolean exclusion array (True is exclude).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        boolean_exclude : np.ndarray</span>
+<span class="sd">            Same as input but includes additional exclusions for resource</span>
+<span class="sd">            outside of current resource class bin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+
+            <span class="n">rex</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span><span class="p">]</span>
+                    <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bin</span><span class="p">))</span>
+                   <span class="o">|</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span><span class="p">]</span>
+                      <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bin</span><span class="p">)))</span>
+
+            <span class="n">boolean_exclude</span> <span class="o">=</span> <span class="p">(</span><span class="n">boolean_exclude</span> <span class="o">|</span> <span class="n">rex</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">boolean_exclude</span>
+
+<div class="viewcode-block" id="SupplyCurvePointSummary.ordered_unique"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.point_summary.SupplyCurvePointSummary.ordered_unique">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">ordered_unique</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of unique values in the same order as the input sequence.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        seq : list | tuple</span>
+<span class="sd">            Sequence of values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        seq : list</span>
+<span class="sd">            List of unique values in seq input with original order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">seq</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">x</span> <span class="ow">in</span> <span class="n">seen</span> <span class="ow">or</span> <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="p">))]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the non-excluded resource area of the supply curve point in the</span>
+<span class="sd">        current resource class.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        area : float</span>
+<span class="sd">            Non-excluded resource/generation area in square km.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ex_area</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">res_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the resource data array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _res_data : np.ndarray</span>
+<span class="sd">            Multi-year-mean resource data array for all sites in the</span>
+<span class="sd">            generation data output file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_res_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gen_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the generation capacity factor data array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _gen_data : np.ndarray</span>
+<span class="sd">            Multi-year-mean capacity factor data array for all sites in the</span>
+<span class="sd">            generation data output file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_cf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dset_cf</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dset_cf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_gen_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_cf</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lcoe_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the LCOE data array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _lcoe_data : np.ndarray</span>
+<span class="sd">            Multi-year-mean LCOE data array for all sites in the</span>
+<span class="sd">            generation data output file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_lcoe</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dset_lcoe</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lcoe_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dset_lcoe</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_lcoe_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_dset_lcoe</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lcoe_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">latitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the SC point latitude&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroid</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">longitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the SC point longitude&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroid</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">res_gid_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the list of resource gids corresponding to this sc point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res_gids : list</span>
+<span class="sd">            List of resource gids.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_gid_set</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_res_gid_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ordered_unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_gids</span><span class="p">)</span>
+            <span class="k">if</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_gid_set</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_res_gid_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_gid_set</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gen_gid_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the list of generation gids corresponding to this sc point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gen_gids : list</span>
+<span class="sd">            List of generation gids.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gid_set</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gid_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ordered_unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span><span class="p">)</span>
+            <span class="k">if</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gid_set</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gid_set</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_gid_set</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gid_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the number of exclusion pixels in each resource/generation gid</span>
+<span class="sd">        corresponding to this sc point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gid_counts : list</span>
+<span class="sd">            List of exclusion pixels in each resource/generation gid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_gids</span> <span class="o">==</span> <span class="n">gid</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">for</span> <span class="n">gid</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">res_gid_set</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mean_cf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the mean capacity factor for the non-excluded data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mean_cf : float | None</span>
+<span class="sd">            Mean capacity factor value for the non-excluded data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mean_cf</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mean_cf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">mean_cf</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mean_lcoe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the mean LCOE for the non-excluded data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mean_lcoe : float | None</span>
+<span class="sd">            Mean LCOE value for the non-excluded data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mean_lcoe</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lcoe_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mean_lcoe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lcoe_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">mean_lcoe</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mean_res</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the mean resource for the non-excluded data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mean_res : float | None</span>
+<span class="sd">            Mean resource for the non-excluded data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mean_res</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_res_class_dset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_res_class_bin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">mean_res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">res_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_gen_gids</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">mean_res</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">power_density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the estimated power density either from input or infered from</span>
+<span class="sd">        generation output meta.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        _power_density : float</span>
+<span class="sd">            Estimated power density in MW/km2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tech</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gen</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;reV_tech&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">tech</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">POWER_DENSITY</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">POWER_DENSITY</span><span class="p">[</span><span class="n">tech</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Could not recognize reV technology in generation meta &#39;</span>
+                     <span class="s1">&#39;data: &quot;</span><span class="si">{}</span><span class="s1">&quot;. Cannot lookup an appropriate power density &#39;</span>
+                     <span class="s1">&#39;to calculate SC point capacity.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tech</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_density</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">capacity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the estimated capacity in MW of the supply curve point in the</span>
+<span class="sd">        current resource class with the applied exclusions.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        capacity : float</span>
+<span class="sd">            Estimated capacity in MW of the supply curve point in the</span>
+<span class="sd">            current resource class with the applied exclusions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">capacity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_density</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">area</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_density</span>
+        <span class="k">return</span> <span class="n">capacity</span>
+
+<div class="viewcode-block" id="SupplyCurvePointSummary.agg_data_layers"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.point_summary.SupplyCurvePointSummary.agg_data_layers">[docs]</a>    <span class="k">def</span> <span class="nf">agg_data_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">summary</span><span class="p">,</span> <span class="n">data_layers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Perform additional data layer aggregation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        summary : dict</span>
+<span class="sd">            Dictionary of summary outputs for this sc point.</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must be a dictionary keyed by data label</span>
+<span class="sd">            name. Each value must be another dictionary with &quot;band&quot;, &quot;method&quot;,</span>
+<span class="sd">            and &quot;fpath&quot;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : dict</span>
+<span class="sd">            Dictionary of summary outputs for this sc point. A new entry for</span>
+<span class="sd">            each data layer is added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">data_layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">attrs</span> <span class="ow">in</span> <span class="n">data_layers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+                <span class="k">if</span> <span class="s1">&#39;fobj&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">Geotiff</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;fpath&#39;</span><span class="p">])</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;band&#39;</span><span class="p">]),</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;fobj&#39;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;band&#39;</span><span class="p">]),</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;mode&#39;</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+                <span class="n">summary</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+<div class="viewcode-block" id="SupplyCurvePointSummary.summary"><a class="viewcode-back" href="../../../reV/reV.supply_curve.html#reV.supply_curve.point_summary.SupplyCurvePointSummary.summary">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">fpath_excl</span><span class="p">,</span> <span class="n">fpath_gen</span><span class="p">,</span> <span class="n">fpath_techmap</span><span class="p">,</span> <span class="n">dset_tm</span><span class="p">,</span>
+                <span class="n">gen_index</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_layers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a summary dictionary of a single supply curve point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gid : int</span>
+<span class="sd">            gid for supply curve point to analyze.</span>
+<span class="sd">        fpath_excl : str</span>
+<span class="sd">            Filepath to exclusions geotiff.</span>
+<span class="sd">        fpath_gen : str</span>
+<span class="sd">            Filepath to .h5 reV generation output results.</span>
+<span class="sd">        fpath_techmap : str</span>
+<span class="sd">            Filepath to tech mapping between exclusions and generation results</span>
+<span class="sd">            (created using the reV TechMapping framework).</span>
+<span class="sd">        dset_tm : str</span>
+<span class="sd">            Dataset name in the techmap file containing the</span>
+<span class="sd">            exclusions-to-generation mapping data.</span>
+<span class="sd">        gen_index : np.ndarray</span>
+<span class="sd">            Array of generation gids with array index equal to resource gid.</span>
+<span class="sd">            Array value is -1 if the resource index was not used in the</span>
+<span class="sd">            generation run.</span>
+<span class="sd">        args : tuple | list | None</span>
+<span class="sd">            List of summary arguments to include. None defaults to all</span>
+<span class="sd">            available args defined in the class attr.</span>
+<span class="sd">        data_layers : None | dict</span>
+<span class="sd">            Aggregation data layers. Must be a dictionary keyed by data label</span>
+<span class="sd">            name. Each value must be another dictionary with &quot;band&quot;, &quot;method&quot;,</span>
+<span class="sd">            and &quot;fpath&quot;.</span>
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Keyword args to init the SC point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        summary : dict</span>
+<span class="sd">            Dictionary of summary outputs for this sc point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">gid</span><span class="p">,</span> <span class="n">fpath_excl</span><span class="p">,</span> <span class="n">fpath_gen</span><span class="p">,</span> <span class="n">fpath_techmap</span><span class="p">,</span> <span class="n">dset_tm</span><span class="p">,</span> <span class="n">gen_index</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">point</span><span class="p">:</span>
+
+            <span class="n">ARGS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;res_gids&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">res_gid_set</span><span class="p">,</span>
+                    <span class="s1">&#39;gen_gids&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">gen_gid_set</span><span class="p">,</span>
+                    <span class="s1">&#39;gid_counts&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">gid_counts</span><span class="p">,</span>
+                    <span class="s1">&#39;mean_cf&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">mean_cf</span><span class="p">,</span>
+                    <span class="s1">&#39;mean_lcoe&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">mean_lcoe</span><span class="p">,</span>
+                    <span class="s1">&#39;mean_res&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">mean_res</span><span class="p">,</span>
+                    <span class="s1">&#39;capacity&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">capacity</span><span class="p">,</span>
+                    <span class="s1">&#39;area_sq_km&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">area</span><span class="p">,</span>
+                    <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span>
+                    <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="n">point</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+            <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ARGS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+            <span class="n">summary</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">ARGS</span><span class="p">:</span>
+                    <span class="n">summary</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">ARGS</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Cannot find &quot;</span><span class="si">{}</span><span class="s1">&quot; as an available SC point summary &#39;</span>
+                         <span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="n">OutputWarning</span><span class="p">)</span>
+
+            <span class="n">summary</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">agg_data_layers</span><span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="n">data_layers</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

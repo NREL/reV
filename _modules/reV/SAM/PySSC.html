@@ -1,0 +1,549 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.SAM.PySSC &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.SAM.PySSC</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.SAM.PySSC</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Python SAM Simulation Core (PySSC)</span>
+
+<span class="sd">Created with SAM version 2017.9.5</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="k">import</span> <span class="p">(</span><span class="n">c_int</span><span class="p">,</span> <span class="n">c_char_p</span><span class="p">,</span> <span class="n">c_float</span><span class="p">,</span> <span class="n">CDLL</span><span class="p">,</span> <span class="n">c_void_p</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span>
+                    <span class="n">POINTER</span><span class="p">,</span> <span class="n">byref</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn</span>
+
+
+<span class="c1"># must be c_double or c_float depending on how defined in sscapi.h</span>
+<span class="n">c_number</span> <span class="o">=</span> <span class="n">c_float</span>
+
+
+<div class="viewcode-block" id="PySSC"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC">[docs]</a><span class="k">class</span> <span class="nc">PySSC</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Python SAM Simulation Core (PySSC)&quot;&quot;&quot;</span>
+
+    <span class="c1"># Default SAM SDK version, also the folder name in reV/SAM/</span>
+    <span class="n">DEF_SDK_VER</span> <span class="o">=</span> <span class="s1">&#39;sam-sdk-200_2018.11.11&#39;</span>
+
+    <span class="c1"># Default directory containing SAM SSC files</span>
+    <span class="n">DEF_PYSSC_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span>
+                                 <span class="n">DEF_SDK_VER</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pyssc_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a PySSC object.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pyssc_dir</span><span class="p">:</span>
+            <span class="c1"># no pyssc_dir specified, use SSC files in this file&#39;s path</span>
+            <span class="n">pyssc_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEF_PYSSC_DIR</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">pyssc_dir</span><span class="p">):</span>
+                <span class="c1"># specified pyssc_dir not found</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Requested SAM Simulation Core directory not found: &#39;</span>
+                     <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;. Defaulting to: &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pyssc_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEF_PYSSC_DIR</span><span class="p">))</span>
+                <span class="n">pyssc_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEF_PYSSC_DIR</span>
+
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;win&#39;</span><span class="p">):</span>
+            <span class="n">sub_dir</span> <span class="o">=</span> <span class="s1">&#39;win64&#39;</span>
+            <span class="n">f_ssc</span> <span class="o">=</span> <span class="s1">&#39;ssc.dll&#39;</span>
+        <span class="k">elif</span> <span class="s1">&#39;darwin&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">:</span>
+            <span class="n">sub_dir</span> <span class="o">=</span> <span class="s1">&#39;osx64&#39;</span>
+            <span class="n">f_ssc</span> <span class="o">=</span> <span class="s1">&#39;ssc.dylib&#39;</span>
+        <span class="k">elif</span> <span class="s1">&#39;linux&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">:</span>
+            <span class="n">sub_dir</span> <span class="o">=</span> <span class="s1">&#39;linux64&#39;</span>
+            <span class="n">f_ssc</span> <span class="o">=</span> <span class="s1">&#39;ssc.so&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Platform not supported: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span> <span class="o">=</span> <span class="n">CDLL</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pyssc_dir</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">,</span> <span class="n">f_ssc</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">INVALID</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">STRING</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NUMBER</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ARRAY</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MATRIX</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INPUT</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">OUTPUT</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INOUT</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="PySSC.b"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.b">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">b</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure that name strings are sent to PySSC as bytes type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">s</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input variable should be a string: &#39;</span>
+                            <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">s</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PySSC.version"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.version">[docs]</a>    <span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;version &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_version</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_int</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_version</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PySSC.build_info"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.build_info">[docs]</a>    <span class="k">def</span> <span class="nf">build_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;build_info &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_build_info</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_build_info</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PySSC.data_create"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_create">[docs]</a>    <span class="k">def</span> <span class="nf">data_create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_create &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_create</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_void_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_create</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PySSC.data_free"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_free">[docs]</a>    <span class="k">def</span> <span class="nf">data_free</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_free &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_free</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_clear"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_clear">[docs]</a>    <span class="k">def</span> <span class="nf">data_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_clear &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_clear</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_unassign"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_unassign">[docs]</a>    <span class="k">def</span> <span class="nf">data_unassign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_unassign &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_unassign</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span> <span class="n">c_char_p</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_query"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_query">[docs]</a>    <span class="k">def</span> <span class="nf">data_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_query &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_query</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_int</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_query</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span> <span class="n">c_char_p</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_first"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_first">[docs]</a>    <span class="k">def</span> <span class="nf">data_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_first &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_first</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_first</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_next"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_next">[docs]</a>    <span class="k">def</span> <span class="nf">data_next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_next &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_next</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_next</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_set_string"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_set_string">[docs]</a>    <span class="k">def</span> <span class="nf">data_set_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_set_string &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_set_string</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                      <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                                      <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_set_number"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_set_number">[docs]</a>    <span class="k">def</span> <span class="nf">data_set_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_set_number &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_set_number</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                      <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                                      <span class="n">c_number</span><span class="p">(</span><span class="n">value</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_set_array"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_set_array">[docs]</a>    <span class="k">def</span> <span class="nf">data_set_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_set_array &quot;&quot;&quot;</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">parr</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_number</span> <span class="o">*</span> <span class="n">count</span><span class="p">)()</span>
+        <span class="c1"># set all at once instead of looping</span>
+        <span class="n">arr</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">parr</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_set_array</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                            <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                                            <span class="n">pointer</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="n">c_int</span><span class="p">(</span><span class="n">count</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_set_array_from_csv"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_set_array_from_csv">[docs]</a>    <span class="k">def</span> <span class="nf">data_set_array_from_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_set_array_from_csv &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;,&#39;</span><span class="p">))])</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set_array</span><span class="p">(</span><span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PySSC.data_set_matrix"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_set_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">data_set_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">mat</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_set_matrix &quot;&quot;&quot;</span>
+        <span class="n">nrows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+        <span class="n">ncols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">nrows</span> <span class="o">*</span> <span class="n">ncols</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_number</span> <span class="o">*</span> <span class="n">size</span><span class="p">)()</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+                <span class="n">arr</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">c_number</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">c</span><span class="p">])</span>
+                <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_set_matrix</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                             <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                                             <span class="n">pointer</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="n">c_int</span><span class="p">(</span><span class="n">nrows</span><span class="p">),</span>
+                                             <span class="n">c_int</span><span class="p">(</span><span class="n">ncols</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_set_matrix_from_csv"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_set_matrix_from_csv">[docs]</a>    <span class="k">def</span> <span class="nf">data_set_matrix_from_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">fn</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_set_matrix_from_csv &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lst</span> <span class="o">=</span> <span class="p">([</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;,&#39;</span><span class="p">))])</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_set_matrix</span><span class="p">(</span><span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PySSC.data_set_table"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_set_table">[docs]</a>    <span class="k">def</span> <span class="nf">data_set_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">tab</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_set_table &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_set_table</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                            <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                                            <span class="n">c_void_p</span><span class="p">(</span><span class="n">tab</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_get_string"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_get_string">[docs]</a>    <span class="k">def</span> <span class="nf">data_get_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_get_string &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_get_string</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_get_string</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                             <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PySSC.data_get_number"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_get_number">[docs]</a>    <span class="k">def</span> <span class="nf">data_get_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_get_number &quot;&quot;&quot;</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">c_number</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_get_number</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                      <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                                      <span class="n">byref</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">value</span></div>
+
+<div class="viewcode-block" id="PySSC.data_get_array"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_get_array">[docs]</a>    <span class="k">def</span> <span class="nf">data_get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_get_array &quot;&quot;&quot;</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_get_array</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">POINTER</span><span class="p">(</span><span class="n">c_number</span><span class="p">)</span>
+        <span class="n">parr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_get_array</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                            <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                                            <span class="n">byref</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+        <span class="c1"># extract all at once</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">parr</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">count</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">arr</span></div>
+
+<div class="viewcode-block" id="PySSC.data_get_matrix"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_get_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">data_get_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_get_matrix &quot;&quot;&quot;</span>
+        <span class="n">nrows</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">()</span>
+        <span class="n">ncols</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_get_matrix</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">POINTER</span><span class="p">(</span><span class="n">c_number</span><span class="p">)</span>
+        <span class="n">parr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_get_matrix</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span>
+                                             <span class="n">c_char_p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">)),</span>
+                                             <span class="n">byref</span><span class="p">(</span><span class="n">nrows</span><span class="p">),</span> <span class="n">byref</span><span class="p">(</span><span class="n">ncols</span><span class="p">))</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">parr</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">mat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mat</span></div>
+
+    <span class="c1"># don&#39;t call data_free() on the result, it&#39;s an internal</span>
+    <span class="c1"># pointer inside SSC</span>
+<div class="viewcode-block" id="PySSC.data_get_table"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.data_get_table">[docs]</a>    <span class="k">def</span> <span class="nf">data_get_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_data</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;data_get_table &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_data_get_table</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.module_entry"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.module_entry">[docs]</a>    <span class="k">def</span> <span class="nf">module_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;module_entry &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_entry</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_void_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_entry</span><span class="p">(</span><span class="n">c_int</span><span class="p">(</span><span class="n">index</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.entry_name"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.entry_name">[docs]</a>    <span class="k">def</span> <span class="nf">entry_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_entry</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;entry_name &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_entry_name</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_entry_name</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_entry</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.entry_description"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.entry_description">[docs]</a>    <span class="k">def</span> <span class="nf">entry_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_entry</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;entry_description &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_entry_description</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_entry_description</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_entry</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.entry_version"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.entry_version">[docs]</a>    <span class="k">def</span> <span class="nf">entry_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_entry</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;entry_version &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_entry_version</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_int</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_entry_version</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_entry</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.module_create"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.module_create">[docs]</a>    <span class="k">def</span> <span class="nf">module_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;module_create &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_create</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_void_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_create</span><span class="p">(</span><span class="n">c_char_p</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.module_free"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.module_free">[docs]</a>    <span class="k">def</span> <span class="nf">module_free</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_mod</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;module_free &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_free</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_mod</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.module_var_info"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.module_var_info">[docs]</a>    <span class="k">def</span> <span class="nf">module_var_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_mod</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;module_var_info &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_var_info</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_void_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_var_info</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_mod</span><span class="p">),</span> <span class="n">c_int</span><span class="p">(</span><span class="n">index</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.info_var_type"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.info_var_type">[docs]</a>    <span class="k">def</span> <span class="nf">info_var_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;info_var_type &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_var_type</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_inf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.info_data_type"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.info_data_type">[docs]</a>    <span class="k">def</span> <span class="nf">info_data_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;info_data_type &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_data_type</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_inf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.info_name"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.info_name">[docs]</a>    <span class="k">def</span> <span class="nf">info_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;info_name &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_name</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_name</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_inf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.info_label"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.info_label">[docs]</a>    <span class="k">def</span> <span class="nf">info_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;info_label &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_label</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_label</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_inf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.info_units"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.info_units">[docs]</a>    <span class="k">def</span> <span class="nf">info_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;info_units &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_units</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_units</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_inf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.info_meta"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.info_meta">[docs]</a>    <span class="k">def</span> <span class="nf">info_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;info_meta &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_meta</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_meta</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_inf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.info_group"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.info_group">[docs]</a>    <span class="k">def</span> <span class="nf">info_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;info_group &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_group</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_group</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_inf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.info_uihint"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.info_uihint">[docs]</a>    <span class="k">def</span> <span class="nf">info_uihint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;info_uihint &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_uihint</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_info_uihint</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_inf</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.module_exec"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.module_exec">[docs]</a>    <span class="k">def</span> <span class="nf">module_exec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_mod</span><span class="p">,</span> <span class="n">p_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;module_exec &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_exec</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_int</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_exec</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_mod</span><span class="p">),</span> <span class="n">c_void_p</span><span class="p">(</span><span class="n">p_data</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.module_exec_simple_no_thread"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.module_exec_simple_no_thread">[docs]</a>    <span class="k">def</span> <span class="nf">module_exec_simple_no_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modname</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;module_exec_simple_no_thread &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_exec_simple_nothread</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_exec_simple_nothread</span><span class="p">(</span><span class="n">c_char_p</span><span class="p">(</span><span class="n">modname</span><span class="p">),</span>
+                                                         <span class="n">c_void_p</span><span class="p">(</span><span class="n">data</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.module_log"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.module_log">[docs]</a>    <span class="k">def</span> <span class="nf">module_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p_mod</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;module_log &quot;&quot;&quot;</span>
+        <span class="n">log_type</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">()</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">c_float</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_log</span><span class="o">.</span><span class="n">restype</span> <span class="o">=</span> <span class="n">c_char_p</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_log</span><span class="p">(</span><span class="n">c_void_p</span><span class="p">(</span><span class="n">p_mod</span><span class="p">),</span> <span class="n">c_int</span><span class="p">(</span><span class="n">index</span><span class="p">),</span>
+                                        <span class="n">byref</span><span class="p">(</span><span class="n">log_type</span><span class="p">),</span> <span class="n">byref</span><span class="p">(</span><span class="n">time</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PySSC.module_exec_set_print"><a class="viewcode-back" href="../../../reV/reV.SAM.html#reV.SAM.PySSC.PySSC.module_exec_set_print">[docs]</a>    <span class="k">def</span> <span class="nf">module_exec_set_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prn</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;module_exec_set_print &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdll</span><span class="o">.</span><span class="n">ssc_module_exec_set_print</span><span class="p">(</span><span class="n">c_int</span><span class="p">(</span><span class="n">prn</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

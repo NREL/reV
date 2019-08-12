@@ -1,0 +1,561 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>reV.handlers.multi_year &mdash; reV 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> reV
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reV.html">reV</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/modules.html">reV2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/setup.html">setup module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reV/reV.html">reV package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.SAM.html">reV.SAM package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.batch.html">reV.batch package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.config.html">reV.config package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.econ.html">reV.econ package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.exclusions.html">reV.exclusions package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.generation.html">reV.generation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.handlers.html">reV.handlers package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.pipeline.html">reV.pipeline package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.supply_curve.html">reV.supply_curve package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reV/reV.utilities.html">reV.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.cli">reV.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV.version">reV.version module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reV/reV.html#module-reV">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">reV</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>reV.handlers.multi_year</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for reV.handlers.multi_year</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes to collect reV outputs from multiple annual files.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">reV.handlers.outputs</span> <span class="k">import</span> <span class="n">Outputs</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.exceptions</span> <span class="k">import</span> <span class="n">HandlerRuntimeError</span>
+<span class="kn">from</span> <span class="nn">reV.utilities.utilities</span> <span class="k">import</span> <span class="n">parse_year</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MultiYear"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.multi_year.MultiYear">[docs]</a><span class="k">class</span> <span class="nc">MultiYear</span><span class="p">(</span><span class="n">Outputs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to handle multiple years of data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="MultiYear.create_dset_out"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.multi_year.MultiYear.create_dset_out">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_dset_out</span><span class="p">(</span><span class="n">source_h5</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create output dataset by parsing year from source_h5 and appending</span>
+<span class="sd">        to dset_in.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_h5 : str</span>
+<span class="sd">            Path to source .h5 file to copy data from</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset to copy</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Ouput dataset name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source_h5</span><span class="p">)</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="n">parse_year</span><span class="p">(</span><span class="n">f_name</span><span class="p">)</span>
+        <span class="n">dset_out</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dset_out</span></div>
+
+    <span class="k">def</span> <span class="nf">_copy_time_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_h5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copy time_index from source_h5 to time_index_{year} in multiyear .h5</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_h5 : str</span>
+<span class="sd">            Path to source .h5 file to copy data from</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dset</span> <span class="o">=</span> <span class="s1">&#39;time_index&#39;</span>
+        <span class="n">dset_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dset_out</span><span class="p">(</span><span class="n">source_h5</span><span class="p">,</span> <span class="n">dset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dset_out</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;- Collecting time_index from </span><span class="si">{}</span><span class="s2">&quot;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">source_h5</span><span class="p">)))</span>
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">source_h5</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+                <span class="n">time_index</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;time_index&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_dset</span><span class="p">(</span><span class="n">dset_out</span><span class="p">,</span> <span class="n">time_index</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">time_index</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                              <span class="n">data</span><span class="o">=</span><span class="n">time_index</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_copy_dset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_h5</span><span class="p">,</span> <span class="n">dset</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copy dset_in from source_h5 to multiyear .h5</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_h5 : str</span>
+<span class="sd">            Path to source .h5 file to copy data from</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset to copy</span>
+<span class="sd">        meta : pandas.DataFrame</span>
+<span class="sd">            If provided confirm that source meta matches given meta</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dset_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dset_out</span><span class="p">(</span><span class="n">source_h5</span><span class="p">,</span> <span class="n">dset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dset_out</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;- Collecting </span><span class="si">{}</span><span class="s2"> from </span><span class="si">{}</span><span class="s2">&quot;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">source_h5</span><span class="p">)))</span>
+            <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">source_h5</span><span class="p">,</span> <span class="n">unscale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">]</span>
+                    <span class="n">source_meta</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">meta</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">meta</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">source_meta</span><span class="p">[</span><span class="n">cols</span><span class="p">]):</span>
+                        <span class="k">raise</span> <span class="n">HandlerRuntimeError</span><span class="p">(</span><span class="s1">&#39;Coordinates do not match&#39;</span><span class="p">)</span>
+
+                <span class="n">_</span><span class="p">,</span> <span class="n">ds_dtype</span><span class="p">,</span> <span class="n">ds_chunks</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">get_dset_properties</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+                <span class="n">ds_attrs</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">(</span><span class="n">dset</span><span class="o">=</span><span class="n">dset</span><span class="p">)</span>
+                <span class="n">ds_data</span> <span class="o">=</span> <span class="n">f_in</span><span class="p">[</span><span class="n">dset</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_dset</span><span class="p">(</span><span class="n">dset_out</span><span class="p">,</span> <span class="n">ds_data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">ds_dtype</span><span class="p">,</span>
+                              <span class="n">chunks</span><span class="o">=</span><span class="n">ds_chunks</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">ds_attrs</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">ds_data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MultiYear.collect"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.multi_year.MultiYear.collect">[docs]</a>    <span class="k">def</span> <span class="nf">collect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h5_files</span><span class="p">,</span> <span class="n">dset</span><span class="p">,</span> <span class="n">profiles</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect dataset dset from all give list of h5 files</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        h5_files : list</span>
+<span class="sd">            List of .h5 files to collect datasets from</span>
+<span class="sd">            NOTE: .h5 file names much indicate the year the data pertains to</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset to collect</span>
+<span class="sd">        profiles : bool</span>
+<span class="sd">            Boolean flag to indicate if profiles are being collected</span>
+<span class="sd">            If True also collect time_index</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">Outputs</span><span class="p">(</span><span class="n">h5_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">f_in</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">][</span><span class="o">...</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;meta&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Copying meta&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_dset</span><span class="p">(</span><span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                              <span class="n">data</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span>
+
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">year_h5</span> <span class="ow">in</span> <span class="n">h5_files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">profiles</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_copy_time_index</span><span class="p">(</span><span class="n">year_h5</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_dset</span><span class="p">(</span><span class="n">year_h5</span><span class="p">,</span> <span class="n">dset</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="n">meta</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_source_dsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset_out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract all available annual datasets associated with dset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Output dataset to find source datasets for</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        source_dsets : list</span>
+<span class="sd">            List of annual datasets</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dset</span> <span class="o">=</span> <span class="n">dset_out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">my_dset</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;means&#39;</span><span class="p">,</span> <span class="s1">&#39;std&#39;</span><span class="p">]]</span>
+        <span class="n">source_dsets</span> <span class="o">=</span> <span class="p">[</span><span class="n">ds</span> <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span> <span class="k">if</span> <span class="n">dset</span> <span class="ow">in</span> <span class="n">ds</span>
+                        <span class="ow">and</span> <span class="n">ds</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">my_dset</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">dset_out</span> <span class="ow">in</span> <span class="n">source_dsets</span><span class="p">:</span>
+            <span class="n">source_dsets</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">dset_out</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">source_dsets</span>
+
+    <span class="k">def</span> <span class="nf">_update_dset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset_out</span><span class="p">,</span> <span class="n">dset_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update dataset, create if needed</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Dataset name</span>
+<span class="sd">        dset_data : ndarray</span>
+<span class="sd">            Dataset data to write to disc</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dset_out</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;- Updating </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_out</span><span class="p">))</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">dset_out</span><span class="p">]</span> <span class="o">=</span> <span class="n">dset_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;- Creating </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_out</span><span class="p">))</span>
+            <span class="n">source_dset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_source_dsets</span><span class="p">(</span><span class="n">dset_out</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">ds_dtype</span><span class="p">,</span> <span class="n">ds_chunks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dset_properties</span><span class="p">(</span><span class="n">source_dset</span><span class="p">)</span>
+            <span class="n">ds_attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_attrs</span><span class="p">(</span><span class="n">dset</span><span class="o">=</span><span class="n">source_dset</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_dset</span><span class="p">(</span><span class="n">dset_out</span><span class="p">,</span> <span class="n">dset_data</span><span class="p">,</span> <span class="n">ds_dtype</span><span class="p">,</span>
+                           <span class="n">chunks</span><span class="o">=</span><span class="n">ds_chunks</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">ds_attrs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_means</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset_out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute multi-year means for given dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Multi-year means dataset name</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        my_means : ndarray</span>
+<span class="sd">            Array of multi-year means</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">source_dsets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_source_dsets</span><span class="p">(</span><span class="n">dset_out</span><span class="p">)</span>
+
+        <span class="n">MY_means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">source_dsets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">MY_means</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="n">MY_means</span> <span class="o">+=</span> <span class="bp">self</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">HandlerRuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> shape </span><span class="si">{}</span><span class="s2"> should be </span><span class="si">{}</span><span class="s2">&quot;</span>
+                                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                  <span class="n">MY_means</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">MY_means</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">source_dsets</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_dset</span><span class="p">(</span><span class="n">dset_out</span><span class="p">,</span> <span class="n">MY_means</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MY_means</span>
+
+<div class="viewcode-block" id="MultiYear.means"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.multi_year.MultiYear.means">[docs]</a>    <span class="k">def</span> <span class="nf">means</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract or compute multi-year means for given source dset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset of interest</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MY_means : ndarray</span>
+<span class="sd">            Array of multi-year means for dataset of interest</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">my_dset</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-means&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">my_dset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+            <span class="n">MY_means</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">my_dset</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">MY_means</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_means</span><span class="p">(</span><span class="n">my_dset</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MY_means</span></div>
+
+    <span class="k">def</span> <span class="nf">_compute_std</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset_out</span><span class="p">,</span> <span class="n">means</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute multi-year standard deviation for given dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset_out : str</span>
+<span class="sd">            Multi-year std dataset name</span>
+<span class="sd">        means : ndarray</span>
+<span class="sd">            Array of pre-computed means</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        my_std : ndarray</span>
+<span class="sd">            Array of multi-year standard deviations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">means</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">means</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_means</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-means&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset_out</span><span class="p">))</span>
+
+        <span class="n">source_dsets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_source_dsets</span><span class="p">(</span><span class="n">dset_out</span><span class="p">)</span>
+
+        <span class="n">MY_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">means</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="n">source_dsets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">MY_std</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="n">MY_std</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span> <span class="o">-</span> <span class="n">means</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">HandlerRuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> shape </span><span class="si">{}</span><span class="s2"> should be </span><span class="si">{}</span><span class="s2">&quot;</span>
+                                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_h5</span><span class="p">[</span><span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                  <span class="n">MY_std</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="n">MY_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">MY_std</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">source_dsets</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_dset</span><span class="p">(</span><span class="n">dset_out</span><span class="p">,</span> <span class="n">MY_std</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MY_std</span>
+
+<div class="viewcode-block" id="MultiYear.std"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.multi_year.MultiYear.std">[docs]</a>    <span class="k">def</span> <span class="nf">std</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract or compute multi-year standard deviation for given source dset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset of interest</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MY_std : ndarray</span>
+<span class="sd">            Array of multi-year standard deviation for dataset of interest</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">my_dset</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-std&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">my_dset</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dsets</span><span class="p">:</span>
+            <span class="n">MY_std</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">my_dset</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">MY_means</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">means</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+            <span class="n">MY_std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_std</span><span class="p">(</span><span class="n">my_dset</span><span class="p">,</span> <span class="n">means</span><span class="o">=</span><span class="n">MY_means</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MY_std</span></div>
+
+<div class="viewcode-block" id="MultiYear.CV"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.multi_year.MultiYear.CV">[docs]</a>    <span class="k">def</span> <span class="nf">CV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract or compute multi-year coefficient of variation for given</span>
+<span class="sd">        source dset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset of interest</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MY_cv : ndarray</span>
+<span class="sd">            Array of multi-year coefficient of variation for</span>
+<span class="sd">            dataset of interest</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">MY_cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">means</span><span class="p">(</span><span class="n">dset</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">MY_cv</span></div>
+
+<div class="viewcode-block" id="MultiYear.collect_means"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.multi_year.MultiYear.collect_means">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">collect_means</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">my_file</span><span class="p">,</span> <span class="n">h5_files</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect and compute multi-year means for given dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        my_file : str</span>
+<span class="sd">            Path to .h5 resource file</span>
+<span class="sd">        h5_files : list</span>
+<span class="sd">            List of .h5 files to collect datasets from</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Dataset to collect</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Collecting </span><span class="si">{}</span><span class="s1"> into </span><span class="si">{}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">my_file</span><span class="p">),</span>
+                    <span class="s1">&#39;and computing multi-year means and standard deviation.&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">my_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my</span><span class="p">:</span>
+            <span class="n">my</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">h5_files</span><span class="p">,</span> <span class="n">dset</span><span class="p">)</span>
+            <span class="n">means</span> <span class="o">=</span> <span class="n">my</span><span class="o">.</span><span class="n">_compute_means</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-means&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">))</span>
+            <span class="n">my</span><span class="o">.</span><span class="n">_compute_std</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-std&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">),</span> <span class="n">means</span><span class="o">=</span><span class="n">means</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MultiYear.collect_profiles"><a class="viewcode-back" href="../../../reV/reV.handlers.html#reV.handlers.multi_year.MultiYear.collect_profiles">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">collect_profiles</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">my_file</span><span class="p">,</span> <span class="n">h5_files</span><span class="p">,</span> <span class="n">dset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect multi-year profiles associated with given dataset</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        my_file : str</span>
+<span class="sd">            Path to .h5 resource file</span>
+<span class="sd">        h5_files : list</span>
+<span class="sd">            List of .h5 files to collect datasets from</span>
+<span class="sd">        dset : str</span>
+<span class="sd">            Profiles dataset to collect</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Collecting </span><span class="si">{}</span><span class="s1"> into </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">my_file</span><span class="p">))</span>
+        <span class="k">with</span> <span class="bp">cls</span><span class="p">(</span><span class="n">my_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">my</span><span class="p">:</span>
+            <span class="n">my</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">h5_files</span><span class="p">,</span> <span class="n">dset</span><span class="p">,</span> <span class="n">profiles</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Galen MacLaurin, Michael Rossol
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
