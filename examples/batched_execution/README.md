@@ -11,7 +11,7 @@ This example set shows how reV inputs can be parameterized and the execution can
 ## How to Run
 All batch jobs will be kicked off using the following CLI call:
 
-`rev -c "/scratch/gbuster/rev/test_batch/config_batch.json" batch`
+`rev -c "../config_batch.json" batch`
 
 New sub directories will be created in the folder with the batch config file for each sub job.
 All job files in the same directory (and sub directories) as the batch config file will be copied into the job folders.

@@ -6,7 +6,7 @@ More complex input sets on a site-by-site basis can be easily generated using a 
 ## Workflow Description
 The batching config in this example represents the high-level executed module. The user executes the following command:
 
-`rev -c "/scratch/ngilroy/rev2/config_batch.json" batch`
+`rev -c "../config_batch.json" batch`
 
 This creates and executes three batch job pipelines. You should be able to see in config_batch.json how the actual input generation files are parameterized.
 This is the power of the batch module - it's sufficiently generic to modify ANY key-value pairs in any .json file, including other config files.

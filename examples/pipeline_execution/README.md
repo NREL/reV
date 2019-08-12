@@ -4,7 +4,7 @@ This set of example files demonstrates how to run the full reV pipeline using th
 
 The full pipeline can be executed using the following CLI call:
 
-`rev -c "/scratch/gbuster/rev/test_pipeline/config_pipeline.json" pipeline`
+`rev -c "../config_pipeline.json" pipeline`
 
 Please note that the project directory (for configs, logs, outputs, etc...) in all of the configs is set to: `/scratch/gbuster/rev/test_pipeline/` and should be changed for your run.
 
@@ -15,7 +15,7 @@ These requirements are necessary to track pipeline status and to pipe i/o throug
 
 1. All pipeline modules must have the same output directory.
 2. Only one pipeline can be run per output directory.
-3. Each module run by the pipeline must have a unqiue job name.
+3. Each module run by the pipeline must have a unique job name.
 
 ## Failed Jobs
 
