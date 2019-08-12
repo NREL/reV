@@ -1,5 +1,5 @@
-# reV2
-reV 2.0 development repository
+# reV
+The Renewable Energy Potential (reV) Model
 
 [Execution examples.](https://github.nrel.gov/reV/reV2/tree/master/examples)
 
