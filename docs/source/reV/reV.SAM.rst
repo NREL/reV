@@ -8,39 +8,39 @@ reV.SAM.PySSC module
 --------------------
 
 .. automodule:: reV.SAM.PySSC
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 reV.SAM.SAM module
 ------------------
 
 .. automodule:: reV.SAM.SAM
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 reV.SAM.econ module
 -------------------
 
 .. automodule:: reV.SAM.econ
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 reV.SAM.generation module
 -------------------------
 
 .. automodule:: reV.SAM.generation
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
 Module contents
 ---------------
 
 .. automodule:: reV.SAM
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
