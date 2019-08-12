@@ -140,6 +140,7 @@ dependencies:
   - wcwidth=0.1.7
   - wheel=0.33.4
   - wrapt=1.11.2
+  - xarray=0.12.1
   - xerces-c=3.2.2
   - xz=5.2.4
   - zeromq=4.3.1
