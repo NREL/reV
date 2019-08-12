@@ -64,24 +64,6 @@ class SAMExecutionError(Exception):
     """
 
 
-class RPMValueError(Exception):
-    """
-    ValueError for RPM Pipeline
-    """
-
-
-class RPMTypeError(Exception):
-    """
-    ValueError for RPM Pipeline
-    """
-
-
-class RPMRuntimeError(Exception):
-    """
-    ValueError for RPM Pipeline
-    """
-
-
 class SupplyCurveError(Exception):
     """
     Execution error for SAM simulations
