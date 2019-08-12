@@ -27,7 +27,7 @@ class DatasetCollector:
         Parameters
         ----------
         h5_file : str
-            Path to h5_file into wich dataset is to be collected
+            Path to h5_file into which dataset is to be collected
         gids : list
             list of gids to be collected
         dset_in : str
