@@ -64,9 +64,9 @@ reV.config.multi\_year module
 -----------------------------
 
 .. automodule:: reV.config.multi_year
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 reV.config.output\_request module
 ---------------------------------
