@@ -396,6 +396,7 @@ class MultiYear(Outputs):
             is_profile = True
         else:
             is_profile = False
+
         return is_profile
 
     @classmethod

@@ -139,62 +139,68 @@ def collect(ctx, group, source_files, dsets, verbose):
 
     # add job to reV status file.
     status = {'dirout': os.path.dirname(my_file),
-              'fout': os.path.basename(my_file), 'job_status': 'successful',
+              'fout': os.path.basename(my_file),
+              'job_status': 'successful',
               'runtime': runtime,
               'finput': source_files}
-    Status.make_job_file(os.path.dirname(my_file), 'multi-year', name, status)
+    Status.make_job_file(os.path.dirname(my_file), 'multi-year', name,
+                         status)
 
 
-def get_collect_cmd(name, my_file, source_files, dsets, group=None,
-                    verbose=False):
-    """Make a reV multi-year collection local CLI call string.
+@main.command()
+@click.option('--group_params', '-gp', required=True, type=str,
+              help=('List of groups and their parameters'
+                    '(group, source_files, dsets) to collect'))
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def collect_groups(ctx, group_params, verbose):
+    """Run collection for multiple groups."""
+    name = ctx.obj['NAME']
+    my_file = ctx.obj['MY_FILE']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    Parameters
-    ----------
-    name : str
-        reV collection jobname.
-    my_file : str
-        Path to .h5 file to use for multi-year collection.
-    source_files : list
-        Root directory containing .h5 files to combine
-    dsets : list
-        List of datasets (strings) to be collected.
-    group : str | NoneType
-        Group to collect and compute multi-year means into.
-        Usefull when collecting multiple scenarios
-    verbose : bool
-        Flag to turn on DEBUG logging
+    # initialize loggers for multiple modules
+    log_dir = os.path.basename(my_file)
+    init_mult(name, log_dir, modules=[__name__, 'reV.handlers.multi_year'],
+              verbose=verbose, node=True)
 
-    Returns
-    -------
-    cmd : str
-        Single line command line argument to call the following CLI with
-        appropriately formatted arguments based on input args:
-            python -m reV.handlers.cli_multi_year [args] collect [args]
-    """
+    for key, val in ctx.obj.items():
+        logger.debug('ctx var passed to collection method: "{}" : "{}" '
+                     'with type "{}"'.format(key, val, type(val)))
 
-    # make a cli arg string for direct() in this module
-    main_args = ('-n {name} '
-                 '-f {my_file} '
-                 '{v}'
-                 .format(name=SubprocessManager.s(name),
-                         my_file=SubprocessManager.s(my_file),
-                         v='-v ' if verbose else '',
-                         ))
+    logger.info('Multi-year collection is being run with job name "{}". '
+                'Target output path is: {}'
+                .format(name, my_file))
+    ts = time.time()
+    for group_name, group in json.loads(group_params).items():
+        logger.info('- Collecting datasets "{}" from "{}" into "{}/"'
+                    .format(group['dsets'], group['source_files'],
+                            group_name))
+        t0 = time.time()
+        for dset in group['dsets']:
+            if MultiYear.is_profile(group['source_files'], dset):
+                MultiYear.collect_profiles(my_file, group['source_files'],
+                                           dset, group=group['group'])
+            else:
+                MultiYear.collect_means(my_file, group['source_files'],
+                                        dset, group=group['group'])
 
-    collect_args = ('-g {group} '
-                    '-sf {source_files} '
-                    '-ds {dsets} '
-                    .format(group=SubprocessManager.s(group),
-                            source_files=SubprocessManager.s(source_files),
-                            dsets=SubprocessManager.s(dsets),
-                            ))
+        runtime = (time.time() - t0) / 60
+        logger.info('- {} collection completed in: {:.2f} min.'
+                    .format(group_name, runtime))
 
-    # Python command that will be executed on a node
-    # command strings after cli v7.0 use dashes instead of underscores
-    cmd = ('python -m reV.handlers.cli_multi_year {} collect {}'
-           .format(main_args, collect_args))
-    return cmd
+    runtime = (time.time() - ts) / 60
+    logger.info('Multi-year collection completed in : {:.2f} min.'
+                .format(runtime))
+
+    # add job to reV status file.
+    status = {'dirout': os.path.dirname(my_file),
+              'fout': os.path.basename(my_file),
+              'job_status': 'successful',
+              'runtime': runtime}
+    Status.make_job_file(os.path.dirname(my_file), 'multi-year', name,
+                         status)
 
 
 def get_slurm_cmd(name, my_file, group_params, verbose=False):
@@ -213,22 +219,28 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 
     Returns
     -------
-    slurm_cmd : str
+    cmd : str
         Argument to call the neccesary CLI calls on the node to collect
         desired groups
     """
-    slurm_cmd = []
-    for group_names, group in json.loads(group_params).items():
-        g_name = "{}-{}".format(name, group_names)
-        cmd = get_collect_cmd(g_name, my_file, group['source_files'],
-                              group['dsets'], group=group['group'],
-                              verbose=verbose)
-        slurm_cmd.append(cmd)
+    # make a cli arg string for direct() in this module
+    main_args = ('-n {name} '
+                 '-f {my_file} '
+                 '{v}'
+                 .format(name=SubprocessManager.s(name),
+                         my_file=SubprocessManager.s(my_file),
+                         v='-v ' if verbose else '',
+                         ))
 
-    slurm_cmd = '\n'.join(slurm_cmd)
+    collect_args = '-gp {} '.format(SubprocessManager.s(group_params))
+
+    # Python command that will be executed on a node
+    # command strings after cli v7.0 use dashes instead of underscores
+    cmd = ('python -m reV.handlers.cli_multi_year {} collect-groups {}'
+           .format(main_args, collect_args))
     logger.debug('Creating the following command line call:\n\t{}'
-                 .format(slurm_cmd))
-    return slurm_cmd
+                 .format(cmd))
+    return cmd
 
 
 @main.command()
@@ -255,6 +267,7 @@ def collect_eagle(ctx, alloc, walltime, feature, memory, stdout_path,
 
     name = ctx.obj['NAME']
     my_file = ctx.obj['MY_FILE']
+    ctx.obj['GROUP_PARAMS'] = group_params
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
