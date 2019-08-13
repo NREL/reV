@@ -20,8 +20,7 @@ class SAMFilesType(click.ParamType):
     """SAM config files click input argument type."""
     name = 'samfiles'
 
-    @staticmethod
-    def convert(value, param, ctx):
+    def convert(self, value, param, ctx):
         """Convert value to dict, list, or str."""
         if isinstance(value, str):
             if '{' in value and '}' in value:
@@ -39,21 +38,20 @@ class SAMFilesType(click.ParamType):
             elif '.json' in value:
                 return value
             else:
-                raise TypeError('Cannot recognize SAM files type: {} {} {} {}'
-                                .format(value, type(value), param, ctx))
+                self.fail('Cannot recognize SAM files type: {} {}'
+                          .format(value, type(value)), param, ctx)
         elif isinstance(value, (dict, list, tuple)):
             return value
         else:
-            raise TypeError('Cannot recognize SAM files type: {} {} {} {}'
-                            .format(value, type(value), param, ctx))
+            self.fail('Cannot recognize SAM files type: {} {}'
+                      .format(value, type(value)), param, ctx)
 
 
 class ProjectPointsType(click.ParamType):
     """Project points click input argument type."""
     name = 'points'
 
-    @staticmethod
-    def convert(value, param, ctx):
+    def convert(self, value, param, ctx):
         """Convert value to slice or list, or return as string."""
         if isinstance(value, str):
             if 'slice' in value:
@@ -79,21 +77,20 @@ class ProjectPointsType(click.ParamType):
                 return value
 
             else:
-                raise TypeError('Cannot recognize points type: {} {} {} {}'
-                                .format(value, type(value), param, ctx))
+                self.fail('Cannot recognize points type: {} {}'
+                          .format(value, type(value)), param, ctx)
         elif isinstance(value, slice):
             return value
         else:
-            raise TypeError('Cannot recognize points type: {} {} {} {}'
-                            .format(value, type(value), param, ctx))
+            self.fail('Cannot recognize points type: {} {}'
+                      .format(value, type(value)), param, ctx)
 
 
 class IntType(click.ParamType):
     """Integer click input argument type with option for None."""
     name = 'int'
 
-    @staticmethod
-    def convert(value, param, ctx):
+    def convert(self, value, param, ctx):
         """Convert to int or return as None."""
         if isinstance(value, str):
             if 'None' in value:
@@ -103,16 +100,15 @@ class IntType(click.ParamType):
         elif isinstance(value, int):
             return value
         else:
-            raise TypeError('Cannot recognize int type: {} {} {} {}'
-                            .format(value, type(value), param, ctx))
+            self.fail('Cannot recognize int type: {} {}'
+                      .format(value, type(value)), param, ctx)
 
 
 class StrType(click.ParamType):
     """String click input argument type with option for None."""
     name = 'str'
 
-    @staticmethod
-    def convert(value, param, ctx):
+    def convert(self, value, param, ctx):
         """Convert to int or return as None."""
         if isinstance(value, str):
             if 'None' in value:
@@ -120,8 +116,8 @@ class StrType(click.ParamType):
             else:
                 return value
         else:
-            raise TypeError('Cannot recognize int type: {} {} {} {}'
-                            .format(value, type(value), param, ctx))
+            self.fail('Cannot recognize int type: {} {}'
+                      .format(value, type(value)), param, ctx)
 
 
 class ListType(click.ParamType):
@@ -142,8 +138,8 @@ class ListType(click.ParamType):
         elif isinstance(value, type(None)):
             return value
         else:
-            raise TypeError('Cannot recognize list type: {} {} {} {}'
-                            .format(value, type(value), param, ctx))
+            self.fail('Cannot recognize list type: {} {}'
+                      .format(value, type(value)), param, ctx)
 
     @staticmethod
     def dtype(x):
@@ -181,6 +177,41 @@ class StrListType(ListType):
         return str(x)
 
 
+class PathListType(ListType):
+    """Homogeneous list of click path input argument types."""
+    name = 'pathlist'
+
+    def __init__(self, **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs : dict
+            kwargs for click.types.Path
+        """
+        self._click_path_type = click.types.Path(**kwargs)
+
+    def convert(self, value, param, ctx):
+        """Convert string to list."""
+        if isinstance(value, str):
+            value = sanitize_str(value, subs=['=', '(', ')', ' ', '[', ']',
+                                              '"', "'"])
+            if value == 'None':
+                return None
+            list0 = value.split(',')
+            return [self.path(x, param, ctx) for x in list0]
+        elif isinstance(value, list):
+            return value
+        elif isinstance(value, type(None)):
+            return value
+        else:
+            self.fail('Cannot recognize list type: {} {}'
+                      .format(value, type(value)), param, ctx)
+
+    def path(self, value, param, ctx):
+        """Enforce a homogeneous string datatype."""
+        return self._click_path_type.convert(value, param, ctx)
+
+
 INT = IntType()
 STR = StrType()
 SAMFILES = SAMFilesType()
@@ -188,3 +219,4 @@ PROJECTPOINTS = ProjectPointsType()
 INTLIST = IntListType()
 FLOATLIST = IntListType()
 STRLIST = StrListType()
+PATHLIST = PathListType()

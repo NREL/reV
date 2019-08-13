@@ -15,14 +15,13 @@ from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
 from reV.utilities.execution import SubprocessManager, SLURM
 
-
 logger = logging.getLogger(__name__)
 
 
 @click.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
-              help='reV generation configuration json file.')
+              help='reV collection configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -90,7 +89,7 @@ def from_config(ctx, config_file, verbose):
 @click.group()
 @click.option('--name', '-n', default='reV_collect', type=str,
               help='Collection job name. Default is "reV_collect".')
-@click.option('--h5_file', '-f', required=True, type=str,
+@click.option('--h5_file', '-f', required=True, type=click.Path(),
               help='H5 file to be collected into.')
 @click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
               help='Directory containing h5 files to collect.')
@@ -145,7 +144,7 @@ def collect(ctx, verbose):
         logger.debug('ctx var passed to collection method: "{}" : "{}" '
                      'with type "{}"'.format(key, val, type(val)))
 
-    logger.info('Collection is being run for "{}" with with job name "{}" '
+    logger.info('Collection is being run for "{}" with job name "{}" '
                 'and collection dir: {}. Target output path is: {}'
                 .format(dsets, name, h5_dir, h5_file))
     t0 = time.time()
@@ -160,9 +159,7 @@ def collect(ctx, verbose):
                                   parallel=parallel)
 
     runtime = (time.time() - t0) / 60
-    logger.info('Collection complete from h5 directory: "{0}". '
-                'Time elapsed: {1:.2f} min. Target output file: "{2}"'
-                .format(h5_dir, runtime, h5_file))
+    logger.info('Collection completed in: {:.2f} min.'.format(runtime))
 
     # add job to reV status file.
     status = {'dirout': os.path.dirname(h5_file),
@@ -193,6 +190,8 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         .h5 file prefix, if None collect all files on h5_dir
     parallel : bool
         Option to run in parallel
+    verbose : bool
+        Flag to turn on DEBUG logging
 
     Returns
     -------

@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class Pipeline:
     """reV pipeline execution framework."""
 
-    COMMANDS = ('generation', 'econ', 'collect', 'exclusions')
+    COMMANDS = ('generation', 'econ', 'collect', 'exclusions', 'multi-year')
     RETURN_CODES = {0: 'successful',
                     1: 'running',
                     2: 'failed',

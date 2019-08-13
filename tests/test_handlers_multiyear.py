@@ -2,7 +2,6 @@
 """
 pytests for MultiYear collection and computation
 """
-import h5py
 import numpy as np
 import os
 import pytest
@@ -21,6 +20,8 @@ PURGE_OUT = True
 
 if not os.path.exists(TEMP_DIR):
     os.makedirs(TEMP_DIR)
+
+logger = init_logger('reV.handlers.multi_year', log_level='DEBUG')
 
 
 def manual_means(h5_files, dset):
@@ -89,8 +90,12 @@ def compare_arrays(my_arr, test_arr, desc):
     assert np.allclose(my_arr, test_arr, atol=1.e-3), msg
 
 
-@pytest.mark.parametrize('dset', ['cf_profile', 'cf_mean'])
-def test_my_collection(dset):
+@pytest.mark.parametrize('dset, group', [
+    ('cf_profile', None),
+    ('cf_mean', None),
+    ('cf_profile', 'pytest'),
+    ('cf_mean', 'pytest')])
+def test_my_collection(dset, group):
     """
     Collect the desired dset
 
@@ -98,21 +103,25 @@ def test_my_collection(dset):
     ----------
     dset : str
         dset to collect from H5_Files
+    group : str | NoneType
+        group to collect datasets into
     """
-    init_logger('reV.handlers.multi_year')
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
     my_dsets = ['meta', ]
     my_dsets.extend(['{}-{}'.format(dset, year) for year in YEARS])
     if 'profile' in dset:
-        MultiYear.collect_profiles(my_out, H5_FILES, dset)
+        MultiYear.collect_profiles(my_out, H5_FILES, dset, group=group)
         my_dsets.extend(["time_index-{}".format(year) for year in YEARS])
     else:
-        MultiYear.collect_means(my_out, H5_FILES, dset)
+        MultiYear.collect_means(my_out, H5_FILES, dset, group=group)
         my_dsets.extend(["{}-{}".format(dset, val)
-                         for val in ['means', 'std']])
+                         for val in ['means', 'stdev']])
 
-    with h5py.File(my_out, 'r') as f:
-        out_dsets = list(f)
+    if group is not None:
+        my_dsets = ['{}/{}'.format(group, ds) for ds in my_dsets]
+
+    with MultiYear(my_out, mode='r', group=group) as f:
+        out_dsets = f.dsets
 
     msg = "Missing datasets after collection"
     assert np.in1d(my_dsets, out_dsets).all(), msg
@@ -121,7 +130,10 @@ def test_my_collection(dset):
         os.remove(my_out)
 
 
-def test_my_means(dset='cf_mean'):
+@pytest.mark.parametrize('dset, group', [
+    ('cf_mean', None),
+    ('cf_mean', 'pytest')])
+def test_my_means(dset, group):
     """
     Test computation of multi-year means
 
@@ -129,18 +141,19 @@ def test_my_means(dset='cf_mean'):
     ----------
     dset : str
         dset to compute means from
+    group : str | NoneType
+        group to collect datasets into
     """
-    init_logger('reV.handlers.multi_year')
     my_means = manual_means(H5_FILES, dset)
 
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
-    with MultiYear(my_out, mode='w') as my:
+    with MultiYear(my_out, mode='w', group=group) as my:
         my.collect(H5_FILES, dset)
         dset_means = my.means(dset)
 
     compare_arrays(my_means, dset_means, "Computed Means")
 
-    with MultiYear(my_out, mode='r') as my:
+    with MultiYear(my_out, mode='r', group=group) as my:
         dset_means = my.means(dset)
 
     compare_arrays(my_means, dset_means, "Saved Means")
@@ -149,7 +162,10 @@ def test_my_means(dset='cf_mean'):
         os.remove(my_out)
 
 
-def test_update(dset='cf_mean'):
+@pytest.mark.parametrize('dset, group', [
+    ('cf_mean', None),
+    ('cf_mean', 'pytest')])
+def test_update(dset, group):
     """
     Test computation of multi-year means
 
@@ -157,39 +173,42 @@ def test_update(dset='cf_mean'):
     ----------
     dset : str
         dset to compute means from
+    group : str | NoneType
+        group to collect datasets into
     """
-    init_logger('reV.handlers.multi_year')
-
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
     # Collect 2012 and compute 'means'
     files = H5_FILES[:1]
-    MultiYear.collect_means(my_out, files, dset)
+    MultiYear.collect_means(my_out, files, dset, group=group)
     my_means = manual_means(files, dset)
     my_std = manual_stdev(files, dset)
-    with MultiYear(my_out, mode='r') as my:
+    with MultiYear(my_out, mode='r', group=group) as my:
         dset_means = my.means(dset)
-        dset_std = my.std(dset)
+        dset_std = my.stdev(dset)
 
     compare_arrays(my_means, dset_means, "2012 Means")
-    compare_arrays(my_std, dset_std, "2013 STD")
+    compare_arrays(my_std, dset_std, "2012 STDEV")
 
     # Add 2013
     files = H5_FILES
-    MultiYear.collect_means(my_out, files, dset)
+    MultiYear.collect_means(my_out, files, dset, group=group)
     my_means = manual_means(files, dset)
     my_std = manual_stdev(files, dset)
-    with MultiYear(my_out, mode='r') as my:
+    with MultiYear(my_out, mode='r', group=group) as my:
         dset_means = my.means(dset)
-        dset_std = my.std(dset)
+        dset_std = my.stdev(dset)
 
     compare_arrays(my_means, dset_means, "Updated Means")
-    compare_arrays(my_std, dset_std, "Updated STD")
+    compare_arrays(my_std, dset_std, "Updated STDEV")
 
     if PURGE_OUT:
         os.remove(my_out)
 
 
-def test_my_stdev(dset='cf_mean'):
+@pytest.mark.parametrize('dset, group', [
+    ('cf_mean', None),
+    ('cf_mean', 'pytest')])
+def test_my_stdev(dset, group):
     """
     Test computation of multi-year means
 
@@ -197,21 +216,22 @@ def test_my_stdev(dset='cf_mean'):
     ----------
     dset : str
         dset to compute means from
+    group : str | NoneType
+        group to collect datasets into
     """
-    init_logger('reV.handlers.multi_year')
     my_std = manual_stdev(H5_FILES, dset)
 
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
-    with MultiYear(my_out, mode='w') as my:
+    with MultiYear(my_out, mode='w', group=group) as my:
         my.collect(H5_FILES, dset)
-        dset_std = my.std(dset)
+        dset_std = my.stdev(dset)
 
-    compare_arrays(my_std, dset_std, "Computed STD")
+    compare_arrays(my_std, dset_std, "Computed STDEV")
 
-    with MultiYear(my_out, mode='r') as my:
-        dset_std = my.std(dset)
+    with MultiYear(my_out, mode='r', group=group) as my:
+        dset_std = my.stdev(dset)
 
-    compare_arrays(my_std, dset_std, "Saved STD")
+    compare_arrays(my_std, dset_std, "Saved STDEV")
 
     if PURGE_OUT:
         os.remove(my_out)

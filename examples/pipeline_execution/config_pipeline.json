@@ -13,6 +13,9 @@
     },
     {
       "econ": "/scratch/gbuster/rev/test_pipeline/config_econ.json"
+    },
+    {
+      "multi-year": "/scratch/gbuster/rev/test_pipeline/config_multi-year.json"
     }
   ]
 }

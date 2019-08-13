@@ -185,7 +185,7 @@ class Collector:
             Project points that correspond to the full collection of points
             contained in the .h5 files to be collected
         file_prefix : str
-            .h5 file prefix, if None collect all files on h5_dir
+            .h5 file prefix, if None collect all files in h5_dir
         parallel : bool
             Option to run in parallel
         clobber : bool

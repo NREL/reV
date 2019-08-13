@@ -8,10 +8,9 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 
+from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.output_request import SAMOutputRequest
 from reV.pipeline.pipeline import Pipeline
-from reV.config.base_analysis_config import AnalysisConfig
-
 
 logger = logging.getLogger(__name__)
 
