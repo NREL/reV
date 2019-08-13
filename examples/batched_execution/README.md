@@ -1,4 +1,5 @@
 # reV Parameter Batching
+
 This example set shows how reV inputs can be parameterized and the execution can be batched.
 
 ## Batching Config Description
@@ -18,3 +19,10 @@ All job files in the same directory (and sub directories) as the batch config fi
 The reV pipeline manager will be executed in each sub directory.
 The above batch cli command can be issues repeatedly to clean up the sub directory status jsons, kick off the next step in the pipeline, or to rerun failed jobs.
 See the reV pipeline execution example for more details on how the pipeline works.
+
+All of the batch jobs can be collected into a single file using the multi-year collection utility. 
+This utility is not part of the batch pipeline and needs to be executed and configured seperately. 
+See the `config_multi-year.json` file for details on how to setup this collection step. 
+To execute, use the following command:
+
+`rev -c "../config_multi-year.json" multi-year`
