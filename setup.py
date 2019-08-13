@@ -78,7 +78,7 @@ setup(
     long_description=readme,
     author="Galen Maclaurin",
     author_email="galen.maclaurin@nrel.gov",
-    url="https://github.nrel.gov/reV/reV2",
+    url="https://github.com/NREL/reV",
     packages=find_packages(),
     package_dir={"rev": "rev"},
     entry_points={
