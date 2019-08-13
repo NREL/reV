@@ -83,12 +83,12 @@ setup(
     package_dir={"rev": "rev"},
     entry_points={
         "console_scripts": ["rev=reV.cli:main",
-                            "rev_batch=reV.batch.cli_batch:main"
-                            "rev_collect=reV.handlers.cli_collect:main",
-                            "rev_econ=reV.econ.cli_econ:main",
-                            "rev_gen=reV.generation.cli_gen:main",
-                            "rev_multiyear=reV.handerlers.cli_multi_year:main"
-                            "rev_pipeline=reV.pipeline.cli_pipeline:main",
+                            "rev-batch=reV.batch.cli_batch:main"
+                            "rev-collect=reV.handlers.cli_collect:main",
+                            "rev-econ=reV.econ.cli_econ:main",
+                            "rev-gen=reV.generation.cli_gen:main",
+                            "rev-multiyear=reV.handerlers.cli_multi_year:main"
+                            "rev-pipeline=reV.pipeline.cli_pipeline:main",
                             ],
     },
     include_package_data=True,
