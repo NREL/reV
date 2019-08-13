@@ -5,3 +5,4 @@ pandas=0.23.4
 psutil=5.4.8
 rasterio=1.0.21
 scipy=1.2.1
+xarray=0.12.1

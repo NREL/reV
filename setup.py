@@ -83,11 +83,13 @@ setup(
     package_dir={"rev": "rev"},
     entry_points={
         "console_scripts": ["rev=reV.cli:main",
-                            "rev_gen=reV.generation.cli_gen:main",
+                            "rev_batch=reV.batch.cli_batch:main"
                             "rev_collect=reV.handlers.cli_collect:main",
                             "rev_econ=reV.econ.cli_econ:main",
+                            "rev_gen=reV.generation.cli_gen:main",
+                            "rev_multiyear=reV.handerlers.cli_multi_year:main"
                             "rev_pipeline=reV.pipeline.cli_pipeline:main",
-                            "rev_batch=reV.batch.cli_batch:main"],
+                            ],
     },
     include_package_data=True,
     license="BSD license",
@@ -103,7 +105,7 @@ setup(
     ],
     test_suite="tests",
     install_requires=["click", "h5py", "numpy", "pandas", "psutil",
-                      "rasterio", "scipy"],
+                      "rasterio", "scipy", "xarray"],
     extras_require={
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],
