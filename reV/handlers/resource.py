@@ -561,18 +561,17 @@ class NSRDB(SolarResource):
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
 
+            if clearsky:
+                SAM_res.set_clearsky()
+
             if not downscale:
                 for var in SAM_res.var_list:
-                    ds = var
-                    if clearsky and var in ['dni', 'dhi']:
-                        ds = 'clearsky_{}'.format(var)
-
-                    SAM_res[var] = res[ds, :, sites_slice]
+                    SAM_res[var] = res[var, :, sites_slice]
             else:
                 # contingent import to avoid dependencies
                 from reV.utilities.downscale import downscale_nsrdb
                 SAM_res = downscale_nsrdb(SAM_res, res, project_points,
-                                          downscale)
+                                          downscale, sam_vars=SAM_res.var_list)
 
         return SAM_res
 
