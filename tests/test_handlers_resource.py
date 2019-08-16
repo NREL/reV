@@ -291,8 +291,9 @@ class TestWindResource:
         """
         test variable interpolation
         """
+        ignore = ['winddirection', 'precipitationrate', 'relativehumidity']
         for var in WindResource_res.heights.keys():
-            if 'winddirection' not in var and 'precip' not in var:
+            if var not in ignore:
                 check_interp(WindResource_res, var, h)
 
         WindResource_res.close()

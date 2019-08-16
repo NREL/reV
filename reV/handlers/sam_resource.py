@@ -160,7 +160,7 @@ class SAMResource:
 
     def set_clearsky(self):
         """Make the NSRDB var list for solar based on clearsky irradiance."""
-        for i, var in enumerate(self._var_list):
+        for i, var in enumerate(self.var_list):
             if var in ['dni', 'dhi', 'ghi']:
                 self._var_list[i] = 'clearsky_{}'.format(var)
 
