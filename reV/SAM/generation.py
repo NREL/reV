@@ -453,14 +453,18 @@ class Wind(Generation):
         # call generic set resource method from the base class
         super().set_resource(resource=resource)
 
+        fields = [1, 2, 3, 4]
+        heights = 4 * [self.parameters['wind_turbine_hub_ht']]
+
         if isinstance(var_list, tuple):
             var_list = list(var_list)
-        if 'relativehumidity' in resource:
+        if 'rh' in resource:
+            fields.append(5)
+            heights.append(self.parameters['wind_turbine_hub_ht'])
             var_list.append('rh')
 
-        self.ssc.data_set_array(self.res_data, 'fields', [1, 2, 3, 4])
-        self.ssc.data_set_array(self.res_data, 'heights',
-                                4 * [self.parameters['wind_turbine_hub_ht']])
+        self.ssc.data_set_array(self.res_data, 'fields', fields)
+        self.ssc.data_set_array(self.res_data, 'heights', heights)
 
         # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760

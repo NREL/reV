@@ -15,7 +15,7 @@ from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
 from reV.handlers.outputs import Outputs
-from reV.handlers.resource import Resource
+from reV.handlers.resource import Resource, FiveMinWTK
 
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.4, downscale=None):
+                 mem_util_lim=0.4, downscale=None, res_5min_dir=None):
         """
         Parameters
         ----------
@@ -97,6 +97,9 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
         """
 
         self._points_control = points_control
@@ -112,6 +115,9 @@ class Gen:
         self.mem_util_lim = mem_util_lim
 
         self._output_request = self._parse_output_request(output_request)
+
+        if res_5min_dir is not None:
+            self._set_high_res_ti(res_5min_dir)
 
         if downscale is not None:
             self._set_downscaled_ti(downscale)
@@ -198,6 +204,18 @@ class Gen:
                 output_request.append('ghi_mean')
 
         return output_request
+
+    def _set_high_res_ti(self, res_5min_dir):
+        """Set the 5-minute resource directory time index.
+
+        Parameters
+        ----------
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
+        """
+        ti = FiveMinWTK.get_new_time_index(res_5min_dir)
+        self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
 
     def _set_downscaled_ti(self, ds_freq):
         """Set the downscaled time index based on a requested frequency.
@@ -1007,7 +1025,8 @@ class Gen:
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout, downscale=downscale)
+                  dirout=dirout, downscale=downscale,
+                  res_5min_dir=res_5min_dir)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,
@@ -1100,7 +1119,7 @@ class Gen:
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout, mem_util_lim=mem_util_lim,
-                  downscale=downscale)
+                  downscale=downscale, res_5min_dir=res_5min_dir)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,

@@ -463,7 +463,7 @@ class SolarResource(Resource):
             in project_points
         """
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res['time_index'])
+            SAM_res = SAMResource(project_points, res.time_index)
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
             for var in SAM_res.var_list:
@@ -557,7 +557,7 @@ class NSRDB(SolarResource):
             in project_points
         """
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res['time_index'])
+            SAM_res = SAMResource(project_points, res.time_index)
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
 
@@ -643,7 +643,8 @@ class WindResource(Resource):
                        'temperature': [],
                        'windspeed': [],
                        'winddirection': [],
-                       'precipitationrate': []}
+                       'precipitationrate': [],
+                       'relativehumidity': []}
             for ds in dsets:
                 ds_name, h = self._parse_name(ds)
                 if ds_name in heights.keys():
@@ -675,11 +676,12 @@ class WindResource(Resource):
             Flag as to whether h is inside or outside heights range
         """
         if isinstance(heights, (list, tuple)):
-            heights = np.array(heights)
+            heights = np.array(heights).astype(np.float32)
 
         dist = np.abs(heights - h)
         pos = dist.argsort()[:2]
         nearest_h = np.sort(heights[pos])
+        nearest_h = [int(h) for h in nearest_h]
         extrapolate = np.all(h < heights) or np.all(h > heights)
         if extrapolate:
             h_min, h_max = np.sort(heights)[[0, -1]]
@@ -878,8 +880,8 @@ class WindResource(Resource):
             ds_name = '{}_{}m'.format(var_name, h)
             warnings.warn('Only one hub-height available, returning {}'
                           .format(ds_name), HandlerWarning)
-
         if h in heights:
+            ds_name = '{}_{}m'.format(var_name, int(h))
             out = super()._get_ds(ds_name, *ds_slice)
         else:
             (h1, h2), extrapolate = self.get_nearest_h(h, heights)
@@ -963,7 +965,7 @@ class WindResource(Resource):
             in project_points
         """
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res['time_index'],
+            SAM_res = SAMResource(project_points, res.time_index,
                                   require_wind_dir=require_wind_dir)
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
@@ -999,8 +1001,8 @@ class WindResource(Resource):
                 SAM_res[var] = res[ds_name, :, sites_slice]
 
             if icing:
-                var = 'relativehumidity'
-                ds_name = '{}_2m'.format(var)
+                var = 'rh'
+                ds_name = 'relativehumidity_2m'
                 SAM_res.append_var_list(var)
                 SAM_res[var] = res[ds_name, :, sites_slice]
 
@@ -1034,8 +1036,27 @@ class FiveMinWTK(WindResource):
         self.heights['windspeed'] = wind_h
         self.heights['winddirection'] = wind_h
         # Substitute hourly for 5min time_index
-        with Resource(wind_files[wind_h[0]]) as f:
-            self._time_index = f.time_index
+        self._time_index = self.get_new_time_index(h5_dir)
+
+    @staticmethod
+    def get_new_time_index(h5_dir):
+        """
+        Get the time index for the high temporal res h5 dir.
+
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+
+        Returns
+        -------
+        time_index : pandas.DatetimeIndex
+            Resource datetime index
+        """
+        files = FiveMinWTK.get_wind_files(h5_dir)
+        with Resource(list(files.values())[0]) as f:
+            time_index = f.time_index
+        return time_index
 
     @staticmethod
     def get_wind_files(h5_dir):
@@ -1055,7 +1076,7 @@ class FiveMinWTK(WindResource):
         wind_files = {}
         for file in os.listdir(h5_dir):
             if file.startswith('wind') and file.endswith('.h5'):
-                h = WindResource._parse_name(file.split('.')[0])
+                h = WindResource._parse_name(file.split('.')[0])[1]
                 wind_files[h] = os.path.join(h5_dir, file)
 
         return wind_files
@@ -1086,6 +1107,7 @@ class FiveMinWTK(WindResource):
                           .format(ds_name), HandlerWarning)
 
         if h in heights:
+            ds_name = '{}_{}m'.format(var_name, int(h))
             with Resource(self._wind_files[h], unscale=self._unscale) as f:
                 out = f._get_ds(ds_name, *ds_slice)
         else:

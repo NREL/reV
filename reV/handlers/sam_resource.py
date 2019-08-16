@@ -26,7 +26,8 @@ class SAMResource:
     # https://github.com/NREL/ssc/blob/develop/shared/lib_windfile.cpp
     WIND_DATA_RANGES = {'windspeed': (0, 120),
                         'pressure': (0.5, 1.1),
-                        'temperature': (-200, 100)}
+                        'temperature': (-200, 100),
+                        'rh': (0.1, 99.9)}
 
     def __init__(self, project_points, time_index, require_wind_dir=False):
         """
