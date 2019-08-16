@@ -135,6 +135,7 @@ class GenConfig(SAMAnalysisConfig):
         self._curtailment = None
         self._downscale = None
         self._res_files = None
+        self._resource_5min = None
         super().__init__(config)
 
     @property
@@ -173,6 +174,31 @@ class GenConfig(SAMAnalysisConfig):
                     # downscaling was requested and is not None or False
                     self._downscale = str(self['project_control']['downscale'])
         return self._downscale
+
+    @property
+    def resource_5min(self):
+        """Get the supplemental 5-minute resource data directory.
+
+        Returns
+        -------
+        _resource_5min : list
+            List with length equal to res_files. None's if no 5-minute data.
+            Otherwise, returns the directory containing 5minute data files
+            for the given year.
+        """
+        self._resource_5min = self.get('resource_5min', None)
+
+        if self._resource_5min is None:
+            self._resource_5min = [None] * len(self.years)
+
+        elif isinstance(self._resource_5min, str):
+            if '{}' in self._resource_5min:
+                self._resource_5min = [self._resource_5min.format(year)
+                                       for year in self.years]
+            else:
+                self._resource_5min = [self._resource_5min]
+
+        return self._resource_5min
 
     @property
     def res_files(self):

@@ -870,7 +870,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, downscale=None):
+            scale_outputs=True, downscale=None, res_5min_dir=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -889,6 +889,9 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -900,7 +903,9 @@ class Gen:
         # run generation method for specified technology
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
-                                            output_request, downscale)
+                                            output_request=output_request,
+                                            downscale=downscale,
+                                            res_5min_dir=res_5min_dir)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -937,7 +942,7 @@ class Gen:
                    output_request=('cf_mean',), curtailment=None,
                    downscale=None, n_workers=1, sites_per_split=None,
                    points_range=None, fout=None, dirout='./gen_out',
-                   return_obj=True, scale_outputs=True):
+                   return_obj=True, scale_outputs=True, res_5min_dir=None):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -985,6 +990,9 @@ class Gen:
             Option to return the Gen object instance.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -1001,10 +1009,12 @@ class Gen:
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout, downscale=downscale)
 
-        kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
+        kwargs = {'tech': gen.tech,
+                  'res_file': gen.res_file,
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
-                  'downscale': downscale}
+                  'downscale': downscale,
+                  'res_5min_dir': res_5min_dir}
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
@@ -1029,7 +1039,7 @@ class Gen:
                   output_request=('cf_mean',), curtailment=None,
                   downscale=None, n_workers=1, sites_per_split=None,
                   points_range=None, fout=None, dirout='./gen_out',
-                  mem_util_lim=0.4, scale_outputs=True):
+                  mem_util_lim=0.4, scale_outputs=True, res_5min_dir=None):
         """Execute a generation run with smart data flushing.
 
         Parameters
@@ -1078,6 +1088,9 @@ class Gen:
             site results are stored in memory at any given time.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
         """
 
         # get a points control instance
@@ -1089,10 +1102,12 @@ class Gen:
                   dirout=dirout, mem_util_lim=mem_util_lim,
                   downscale=downscale)
 
-        kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
+        kwargs = {'tech': gen.tech,
+                  'res_file': gen.res_file,
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
-                  'downscale': downscale}
+                  'downscale': downscale,
+                  'res_5min_dir': res_5min_dir}
 
         logger.info('Running parallel generation with smart data flushing '
                     'for: {}'.format(pc))

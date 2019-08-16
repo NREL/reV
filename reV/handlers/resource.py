@@ -1011,14 +1011,14 @@ class FiveMinWTK(WindResource):
     """
     Class to handle 5min WIND Toolkit data
     """
-    def __init__(self, h5_dir, hourly_h5, unscale=True):
+    def __init__(self, hourly_h5, h5_dir, unscale=True):
         """
         Parameters
         ----------
-        h5_dir : str
-            Path to directory containing 5min .h5 files
         hourly_h5 : str
             Path to hourly .h5 file
+        h5_dir : str
+            Path to directory containing 5min .h5 files
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
         """
