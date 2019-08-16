@@ -936,7 +936,7 @@ class WindResource(Resource):
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
-                    precip_rate=False, **kwargs):
+                    precip_rate=False, icing=False, **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -950,6 +950,9 @@ class WindResource(Resource):
             Boolean flag as to whether wind direction will be loaded.
         precip_rate : bool
             Boolean flag as to whether precipitationrate_0m will be preloaded
+        icing : bool
+            Boolean flag as to whether icing is analyzed.
+            This will preload relative humidity.
         kwargs : dict
             Kwargs to pass to cls
 
@@ -992,6 +995,12 @@ class WindResource(Resource):
             if precip_rate:
                 var = 'precipitationrate'
                 ds_name = '{}_0m'.format(var)
+                SAM_res.append_var_list(var)
+                SAM_res[var] = res[ds_name, :, sites_slice]
+
+            if icing:
+                var = 'relativehumidity'
+                ds_name = '{}_2m'.format(var)
                 SAM_res.append_var_list(var)
                 SAM_res[var] = res[ds_name, :, sites_slice]
 

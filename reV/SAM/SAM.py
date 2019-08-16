@@ -476,13 +476,14 @@ class SAM:
         kwargs = {}
         if res_handler == SolarResource or res_handler == NSRDB:
             # check for clearsky irradiation analysis for NSRDB
-            kwargs = {'clearsky': project_points.sam_config_obj.clearsky}
+            kwargs['clearsky'] = project_points.sam_config_obj.clearsky
 
         elif res_handler == WindResource:
+            kwargs['icing'] = project_points.sam_config_obj.icing
             if project_points.curtailment is not None:
                 if project_points.curtailment.precipitation:
                     # make precip rate available for curtailment analysis
-                    kwargs = {'precip_rate': True}
+                    kwargs['precip_rate'] = True
 
         else:
             raise TypeError('Did not recongize resource type "{}", '

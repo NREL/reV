@@ -25,6 +25,7 @@ class SAMConfig(BaseConfig):
             Keys are config ID's, values are filepaths to the SAM configs.
         """
         self._clearsky = None
+        self._icing = None
         self._inputs = None
         super().__init__(SAM_configs)
 
@@ -49,6 +50,26 @@ class SAMConfig(BaseConfig):
                 warn('Solar analysis being performed on clearsky irradiance.',
                      ConfigWarning)
         return self._clearsky
+
+    @property
+    def icing(self):
+        """Get a boolean for whether wind generation is considering icing.
+
+        Returns
+        -------
+        _icing : bool
+            Flag for whether wind generation is considering icing effects.
+            Based on whether SAM input json has "en_icing_cutoff" == 1.
+        """
+
+        if self._icing is None:
+            self._icing = False
+            for v in self.inputs.values():
+                self._icing = any((self._icing,
+                                   bool(v.get('en_icing_cutoff', False))))
+            if self._icing:
+                logger.debug('Icing analysis active for wind gen.')
+        return self._icing
 
     @property
     def inputs(self):

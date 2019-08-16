@@ -434,17 +434,25 @@ class Wind(Generation):
         elif resource is not None and meta is not None:
             self.set_wtk(resource)
 
-    def set_wtk(self, resource):
+    def set_wtk(self, resource, var_list=('temperature', 'pressure',
+                                          'windspeed', 'winddirection')):
         """Set SSC WTK resource data arrays.
 
         Parameters
         ----------
         resource : pd.DataFrame
             2D table with resource data. Available columns must have var_list.
+        var_list : list | tuple
+            List of variable names to set to SAM.
         """
 
         # call generic set resource method from the base class
         super().set_resource(resource=resource)
+
+        if isinstance(var_list, tuple):
+            var_list = list(var_list)
+        if 'relativehumidity' in resource:
+            var_list.append('rh')
 
         self.ssc.data_set_array(self.res_data, 'fields', [1, 2, 3, 4])
         self.ssc.data_set_array(self.res_data, 'heights',
@@ -453,11 +461,8 @@ class Wind(Generation):
         # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
-        temp = np.roll(
-            self.ensure_res_len(resource[['temperature', 'pressure',
-                                          'windspeed',
-                                          'winddirection']].values),
-            int(self.meta['timezone'] * self.time_interval), axis=0)
+        temp = np.roll(self.ensure_res_len(resource[var_list].values),
+                       int(self.meta['timezone'] * self.time_interval), axis=0)
         self.ssc.data_set_matrix(self.res_data, 'data', temp)
 
         # add resource data to self.data and clear
