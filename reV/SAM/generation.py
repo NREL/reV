@@ -450,21 +450,23 @@ class Wind(Generation):
             List of variable names to set to SAM.
         """
 
+        if isinstance(var_list, tuple):
+            var_list = list(var_list)
+
         # call generic set resource method from the base class
         super().set_resource(resource=resource)
 
         fields = [1, 2, 3, 4]
         heights = 4 * [self.parameters['wind_turbine_hub_ht']]
-
-        if isinstance(var_list, tuple):
-            var_list = list(var_list)
-        if 'rh' in resource:
-            fields.append(5)
-            heights.append(self.parameters['wind_turbine_hub_ht'])
-            var_list.append('rh')
-
         self.ssc.data_set_array(self.res_data, 'fields', fields)
         self.ssc.data_set_array(self.res_data, 'heights', heights)
+
+        if 'rh' in resource:
+            # set relative humidity for icing.
+            rh = np.roll(self.ensure_res_len(resource['rh'].values),
+                         int(self.meta['timezone'] * self.time_interval),
+                         axis=0)
+            self.ssc.data_set_array(self.res_data, 'rh', rh)
 
         # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760

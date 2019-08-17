@@ -1136,6 +1136,7 @@ class Gen:
                      .format(pprint.pformat(sam_files, indent=4)))
         logger.debug('The SAM output variables have been requested:\n{}'
                      .format(output_request))
+
         try:
             # use SmartParallelJob to manage runs, but set mem limit to 1
             # because Gen() will manage the sites in-memory
