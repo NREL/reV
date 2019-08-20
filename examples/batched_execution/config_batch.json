@@ -339,7 +339,8 @@
       },
       "files": [
         "./sam_configs/turbine.json"
-      ]
+      ],
+      "set_tag": "set1"
     }
   ]
 }
