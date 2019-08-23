@@ -111,7 +111,7 @@ class StrType(click.ParamType):
     def convert(self, value, param, ctx):
         """Convert to int or return as None."""
         if isinstance(value, str):
-            if 'None' in value:
+            if value.lower() == 'none':
                 return None
             else:
                 return value
