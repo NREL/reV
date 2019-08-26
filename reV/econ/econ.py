@@ -28,6 +28,7 @@ class Econ(Gen):
                'lcoe_real': SingleOwner.reV_run,
                'lcoe_nom': SingleOwner.reV_run,
                'flip_actual_irr': SingleOwner.reV_run,
+               'gross_revenue': SingleOwner.reV_run
                }
 
     # Mapping of reV econ outputs to scale factors and units.
@@ -52,6 +53,9 @@ class Econ(Gen):
                  'flip_actual_irr': {'scale_factor': 1, 'units': 'perc',
                                      'dtype': 'float32', 'chunks': None,
                                      'type': 'scalar'},
+                 'gross_revenue': {'scale_factor': 1, 'units': 'dollars',
+                                   'dtype': 'float32', 'chunks': None,
+                                   'type': 'scalar'},
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,

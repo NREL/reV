@@ -338,7 +338,8 @@ class SiteOutput(SlottedDict):
     __slots__ = ['cf_mean', 'cf_profile', 'ws_mean', 'dni_mean', 'ghi_mean',
                  'annual_energy', 'energy_yield', 'gen_profile', 'poa',
                  'ppa_price', 'lcoe_fcr', 'npv', 'lcoe_nom', 'lcoe_real',
-                 'project_return_aftertax_npv', 'flip_actual_irr']
+                 'project_return_aftertax_npv', 'flip_actual_irr',
+                 'gross_revenue']
 
 
 class SAM:
@@ -807,6 +808,17 @@ class SAM:
         """
         return self.ssc.data_get_number(self.data, 'flip_actual_irr')
 
+    def gross_revenue(self):
+        """Get cash flow total revenue (from PPA/SingleOwner model).
+
+        Native units are $.
+        """
+        var = 'cf_total_revenue'
+        cf_tr = np.array(self.ssc.data_get_array(self.data, var),
+                         dtype=np.float32)
+        cf_tr = np.sum(cf_tr, axis=0)
+        return cf_tr
+
     def execute(self, module_to_run, close=True):
         """Execute a single SAM simulation core by module name.
 
@@ -869,6 +881,7 @@ class SAM:
                    'lcoe_nom': self.lcoe_nom,
                    'lcoe_real': self.lcoe_real,
                    'flip_actual_irr': self.flip_actual_irr,
+                   'gross_revenue': self.gross_revenue,
                    }
 
         results = SiteOutput()

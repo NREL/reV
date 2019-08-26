@@ -1,5 +1,5 @@
-reV2
-====
+reV
+===
 
 .. toctree::
    :maxdepth: 4
