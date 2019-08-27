@@ -41,7 +41,8 @@ class BatchJob:
         self._config = BatchConfig(config)
         self._base_dir = self._config.dir
 
-        self._arg_combs, self._file_sets = self._parse_config(self._config)
+        x = self._parse_config(self._config)
+        self._arg_combs, self._file_sets, self._set_tags = x
 
         logger.debug('Batch job initialized with {} sub jobs.'
                      .format(len(self._arg_combs)))
@@ -63,10 +64,13 @@ class BatchJob:
         file_sets : list
             List of same length as arg_combs, representing the files to
             manipulate for each arg comb.
+        set_tags : list
+            List of strings of tags for each batch job set.
         """
 
         arg_combs = []
         file_sets = []
+        set_tags = []
 
         # iterate through batch sets
         for s in config['sets']:
@@ -82,8 +86,9 @@ class BatchJob:
                 # append the unique dictionary representation to the attr
                 arg_combs.append(comb_dict)
                 file_sets.append(s['files'])
+                set_tags.append(s.get('set_tag', ''))
 
-        return arg_combs, file_sets
+        return arg_combs, file_sets, set_tags
 
     @staticmethod
     def _tag_value(value):
@@ -113,8 +118,15 @@ class BatchJob:
 
         return value
 
-    def _make_job_tag(self, arg_comb):
+    def _make_job_tag(self, set_tag, arg_comb):
         """Make a job tags from a unique combination of args + values.
+
+        Parameters
+        ----------
+        set_tag : str
+            Optional set tag to prefix job tag.
+        arg_comb : dict
+            Key-value pairs for this argument combination.
 
         Returns
         -------
@@ -148,6 +160,9 @@ class BatchJob:
 
         job_tag = '_'.join(job_tag)
 
+        if set_tag:
+            job_tag = '{}_{}'.format(set_tag, job_tag)
+
         return job_tag
 
     @property
@@ -162,8 +177,9 @@ class BatchJob:
         """
         if self._job_tags is None:
             self._job_tags = []
-            for arg_comb in self.arg_combs:
-                self._job_tags.append(self._make_job_tag(arg_comb))
+            for i, arg_comb in enumerate(self.arg_combs):
+                self._job_tags.append(self._make_job_tag(self._set_tags[i],
+                                                         arg_comb))
         return self._job_tags
 
     @property

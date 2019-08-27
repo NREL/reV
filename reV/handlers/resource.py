@@ -463,7 +463,7 @@ class SolarResource(Resource):
             in project_points
         """
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res['time_index'])
+            SAM_res = SAMResource(project_points, res.time_index)
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
             for var in SAM_res.var_list:
@@ -557,22 +557,21 @@ class NSRDB(SolarResource):
             in project_points
         """
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res['time_index'])
+            SAM_res = SAMResource(project_points, res.time_index)
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
 
+            if clearsky:
+                SAM_res.set_clearsky()
+
             if not downscale:
                 for var in SAM_res.var_list:
-                    ds = var
-                    if clearsky and var in ['dni', 'dhi']:
-                        ds = 'clearsky_{}'.format(var)
-
-                    SAM_res[var] = res[ds, :, sites_slice]
+                    SAM_res[var] = res[var, :, sites_slice]
             else:
                 # contingent import to avoid dependencies
                 from reV.utilities.downscale import downscale_nsrdb
                 SAM_res = downscale_nsrdb(SAM_res, res, project_points,
-                                          downscale)
+                                          downscale, sam_vars=SAM_res.var_list)
 
         return SAM_res
 
@@ -644,7 +643,8 @@ class WindResource(Resource):
                        'temperature': [],
                        'windspeed': [],
                        'winddirection': [],
-                       'precipitationrate': []}
+                       'precipitationrate': [],
+                       'relativehumidity': []}
             for ds in dsets:
                 ds_name, h = self._parse_name(ds)
                 if ds_name in heights.keys():
@@ -675,13 +675,13 @@ class WindResource(Resource):
         extrapolate : bool
             Flag as to whether h is inside or outside heights range
         """
-        if isinstance(heights, (list, tuple)):
-            heights = np.array(heights)
 
-        dist = np.abs(heights - h)
+        heights_arr = np.array(heights, dtype='float32')
+        dist = np.abs(heights_arr - h)
         pos = dist.argsort()[:2]
-        nearest_h = np.sort(heights[pos])
-        extrapolate = np.all(h < heights) or np.all(h > heights)
+        nearest_h = sorted([heights[p] for p in pos])
+        extrapolate = np.all(h < heights_arr) or np.all(h > heights_arr)
+
         if extrapolate:
             h_min, h_max = np.sort(heights)[[0, -1]]
             msg = ('{} is outside the height range'.format(h),
@@ -879,8 +879,8 @@ class WindResource(Resource):
             ds_name = '{}_{}m'.format(var_name, h)
             warnings.warn('Only one hub-height available, returning {}'
                           .format(ds_name), HandlerWarning)
-
         if h in heights:
+            ds_name = '{}_{}m'.format(var_name, int(h))
             out = super()._get_ds(ds_name, *ds_slice)
         else:
             (h1, h2), extrapolate = self.get_nearest_h(h, heights)
@@ -937,7 +937,7 @@ class WindResource(Resource):
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
-                    precip_rate=False, **kwargs):
+                    precip_rate=False, icing=False, **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -951,6 +951,9 @@ class WindResource(Resource):
             Boolean flag as to whether wind direction will be loaded.
         precip_rate : bool
             Boolean flag as to whether precipitationrate_0m will be preloaded
+        icing : bool
+            Boolean flag as to whether icing is analyzed.
+            This will preload relative humidity.
         kwargs : dict
             Kwargs to pass to cls
 
@@ -961,7 +964,7 @@ class WindResource(Resource):
             in project_points
         """
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res['time_index'],
+            SAM_res = SAMResource(project_points, res.time_index,
                                   require_wind_dir=require_wind_dir)
             sites_slice = project_points.sites_as_slice
             SAM_res['meta'] = res['meta', sites_slice]
@@ -996,6 +999,12 @@ class WindResource(Resource):
                 SAM_res.append_var_list(var)
                 SAM_res[var] = res[ds_name, :, sites_slice]
 
+            if icing:
+                var = 'rh'
+                ds_name = 'relativehumidity_2m'
+                SAM_res.append_var_list(var)
+                SAM_res[var] = res[ds_name, :, sites_slice]
+
         return SAM_res
 
 
@@ -1003,14 +1012,14 @@ class FiveMinWTK(WindResource):
     """
     Class to handle 5min WIND Toolkit data
     """
-    def __init__(self, h5_dir, hourly_h5, unscale=True):
+    def __init__(self, hourly_h5, h5_dir, unscale=True):
         """
         Parameters
         ----------
-        h5_dir : str
-            Path to directory containing 5min .h5 files
         hourly_h5 : str
             Path to hourly .h5 file
+        h5_dir : str
+            Path to directory containing 5min .h5 files
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
         """
@@ -1026,8 +1035,27 @@ class FiveMinWTK(WindResource):
         self.heights['windspeed'] = wind_h
         self.heights['winddirection'] = wind_h
         # Substitute hourly for 5min time_index
-        with Resource(wind_files[wind_h[0]]) as f:
-            self._time_index = f.time_index
+        self._time_index = self.get_new_time_index(h5_dir)
+
+    @staticmethod
+    def get_new_time_index(h5_dir):
+        """
+        Get the time index for the high temporal res h5 dir.
+
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+
+        Returns
+        -------
+        time_index : pandas.DatetimeIndex
+            Resource datetime index
+        """
+        files = FiveMinWTK.get_wind_files(h5_dir)
+        with Resource(list(files.values())[0]) as f:
+            time_index = f.time_index
+        return time_index
 
     @staticmethod
     def get_wind_files(h5_dir):
@@ -1047,7 +1075,7 @@ class FiveMinWTK(WindResource):
         wind_files = {}
         for file in os.listdir(h5_dir):
             if file.startswith('wind') and file.endswith('.h5'):
-                h = WindResource._parse_name(file.split('.')[0])
+                h = WindResource._parse_name(file.split('.')[0])[1]
                 wind_files[h] = os.path.join(h5_dir, file)
 
         return wind_files
@@ -1078,6 +1106,7 @@ class FiveMinWTK(WindResource):
                           .format(ds_name), HandlerWarning)
 
         if h in heights:
+            ds_name = '{}_{}m'.format(var_name, int(h))
             with Resource(self._wind_files[h], unscale=self._unscale) as f:
                 out = f._get_ds(ds_name, *ds_slice)
         else:

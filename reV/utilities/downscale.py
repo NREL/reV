@@ -83,6 +83,7 @@ def interp_cld_props(data, ti_native, ti_new,
 
 
 def downscale_nsrdb(SAM_res, res, project_points, frequency,
+                    sam_vars=('dhi', 'dni', 'wind_speed', 'air_temperature'),
                     ghi_variability=0.05):
     """Downscale the NSRDB resource and return the preloaded SAM_res.
 
@@ -96,6 +97,8 @@ def downscale_nsrdb(SAM_res, res, project_points, frequency,
         reV project points object.
     frequency : str
         String in the Pandas frequency format, e.g. '5min'.
+    sam_vars : tuple | list
+        Variables to save to SAM resource handler before returning.
     ghi_variability : float
         Maximum GHI synthetic variability fraction.
 
@@ -118,9 +121,6 @@ def downscale_nsrdb(SAM_res, res, project_points, frequency,
                 'ozone',
                 'total_precipitable_water',
                 )
-
-    # variables to save to SAM resource handler before returning
-    out_list = ('dhi', 'dni', 'wind_speed', 'air_temperature')
 
     # Indexing variable
     sites_slice = project_points.sites_as_slice
@@ -158,11 +158,11 @@ def downscale_nsrdb(SAM_res, res, project_points, frequency,
 
     # set downscaled data to sam resource handler
     for k, v in all_sky_outs.items():
-        if k in out_list:
+        if k in sam_vars:
             SAM_res[k] = v
 
     # downscale extra vars needed for SAM but not for all-sky
-    for var in out_list:
+    for var in sam_vars:
         if var not in SAM_res._res_arrays:
             SAM_res[var] = temporal_lin(res[var, :, sites_slice],
                                         res.time_index, time_index)

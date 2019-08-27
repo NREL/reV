@@ -26,7 +26,8 @@ class SAMResource:
     # https://github.com/NREL/ssc/blob/develop/shared/lib_windfile.cpp
     WIND_DATA_RANGES = {'windspeed': (0, 120),
                         'pressure': (0.5, 1.1),
-                        'temperature': (-200, 100)}
+                        'temperature': (-200, 100),
+                        'rh': (0.1, 99.9)}
 
     def __init__(self, project_points, time_index, require_wind_dir=False):
         """
@@ -156,6 +157,12 @@ class SAMResource:
                 raise HandlerValueError("Resource type is invalid!")
 
         return self._var_list
+
+    def set_clearsky(self):
+        """Make the NSRDB var list for solar based on clearsky irradiance."""
+        for i, var in enumerate(self.var_list):
+            if var in ['dni', 'dhi', 'ghi']:
+                self._var_list[i] = 'clearsky_{}'.format(var)
 
     def append_var_list(self, var):
         """

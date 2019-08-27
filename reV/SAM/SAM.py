@@ -11,7 +11,8 @@ import os
 import pandas as pd
 from warnings import warn
 
-from reV.handlers.resource import WindResource, SolarResource, NSRDB
+from reV.handlers.resource import (WindResource, SolarResource, NSRDB,
+                                   FiveMinWTK)
 from reV.SAM.PySSC import PySSC
 from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
                                       ResourceError)
@@ -342,6 +343,172 @@ class SiteOutput(SlottedDict):
                  'gross_revenue']
 
 
+class SAMResourceRetriever:
+    """Factory utility to get the SAM resource handler."""
+
+    @staticmethod
+    def _get_base_handler(res_file, module):
+        """Get the base SAM resource handler, raise error if module not found.
+
+        Parameters
+        ----------
+        res_file : str
+            Single resource file (with full path) to retrieve.
+        module : str
+            SAM module name or reV technology to force interpretation
+            of the resource file type.
+            Example: module set to 'pvwatts' or 'tcsmolten' means that this
+            expects a SolarResource file. If 'nsrdb' is in the res_file name,
+            the NSRDB handler will be used.
+
+        Returns
+        -------
+        res_handler : SolarResource | WindResource | NSRDB
+            Solar or Wind resource handler based on input.
+        """
+
+        try:
+            res_handler = SAM.RESOURCE_TYPES[module.lower()]
+
+        except KeyError:
+            msg = ('Cannot interpret what kind of resource handler the SAM '
+                   'module or reV technology "{}" requires. Expecting one of '
+                   'the following SAM modules or reV technologies: {}'
+                   .format(module, list(SAM.RESOURCE_TYPES.keys())))
+            raise SAMExecutionError(msg)
+
+        if res_handler == SolarResource and 'nsrdb' in res_file.lower():
+            # Use NSRDB handler if definitely an NSRDB file
+            res_handler = NSRDB
+
+        return res_handler
+
+    @staticmethod
+    def _make_solar_kwargs(res_handler, project_points, downscale=None):
+        """Make kwargs dict for Solar | NSRDB resource handler initialization.
+
+        Parameters
+        ----------
+        res_handler : SolarResource | NSRDB
+            Solar resource handler.
+        project_points : reV.config.ProjectPoints
+            reV 2.0 Project Points instance used to retrieve resource data at a
+            specific set of sites.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
+
+        Returns
+        -------
+        kwargs : dict
+            Extra input args to preload sam resource.
+        res_handler : SolarResource | NSRDB
+            Solar resource handler.
+        """
+
+        kwargs = {}
+
+        # check for clearsky irradiation analysis for NSRDB
+        kwargs['clearsky'] = project_points.sam_config_obj.clearsky
+
+        # check for downscaling request
+        if downscale is not None:
+            # make sure that downscaling is only requested for NSRDB resource
+            if res_handler != NSRDB:
+                msg = ('Downscaling was requested for a non-NSRDB '
+                       'resource file. reV does not have this capability at '
+                       'the current time. Please contact a developer for '
+                       'more information on this feature.')
+                raise SAMInputWarning(msg)
+            else:
+                # pass through the downscaling request
+                kwargs['downscale'] = downscale
+
+        return kwargs, res_handler
+
+    @staticmethod
+    def _make_wind_kwargs(res_handler, project_points, res_5min_dir=None):
+        """Make kwargs dict for Wind resource handler initialization.
+
+        Parameters
+        ----------
+        res_handler : SolarResource | NSRDB
+            Wind resource handler.
+        project_points : reV.config.ProjectPoints
+            reV 2.0 Project Points instance used to retrieve resource data at a
+            specific set of sites.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
+
+        Returns
+        -------
+        kwargs : dict
+            Extra input args to preload sam resource.
+        res_handler : WindResource | FiveMinWTK
+            Wind resource handler.
+        """
+
+        kwargs = {}
+        kwargs['icing'] = project_points.sam_config_obj.icing
+        if project_points.curtailment is not None:
+            if project_points.curtailment.precipitation:
+                # make precip rate available for curtailment analysis
+                kwargs['precip_rate'] = True
+        if res_5min_dir is not None:
+            kwargs['h5_dir'] = res_5min_dir
+            res_handler = FiveMinWTK
+
+        return kwargs, res_handler
+
+    @classmethod
+    def get(cls, res_file, project_points, module, downscale=None,
+            res_5min_dir=None):
+        """Get the SAM resource iterator object (single year, single file).
+
+        Parameters
+        ----------
+        res_file : str
+            Single resource file (with full path) to retrieve.
+        project_points : reV.config.ProjectPoints
+            reV 2.0 Project Points instance used to retrieve resource data at a
+            specific set of sites.
+        module : str
+            SAM module name or reV technology to force interpretation
+            of the resource file type.
+            Example: module set to 'pvwatts' or 'tcsmolten' means that this
+            expects a SolarResource file. If 'nsrdb' is in the res_file name,
+            the NSRDB handler will be used.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
+
+        Returns
+        -------
+        res : reV.resource.SAMResource
+            Resource iterator object to pass to SAM.
+        """
+
+        res_handler = cls._get_base_handler(res_file, module)
+
+        if res_handler == SolarResource or res_handler == NSRDB:
+            kwargs, res_handler = cls._make_solar_kwargs(
+                res_handler, project_points, downscale=downscale)
+
+        elif res_handler == WindResource:
+            kwargs, res_handler = cls._make_wind_kwargs(
+                res_handler, project_points, res_5min_dir=res_5min_dir)
+
+        res = res_handler.preload_SAM(res_file, project_points, **kwargs)
+
+        return res
+
+
 class SAM:
     """Base class for SAM simulations (generation and econ)."""
 
@@ -432,79 +599,9 @@ class SAM:
         return self._site
 
     @staticmethod
-    def get_sam_res(res_file, project_points, module, downscale=None):
-        """Get the SAM resource iterator object (single year, single file).
-
-        Parameters
-        ----------
-        res_file : str
-            Single resource file (with full path) to retrieve.
-        project_points : reV.config.ProjectPoints
-            reV 2.0 Project Points instance used to retrieve resource data at a
-            specific set of sites.
-        module : str
-            SAM module name or reV technology to force interpretation
-            of the resource file type.
-            Example: module set to 'pvwatts' or 'tcsmolten' means that this
-            expects a SolarResource file. If 'nsrdb' is in the res_file name,
-            the NSRDB handler will be used.
-        downscale : NoneType | str
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
-
-        Returns
-        -------
-        res : reV.resource.SAMResource
-            Resource iterator object to pass to SAM.
-        """
-
-        try:
-            res_handler = SAM.RESOURCE_TYPES[module.lower()]
-        except KeyError:
-            msg = ('Cannot interpret what kind of resource handler the SAM '
-                   'module or reV technology "{}" requires. Expecting one of '
-                   'the following SAM modules or reV technologies: {}'
-                   .format(module, list(SAM.RESOURCE_TYPES.keys())))
-            raise SAMExecutionError(msg)
-
-        if res_handler == SolarResource and 'nsrdb' in res_file.lower():
-            # Use NSRDB handler if definitely an NSRDB file
-            res_handler = NSRDB
-
-        # additional arguments for special cases.
-        kwargs = {}
-        if res_handler == SolarResource or res_handler == NSRDB:
-            # check for clearsky irradiation analysis for NSRDB
-            kwargs = {'clearsky': project_points.sam_config_obj.clearsky}
-
-        elif res_handler == WindResource:
-            if project_points.curtailment is not None:
-                if project_points.curtailment.precipitation:
-                    # make precip rate available for curtailment analysis
-                    kwargs = {'precip_rate': True}
-
-        else:
-            raise TypeError('Did not recongize resource type "{}", '
-                            'must be Wind, Solar, or NSRDB resource class.'
-                            .format(res_handler))
-
-        # check for downscaling request
-        if downscale is not None:
-            # make sure that downscaling is only requested for NSRDB resource
-            if res_handler != NSRDB:
-                msg = ('Downscaling was requested for a non-NSRDB '
-                       'resource file. reV does not have this capability at '
-                       'the current time. Please contact a developer for '
-                       'more information on this feature.')
-                raise SAMInputWarning(msg)
-            else:
-                # pass through the downscaling request
-                kwargs['downscale'] = downscale
-
-        res = res_handler.preload_SAM(res_file, project_points, **kwargs)
-
-        return res
+    def get_sam_res(*args, **kwargs):
+        """Get the SAM resource iterator object (single year, single file)."""
+        return SAMResourceRetriever.get(*args, **kwargs)
 
     def set_resource(self, resource=None):
         """Generic resource setting utility.

@@ -15,7 +15,7 @@ from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
 from reV.handlers.outputs import Outputs
-from reV.handlers.resource import Resource
+from reV.handlers.resource import Resource, FiveMinWTK
 
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.4, downscale=None):
+                 mem_util_lim=0.4, downscale=None, res_5min_dir=None):
         """
         Parameters
         ----------
@@ -97,6 +97,9 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
         """
 
         self._points_control = points_control
@@ -112,6 +115,9 @@ class Gen:
         self.mem_util_lim = mem_util_lim
 
         self._output_request = self._parse_output_request(output_request)
+
+        if res_5min_dir is not None:
+            self._set_high_res_ti(res_5min_dir)
 
         if downscale is not None:
             self._set_downscaled_ti(downscale)
@@ -198,6 +204,18 @@ class Gen:
                 output_request.append('ghi_mean')
 
         return output_request
+
+    def _set_high_res_ti(self, res_5min_dir):
+        """Set the 5-minute resource directory time index.
+
+        Parameters
+        ----------
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
+        """
+        ti = FiveMinWTK.get_new_time_index(res_5min_dir)
+        self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
 
     def _set_downscaled_ti(self, ds_freq):
         """Set the downscaled time index based on a requested frequency.
@@ -870,7 +888,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, downscale=None):
+            scale_outputs=True, downscale=None, res_5min_dir=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -889,6 +907,9 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -900,7 +921,9 @@ class Gen:
         # run generation method for specified technology
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
-                                            output_request, downscale)
+                                            output_request=output_request,
+                                            downscale=downscale,
+                                            res_5min_dir=res_5min_dir)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -937,7 +960,7 @@ class Gen:
                    output_request=('cf_mean',), curtailment=None,
                    downscale=None, n_workers=1, sites_per_split=None,
                    points_range=None, fout=None, dirout='./gen_out',
-                   return_obj=True, scale_outputs=True):
+                   return_obj=True, scale_outputs=True, res_5min_dir=None):
         """Execute a generation run directly from source files without config.
 
         Parameters
@@ -985,6 +1008,9 @@ class Gen:
             Option to return the Gen object instance.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -999,12 +1025,15 @@ class Gen:
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout, downscale=downscale)
+                  dirout=dirout, downscale=downscale,
+                  res_5min_dir=res_5min_dir)
 
-        kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
+        kwargs = {'tech': gen.tech,
+                  'res_file': gen.res_file,
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
-                  'downscale': downscale}
+                  'downscale': downscale,
+                  'res_5min_dir': res_5min_dir}
 
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
@@ -1029,7 +1058,7 @@ class Gen:
                   output_request=('cf_mean',), curtailment=None,
                   downscale=None, n_workers=1, sites_per_split=None,
                   points_range=None, fout=None, dirout='./gen_out',
-                  mem_util_lim=0.4, scale_outputs=True):
+                  mem_util_lim=0.4, scale_outputs=True, res_5min_dir=None):
         """Execute a generation run with smart data flushing.
 
         Parameters
@@ -1078,6 +1107,9 @@ class Gen:
             site results are stored in memory at any given time.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
         """
 
         # get a points control instance
@@ -1087,12 +1119,14 @@ class Gen:
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout, mem_util_lim=mem_util_lim,
-                  downscale=downscale)
+                  downscale=downscale, res_5min_dir=res_5min_dir)
 
-        kwargs = {'tech': gen.tech, 'res_file': gen.res_file,
+        kwargs = {'tech': gen.tech,
+                  'res_file': gen.res_file,
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
-                  'downscale': downscale}
+                  'downscale': downscale,
+                  'res_5min_dir': res_5min_dir}
 
         logger.info('Running parallel generation with smart data flushing '
                     'for: {}'.format(pc))
@@ -1102,6 +1136,7 @@ class Gen:
                      .format(pprint.pformat(sam_files, indent=4)))
         logger.debug('The SAM output variables have been requested:\n{}'
                      .format(output_request))
+
         try:
             # use SmartParallelJob to manage runs, but set mem limit to 1
             # because Gen() will manage the sites in-memory
