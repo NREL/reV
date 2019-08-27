@@ -84,4 +84,5 @@ class SAMOutputRequest(OutputRequest):
                    'singleowner': 'ppa_price',
                    'actual_irr': 'flip_actual_irr',
                    'irr': 'flip_actual_irr',
+                   'cf_total_revenue': 'gross_revenue',
                    }
