@@ -174,7 +174,7 @@ class Gen:
                                  .format(request, self.__class__,
                                          list(self.OUT_ATTRS.keys())))
 
-        return output_request
+        return list(set(output_request))
 
     def _add_out_reqs(self, output_request):
         """Add additional output requests as needed.
