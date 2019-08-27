@@ -153,7 +153,7 @@ class Econ(Gen):
                                self.OPTIONS[output_request[0]]))
                 raise ValueError(msg)
 
-        return output_request
+        return list(set(output_request))
 
     def _parse_site_data(self, inp):
         """Parse site-specific data from input arg
