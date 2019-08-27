@@ -675,14 +675,13 @@ class WindResource(Resource):
         extrapolate : bool
             Flag as to whether h is inside or outside heights range
         """
-        if isinstance(heights, (list, tuple)):
-            heights = np.array(heights).astype(np.float32)
 
-        dist = np.abs(heights - h)
+        heights_arr = np.array(heights, dtype='float32')
+        dist = np.abs(heights_arr - h)
         pos = dist.argsort()[:2]
-        nearest_h = np.sort(heights[pos])
-        nearest_h = [int(h) for h in nearest_h]
-        extrapolate = np.all(h < heights) or np.all(h > heights)
+        nearest_h = sorted([heights[p] for p in pos])
+        extrapolate = np.all(h < heights_arr) or np.all(h > heights_arr)
+
         if extrapolate:
             h_min, h_max = np.sort(heights)[[0, -1]]
             msg = ('{} is outside the height range'.format(h),
