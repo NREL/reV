@@ -91,9 +91,11 @@ def setup_logger(logger_name, log_level="INFO", log_file=None,
     else:
         handlers.append(get_handler(log_level=log_level, log_file=log_file,
                                     log_format=log_format))
+
     for handler in handlers:
         if str(handler) not in current_handlers:
             logger.addHandler(handler)
+
     return logger
 
 
