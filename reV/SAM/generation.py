@@ -328,9 +328,15 @@ class Solar(Generation):
         var_map = {'dni': 'dn',
                    'dhi': 'df',
                    'ghi': 'gh',
+                   'clearsky_dni': 'dn',
+                   'clearsky_dhi': 'df',
+                   'clearsky_ghi': 'gh',
                    'wind_speed': 'wspd',
                    'air_temperature': 'tdry',
                    }
+
+        irrad_vars = ['dni', 'dhi', 'ghi', 'clearsky_dni', 'clearsky_dhi',
+                      'clearsky_ghi']
 
         # set resource variables
         for var in resource.columns.values:
@@ -339,7 +345,7 @@ class Solar(Generation):
                 res_arr = np.roll(
                     self.ensure_res_len(resource[var]),
                     int(self.meta['timezone'] * self.time_interval))
-                if var in ['dni', 'dhi', 'ghi']:
+                if var in irrad_vars:
                     if np.min(res_arr) < 0:
                         warn('Solar irradiance variable "{}" has a minimum '
                              'value of {}. Truncating to zero.'

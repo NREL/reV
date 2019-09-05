@@ -176,7 +176,8 @@ class Gen:
 
         return list(set(output_request))
 
-    def _add_out_reqs(self, output_request):
+    @staticmethod
+    def _add_out_reqs(output_request):
         """Add additional output requests as needed.
 
         Parameters
@@ -193,15 +194,6 @@ class Gen:
         if 'cf_mean' not in output_request:
             # ensure that cf_mean is requested from output
             output_request.append('cf_mean')
-
-        if 'wind' in self.tech.lower():
-            if 'ws_mean' not in output_request:
-                output_request.append('ws_mean')
-        else:
-            if 'dni_mean' not in output_request:
-                output_request.append('dni_mean')
-            if 'ghi_mean' not in output_request:
-                output_request.append('ghi_mean')
 
         return output_request
 
