@@ -54,6 +54,7 @@ DEFAULTS = {'tech_model': 'windbos',
             'contingency': 3.0,
             'warranty_management': 0.02,
             'sales_and_use_tax': 5.0,
+            'sales_tax_basis': 0.0,
             'overhead': 5.0,
             'profit_margin': 5.0,
             'development_fee': 5.0,  # Millions of dollars
@@ -129,6 +130,19 @@ def test_rev_windbos_transport():
     assert np.allclose(wb.turbine_cost, 52512000.00, atol=ATOL, rtol=RTOL)
     assert np.allclose(wb.bos_cost, 37720412.00, atol=ATOL, rtol=RTOL)
     assert np.allclose(wb.total_installed_cost, 90232416.00, atol=ATOL,
+                       rtol=RTOL)
+
+
+def test_rev_windbos_sales():
+    """Test windbos calc with turbine transport costs"""
+    fpath = TESTDATADIR + '/SAM/i_windbos.json'
+    with open(fpath, 'r') as f:
+        inputs = json.load(f)
+    inputs['sales_tax_basis'] = 5.0
+    wb = WindBos(inputs)
+    assert np.allclose(wb.turbine_cost, 52512000.00, atol=ATOL, rtol=RTOL)
+    assert np.allclose(wb.bos_cost, 36380236.00, atol=ATOL, rtol=RTOL)
+    assert np.allclose(wb.total_installed_cost, 89114464.00, atol=ATOL,
                        rtol=RTOL)
 
 

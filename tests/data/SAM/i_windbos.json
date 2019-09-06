@@ -9644,6 +9644,7 @@
     0
   ],
   "sales_and_use_tax": 5.0,
+  "sales_tax_basis": 0.0,
   "salvage_percentage": 0,
   "site_terrain": 0,
   "soil_condition": 0,
