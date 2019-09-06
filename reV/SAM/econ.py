@@ -4,6 +4,7 @@
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
 SAM software development kit (SDK).
 """
+from copy import deepcopy
 import logging
 import numpy as np
 import pandas as pd
@@ -538,6 +539,33 @@ class SingleOwner(Economic):
                          site_parameters=site_parameters,
                          output_request=output_request)
 
+        # run balance of system cost model if required
+        self.parameters._parameters = self.windbos(self.parameters._parameters)
+
+    @staticmethod
+    def windbos(inputs):
+        """Run SAM Wind Balance of System cost model if requested.
+
+        Parameters
+        ----------
+        inputs : dict
+            Dictionary of SAM key-value pair inputs.
+            "total_installed_cost": "windbos" will trigger the windbos method.
+
+        Returns
+        -------
+        inputs : dict
+            Dictionary of SAM key-value pair inputs with the total installed
+            cost replaced with WindBOS values if requested.
+        """
+
+        if isinstance(inputs['total_installed_cost'], str):
+            if inputs['total_installed_cost'].lower() == 'windbos':
+                from reV.SAM.windbos import WindBos
+                wb = WindBos(inputs)
+                inputs['total_installed_cost'] = wb.total_installed_cost
+        return inputs
+
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, cf_year,
                 output_request=('ppa_price',)):
@@ -575,10 +603,14 @@ class SingleOwner(Economic):
             # get SAM inputs from project_points based on the current site
             _, inputs = points_control.project_points[site]
 
-            # set the generation profile as an input.
-            inputs = cls.get_gen_profile(site, site_df, cf_file, cf_year,
-                                         inputs)
+            # ensure that site-specific data is not persisted to other sites
+            site_inputs = deepcopy(inputs)
 
-            out[site] = super().reV_run(site, site_df, inputs, output_request)
+            # set the generation profile as an input.
+            site_inputs = cls.get_gen_profile(site, site_df, cf_file, cf_year,
+                                              site_inputs)
+
+            out[site] = super().reV_run(site, site_df, site_inputs,
+                                        output_request)
 
         return out
