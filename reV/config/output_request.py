@@ -85,4 +85,8 @@ class SAMOutputRequest(OutputRequest):
                    'actual_irr': 'flip_actual_irr',
                    'irr': 'flip_actual_irr',
                    'cf_total_revenue': 'gross_revenue',
+                   'total_cost': 'total_installed_cost',
+                   'turbine': 'turbine_cost',
+                   'sales_tax': 'sales_tax_cost',
+                   'bos': 'bos_cost',
                    }

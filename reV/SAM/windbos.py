@@ -140,12 +140,26 @@ class WindBos:
 
     @property
     def sales_tax_mult(self):
-        """Get a sales tax multiplier (on the total installed cost)."""
+        """Get a sales tax multiplier (frac of the total installed cost)."""
         basis = self._inputs.get('sales_tax_basis', 0) / 100
         tax = self._datadict.get('sales_and_use_tax', 0) / 100
-        return 1 + (basis * tax)
+        return (basis * tax)
+
+    @property
+    def sales_tax_cost(self):
+        """Get the cost of sales tax ($)."""
+        return (self.bos_cost + self.turbine_cost) * self.sales_tax_mult
 
     @property
     def total_installed_cost(self):
         """Get the total installed cost ($) (bos + turbine)."""
-        return (self.bos_cost + self.turbine_cost) * self.sales_tax_mult
+        return self.bos_cost + self.turbine_cost + self.sales_tax_cost
+
+    @property
+    def output(self):
+        """Get a dictionary containing the cost breakdown."""
+        output = {'total_installed_cost': self.total_installed_cost,
+                  'turbine_cost': self.turbine_cost,
+                  'sales_tax_cost': self.sales_tax_cost,
+                  'bos_cost': self.bos_cost}
+        return output

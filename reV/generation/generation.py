@@ -153,17 +153,7 @@ class Gen:
             Output variables requested from SAM.
         """
 
-        # type check and ensure list for manipulation
-        if isinstance(req, list):
-            output_request = req
-        elif isinstance(req, tuple):
-            output_request = list(req)
-        elif isinstance(req, str):
-            output_request = [req]
-        else:
-            raise TypeError('Output request must be str, list, or tuple but '
-                            'received: {}'.format(type(req)))
-
+        output_request = self._output_request_type_check(req)
         output_request = self._add_out_reqs(output_request)
 
         for request in output_request:
@@ -175,6 +165,32 @@ class Gen:
                                          list(self.OUT_ATTRS.keys())))
 
         return list(set(output_request))
+
+    @staticmethod
+    def _output_request_type_check(req):
+        """Output request type check and ensure list for manipulation.
+
+        Parameters
+        ----------
+        req : list | tuple | str
+            Output request of variable type.
+
+        Returns
+        -------
+        output_request : list
+            Output request.
+        """
+
+        if isinstance(req, list):
+            output_request = req
+        elif isinstance(req, tuple):
+            output_request = list(req)
+        elif isinstance(req, str):
+            output_request = [req]
+        else:
+            raise TypeError('Output request must be str, list, or tuple but '
+                            'received: {}'.format(type(req)))
+        return output_request
 
     @staticmethod
     def _add_out_reqs(output_request):
@@ -778,7 +794,7 @@ class Gen:
         ----------
         site_gid : int
             Resource-native site gid (index).
-        site_output : SAM.SiteOutput | dict
+        site_output : dict
             SAM site output object.
         """
 

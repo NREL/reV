@@ -540,10 +540,35 @@ class SingleOwner(Economic):
                          output_request=output_request)
 
         # run balance of system cost model if required
-        self.parameters._parameters = self.windbos(self.parameters._parameters)
+        self.parameters._parameters, self.windbos_outputs = \
+            self._windbos(self.parameters._parameters)
+
+    def collect_outputs(self):
+        """Collect SAM output_request, including windbos results.
+
+        Returns
+        -------
+        results : Dict
+            Dictionary keyed by SAM variable names with SAM numerical results.
+        """
+
+        windbos_out_vars = [v for v in self.output_request
+                            if v in self.windbos_outputs]
+        self.output_request = [v for v in self.output_request
+                               if v not in windbos_out_vars]
+
+        results = super().collect_outputs()
+
+        windbos_results = {}
+        for request in windbos_out_vars:
+            windbos_results[request] = self.windbos_outputs[request]
+
+        results.update(windbos_results)
+
+        return results
 
     @staticmethod
-    def windbos(inputs):
+    def _windbos(inputs):
         """Run SAM Wind Balance of System cost model if requested.
 
         Parameters
@@ -557,14 +582,18 @@ class SingleOwner(Economic):
         inputs : dict
             Dictionary of SAM key-value pair inputs with the total installed
             cost replaced with WindBOS values if requested.
+        output : dict
+            Dictionary of windbos cost breakdowns.
         """
 
+        outputs = {}
         if isinstance(inputs['total_installed_cost'], str):
             if inputs['total_installed_cost'].lower() == 'windbos':
                 from reV.SAM.windbos import WindBos
                 wb = WindBos(inputs)
                 inputs['total_installed_cost'] = wb.total_installed_cost
-        return inputs
+                outputs = wb.output
+        return inputs, outputs
 
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, cf_year,

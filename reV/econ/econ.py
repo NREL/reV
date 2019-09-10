@@ -28,7 +28,11 @@ class Econ(Gen):
                'lcoe_real': SingleOwner.reV_run,
                'lcoe_nom': SingleOwner.reV_run,
                'flip_actual_irr': SingleOwner.reV_run,
-               'gross_revenue': SingleOwner.reV_run
+               'gross_revenue': SingleOwner.reV_run,
+               'total_installed_cost': SingleOwner.reV_run,
+               'turbine_cost': SingleOwner.reV_run,
+               'sales_tax_cost': SingleOwner.reV_run,
+               'bos_cost': SingleOwner.reV_run,
                }
 
     # Mapping of reV econ outputs to scale factors and units.
@@ -56,6 +60,19 @@ class Econ(Gen):
                  'gross_revenue': {'scale_factor': 1, 'units': 'dollars',
                                    'dtype': 'float32', 'chunks': None,
                                    'type': 'scalar'},
+                 'total_installed_cost': {'scale_factor': 1,
+                                          'units': 'dollars',
+                                          'dtype': 'float32', 'chunks': None,
+                                          'type': 'scalar'},
+                 'turbine_cost': {'scale_factor': 1, 'units': 'dollars',
+                                  'dtype': 'float32', 'chunks': None,
+                                  'type': 'scalar'},
+                 'sales_tax_cost': {'scale_factor': 1, 'units': 'dollars',
+                                    'dtype': 'float32', 'chunks': None,
+                                    'type': 'scalar'},
+                 'bos_cost': {'scale_factor': 1, 'units': 'dollars',
+                              'dtype': 'float32', 'chunks': None,
+                              'type': 'scalar'},
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
@@ -125,24 +142,9 @@ class Econ(Gen):
             Output variables requested from SAM.
         """
 
-        # type check and ensure list for manipulation
-        if isinstance(req, list):
-            output_request = req
-        elif isinstance(req, tuple):
-            output_request = list(req)
-        elif isinstance(req, str):
-            output_request = [req]
-        else:
-            raise TypeError('Output request must be str, list, or tuple but '
-                            'received: {}'.format(type(req)))
+        output_request = self._output_request_type_check(req)
 
         for request in output_request:
-            if request not in self.OUT_ATTRS:
-                raise ValueError('User output request "{}" not recognized. '
-                                 'The following output requests are available '
-                                 'in "{}": "{}"'
-                                 .format(request, self.__class__,
-                                         list(self.OUT_ATTRS.keys())))
 
             if self.OPTIONS[request] != self.OPTIONS[output_request[0]]:
                 msg = ('Econ outputs requested from different SAM modules not '
@@ -152,6 +154,13 @@ class Econ(Gen):
                                self.OPTIONS[request],
                                self.OPTIONS[output_request[0]]))
                 raise ValueError(msg)
+
+            if request not in self.OUT_ATTRS:
+                raise ValueError('User output request "{}" not recognized. '
+                                 'The following output requests are available '
+                                 'in "{}": "{}"'
+                                 .format(request, self.__class__,
+                                         list(self.OUT_ATTRS.keys())))
 
         return list(set(output_request))
 

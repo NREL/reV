@@ -77,7 +77,12 @@ BASELINE = {'project_return_aftertax_npv': np.array([7876459.5, 7875551.5,
             'flip_actual_irr': np.array([10.999977, 10.999978, 10.999978,
                                          10.999978, 10.999978, 10.999978,
                                          10.999979, 10.999979, 10.999979,
-                                         10.99998])}
+                                         10.99998]),
+            'total_installed_cost': np.array(10 * [88892234.91311586]),
+            'turbine_cost': np.array(10 * [52512000.0]),
+            'sales_tax_cost': np.array(10 * [0.0]),
+            'bos_cost': np.array(10 * [36380234.91311585]),
+            }
 
 
 def test_sam_windbos():
@@ -162,7 +167,8 @@ def test_rev_run(points=slice(0, 10), year=2012, n_workers=1):
                    return_obj=False)
 
     econ_outs = ('lcoe_nom', 'lcoe_real', 'flip_actual_irr',
-                 'project_return_aftertax_npv')
+                 'project_return_aftertax_npv', 'total_installed_cost',
+                 'turbine_cost', 'sales_tax_cost', 'bos_cost')
     e = Econ.run_direct(points=points, sam_files=sam_files, cf_file=fgen,
                         cf_year=year, site_data=None, output_request=econ_outs,
                         n_workers=1, sites_per_split=3, fout=None,
