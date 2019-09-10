@@ -10,6 +10,7 @@ import json
 import os
 import pytest
 import numpy as np
+import pandas as pd
 
 from reV.generation.generation import Gen
 from reV.econ.econ import Econ
@@ -85,6 +86,16 @@ BASELINE = {'project_return_aftertax_npv': np.array([7876459.5, 7875551.5,
             }
 
 
+BASELINE_SITE_BOS = {'total_installed_cost': np.array([88892230., 88936680.,
+                                                       88981130., 89025576.,
+                                                       89070020.]),
+                     'turbine_cost': np.array(5 * [52512000.0]),
+                     'sales_tax_cost': np.array([0., 44446.117, 88892.234,
+                                                 133338.36, 177784.47]),
+                     'bos_cost': np.array(5 * [36380234.91311585]),
+                     }
+
+
 def test_sam_windbos():
     """Test SAM SSC from dict with windbos"""
     from PySAM.PySSC import ssc_sim_from_dict
@@ -151,7 +162,7 @@ def test_rev_windbos_sales():
                        rtol=RTOL)
 
 
-def test_rev_run(points=slice(0, 10), year=2012, n_workers=1):
+def test_rev_run_gen_econ(points=slice(0, 10), year=2012, n_workers=1):
     """Test full reV2 gen->econ pipeline with windbos inputs and benchmark
     against baseline results."""
 
@@ -171,7 +182,7 @@ def test_rev_run(points=slice(0, 10), year=2012, n_workers=1):
                  'turbine_cost', 'sales_tax_cost', 'bos_cost')
     e = Econ.run_direct(points=points, sam_files=sam_files, cf_file=fgen,
                         cf_year=year, site_data=None, output_request=econ_outs,
-                        n_workers=1, sites_per_split=3, fout=None,
+                        n_workers=n_workers, sites_per_split=3, fout=None,
                         return_obj=True)
 
     for k in econ_outs:
@@ -181,6 +192,32 @@ def test_rev_run(points=slice(0, 10), year=2012, n_workers=1):
     if PURGE_OUT:
         for fn in os.listdir(OUT_DIR):
             os.remove(os.path.join(OUT_DIR, fn))
+    return e
+
+
+def test_rev_run_bos(points=slice(0, 5), n_workers=1):
+    """Test full reV2 gen->econ pipeline with windbos inputs and benchmark
+    against baseline results."""
+
+    # get full file paths.
+    sam_files = TESTDATADIR + '/SAM/i_windbos.json'
+    site_data = pd.DataFrame({'gid': range(5),
+                              'sales_tax_basis': range(5)})
+
+    econ_outs = ('total_installed_cost', 'turbine_cost', 'sales_tax_cost',
+                 'bos_cost')
+    e = Econ.run_direct(points=points, sam_files=sam_files, cf_file=None,
+                        cf_year=None, site_data=site_data,
+                        output_request=econ_outs,
+                        n_workers=n_workers, sites_per_split=3, fout=None,
+                        return_obj=True)
+
+    for k in econ_outs:
+        check = np.allclose(e.out[k], BASELINE_SITE_BOS[k],
+                            atol=ATOL, rtol=RTOL)
+        msg = 'Failed for {}'.format(k)
+        assert check, msg
+
     return e
 
 

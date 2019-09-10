@@ -2,7 +2,7 @@
 """
 SAM Wind Balance of System Cost Model
 """
-
+from copy import deepcopy
 import numpy as np
 from PySAM.PySSC import ssc_sim_from_dict
 from reV.utilities.exceptions import SAMInputError
@@ -163,3 +163,47 @@ class WindBos:
                   'sales_tax_cost': self.sales_tax_cost,
                   'bos_cost': self.bos_cost}
         return output
+
+    @classmethod
+    def reV_run(cls, points_control, site_df,
+                output_request=('total_installed_cost',), **kwargs):
+        """Execute SAM SingleOwner simulations based on reV points control.
+
+        Parameters
+        ----------
+        points_control : config.PointsControl
+            PointsControl instance containing project points site and SAM
+            config info.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
+        output_request : list | tuple | str
+            Output(s) to retrieve from SAM.
+
+        Returns
+        -------
+        out : dict
+            Nested dictionaries where the top level key is the site index,
+            the second level key is the variable name, second level value is
+            the output variable value.
+        """
+
+        del kwargs
+        out = {}
+
+        for site in points_control.sites:
+            # get SAM inputs from project_points based on the current site
+            _, inputs = points_control.project_points[site]
+
+            # ensure that site-specific data is not persisted to other sites
+            site_inputs = deepcopy(inputs)
+
+            site_inputs.update(dict(site_df.loc[site, :]))
+
+            wb = cls(site_inputs)
+
+            out[site] = {k: v for k, v in wb.output.items()
+                         if k in output_request}
+
+        return out

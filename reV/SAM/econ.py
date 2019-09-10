@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
+from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
 from reV.SAM.PySSC import PySSC
 from reV.SAM.SAM import SAM, ParametersManager
@@ -589,7 +590,6 @@ class SingleOwner(Economic):
         outputs = {}
         if isinstance(inputs['total_installed_cost'], str):
             if inputs['total_installed_cost'].lower() == 'windbos':
-                from reV.SAM.windbos import WindBos
                 wb = WindBos(inputs)
                 inputs['total_installed_cost'] = wb.total_installed_cost
                 outputs = wb.output
