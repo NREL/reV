@@ -95,12 +95,18 @@ class WindBos:
     @property
     def hub_height(self):
         """Turbine hub height."""
-        return self._inputs['wind_turbine_hub_ht']
+        if 'wind_turbine_hub_ht' in self._inputs:
+            return self._inputs['wind_turbine_hub_ht']
+        else:
+            return self._inputs['hub_height']
 
     @property
     def rotor_diameter(self):
         """Turbine rotor diameter."""
-        return self._inputs['wind_turbine_rotor_diameter']
+        if 'wind_turbine_rotor_diameter' in self._inputs:
+            return self._inputs['wind_turbine_rotor_diameter']
+        else:
+            return self._inputs['rotor_diameter']
 
     @property
     def number_of_turbines(self):

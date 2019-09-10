@@ -86,6 +86,7 @@ BASELINE = {'project_return_aftertax_npv': np.array([7876459.5, 7875551.5,
             }
 
 
+# baseline single owner + windbos results when sweeping sales tax basis
 BASELINE_SITE_BOS = {'total_installed_cost': np.array([88892230., 88936680.,
                                                        88981130., 89025576.,
                                                        89070020.]),
@@ -113,7 +114,7 @@ def test_sam_windbos():
 
 def test_rev_windbos():
     """Test baseline windbos calc with single owner defaults"""
-    fpath = TESTDATADIR + '/SAM/i_windbos.json'
+    fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
     with open(fpath, 'r') as f:
         inputs = json.load(f)
     wb = WindBos(inputs)
@@ -123,9 +124,24 @@ def test_rev_windbos():
                        rtol=RTOL)
 
 
+def test_standalone_json():
+    """Test baseline windbos calc with standalone json file"""
+    fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
+    with open(fpath, 'r') as f:
+        inputs = json.load(f)
+    wb1 = WindBos(inputs)
+    fpath = TESTDATADIR + '/SAM/i_windbos.json'
+    with open(fpath, 'r') as f:
+        inputs = json.load(f)
+    wb2 = WindBos(inputs)
+
+    for k, v in wb1.output.items():
+        assert v == wb2.output[k]
+
+
 def test_rev_windbos_perf_bond():
     """Test windbos calc with performance bonds"""
-    fpath = TESTDATADIR + '/SAM/i_windbos.json'
+    fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
     with open(fpath, 'r') as f:
         inputs = json.load(f)
     inputs['performance_bond'] = 10.0
@@ -138,7 +154,7 @@ def test_rev_windbos_perf_bond():
 
 def test_rev_windbos_transport():
     """Test windbos calc with turbine transport costs"""
-    fpath = TESTDATADIR + '/SAM/i_windbos.json'
+    fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
     with open(fpath, 'r') as f:
         inputs = json.load(f)
     inputs['turbine_transportation'] = 100.0
@@ -151,7 +167,7 @@ def test_rev_windbos_transport():
 
 def test_rev_windbos_sales():
     """Test windbos calc with turbine transport costs"""
-    fpath = TESTDATADIR + '/SAM/i_windbos.json'
+    fpath = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
     with open(fpath, 'r') as f:
         inputs = json.load(f)
     inputs['sales_tax_basis'] = 5.0
@@ -167,7 +183,7 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, n_workers=1):
     against baseline results."""
 
     # get full file paths.
-    sam_files = TESTDATADIR + '/SAM/i_windbos.json'
+    sam_files = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
     res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
     fgen = os.path.join(OUT_DIR, 'windbos_gen_{}.h5'.format(year))
 
@@ -200,7 +216,7 @@ def test_rev_run_bos(points=slice(0, 5), n_workers=1):
     against baseline results."""
 
     # get full file paths.
-    sam_files = TESTDATADIR + '/SAM/i_windbos.json'
+    sam_files = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
     site_data = pd.DataFrame({'gid': range(5),
                               'sales_tax_basis': range(5)})
 
