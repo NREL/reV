@@ -248,7 +248,7 @@ class TransmissionFeatures:
                     self._connect(gid, capacity)
                 elif feature_type == 'Substation':
                     self._connect_to_substation(self._features[gid]['lines'],
-                                                capacity)
+                                                capacity, **kwargs)
                 elif feature_type == 'LoadCen':
                     self._connect(gid, capacity)
 
