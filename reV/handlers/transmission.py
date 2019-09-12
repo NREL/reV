@@ -2,6 +2,7 @@
 """
 Module to handle Supply Curve Transmission features
 """
+import json
 import numpy as np
 import pandas as pd
 from warnings import warn
@@ -28,9 +29,10 @@ class TransmissionFeatures:
             Path to .csv or .json containing supply curve transmission mapping
         """
         self._features = self._parse_table(sc_table)
+        self._mask = pd.DataFrame(index=self._features)
+        self._mask['available'] = True
 
-    @staticmethod
-    def _parse_table(sc_table):
+    def _parse_table(self, sc_table):
         """
         Extract features and their capacity from supply curve transmission
         mapping table
@@ -60,18 +62,19 @@ class TransmissionFeatures:
                              "a pandas DataFrame")
 
         features = {}
+        cap_perc = self.AVAILABLE_CAPACITY
         trans_features = sc_table.groupby('trans_line_gid').first()
         for gid, feature in trans_features.iterrows():
             name = feature['category']
             feature_dict = {'type': name}
             if name == "TransLine":
-                feature_dict['capacity'] = feature['ac_cap']
+                feature_dict['avail_cap'] = feature['ac_cap'] * cap_perc
             elif name == "Substation":
-                feature_dict['lines'] = feature['trans_gids']
+                feature_dict['lines'] = json.loads(feature['trans_gids'])
             elif name == "LoadCen":
-                feature_dict['capacity'] = feature['ac_cap']
+                feature_dict['avail_cap'] = feature['ac_cap'] * cap_perc
             elif name == "PCALoadCen":
-                feature_dict['capacity'] = None
+                feature_dict['avail_cap'] = None
 
             features[gid] = feature_dict
 
@@ -79,7 +82,7 @@ class TransmissionFeatures:
 
     @staticmethod
     def _calc_lcot(distance, capacity,
-                   line_cost=TransmissionFeatures.LINE_COST,
+                   line_cost=3667,
                    tie_in_cost=0):
         """
         Compute levelized cost of transmission (LCOT)
@@ -118,28 +121,28 @@ class TransmissionFeatures:
 
         Returns
         -------
-        capacity : float
-            Substation capacity = sum(line capacities) / 2
+        avail_cap : float
+            Substation available capacity
         """
-        capacity = 0
+        avail_cap = 0
         line_max = 0
         for gid in line_gids:
             line = self._features[gid]
             if line['type'] == 'TransLine':
-                line_cap = line['capacity']
-                capacity += line_cap
+                line_cap = line['avail_cap']
+                avail_cap += line_cap
                 if line_cap > line_max:
                     line_max = line_cap
             else:
                 warn("Feature type is {} but should be 'TransLine'"
                      .format(line['type']), HandlerWarning)
 
-        capacity /= 2
+        avail_cap /= 2
         if line_limited:
-            if line_max < capacity:
-                capacity = line_max
+            if line_max < avail_cap:
+                avail_cap = line_max
 
-        return capacity
+        return avail_cap
 
     def available_capacity(self, gid, **kwargs):
         """
@@ -154,20 +157,48 @@ class TransmissionFeatures:
 
         Returns
         -------
-        capacity : float
+        avail_cap : float
             Available capacity = capacity * available fraction
             default = 10%
         """
         feature = self._features[gid]
         if feature['type'] == 'Substation':
-            capacity = self._substation_capacity(feature['lines'], **kwargs)
+            avail_cap = self._substation_capacity(feature['lines'], **kwargs)
         else:
-            capacity = feature['capacity']
+            avail_cap = feature['avail_cap']
 
-        if capacity is not None:
-            capacity *= self.AVAILABLE_CAPACITY
+        return avail_cap
 
-        return capacity
+    def _update_availability(self, gid, **kwargs):
+        """
+        Check features available capacity, if its 0 update _mask
+
+        Parameters
+        ----------
+        gid : list
+            Feature gid to check
+        kwargs : dict
+            Internal kwargs for substations
+        """
+        avail_cap = self.available_capacity(gid, **kwargs)
+        if avail_cap == 0:
+            self._mask.loc[gid, 'available'] = False
+
+    def check_availability(self, gid):
+        """
+        Check availablity of feature with given gid
+
+        Parameters
+        ----------
+        gid : list
+            Feature gid to check
+
+        Returns
+        -------
+        bool
+            Whether the gid is available or not
+        """
+        return self._mask.loc[gid, 'available']
 
     def _connect(self, gid, capacity):
         """
@@ -180,14 +211,14 @@ class TransmissionFeatures:
         capacity : float
             Capacity needed in MW
         """
-        avail_cap = self._features[gid]['capacity'] * self.AVAILABLE_CAPACITY
+        avail_cap = self._features[gid]['avail_cap']
         if avail_cap < capacity:
             raise RuntimeError("Cannot connect to {}: "
                                "needed capacity({} MW) > "
                                "available capacity({} MW)"
                                .format(gid, capacity, avail_cap))
 
-        self._features[gid]['capacity'] -= capacity
+        self._features[gid]['avail_cap'] -= capacity
 
     def _connect_to_substation(self, line_gids, capacity,
                                line_limited=False):
@@ -204,14 +235,28 @@ class TransmissionFeatures:
             Substation connection is limited by maximum capacity of the
             attached lines
         """
+        line_caps = np.array([self._features[gid]['avail_cap']
+                              for gid in line_gids])
         if line_limited:
-            line_caps = [self._features[gid]['capacity'] for gid in line_gids]
-            line_gids = [line_gids[np.argmax(line_caps)], ]
-        else:
-            capacity /= len(line_gids)
-
-        for gid in line_gids:
+            gid = line_gids[np.argmax(line_caps)]
             self._connect(gid, capacity)
+        else:
+            non_zero = np.nonzero(line_caps)[0]
+            line_gids = [line_gids[i] for i in non_zero]
+            line_caps = line_caps[non_zero]
+            line_cap = capacity / len(line_gids)
+            lines = line_gids.copy()
+            full_lines = np.where(line_caps < line_cap)[0]
+            for pos in full_lines:
+                gid = line_gids[pos]
+                line_cap = line_caps[pos]
+                self._connect(gid, line_cap)
+                capacity -= line_cap
+                lines.remove(gid)
+
+            line_cap = capacity / len(lines)
+            for gid in lines:
+                self._connect(gid, line_cap)
 
     def connect(self, gid, capacity, apply=True, **kwargs):
         """
@@ -233,24 +278,26 @@ class TransmissionFeatures:
         connected : bool
             Flag as to whether connection is possible or not
         """
-        avail_cap = self.available_capacity(gid, **kwargs)
-        if avail_cap is not None and capacity > avail_cap:
-            msg = ("Cannot connect to {}: "
-                   "needed capacity({} MW) > available capacity({} MW)"
-                   .format(gid, capacity, avail_cap))
-            warn(msg, HandlerWarning)
-            connected = False
+        if self.check_availability(gid):
+            avail_cap = self.available_capacity(gid, **kwargs)
+            if avail_cap is not None and capacity > avail_cap:
+                connected = False
+            else:
+                connected = True
+                if apply:
+                    feature_type = self._features[gid]['type']
+                    if feature_type == 'TransLine':
+                        self._connect(gid, capacity)
+                    elif feature_type == 'Substation':
+                        lines = self._features[gid]['lines']
+                        self._connect_to_substation(lines, capacity,
+                                                    **kwargs)
+                    elif feature_type == 'LoadCen':
+                        self._connect(gid, capacity)
+
+                    self._update_availability(gid)
         else:
-            connected = True
-            if apply:
-                feature_type = self._features[gid]['type']
-                if feature_type == 'TransLine':
-                    self._connect(gid, capacity)
-                elif feature_type == 'Substation':
-                    self._connect_to_substation(self._features[gid]['lines'],
-                                                capacity, **kwargs)
-                elif feature_type == 'LoadCen':
-                    self._connect(gid, capacity)
+            connected = False
 
         return connected
 
