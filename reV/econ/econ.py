@@ -330,7 +330,14 @@ class Econ(Gen):
             site_df = site_df.set_index('gid', drop=True)
 
         # SAM execute econ analysis based on output request
-        out = econ_fun(pc, site_df, output_request=output_request, **kwargs)
+        try:
+            out = econ_fun(pc, site_df, output_request=output_request,
+                           **kwargs)
+        except Exception as e:
+            out = {}
+            logger.exception('Worker failed for PC: {}'.format(pc))
+            raise e
+
         return out
 
     @classmethod
