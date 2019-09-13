@@ -272,6 +272,8 @@ class TransmissionFeatures:
         apply : bool
             Apply capacity to feature with given gid and update
             internal dictionary
+        kwargs : dict
+            Internal kwargs for substations
 
         Returns
         -------

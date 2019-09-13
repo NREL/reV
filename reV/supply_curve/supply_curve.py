@@ -126,6 +126,52 @@ class SupplyCurve:
         return lcot
 
     @staticmethod
+    def _test_connect(sc_table, max_workers=1, **kwargs):
+        """
+        Compute costs for all combinations of supply curve points and
+        tranmission features in _sc_table
+
+        Parameters
+        ----------
+        sc_table : pd.DataFrame
+            Table mapping supply curve points to transmission features
+            MUST contain supply curve point capacity
+        max_workers : int | NoneType
+            Number of workers to use to compute lcot, if > 1 run in parallel
+        kwargs : dict
+            Internal kwargs for substations
+
+        Returns
+        -------
+        connect : list
+            List of booleans indicating if a connection is possible
+        """
+        if 'capacity' not in sc_table:
+            raise SupplyCurveInputError('Supply curve table must have '
+                                        'supply curve point capacity '
+                                        'to test connections')
+
+        feature = TransmissionFeatures(sc_table)
+        if max_workers > 1:
+            with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
+                futures = []
+                for _, row in sc_table.iterrows():
+                    futures.append(exe.submit(feature.connect,
+                                              row['trans_gid'],
+                                              row['capacity'], apply=False,
+                                              **kwargs))
+
+                connect = [future.result() for future in futures]
+        else:
+            connect = []
+            for _, row in sc_table.iterrows():
+                connect.append(feature.connect(row['trans_gid'],
+                                               row['capacity'], apply=False,
+                                               **kwargs))
+
+        return connect
+
+    @staticmethod
     def _parse_sc_table(sc_points, sc_table, max_workers=1):
         """
         Import supply curve table, add in supply curve point capacity,
@@ -159,11 +205,17 @@ class SupplyCurve:
 
         return sc_table
 
-    def _serial_sort(self):
+    def _serial_sort(self, sc_table=None):
         """
         run supply curve sorting in serial
+
+        Parameters
+        ----------
         """
-        for _, row in self._sc_table.sort_values('lcot').iterrows():
+        if sc_table is None:
+            sc_table = self._sc_table.sort_values('lcot')
+
+        for _, row in sc_table.iterrows():
             sc_gid = row['sc_gid']
             if self._mask.loc[sc_gid, 'empty']:
                 trans_gid = row['trans_line_gid']
