@@ -124,6 +124,11 @@ class ListType(click.ParamType):
     """Base list click input argument type with option for None."""
     name = 'list'
 
+    @staticmethod
+    def dtype(x):
+        """Option to enforce a Homogeneous datatype."""
+        return x
+
     def convert(self, value, param, ctx):
         """Convert string to list."""
         if isinstance(value, str):
@@ -140,11 +145,6 @@ class ListType(click.ParamType):
         else:
             self.fail('Cannot recognize list type: {} {}'
                       .format(value, type(value)), param, ctx)
-
-    @staticmethod
-    def dtype(x):
-        """Option to enforce a Homogeneous datatype."""
-        return x
 
 
 class FloatListType(ListType):
