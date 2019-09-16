@@ -81,31 +81,29 @@ class TransmissionFeatures:
         return features
 
     @staticmethod
-    def _calc_lcot(distance, capacity,
-                   line_cost=3667,
-                   tie_in_cost=0):
+    def _calc_cost(distance, line_cost=3667, tie_in_cost=0, line_multiplier=1):
         """
-        Compute levelized cost of transmission (LCOT)
+        Compute transmission cost in $/MW
 
         Parameters
         ----------
         distance : float
             Distance to feature in miles
-        capacity : float
-            Capacity needed in MW
         line_cost : float
             Cost of tranmission lines in $/MW-mile
         tie_in_cost : float
             Cost to connect to feature in $/MW
+        line_multiplier : float
+            Multiplier for region specific line cost increases
 
         Returns
         -------
-        lcot : float
-            Levelized cost of transmission
+        cost : float
+            Cost of transmission in $/MW
         """
-        lcot = capacity * (distance * line_cost + tie_in_cost)
+        cost = (distance * line_cost * line_multiplier + tie_in_cost)
 
-        return lcot
+        return cost
 
     def _substation_capacity(self, line_gids, line_limited=False):
         """
@@ -303,7 +301,8 @@ class TransmissionFeatures:
 
         return connected
 
-    def lcot(self, gid, distance, capacity, connectable=True):
+    def cost(self, gid, distance, line_multiplier=1,
+             capacity=None):
         """
         Compute levelized cost of transmission (LCOT) for connecting to give
         feature
@@ -314,15 +313,17 @@ class TransmissionFeatures:
             Feature gid to connect to
         distance : float
             Distance to feature in miles
+        line_multiplier : float
+            Multiplier for region specific line cost increases
         capacity : float
-            Capacity needed in MW
-        connectable : bool
-            Check to see if connection is possible based on available capacity
+            Capacity needed in MW, if None DO NOT check if connection is
+            possible
 
         Returns
         -------
-        lcot : float
-            Levelized cost of transmission
+        cost : float
+            Cost of transmission in $/MW, if None indicates connection is
+            NOT possible
         """
         feature_type = self._features[gid]['type']
         line_cost = self.LINE_COST
@@ -340,10 +341,11 @@ class TransmissionFeatures:
                    .format(feature_type))
             warn(msg, HandlerWarning)
 
-        lcot = self._calc_lcot(distance, capacity, line_cost=line_cost,
-                               tie_in_cost=tie_in_cost)
-        if connectable:
+        cost = self._calc_cost(distance, line_cost=line_cost,
+                               tie_in_cost=tie_in_cost,
+                               line_multiplier=line_multiplier)
+        if capacity is not None:
             if not self.connect(gid, capacity, apply=False):
-                lcot = None
+                cost = None
 
-        return lcot
+        return cost
