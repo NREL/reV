@@ -303,7 +303,7 @@ class TransmissionFeatures:
 
         return connected
 
-    def lcot(self, gid, distance, capacity):
+    def lcot(self, gid, distance, capacity, connectable=True):
         """
         Compute levelized cost of transmission (LCOT) for connecting to give
         feature
@@ -316,6 +316,8 @@ class TransmissionFeatures:
             Distance to feature in miles
         capacity : float
             Capacity needed in MW
+        connectable : bool
+            Check to see if connection is possible based on available capacity
 
         Returns
         -------
@@ -340,4 +342,8 @@ class TransmissionFeatures:
 
         lcot = self._calc_lcot(distance, capacity, line_cost=line_cost,
                                tie_in_cost=tie_in_cost)
+        if connectable:
+            if not self.connect(gid, capacity, apply=False):
+                lcot = None
+
         return lcot
