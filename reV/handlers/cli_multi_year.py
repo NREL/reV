@@ -161,7 +161,7 @@ def collect_groups(ctx, group_params, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
-    log_dir = os.path.basename(my_file)
+    log_dir = os.path.dirname(my_file)
     init_mult(name, log_dir, modules=[__name__, 'reV.handlers.multi_year'],
               verbose=verbose, node=True)
 

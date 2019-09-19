@@ -24,6 +24,13 @@ class BaseConfig(dict):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
+
+        # str_rep is a mapping of config strings to replace with real values
+        self.str_rep = {'REVDIR': REVDIR,
+                        'TESTDATADIR': TESTDATADIR,
+                        }
+
+        self.dir = None
         self._logging_level = None
         self._name = None
         self._parse_config(config)
@@ -37,11 +44,6 @@ class BaseConfig(dict):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
-
-        # str_rep is a mapping of config strings to replace with real values
-        self.str_rep = {'REVDIR': REVDIR,
-                        'TESTDATADIR': TESTDATADIR,
-                        }
 
         # str is either json file path or serialized json object
         if isinstance(config, str):
