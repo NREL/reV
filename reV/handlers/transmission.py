@@ -81,7 +81,8 @@ class TransmissionFeatures:
         return features
 
     @staticmethod
-    def _calc_cost(distance, line_cost=3667, tie_in_cost=0, line_multiplier=1):
+    def _calc_cost(distance, line_cost=3667, tie_in_cost=0,
+                   transmission_multiplier=1):
         """
         Compute transmission cost in $/MW
 
@@ -101,7 +102,7 @@ class TransmissionFeatures:
         cost : float
             Cost of transmission in $/MW
         """
-        cost = (distance * line_cost * line_multiplier + tie_in_cost)
+        cost = (distance * line_cost * transmission_multiplier + tie_in_cost)
 
         return cost
 
@@ -301,8 +302,8 @@ class TransmissionFeatures:
 
         return connected
 
-    def cost(self, gid, distance, line_multiplier=1,
-             capacity=None):
+    def cost(self, gid, distance, transmission_multiplier=1,
+             capacity=None, **kwargs):
         """
         Compute levelized cost of transmission (LCOT) for connecting to give
         feature
@@ -318,6 +319,8 @@ class TransmissionFeatures:
         capacity : float
             Capacity needed in MW, if None DO NOT check if connection is
             possible
+        kwargs : dict
+            Internal kwargs for connect
 
         Returns
         -------
@@ -343,9 +346,9 @@ class TransmissionFeatures:
 
         cost = self._calc_cost(distance, line_cost=line_cost,
                                tie_in_cost=tie_in_cost,
-                               line_multiplier=line_multiplier)
+                               transmission_multiplier=transmission_multiplier)
         if capacity is not None:
-            if not self.connect(gid, capacity, apply=False):
+            if not self.connect(gid, capacity, apply=False, **kwargs):
                 cost = None
 
         return cost

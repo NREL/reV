@@ -88,7 +88,8 @@ class SupplyCurve:
         return sorted(merge_cols)
 
     @staticmethod
-    def _compute_lcot(sc_table, fcr, max_workers=1, connectable=True):
+    def _compute_lcot(sc_table, fcr, max_workers=1, connectable=True,
+                      **kwargs):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in sc_table
@@ -104,6 +105,8 @@ class SupplyCurve:
             Number of workers to use to compute lcot, if > 1 run in parallel
         connectable : bool
             Determine if connection is possible
+        kwargs : dict
+            kwargs for feature.cost
 
         Returns
         -------
@@ -126,9 +129,12 @@ class SupplyCurve:
                     else:
                         capacity = None
 
+                    tm = row.get('transmission_multiplier', 1)
                     futures.append(exe.submit(feature.cost, row['trans_gid'],
                                               row['dist_mi'],
-                                              capacity=capacity))
+                                              capacity=capacity,
+                                              transmission_multiplier=tm,
+                                              **kwargs))
 
                 lcot = [future.result() for future in futures]
         else:
@@ -139,8 +145,10 @@ class SupplyCurve:
                 else:
                     capacity = None
 
+                tm = row.get('transmission_multiplier', 1)
                 cost.append(feature.cost(row['trans_line_gid'], row['dist_mi'],
-                                         capacity=capacity))
+                                         capacity=capacity,
+                                         transmission_multiplier=tm, **kwargs))
 
         lcot = ((np.array(cost, dtype=np.float) * fcr)
                 / (sc_table['mean_cf'].values * 8760))
@@ -204,7 +212,7 @@ class SupplyCurve:
         if sc_table is None:
             sc_table = self._sc_table
 
-        columns = ['trans_gid', 'trans_type', 'lcot', 'total_lcot']
+        columns = ['trans_gid', 'trans_type', 'lcot', 'total_lcoe']
         connections = pd.DataFrame(columns=columns, index=self._mask.index)
         connections.index.name = 'sc_gid'
 
