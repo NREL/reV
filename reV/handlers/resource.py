@@ -348,6 +348,34 @@ class Resource:
             Site to extract SAM DataFrame for
         """
 
+    @staticmethod
+    def _check_slice(ds_slice):
+        """
+        Parameters
+        ----------
+        ds_slice : slice | list | ndarray
+            slice, list, or vector of points to extract
+
+        Returns
+        -------
+        ds_slice : slice
+            Slice that encompasses the entire range
+        ds_idx : ndarray
+            Adjusted list to extract points of interest from slice
+        """
+        ds_idx = slice(None, None, None)
+        if not isinstance(ds_slice, slice):
+            if isinstance(ds_slice, (list, np.ndarray)):
+                in_slice = np.array(ds_slice)
+                s = in_slice.min()
+                e = in_slice.max() + 1
+                ds_slice = slice(s, e, None)
+                ds_idx = in_slice - s
+            elif isinstance(ds_slice, int):
+                ds_idx = None
+
+        return ds_slice, ds_idx
+
     def _get_ds(self, ds_name, *ds_slice):
         """
         Extract data from given dataset
@@ -380,7 +408,18 @@ class Resource:
                                   .format(ds_name, self.dsets))
 
         ds = self._h5[ds_name]
-        out = ds[ds_slice]
+        slices = []
+        idx = []
+        for axis_slice in ds_slice:
+            axis_slice, axis_idx = self._check_slice(axis_slice)
+            slices.append(axis_slice)
+            if axis_idx is not None:
+                idx.append(axis_idx)
+
+        out = ds[tuple(slices)]
+        if idx:
+            out = out[tuple(idx)]
+
         if self._unscale:
             scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
             out = out.astype('float32')

@@ -126,11 +126,25 @@ def check_dset(res_cls, ds_name):
     ds = res_cls[ds_name, :, sites]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (ds_shape[0], 20)
+    # site list single time
+    sites = sorted(np.random.choice(ds_shape[1], 20, replace=False))
+    ds = res_cls[ds_name, 0, sites]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (20,)
     # time list
     times = sorted(np.random.choice(ds_shape[0], 100, replace=False))
     ds = res_cls[ds_name, times]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (100, ds_shape[1])
+    # time list single site
+    times = sorted(np.random.choice(ds_shape[0], 100, replace=False))
+    ds = res_cls[ds_name, times, 0]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (100,)
+    # time and site lists
+    ds = res_cls[ds_name, times, sites]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (100, 20)
 
 
 def check_scale(res_cls, ds_name):
