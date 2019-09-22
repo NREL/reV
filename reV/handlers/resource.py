@@ -362,19 +362,57 @@ class Resource:
             Slice that encompasses the entire range
         ds_idx : ndarray
             Adjusted list to extract points of interest from slice
+        idx_slice : tuple
+            Tuple to add to ds_idx slicing
         """
-        ds_idx = slice(None, None, None)
-        if not isinstance(ds_slice, slice):
-            if isinstance(ds_slice, (list, np.ndarray)):
-                in_slice = np.array(ds_slice)
-                s = in_slice.min()
-                e = in_slice.max() + 1
-                ds_slice = slice(s, e, None)
-                ds_idx = in_slice - s
-            elif isinstance(ds_slice, int):
-                ds_idx = None
+        ds_idx = None
+        idx_slice = ()
+        if isinstance(ds_slice, (list, np.ndarray)):
+            in_slice = np.array(ds_slice)
+            s = in_slice.min()
+            e = in_slice.max() + 1
+            ds_slice = slice(s, e, None)
+            ds_idx = in_slice - s
+            idx_slice = (slice(None, None, None),)
+        elif isinstance(ds_slice, slice):
+            idx_slice = (slice(None, None, None),)
 
-        return ds_slice, ds_idx
+        return ds_slice, ds_idx, idx_slice
+
+    @staticmethod
+    def _extract_ds_slice(ds, *ds_slice):
+        """
+        Extact ds_slice from ds as efficiently as possible.
+
+        Parameters
+        ----------
+        ds : h5py.dataset
+            Open .h5 dataset instance to extract data from
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis
+
+        Returns
+        -------
+        out : ndarray
+            Extracted array of data from ds
+        """
+        slices = ()
+        idx = []
+        idx_slice = ()
+        for ax_slice in ds_slice:
+            ax_slice, ax_idx, ax_idx_slice = Resource._check_slice(ax_slice)
+            slices += (ax_slice,)
+            if ax_idx is not None:
+                ax_idx = idx_slice + (ax_idx,)
+                idx.append(ax_idx)
+
+            idx_slice += ax_idx_slice
+
+        out = ds[slices]
+        for idx_slice in idx:
+            out = out[idx_slice]
+
+        return out
 
     def _get_ds(self, ds_name, *ds_slice):
         """
@@ -408,17 +446,7 @@ class Resource:
                                   .format(ds_name, self.dsets))
 
         ds = self._h5[ds_name]
-        slices = []
-        idx = []
-        for axis_slice in ds_slice:
-            axis_slice, axis_idx = self._check_slice(axis_slice)
-            slices.append(axis_slice)
-            if axis_idx is not None:
-                idx.append(axis_idx)
-
-        out = ds[tuple(slices)]
-        if idx:
-            out = out[tuple(idx)]
+        out = self._extract_ds_slice(ds, *ds_slice)
 
         if self._unscale:
             scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
@@ -553,7 +581,7 @@ class NSRDB(SolarResource):
                                   .format(ds_name, self.dsets))
 
         ds = self._h5[ds_name]
-        out = ds[ds_slice]
+        out = self._extract_ds_slice(ds, *ds_slice)
         if self._unscale:
             scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
             adder = ds.attrs.get(self.ADD_ATTR, 0)
