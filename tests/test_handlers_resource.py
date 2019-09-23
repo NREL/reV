@@ -95,9 +95,11 @@ def check_dset(res_cls, ds_name):
     time_index = res_cls['time_index']
     meta = res_cls['meta']
     ds_shape = (len(time_index), len(meta))
+    arr = res_cls[ds_name]
     ds = res_cls[ds_name]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == ds_shape
+    assert np.allclose(arr, ds)
     # single site all time
     ds = res_cls[ds_name, :, 1]
     assert isinstance(ds, np.ndarray)
@@ -106,31 +108,55 @@ def check_dset(res_cls, ds_name):
     ds = res_cls[ds_name, 10]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (ds_shape[1],)
+    assert np.allclose(arr[10], ds)
     # single value
     ds = res_cls[ds_name, 10, 10]
     assert isinstance(ds, (np.integer, np.floating))
+    assert np.allclose(arr[10, 10], ds)
     # site slice
     ds = res_cls[ds_name, :, 10:20]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (ds_shape[0], 10)
+    assert np.allclose(arr[:, 10:20], ds)
     # time slice
     ds = res_cls[ds_name, 10:20]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (10, ds_shape[1])
+    assert np.allclose(arr[10:20], ds)
     # slice in time and space
     ds = res_cls[ds_name, 100:200, 20:30]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (100, 10)
+    assert np.allclose(arr[100:200, 20:30], ds)
     # site list
     sites = sorted(np.random.choice(ds_shape[1], 20, replace=False))
     ds = res_cls[ds_name, :, sites]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (ds_shape[0], 20)
+    assert np.allclose(arr[:, sites], ds)
+    # site list single time
+    sites = sorted(np.random.choice(ds_shape[1], 20, replace=False))
+    ds = res_cls[ds_name, 0, sites]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (20,)
+    assert np.allclose(arr[0, sites], ds)
     # time list
     times = sorted(np.random.choice(ds_shape[0], 100, replace=False))
     ds = res_cls[ds_name, times]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (100, ds_shape[1])
+    assert np.allclose(arr[times], ds)
+    # time list single site
+    times = sorted(np.random.choice(ds_shape[0], 100, replace=False))
+    ds = res_cls[ds_name, times, 0]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (100,)
+    assert np.allclose(arr[times, 0], ds)
+    # time and site lists
+    ds = res_cls[ds_name, times, sites]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (100, 20)
+    assert np.allclose(arr[times][:, sites], ds)
 
 
 def check_scale(res_cls, ds_name):
