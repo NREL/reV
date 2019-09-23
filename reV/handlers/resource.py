@@ -968,7 +968,7 @@ class WindResource(Resource):
         return out
 
     def _get_SAM_df(self, ds_name, site, require_wind_dir=False,
-                    icing=True):
+                    icing=False):
         """
         Get SAM wind resource DataFrame for given site
 
