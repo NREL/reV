@@ -7,3 +7,4 @@ pyproj=1.9.6
 rasterio=1.0.21
 scipy=1.2.1
 xarray=0.12.1
+NREL-PySAM=1.2.1
