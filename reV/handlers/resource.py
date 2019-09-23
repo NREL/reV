@@ -499,6 +499,7 @@ class SolarResource(Resource):
             raise HandlerValueError("SAM requires unscaled values")
 
         res_df = pd.DataFrame(index=self.time_index)
+        res_df.index.name = 'time_index'
         res_df.name = "{}-{}".format(ds_name, site)
         for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
             var_array = self._get_ds(var, slice(None, None, None), site)
@@ -963,7 +964,8 @@ class WindResource(Resource):
 
         return out
 
-    def _get_SAM_df(self, ds_name, site, require_wind_dir=False):
+    def _get_SAM_df(self, ds_name, site, require_wind_dir=False,
+                    icing=True):
         """
         Get SAM wind resource DataFrame for given site
 
@@ -975,6 +977,8 @@ class WindResource(Resource):
             Site to extract SAM DataFrame for
         require_wind_dir : bool
             Boolean flag as to whether wind direction will be loaded.
+        icing : bool
+            Boolean flag to include relativehumitidy for icing calculation
 
         Returns
         -------
@@ -987,10 +991,14 @@ class WindResource(Resource):
         _, h = self._parse_name(ds_name)
         h = self._check_hub_height(h)
         res_df = pd.DataFrame(index=self.time_index)
+        res_df.index.name = 'time_index'
         res_df.name = site
         variables = ['pressure', 'temperature', 'winddirection', 'windspeed']
         if not require_wind_dir:
             variables.remove('winddirection')
+
+        if icing:
+            variables.append('relativehumidity')
         for var in variables:
             var_name = "{}_{}m".format(var, h)
             var_array = self._get_ds(var_name, slice(None, None, None),
