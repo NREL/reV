@@ -16,6 +16,8 @@ import numpy as np
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
+from nsrdb.utilities.statistics import mae_perc
+
 
 def test_gen_downscaling():
     """Test reV 2.0 generation with resource downscaled to 5 minutes."""
@@ -39,7 +41,10 @@ def test_gen_downscaling():
     else:
         with h5py.File(baseline, 'r') as f:
             baseline = f['cf_profile'][...].astype(np.int32)
-        assert np.allclose(baseline, gen_outs)
+
+        x = mae_perc(gen_outs, baseline)
+        msg = 'Mean absolute error is {}% from the baseline data'.format(x)
+        assert x < 1, msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):
