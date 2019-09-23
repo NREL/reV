@@ -351,6 +351,9 @@ class Resource:
     @staticmethod
     def _check_slice(ds_slice):
         """
+        Check ds_slice to see if it is an int, slice, or list.  Return
+        pieces required for fancy indexing based on input type.
+
         Parameters
         ----------
         ds_slice : slice | list | ndarray
@@ -361,7 +364,7 @@ class Resource:
         ds_slice : slice
             Slice that encompasses the entire range
         ds_idx : ndarray
-            Adjusted list to extract points of interest from slice
+            Adjusted list to extract points of interest from sliced array
         idx_slice : tuple
             Tuple to add to ds_idx slicing
         """
