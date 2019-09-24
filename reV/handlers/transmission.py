@@ -285,9 +285,9 @@ class TransmissionFeatures:
             else:
                 break
 
-        line_cap = capacity / len(lines)
+        apply_cap = capacity / len(lines)
         for gid in lines:
-            self._connect(gid, line_cap)
+            self._connect(gid, apply_cap)
 
     def _connect_to_substation(self, line_gids, capacity,
                                line_limited=False):
