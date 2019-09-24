@@ -57,6 +57,9 @@ class WindBos:
             SAM key value pair inputs.
         """
 
+        self._turbine_capital_cost = 0.0
+        self._datadict = {}
+
         self._inputs = inputs
         self._special = {'tech_model': 'windbos',
                          'financial_model': 'none',
@@ -66,7 +69,6 @@ class WindBos:
                          'number_of_turbines': self.number_of_turbines,
                          'turbine_capital_cost': self.turbine_capital_cost,
                          }
-        self._turbine_capital_cost = 0.0
         self._parse_inputs()
         self._out = ssc_sim_from_dict(self._datadict)
 
@@ -74,7 +76,6 @@ class WindBos:
         """Parse SAM inputs into a windbos input dict and perform any
         required special operations."""
 
-        self._datadict = {}
         for k in self.KEYS:
             if k in self._special:
                 self._datadict[k] = self._special[k]
