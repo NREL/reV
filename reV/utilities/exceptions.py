@@ -64,6 +64,12 @@ class SAMExecutionError(Exception):
     """
 
 
+class SAMInputError(Exception):
+    """
+    Input error for SAM simulations
+    """
+
+
 class SupplyCurveError(Exception):
     """
     Execution error for SAM simulations

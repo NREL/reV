@@ -623,8 +623,9 @@ class ProjectPoints:
             Primary key of df2 to be joined to the _df attribute. Primary key
             of the _df attribute is fixed as the gid column.
         """
-
-        self._df = pd.merge(self._df, df2, how='left', left_on='gid',
+        # ensure df2 doesnt have any duplicate columns for suffix reasons.
+        df2_cols = [c for c in df2.columns if c not in self._df or c == key]
+        self._df = pd.merge(self._df, df2[df2_cols], how='left', left_on='gid',
                             right_on=key, copy=False, validate='1:1')
 
     def get_sites_from_config(self, config):

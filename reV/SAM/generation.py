@@ -15,7 +15,7 @@ from reV.handlers.resource import Resource
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
 from reV.utilities.utilities import mean_irrad
-from reV.SAM.SAM import SAM, SiteOutput
+from reV.SAM.SAM import SAM
 from reV.SAM.econ import LCOE, SingleOwner
 
 
@@ -50,8 +50,8 @@ class Generation(SAM):
 
         Returns
         -------
-        res_mean : SiteOutput
-            SiteOutput object with variables for resource means.
+        res_mean : dict
+            Dictionary object with variables for resource means.
         out_req_nomeans : list
             Output request list with the resource mean entries removed.
         """
@@ -61,19 +61,19 @@ class Generation(SAM):
 
         if 'ws_mean' in out_req_nomeans:
             out_req_nomeans.remove('ws_mean')
-            res_mean = SiteOutput()
+            res_mean = {}
             res_mean['ws_mean'] = res_df['windspeed'].mean()
 
         else:
             if 'dni_mean' in out_req_nomeans:
                 out_req_nomeans.remove('dni_mean')
-                res_mean = SiteOutput()
+                res_mean = {}
                 res_mean['dni_mean'] = mean_irrad(res_df['dni'])
 
             if 'ghi_mean' in out_req_nomeans:
                 out_req_nomeans.remove('ghi_mean')
                 if res_mean is None:
-                    res_mean = SiteOutput()
+                    res_mean = {}
 
                 if 'ghi' in res_df:
                     res_mean['ghi_mean'] = mean_irrad(res_df['ghi'])

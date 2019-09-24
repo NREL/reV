@@ -1419,7 +1419,8 @@
     "total_installed_cost",
     [
       "int",
-      "float"
+      "float",
+      "str"
     ]
   ]
 ]
