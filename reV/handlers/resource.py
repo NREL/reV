@@ -995,7 +995,7 @@ class WindResource(Resource):
         h = self._check_hub_height(h)
         res_df = pd.DataFrame(index=self.time_index)
         res_df.index.name = 'time_index'
-        res_df.name = site
+        res_df.name = "{}-{}".format(ds_name, site)
         variables = ['pressure', 'temperature', 'winddirection', 'windspeed']
         if not require_wind_dir:
             variables.remove('winddirection')
