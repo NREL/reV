@@ -14,23 +14,34 @@ class TransmissionFeatures:
     """
     Class to handle Supply Curve Transmission features
     """
-    LINE_TIE_IN_COST = 14000  # $/MW
-    LINE_COST = 3667  # $/MW-mile
-    STATION_TIE_IN_COST = 0  # $/MW
-    CENTER_TIE_IN_COST = 0  # $/MW
-    SINK_TIE_IN_COST = 0  # $/MW
-    AVAILABLE_CAPACITY = 0.1
-
-    def __init__(self, sc_table):
+    def __init__(self, sc_table, line_tie_in_cost=14000, line_cost=3667,
+                 station_tine_in_cost=0, center_tie_in_cost=0,
+                 sink_tie_in_cost=0, available_capacity=0.1):
         """
         Parameters
         ----------
         sc_table : str | pandas.DataFrame
             Path to .csv or .json containing supply curve transmission mapping
+        line_tie_in_cost : float
+            Cost of connecting to atransmission line in $/MW
+        line_cost : float
+            Cost of building transmission line during connection in $/MW-mile
+        station_tine_in_cost : float
+            Cost of connecting to a substation in $/MW
+        center_tie_in_cost : float
+            Cost of connecting to a load center in $/MW
+        available_capacity : float
+            Fraction of capacity that is available for connection
         """
         self._features = self._parse_table(sc_table)
         self._mask = pd.DataFrame(index=self._features)
         self._mask['available'] = True
+        self._line_tie_in_cost = line_tie_in_cost
+        self._line_cost = line_cost
+        self._station_tie_in_cost = station_tine_in_cost
+        self._center_tie_in_cost = center_tie_in_cost
+        self._sink_tie_in_cost = sink_tie_in_cost
+        self._available_capacity = available_capacity
 
     def _parse_table(self, sc_table):
         """
@@ -62,7 +73,7 @@ class TransmissionFeatures:
                              "a pandas DataFrame")
 
         features = {}
-        cap_perc = self.AVAILABLE_CAPACITY
+        cap_perc = self._available_capacity
         trans_features = sc_table.groupby('trans_line_gid').first()
         for gid, feature in trans_features.iterrows():
             name = feature['category']
@@ -329,15 +340,15 @@ class TransmissionFeatures:
             NOT possible
         """
         feature_type = self._features[gid]['type']
-        line_cost = self.LINE_COST
+        line_cost = self._line_cost
         if feature_type == 'TransLine':
-            tie_in_cost = self.LINE_TIE_IN_COST
+            tie_in_cost = self._line_tie_in_cost
         elif feature_type == 'Substation':
-            tie_in_cost = self.STATION_TIE_IN_COST
+            tie_in_cost = self._station_tie_in_cost
         elif feature_type == 'LoadCen':
-            tie_in_cost = self.CENTER_TIE_IN_COST
+            tie_in_cost = self._center_tie_in_cost
         elif feature_type == 'PCALoadCen':
-            tie_in_cost = self.SINK_TIE_IN_COST
+            tie_in_cost = self._sink_tie_in_cost
         else:
             tie_in_cost = 0
             msg = ("Do not recognize feature type {}, tie_in_cost set to 0"

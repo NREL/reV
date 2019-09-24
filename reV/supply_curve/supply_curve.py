@@ -5,7 +5,9 @@ reV supply curve module
 - Supply Curve creation
 """
 import concurrent.futures as cf
+import json
 import numpy as np
+import os
 import pandas as pd
 
 from reV.handlers.transmission import TransmissionFeatures
@@ -16,26 +18,34 @@ class SupplyCurve:
     """
     Class to handle LCOT calcuation and SupplyCurve sorting
     """
-    def __init__(self, sc_points, sc_table, fcr, **kwargs):
+    def __init__(self, sc_points, sc_table, fcr, sc_features=None,
+                 transmission_costs=None, **kwargs):
         """
         Parameters
         ----------
         sc_points : str | pandas.DataFrame
-            Path to .csv or .json or DataFrame containing supplcy curve
+            Path to .csv or .json or DataFrame containing supply curve
             point summary
         sc_table : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping
         fcr : float
             Fixed charge rate, used to compute LCOT
+        sc_features : str | pandas.DataFrame
+            Path to .csv or .json or DataFrame containing additional supply
+            curve features, e.g. transmission multipliers, regions
+        transmission_costs : str | dict
+            Transmission feature costs to use with TransmissionFeatures
+            handler
         kwargs : dict
             Internal kwargs for _parse_sc_table to compute LCOT
         """
-        sc_points = self._parse_table(sc_points)
-        self._sc_points = sc_points.set_index('sc_gid')
-        self._sc_table = self._parse_sc_table(sc_points, sc_table, fcr,
+        self._sc_points = self._parse_sc_points(sc_points,
+                                                sc_features=sc_features)
+        self._sc_table = self._parse_sc_table(self._sc_points, sc_table, fcr,
                                               **kwargs)
-        self._trans_features = TransmissionFeatures(self._sc_table)
+        self._trans_features = self._create_handler(self._sc_table,
+                                                    costs=transmission_costs)
         sc_gid = np.sort(self._sc_table['sc_gid'].unique())
         self._mask = pd.DataFrame(index=sc_gid)
         self._mask['empty'] = True
@@ -68,6 +78,62 @@ class SupplyCurve:
                              "a pandas DataFrame")
 
         return table
+
+    @staticmethod
+    def _parse_sc_points(sc_points, sc_features=None):
+        """
+        Import supply curve point summary and add any additional features
+
+        Parameters
+        ----------
+        sc_points : str | pandas.DataFrame
+            Path to .csv or .json or DataFrame containing supply curve
+        sc_features : str | pandas.DataFrame
+            Path to .csv or .json or DataFrame containing additional supply
+            curve features, e.g. transmission multipliers, regions
+
+        Returns
+        -------
+        sc_points : pandas.DataFrame
+            DataFrame of supply curve point summary with additional features
+            added if supplied
+        """
+        sc_points = SupplyCurve._parse_table(sc_points)
+        if sc_features is not None:
+            sc_features = SupplyCurve._parse_table(sc_features)
+            merge_cols = [c for c in sc_features
+                          if c in sc_points]
+            sc_points = sc_points.merge(sc_features, on=merge_cols, how='left')
+
+        return sc_points.set_index('sc_gid')
+
+    @staticmethod
+    def _create_handler(sc_table, costs=None):
+        """
+        Create TransmissionFeatures handler from supply curve transmission
+        mapping table.  Update connection costs if given.
+
+        Parameters
+        ----------
+        sc_table : str | pandas.DataFrame
+            Path to .csv or .json or DataFrame containing supply curve
+            transmission mapping
+        costs : str | dict
+            Transmission feature costs to use with TransmissionFeatures
+            handler
+        """
+        if costs is not None:
+            if os.path.isfile(costs):
+                with open(costs, 'r') as f:
+                    kwargs = json.load(f)
+            else:
+                kwargs = json.loads(costs)
+        else:
+            kwargs = {}
+
+        trans_features = TransmissionFeatures(sc_table, **kwargs)
+
+        return trans_features
 
     @staticmethod
     def _get_merge_cols(columns):
@@ -113,6 +179,9 @@ class SupplyCurve:
         lcot : list
             Levelized cost of transmission for all supply curve -
             tranmission feature connections
+        cost : list
+            Capital cost of tramsmission for all supply curve - transmission
+            feature connections
         """
         if 'capacity' not in sc_table:
             raise SupplyCurveInputError('Supply curve table must have '
@@ -153,7 +222,7 @@ class SupplyCurve:
         lcot = ((np.array(cost, dtype=np.float) * fcr)
                 / (sc_table['mean_cf'].values * 8760))
 
-        return lcot
+        return lcot, cost
 
     @staticmethod
     def _parse_sc_table(sc_points, sc_table, fcr, **kwargs):
@@ -180,14 +249,16 @@ class SupplyCurve:
         point_merge_cols = SupplyCurve._get_merge_cols(sc_points.columns)
         table_merge_cols = SupplyCurve._get_merge_cols(sc_table.columns)
 
-        merge_cols = (point_merge_cols
-                      + ['capacity', 'sc_gid', 'mean_cf', 'mean_lcoe'])
-        sc_cap = sc_points[merge_cols]
+        drop_cols = ["area_sq_km", "gen_gids", "gid_counts", "latitude",
+                     "longitude", "pct_slope", "res_gids"]
+        sc_cap = sc_points.drop(columns=drop_cols)
         rename = {p: t for p, t in zip(point_merge_cols, table_merge_cols)}
         sc_cap = sc_cap.rename(columns=rename)
 
         sc_table = sc_table.merge(sc_cap, on=table_merge_cols, how='inner')
-        sc_table['lcot'] = SupplyCurve._compute_lcot(sc_table, fcr, **kwargs)
+        lcot, cost = SupplyCurve._compute_lcot(sc_table, fcr, **kwargs)
+        sc_table['trans_cap_cost'] = cost
+        sc_table['lcot'] = lcot
         sc_table['total_lcoe'] = sc_table['lcot'] + sc_table['mean_lcoe']
 
         return sc_table
