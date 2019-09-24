@@ -30,7 +30,7 @@ class TransmissionFeatures:
             Cost of connecting to a substation in $/MW
         center_tie_in_cost : float
             Cost of connecting to a load center in $/MW
-        available_capacity : float
+         : float
             Fraction of capacity that is available for connection
         """
         self._line_tie_in_cost = line_tie_in_cost
@@ -231,6 +231,64 @@ class TransmissionFeatures:
 
         self._features[gid]['avail_cap'] -= capacity
 
+    def _fill_lines(self, line_gids, line_caps, capacity):
+        """
+        Fill any lines that cannot handle equal portion of capacity and
+        remove from lines to be filled and capacity needed
+
+        Parameters
+        ----------
+        line_gids : ndarray
+            Vector of transmission line gids connected to the substation
+        line_caps : ndarray
+            Vector of available capacity of the transmission lines
+        capacity : float
+            Capacity needed in MW
+
+        Returns
+        ----------
+        line_gids : ndarray
+            Transmission lines with available capacity
+        line_caps : ndarray
+            Capacity of lines with available capacity
+        capacity : float
+            Updated capacity needed to be applied to substation in MW
+        """
+        apply_cap = capacity / len(line_gids)
+        mask = line_caps < apply_cap
+        for pos in np.where(line_caps < apply_cap)[0]:
+            gid = line_gids[pos]
+            apply_cap = line_caps[pos]
+            self._connect(gid, apply_cap)
+            capacity -= apply_cap
+
+        return line_gids[~mask], line_caps[~mask], capacity
+
+    def _spread_substation_load(self, line_gids, line_caps, capacity):
+        """
+        Spread needed capacity over all lines connected to substation
+
+        Parameters
+        ----------
+        line_gids : ndarray
+            Vector of transmission line gids connected to the substation
+        line_caps : ndarray
+            Vector of available capacity of the transmission lines
+        capacity : float
+            Capacity needed to be applied to substation in MW
+        """
+        while True:
+            lines, line_caps, capacity = self._fill_lines(line_gids, line_caps,
+                                                          capacity)
+            if len(lines) < len(line_gids):
+                line_gids = lines
+            else:
+                break
+
+        line_cap = capacity / len(lines)
+        for gid in lines:
+            self._connect(gid, line_cap)
+
     def _connect_to_substation(self, line_gids, capacity,
                                line_limited=False):
         """
@@ -253,21 +311,9 @@ class TransmissionFeatures:
             self._connect(gid, capacity)
         else:
             non_zero = np.nonzero(line_caps)[0]
-            line_gids = [line_gids[i] for i in non_zero]
+            line_gids = np.array([line_gids[i] for i in non_zero])
             line_caps = line_caps[non_zero]
-            line_cap = capacity / len(line_gids)
-            lines = line_gids.copy()
-            full_lines = np.where(line_caps < line_cap)[0]
-            for pos in full_lines:
-                gid = line_gids[pos]
-                line_cap = line_caps[pos]
-                self._connect(gid, line_cap)
-                capacity -= line_cap
-                lines.remove(gid)
-
-            line_cap = capacity / len(lines)
-            for gid in lines:
-                self._connect(gid, line_cap)
+            self._spread_substation_load(line_gids, line_caps, capacity)
 
     def connect(self, gid, capacity, apply=True, **kwargs):
         """

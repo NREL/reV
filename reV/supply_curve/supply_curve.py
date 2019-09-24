@@ -105,7 +105,7 @@ class SupplyCurve:
                           if c in sc_points]
             sc_points = sc_points.merge(sc_features, on=merge_cols, how='left')
 
-        return sc_points.set_index('sc_gid')
+        return sc_points
 
     @staticmethod
     def _create_handler(sc_table, costs=None):
@@ -249,9 +249,12 @@ class SupplyCurve:
         point_merge_cols = SupplyCurve._get_merge_cols(sc_points.columns)
         table_merge_cols = SupplyCurve._get_merge_cols(sc_table.columns)
 
-        drop_cols = ["area_sq_km", "gen_gids", "gid_counts", "latitude",
-                     "longitude", "pct_slope", "res_gids"]
-        sc_cap = sc_points.drop(columns=drop_cols)
+        merge_cols = (point_merge_cols
+                      + ['capacity', 'sc_gid', 'mean_cf', 'mean_lcoe'])
+        if 'transmission_multiplier' in sc_points:
+            merge_cols.append('transmission_multiplier')
+
+        sc_cap = sc_points[merge_cols].copy()
         rename = {p: t for p, t in zip(point_merge_cols, table_merge_cols)}
         sc_cap = sc_cap.rename(columns=rename)
 
@@ -298,6 +301,9 @@ class SupplyCurve:
                     self._mask.loc[sc_gid, 'empty'] = False
                     connections.at[sc_gid, 'trans_gid'] = trans_gid
                     connections.at[sc_gid, 'trans_type'] = row['category']
+                    connections.at[sc_gid, 'dist_mi'] = row['dist_mi']
+                    connections.at[sc_gid, 'trans_cap_cost'] = \
+                        row['trans_cap_cost']
                     connections.at[sc_gid, 'lcot'] = row['lcot']
                     connections.at[sc_gid, 'total_lcoe'] = row['total_lcoe']
 
@@ -325,7 +331,8 @@ class SupplyCurve:
             sc_table = self._sc_table
 
         connections = sc_table.sort_values('total_lcoe').groupby('sc_gid')
-        columns = ['trans_line_gid', 'category', 'lcot', 'total_lcoe']
+        columns = ['trans_line_gid', 'category', 'lcot', 'total_lcoe',
+                   'trans_cap_cost']
         connections = connections.first()[columns]
         rename = {'trans_line_gid': 'trans_gid',
                   'category': 'trans_type'}
@@ -334,7 +341,8 @@ class SupplyCurve:
         return connections.reset_index()
 
     @classmethod
-    def full(cls, sc_points, sc_table, fcr, **kwargs):
+    def full(cls, sc_points, sc_table, fcr, sc_features=None,
+             transmission_costs=None, **kwargs):
         """
         Run full supply curve taking into account available capacity of
         tranmission features when making connections.
@@ -349,6 +357,12 @@ class SupplyCurve:
             transmission mapping
         fcr : float
             Fixed charge rate, used to compute LCOT
+        sc_features : str | pandas.DataFrame
+            Path to .csv or .json or DataFrame containing additional supply
+            curve features, e.g. transmission multipliers, regions
+        transmission_costs : str | dict
+            Transmission feature costs to use with TransmissionFeatures
+            handler
         kwargs : dict
             Internal kwargs for computing LCOT
 
@@ -358,13 +372,15 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT
         """
-        sc = cls(sc_points, sc_table, fcr, **kwargs)
+        sc = cls(sc_points, sc_table, fcr, sc_features=sc_features,
+                 transmission_costs=transmission_costs, **kwargs)
         connections = sc.full_sort()
         supply_curve = sc._sc_points.merge(connections, on='sc_gid')
         return supply_curve
 
     @classmethod
-    def simple(cls, sc_points, sc_table, fcr, **kwargs):
+    def simple(cls, sc_points, sc_table, fcr, sc_features=None,
+               transmission_costs=None, **kwargs):
         """
         Run simple supply curve by connecting to the cheapest tranmission
         feature.
@@ -379,6 +395,12 @@ class SupplyCurve:
             transmission mapping
         fcr : float
             Fixed charge rate, used to compute LCOT
+        sc_features : str | pandas.DataFrame
+            Path to .csv or .json or DataFrame containing additional supply
+            curve features, e.g. transmission multipliers, regions
+        transmission_costs : str | dict
+            Transmission feature costs to use with TransmissionFeatures
+            handler
         kwargs : dict
             Internal kwargs for computing LCOT
 
@@ -388,7 +410,9 @@ class SupplyCurve:
             Updated sc_points table with transmission connections, LCOT
             and LCOE+LCOT
         """
-        sc = cls(sc_points, sc_table, fcr, connectable=False, **kwargs)
+        sc = cls(sc_points, sc_table, fcr, sc_features=sc_features,
+                 transmission_costs=transmission_costs, connectable=False,
+                 **kwargs)
         connections = sc.simple_sort()
         supply_curve = sc._sc_points.merge(connections, on='sc_gid')
         return supply_curve
