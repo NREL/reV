@@ -33,15 +33,16 @@ class TransmissionFeatures:
         available_capacity : float
             Fraction of capacity that is available for connection
         """
-        self._features = self._parse_table(sc_table)
-        self._mask = pd.DataFrame(index=self._features)
-        self._mask['available'] = True
         self._line_tie_in_cost = line_tie_in_cost
         self._line_cost = line_cost
         self._station_tie_in_cost = station_tine_in_cost
         self._center_tie_in_cost = center_tie_in_cost
         self._sink_tie_in_cost = sink_tie_in_cost
         self._available_capacity = available_capacity
+
+        self._features = self._parse_table(sc_table)
+        self._mask = pd.DataFrame(index=self._features)
+        self._mask['available'] = True
 
     def _parse_table(self, sc_table):
         """
