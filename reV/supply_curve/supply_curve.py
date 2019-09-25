@@ -46,9 +46,9 @@ class SupplyCurve:
                                               **kwargs)
         self._trans_features = self._create_handler(self._sc_table,
                                                     costs=transmission_costs)
-        sc_gid = np.sort(self._sc_table['sc_gid'].unique())
-        self._mask = pd.DataFrame(index=sc_gid)
-        self._mask['empty'] = True
+
+        self._sc_gids = list(np.sort(self._sc_table['sc_gid'].unique()))
+        self._mask = np.ones((len(self._sc_gids), ), dtype=bool)
 
     @staticmethod
     def _parse_table(table):
@@ -287,25 +287,37 @@ class SupplyCurve:
             sc_table = self._sc_table
 
         columns = ['trans_gid', 'trans_type', 'lcot', 'total_lcoe']
-        connections = pd.DataFrame(columns=columns, index=self._mask.index)
+        connections = pd.DataFrame(columns=columns, index=self._sc_gids)
         connections.index.name = 'sc_gid'
 
         pos = sc_table['lcot'].isnull()
-        for _, row in sc_table.loc[~pos].sort_values('total_lcoe').iterrows():
-            sc_gid = row['sc_gid']
-            if self._mask.loc[sc_gid, 'empty']:
-                trans_gid = row['trans_line_gid']
+        sc_table = sc_table.loc[~pos].sort_values('total_lcoe')
+
+        sc_gids = sc_table['sc_gid'].values
+        trans_gids = sc_table['trans_line_gid'].values
+        capacities = sc_table['capacity'].values
+        categories = sc_table['category'].values
+        dists = sc_table['dist_mi'].values
+        trans_cap_costs = sc_table['trans_cap_cost'].values
+        lcots = sc_table['lcot'].values
+        total_lcoes = sc_table['total_lcoe'].values
+
+        for i in range(len(sc_table)):
+            sc_gid = sc_gids[i]
+            i_mask = self._sc_gids.index(sc_gid)
+            if self._mask[i_mask]:
+                trans_gid = trans_gids[i]
                 connect = self._trans_features.connect(trans_gid,
-                                                       row['capacity'])
+                                                       capacities[i])
                 if connect:
-                    self._mask.loc[sc_gid, 'empty'] = False
+                    self._mask[i_mask] = False
                     connections.at[sc_gid, 'trans_gid'] = trans_gid
-                    connections.at[sc_gid, 'trans_type'] = row['category']
-                    connections.at[sc_gid, 'dist_mi'] = row['dist_mi']
+                    connections.at[sc_gid, 'trans_type'] = categories[i]
+                    connections.at[sc_gid, 'dist_mi'] = dists[i]
                     connections.at[sc_gid, 'trans_cap_cost'] = \
-                        row['trans_cap_cost']
-                    connections.at[sc_gid, 'lcot'] = row['lcot']
-                    connections.at[sc_gid, 'total_lcoe'] = row['total_lcoe']
+                        trans_cap_costs[i]
+                    connections.at[sc_gid, 'lcot'] = lcots[i]
+                    connections.at[sc_gid, 'total_lcoe'] = total_lcoes[i]
 
         return connections.reset_index()
 

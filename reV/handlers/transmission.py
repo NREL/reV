@@ -41,8 +41,9 @@ class TransmissionFeatures:
         self._available_capacity = available_capacity
 
         self._features = self._parse_table(sc_table)
-        self._mask = pd.DataFrame(index=self._features)
-        self._mask['available'] = True
+
+        self._feature_gid_list = list(self._features.keys())
+        self._available_mask = np.ones((len(self._features), ), dtype=bool)
 
     def _parse_table(self, sc_table):
         """
@@ -182,7 +183,7 @@ class TransmissionFeatures:
 
     def _update_availability(self, gid, **kwargs):
         """
-        Check features available capacity, if its 0 update _mask
+        Check features available capacity, if its 0 update _available_mask
 
         Parameters
         ----------
@@ -193,7 +194,8 @@ class TransmissionFeatures:
         """
         avail_cap = self.available_capacity(gid, **kwargs)
         if avail_cap == 0:
-            self._mask.loc[gid, 'available'] = False
+            i = self._feature_gid_list.index(gid)
+            self._available_mask[i] = False
 
     def check_availability(self, gid):
         """
@@ -201,7 +203,7 @@ class TransmissionFeatures:
 
         Parameters
         ----------
-        gid : list
+        gid : int
             Feature gid to check
 
         Returns
@@ -209,7 +211,8 @@ class TransmissionFeatures:
         bool
             Whether the gid is available or not
         """
-        return self._mask.loc[gid, 'available']
+        i = self._feature_gid_list.index(gid)
+        return self._available_mask[i]
 
     def _connect(self, gid, capacity):
         """
