@@ -17,14 +17,18 @@ class TransmissionFeatures:
     """
     Class to handle Supply Curve Transmission features
     """
-    def __init__(self, trans_table, line_tie_in_cost=14000, line_cost=3667,
+    def __init__(self, trans_table, features=None,
+                 line_tie_in_cost=14000, line_cost=3667,
                  station_tine_in_cost=0, center_tie_in_cost=0,
                  sink_tie_in_cost=0, available_capacity=0.1):
         """
         Parameters
         ----------
         trans_table : str | pandas.DataFrame
-            Path to .csv or .json containing supply curve transmission mapping
+            Path to .csv or .json or DataFrame containing supply curve
+            transmission mapping
+        features : dict
+            Dictionary of transmission features
         line_tie_in_cost : float
             Cost of connecting to a transmission line in $/MW
         line_cost : float
@@ -46,7 +50,10 @@ class TransmissionFeatures:
         self._sink_tie_in_cost = sink_tie_in_cost
         self._available_capacity = available_capacity
 
-        self._features = self._parse_table(trans_table)
+        if features is None:
+            features = self._parse_table(trans_table)
+
+        self._features = features
 
         self._feature_gid_list = list(self._features.keys())
         self._available_mask = np.ones((len(self._features), ), dtype=bool)
@@ -436,7 +443,8 @@ class TransmissionFeatures:
         return cost
 
     @classmethod
-    def feature_costs(cls, trans_table, capacity=None, line_tie_in_cost=14000,
+    def feature_costs(cls, trans_table, features=None,
+                      capacity=None, line_tie_in_cost=14000,
                       line_cost=3667, station_tine_in_cost=0,
                       center_tie_in_cost=0, sink_tie_in_cost=0,
                       available_capacity=0.1, **kwargs):
@@ -447,6 +455,8 @@ class TransmissionFeatures:
         ----------
         trans_table : str | pandas.DataFrame
             Path to .csv or .json containing supply curve transmission mapping
+        features : dict
+            Dictionary of transmission features
         capacity : float
             Capacity needed in MW, if None DO NOT check if connection is
             possible
@@ -473,7 +483,8 @@ class TransmissionFeatures:
             NOT possible
         """
         try:
-            feature = cls(trans_table, line_tie_in_cost=line_tie_in_cost,
+            feature = cls(trans_table, features=features,
+                          line_tie_in_cost=line_tie_in_cost,
                           line_cost=line_cost,
                           station_tine_in_cost=station_tine_in_cost,
                           center_tie_in_cost=center_tie_in_cost,

@@ -212,6 +212,8 @@ class SupplyCurve:
                                         'supply curve point capacity '
                                         'to compute lcot')
 
+        feature = SupplyCurve._create_handler(trans_table,
+                                              costs=trans_costs)
         if max_workers > 1:
             if trans_costs is not None:
                 kwargs.update(trans_costs)
@@ -233,13 +235,12 @@ class SupplyCurve:
                         capacity = None
 
                     futures.append(exe.submit(TF.feature_costs, sc_table,
+                                              features=feature._features,
                                               capacity=capacity, **kwargs))
 
                 cost = [future.result() for future in futures]
                 cost = np.hstack(cost)
         else:
-            feature = SupplyCurve._create_handler(trans_table,
-                                                  costs=trans_costs)
             cost = []
             for _, row in trans_table.iterrows():
                 if connectable:
