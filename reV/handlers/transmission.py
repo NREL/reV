@@ -3,34 +3,40 @@
 Module to handle Supply Curve Transmission features
 """
 import json
+import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
 
-from reV.utilities.exceptions import HandlerWarning
+from reV.utilities.exceptions import HandlerWarning, HandlerKeyError
+
+logger = logging.getLogger(__name__)
 
 
 class TransmissionFeatures:
     """
     Class to handle Supply Curve Transmission features
     """
-    def __init__(self, sc_table, line_tie_in_cost=14000, line_cost=3667,
+    def __init__(self, trans_table, line_tie_in_cost=14000, line_cost=3667,
                  station_tine_in_cost=0, center_tie_in_cost=0,
                  sink_tie_in_cost=0, available_capacity=0.1):
         """
         Parameters
         ----------
-        sc_table : str | pandas.DataFrame
+        trans_table : str | pandas.DataFrame
             Path to .csv or .json containing supply curve transmission mapping
         line_tie_in_cost : float
-            Cost of connecting to atransmission line in $/MW
+            Cost of connecting to a transmission line in $/MW
         line_cost : float
             Cost of building transmission line during connection in $/MW-mile
         station_tine_in_cost : float
             Cost of connecting to a substation in $/MW
         center_tie_in_cost : float
             Cost of connecting to a load center in $/MW
-         : float
+        center_tie_in_cost : float
+            Cost of connecting to a synthetic load center (infinite sink)
+            in $/MW
+        available_capacity : float
             Fraction of capacity that is available for connection
         """
         self._line_tie_in_cost = line_tie_in_cost
@@ -40,19 +46,34 @@ class TransmissionFeatures:
         self._sink_tie_in_cost = sink_tie_in_cost
         self._available_capacity = available_capacity
 
-        self._features = self._parse_table(sc_table)
+        self._features = self._parse_table(trans_table)
 
         self._feature_gid_list = list(self._features.keys())
         self._available_mask = np.ones((len(self._features), ), dtype=bool)
 
-    def _parse_table(self, sc_table):
+    def __repr__(self):
+        msg = "{} with {} features".format(self.__class__.__name__, len(self))
+        return msg
+
+    def __len__(self):
+        return len(self._features)
+
+    def __getitem__(self, gid):
+        if gid not in self._features:
+            msg = "Invalid feature gid {}".format(gid)
+            logger.error(msg)
+            raise HandlerKeyError(msg)
+
+        return self._features[gid]
+
+    def _parse_table(self, trans_table):
         """
         Extract features and their capacity from supply curve transmission
         mapping table
 
         Parameters
         ----------
-        sc_table : str
+        trans_table : str
             Path to .csv or .json containing supply curve transmission mapping
 
         Returns
@@ -63,20 +84,20 @@ class TransmissionFeatures:
             substations : {lines}
             loadcenters : {capacity}
         """
-        if isinstance(sc_table, str):
-            if sc_table.endswith('.csv'):
-                sc_table = pd.read_csv(sc_table)
-            elif sc_table.endswith('.json'):
-                sc_table = pd.read_json(sc_table)
+        if isinstance(trans_table, str):
+            if trans_table.endswith('.csv'):
+                trans_table = pd.read_csv(trans_table)
+            elif trans_table.endswith('.json'):
+                trans_table = pd.read_json(trans_table)
             else:
-                raise ValueError('Cannot parse {}'.format(sc_table))
-        elif not isinstance(sc_table, pd.DataFrame):
+                raise ValueError('Cannot parse {}'.format(trans_table))
+        elif not isinstance(trans_table, pd.DataFrame):
             raise ValueError("Supply Curve table must be a .csv, .json, or "
                              "a pandas DataFrame")
 
         features = {}
         cap_perc = self._available_capacity
-        trans_features = sc_table.groupby('trans_line_gid').first()
+        trans_features = trans_table.groupby('trans_line_gid').first()
         for gid, feature in trans_features.iterrows():
             name = feature['category']
             feature_dict = {'type': name}
@@ -413,3 +434,61 @@ class TransmissionFeatures:
                 cost = None
 
         return cost
+
+    @classmethod
+    def feature_costs(cls, trans_table, capacity=None, line_tie_in_cost=14000,
+                      line_cost=3667, station_tine_in_cost=0,
+                      center_tie_in_cost=0, sink_tie_in_cost=0,
+                      available_capacity=0.1, **kwargs):
+        """
+        Compute costs for all connections in given transmission table
+
+        Parameters
+        ----------
+        trans_table : str | pandas.DataFrame
+            Path to .csv or .json containing supply curve transmission mapping
+        capacity : float
+            Capacity needed in MW, if None DO NOT check if connection is
+            possible
+        line_tie_in_cost : float
+            Cost of connecting to a transmission line in $/MW
+        line_cost : float
+            Cost of building transmission line during connection in $/MW-mile
+        station_tine_in_cost : float
+            Cost of connecting to a substation in $/MW
+        center_tie_in_cost : float
+            Cost of connecting to a load center in $/MW
+        center_tie_in_cost : float
+            Cost of connecting to a synthetic load center (infinite sink)
+            in $/MW
+        available_capacity : float
+            Fraction of capacity that is available for connection
+        kwargs : dict
+            Internal kwargs for connect
+
+        Returns
+        -------
+        cost : ndarray
+            Cost of transmission in $/MW, if None indicates connection is
+            NOT possible
+        """
+        try:
+            feature = cls(trans_table, line_tie_in_cost=line_tie_in_cost,
+                          line_cost=line_cost,
+                          station_tine_in_cost=station_tine_in_cost,
+                          center_tie_in_cost=center_tie_in_cost,
+                          sink_tie_in_cost=sink_tie_in_cost,
+                          available_capacity=available_capacity)
+
+            costs = []
+            for _, row in trans_table.iterrows():
+                tm = row.get('transmission_multiplier', 1)
+                costs.append(feature.cost(row['trans_line_gid'],
+                                          row['dist_mi'], capacity=capacity,
+                                          transmission_multiplier=tm,
+                                          **kwargs))
+        except Exception:
+            logger.exception("Error computing costs for all connections in {}"
+                             .format(cls))
+
+        return np.array(costs, dtype='float32')
