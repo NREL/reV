@@ -225,7 +225,7 @@ class SupplyCurve:
                             capacity = capacity[0]
                         else:
                             msg = ('Each supply curve point should only have '
-                                   'a single capacity, but {} as {}'
+                                   'a single capacity, but {} has {}'
                                    .format(sc_gid, capacity))
                             logger.error(msg)
                             raise RuntimeError(msg)
