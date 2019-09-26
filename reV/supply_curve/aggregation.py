@@ -446,7 +446,7 @@ class Aggregation:
                         pass
 
                     else:
-                        pointsum['sc_gid'] = gid
+                        pointsum['sc_point_gid'] = gid
                         pointsum['sc_row_ind'] = points.loc[gid, 'row_ind']
                         pointsum['sc_col_ind'] = points.loc[gid, 'col_ind']
                         pointsum['res_class'] = ri
@@ -586,6 +586,8 @@ class Aggregation:
 
         if 'dataframe' in option.lower():
             summary = pd.DataFrame(summary)
-            summary = summary.sort_values('sc_gid')
+            summary = summary.sort_values('sc_point_gid')
+            summary = summary.reset_index(drop=True)
+            summary.index.name = 'sc_gid'
 
         return summary
