@@ -7,7 +7,7 @@ import time
 
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.supply_curve import SupplyCurve
-from reV.utilities.loggers import setup_logger
+from reV.utilities.loggers import setup_logger, get_handler
 
 
 def main():
@@ -17,6 +17,8 @@ def main():
     log_file = os.path.join(os.getcwd(), 'sc_test.log')
     logger = setup_logger('reV.supply_curve', log_file=log_file,
                           log_level="DEBUG")
+    handler = get_handler()
+    logger.addHandler(handler)
 
     path = '/scratch/ngrue/conus_trans_lines_cache_064_sj_infsink.csv'
     trans_table = pd.read_csv(path, index_col=0)
