@@ -647,6 +647,7 @@ class TransmissionFeatures:
         feature_cap = pd.Series(feature_cap)
         feature_cap.name = 'avail_cap'
         feature_cap.index.name = 'trans_line_gid'
+        feature_cap.index = feature_cap.index.astype('int64')
         feature_cap = feature_cap.to_frame().reset_index()
 
         return feature_cap
