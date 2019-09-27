@@ -76,7 +76,7 @@ class TransmissionFeatures:
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        return self._features[gid]
+        return self[gid]
 
     @staticmethod
     def _parse_dictionary(features):
@@ -252,7 +252,7 @@ class TransmissionFeatures:
         avail_cap = 0
         line_max = 0
         for gid in line_gids:
-            line = self._features[gid]
+            line = self[gid]
             if line['type'] == 'TransLine':
                 line_cap = line['avail_cap']
                 avail_cap += line_cap
@@ -286,7 +286,7 @@ class TransmissionFeatures:
             Available capacity = capacity * available fraction
             default = 10%
         """
-        feature = self._features[gid]
+        feature = self[gid]
         if feature['type'] == 'Substation':
             avail_cap = self._substation_capacity(feature['lines'], **kwargs)
         else:
@@ -338,14 +338,14 @@ class TransmissionFeatures:
         capacity : float
             Capacity needed in MW
         """
-        avail_cap = self._features[gid]['avail_cap']
+        avail_cap = self[gid]['avail_cap']
         if avail_cap < capacity:
             raise RuntimeError("Cannot connect to {}: "
                                "needed capacity({} MW) > "
                                "available capacity({} MW)"
                                .format(gid, capacity, avail_cap))
 
-        self._features[gid]['avail_cap'] -= capacity
+        self[gid]['avail_cap'] -= capacity
 
     def _fill_lines(self, line_gids, line_caps, capacity):
         """
@@ -419,7 +419,7 @@ class TransmissionFeatures:
             Substation connection is limited by maximum capacity of the
             attached lines
         """
-        line_caps = np.array([self._features[gid]['avail_cap']
+        line_caps = np.array([self[gid]['avail_cap']
                               for gid in line_gids])
         if self._line_limited:
             gid = line_gids[np.argmax(line_caps)]
@@ -459,11 +459,11 @@ class TransmissionFeatures:
             else:
                 connected = True
                 if apply:
-                    feature_type = self._features[gid]['type']
+                    feature_type = self[gid]['type']
                     if feature_type == 'TransLine':
                         self._connect(gid, capacity)
                     elif feature_type == 'Substation':
-                        lines = self._features[gid]['lines']
+                        lines = self[gid]['lines']
                         self._connect_to_substation(lines, capacity,
                                                     **kwargs)
                     elif feature_type == 'LoadCen':
@@ -501,7 +501,7 @@ class TransmissionFeatures:
             Cost of transmission in $/MW, if None indicates connection is
             NOT possible
         """
-        feature_type = self._features[gid]['type']
+        feature_type = self[gid]['type']
         line_cost = self._line_cost
         if feature_type == 'TransLine':
             tie_in_cost = self._line_tie_in_cost
@@ -696,7 +696,7 @@ class TransmissionCosts(TransmissionFeatures):
             Available capacity = capacity * available fraction
             default = 10%
         """
-        feature = self._features[gid]
+        feature = self[gid]
         avail_cap = feature['avail_cap']
 
         return avail_cap
