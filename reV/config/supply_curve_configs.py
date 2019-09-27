@@ -93,7 +93,14 @@ class AggregationConfig(AnalysisConfig):
     @property
     def fpath_res(self):
         """Get the resource data filepath"""
-        return self.get('fpath_res', self._default_fpath_res)
+        fpath_res = self.get('fpath_res', self._default_fpath_res)
+        if isinstance(fpath_res, str):
+            if '{}' in fpath_res:
+                for year in range(1998, 2018):
+                    if os.path.exists(fpath_res.format(year)):
+                        break
+                fpath_res = fpath_res.format(year)
+        return fpath_res
 
     @property
     def fpath_techmap(self):
