@@ -21,7 +21,7 @@ class TransmissionFeatures:
     """
     def __init__(self, trans_table, features=None,
                  line_tie_in_cost=14000, line_cost=3667,
-                 station_tine_in_cost=0, center_tie_in_cost=0,
+                 station_tie_in_cost=0, center_tie_in_cost=0,
                  sink_tie_in_cost=0, available_capacity=0.1,
                  line_limited=False):
         """
@@ -37,11 +37,11 @@ class TransmissionFeatures:
             Cost of connecting to a transmission line in $/MW
         line_cost : float
             Cost of building transmission line during connection in $/MW-mile
-        station_tine_in_cost : float
+        station_tie_in_cost : float
             Cost of connecting to a substation in $/MW
         center_tie_in_cost : float
             Cost of connecting to a load center in $/MW
-        center_tie_in_cost : float
+        sink_tie_in_cost : float
             Cost of connecting to a synthetic load center (infinite sink)
             in $/MW
         available_capacity : float
@@ -50,9 +50,20 @@ class TransmissionFeatures:
             Substation connection is limited by maximum capacity of the
             attached lines
         """
+        logger.info('Line tie in cost: {} $/MW'.format(line_tie_in_cost))
+        logger.info('Line cost: {} $/MW-mile'.format(line_cost))
+        logger.info('Station tie in cost: {} $/MW'.format(station_tie_in_cost))
+        logger.info('Center tie in cost: {} $/MW'.format(center_tie_in_cost))
+        logger.info('Synthetic load center tie in cost: {} $/MW'
+                    .format(sink_tie_in_cost))
+        logger.info('Available capacity fraction: {}'
+                    .format(available_capacity))
+        logger.info('Line limited substation connections: {}'
+                    .format(line_limited))
+
         self._line_tie_in_cost = line_tie_in_cost
         self._line_cost = line_cost
-        self._station_tie_in_cost = station_tine_in_cost
+        self._station_tie_in_cost = station_tie_in_cost
         self._center_tie_in_cost = center_tie_in_cost
         self._sink_tie_in_cost = sink_tie_in_cost
         self._available_capacity = available_capacity
