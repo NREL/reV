@@ -199,7 +199,7 @@ class Aggregation:
         self._fpath_techmap = fpath_techmap
         self._dset_tm = dset_tm
         self._res_class_dset = res_class_dset
-        self._res_class_bins = res_class_bins
+        self._res_class_bins = self._convert_bins(res_class_bins)
         self._dset_cf = dset_cf
         self._dset_lcoe = dset_lcoe
         self._resolution = resolution
@@ -509,6 +509,44 @@ class Aggregation:
 
         return summary
 
+    @staticmethod
+    def _convert_bins(bins):
+        """Convert a list of floats or ints to a list of two-entry bin bounds.
+
+        Parameters
+        ----------
+        bins : list | None
+            List of floats or ints (bin edges) to convert to list of two-entry
+            bin boundaries or list of two-entry bind boundaries in final format
+
+        Returns
+        -------
+        bins : list
+            List of two-entry bin boundaries
+        """
+
+        if bins is None:
+            return None
+
+        type_check = [isinstance(x, (list, tuple)) for x in bins]
+
+        if all(type_check):
+            return bins
+
+        elif any(type_check):
+            raise TypeError('Resource class bins has inconsistent '
+                            'entry type: {}'.format(bins))
+
+        else:
+            bbins = []
+            for i, b in enumerate(sorted(bins)):
+                if i < len(bins) - 1:
+                    bbins.append([b, bins[i + 1]])
+                else:
+                    bbins.append([b, 1e6])
+
+            return bbins
+
     @classmethod
     def summary(cls, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                 res_class_dset=None, res_class_bins=None,
@@ -533,8 +571,8 @@ class Aggregation:
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
         res_class_bins : list | None
-            List of two-entry lists dictating the resource class bins.
-            None if no resource classes.
+            List of floats or ints (bin edges) to convert to list of two-entry
+            bin boundaries or list of two-entry bind boundaries in final format
         dset_cf : str
             Dataset name from f_gen containing capacity factor mean values.
         dset_lcoe : str

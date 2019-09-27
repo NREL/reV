@@ -11,6 +11,7 @@ from reV.econ.cli_econ import from_config as run_econ_from_config
 from reV.exclusions.cli_excl import from_config as run_excl_from_config
 from reV.generation.cli_gen import from_config as run_gen_from_config
 from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
+from reV.supply_curve.aggregation_cli import from_config as run_agg_from_config
 from reV.utilities.cli_dtypes import STR
 
 
@@ -118,6 +119,18 @@ def multi_year(ctx, verbose):
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_my_from_config, config_file=config_file,
+               verbose=verbose)
+
+
+@main.command()
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def aggregation(ctx, verbose):
+    """Run reV supply curve aggregation using the config file."""
+    config_file = ctx.obj['CONFIG_FILE']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.invoke(run_agg_from_config, config_file=config_file,
                verbose=verbose)
 
 
