@@ -41,9 +41,8 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir,
-              modules=[__name__, 'reV.supply_curve',
-                       'reV.config', 'reV.utilities'],
+    init_mult(name, config.logdir, modules=[__name__, 'reV.supply_curve',
+                                            'reV.config', 'reV.utilities'],
               verbose=verbose)
 
     # Initial log statements

@@ -107,3 +107,53 @@ class AggregationConfig(AnalysisConfig):
     def resolution(self):
         """Get the SC resolution"""
         return self.get('resolution', self._default_resolution)
+
+
+class SupplyCurveConfig(AnalysisConfig):
+    """SC config."""
+
+    NAME = 'sc'
+
+    def __init__(self, config):
+        """
+        Parameters
+        ----------
+        config : str | dict
+            File path to config json (str), serialized json object (str),
+            or dictionary with pre-extracted config.
+        """
+        super().__init__(config)
+
+        self._default_sc_features = None
+        self._default_transmission_costs = None
+        self._default_simple = False
+
+    @property
+    def sc_points(self):
+        """Get the supply curve points summary file path"""
+        return self['sc_points']
+
+    @property
+    def trans_table(self):
+        """Get the transmission table file path"""
+        return self['trans_table']
+
+    @property
+    def fixed_charge_rate(self):
+        """Get the fixed charge rate input"""
+        return self['fixed_charge_rate']
+
+    @property
+    def sc_features(self):
+        """Get the supply curve features input."""
+        return self.get('sc_features', self._default_sc_features)
+
+    @property
+    def transmission_costs(self):
+        """Get the transmission costs input."""
+        return self.get('transmission_costs', self._default_transmission_costs)
+
+    @property
+    def simple(self):
+        """Get the simple flag."""
+        return self.get('simple', self._default_simple)
