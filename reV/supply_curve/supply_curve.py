@@ -48,8 +48,7 @@ class SupplyCurve:
                                                     trans_table, fcr,
                                                     **kwargs)
         self._trans_features = self._create_handler(self._trans_table,
-                                                    costs=transmission_costs,
-                                                    cls=TF)
+                                                    costs=transmission_costs)
 
         self._sc_gids = list(np.sort(self._trans_table['sc_gid'].unique()))
         self._mask = np.ones((len(self._sc_gids), ), dtype=bool)
@@ -129,7 +128,7 @@ class SupplyCurve:
         return sc_points
 
     @staticmethod
-    def _create_handler(trans_table, costs=None, cls=TF):
+    def _create_handler(trans_table, costs=None):
         """
         Create TransmissionFeatures handler from supply curve transmission
         mapping table.  Update connection costs if given.
@@ -145,7 +144,7 @@ class SupplyCurve:
 
         Returns
         -------
-        handler : TransmissionFeatures | TransmissionCosts
+        trans_features : TransmissionFeatures
             TransmissionFeatures or TransmissionCosts instance initilized
             with specified transmission costs
         """
@@ -154,19 +153,9 @@ class SupplyCurve:
         else:
             kwargs = {}
 
-        if issubclass(cls, TF):
-            handler = TF(trans_table, **kwargs)
-        elif issubclass(cls, TC):
-            feature_cap = TF.feature_capacity(trans_table, **kwargs)
-            trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
-            handler = TC(trans_table, **kwargs)
-        else:
-            msg = ('handler cls must be either TransmissionFeatures or '
-                   'TransmissionCosts!')
-            logger.error(msg)
-            raise KeyError(msg)
+        trans_features = TF(trans_table, **kwargs)
 
-        return handler
+        return trans_features
 
     @staticmethod
     def _get_merge_cols(columns):
@@ -227,8 +216,8 @@ class SupplyCurve:
             if trans_costs is not None:
                 kwargs.update(trans_costs)
 
-            feature = SupplyCurve._create_handler(trans_table, cls=TC,
-                                                  costs=trans_costs)
+            feature_cap = TF.feature_capacity(trans_table, **kwargs)
+            trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
             groups = trans_table.groupby('sc_gid')
             with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
                 futures = []
@@ -246,13 +235,13 @@ class SupplyCurve:
                     else:
                         capacity = None
 
-                    futures.append(exe.submit(TF.feature_costs, sc_table,
+                    futures.append(exe.submit(TC.feature_costs, sc_table,
                                               capacity=capacity, **kwargs))
 
                 cost = [future.result() for future in futures]
                 cost = np.hstack(cost)
         else:
-            feature = SupplyCurve._create_handler(trans_table, cls=TF,
+            feature = SupplyCurve._create_handler(trans_table,
                                                   costs=trans_costs)
             cost = []
             for _, row in trans_table.iterrows():
