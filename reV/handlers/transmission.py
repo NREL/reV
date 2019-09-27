@@ -76,7 +76,7 @@ class TransmissionFeatures:
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        return self[gid]
+        return self._features[gid]
 
     @staticmethod
     def _parse_dictionary(features):
