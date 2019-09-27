@@ -1,6 +1,7 @@
 """
 Full scale SupplyCurve Test
 """
+import json
 import os
 import pandas as pd
 import time
@@ -14,7 +15,7 @@ def main():
     """
     Full scale supply curve test and timing
     """
-    log_file = os.path.join(os.getcwd(), 'sc_test.log')
+    log_file = os.path.join(os.getcwd(), 'sc_test_1.log')
     logger = setup_logger('reV.supply_curve', log_file=log_file,
                           log_level="DEBUG")
     handler = get_handler()
@@ -28,45 +29,53 @@ def main():
     sc_points = sc_points.rename(columns={'sc_gid': 'sc_point_gid'})
     sc_points['sc_gid'] = sc_points.index.values
 
+    temp_dir = '/tmp/scratch'
+
     ts = time.time()
     tf = TF(trans_table)
     tt = time.time() - ts
     logger.info('Time to init TransmissionFeature = {:.4f} seconds'.format(tt))
 
+    features_path = os.path.join(temp_dir, 'features.json')
+    with open(features_path, 'w') as f:
+        json.dump(tf._features, f)
+
     ts = time.time()
-    TF(trans_table, features=tf._features)
+    TF(trans_table, features=features_path)
     tt = time.time() - ts
     logger.info('Time to init TransmissionFeature  w/ existing features '
                 '= {:.4f} seconds'.format(tt))
 
+    os.remove(features_path)
+
+    # ts = time.time()
+    # sc = SupplyCurve(sc_points, trans_table, fcr=0.096, connectable=False,
+    #                  max_workers=36)
+    # tt = time.time() - ts
+    # logger.info('Time to init SupplyCurve in parallel = {:.4f} minutes'
+    #             .format(tt / 60))
+    #
+    # ts = time.time()
+    # sc.simple_sort()
+    # tt = time.time() - ts
+    # logger.info('Time to run simple sort = {:.4f} minutes'.format(tt / 60))
+
     ts = time.time()
-    sc = SupplyCurve(sc_points, trans_table, fcr=0.096, connectable=False,
-                     max_workers=36)
+    SupplyCurve(sc_points, trans_table, fcr=0.096, max_workers=36)
     tt = time.time() - ts
     logger.info('Time to init SupplyCurve in parallel = {:.4f} minutes'
                 .format(tt / 60))
 
-    ts = time.time()
-    sc.simple_sort()
-    tt = time.time() - ts
-    logger.info('Time to run simple sort = {:.4f} minutes'.format(tt / 60))
-
-    ts = time.time()
-    sc = SupplyCurve(sc_points, trans_table, fcr=0.096, max_workers=36)
-    tt = time.time() - ts
-    logger.info('Time to init SupplyCurve in parallel = {:.4f} minutes'
-                .format(tt / 60))
-
-    ts = time.time()
-    sc.full_sort()
-    tt = time.time() - ts
-    logger.info('Time to run full sort = {:.4f} minutes'.format(tt / 60))
-
-    ts = time.time()
-    sc = SupplyCurve(sc_points, trans_table, fcr=0.096)
-    tt = time.time() - ts
-    logger.info('Time to init SupplyCurve in serial = {:.4f} minutes'
-                .format(tt / 60))
+    # ts = time.time()
+    # sc.full_sort()
+    # tt = time.time() - ts
+    # logger.info('Time to run full sort = {:.4f} minutes'.format(tt / 60))
+    #
+    # ts = time.time()
+    # sc = SupplyCurve(sc_points, trans_table, fcr=0.096)
+    # tt = time.time() - ts
+    # logger.info('Time to init SupplyCurve in serial = {:.4f} minutes'
+    #             .format(tt / 60))
 
 
 if __name__ == '__main__':

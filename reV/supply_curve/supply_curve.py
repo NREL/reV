@@ -10,6 +10,7 @@ import logging
 import numpy as np
 import os
 import pandas as pd
+import tempfile
 
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.utilities.exceptions import SupplyCurveInputError
@@ -176,7 +177,7 @@ class SupplyCurve:
 
     @staticmethod
     def _compute_lcot(trans_table, fcr, trans_costs=None, max_workers=1,
-                      connectable=True, **kwargs):
+                      connectable=True, temp_dir=None, **kwargs):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -217,6 +218,16 @@ class SupplyCurve:
         if max_workers > 1:
             if trans_costs is not None:
                 kwargs.update(trans_costs)
+
+            if temp_dir is None:
+                with tempfile.NamedTemporaryFile(mode='w', delete=False,) as f:
+                    features_path = f.name
+                    json.dump(feature._features, f)
+            else:
+                features_path = os.path.join(temp_dir, 'features.json')
+                with open(features_path, 'w') as f:
+                    json.dump(feature._features, f)
+
             groups = trans_table.groupby('sc_gid')
             with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
                 futures = []
@@ -235,11 +246,13 @@ class SupplyCurve:
                         capacity = None
 
                     futures.append(exe.submit(TF.feature_costs, sc_table,
-                                              features=feature._features,
+                                              features=features_path,
                                               capacity=capacity, **kwargs))
 
                 cost = [future.result() for future in futures]
                 cost = np.hstack(cost)
+
+            os.remove(features_path)
         else:
             cost = []
             for _, row in trans_table.iterrows():

@@ -5,6 +5,7 @@ Module to handle Supply Curve Transmission features
 import json
 import logging
 import numpy as np
+import os
 import pandas as pd
 from warnings import warn
 
@@ -27,8 +28,9 @@ class TransmissionFeatures:
         trans_table : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping
-        features : dict
-            Dictionary of transmission features
+        features : dict | str
+            Dictionary of transmission features or path to .json containing
+            dictionary of transmission features
         line_tie_in_cost : float
             Cost of connecting to a transmission line in $/MW
         line_cost : float
@@ -50,10 +52,7 @@ class TransmissionFeatures:
         self._sink_tie_in_cost = sink_tie_in_cost
         self._available_capacity = available_capacity
 
-        if features is None:
-            features = self._parse_table(trans_table)
-
-        self._features = features
+        self._features = self._get_features(trans_table, features=features)
 
         self._feature_gid_list = list(self._features.keys())
         self._available_mask = np.ones((len(self._features), ), dtype=bool)
@@ -73,15 +72,16 @@ class TransmissionFeatures:
 
         return self._features[gid]
 
-    def _parse_table(self, trans_table):
+    @staticmethod
+    def _parse_features(features):
         """
-        Extract features and their capacity from supply curve transmission
-        mapping table
+        Parse features dict from .json or json object
 
         Parameters
         ----------
-        trans_table : str
-            Path to .csv or .json containing supply curve transmission mapping
+        features : dict | str
+            Dictionary of transmission features or path to .json containing
+            dictionary of transmission features
 
         Returns
         -------
@@ -91,6 +91,36 @@ class TransmissionFeatures:
             substations : {lines}
             loadcenters : {capacity}
         """
+        if isinstance(features, str):
+            if os.path.isfile(features):
+                with open(features, 'r') as f:
+                    features = json.load(f)
+            else:
+                features = json.loads(features)
+        elif not isinstance(features, dict):
+            msg = ("Transmission featurse must be a .json file, object, "
+                   "or a dictionary")
+            logger.error(msg)
+            raise ValueError(msg)
+
+        return features
+
+    @staticmethod
+    def _parse_table(trans_table):
+        """
+        Extract features and their capacity from supply curve transmission
+        mapping table
+
+        Parameters
+        ----------
+        trans_table : str | pandas.DataFrame
+            Path to .csv or .json containing supply curve transmission mapping
+
+        Returns
+        -------
+        trans_table : pandas.DataFrame
+            DataFrame of transmission features
+        """
         if isinstance(trans_table, str):
             if trans_table.endswith('.csv'):
                 trans_table = pd.read_csv(trans_table)
@@ -99,9 +129,31 @@ class TransmissionFeatures:
             else:
                 raise ValueError('Cannot parse {}'.format(trans_table))
         elif not isinstance(trans_table, pd.DataFrame):
-            raise ValueError("Supply Curve table must be a .csv, .json, or "
-                             "a pandas DataFrame")
+            msg = ("Supply Curve table must be a .csv, .json, or "
+                   "a pandas DataFrame")
+            logger.error(msg)
+            raise ValueError(msg)
 
+        return trans_table
+
+    def _features_from_table(self, trans_table):
+        """
+        Extract features and their capacity from supply curve transmission
+        mapping table
+
+        Parameters
+        ----------
+        trans_table : pandas.DataFrame
+            DataFrame of transmission features
+
+        Returns
+        -------
+        features : dict
+            Nested dictionary of features (lines, substations, loadcenters)
+            lines : {capacity}
+            substations : {lines}
+            loadcenters : {capacity}
+        """
         features = {}
         cap_perc = self._available_capacity
         trans_features = trans_table.groupby('trans_line_gid').first()
@@ -118,6 +170,35 @@ class TransmissionFeatures:
                 feature_dict['avail_cap'] = None
 
             features[gid] = feature_dict
+
+        return features
+
+    def _get_features(self, trans_table, features=None):
+        """
+        Create transmission features dictionary either from supply curve
+        transmission mapping or from pre-created dictionary
+
+        Parameters
+        ----------
+        trans_table : str
+            Path to .csv or .json containing supply curve transmission mapping
+        features : dict | str
+            Dictionary of transmission features or path to .json containing
+            dictionary of transmission features
+
+        Returns
+        -------
+        features : dict
+            Nested dictionary of features (lines, substations, loadcenters)
+            lines : {capacity}
+            substations : {lines}
+            loadcenters : {capacity}
+        """
+        if features is not None:
+            features = self._parse_features(features)
+        else:
+            trans_table = self._parse_table(trans_table)
+            features = self._features_from_table(trans_table)
 
         return features
 
@@ -501,5 +582,6 @@ class TransmissionFeatures:
         except Exception:
             logger.exception("Error computing costs for all connections in {}"
                              .format(cls))
+            raise
 
         return np.array(costs, dtype='float32')
