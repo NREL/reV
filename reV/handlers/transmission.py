@@ -21,7 +21,8 @@ class TransmissionFeatures:
     def __init__(self, trans_table, features=None,
                  line_tie_in_cost=14000, line_cost=3667,
                  station_tine_in_cost=0, center_tie_in_cost=0,
-                 sink_tie_in_cost=0, available_capacity=0.1):
+                 sink_tie_in_cost=0, available_capacity=0.1,
+                 line_limited=False):
         """
         Parameters
         ----------
@@ -44,6 +45,9 @@ class TransmissionFeatures:
             in $/MW
         available_capacity : float
             Fraction of capacity that is available for connection
+        line_lmited : bool
+            Substation connection is limited by maximum capacity of the
+            attached lines
         """
         self._line_tie_in_cost = line_tie_in_cost
         self._line_cost = line_cost
@@ -56,6 +60,8 @@ class TransmissionFeatures:
 
         self._feature_gid_list = list(self._features.keys())
         self._available_mask = np.ones((len(self._features), ), dtype=bool)
+
+        self._line_limited = line_limited
 
     def __repr__(self):
         msg = "{} with {} features".format(self.__class__.__name__, len(self))
@@ -73,7 +79,7 @@ class TransmissionFeatures:
         return self._features[gid]
 
     @staticmethod
-    def _parse_features(features):
+    def _parse_dictionary(features):
         """
         Parse features dict from .json or json object
 
@@ -195,7 +201,7 @@ class TransmissionFeatures:
             loadcenters : {capacity}
         """
         if features is not None:
-            features = self._parse_features(features)
+            features = self._parse_dictionary(features)
         else:
             trans_table = self._parse_table(trans_table)
             features = self._features_from_table(trans_table)
@@ -228,7 +234,7 @@ class TransmissionFeatures:
 
         return cost
 
-    def _substation_capacity(self, line_gids, line_limited=False):
+    def _substation_capacity(self, line_gids):
         """
         Get capacity of a substation from its tranmission lines
 
@@ -236,9 +242,7 @@ class TransmissionFeatures:
         ----------
         line_gids : list
             List of transmission line gids connected to the substation
-        line_lmited : bool
-            Substation connection is limited by maximum capacity of the
-            attached lines
+
 
         Returns
         -------
@@ -259,7 +263,7 @@ class TransmissionFeatures:
                      .format(line['type']), HandlerWarning)
 
         avail_cap /= 2
-        if line_limited:
+        if self._line_limited:
             if line_max < avail_cap:
                 avail_cap = line_max
 
@@ -401,8 +405,7 @@ class TransmissionFeatures:
         for gid in lines:
             self._connect(gid, apply_cap)
 
-    def _connect_to_substation(self, line_gids, capacity,
-                               line_limited=False):
+    def _connect_to_substation(self, line_gids, capacity):
         """
         Connect to substation and update internal dictionary accordingly
 
@@ -418,7 +421,7 @@ class TransmissionFeatures:
         """
         line_caps = np.array([self._features[gid]['avail_cap']
                               for gid in line_gids])
-        if line_limited:
+        if self._line_limited:
             gid = line_gids[np.argmax(line_caps)]
             self._connect(gid, capacity)
         else:
@@ -585,3 +588,115 @@ class TransmissionFeatures:
             raise
 
         return np.array(costs, dtype='float32')
+
+    @classmethod
+    def feature_capacity(cls, trans_table, features=None,
+                         available_capacity=0.1, **kwargs):
+        """
+        Compute available capacity for all features
+
+        Parameters
+        ----------
+        trans_table : str | pandas.DataFrame
+            Path to .csv or .json containing supply curve transmission mapping
+        features : dict
+            Dictionary of transmission features
+        line_tie_in_cost : float
+            Cost of connecting to a transmission line in $/MW
+        line_cost : float
+            Cost of building transmission line during connection in $/MW-mile
+        station_tine_in_cost : float
+            Cost of connecting to a substation in $/MW
+        center_tie_in_cost : float
+            Cost of connecting to a load center in $/MW
+        center_tie_in_cost : float
+            Cost of connecting to a synthetic load center (infinite sink)
+            in $/MW
+        available_capacity : float
+            Fraction of capacity that is available for connection
+        kwargs : dict
+            Internal kwargs for connect
+
+        Returns
+        -------
+        feature_cap : pandas.DataFrame
+            Available Capacity for each transmission feature
+        """
+        try:
+            feature = cls(trans_table, features=features,
+                          available_capacity=available_capacity)
+
+            feature_cap = {}
+            for gid in feature._features:
+                feature_cap[gid] = feature.available_capacity(gid, **kwargs)
+        except Exception:
+            logger.exception("Error computing available capacity for all "
+                             "features in {}".format(cls))
+            raise
+
+        feature_cap = pd.Series(feature_cap)
+        feature_cap.name = 'avail_cap'
+        feature_cap.index.name = 'trans_line_gid'
+        feature_cap = feature_cap.to_frame().reset_index()
+
+        return feature_cap
+
+
+class TransmissionCosts(TransmissionFeatures):
+    """
+    Class to compute supply curve -> transmission feature costs
+    """
+    def _features_from_table(self, trans_table):
+        """
+        Extract features and their capacity from supply curve transmission
+        mapping table
+
+        Parameters
+        ----------
+        trans_table : pandas.DataFrame
+            DataFrame of transmission features
+
+        Returns
+        -------
+        features : dict
+            Nested dictionary of features (lines, substations, loadcenters)
+            lines : {capacity}
+            substations : {lines}
+            loadcenters : {capacity}
+        """
+        if 'avail_cap' not in trans_table:
+            kwargs = {'available_capacity': self._available_capacity}
+            fc = TransmissionFeatures.feature_capacity(trans_table,
+                                                       **kwargs)
+            trans_table = trans_table.merge(fc, on='trans_line_gid')
+
+        features = {}
+        trans_features = trans_table.groupby('trans_line_gid').first()
+        for gid, feature in trans_features.iterrows():
+            name = feature['category']
+            feature_dict = {'type': name, 'avail_cap': feature['avail_cap']}
+            features[gid] = feature_dict
+
+        return features
+
+    def available_capacity(self, gid, **kwargs):
+        """
+        Get available capacity for given line
+
+        Parameters
+        ----------
+        gid : int
+            Unique id of feature of interest
+        kwargs : dict
+            Internal kwargs for _substation_capacity
+
+        Returns
+        -------
+        avail_cap : float
+            Available capacity = capacity * available fraction
+            default = 10%
+        """
+        feature = self._features[gid]
+        avail_cap = feature['avail_cap']
+
+        return avail_cap

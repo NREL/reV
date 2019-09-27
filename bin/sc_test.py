@@ -15,7 +15,7 @@ def main():
     """
     Full scale supply curve test and timing
     """
-    log_file = os.path.join(os.getcwd(), 'sc_test_1.log')
+    log_file = os.path.join(os.getcwd(), 'sc_test_2.log')
     logger = setup_logger('reV.supply_curve', log_file=log_file,
                           log_level="DEBUG")
     handler = get_handler()
