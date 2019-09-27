@@ -9,6 +9,7 @@ import logging
 import time
 from warnings import warn
 
+from reV.utilities import safe_json_load
 from reV.utilities.execution import SLURM, PBS
 
 
@@ -83,8 +84,7 @@ class Status(dict):
             JSON file contents loaded as a python dictionary.
         """
         if os.path.isfile(fpath):
-            with open(fpath, 'r') as f:
-                data = json.load(f)
+            data = safe_json_load(fpath)
         else:
             data = {}
         return data
@@ -171,8 +171,7 @@ class Status(dict):
             if fname.startswith('jobstatus_') and fname.endswith('.json'):
                 # wait one second to make sure file is finished being written
                 time.sleep(0.1)
-                with open(os.path.join(status_dir, fname), 'r') as f:
-                    status = json.load(f)
+                status = safe_json_load(os.path.join(status_dir, fname))
                 self.data = self.update_dict(self.data, status)
                 os.remove(os.path.join(status_dir, fname))
 
@@ -198,8 +197,7 @@ class Status(dict):
             if fname == target_fname:
                 # wait one second to make sure file is finished being written
                 time.sleep(0.1)
-                with open(os.path.join(status_dir, fname), 'r') as f:
-                    status = json.load(f)
+                status = safe_json_load(os.path.join(status_dir, fname))
                 os.remove(os.path.join(status_dir, fname))
                 break
         return status

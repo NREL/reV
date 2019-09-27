@@ -14,6 +14,7 @@ from warnings import warn
 from reV.handlers.resource import (WindResource, SolarResource, NSRDB,
                                    FiveMinWTK)
 from reV.SAM.PySSC import PySSC
+from reV.utilities import safe_json_load
 from reV.utilities.exceptions import (SAMInputWarning, SAMExecutionError,
                                       ResourceError)
 
@@ -217,9 +218,7 @@ class ParametersManager:
                     'np.ndarray': np.ndarray, 'list': list}
 
         jf = os.path.join(SAM.DIR, req_folder, module + '.json')
-
-        with open(jf, 'r') as f:
-            req = json.load(f)
+        req = safe_json_load(jf)
 
         for i, [_, dtypes] in enumerate(req):
             for j, dtype in enumerate(dtypes):
@@ -244,11 +243,7 @@ class ParametersManager:
         """
 
         jf = os.path.join(SAM.DIR, def_folder, module + '.json')
-
-        with open(jf, 'r') as f:
-            # get unit test inputs
-            defaults = json.load(f)
-
+        defaults = safe_json_load(jf)
         return defaults
 
     def set_defaults(self):

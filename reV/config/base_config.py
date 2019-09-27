@@ -6,6 +6,7 @@ import json
 import logging
 import os
 
+from reV.utilities import safe_json_load
 from reV.utilities.exceptions import ConfigError
 from reV import REVDIR, TESTDATADIR
 
@@ -76,25 +77,6 @@ class BaseConfig(dict):
                     raise IOError('File does not exist: {}'.format(f))
 
     @staticmethod
-    def load_json(fname):
-        """Load json config into config class instance.
-
-        Parameters
-        ----------
-        fname : str
-            JSON filename (with path).
-
-        Returns
-        -------
-        config : dict
-            JSON file contents loaded as a python dictionary.
-        """
-        with open(fname, 'r') as f:
-            # get config file
-            config = json.load(f)
-        return config
-
-    @staticmethod
     def str_replace(d, strrep):
         """Perform a deep string replacement in d.
 
@@ -142,7 +124,8 @@ class BaseConfig(dict):
         for key, val in dictlike.items():
             self.__setitem__(key, val)
 
-    def get_file(self, fname):
+    @staticmethod
+    def get_file(fname):
         """Read the config file.
 
         Parameters
@@ -158,12 +141,7 @@ class BaseConfig(dict):
 
         logger.debug('Getting "{}"'.format(fname))
         if os.path.exists(fname) and fname.endswith('.json'):
-            try:
-                config = self.load_json(fname)
-            except json.decoder.JSONDecodeError as e:
-                emsg = ('JSON Error:\n{}\nCannot read json file: "{}"'
-                        .format(e, fname))
-                raise ConfigError(emsg)
+            config = safe_json_load(fname)
         elif os.path.exists(fname) is False:
             raise IOError('Configuration file does not exist: "{}"'
                           .format(fname))

@@ -3,13 +3,13 @@
 reV data pipeline architecture.
 """
 import time
-import json
 import os
 import numpy as np
 import logging
 from warnings import warn
 
 from reV.config.base_analysis_config import AnalysisConfig
+from reV.utilities import safe_json_load
 from reV.utilities.execution import SubprocessManager, SLURM
 from reV.utilities.exceptions import ExecutionError
 from reV.pipeline.status import Status
@@ -187,8 +187,7 @@ class Pipeline:
             reV analysis config object.
         """
 
-        with open(f_config, 'r') as f:
-            config_dict = json.load(f)
+        config_dict = safe_json_load(f_config)
         return AnalysisConfig(config_dict)
 
     def _get_status_obj(self):

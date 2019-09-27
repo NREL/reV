@@ -2,7 +2,46 @@
 """
 Collection of helpful functions
 """
+import os
 import re
+import json
+
+from reV.utilities.exceptions import JSONError
+
+
+def safe_json_load(fpath):
+    """Perform a json file load with better exception handling.
+
+    Parameters
+    ----------
+    fpath : str
+        Filepath to .json file.
+
+    Returns
+    -------
+    j : dict
+        Loaded json dictionary.
+    """
+
+    if not isinstance(fpath, str):
+        raise TypeError('Filepath must be str to load json: {}'.format(fpath))
+
+    if not fpath.endswith('.json'):
+        raise JSONError('Filepath must end in .json to load json: {}'
+                        .format(fpath))
+
+    if not os.path.isfile(fpath):
+        raise JSONError('Could not find json file to load: {}'.format(fpath))
+
+    try:
+        with open(fpath, 'r') as f:
+            j = json.load(f)
+    except json.decoder.JSONDecodeError as e:
+        emsg = ('JSON Error:\n{}\nCannot read json file: '
+                '"{}"'.format(e, fpath))
+        raise JSONError(emsg)
+
+    return j
 
 
 def parse_year(inp, option='raise'):

@@ -9,6 +9,7 @@ import os
 import pandas as pd
 from warnings import warn
 
+from reV.utilities import safe_json_load
 from reV.utilities.exceptions import HandlerWarning, HandlerKeyError
 
 logger = logging.getLogger(__name__)
@@ -99,8 +100,7 @@ class TransmissionFeatures:
         """
         if isinstance(features, str):
             if os.path.isfile(features):
-                with open(features, 'r') as f:
-                    features = json.load(f)
+                features = safe_json_load(features)
             else:
                 features = json.loads(features)
 

@@ -2,11 +2,11 @@
 """
 reV configuration framework for SAM config inputs.
 """
-import json
 import logging
 import os
 from warnings import warn
 
+from reV.utilities import safe_json_load
 from reV.utilities.exceptions import ConfigWarning
 from reV.config.base_config import BaseConfig
 
@@ -90,9 +90,8 @@ class SAMConfig(BaseConfig):
 
                 if fname.endswith('.json') is True:
                     if os.path.exists(fname):
-                        with open(fname, 'r') as f:
-                            # get unit test inputs
-                            self._inputs[key] = json.load(f)
+                        self._inputs[key] = safe_json_load(fname)
+
                     else:
                         raise IOError('SAM inputs file does not exist: "{}"'
                                       .format(fname))
