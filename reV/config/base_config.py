@@ -158,7 +158,12 @@ class BaseConfig(dict):
 
         logger.debug('Getting "{}"'.format(fname))
         if os.path.exists(fname) and fname.endswith('.json'):
-            config = self.load_json(fname)
+            try:
+                config = self.load_json(fname)
+            except json.decoder.JSONDecodeError as e:
+                emsg = ('JSON Error:\n{}\nCannot read json file: "{}"'
+                        .format(e, fname))
+                raise ConfigError(emsg)
         elif os.path.exists(fname) is False:
             raise IOError('Configuration file does not exist: "{}"'
                           .format(fname))
