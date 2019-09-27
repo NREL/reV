@@ -542,8 +542,6 @@ class Aggregation:
             for i, b in enumerate(sorted(bins)):
                 if i < len(bins) - 1:
                     bbins.append([b, bins[i + 1]])
-                else:
-                    bbins.append([b, 1e6])
 
             return bbins
 
