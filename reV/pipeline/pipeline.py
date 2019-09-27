@@ -389,7 +389,7 @@ class Pipeline:
         return out
 
     @staticmethod
-    def parse_previous(status_dir, module, target='fpath'):
+    def parse_previous(status_dir, module, target='fpath', target_module=None):
         """Parse output file paths from the previous pipeline step.
 
         Parameters
@@ -400,6 +400,8 @@ class Pipeline:
             Current module (i.e. current pipeline step).
         target : str
             Parsing target of previous module.
+        target_module : str | None
+            Optional name of module to pull target data from.
 
         Returns
         -------
@@ -426,8 +428,16 @@ class Pipeline:
                  'step, but it appears to be the first step. Attempting to '
                  'parse data from {0}.'.format(module))
 
-        module_status = Pipeline._get_module_status(status, i0)
-        job_statuses = Pipeline._get_job_status(module_status)
+        if target_module is None:
+            module_status = Pipeline._get_module_status(status, i0)
+            job_statuses = Pipeline._get_job_status(module_status)
+        else:
+            if target_module not in status.data:
+                raise KeyError('Target module "{}" not found in pipeline '
+                               'status dictionary.'.format(target_module))
+            else:
+                module_status = status.data[target_module]
+                job_statuses = Pipeline._get_job_status(module_status)
 
         out = []
         if target == 'fpath':

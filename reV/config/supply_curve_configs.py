@@ -7,9 +7,14 @@ Created on Mon Jan 28 11:43:27 2019
 @author: gbuster
 """
 import os
+import logging
 
-from reV.utilities.exceptions import ConfigError
+from reV.utilities.exceptions import ConfigError, PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
+from reV.pipeline.pipeline import Pipeline
+
+
+logger = logging.getLogger(__name__)
 
 
 class AggregationConfig(AnalysisConfig):
@@ -61,7 +66,28 @@ class AggregationConfig(AnalysisConfig):
     @property
     def fpath_gen(self):
         """Get the generation data filepath"""
-        return self['fpath_gen']
+        fpath = self['fpath_gen']
+
+        if fpath == 'PIPELINE':
+            target_modules = ['multi-year', 'collect', 'generation']
+            for target_module in target_modules:
+                try:
+                    fpath = Pipeline.parse_previous(
+                        self.dirout, 'aggregation', target='fpath',
+                        target_module=target_module)[0]
+                except KeyError:
+                    pass
+                else:
+                    break
+
+            if fpath == 'PIPELINE':
+                raise PipelineError('Could not parse fpath_gen from previous '
+                                    'pipeline jobs.')
+            else:
+                logger.info('Supply curve aggregation using the following '
+                            'pipeline input for fpath_gen: {}'.format(fpath))
+
+        return fpath
 
     @property
     def fpath_res(self):
@@ -131,7 +157,17 @@ class SupplyCurveConfig(AnalysisConfig):
     @property
     def sc_points(self):
         """Get the supply curve points summary file path"""
-        return self['sc_points']
+
+        sc_points = self['sc_points']
+
+        if sc_points == 'PIPELINE':
+            fpath = Pipeline.parse_previous(
+                self.dirout, 'supply-curve', target='fpath')[0]
+
+            logger.info('Supply curve using the following '
+                        'pipeline input for sc_points: {}'.format(fpath))
+
+        return sc_points
 
     @property
     def trans_table(self):
