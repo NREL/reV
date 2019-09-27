@@ -65,6 +65,12 @@ def main():
         logger.info('Time to run full sort = {:.4f} minutes'.format(tt / 60))
 
         ts = time.time()
+        SupplyCurve.full(sc_points, trans_table, fcr=0.096, max_workers=36)
+        tt = time.time() - ts
+        logger.info('Time run full supply curve = {:.4f} minutes'
+                    .format(tt / 60))
+
+        ts = time.time()
         sc = SupplyCurve(sc_points, trans_table, fcr=0.096)
         tt = time.time() - ts
         logger.info('Time to init SupplyCurve in serial = {:.4f} minutes'
