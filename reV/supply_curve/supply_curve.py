@@ -5,13 +5,11 @@ reV supply curve module
 - Supply Curve creation
 """
 import concurrent.futures as cf
-import json
 import logging
 import numpy as np
-import os
 import pandas as pd
-import tempfile
 
+from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.utilities.exceptions import SupplyCurveInputError
 
@@ -143,13 +141,15 @@ class SupplyCurve:
         costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
             handler
+
+        Returns
+        -------
+        trans_features : TransmissionFeatures
+            TransmissionFeatures or TransmissionCosts instance initilized
+            with specified transmission costs
         """
         if costs is not None:
-            if os.path.isfile(costs):
-                with open(costs, 'r') as f:
-                    kwargs = json.load(f)
-            else:
-                kwargs = json.loads(costs)
+            kwargs = TF._parse_dictionary(costs)
         else:
             kwargs = {}
 
@@ -177,7 +177,7 @@ class SupplyCurve:
 
     @staticmethod
     def _compute_lcot(trans_table, fcr, trans_costs=None, max_workers=1,
-                      connectable=True, temp_dir=None, **kwargs):
+                      connectable=True, **kwargs):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -212,22 +212,12 @@ class SupplyCurve:
             raise SupplyCurveInputError('Supply curve table must have '
                                         'supply curve point capacity '
                                         'to compute lcot')
-
-        feature = SupplyCurve._create_handler(trans_table,
-                                              costs=trans_costs)
         if max_workers > 1:
             if trans_costs is not None:
                 kwargs.update(trans_costs)
 
-            if temp_dir is None:
-                with tempfile.NamedTemporaryFile(mode='w', delete=False,) as f:
-                    features_path = f.name
-                    json.dump(feature._features, f)
-            else:
-                features_path = os.path.join(temp_dir, 'features.json')
-                with open(features_path, 'w') as f:
-                    json.dump(feature._features, f)
-
+            feature_cap = TF.feature_capacity(trans_table, **kwargs)
+            trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
             groups = trans_table.groupby('sc_gid')
             with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
                 futures = []
@@ -245,15 +235,14 @@ class SupplyCurve:
                     else:
                         capacity = None
 
-                    futures.append(exe.submit(TF.feature_costs, sc_table,
-                                              features=features_path,
+                    futures.append(exe.submit(TC.feature_costs, sc_table,
                                               capacity=capacity, **kwargs))
 
                 cost = [future.result() for future in futures]
                 cost = np.hstack(cost)
-
-            os.remove(features_path)
         else:
+            feature = SupplyCurve._create_handler(trans_table,
+                                                  costs=trans_costs)
             cost = []
             for _, row in trans_table.iterrows():
                 if connectable:
