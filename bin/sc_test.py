@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import time
 
+from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.supply_curve import SupplyCurve
 from reV.utilities.loggers import setup_logger, get_handler
@@ -33,6 +34,12 @@ def main():
         TF(trans_table)
         tt = time.time() - ts
         logger.info('Time to init TransmissionFeature = {:.4f} seconds'
+                    .format(tt))
+
+        ts = time.time()
+        SupplyCurve._create_handler(trans_table, cls=TC)
+        tt = time.time() - ts
+        logger.info('Time to compute available capacity = {:.4f} seconds'
                     .format(tt))
 
         ts = time.time()
