@@ -71,9 +71,6 @@ class TransmissionFeatures:
         return len(self._features)
 
     def __getitem__(self, gid):
-        if isinstance(gid, int):
-            gid = str(gid)
-
         if gid not in self._features:
             msg = "Invalid feature gid {}".format(gid)
             logger.error(msg)
