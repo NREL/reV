@@ -218,7 +218,7 @@ class SupplyCurve:
 
             feature_cap = TF.feature_capacity(trans_table, **kwargs)
             trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
-            groups = trans_table.groupby('sc_gid')
+            groups = trans_table.sort_values('sc_gid').groupby('sc_gid')
             with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
                 futures = []
                 for sc_gid, sc_table in groups:
