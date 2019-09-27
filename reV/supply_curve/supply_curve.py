@@ -217,6 +217,9 @@ class SupplyCurve:
                 kwargs.update(trans_costs)
 
             feature_cap = TF.feature_capacity(trans_table, **kwargs)
+            dtype = trans_table['trans_line_gid'].dtype
+            feature_cap['trans_line_gid'] = \
+                feature_cap['trans_line_gid'].astype(dtype)
             trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
             groups = trans_table.sort_values('sc_gid').groupby('sc_gid')
             with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
