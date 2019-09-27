@@ -147,8 +147,9 @@ class AnalysisConfig(BaseConfig):
                 self._name += '_{}'.format(self.NAME)
 
             # name specified by user config
-            if 'name' in self['project_control']:
-                if self['project_control']['name']:
-                    self._name = self['project_control']['name']
+            if 'project_control' in self:
+                if 'name' in self['project_control']:
+                    if self['project_control']['name']:
+                        self._name = self['project_control']['name']
 
         return self._name

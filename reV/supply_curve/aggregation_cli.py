@@ -154,13 +154,16 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
         if not os.path.exists(fpath_techmap):
             TechMapping.run(fpath_excl, fpath_res, fpath_techmap, dset_tm)
 
+        if data_layers is not None:
+            json.loads(data_layers)
+
         summary = Aggregation.summary(fpath_excl, fpath_gen, fpath_techmap,
                                       dset_tm,
                                       res_class_dset=res_class_dset,
                                       res_class_bins=res_class_bins,
                                       dset_cf=dset_cf,
                                       dset_lcoe=dset_lcoe,
-                                      data_layers=json.loads(data_layers),
+                                      data_layers=data_layers,
                                       resolution=resolution)
 
         fn_out = '{}.csv'.format(name)

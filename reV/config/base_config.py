@@ -170,9 +170,10 @@ class BaseConfig(dict):
                       }
             # set default value
             self._logging_level = logging.INFO
-            if 'logging_level' in self['project_control']:
-                x = self['project_control']['logging_level']
-                self._logging_level = levels[x.upper()]
+            if 'project_control' in self:
+                if 'logging_level' in self['project_control']:
+                    x = self['project_control']['logging_level']
+                    self._logging_level = levels[x.upper()]
         return self._logging_level
 
     @property

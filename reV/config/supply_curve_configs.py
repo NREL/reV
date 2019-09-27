@@ -49,7 +49,7 @@ class AggregationConfig(AnalysisConfig):
         for req in self.REQUIREMENTS:
             if self.get(req, None) is None:
                 missing.append(req)
-        if any(req):
+        if any(missing):
             raise ConfigError('SC Aggregation config missing the following '
                               'keys: {}'.format(missing))
 
