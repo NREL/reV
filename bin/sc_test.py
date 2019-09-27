@@ -42,9 +42,32 @@ def main():
                     .format(tt))
 
         ts = time.time()
-        SupplyCurve(sc_points, trans_table, fcr=0.096, max_workers=36)
+        sc = SupplyCurve(sc_points, trans_table, fcr=0.096, connectable=False,
+                         max_workers=36)
         tt = time.time() - ts
-        logger.info('Time to init SupplyCurve in parallel = {:.4f} minutes'
+        logger.info('Time to init Simple SupplyCurve in parallel = {:.4f} '
+                    'minutes'.format(tt / 60))
+
+        ts = time.time()
+        sc.simple_sort()
+        tt = time.time() - ts
+        logger.info('Time to run simple sort = {:.4f} minutes'.format(tt / 60))
+
+        ts = time.time()
+        sc = SupplyCurve(sc_points, trans_table, fcr=0.096, max_workers=36)
+        tt = time.time() - ts
+        logger.info('Time to init Full SupplyCurve in parallel = {:.4f} '
+                    'minutes'.format(tt / 60))
+
+        ts = time.time()
+        sc.full_sort()
+        tt = time.time() - ts
+        logger.info('Time to run full sort = {:.4f} minutes'.format(tt / 60))
+
+        ts = time.time()
+        sc = SupplyCurve(sc_points, trans_table, fcr=0.096)
+        tt = time.time() - ts
+        logger.info('Time to init SupplyCurve in serial = {:.4f} minutes'
                     .format(tt / 60))
 
     except Exception:
