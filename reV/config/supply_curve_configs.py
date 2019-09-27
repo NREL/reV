@@ -66,6 +66,7 @@ class AggregationConfig(AnalysisConfig):
     @property
     def fpath_gen(self):
         """Get the generation data filepath"""
+
         fpath = self['fpath_gen']
 
         if fpath == 'PIPELINE':

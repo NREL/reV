@@ -6,12 +6,14 @@ import os
 import click
 import logging
 import pprint
+import time
 
 from reV.config.supply_curve_configs import SupplyCurveConfig
 from reV.utilities.execution import SLURM
 from reV.utilities.cli_dtypes import STR, INT
 from reV.utilities.loggers import init_mult
 from reV.supply_curve.supply_curve import SupplyCurve
+from reV.pipeline.status import Status
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +119,7 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
     ctx.obj['VERBOSE'] = verbose
 
     if ctx.invoked_subcommand is None:
+        t0 = time.time()
         init_mult(name, log_dir, modules=[__name__, 'reV.supply_curve'],
                   verbose=verbose)
 
@@ -129,8 +132,26 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
                                    sc_features=sc_features,
                                    transmission_costs=transmission_costs)
 
-        fpath_out = os.path.join(out_dir, '{}.csv'.format(name))
+        fn_out = '{}.csv'.format(name)
+        fpath_out = os.path.join(out_dir, fn_out)
         out.to_csv(fpath_out)
+
+        runtime = (time.time() - t0) / 60
+        logger.info('Supply curve complete. Time elapsed: {:.2f} min. '
+                    'Target output dir: {}'.format(runtime, out_dir))
+
+        finput = [sc_points, trans_table]
+        if sc_features is not None:
+            finput.append(sc_features)
+        if transmission_costs is not None:
+            finput.append(transmission_costs)
+
+        # add job to reV status file.
+        status = {'dirout': out_dir, 'fout': fn_out,
+                  'job_status': 'successful',
+                  'runtime': runtime,
+                  'finput': finput}
+        Status.make_job_file(out_dir, 'aggregation', name, status)
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
@@ -201,18 +222,23 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
                        sc_features, transmission_costs, out_dir, log_dir,
                        simple, verbose)
 
-    logger.info('Running reV Supply Curve on Eagle with '
-                'node name "{}"'.format(node_name))
-
-    slurm = SLURM(cmd, alloc=alloc, memory=memory,
-                  walltime=walltime, feature=feature,
-                  name=node_name, stdout_path=stdout_path)
-    if slurm.id:
-        msg = ('Kicked off reV SC job "{}" (SLURM jobid #{}) on Eagle.'
-               .format(node_name, slurm.id))
+    status = Status.retrieve_job_status(out_dir, 'supply-curve', node_name)
+    if status == 'successful':
+        msg = ('Job "{}" is successful in status json found in "{}", '
+               'not re-running.'
+               .format(node_name, out_dir))
     else:
-        msg = ('Was unable to kick off reV SC job "{}". Please see the '
-               'stdout error messages'.format(node_name))
+        logger.info('Running reV Supply Curve on Eagle with '
+                    'node name "{}"'.format(node_name))
+        slurm = SLURM(cmd, alloc=alloc, memory=memory,
+                      walltime=walltime, feature=feature,
+                      name=node_name, stdout_path=stdout_path)
+        if slurm.id:
+            msg = ('Kicked off reV SC job "{}" (SLURM jobid #{}) on Eagle.'
+                   .format(node_name, slurm.id))
+        else:
+            msg = ('Was unable to kick off reV SC job "{}". Please see the '
+                   'stdout error messages'.format(node_name))
     click.echo(msg)
     logger.info(msg)
 

@@ -7,6 +7,7 @@ import click
 import logging
 import json
 import pprint
+import time
 
 from reV.config.supply_curve_configs import AggregationConfig
 from reV.utilities.execution import SLURM
@@ -14,6 +15,7 @@ from reV.utilities.cli_dtypes import STR, INT, FLOATLIST
 from reV.utilities.loggers import init_mult
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.aggregation import Aggregation
+from reV.pipeline.status import Status
 
 logger = logging.getLogger(__name__)
 
@@ -145,6 +147,7 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
     ctx.obj['VERBOSE'] = verbose
 
     if ctx.invoked_subcommand is None:
+        t0 = time.time()
         init_mult(name, log_dir, modules=[__name__, 'reV.supply_curve'],
                   verbose=verbose)
 
@@ -160,8 +163,25 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
                                       data_layers=json.loads(data_layers),
                                       resolution=resolution)
 
-        fpath_out = os.path.join(out_dir, '{}.csv'.format(name))
+        fn_out = '{}.csv'.format(name)
+        fpath_out = os.path.join(out_dir, fn_out)
         summary.to_csv(fpath_out)
+
+        runtime = (time.time() - t0) / 60
+        logger.info('Supply curve aggregation complete. '
+                    'Time elapsed: {:.2f} min. Target output dir: {}'
+                    .format(runtime, out_dir))
+
+        finput = [fpath_excl, fpath_gen, fpath_techmap]
+        if fpath_res is not None:
+            finput.append(fpath_res)
+
+        # add job to reV status file.
+        status = {'dirout': out_dir, 'fout': fn_out,
+                  'job_status': 'successful',
+                  'runtime': runtime,
+                  'finput': finput}
+        Status.make_job_file(out_dir, 'aggregation', name, status)
 
 
 def get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
@@ -250,20 +270,25 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
                        dset_cf, dset_lcoe, data_layers,
                        resolution, out_dir, log_dir, verbose)
 
-    logger.info('Running reV SC aggregation on Eagle with '
-                'node name "{}"'.format(node_name))
-
-    slurm = SLURM(cmd, alloc=alloc, memory=memory,
-                  walltime=walltime, feature=feature,
-                  name=node_name, stdout_path=stdout_path)
-    if slurm.id:
-        msg = ('Kicked off reV SC aggregation job "{}" '
-               '(SLURM jobid #{}) on Eagle.'
-               .format(node_name, slurm.id))
+    status = Status.retrieve_job_status(out_dir, 'aggregation', node_name)
+    if status == 'successful':
+        msg = ('Job "{}" is successful in status json found in "{}", '
+               'not re-running.'
+               .format(node_name, out_dir))
     else:
-        msg = ('Was unable to kick off reV SC job "{}". '
-               'Please see the stdout error messages'
-               .format(node_name))
+        logger.info('Running reV SC aggregation on Eagle with '
+                    'node name "{}"'.format(node_name))
+        slurm = SLURM(cmd, alloc=alloc, memory=memory,
+                      walltime=walltime, feature=feature,
+                      name=node_name, stdout_path=stdout_path)
+        if slurm.id:
+            msg = ('Kicked off reV SC aggregation job "{}" '
+                   '(SLURM jobid #{}) on Eagle.'
+                   .format(node_name, slurm.id))
+        else:
+            msg = ('Was unable to kick off reV SC job "{}". '
+                   'Please see the stdout error messages'
+                   .format(node_name))
     click.echo(msg)
     logger.info(msg)
 
