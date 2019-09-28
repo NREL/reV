@@ -176,7 +176,7 @@ class TransmissionFeatures:
             elif name == "PCALoadCen":
                 feature_dict['avail_cap'] = None
 
-            features[str(gid)] = feature_dict
+            features[gid] = feature_dict
 
         return features
 
@@ -308,9 +308,6 @@ class TransmissionFeatures:
         """
         avail_cap = self.available_capacity(gid, **kwargs)
         if avail_cap == 0:
-            if isinstance(gid, int):
-                gid = str(gid)
-
             i = self._feature_gid_list.index(gid)
             self._available_mask[i] = False
 
@@ -328,9 +325,6 @@ class TransmissionFeatures:
         bool
             Whether the gid is available or not
         """
-        if isinstance(gid, int):
-            gid = str(gid)
-
         i = self._feature_gid_list.index(gid)
         return self._available_mask[i]
 
