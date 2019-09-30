@@ -29,7 +29,7 @@ class Pipeline:
                 'exclusions',
                 'multi-year',
                 'aggregation',
-                'supply_curve')
+                'supply-curve')
 
     RETURN_CODES = {0: 'successful',
                     1: 'running',
@@ -82,9 +82,7 @@ class Pipeline:
             return_code = self._check_step_completed(i)
 
             if return_code == 0:
-                logger.debug('Based on successful end state in reV status '
-                             'file, not running pipeline step {}: {}.'
-                             .format(i, step))
+                logger.debug('Successful: "{}".'.format(list(step.keys())[0]))
             else:
                 return_code = 1
                 self._submit_step(i)
@@ -105,8 +103,10 @@ class Pipeline:
                                              .format(i, module, f_config))
 
         if i + 1 == len(self._run_list) and return_code == 0:
-            logger.info('Pipeline job "{}" is complete. Output directory is: '
-                        '"{}"'.format(self._config.name, self._config.dirout))
+            logger.info('Pipeline job "{}" is complete.'
+                        .format(self._config.name))
+            logger.debug('Output directory is: "{}"'
+                         .format(self._config.dirout))
 
     def _submit_step(self, i):
         """Submit a step in the pipeline.
@@ -119,7 +119,9 @@ class Pipeline:
 
         command, f_config = self._get_command_config(i)
         cmd = self._get_cmd(command, f_config)
-        logger.info('reV pipeline submitting subprocess:\n\t"{}"'.format(cmd))
+        logger.info('reV pipeline submitting: "{}"'.format(command))
+        logger.debug('reV pipeline submitting subprocess call:\n\t"{}"'
+                     .format(cmd))
         SubprocessManager.submit(cmd)
 
     def _check_step_completed(self, i):
@@ -248,12 +250,12 @@ class Pipeline:
 
         return_code = self._parse_code_array(arr)
 
+        status = Pipeline.RETURN_CODES[return_code]
         fail_str = ''
-        if check_failed:
+        if check_failed and status != 'failed':
             fail_str = ', but some jobs have failed'
-        logger.debug('reV {} is {}{}.'
-                     .format(module, Pipeline.RETURN_CODES[return_code],
-                             fail_str))
+        logger.info('reV "{}" is {}{}.'
+                    .format(module, status, fail_str))
 
         return return_code
 

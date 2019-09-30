@@ -41,8 +41,8 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV.supply_curve',
-                                            'reV.config', 'reV.utilities'],
+    init_mult(name, config.logdir, modules=[__name__, 'reV.config',
+                                            'reV.utilities'],
               verbose=verbose)
 
     # Initial log statements
@@ -120,7 +120,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
     if ctx.invoked_subcommand is None:
         t0 = time.time()
-        init_mult(name, log_dir, modules=[__name__, 'reV.supply_curve'],
+        init_mult(name, log_dir, modules=[__name__, 'reV.supply_curve',
+                                          'reV.handlers'],
                   verbose=verbose)
 
         if simple:
@@ -217,28 +218,31 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    node_name = 'sc_{}'.format(name)
     cmd = get_node_cmd(name, sc_points, trans_table, fixed_charge_rate,
                        sc_features, transmission_costs, out_dir, log_dir,
                        simple, verbose)
 
-    status = Status.retrieve_job_status(out_dir, 'supply-curve', node_name)
+    status = Status.retrieve_job_status(out_dir, 'supply-curve', name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
-               .format(node_name, out_dir))
+               .format(name, out_dir))
     else:
         logger.info('Running reV Supply Curve on Eagle with '
-                    'node name "{}"'.format(node_name))
+                    'node name "{}"'.format(name))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
-                      name=node_name, stdout_path=stdout_path)
+                      name=name, stdout_path=stdout_path)
         if slurm.id:
             msg = ('Kicked off reV SC job "{}" (SLURM jobid #{}) on Eagle.'
-                   .format(node_name, slurm.id))
+                   .format(name, slurm.id))
+            Status.add_job(
+                out_dir, 'supply-curve', name, replace=True,
+                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                           'fout': '{}.csv'.format(name), 'dirout': out_dir})
         else:
             msg = ('Was unable to kick off reV SC job "{}". Please see the '
-                   'stdout error messages'.format(node_name))
+                   'stdout error messages'.format(name))
     click.echo(msg)
     logger.info(msg)
 

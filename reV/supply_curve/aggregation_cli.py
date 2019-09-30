@@ -43,8 +43,8 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV.supply_curve',
-                                            'reV.config', 'reV.utilities'],
+    init_mult(name, config.logdir, modules=[__name__, 'reV.config',
+                                            'reV.utilities'],
               verbose=verbose)
 
     # Initial log statements
@@ -267,31 +267,34 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    node_name = 'agg_{}'.format(name)
     cmd = get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
                        dset_tm, res_class_dset, res_class_bins,
                        dset_cf, dset_lcoe, data_layers,
                        resolution, out_dir, log_dir, verbose)
 
-    status = Status.retrieve_job_status(out_dir, 'aggregation', node_name)
+    status = Status.retrieve_job_status(out_dir, 'aggregation', name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
-               .format(node_name, out_dir))
+               .format(name, out_dir))
     else:
         logger.info('Running reV SC aggregation on Eagle with '
-                    'node name "{}"'.format(node_name))
+                    'node name "{}"'.format(name))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
-                      name=node_name, stdout_path=stdout_path)
+                      name=name, stdout_path=stdout_path)
         if slurm.id:
             msg = ('Kicked off reV SC aggregation job "{}" '
                    '(SLURM jobid #{}) on Eagle.'
-                   .format(node_name, slurm.id))
+                   .format(name, slurm.id))
+            Status.add_job(
+                out_dir, 'aggregation', name, replace=True,
+                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                           'fout': '{}.csv'.format(name), 'dirout': out_dir})
         else:
             msg = ('Was unable to kick off reV SC job "{}". '
                    'Please see the stdout error messages'
-                   .format(node_name))
+                   .format(name))
     click.echo(msg)
     logger.info(msg)
 

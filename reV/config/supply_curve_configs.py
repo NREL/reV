@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class AggregationConfig(AnalysisConfig):
     """SC Aggregation config."""
 
-    NAME = 'sc_agg'
+    NAME = 'agg'
     REQUIREMENTS = ('fpath_excl', 'fpath_gen', 'fpath_techmap', 'dset_tm')
 
     def __init__(self, config):
@@ -169,11 +169,11 @@ class SupplyCurveConfig(AnalysisConfig):
         sc_points = self['sc_points']
 
         if sc_points == 'PIPELINE':
-            fpath = Pipeline.parse_previous(
+            sc_points = Pipeline.parse_previous(
                 self.dirout, 'supply-curve', target='fpath')[0]
 
             logger.info('Supply curve using the following '
-                        'pipeline input for sc_points: {}'.format(fpath))
+                        'pipeline input for sc_points: {}'.format(sc_points))
 
         return sc_points
 
