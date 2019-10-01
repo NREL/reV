@@ -220,11 +220,6 @@ class SupplyCurve:
             if trans_costs is not None:
                 kwargs.update(trans_costs)
 
-            feature_cap = TF.feature_capacity(trans_table, **kwargs)
-            dtype = trans_table['trans_line_gid'].dtype
-            feature_cap['trans_line_gid'] = \
-                feature_cap['trans_line_gid'].astype(dtype)
-            trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
             groups = trans_table.sort_values('sc_gid').groupby('sc_gid')
             with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
                 futures = []
@@ -271,6 +266,35 @@ class SupplyCurve:
         return lcot, cost
 
     @staticmethod
+    def _add_feature_capacity(trans_table, **kwargs):
+        """
+        Add the transmission connection feature capacity to the trans table.
+
+        Parameters
+        ----------
+        trans_table : pd.DataFrame
+            Table mapping supply curve points to transmission features
+
+        Returns
+        -------
+        trans_table : pd.DataFrame
+            Table mapping supply curve points to transmission features with
+            'avail_cap' column.
+        """
+        avc = 0.1
+        if 'trans_costs' in kwargs:
+            if 'available_capacity' in kwargs['trans_costs']:
+                avc = kwargs['trans_costs']['available_capacity']
+
+        feature_cap = TF.feature_capacity(trans_table, available_capacity=avc)
+        dtype = trans_table['trans_line_gid'].dtype
+        feature_cap['trans_line_gid'] = \
+            feature_cap['trans_line_gid'].astype(dtype)
+        trans_table = trans_table.merge(feature_cap, on='trans_line_gid')
+
+        return trans_table
+
+    @staticmethod
     def _parse_trans_table(sc_points, trans_table, fcr, **kwargs):
         """
         Import supply curve table, add in supply curve point capacity
@@ -293,7 +317,7 @@ class SupplyCurve:
         """
         trans_table = SupplyCurve._load_table(trans_table)
 
-        drop_cols = ['sc_point_gid', 'sc_gid']
+        drop_cols = ['sc_point_gid', 'sc_gid', 'cap_left']
         for col in drop_cols:
             if col in trans_table:
                 trans_table = trans_table.drop(col, axis=1)
@@ -323,6 +347,7 @@ class SupplyCurve:
 
         trans_table = trans_table.merge(sc_cap, on=table_merge_cols,
                                         how='inner').sort_values('sc_gid')
+        trans_table = SupplyCurve._add_feature_capacity(trans_table, **kwargs)
         lcot, cost = SupplyCurve._compute_lcot(trans_table, fcr, **kwargs)
         trans_table['trans_cap_cost'] = cost
         trans_table['lcot'] = lcot
@@ -351,7 +376,8 @@ class SupplyCurve:
         if trans_table is None:
             trans_table = self._trans_table
 
-        columns = ['trans_gid', 'trans_type', 'lcot', 'total_lcoe']
+        columns = ['trans_gid', 'trans_capacity', 'trans_type', 'lcot',
+                   'total_lcoe']
         connections = pd.DataFrame(columns=columns, index=self._sc_gids)
         connections.index.name = 'sc_gid'
 
@@ -360,6 +386,7 @@ class SupplyCurve:
 
         sc_gids = trans_table['sc_gid'].values
         trans_gids = trans_table['trans_line_gid'].values
+        trans_cap = trans_table['avail_cap'].values
         capacities = trans_table['capacity'].values
         categories = trans_table['category'].values
         dists = trans_table['dist_mi'].values
@@ -378,6 +405,7 @@ class SupplyCurve:
                 if connect:
                     self._mask[i_mask] = False
                     connections.at[sc_gid, 'trans_gid'] = trans_gid
+                    connections.at[sc_gid, 'trans_capacity'] = trans_cap[i]
                     connections.at[sc_gid, 'trans_type'] = categories[i]
                     connections.at[sc_gid, 'dist_mi'] = dists[i]
                     connections.at[sc_gid, 'trans_cap_cost'] = \
