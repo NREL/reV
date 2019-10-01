@@ -249,7 +249,7 @@ class SupplyCurve:
                 cost = np.hstack(cost)
         else:
             feature = SupplyCurve._create_handler(trans_table,
-                                                  costs=trans_costs)
+                                                  trans_costs=trans_costs)
             cost = []
             for _, row in trans_table.iterrows():
                 if connectable:
