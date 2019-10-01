@@ -305,7 +305,7 @@ class SupplyCurve:
         sc_cap = sc_cap.rename(columns=rename)
 
         sc_gids = len(sc_cap)
-        trans_sc_gids = len(trans_table[table_merge_cols].unique())
+        trans_sc_gids = len(trans_table[table_merge_cols].drop_duplicates())
         if sc_gids != trans_sc_gids:
             msg = ("The number of supply Curve points ({}) and transmission "
                    "to supply curve point mappings ({}) do not match!"
