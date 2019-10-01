@@ -215,11 +215,12 @@ class SupplyCurve:
             raise SupplyCurveInputError('Supply curve table must have '
                                         'supply curve point capacity '
                                         'to compute lcot')
+
+        if trans_costs is not None:
+            kwargs.update(trans_costs)
+
         logger.info('Computing LCOT costs for all possible connections...')
         if max_workers > 1:
-            if trans_costs is not None:
-                kwargs.update(trans_costs)
-
             groups = trans_table.sort_values('sc_gid').groupby('sc_gid')
             with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
                 futures = []
@@ -243,8 +244,7 @@ class SupplyCurve:
                 cost = [future.result() for future in futures]
                 cost = np.hstack(cost)
         else:
-            feature = SupplyCurve._create_handler(trans_table,
-                                                  trans_costs=trans_costs)
+            feature = TC(trans_table, **kwargs)
             cost = []
             for _, row in trans_table.iterrows():
                 if connectable:
