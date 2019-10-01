@@ -290,6 +290,12 @@ class SupplyCurve:
             Updated table mapping supply curve points to transmission features
         """
         trans_table = SupplyCurve._load_table(trans_table)
+
+        drop_cols = ['sc_point_gid', 'sc_gid']
+        for col in drop_cols:
+            if col in trans_table:
+                trans_table = trans_table.drop(col, axis=1)
+
         point_merge_cols = SupplyCurve._get_merge_cols(sc_points.columns)
         table_merge_cols = SupplyCurve._get_merge_cols(trans_table.columns)
 
