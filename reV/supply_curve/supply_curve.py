@@ -336,17 +336,20 @@ class SupplyCurve:
         rename = {p: t for p, t in zip(point_merge_cols, table_merge_cols)}
         sc_cap = sc_cap.rename(columns=rename)
 
-        sc_gids = len(sc_cap)
-        trans_sc_gids = len(trans_table[table_merge_cols].drop_duplicates())
-        if sc_gids != trans_sc_gids:
-            msg = ("The number of supply Curve points ({}) and transmission "
-                   "to supply curve point mappings ({}) do not match!"
-                   .format(sc_gids, trans_sc_gids))
+        trans_table = trans_table.merge(sc_cap, on=table_merge_cols,
+                                        how='inner').sort_values('sc_gid')
+
+        sc_gids = set(sc_cap['sc_gid'].unique())
+        trans_sc_gids = set(trans_table['sc_gid'].unique())
+        missing = sorted(list(sc_gids - trans_sc_gids))
+        if any(missing):
+            msg = ("There are Supply Curve points with missing transmission "
+                   "mappings. Supply curve points with no transmission "
+                   "features will not be connected! Missing sc_gid's: {}"
+                   .format(missing))
             logger.warning(msg)
             warn(msg)
 
-        trans_table = trans_table.merge(sc_cap, on=table_merge_cols,
-                                        how='inner').sort_values('sc_gid')
         trans_table = SupplyCurve._add_feature_capacity(trans_table, **kwargs)
         lcot, cost = SupplyCurve._compute_lcot(trans_table, fcr, **kwargs)
         trans_table['trans_cap_cost'] = cost
