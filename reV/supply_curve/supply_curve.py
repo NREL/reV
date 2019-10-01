@@ -8,6 +8,7 @@ import concurrent.futures as cf
 import logging
 import numpy as np
 import pandas as pd
+from warnings import warn
 
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
@@ -300,6 +301,15 @@ class SupplyCurve:
         rename = {p: t for p, t in zip(point_merge_cols, table_merge_cols)}
         sc_cap = sc_cap.rename(columns=rename)
 
+        sc_gids = len(sc_cap)
+        trans_sc_gids = len(trans_table[table_merge_cols].unique())
+        if sc_gids != trans_sc_gids:
+            msg = ("The number of supply Curve points ({}) and transmission "
+                   "to supply curve point mappings ({}) do not match!"
+                   .format(sc_gids, trans_sc_gids))
+            logger.warning(msg)
+            warn(msg)
+
         trans_table = trans_table.merge(sc_cap, on=table_merge_cols,
                                         how='inner').sort_values('sc_gid')
         lcot, cost = SupplyCurve._compute_lcot(trans_table, fcr, **kwargs)
@@ -369,6 +379,12 @@ class SupplyCurve:
                         progress = current_prog
                         logger.info('{} % of supply curve points connected'
                                     .format(progress))
+
+        if np.any(self._mask):
+            msg = ("{} supply curve points were not connected to tranmission!"
+                   .format(np.sum(self._mask)))
+            logger.warning(msg)
+            warn(msg)
 
         return connections.reset_index()
 
