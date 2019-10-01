@@ -61,7 +61,15 @@ class AggregationConfig(AnalysisConfig):
     @property
     def fpath_excl(self):
         """Get the exclusions filepath"""
-        return self['fpath_excl']
+
+        fpath = self['fpath_excl']
+
+        if fpath == 'PIPELINE':
+            fpath = Pipeline.parse_previous(
+                self.dirout, 'aggregation', target='fpath',
+                target_module='exclusions')[0]
+
+        return fpath
 
     @property
     def fpath_gen(self):
