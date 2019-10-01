@@ -43,13 +43,15 @@ class SupplyCurve:
         kwargs : dict
             Internal kwargs for _parse_trans_table to compute LCOT
         """
+        trans_costs = transmission_costs
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
         self._trans_table = self._parse_trans_table(self._sc_points,
                                                     trans_table, fcr,
+                                                    trans_costs=trans_costs,
                                                     **kwargs)
         self._trans_features = self._create_handler(self._trans_table,
-                                                    costs=transmission_costs)
+                                                    trans_costs=trans_costs)
 
         self._sc_gids = list(np.sort(self._trans_table['sc_gid'].unique()))
         self._mask = np.ones((len(self._sc_gids), ), dtype=bool)
@@ -129,7 +131,7 @@ class SupplyCurve:
         return sc_points
 
     @staticmethod
-    def _create_handler(trans_table, costs=None):
+    def _create_handler(trans_table, trans_costs=None):
         """
         Create TransmissionFeatures handler from supply curve transmission
         mapping table.  Update connection costs if given.
@@ -139,7 +141,7 @@ class SupplyCurve:
         trans_table : str | pandas.DataFrame
             Path to .csv or .json or DataFrame containing supply curve
             transmission mapping
-        costs : str | dict
+        trans_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
             handler
 
@@ -149,8 +151,8 @@ class SupplyCurve:
             TransmissionFeatures or TransmissionCosts instance initilized
             with specified transmission costs
         """
-        if costs is not None:
-            kwargs = TF._parse_dictionary(costs)
+        if trans_costs is not None:
+            kwargs = TF._parse_dictionary(trans_costs)
         else:
             kwargs = {}
 
