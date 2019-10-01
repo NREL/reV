@@ -266,7 +266,7 @@ class SupplyCurve:
         return lcot, cost
 
     @staticmethod
-    def _add_feature_capacity(trans_table, **kwargs):
+    def _feature_capacity(trans_table, trans_costs=None):
         """
         Add the transmission connection feature capacity to the trans table.
 
@@ -274,6 +274,9 @@ class SupplyCurve:
         ----------
         trans_table : pd.DataFrame
             Table mapping supply curve points to transmission features
+        trans_costs : str | dict
+            Transmission feature costs to use with TransmissionFeatures
+            handler
 
         Returns
         -------
@@ -282,9 +285,9 @@ class SupplyCurve:
             'avail_cap' column.
         """
         avc = 0.1
-        if 'trans_costs' in kwargs:
-            if 'available_capacity' in kwargs['trans_costs']:
-                avc = kwargs['trans_costs']['available_capacity']
+        if trans_costs is not None:
+            if 'available_capacity' in trans_costs:
+                avc = trans_costs['available_capacity']
 
         feature_cap = TF.feature_capacity(trans_table, available_capacity=avc)
         dtype = trans_table['trans_line_gid'].dtype
@@ -295,7 +298,8 @@ class SupplyCurve:
         return trans_table
 
     @staticmethod
-    def _parse_trans_table(sc_points, trans_table, fcr, **kwargs):
+    def _parse_trans_table(sc_points, trans_table, fcr, trans_costs=None,
+                           **kwargs):
         """
         Import supply curve table, add in supply curve point capacity
 
@@ -307,6 +311,9 @@ class SupplyCurve:
             Table mapping supply curve points to transmission features
         fcr : float
             Fixed charge rate, used to compute LCOT
+        trans_costs : str | dict
+            Transmission feature costs to use with TransmissionFeatures
+            handler
         kwargs : dict
             Internal kwargs for _parse_trans_table to compute LCOT
 
@@ -351,8 +358,11 @@ class SupplyCurve:
             logger.warning(msg)
             warn(msg)
 
-        trans_table = SupplyCurve._add_feature_capacity(trans_table, **kwargs)
-        lcot, cost = SupplyCurve._compute_lcot(trans_table, fcr, **kwargs)
+        trans_table = SupplyCurve._feature_capacity(trans_table,
+                                                    trans_costs=trans_costs)
+        lcot, cost = SupplyCurve._compute_lcot(trans_table, fcr,
+                                               trans_costs=trans_costs,
+                                               **kwargs)
         trans_table['trans_cap_cost'] = cost
         trans_table['lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
