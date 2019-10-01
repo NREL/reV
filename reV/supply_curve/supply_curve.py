@@ -213,6 +213,7 @@ class SupplyCurve:
             raise SupplyCurveInputError('Supply curve table must have '
                                         'supply curve point capacity '
                                         'to compute lcot')
+        logger.info('Computing LCOT costs for all possible connections...')
         if max_workers > 1:
             if trans_costs is not None:
                 kwargs.update(trans_costs)
@@ -262,6 +263,8 @@ class SupplyCurve:
             cost = np.array(cost, dtype='float32')
 
         lcot = (cost * fcr) / (trans_table['mean_cf'].values * 8760)
+
+        logger.info('LCOT cost calculation is complete.')
 
         return lcot, cost
 
