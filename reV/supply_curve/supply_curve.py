@@ -343,10 +343,11 @@ class SupplyCurve:
         trans_sc_gids = set(trans_table['sc_gid'].unique())
         missing = sorted(list(sc_gids - trans_sc_gids))
         if any(missing):
-            msg = ("There are Supply Curve points with missing transmission "
-                   "mappings. Supply curve points with no transmission "
-                   "features will not be connected! Missing sc_gid's: {}"
-                   .format(missing))
+            msg = ("There are {} Supply Curve points with missing "
+                   "transmission mappings. Supply curve points with no "
+                   "transmission features will not be connected! "
+                   "Missing sc_gid's: {}"
+                   .format(len(missing), missing))
             logger.warning(msg)
             warn(msg)
 
@@ -387,7 +388,7 @@ class SupplyCurve:
         pos = trans_table['lcot'].isnull()
         trans_table = trans_table.loc[~pos].sort_values('total_lcoe')
 
-        sc_gids = trans_table['sc_gid'].values
+        trans_sc_gids = trans_table['sc_gid'].values
         trans_gids = trans_table['trans_line_gid'].values
         trans_cap = trans_table['avail_cap'].values
         capacities = trans_table['capacity'].values
@@ -399,7 +400,7 @@ class SupplyCurve:
 
         progress = 0
         for i in range(len(trans_table)):
-            sc_gid = sc_gids[i]
+            sc_gid = trans_sc_gids[i]
             i_mask = self._sc_gids.index(sc_gid)
             if self._mask[i_mask]:
                 trans_gid = trans_gids[i]
@@ -423,8 +424,10 @@ class SupplyCurve:
                                     .format(progress))
 
         if np.any(self._mask):
-            msg = ("{} supply curve points were not connected to tranmission!"
-                   .format(np.sum(self._mask)))
+            msg = ("{} supply curve points were not connected to tranmission! "
+                   "Unconnected sc_gid's: {}"
+                   .format(np.sum(self._mask),
+                           np.array(self._sc_gids)[self._mask]))
             logger.warning(msg)
             warn(msg)
 
