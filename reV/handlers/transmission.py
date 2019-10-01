@@ -50,16 +50,17 @@ class TransmissionFeatures:
             Substation connection is limited by maximum capacity of the
             attached lines
         """
-        logger.info('Line tie in cost: {} $/MW'.format(line_tie_in_cost))
-        logger.info('Line cost: {} $/MW-mile'.format(line_cost))
-        logger.info('Station tie in cost: {} $/MW'.format(station_tie_in_cost))
-        logger.info('Center tie in cost: {} $/MW'.format(center_tie_in_cost))
-        logger.info('Synthetic load center tie in cost: {} $/MW'
-                    .format(sink_tie_in_cost))
-        logger.info('Available capacity fraction: {}'
-                    .format(available_capacity))
-        logger.info('Line limited substation connections: {}'
-                    .format(line_limited))
+        logger.debug('Line tie in cost: {} $/MW'.format(line_tie_in_cost))
+        logger.debug('Line cost: {} $/MW-mile'.format(line_cost))
+        logger.debug('Station tie in cost: {} $/MW'
+                     .format(station_tie_in_cost))
+        logger.debug('Center tie in cost: {} $/MW'.format(center_tie_in_cost))
+        logger.debug('Synthetic load center tie in cost: {} $/MW'
+                     .format(sink_tie_in_cost))
+        logger.debug('Available capacity fraction: {}'
+                     .format(available_capacity))
+        logger.debug('Line limited substation connections: {}'
+                     .format(line_limited))
 
         self._line_tie_in_cost = line_tie_in_cost
         self._line_cost = line_cost
@@ -582,7 +583,7 @@ class TransmissionFeatures:
             feature = cls(trans_table, features=features,
                           line_tie_in_cost=line_tie_in_cost,
                           line_cost=line_cost,
-                          station_tine_in_cost=station_tine_in_cost,
+                          station_tie_in_cost=station_tine_in_cost,
                           center_tie_in_cost=center_tie_in_cost,
                           sink_tie_in_cost=sink_tie_in_cost,
                           available_capacity=available_capacity)
