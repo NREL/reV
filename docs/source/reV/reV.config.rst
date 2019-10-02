@@ -100,6 +100,14 @@ reV.config.sam\_config module
    :undoc-members:
    :show-inheritance:
 
+reV.config.supply\_curve\_configs module
+----------------------------------------
+
+.. automodule:: reV.config.supply_curve_configs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Module contents
 ---------------

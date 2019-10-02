@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v1.2.3
+    rev: v2.3.0
     hooks:
     -   id: check-json
     -   id: check-merge-conflict
@@ -10,6 +10,6 @@ repos:
     -   id: pretty-format-json
         args: [--autofix]
 -   repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v2.1.1
+    rev: v2.3.1
     hooks:
     -   id: pylint

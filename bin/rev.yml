@@ -159,5 +159,6 @@ dependencies:
   - zstd=1.3.7
   - pip:
     - ghp-import==0.5.5
+    - NREL-PySAM==1.2.1
 prefix: /Users/mrossol/miniconda3/envs/rev
 

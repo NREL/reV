@@ -3,13 +3,13 @@
 reV data pipeline architecture.
 """
 import time
-import json
 import os
 import numpy as np
 import logging
 from warnings import warn
 
 from reV.config.base_analysis_config import AnalysisConfig
+from reV.utilities import safe_json_load
 from reV.utilities.execution import SubprocessManager, SLURM
 from reV.utilities.exceptions import ExecutionError
 from reV.pipeline.status import Status
@@ -23,7 +23,14 @@ logger = logging.getLogger(__name__)
 class Pipeline:
     """reV pipeline execution framework."""
 
-    COMMANDS = ('generation', 'econ', 'collect', 'exclusions', 'multi-year')
+    COMMANDS = ('generation',
+                'econ',
+                'collect',
+                'exclusions',
+                'multi-year',
+                'aggregation',
+                'supply-curve')
+
     RETURN_CODES = {0: 'successful',
                     1: 'running',
                     2: 'failed',
@@ -75,9 +82,7 @@ class Pipeline:
             return_code = self._check_step_completed(i)
 
             if return_code == 0:
-                logger.debug('Based on successful end state in reV status '
-                             'file, not running pipeline step {}: {}.'
-                             .format(i, step))
+                logger.debug('Successful: "{}".'.format(list(step.keys())[0]))
             else:
                 return_code = 1
                 self._submit_step(i)
@@ -98,8 +103,10 @@ class Pipeline:
                                              .format(i, module, f_config))
 
         if i + 1 == len(self._run_list) and return_code == 0:
-            logger.info('Pipeline job "{}" is complete. Output directory is: '
-                        '"{}"'.format(self._config.name, self._config.dirout))
+            logger.info('Pipeline job "{}" is complete.'
+                        .format(self._config.name))
+            logger.debug('Output directory is: "{}"'
+                         .format(self._config.dirout))
 
     def _submit_step(self, i):
         """Submit a step in the pipeline.
@@ -112,7 +119,9 @@ class Pipeline:
 
         command, f_config = self._get_command_config(i)
         cmd = self._get_cmd(command, f_config)
-        logger.info('reV pipeline submitting subprocess:\n\t"{}"'.format(cmd))
+        logger.info('reV pipeline submitting: "{}"'.format(command))
+        logger.debug('reV pipeline submitting subprocess call:\n\t"{}"'
+                     .format(cmd))
         SubprocessManager.submit(cmd)
 
     def _check_step_completed(self, i):
@@ -180,8 +189,7 @@ class Pipeline:
             reV analysis config object.
         """
 
-        with open(f_config, 'r') as f:
-            config_dict = json.load(f)
+        config_dict = safe_json_load(f_config)
         return AnalysisConfig(config_dict)
 
     def _get_status_obj(self):
@@ -242,12 +250,12 @@ class Pipeline:
 
         return_code = self._parse_code_array(arr)
 
+        status = Pipeline.RETURN_CODES[return_code]
         fail_str = ''
-        if check_failed:
+        if check_failed and status != 'failed':
             fail_str = ', but some jobs have failed'
-        logger.debug('reV {} is {}{}.'
-                     .format(module, Pipeline.RETURN_CODES[return_code],
-                             fail_str))
+        logger.info('reV "{}" is {}{}.'
+                    .format(module, status, fail_str))
 
         return return_code
 
@@ -389,7 +397,7 @@ class Pipeline:
         return out
 
     @staticmethod
-    def parse_previous(status_dir, module, target='fpath'):
+    def parse_previous(status_dir, module, target='fpath', target_module=None):
         """Parse output file paths from the previous pipeline step.
 
         Parameters
@@ -400,6 +408,8 @@ class Pipeline:
             Current module (i.e. current pipeline step).
         target : str
             Parsing target of previous module.
+        target_module : str | None
+            Optional name of module to pull target data from.
 
         Returns
         -------
@@ -426,8 +436,16 @@ class Pipeline:
                  'step, but it appears to be the first step. Attempting to '
                  'parse data from {0}.'.format(module))
 
-        module_status = Pipeline._get_module_status(status, i0)
-        job_statuses = Pipeline._get_job_status(module_status)
+        if target_module is None:
+            module_status = Pipeline._get_module_status(status, i0)
+            job_statuses = Pipeline._get_job_status(module_status)
+        else:
+            if target_module not in status.data:
+                raise KeyError('Target module "{}" not found in pipeline '
+                               'status dictionary.'.format(target_module))
+            else:
+                module_status = status.data[target_module]
+                job_statuses = Pipeline._get_job_status(module_status)
 
         out = []
         if target == 'fpath':

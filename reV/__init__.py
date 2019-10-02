@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The Renewable Energy Potential Model (v2)
+The Renewable Energy Potential Model
 """
 from __future__ import print_function, division, absolute_import
 import os

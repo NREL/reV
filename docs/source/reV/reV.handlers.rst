@@ -76,6 +76,14 @@ reV.handlers.sam\_resource module
    :undoc-members:
    :show-inheritance:
 
+reV.handlers.transmission module
+--------------------------------
+
+.. automodule:: reV.handlers.transmission
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Module contents
 ---------------

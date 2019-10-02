@@ -18,7 +18,7 @@ import logging
 
 from reV.pipeline.pipeline import Pipeline
 from reV.config.batch import BatchConfig
-from reV.utilities.utilities import parse_year
+from reV.utilities import safe_json_load, parse_year
 from reV.utilities.exceptions import PipelineError
 
 
@@ -269,9 +269,7 @@ class BatchJob:
             implement in the json
         """
 
-        with open(fpath, 'r') as f:
-            data = json.load(f)
-
+        data = safe_json_load(fpath)
         data = BatchJob._mod_dict(data, arg_mods)
 
         with open(fpath_out, 'w') as f:

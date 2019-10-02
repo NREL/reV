@@ -348,6 +348,75 @@ class Resource:
             Site to extract SAM DataFrame for
         """
 
+    @staticmethod
+    def _check_slice(ds_slice):
+        """
+        Check ds_slice to see if it is an int, slice, or list.  Return
+        pieces required for fancy indexing based on input type.
+
+        Parameters
+        ----------
+        ds_slice : slice | list | ndarray
+            slice, list, or vector of points to extract
+
+        Returns
+        -------
+        ds_slice : slice
+            Slice that encompasses the entire range
+        ds_idx : ndarray
+            Adjusted list to extract points of interest from sliced array
+        idx_slice : tuple
+            Tuple to add to ds_idx slicing
+        """
+        ds_idx = None
+        idx_slice = ()
+        if isinstance(ds_slice, (list, np.ndarray)):
+            in_slice = np.array(ds_slice)
+            s = in_slice.min()
+            e = in_slice.max() + 1
+            ds_slice = slice(s, e, None)
+            ds_idx = in_slice - s
+            idx_slice = (slice(None, None, None),)
+        elif isinstance(ds_slice, slice):
+            idx_slice = (slice(None, None, None),)
+
+        return ds_slice, ds_idx, idx_slice
+
+    @staticmethod
+    def _extract_ds_slice(ds, *ds_slice):
+        """
+        Extact ds_slice from ds as efficiently as possible.
+
+        Parameters
+        ----------
+        ds : h5py.dataset
+            Open .h5 dataset instance to extract data from
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis
+
+        Returns
+        -------
+        out : ndarray
+            Extracted array of data from ds
+        """
+        slices = ()
+        idx = []
+        idx_slice = ()
+        for ax_slice in ds_slice:
+            ax_slice, ax_idx, ax_idx_slice = Resource._check_slice(ax_slice)
+            slices += (ax_slice,)
+            if ax_idx is not None:
+                ax_idx = idx_slice + (ax_idx,)
+                idx.append(ax_idx)
+
+            idx_slice += ax_idx_slice
+
+        out = ds[slices]
+        for idx_slice in idx:
+            out = out[idx_slice]
+
+        return out
+
     def _get_ds(self, ds_name, *ds_slice):
         """
         Extract data from given dataset
@@ -380,7 +449,8 @@ class Resource:
                                   .format(ds_name, self.dsets))
 
         ds = self._h5[ds_name]
-        out = ds[ds_slice]
+        out = self._extract_ds_slice(ds, *ds_slice)
+
         if self._unscale:
             scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
             out = out.astype('float32')
@@ -432,6 +502,7 @@ class SolarResource(Resource):
             raise HandlerValueError("SAM requires unscaled values")
 
         res_df = pd.DataFrame(index=self.time_index)
+        res_df.index.name = 'time_index'
         res_df.name = "{}-{}".format(ds_name, site)
         for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
             var_array = self._get_ds(var, slice(None, None, None), site)
@@ -514,7 +585,7 @@ class NSRDB(SolarResource):
                                   .format(ds_name, self.dsets))
 
         ds = self._h5[ds_name]
-        out = ds[ds_slice]
+        out = self._extract_ds_slice(ds, *ds_slice)
         if self._unscale:
             scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
             adder = ds.attrs.get(self.ADD_ATTR, 0)
@@ -896,7 +967,8 @@ class WindResource(Resource):
 
         return out
 
-    def _get_SAM_df(self, ds_name, site, require_wind_dir=False):
+    def _get_SAM_df(self, ds_name, site, require_wind_dir=False,
+                    icing=False):
         """
         Get SAM wind resource DataFrame for given site
 
@@ -908,6 +980,8 @@ class WindResource(Resource):
             Site to extract SAM DataFrame for
         require_wind_dir : bool
             Boolean flag as to whether wind direction will be loaded.
+        icing : bool
+            Boolean flag to include relativehumitidy for icing calculation
 
         Returns
         -------
@@ -920,10 +994,14 @@ class WindResource(Resource):
         _, h = self._parse_name(ds_name)
         h = self._check_hub_height(h)
         res_df = pd.DataFrame(index=self.time_index)
-        res_df.name = site
+        res_df.index.name = 'time_index'
+        res_df.name = "{}-{}".format(ds_name, site)
         variables = ['pressure', 'temperature', 'winddirection', 'windspeed']
         if not require_wind_dir:
             variables.remove('winddirection')
+
+        if icing:
+            variables.append('relativehumidity')
         for var in variables:
             var_name = "{}_{}m".format(var, h)
             var_array = self._get_ds(var_name, slice(None, None, None),

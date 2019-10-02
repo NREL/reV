@@ -22,6 +22,12 @@ class FileInputError(Exception):
     """
 
 
+class JSONError(Exception):
+    """
+    Error reading json file.
+    """
+
+
 class ExecutionError(Exception):
     """
     Error for execution failure
@@ -61,6 +67,12 @@ class ResourceError(Exception):
 class SAMExecutionError(Exception):
     """
     Execution error for SAM simulations
+    """
+
+
+class SAMInputError(Exception):
+    """
+    Input error for SAM simulations
     """
 
 

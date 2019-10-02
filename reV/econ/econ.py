@@ -3,12 +3,14 @@
 reV econ module (lcoe-fcr, single owner, etc...)
 """
 import logging
+import numpy as np
 import pandas as pd
 import pprint
 from warnings import warn
 
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
+from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
@@ -28,7 +30,11 @@ class Econ(Gen):
                'lcoe_real': SingleOwner.reV_run,
                'lcoe_nom': SingleOwner.reV_run,
                'flip_actual_irr': SingleOwner.reV_run,
-               'gross_revenue': SingleOwner.reV_run
+               'gross_revenue': SingleOwner.reV_run,
+               'total_installed_cost': WindBos.reV_run,
+               'turbine_cost': WindBos.reV_run,
+               'sales_tax_cost': WindBos.reV_run,
+               'bos_cost': WindBos.reV_run,
                }
 
     # Mapping of reV econ outputs to scale factors and units.
@@ -56,6 +62,19 @@ class Econ(Gen):
                  'gross_revenue': {'scale_factor': 1, 'units': 'dollars',
                                    'dtype': 'float32', 'chunks': None,
                                    'type': 'scalar'},
+                 'total_installed_cost': {'scale_factor': 1,
+                                          'units': 'dollars',
+                                          'dtype': 'float32', 'chunks': None,
+                                          'type': 'scalar'},
+                 'turbine_cost': {'scale_factor': 1, 'units': 'dollars',
+                                  'dtype': 'float32', 'chunks': None,
+                                  'type': 'scalar'},
+                 'sales_tax_cost': {'scale_factor': 1, 'units': 'dollars',
+                                    'dtype': 'float32', 'chunks': None,
+                                    'type': 'scalar'},
+                 'bos_cost': {'scale_factor': 1, 'units': 'dollars',
+                              'dtype': 'float32', 'chunks': None,
+                              'type': 'scalar'},
                  }
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
@@ -96,6 +115,7 @@ class Econ(Gen):
         self._fpath = None
         self._time_index = None
         self._meta = None
+        self._fun = None
         self.mem_util_lim = mem_util_lim
         self._output_request = self._parse_output_request(output_request)
         self._site_data = self._parse_site_data(site_data)
@@ -125,16 +145,7 @@ class Econ(Gen):
             Output variables requested from SAM.
         """
 
-        # type check and ensure list for manipulation
-        if isinstance(req, list):
-            output_request = req
-        elif isinstance(req, tuple):
-            output_request = list(req)
-        elif isinstance(req, str):
-            output_request = [req]
-        else:
-            raise TypeError('Output request must be str, list, or tuple but '
-                            'received: {}'.format(type(req)))
+        output_request = self._output_request_type_check(req)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
@@ -144,14 +155,22 @@ class Econ(Gen):
                                  .format(request, self.__class__,
                                          list(self.OUT_ATTRS.keys())))
 
-            if self.OPTIONS[request] != self.OPTIONS[output_request[0]]:
-                msg = ('Econ outputs requested from different SAM modules not '
-                       'currently supported. Output request variables "{}" '
-                       'and "{}" require SAM modules "{}" and "{}".'
-                       .format(request, output_request[0],
-                               self.OPTIONS[request],
-                               self.OPTIONS[output_request[0]]))
-                raise ValueError(msg)
+        funs = []
+        for request in output_request:
+            funs.append(self.OPTIONS[request])
+        b1 = [f == funs[0] for f in funs]
+        b2 = np.array([f == WindBos.reV_run for f in funs])
+        b3 = np.array([f == SingleOwner.reV_run for f in funs])
+
+        if all(b1):
+            self._fun = funs[0]
+        elif all(b2 | b3):
+            self._fun = SingleOwner.reV_run
+        else:
+            msg = ('Econ outputs requested from different SAM modules not '
+                   'currently supported. Output request variables require '
+                   'SAM methods: {}'.format(funs))
+            raise ValueError(msg)
 
         return list(set(output_request))
 
@@ -172,7 +191,7 @@ class Econ(Gen):
             columns are variables.
         """
 
-        if not inp:
+        if inp is None or inp is False:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
         else:
@@ -252,13 +271,14 @@ class Econ(Gen):
         _meta : pd.DataFrame
             Meta data from capacity factor outputs file.
         """
-        if self._meta is None:
+        if self._meta is None and self.cf_file is not None:
             with Outputs(self.cf_file) as cfh:
                 # only take meta that belongs to this project's site list
                 self._meta = cfh.meta[
                     cfh.meta['gid'].isin(self.points_control.sites)]
 
-            logger.debug('Meta shape is {}'.format(self._meta.shape))
+        elif self._meta is None and self.cf_file is None:
+            self._meta = pd.DataFrame({'gid': self.points_control.sites})
 
         return self._meta
 
@@ -273,7 +293,7 @@ class Econ(Gen):
         return self._time_index
 
     @staticmethod
-    def run(pc, output_request, **kwargs):
+    def run(pc, econ_fun, output_request, **kwargs):
         """Run the SAM econ calculation.
 
         Parameters
@@ -284,6 +304,9 @@ class Econ(Gen):
             site-specific inputs and a 'gid' column. By passing site-specific
             inputs in this dataframe, which was split using points_control,
             only the data relevant to the current sites is passed.
+        econ_fun : method
+            reV_run() method from one of the econ modules (SingleOwner,
+            SAM_LCOE, WindBos).
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
         kwargs : dict
@@ -307,9 +330,14 @@ class Econ(Gen):
             site_df = site_df.set_index('gid', drop=True)
 
         # SAM execute econ analysis based on output request
-        out = Econ.OPTIONS[output_request[0]](pc, site_df,
-                                              output_request=output_request,
-                                              **kwargs)
+        try:
+            out = econ_fun(pc, site_df, output_request=output_request,
+                           **kwargs)
+        except Exception as e:
+            out = {}
+            logger.exception('Worker failed for PC: {}'.format(pc))
+            raise e
+
         return out
 
     @classmethod
@@ -391,10 +419,11 @@ class Econ(Gen):
         # use serial or parallel execution control based on n_workers
         if n_workers == 1:
             logger.debug('Running serial generation for: {}'.format(pc))
-            out = execute_single(econ.run, pc, **kwargs)
+            out = execute_single(econ.run, pc, econ_fun=econ._fun, **kwargs)
         else:
             logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(econ.run, pc, n_workers=n_workers, **kwargs)
+            out = execute_parallel(econ.run, pc, econ_fun=econ._fun,
+                                   n_workers=n_workers, **kwargs)
 
         # save output data to object attribute
         econ.out = out
@@ -492,8 +521,9 @@ class Econ(Gen):
         try:
             # use SmartParallelJob to manage runs, but set mem limit to 1
             # because Econ() will manage the sites in-memory
-            SmartParallelJob.execute(econ, pc, n_workers=n_workers,
-                                     mem_util_lim=1.0, **kwargs)
+            SmartParallelJob.execute(econ, pc, econ_fun=econ._fun,
+                                     n_workers=n_workers, mem_util_lim=1.0,
+                                     **kwargs)
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed.')
             raise e

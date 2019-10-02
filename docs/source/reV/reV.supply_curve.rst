@@ -12,6 +12,22 @@ reV.supply\_curve.aggregation module
    :undoc-members:
    :show-inheritance:
 
+reV.supply\_curve.cli\_aggregation module
+-----------------------------------------
+
+.. automodule:: reV.supply_curve.cli_aggregation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+reV.supply\_curve.cli\_supply\_curve module
+-------------------------------------------
+
+.. automodule:: reV.supply_curve.cli_supply_curve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 reV.supply\_curve.point\_summary module
 ---------------------------------------
 
@@ -24,6 +40,14 @@ reV.supply\_curve.points module
 -------------------------------
 
 .. automodule:: reV.supply_curve.points
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+reV.supply\_curve.supply\_curve module
+--------------------------------------
+
+.. automodule:: reV.supply_curve.supply_curve
    :members:
    :undoc-members:
    :show-inheritance:

@@ -32,7 +32,7 @@ def get_curtailment(year):
     resource = SAM.get_sam_res(res_file, pp, 'wind')
     non_curtailed_res = deepcopy(resource)
 
-    out = curtail(resource, pp.curtailment)
+    out = curtail(resource, pp.curtailment, random_seed=0)
 
     return out, non_curtailed_res, pp
 

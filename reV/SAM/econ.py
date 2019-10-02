@@ -4,11 +4,13 @@
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
 SAM software development kit (SDK).
 """
+from copy import deepcopy
 import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
 
+from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
 from reV.SAM.PySSC import PySSC
 from reV.SAM.SAM import SAM, ParametersManager
@@ -538,6 +540,61 @@ class SingleOwner(Economic):
                          site_parameters=site_parameters,
                          output_request=output_request)
 
+        # run balance of system cost model if required
+        self.parameters._parameters, self.windbos_outputs = \
+            self._windbos(self.parameters._parameters)
+
+    def collect_outputs(self):
+        """Collect SAM output_request, including windbos results.
+
+        Returns
+        -------
+        results : Dict
+            Dictionary keyed by SAM variable names with SAM numerical results.
+        """
+
+        windbos_out_vars = [v for v in self.output_request
+                            if v in self.windbos_outputs]
+        self.output_request = [v for v in self.output_request
+                               if v not in windbos_out_vars]
+
+        results = super().collect_outputs()
+
+        windbos_results = {}
+        for request in windbos_out_vars:
+            windbos_results[request] = self.windbos_outputs[request]
+
+        results.update(windbos_results)
+
+        return results
+
+    @staticmethod
+    def _windbos(inputs):
+        """Run SAM Wind Balance of System cost model if requested.
+
+        Parameters
+        ----------
+        inputs : dict
+            Dictionary of SAM key-value pair inputs.
+            "total_installed_cost": "windbos" will trigger the windbos method.
+
+        Returns
+        -------
+        inputs : dict
+            Dictionary of SAM key-value pair inputs with the total installed
+            cost replaced with WindBOS values if requested.
+        output : dict
+            Dictionary of windbos cost breakdowns.
+        """
+
+        outputs = {}
+        if isinstance(inputs['total_installed_cost'], str):
+            if inputs['total_installed_cost'].lower() == 'windbos':
+                wb = WindBos(inputs)
+                inputs['total_installed_cost'] = wb.total_installed_cost
+                outputs = wb.output
+        return inputs, outputs
+
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, cf_year,
                 output_request=('ppa_price',)):
@@ -575,10 +632,14 @@ class SingleOwner(Economic):
             # get SAM inputs from project_points based on the current site
             _, inputs = points_control.project_points[site]
 
-            # set the generation profile as an input.
-            inputs = cls.get_gen_profile(site, site_df, cf_file, cf_year,
-                                         inputs)
+            # ensure that site-specific data is not persisted to other sites
+            site_inputs = deepcopy(inputs)
 
-            out[site] = super().reV_run(site, site_df, inputs, output_request)
+            # set the generation profile as an input.
+            site_inputs = cls.get_gen_profile(site, site_df, cf_file, cf_year,
+                                              site_inputs)
+
+            out[site] = super().reV_run(site, site_df, site_inputs,
+                                        output_request)
 
         return out
