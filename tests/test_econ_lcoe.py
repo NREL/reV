@@ -33,10 +33,10 @@ def test_lcoe(year):
     r1f = os.path.join(TESTDATADIR,
                        'ri_pv/scalar_outputs/project_outputs.h5')
     points = slice(0, 100)
-    obj = Econ.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
-                          cf_year=year, output_request='lcoe_fcr',
-                          n_workers=1, sites_per_split=25,
-                          points_range=None, fout=None, return_obj=True)
+    obj = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
+                       cf_year=year, output_request='lcoe_fcr',
+                       n_workers=1, sites_per_split=25,
+                       points_range=None, fout=None, return_obj=True)
     lcoe = list(obj.out['lcoe_fcr'])
 
     with h5py.File(r1f) as f:
@@ -61,11 +61,11 @@ def test_fout(year):
     fout = 'lcoe_out_{}.h5'.format(year)
     fpath = os.path.join(dirout, fout)
     points = slice(0, 100)
-    Econ.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
-                    cf_year=year, output_request='lcoe_fcr',
-                    n_workers=1, sites_per_split=25,
-                    points_range=None, fout=fout, dirout=dirout,
-                    return_obj=False)
+    Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
+                 cf_year=year, output_request='lcoe_fcr',
+                 n_workers=1, sites_per_split=25,
+                 points_range=None, fout=fout, dirout=dirout,
+                 return_obj=False)
 
     with Outputs(fpath) as f:
         lcoe = f['lcoe_fcr']
@@ -102,11 +102,11 @@ def test_ORCA(rut_id):
                  }
     site_data = TESTDATADIR + '/ORCA/orca_site_data.csv'
 
-    obj = Econ.run_direct(points=points, sam_files=sam_files, cf_file=cf_file,
-                          cf_year=None, site_data=site_data,
-                          output_request='lcoe_fcr', n_workers=1,
-                          sites_per_split=25, points_range=None,
-                          fout=None, dirout=None, return_obj=True)
+    obj = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
+                       cf_year=None, site_data=site_data,
+                       output_request='lcoe_fcr', n_workers=1,
+                       sites_per_split=25, points_range=None,
+                       fout=None, dirout=None, return_obj=True)
 
     lcoe = list(obj.out['lcoe_fcr'])
 

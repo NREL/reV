@@ -964,110 +964,13 @@ class Gen:
         return out
 
     @classmethod
-    def run_direct(cls, tech=None, points=None, sam_files=None, res_file=None,
-                   output_request=('cf_mean',), curtailment=None,
-                   downscale=None, n_workers=1, sites_per_split=None,
-                   points_range=None, fout=None, dirout='./gen_out',
-                   return_obj=True, scale_outputs=True, res_5min_dir=None):
-        """Execute a generation run directly from source files without config.
-
-        Parameters
-        ----------
-        tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind).
-        points : slice | str | reV.config.project_points.PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object.
-        sam_files : dict | str | list
-            Dict contains SAM input configuration ID(s) and file path(s).
-            Keys are the SAM config ID(s), top level value is the SAM path.
-            Can also be a single config file str. If it's a list, it is mapped
-            to the sorted list of unique configs requested by points csv.
-        res_file : str
-            Single resource file with path.
-        output_request : list | tuple
-            Output variables requested from SAM.
-        curtailment : NoneType | dict | str | config.curtailment.Curtailment
-            Inputs for curtailment parameters. If not None, curtailment inputs
-            are expected. Can be:
-                - Explicit namespace of curtailment variables (dict)
-                - Pointer to curtailment config json file with path (str)
-                - Instance of curtailment config object
-                  (config.curtailment.Curtailment)
-        downscale : NoneType | str
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
-        n_workers : int
-            Number of local workers to run on.
-        sites_per_split : int
-            Number of sites to run in series on a core. None defaults to the
-            resource file chunk size.
-        points_range : list | None
-            Optional two-entry list specifying the index range of the sites to
-            analyze. To be taken from the reV.config.PointsControl.split_range
-            property.
-        fout : str | None
-            Optional .h5 output file specification.
-        dirout : str | None
-            Optional output directory specification. The directory will be
-            created if it does not already exist.
-        return_obj : bool
-            Option to return the Gen object instance.
-        scale_outputs : bool
-            Flag to scale outputs in-place immediately upon Gen returning data.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
-
-        Returns
-        -------
-        gen : reV.generation.Gen
-            Generation object instance with outputs stored in .out attribute.
-            Only returned if return_obj is True.
-        """
-
-        # get a points control instance
-        pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
-                        res_file=res_file, curtailment=curtailment)
-
-        # make a Gen class instance to operate with
-        gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout, downscale=downscale,
-                  res_5min_dir=res_5min_dir)
-
-        kwargs = {'tech': gen.tech,
-                  'res_file': gen.res_file,
-                  'output_request': gen.output_request,
-                  'scale_outputs': scale_outputs,
-                  'downscale': downscale,
-                  'res_5min_dir': res_5min_dir}
-
-        # use serial or parallel execution control based on n_workers
-        if n_workers == 1:
-            logger.debug('Running serial generation for: {}'.format(pc))
-            out = execute_single(gen.run, pc, **kwargs)
-        else:
-            logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(gen.run, pc, n_workers=n_workers, **kwargs)
-
-        # save output data to object attribute
-        gen.out = out
-
-        # flush output data (will only write to disk if fout is a str)
-        gen.flush()
-
-        # optionally return Gen object (useful for debugging and hacking)
-        if return_obj:
-            return gen
-
-    @classmethod
-    def run_smart(cls, tech=None, points=None, sam_files=None, res_file=None,
-                  output_request=('cf_mean',), curtailment=None,
-                  downscale=None, n_workers=1, sites_per_split=None,
-                  points_range=None, fout=None, dirout='./gen_out',
-                  mem_util_lim=0.4, scale_outputs=True, res_5min_dir=None):
-        """Execute a generation run with smart data flushing.
+    def reV_run(cls, tech=None, points=None, sam_files=None, res_file=None,
+                output_request=('cf_mean',), curtailment=None,
+                downscale=None, n_workers=1, sites_per_split=None,
+                points_range=None, fout=None, dirout='./gen_out',
+                mem_util_lim=0.4, return_obj=False,
+                scale_outputs=True, res_5min_dir=None):
+        """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
         ----------
@@ -1113,6 +1016,8 @@ class Gen:
         mem_util_lim : float
             Memory utilization limit (fractional). This will determine how many
             site results are stored in memory at any given time.
+        return_obj : bool
+            Option to return the Gen object instance.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
         res_5min_dir : str
@@ -1145,11 +1050,31 @@ class Gen:
         logger.debug('The SAM output variables have been requested:\n{}'
                      .format(output_request))
 
+        # use serial or parallel execution control based on n_workers
         try:
-            # use SmartParallelJob to manage runs, but set mem limit to 1
-            # because Gen() will manage the sites in-memory
-            SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                     mem_util_lim=1.0, **kwargs)
+            if return_obj:
+                if n_workers == 1:
+                    logger.debug('Running serial generation for: {}'
+                                 .format(pc))
+                    out = execute_single(gen.run, pc, **kwargs)
+                else:
+                    logger.debug('Running parallel generation for: {}'
+                                 .format(pc))
+                    out = execute_parallel(gen.run, pc, n_workers=n_workers,
+                                           **kwargs)
+                gen.out = out
+                gen.flush()
+
+            else:
+                logger.debug('Running smart parallel generation for: {}'
+                             .format(pc))
+                # use SmartParallelJob to manage runs, but set mem limit to 1
+                # because Gen() will manage the sites in-memory
+                SmartParallelJob.execute(gen, pc, n_workers=n_workers,
+                                         mem_util_lim=1.0, **kwargs)
         except Exception as e:
-            logger.exception('SmartParallelJob.execute() failed.')
+            logger.exception('SmartParallelJob.execute() failed for gen.')
             raise e
+
+        if return_obj:
+            return gen

@@ -341,106 +341,11 @@ class Econ(Gen):
         return out
 
     @classmethod
-    def run_direct(cls, points=None, sam_files=None, cf_file=None,
-                   cf_year=None, site_data=None, output_request=('lcoe_fcr',),
-                   n_workers=1, sites_per_split=100, points_range=None,
-                   fout=None, dirout='./econ_out', return_obj=True):
-        """Execute a econ run directly from source files without config.
-
-        Parameters
-        ----------
-        points : slice | str | reV.config.project_points.PointsControl
-            Slice specifying project points, or string pointing to a project
-            points csv, or a fully instantiated PointsControl object.
-        sam_files : dict | str | list
-            Site-agnostic input data.
-            Dict contains SAM input configuration ID(s) and file path(s).
-            Keys are the SAM config ID(s), top level value is the SAM path.
-            Can also be a single config file str. If it's a list, it is mapped
-            to the sorted list of unique configs requested by points csv.
-        cf_file : str
-            reV generation capacity factor output file with path.
-        cf_year : int | str | None
-            reV generation year to calculate econ for. Looks for cf_mean_{year}
-            or cf_profile_{year}. None will default to a non-year-specific cf
-            dataset (cf_mean, cf_profile).
-        site_data : str | pd.DataFrame | None
-            Site-specific data for econ calculation. Str points to csv,
-            DataFrame is pre-extracted data. Rows match sites, columns are
-            variables. Input as None if the only site data required is present
-            in the cf_file.
-        output_request : str | list | tuple
-            Economic output variable(s) requested from SAM.
-        n_workers : int
-            Number of local workers to run on.
-        sites_per_split : int
-            Number of sites to run in series on a core.
-        points_range : list | None
-            Optional two-entry list specifying the index range of the sites to
-            analyze. To be taken from the reV.config.PointsControl.split_range
-            property.
-        fout : str | None
-            Optional .h5 output file specification.
-        dirout : str | None
-            Optional output directory specification. The directory will be
-            created if it does not already exist.
-        return_obj : bool
-            Option to return the Gen object instance.
-
-        Returns
-        -------
-        econ : reV.econ.Econ
-            Econ object instance with outputs stored in .out attribute.
-            Only returned if return_obj is True.
-        """
-
-        # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_files, tech=None)
-
-        # make a Gen class instance to operate with
-        econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
-                   output_request=output_request, fout=fout, dirout=dirout)
-
-        diff = set(pc.sites) - set(econ.meta['gid'].values)
-        if diff:
-            raise Exception('The following analysis sites were requested '
-                            'through project points for econ but are not '
-                            'found in the CF file ("{}"): {}'
-                            .format(econ.cf_file, diff))
-
-        # make a kwarg dict
-        kwargs = {'output_request': output_request,
-                  'cf_file': cf_file,
-                  'cf_year': cf_year}
-
-        # add site_df to project points dataframe
-        econ.add_site_data_to_pp()
-
-        # use serial or parallel execution control based on n_workers
-        if n_workers == 1:
-            logger.debug('Running serial generation for: {}'.format(pc))
-            out = execute_single(econ.run, pc, econ_fun=econ._fun, **kwargs)
-        else:
-            logger.debug('Running parallel generation for: {}'.format(pc))
-            out = execute_parallel(econ.run, pc, econ_fun=econ._fun,
-                                   n_workers=n_workers, **kwargs)
-
-        # save output data to object attribute
-        econ.out = out
-
-        # flush output data (will only write to disk if fout is a str)
-        econ.flush()
-
-        # optionally return Gen object (useful for debugging and hacking)
-        if return_obj:
-            return econ
-
-    @classmethod
-    def run_smart(cls, points=None, sam_files=None, cf_file=None,
-                  cf_year=None, site_data=None, output_request=('lcoe_fcr',),
-                  n_workers=1, sites_per_split=100, points_range=None,
-                  fout=None, dirout='./econ_out'):
-        """Execute a econ run directly from source files without config.
+    def reV_run(cls, points=None, sam_files=None, cf_file=None,
+                cf_year=None, site_data=None, output_request=('lcoe_fcr',),
+                n_workers=1, sites_per_split=100, points_range=None,
+                fout=None, dirout='./econ_out', return_obj=False):
+        """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
         ----------
@@ -519,11 +424,28 @@ class Econ(Gen):
                      .format(output_request))
 
         try:
-            # use SmartParallelJob to manage runs, but set mem limit to 1
-            # because Econ() will manage the sites in-memory
-            SmartParallelJob.execute(econ, pc, econ_fun=econ._fun,
-                                     n_workers=n_workers, mem_util_lim=1.0,
-                                     **kwargs)
+            if return_obj:
+                if n_workers == 1:
+                    logger.debug('Running serial econ for: {}'.format(pc))
+                    out = execute_single(econ.run, pc, econ_fun=econ._fun,
+                                         **kwargs)
+                else:
+                    logger.debug('Running parallel econ for: {}'.format(pc))
+                    out = execute_parallel(econ.run, pc, econ_fun=econ._fun,
+                                           n_workers=n_workers, **kwargs)
+
+                econ.out = out
+                econ.flush()
+
+            else:
+                # use SmartParallelJob to manage runs, but set mem limit to 1
+                # because Econ() will manage the sites in-memory
+                SmartParallelJob.execute(econ, pc, econ_fun=econ._fun,
+                                         n_workers=n_workers, mem_util_lim=1.0,
+                                         **kwargs)
         except Exception as e:
-            logger.exception('SmartParallelJob.execute() failed.')
+            logger.exception('SmartParallelJob.execute() failed for econ.')
             raise e
+
+        if return_obj:
+            return econ
