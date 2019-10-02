@@ -384,6 +384,8 @@ class Econ(Gen):
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
+        return_obj : bool
+            Option to return the Econ object instance.
 
         Returns
         -------
