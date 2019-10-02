@@ -11,8 +11,8 @@ from reV.econ.cli_econ import from_config as run_econ_from_config
 from reV.exclusions.cli_excl import from_config as run_excl_from_config
 from reV.generation.cli_gen import from_config as run_gen_from_config
 from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
-from reV.supply_curve.aggregation_cli import from_config as run_agg_from_config
-from reV.supply_curve.supply_curve_cli import from_config as run_sc_from_config
+from reV.supply_curve.cli_aggregation import from_config as run_agg_from_config
+from reV.supply_curve.cli_supply_curve import from_config as run_sc_from_config
 from reV.utilities.cli_dtypes import STR
 
 

@@ -184,7 +184,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
     if verbose:
         args += '-v '
 
-    cmd = 'python -m reV.supply_curve.supply_curve_cli {}'.format(args)
+    cmd = 'python -m reV.supply_curve.cli_supply_curve {}'.format(args)
     return cmd
 
 
