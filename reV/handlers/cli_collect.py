@@ -10,7 +10,7 @@ import time
 
 from reV.config.collection import CollectionConfig
 from reV.handlers.collection import Collector
-from reV.utilities.cli_dtypes import STR, STRLIST
+from reV.utilities.cli_dtypes import STR, STRLIST, INT
 from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
 from reV.utilities.execution import SubprocessManager, SLURM
@@ -239,8 +239,8 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
 @main.command()
 @click.option('--alloc', '-a', default='rev', type=str,
               help='Eagle allocation account name. Default is "rev".')
-@click.option('--memory', '-mem', default=90, type=int,
-              help='Eagle node memory request in GB. Default is 90')
+@click.option('--memory', '-mem', default=None, type=INT,
+              help='Eagle node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
               help='Eagle walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,

@@ -11,7 +11,7 @@ import time
 from reV.config.multi_year import MultiYearConfig
 from reV.handlers.multi_year import MultiYear
 from reV.pipeline.status import Status
-from reV.utilities.cli_dtypes import STR, STRLIST, PATHLIST
+from reV.utilities.cli_dtypes import STR, STRLIST, PATHLIST, INT
 from reV.utilities.loggers import init_mult
 from reV.utilities.execution import SubprocessManager, SLURM
 
@@ -257,8 +257,8 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
-@click.option('--memory', '-mem', default=90, type=int,
-              help='Eagle node memory request in GB. Default is 90')
+@click.option('--memory', '-mem', default=None, type=INT,
+              help='Eagle node memory request in GB. Default is None')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('--group_params', '-gp', required=True, type=str,

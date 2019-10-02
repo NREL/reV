@@ -249,8 +249,6 @@ class EagleConfig(HPCConfig):
             Requested node memory in GB.
         """
         if self._hpc_node_mem is None:
-            # default option if not specified
-            self._hpc_node_mem = 90
             if 'memory' in self:
                 if self['memory']:
                     # config-specified, set to attribute

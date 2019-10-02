@@ -11,7 +11,7 @@ import json
 
 from reV.exclusions.exclusions import Exclusions
 from reV.config.analysis_configs import ExclConfig
-from reV.utilities.cli_dtypes import STR
+from reV.utilities.cli_dtypes import STR, INT
 from reV.utilities.loggers import init_mult
 from reV.utilities.execution import SLURM
 from reV.pipeline.status import Status
@@ -165,8 +165,8 @@ def exclusions(ctx, verbose):
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
-@click.option('--memory', '-mem', default=90, type=int,
-              help='Eagle node memory request in GB. Default is 90')
+@click.option('--memory', '-mem', default=None, type=INT,
+              help='Eagle node memory request in GB. Default is None')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,

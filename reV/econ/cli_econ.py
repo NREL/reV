@@ -482,8 +482,8 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
               help='Number of Eagle nodes for econ job. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
               help='Eagle allocation account name. Default is "rev".')
-@click.option('--memory', '-mem', default=90, type=INT,
-              help='Eagle node memory request in GB. Default is 90')
+@click.option('--memory', '-mem', default=None, type=INT,
+              help='Eagle node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=0.5, type=float,
               help='Eagle walltime request in hours. Default is 0.5')
 @click.option('--feature', '-l', default=None, type=STR,

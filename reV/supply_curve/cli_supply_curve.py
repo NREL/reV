@@ -199,8 +199,8 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 @main.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='Eagle allocation account name.')
-@click.option('--memory', '-mem', default=90, type=INT, help='Eagle node '
-              'memory request in GB. Default is 90')
+@click.option('--memory', '-mem', default=None, type=INT, help='Eagle node '
+              'memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
               help='Eagle walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
