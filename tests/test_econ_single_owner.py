@@ -42,11 +42,11 @@ def test_single_owner():
     output_request = ('ppa_price', 'project_return_aftertax_npv', 'lcoe_nom',
                       'lcoe_real')
 
-    obj = Econ.run_direct(points=slice(0, 10), sam_files=sam_files,
-                          cf_file=cf_file, cf_year=2012,
-                          output_request=output_request,
-                          n_workers=1, sites_per_split=10,
-                          points_range=None, fout=None, return_obj=True)
+    obj = Econ.reV_run(points=slice(0, 10), sam_files=sam_files,
+                       cf_file=cf_file, cf_year=2012,
+                       output_request=output_request,
+                       n_workers=1, sites_per_split=10,
+                       points_range=None, fout=None, return_obj=True)
 
     for k, v in obj.out.items():
         msg = 'Array for "{}" is bad!'.format(k)

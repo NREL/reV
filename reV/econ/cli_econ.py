@@ -235,17 +235,17 @@ def econ_local(ctx, n_workers, points_range, verbose):
     t0 = time.time()
 
     # Execute the Generation module with smart data flushing.
-    Econ.run_smart(points=points,
-                   sam_files=sam_files,
-                   cf_file=cf_file,
-                   cf_year=cf_year,
-                   site_data=site_data,
-                   output_request=output_request,
-                   n_workers=n_workers,
-                   sites_per_split=sites_per_core,
-                   points_range=points_range,
-                   fout=fout,
-                   dirout=dirout)
+    Econ.reV_run(points=points,
+                 sam_files=sam_files,
+                 cf_file=cf_file,
+                 cf_year=cf_year,
+                 site_data=site_data,
+                 output_request=output_request,
+                 n_workers=n_workers,
+                 sites_per_split=sites_per_core,
+                 points_range=points_range,
+                 fout=fout,
+                 dirout=dirout)
 
     tmp_str = ' with points range {}'.format(points_range)
     runtime = (time.time() - t0) / 60

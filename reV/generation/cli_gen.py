@@ -318,20 +318,20 @@ def gen_local(ctx, n_workers, points_range, verbose):
     t0 = time.time()
 
     # Execute the Generation module with smart data flushing.
-    Gen.run_smart(tech=tech,
-                  points=points,
-                  sam_files=sam_files,
-                  res_file=res_file,
-                  output_request=output_request,
-                  curtailment=curtailment,
-                  downscale=downscale,
-                  res_5min_dir=res_5min_dir,
-                  n_workers=n_workers,
-                  sites_per_split=sites_per_core,
-                  points_range=points_range,
-                  fout=fout,
-                  dirout=dirout,
-                  mem_util_lim=mem_util_lim)
+    Gen.reV_run(tech=tech,
+                points=points,
+                sam_files=sam_files,
+                res_file=res_file,
+                output_request=output_request,
+                curtailment=curtailment,
+                downscale=downscale,
+                res_5min_dir=res_5min_dir,
+                n_workers=n_workers,
+                sites_per_split=sites_per_core,
+                points_range=points_range,
+                fout=fout,
+                dirout=dirout,
+                mem_util_lim=mem_util_lim)
 
     tmp_str = ' with points range {}'.format(points_range)
     runtime = (time.time() - t0) / 60

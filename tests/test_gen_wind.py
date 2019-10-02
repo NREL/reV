@@ -86,9 +86,9 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, n_workers):
 
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'wind', res_file=res_file)
-    gen = Gen.run_direct('wind', rev2_points, sam_files, res_file,
-                         n_workers=n_workers, sites_per_split=3, fout=None,
-                         return_obj=True)
+    gen = Gen.reV_run('wind', rev2_points, sam_files, res_file,
+                      n_workers=n_workers, sites_per_split=3, fout=None,
+                      return_obj=True)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
