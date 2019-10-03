@@ -1,0 +1,11 @@
+{
+  "logging": {
+    "log_file": null,
+    "log_level": "DEBUG"
+  },
+  "pipeline": [
+    {
+      "generation": "./config_gen.json"
+    }
+  ]
+}
