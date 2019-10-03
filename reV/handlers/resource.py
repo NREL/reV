@@ -22,7 +22,8 @@ class Resource:
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
 
-    def __init__(self, h5_file, unscale=True, hsds=False, str_decode=True):
+    def __init__(self, h5_file, unscale=True, hsds=False, str_decode=True,
+                 group=None):
         """
         Parameters
         ----------
@@ -36,6 +37,8 @@ class Resource:
         str_decode : bool
             Boolean flag to decode the bytestring meta data into normal
             strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
         self._h5_file = h5_file
         if hsds:
@@ -43,6 +46,9 @@ class Resource:
             self._h5 = h5pyd.File(self._h5_file, 'r')
         else:
             self._h5 = h5py.File(self._h5_file, 'r')
+
+        if group is not None:
+            self._h5 = self._h5[group]
 
         self._unscale = unscale
         self._meta = None
@@ -68,9 +74,9 @@ class Resource:
     def __getitem__(self, keys):
         ds, ds_slice = parse_keys(keys)
 
-        if ds == 'time_index':
+        if ds.endswith('time_index'):
             out = self._get_time_index(*ds_slice)
-        elif ds == 'meta':
+        elif ds.endswith('meta'):
             out = self._get_meta(*ds_slice)
         elif 'SAM' in ds:
             site = ds_slice[0]
@@ -84,6 +90,31 @@ class Resource:
 
         return out
 
+    @staticmethod
+    def _get_datasets(h5_obj):
+        """
+        Search h5 file instance for Datasets
+
+        Parameters
+        ----------
+        h5_obj : h5py.File | h5py.Group
+            Open h5py File or Group instance to search
+
+        Returns
+        -------
+        dsets : list
+            List of datasets in h5_obj
+        """
+        dsets = []
+        for name in h5_obj:
+            sub_obj = h5_obj[name]
+            if isinstance(sub_obj, h5py.Group):
+                dsets.extend(Resource._get_datasets(sub_obj))
+            else:
+                dsets.append(sub_obj.name)
+
+        return dsets
+
     @property
     def dsets(self):
         """
@@ -94,7 +125,7 @@ class Resource:
         list
             List of datasets in h5_file
         """
-        return list(self._h5)
+        return self._get_datasets(self._h5)
 
     @property
     def shape(self):
