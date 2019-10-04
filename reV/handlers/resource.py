@@ -75,9 +75,9 @@ class Resource:
         ds, ds_slice = parse_keys(keys)
 
         if ds.endswith('time_index'):
-            out = self._get_time_index(*ds_slice)
+            out = self._get_time_index(ds, *ds_slice)
         elif ds.endswith('meta'):
-            out = self._get_meta(*ds_slice)
+            out = self._get_meta(ds, *ds_slice)
         elif 'SAM' in ds:
             site = ds_slice[0]
             if isinstance(site, int):
@@ -152,12 +152,31 @@ class Resource:
             Resource Meta Data
         """
         if self._meta is None:
-            self._meta = pd.DataFrame(self._h5['meta'][...])
-
-            if self._str_decode:
-                self._meta = self.df_str_decode(self._meta)
+            if 'meta' in self._h5:
+                self._meta = self._get_meta('meta', slice(None))
+            else:
+                raise HandlerKeyError("'meta' is not a valid dataset")
 
         return self._meta
+
+    @property
+    def time_index(self):
+        """
+        DatetimeIndex
+
+        Returns
+        -------
+        time_index : pandas.DatetimeIndex
+            Resource datetime index
+        """
+        if self._time_index is None:
+            if 'time_index' in self._h5:
+                self._time_index = self._get_time_index('time_index',
+                                                        slice(None))
+            else:
+                raise HandlerKeyError("'time_index' is not a valid dataset!")
+
+        return self._time_index
 
     @staticmethod
     def df_str_decode(df):
@@ -180,22 +199,6 @@ class Resource:
                 df[col] = df[col].copy().str.decode('utf-8', 'ignore')
 
         return df
-
-    @property
-    def time_index(self):
-        """
-        DatetimeIndex
-
-        Returns
-        -------
-        time_index : pandas.DatetimeIndex
-            Resource datetime index
-        """
-        if self._time_index is None:
-            ti = self._h5['time_index'][...].astype(str)
-            self._time_index = pd.to_datetime(ti)
-
-        return self._time_index
 
     def get_attrs(self, dset=None):
         """
@@ -286,13 +289,16 @@ class Resource:
         arr : np.ndarray
             Extracted array from the meta data record name.
         """
+        if 'meta' in self._h5:
+            meta_arr = self._h5['meta'][rec_name, rows]
+            if self._str_decode and np.issubdtype(meta_arr.dtype, np.bytes_):
+                meta_arr = np.char.decode(meta_arr, encoding='utf-8')
+        else:
+            raise HandlerKeyError("'meta' is not a valid dataset")
 
-        meta_arr = self._h5['meta'][rec_name, rows]
-        if self._str_decode and np.issubdtype(meta_arr.dtype, np.bytes_):
-            meta_arr = np.char.decode(meta_arr, encoding='utf-8')
         return meta_arr
 
-    def _get_time_index(self, *ds_slice):
+    def _get_time_index(self, ds, *ds_slice):
         """
         Extract and convert time_index to pandas Datetime Index
 
@@ -307,6 +313,8 @@ class Resource:
 
         Parameters
         ----------
+        ds : str
+            Dataset to extract time_index from
         ds_slice : tuple of int | list | slice
             tuple describing slice of time_index to extract
 
@@ -315,11 +323,11 @@ class Resource:
         time_index : pandas.DatetimeIndex
             Vector of datetime stamps
         """
-        time_index = self._h5['time_index'][ds_slice[0]]
+        time_index = self._h5[ds][ds_slice[0]]
         time_index: np.array
         return pd.to_datetime(time_index.astype(str))
 
-    def _get_meta(self, *ds_slice):
+    def _get_meta(self, ds, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
 
@@ -338,6 +346,8 @@ class Resource:
 
         Parameters
         ----------
+        ds : str
+            Dataset to extract time_index from
         ds_slice : tuple of int | list | slice
             Pandas slicing describing which sites and columns to extract
 
@@ -350,7 +360,7 @@ class Resource:
         if isinstance(sites, int):
             sites = slice(sites, sites + 1)
 
-        meta = self._h5['meta'][sites]
+        meta = self._h5[ds][sites]
 
         if isinstance(sites, slice):
             if sites.stop:
