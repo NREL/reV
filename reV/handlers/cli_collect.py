@@ -80,7 +80,7 @@ def from_config(ctx, config_file, verbose):
                 Status.add_job(
                     config.dirout, 'collect', ctx.obj['NAME'], replace=True,
                     job_attrs={'hardware': 'local',
-                               'fout': ctx.obj['NAME'] + '.h5',
+                               'fout': file_prefix + '.h5',
                                'dirout': config.dirout})
                 ctx.invoke(collect)
 

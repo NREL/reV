@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV Supply Curve Aggregation command line interface (cli).
+reV Supply Curve command line interface (cli).
 """
 import os
 import click
