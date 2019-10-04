@@ -276,7 +276,6 @@ class Gen:
             dtypes = {}
             shapes = {}
 
-            profiles_shape = (len(self.time_index), len(self.meta))
             means_shape = (len(self.meta), )
 
             # flag to write time index if profiles are being output
@@ -290,6 +289,7 @@ class Gen:
                 dtypes[dset] = self.OUT_ATTRS[dset]['dtype']
 
                 if self.OUT_ATTRS[dset]['type'] == 'array':
+                    profiles_shape = (len(self.time_index), len(self.meta))
                     shapes[dset] = profiles_shape
                     write_ti = True
                 elif self.OUT_ATTRS[dset]['type'] == 'scalar':
