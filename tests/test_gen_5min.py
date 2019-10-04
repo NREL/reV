@@ -16,6 +16,7 @@ import numpy as np
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
+pytest.importorskip("nsrdb")
 from nsrdb.utilities.statistics import mae_perc
 
 
