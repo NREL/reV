@@ -23,19 +23,19 @@ class MultiYear(Outputs):
     - compute multi-year coefficient of variations
 
     """
-    def __init__(self, h5_file, group=None, **kwargs):
+    def __init__(self, h5_file, my_group=None, **kwargs):
         """
         Parameters
         ----------
         h5_file : str
             Path to .h5 resource file
-        group : str
+        my_group : str
             Group to collect datasets into
         kwargs : dict
             kwargs to initialize class
         """
         super().__init__(h5_file, **kwargs)
-        self._group = group
+        self._group = my_group
 
     def __len__(self):
         _len = 0
@@ -400,7 +400,7 @@ class MultiYear(Outputs):
         return is_profile
 
     @classmethod
-    def collect_means(cls, my_file, source_files, dset, group=None):
+    def collect_means(cls, my_file, source_files, dset, my_group=None):
         """
         Collect and compute multi-year means for given dataset
 
@@ -418,13 +418,13 @@ class MultiYear(Outputs):
         logger.info('Collecting {} into {} '
                     'and computing multi-year means and standard deviations.'
                     .format(dset, my_file))
-        with cls(my_file, mode='a', group=group) as my:
+        with cls(my_file, mode='a', my_group=my_group) as my:
             my.collect(source_files, dset)
             means = my._compute_means("{}-means".format(dset))
             my._compute_stdev("{}-stdev".format(dset), means=means)
 
     @classmethod
-    def collect_profiles(cls, my_file, source_files, dset, group=None):
+    def collect_profiles(cls, my_file, source_files, dset, my_group=None):
         """
         Collect multi-year profiles associated with given dataset
 
@@ -440,5 +440,5 @@ class MultiYear(Outputs):
             Group to collect datasets into
         """
         logger.info('Collecting {} into {}'.format(dset, my_file))
-        with cls(my_file, mode='a', group=group) as my:
+        with cls(my_file, mode='a', my_group=my_group) as my:
             my.collect(source_files, dset, profiles=True)
