@@ -136,14 +136,31 @@ class Resource:
     @property
     def dsets(self):
         """
-        Datasets available in h5_file
+        Datasets available
 
         Returns
         -------
         list
-            List of datasets in h5_file
+            List of datasets
         """
         return self._get_datasets(self.h5)
+
+    @property
+    def groups(self):
+        """
+        Groups available
+
+        Returns
+        -------
+        groups : list
+            List of groups
+        """
+        groups = []
+        for name in self.h5:
+            if isinstance(self.h5[name], h5py.Group):
+                groups.append(name)
+
+        return groups
 
     @property
     def shape(self):
