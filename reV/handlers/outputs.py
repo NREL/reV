@@ -40,9 +40,7 @@ class Outputs(Resource):
         """
         self._h5_file = h5_file
         self._h5 = h5py.File(h5_file, mode=mode)
-        if group is not None:
-            self._h5 = self._h5[group]
-
+        self._group = group
         self._unscale = unscale
         self._mode = mode
         self._meta = None

@@ -110,17 +110,17 @@ def test_my_collection(dset, group):
     my_dsets = ['meta', ]
     my_dsets.extend(['{}-{}'.format(dset, year) for year in YEARS])
     if 'profile' in dset:
-        MultiYear.collect_profiles(my_out, H5_FILES, dset, group=group)
+        MultiYear.collect_profiles(my_out, H5_FILES, dset, my_group=group)
         my_dsets.extend(["time_index-{}".format(year) for year in YEARS])
     else:
-        MultiYear.collect_means(my_out, H5_FILES, dset, group=group)
+        MultiYear.collect_means(my_out, H5_FILES, dset, my_group=group)
         my_dsets.extend(["{}-{}".format(dset, val)
                          for val in ['means', 'stdev']])
 
     if group is not None:
         my_dsets = ['{}/{}'.format(group, ds) for ds in my_dsets]
 
-    with MultiYear(my_out, mode='r', group=group) as f:
+    with MultiYear(my_out, mode='r', my_group=group) as f:
         out_dsets = f.dsets
 
     msg = "Missing datasets after collection"
@@ -147,13 +147,13 @@ def test_my_means(dset, group):
     my_means = manual_means(H5_FILES, dset)
 
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
-    with MultiYear(my_out, mode='w', group=group) as my:
+    with MultiYear(my_out, mode='w', my_group=group) as my:
         my.collect(H5_FILES, dset)
         dset_means = my.means(dset)
 
     compare_arrays(my_means, dset_means, "Computed Means")
 
-    with MultiYear(my_out, mode='r', group=group) as my:
+    with MultiYear(my_out, mode='r', my_group=group) as my:
         dset_means = my.means(dset)
 
     compare_arrays(my_means, dset_means, "Saved Means")
@@ -179,10 +179,10 @@ def test_update(dset, group):
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
     # Collect 2012 and compute 'means'
     files = H5_FILES[:1]
-    MultiYear.collect_means(my_out, files, dset, group=group)
+    MultiYear.collect_means(my_out, files, dset, my_group=group)
     my_means = manual_means(files, dset)
     my_std = manual_stdev(files, dset)
-    with MultiYear(my_out, mode='r', group=group) as my:
+    with MultiYear(my_out, mode='r', my_group=group) as my:
         dset_means = my.means(dset)
         dset_std = my.stdev(dset)
 
@@ -191,10 +191,10 @@ def test_update(dset, group):
 
     # Add 2013
     files = H5_FILES
-    MultiYear.collect_means(my_out, files, dset, group=group)
+    MultiYear.collect_means(my_out, files, dset, my_group=group)
     my_means = manual_means(files, dset)
     my_std = manual_stdev(files, dset)
-    with MultiYear(my_out, mode='r', group=group) as my:
+    with MultiYear(my_out, mode='r', my_group=group) as my:
         dset_means = my.means(dset)
         dset_std = my.stdev(dset)
 
@@ -222,13 +222,13 @@ def test_my_stdev(dset, group):
     my_std = manual_stdev(H5_FILES, dset)
 
     my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
-    with MultiYear(my_out, mode='w', group=group) as my:
+    with MultiYear(my_out, mode='w', my_group=group) as my:
         my.collect(H5_FILES, dset)
         dset_std = my.stdev(dset)
 
     compare_arrays(my_std, dset_std, "Computed STDEV")
 
-    with MultiYear(my_out, mode='r', group=group) as my:
+    with MultiYear(my_out, mode='r', my_group=group) as my:
         dset_std = my.stdev(dset)
 
     compare_arrays(my_std, dset_std, "Saved STDEV")

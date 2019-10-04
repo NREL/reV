@@ -35,7 +35,7 @@ class MultiYear(Outputs):
             kwargs to initialize class
         """
         super().__init__(h5_file, **kwargs)
-        self._group = my_group
+        self._my_group = my_group
 
     def __len__(self):
         _len = 0
@@ -57,13 +57,13 @@ class MultiYear(Outputs):
         """
         dsets = list(self._h5)
 
-        if self._group is not None:
+        if self._my_group is not None:
             if self._mode in ['a', 'w', 'w-', 'x']:
-                if self._group not in dsets:
-                    self._h5.create_group(self._group)
+                if self._my_group not in dsets:
+                    self._h5.create_group(self._my_group)
 
-            dsets = ['{}/{}'.format(self._group, ds)
-                     for ds in self._h5[self._group]]
+            dsets = ['{}/{}'.format(self._my_group, ds)
+                     for ds in self._h5[self._my_group]]
 
         return dsets
 
@@ -103,9 +103,9 @@ class MultiYear(Outputs):
         dset : str
             Modified dataset name
         """
-        if self._group is not None:
-            if not dset.startswith(self._group):
-                dset = '{}/{}'.format(self._group, dset)
+        if self._my_group is not None:
+            if not dset.startswith(self._my_group):
+                dset = '{}/{}'.format(self._my_group, dset)
 
         return dset
 
