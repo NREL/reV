@@ -143,6 +143,12 @@ class MultiYearGroup:
             else:
                 raise ConfigError("source_files or both source_dir and "
                                   "source_prefix must be provided")
+
+        if not any(source_files):
+            raise FileNotFoundError('Could not find any source files for '
+                                    'multi-year collection group: "{}"'
+                                    .format(self.name))
+
         return source_files
 
     @property

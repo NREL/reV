@@ -1,11 +1,17 @@
 {
   "logging": {
     "log_file": null,
-    "log_level": "DEBUG"
+    "log_level": "INFO"
   },
   "pipeline": [
     {
       "generation": "./config_gen.json"
+    },
+    {
+      "econ": "./config_econ.json"
+    },
+    {
+      "multi-year": "./config_multi-year.json"
     }
   ]
 }

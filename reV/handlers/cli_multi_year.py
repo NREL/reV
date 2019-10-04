@@ -58,12 +58,17 @@ def from_config(ctx, config_file, verbose):
 
     ctx.obj['MY_FILE'] = config.my_file
     if config.execution_control.option == 'local':
-        for group_name, group in config.group_params.items():
-            # set config objects to be passed through invoke to direct methods
-            ctx.obj['NAME'] = "{}-{}".format(name, group_name)
-            ctx.invoke(collect, group=group['group'],
-                       source_files=group['source_files'],
-                       dsets=group['dsets'])
+
+        ctx.obj['NAME'] = name
+        status = Status.retrieve_job_status(config.dirout, 'multi-year', name)
+        if status != 'successful':
+            Status.add_job(
+                config.dirout, 'multi-year', name, replace=True,
+                job_attrs={'hardware': 'local',
+                           'fout': ctx.obj['MY_FILE'],
+                           'dirout': config.dirout})
+            ctx.invoke(collect_groups,
+                       group_params=json.dumps(config.group_params))
 
     elif config.execution_control.option == 'eagle':
         ctx.obj['NAME'] = name
@@ -113,7 +118,7 @@ def collect(ctx, group, source_files, dsets, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
-    log_dir = os.path.basename(my_file)
+    log_dir = os.path.dirname(my_file)
     init_mult(name, log_dir, modules=[__name__, 'reV.handlers.multi_year'],
               verbose=verbose, node=True)
 
