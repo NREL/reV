@@ -25,6 +25,6 @@ def parse_keys(keys):
         key_slice = keys[1:]
     else:
         key = keys
-        key_slice = (slice(None, None, None),)
+        key_slice = (slice(None),)
 
     return key, key_slice

@@ -7,8 +7,10 @@ import numpy as np
 import os
 import pandas as pd
 import pytest
-from reV.handlers.resource import NSRDB, WindResource
+
 from reV import TESTDATADIR
+from reV.handlers.resource import NSRDB, WindResource
+from reV.utilities.exceptions import HandlerKeyError
 
 
 @pytest.fixture
@@ -29,12 +31,21 @@ def WindResource_res():
     return WindResource(path)
 
 
+@pytest.fixture
+def wind_group():
+    """
+    Init WindResource resource handler
+    """
+    path = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012_group.h5')
+    return WindResource(path, group='group')
+
+
 def check_res(res_cls):
     """
     Run test on len and shape methods
     """
-    time_index = res_cls['time_index']
-    meta = res_cls['meta']
+    time_index = res_cls.time_index
+    meta = res_cls.meta
     res_shape = (len(time_index), len(meta))
 
     assert len(res_cls) == len(meta)
@@ -164,7 +175,7 @@ def check_scale(res_cls, ds_name):
     Test unscaling of variable
     """
     native_value = res_cls[ds_name, 0, 0]
-    scaled_value = res_cls._h5[ds_name][0, 0]
+    scaled_value = res_cls.h5[ds_name][0, 0]
     scale_factor = res_cls.get_scale(ds_name)
     if scale_factor != 1:
         assert native_value != scaled_value
@@ -342,3 +353,105 @@ class TestWindResource:
     #     assert WindResource_res.get_units('windspeed_100m') == 'm s-1'
     #     assert WindResource_res.get_units('temperature_100m') == 'C'
     #     WindResource_res.close()
+
+
+class TestGroupResource:
+    """
+    WindResource Resource handler tests
+    """
+    @staticmethod
+    def test_group():
+        """
+        test WindResource class calls
+        """
+        path = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012_group.h5')
+        with pytest.raises(HandlerKeyError):
+            with WindResource(path) as res:
+                check_res(res)
+
+    @staticmethod
+    def test_res(wind_group):
+        """
+        test WindResource class calls
+        """
+        check_res(wind_group)
+        wind_group.close()
+
+    @staticmethod
+    def test_meta(wind_group):
+        """
+        test extraction of WindResource meta data
+        """
+        check_meta(wind_group)
+        wind_group.close()
+
+    @staticmethod
+    def test_time_index(wind_group):
+        """
+        test extraction of WindResource time_index
+        """
+        check_time_index(wind_group)
+        wind_group.close()
+
+    @staticmethod
+    def test_ds(wind_group, ds_name='windspeed_100m'):
+        """
+        test extraction of a variable array
+        """
+        check_dset(wind_group, ds_name)
+        wind_group.close()
+
+    @staticmethod
+    def test_new_hubheight(wind_group, ds_name='windspeed_90m'):
+        """
+        test extraction of a variable array
+        """
+        check_dset(wind_group, ds_name)
+        wind_group.close()
+
+    @staticmethod
+    def test_unscale_windspeed(wind_group):
+        """
+        test unscaling of windspeed values
+        """
+        check_scale(wind_group, 'windspeed_100m')
+        wind_group.close()
+
+    @staticmethod
+    def test_unscale_pressure(wind_group):
+        """
+        test unscaling of pressure values
+        """
+        check_scale(wind_group, 'pressure_100m')
+        wind_group.close()
+
+    @staticmethod
+    def test_interpolation(wind_group, h=90):
+        """
+        test variable interpolation
+        """
+        ignore = ['winddirection', 'precipitationrate', 'relativehumidity']
+        for var in wind_group.heights.keys():
+            if var not in ignore:
+                check_interp(wind_group, var, h)
+
+        wind_group.close()
+
+    @staticmethod
+    def test_extrapolation(wind_group, h=110):
+        """
+        test variable interpolation
+        """
+        for var in ['temperature', 'pressure']:
+            check_interp(wind_group, var, h)
+
+        wind_group.close()
+
+    # @staticmethod
+    # def test_units(wind_group):
+    #     """
+    #     test unit attributes
+    #     """
+    #     assert wind_group.get_units('windspeed_100m') == 'm s-1'
+    #     assert wind_group.get_units('temperature_100m') == 'C'
+    #     wind_group.close()

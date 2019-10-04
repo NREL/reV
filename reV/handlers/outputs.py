@@ -21,7 +21,8 @@ class Outputs(Resource):
     """
     Base class to handle reV output data in .h5 format
     """
-    def __init__(self, h5_file, unscale=True, mode='r', str_decode=True):
+    def __init__(self, h5_file, unscale=True, mode='r', str_decode=True,
+                 group=None):
         """
         Parameters
         ----------
@@ -34,9 +35,12 @@ class Outputs(Resource):
         str_decode : bool
             Boolean flag to decode the bytestring meta data into normal
             strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
         self._h5_file = h5_file
         self._h5 = h5py.File(h5_file, mode=mode)
+        self._group = group
         self._unscale = unscale
         self._mode = mode
         self._meta = None
@@ -506,13 +510,15 @@ class Outputs(Resource):
             Dictionary of SAM configuration JSONs used to compute cf profiles
         chunks : tuple
             Chunk size for profiles dataset
+        kwargs : dict
+            Extra kwargs to init Output
         """
         logger.info("Saving profiles ({}) to {}".format(dset_name, h5_file))
         if profiles.shape != (len(time_index), len(meta)):
             raise HandlerValueError("Profile dimensions does not match"
                                     "'time_index' and 'meta'")
         ts = time.time()
-        with cls(h5_file, mode=kwargs.get('mode', 'w-')) as f:
+        with cls(h5_file, mode=kwargs.pop('mode', 'w-'), **kwargs) as f:
             # Save time index
             f['time_index'] = time_index
             logger.debug("\t- 'time_index' saved to disc")
@@ -559,6 +565,8 @@ class Outputs(Resource):
             Dictionary of SAM configuration JSONs used to compute cf means
         chunks : tuple
             Chunk size for capacity factor means dataset
+        kwargs : dict
+            Extra kwargs to init Output
         """
         logger.info("Saving means ({}) to {}".format(dset_name, h5_file))
         if len(means) != len(meta):
@@ -566,7 +574,7 @@ class Outputs(Resource):
             raise HandlerValueError(msg)
 
         ts = time.time()
-        with cls(h5_file, mode=kwargs.get('mode', 'w-')) as f:
+        with cls(h5_file, mode=kwargs.get('mode', 'w-'), **kwargs) as f:
             # Save meta
             f['meta'] = meta
             logger.debug("\t- 'meta' saved to disc")
@@ -604,10 +612,12 @@ class Outputs(Resource):
             Attributes to be set. May include 'scale_factor'.
         dtype : str
             Intended dataset datatype after scaling.
+        kwargs : dict
+            Extra kwargs to init Output
         """
         logger.info("Adding {} to {}".format(dset_name, h5_file))
         ts = time.time()
-        with cls(h5_file, mode=kwargs.get('mode', 'a')) as f:
+        with cls(h5_file, mode=kwargs.pop('mode', 'a'), **kwargs) as f:
             f._add_dset(dset_name, dset_data, dtype,
                         chunks=chunks, attrs=attrs)
 
@@ -618,7 +628,7 @@ class Outputs(Resource):
 
     @classmethod
     def init_h5(cls, h5_file, dsets, shapes, attrs, chunks, dtypes,
-                meta, time_index=None, configs=None):
+                meta, time_index=None, configs=None, **kwargs):
         """Init a full output file with the final intended shape without data.
 
         Parameters
@@ -643,10 +653,12 @@ class Outputs(Resource):
             (no site profiles) are being written.
         configs : dict | None
             Optional input configs to set as attr on meta.
+        kwargs : dict
+            Extra kwargs to init Output
         """
 
         logger.debug("Initializing output file: {}".format(h5_file))
-        with cls(h5_file, mode='w') as f:
+        with cls(h5_file, mode=kwargs.get('mode', 'w'), **kwargs) as f:
             f['meta'] = meta
 
             if time_index is not None:

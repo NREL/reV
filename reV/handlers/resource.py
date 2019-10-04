@@ -22,7 +22,8 @@ class Resource:
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
 
-    def __init__(self, h5_file, unscale=True, hsds=False, str_decode=True):
+    def __init__(self, h5_file, unscale=True, hsds=False, str_decode=True,
+                 group=None):
         """
         Parameters
         ----------
@@ -36,21 +37,24 @@ class Resource:
         str_decode : bool
             Boolean flag to decode the bytestring meta data into normal
             strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
-        self._h5_file = h5_file
+        self.h5_file = h5_file
         if hsds:
             import h5pyd
-            self._h5 = h5pyd.File(self._h5_file, 'r')
+            self._h5 = h5pyd.File(self.h5_file, 'r')
         else:
-            self._h5 = h5py.File(self._h5_file, 'r')
+            self._h5 = h5py.File(self.h5_file, 'r')
 
+        self._group = group
         self._unscale = unscale
         self._meta = None
         self._time_index = None
         self._str_decode = str_decode
 
     def __repr__(self):
-        msg = "{} for {}".format(self.__class__.__name__, self._h5_file)
+        msg = "{} for {}".format(self.__class__.__name__, self.h5_file)
         return msg
 
     def __enter__(self):
@@ -63,15 +67,15 @@ class Resource:
             raise
 
     def __len__(self):
-        return self._h5['meta'].shape[0]
+        return self.h5['meta'].shape[0]
 
     def __getitem__(self, keys):
         ds, ds_slice = parse_keys(keys)
 
-        if ds == 'time_index':
-            out = self._get_time_index(*ds_slice)
-        elif ds == 'meta':
-            out = self._get_meta(*ds_slice)
+        if ds.endswith('time_index'):
+            out = self._get_time_index(ds, *ds_slice)
+        elif ds.endswith('meta'):
+            out = self._get_meta(ds, *ds_slice)
         elif 'SAM' in ds:
             site = ds_slice[0]
             if isinstance(site, int):
@@ -84,17 +88,79 @@ class Resource:
 
         return out
 
+    @staticmethod
+    def _get_datasets(h5_obj, group=None):
+        """
+        Search h5 file instance for Datasets
+
+        Parameters
+        ----------
+        h5_obj : h5py.File | h5py.Group
+            Open h5py File or Group instance to search
+
+        Returns
+        -------
+        dsets : list
+            List of datasets in h5_obj
+        """
+        dsets = []
+        for name in h5_obj:
+            sub_obj = h5_obj[name]
+            if isinstance(sub_obj, h5py.Group):
+                dsets.extend(Resource._get_datasets(sub_obj, group=name))
+            else:
+                dset_name = name
+                if group is not None:
+                    dset_name = "{}/{}".format(group, dset_name)
+
+                dsets.append(dset_name)
+
+        return dsets
+
+    @property
+    def h5(self):
+        """
+        Open h5py File instance. If _group is not None return open Group
+
+        Returns
+        -------
+        h5 : h5py.File | h5py.Group
+            Open h5py File or Group instance
+        """
+        h5 = self._h5
+        if self._group is not None:
+            h5 = h5[self._group]
+
+        return h5
+
     @property
     def dsets(self):
         """
-        Datasets available in h5_file
+        Datasets available
 
         Returns
         -------
         list
-            List of datasets in h5_file
+            List of datasets
         """
-        return list(self._h5)
+        return self._get_datasets(self.h5)
+
+    @property
+    def groups(self):
+        """
+        Groups available
+
+        Returns
+        -------
+        groups : list
+            List of groups
+        """
+        groups = []
+        for name in self.h5:
+            if isinstance(self.h5[name], h5py.Group):
+                groups.append(name)
+
+        return groups
 
     @property
     def shape(self):
@@ -107,7 +173,7 @@ class Resource:
         shape : tuple
             Shape of resource variable arrays (timesteps, sites)
         """
-        _shape = (self._h5['time_index'].shape[0], self._h5['meta'].shape[0])
+        _shape = (self.h5['time_index'].shape[0], self.h5['meta'].shape[0])
         return _shape
 
     @property
@@ -121,12 +187,31 @@ class Resource:
             Resource Meta Data
         """
         if self._meta is None:
-            self._meta = pd.DataFrame(self._h5['meta'][...])
-
-            if self._str_decode:
-                self._meta = self.df_str_decode(self._meta)
+            if 'meta' in self.h5:
+                self._meta = self._get_meta('meta', slice(None))
+            else:
+                raise HandlerKeyError("'meta' is not a valid dataset")
 
         return self._meta
+
+    @property
+    def time_index(self):
+        """
+        DatetimeIndex
+
+        Returns
+        -------
+        time_index : pandas.DatetimeIndex
+            Resource datetime index
+        """
+        if self._time_index is None:
+            if 'time_index' in self.h5:
+                self._time_index = self._get_time_index('time_index',
+                                                        slice(None))
+            else:
+                raise HandlerKeyError("'time_index' is not a valid dataset!")
+
+        return self._time_index
 
     @staticmethod
     def df_str_decode(df):
@@ -150,22 +235,6 @@ class Resource:
 
         return df
 
-    @property
-    def time_index(self):
-        """
-        DatetimeIndex
-
-        Returns
-        -------
-        time_index : pandas.DatetimeIndex
-            Resource datetime index
-        """
-        if self._time_index is None:
-            ti = self._h5['time_index'][...].astype(str)
-            self._time_index = pd.to_datetime(ti)
-
-        return self._time_index
-
     def get_attrs(self, dset=None):
         """
         Get h5 attributes either from file or dataset
@@ -181,9 +250,9 @@ class Resource:
             Dataset or file attributes
         """
         if dset is None:
-            attrs = dict(self._h5.attrs)
+            attrs = dict(self.h5.attrs)
         else:
-            attrs = dict(self._h5[dset].attrs)
+            attrs = dict(self.h5[dset].attrs)
 
         return attrs
 
@@ -205,7 +274,7 @@ class Resource:
         chunks : tuple
             Dataset chunk size
         """
-        ds = self._h5[dset]
+        ds = self.h5[dset]
         return ds.shape, ds.dtype, ds.chunks
 
     def get_scale(self, dset):
@@ -222,7 +291,7 @@ class Resource:
         float
             Dataset scale factor, used to unscale int values to floats
         """
-        return self._h5[dset].attrs.get(self.SCALE_ATTR, 1)
+        return self.h5[dset].attrs.get(self.SCALE_ATTR, 1)
 
     def get_units(self, dset):
         """
@@ -238,7 +307,7 @@ class Resource:
         str
             Dataset units, None if not defined
         """
-        return self._h5[dset].attrs.get(self.UNIT_ATTR, None)
+        return self.h5[dset].attrs.get(self.UNIT_ATTR, None)
 
     def get_meta_arr(self, rec_name, rows=slice(None)):
         """Get a meta array by name (faster than DataFrame extraction).
@@ -255,13 +324,16 @@ class Resource:
         arr : np.ndarray
             Extracted array from the meta data record name.
         """
+        if 'meta' in self.h5:
+            meta_arr = self.h5['meta'][rec_name, rows]
+            if self._str_decode and np.issubdtype(meta_arr.dtype, np.bytes_):
+                meta_arr = np.char.decode(meta_arr, encoding='utf-8')
+        else:
+            raise HandlerKeyError("'meta' is not a valid dataset")
 
-        meta_arr = self._h5['meta'][rec_name, rows]
-        if self._str_decode and np.issubdtype(meta_arr.dtype, np.bytes_):
-            meta_arr = np.char.decode(meta_arr, encoding='utf-8')
         return meta_arr
 
-    def _get_time_index(self, *ds_slice):
+    def _get_time_index(self, ds, *ds_slice):
         """
         Extract and convert time_index to pandas Datetime Index
 
@@ -276,6 +348,8 @@ class Resource:
 
         Parameters
         ----------
+        ds : str
+            Dataset to extract time_index from
         ds_slice : tuple of int | list | slice
             tuple describing slice of time_index to extract
 
@@ -284,11 +358,11 @@ class Resource:
         time_index : pandas.DatetimeIndex
             Vector of datetime stamps
         """
-        time_index = self._h5['time_index'][ds_slice[0]]
+        time_index = self.h5[ds][ds_slice[0]]
         time_index: np.array
         return pd.to_datetime(time_index.astype(str))
 
-    def _get_meta(self, *ds_slice):
+    def _get_meta(self, ds, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
 
@@ -307,6 +381,8 @@ class Resource:
 
         Parameters
         ----------
+        ds : str
+            Dataset to extract time_index from
         ds_slice : tuple of int | list | slice
             Pandas slicing describing which sites and columns to extract
 
@@ -319,7 +395,7 @@ class Resource:
         if isinstance(sites, int):
             sites = slice(sites, sites + 1)
 
-        meta = self._h5['meta'][sites]
+        meta = self.h5[ds][sites]
 
         if isinstance(sites, slice):
             if sites.stop:
@@ -448,7 +524,7 @@ class Resource:
             raise HandlerKeyError('{} not in {}'
                                   .format(ds_name, self.dsets))
 
-        ds = self._h5[ds_name]
+        ds = self.h5[ds_name]
         out = self._extract_ds_slice(ds, *ds_slice)
 
         if self._unscale:
@@ -584,7 +660,7 @@ class NSRDB(SolarResource):
             raise HandlerKeyError('{} not in {}'
                                   .format(ds_name, self.dsets))
 
-        ds = self._h5[ds_name]
+        ds = self.h5[ds_name]
         out = self._extract_ds_slice(ds, *ds_slice)
         if self._unscale:
             scale_factor = ds.attrs.get(self.SCALE_ATTR, 1)
@@ -651,20 +727,17 @@ class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
-    def __init__(self, h5_file, unscale=True, hsds=False):
+    def __init__(self, h5_file, **kwargs):
         """
         Parameters
         ----------
         h5_file : str
             Path to .h5 resource file
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
+        kwargs : dict
+            kwargs to init Resource
         """
         self._heights = None
-        super().__init__(h5_file, unscale=unscale, hsds=False)
+        super().__init__(h5_file, **kwargs)
 
     @staticmethod
     def _parse_name(ds_name):
@@ -709,7 +782,7 @@ class WindResource(Resource):
             windspeed, winddirection, temperature, and pressure
         """
         if self._heights is None:
-            dsets = list(self._h5)
+            dsets = self.dsets
             heights = {'pressure': [],
                        'temperature': [],
                        'windspeed': [],
@@ -1090,7 +1163,7 @@ class FiveMinWTK(WindResource):
     """
     Class to handle 5min WIND Toolkit data
     """
-    def __init__(self, hourly_h5, h5_dir, unscale=True):
+    def __init__(self, hourly_h5, h5_dir, **kwargs):
         """
         Parameters
         ----------
@@ -1098,11 +1171,11 @@ class FiveMinWTK(WindResource):
             Path to hourly .h5 file
         h5_dir : str
             Path to directory containing 5min .h5 files
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
+        kwargs : dict
+            kwargs to init Resource
         """
         # Init on hourly_h5 file
-        super().__init__(hourly_h5, unscale=unscale)
+        super().__init__(hourly_h5, **kwargs)
         self._hourly_time_index = self.time_index
 
         # Find 5min wind files
