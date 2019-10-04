@@ -61,7 +61,7 @@ def from_config(ctx, config_file, verbose):
         for group_name, group in config.group_params.items():
             # set config objects to be passed through invoke to direct methods
             ctx.obj['NAME'] = "{}-{}".format(name, group_name)
-            ctx.invoke(collect, my_group=group['group'],
+            ctx.invoke(collect, group=group['group'],
                        source_files=group['source_files'],
                        dsets=group['dsets'])
 
