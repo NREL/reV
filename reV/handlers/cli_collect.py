@@ -74,7 +74,15 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FILE_PREFIX'] = file_prefix
 
         if config.execution_control.option == 'local':
-            ctx.invoke(collect)
+            status = Status.retrieve_job_status(config.dirout, 'collect',
+                                                ctx.obj['NAME'])
+            if status != 'successful':
+                Status.add_job(
+                    config.dirout, 'collect', ctx.obj['NAME'], replace=True,
+                    job_attrs={'hardware': 'local',
+                               'fout': ctx.obj['NAME'] + '.h5',
+                               'dirout': config.dirout})
+                ctx.invoke(collect)
 
         elif config.execution_control.option == 'eagle':
             ctx.invoke(collect_eagle,

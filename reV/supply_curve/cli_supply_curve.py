@@ -54,10 +54,18 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        ctx.invoke(main, name, config.sc_points, config.trans_table,
-                   config.fixed_charge_rate, config.sc_features,
-                   config.transmission_costs, config.dirout, config.logdir,
-                   config.simple, verbose)
+        status = Status.retrieve_job_status(config.dirout, 'supply-curve',
+                                            name)
+        if status != 'successful':
+            Status.add_job(
+                config.dirout, 'supply-curve', name, replace=True,
+                job_attrs={'hardware': 'local',
+                           'fout': '{}.csv'.format(name),
+                           'dirout': config.dirout})
+            ctx.invoke(main, name, config.sc_points, config.trans_table,
+                       config.fixed_charge_rate, config.sc_features,
+                       config.transmission_costs, config.dirout, config.logdir,
+                       config.simple, verbose)
 
     elif config.execution_control.option == 'eagle':
 
