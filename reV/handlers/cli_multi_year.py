@@ -67,8 +67,8 @@ def from_config(ctx, config_file, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': ctx.obj['MY_FILE'],
                            'dirout': config.dirout})
-            ctx.invoke(collect_groups,
-                       group_params=json.dumps(config.group_params))
+            group_params = json.dumps(config.group_params)
+            ctx.invoke(my_groups, group_params=group_params)
 
     elif config.execution_control.option == 'eagle':
         ctx.obj['NAME'] = name
