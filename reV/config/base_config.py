@@ -51,6 +51,7 @@ class BaseConfig(dict):
             if config.endswith('.json'):
                 # get the directory of the config file
                 self.dir = os.path.dirname(os.path.realpath(config)) + '/'
+                self.dir = self.dir.replace('\\', '/')
                 self.str_rep['./'] = self.dir
                 config = self.get_file(config)
             else:

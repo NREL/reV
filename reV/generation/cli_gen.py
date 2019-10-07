@@ -149,11 +149,22 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
+        name_year = make_fout(name, year).replace('.h5', '')
+        ctx.obj['NAME'] = name_year
         sites_per_core = ceil(len(config.points_control)
                               / config.execution_control.ppn)
         ctx.obj['SITES_PER_CORE'] = sites_per_core
-        ctx.invoke(gen_local, n_workers=config.execution_control.ppn,
-                   points_range=None, verbose=verbose)
+
+        status = Status.retrieve_job_status(config.dirout, 'generation',
+                                            name_year)
+        if status != 'successful':
+            Status.add_job(
+                config.dirout, 'generation', name_year, replace=True,
+                job_attrs={'hardware': 'local',
+                           'fout': ctx.obj['FOUT'],
+                           'dirout': config.dirout})
+            ctx.invoke(gen_local, n_workers=config.execution_control.ppn,
+                       points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
         if not parse_year(name, option='bool') and year:

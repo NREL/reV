@@ -66,7 +66,14 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['LOGDIR'] = config.logdir
 
     if config.execution_control.option == 'local':
-        ctx.invoke(exclusions)
+        status = Status.retrieve_job_status(config.dirout, 'exclusions', name)
+        if status != 'successful':
+            Status.add_job(
+                config.dirout, 'exclusions', name, replace=True,
+                job_attrs={'hardware': 'local',
+                           'fout': ctx.obj['FOUT'],
+                           'dirout': config.dirout})
+            ctx.invoke(exclusions)
 
     elif config.execution_control.option == 'eagle':
         ctx.invoke(exclusions_eagle,

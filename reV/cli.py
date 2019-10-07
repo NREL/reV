@@ -116,7 +116,7 @@ def exclusions(ctx, verbose):
               help='Flag to turn on debug logging.')
 @click.pass_context
 def multi_year(ctx, verbose):
-    """Run reV mult_year using the config file."""
+    """Run reV multi_year using the config file."""
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_my_from_config, config_file=config_file,

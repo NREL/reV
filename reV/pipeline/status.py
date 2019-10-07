@@ -127,7 +127,8 @@ class Status(dict):
             Options are found in the options dictionary below.
         """
         options = {'eagle': SLURM.check_status,
-                   'peregrine': PBS.check_status}
+                   'peregrine': PBS.check_status,
+                   'local': None}
         try:
             method = options[hardware]
         except KeyError:
@@ -136,7 +137,7 @@ class Status(dict):
         return method
 
     @staticmethod
-    def _get_job_status(job_id, hardware='eagle'):
+    def _get_job_status(job_id, hardware='local'):
         """Get the job status using pre-defined hardware-specific methods.
 
         Parameters
@@ -154,7 +155,10 @@ class Status(dict):
         status = None
         if job_id:
             method = Status._get_check_method(hardware=hardware)
-            status = method(job_id)
+            if method is None:
+                status = None
+            else:
+                status = method(job_id)
         return status
 
     def _check_all_job_files(self, status_dir):
@@ -202,7 +206,7 @@ class Status(dict):
                 break
         return status
 
-    def _update_job_status(self, module, job_name, hardware='eagle'):
+    def _update_job_status(self, module, job_name, hardware='local'):
         """Update HPC job and respective job status to the status obj instance.
 
         Parameters

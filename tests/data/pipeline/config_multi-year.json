@@ -1,0 +1,31 @@
+{
+  "directories": {
+    "logging_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "option": "local"
+  },
+  "groups": {
+    "econ": {
+      "dsets": [
+        "lcoe_fcr"
+      ],
+      "source_dir": "./",
+      "source_files": null,
+      "source_prefix": "pipeline_econ"
+    },
+    "generation": {
+      "dsets": [
+        "cf_mean"
+      ],
+      "source_dir": "./",
+      "source_files": null,
+      "source_prefix": "pipeline_gen"
+    }
+  },
+  "project_control": {
+    "logging_level": "INFO"
+  }
+}

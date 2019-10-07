@@ -56,11 +56,20 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        ctx.invoke(main, name, config.fpath_excl, config.fpath_gen,
-                   config.fpath_res, config.fpath_techmap, config.dset_tm,
-                   config.res_class_dset, config.res_class_bins,
-                   config.dset_cf, config.dset_lcoe, config.data_layers,
-                   config.resolution, config.dirout, config.logdir, verbose)
+        status = Status.retrieve_job_status(config.dirout, 'aggregation',
+                                            name)
+        if status != 'successful':
+            Status.add_job(
+                config.dirout, 'aggregation', name, replace=True,
+                job_attrs={'hardware': 'local',
+                           'fout': '{}.csv'.format(name),
+                           'dirout': config.dirout})
+            ctx.invoke(main, name, config.fpath_excl, config.fpath_gen,
+                       config.fpath_res, config.fpath_techmap, config.dset_tm,
+                       config.res_class_dset, config.res_class_bins,
+                       config.dset_cf, config.dset_lcoe, config.data_layers,
+                       config.resolution, config.dirout, config.logdir,
+                       verbose)
 
     elif config.execution_control.option == 'eagle':
 

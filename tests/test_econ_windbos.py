@@ -183,20 +183,21 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, n_workers=1):
     against baseline results."""
 
     # get full file paths.
-    sam_files = TESTDATADIR + '/SAM/i_singleowner_windbos.json'
-    res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
-    fgen = os.path.join(OUT_DIR, 'windbos_gen_{}.h5'.format(year))
+    sam_files = os.path.join(TESTDATADIR, 'SAM/i_singleowner_windbos.json')
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5'.format(year))
+    fn_gen = 'windbos_gen_{}.h5'.format(year)
+    cf_file = os.path.join(OUT_DIR, fn_gen)
 
     # run reV 2.0 generation
     Gen.reV_run('wind', points, sam_files, res_file,
                 output_request=('cf_mean', 'cf_profile'),
-                n_workers=n_workers, sites_per_split=3, fout=fgen,
-                return_obj=False)
+                n_workers=n_workers, sites_per_split=3, fout=fn_gen,
+                dirout=OUT_DIR, return_obj=False)
 
     econ_outs = ('lcoe_nom', 'lcoe_real', 'flip_actual_irr',
                  'project_return_aftertax_npv', 'total_installed_cost',
                  'turbine_cost', 'sales_tax_cost', 'bos_cost')
-    e = Econ.reV_run(points=points, sam_files=sam_files, cf_file=fgen,
+    e = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
                      cf_year=year, site_data=None, output_request=econ_outs,
                      n_workers=n_workers, sites_per_split=3, fout=None,
                      return_obj=True)
