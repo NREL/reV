@@ -2,14 +2,19 @@
 setup.py
 """
 import os
-import logging
 from codecs import open
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from subprocess import check_call
 import shlex
+import sys
+from warnings import warn
 
-logger = logging.getLogger(__name__)
+py_version = sys.version_info
+if py_version.major < 3:
+    raise RuntimeError("reV is not compatible with python 2!")
+elif py_version.minor < 6:
+    warn("You will the get best results by running reV with python >= 3.6")
 
 try:
     from pypandoc import convert_text
@@ -39,8 +44,9 @@ class PostDevelopCommand(develop):
         try:
             check_call(shlex.split("pre-commit install"))
         except Exception as e:
-            logger.warning("Unable to run 'pre-commit install': {}"
-                           .format(e))
+            warn("Unable to run 'pre-commit install': {}"
+                 .format(e))
+
         develop.run(self)
 
 
