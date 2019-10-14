@@ -359,7 +359,7 @@ class Resource:
             Vector of datetime stamps
         """
         time_index = self.h5[ds][ds_slice[0]]
-        time_index: np.array
+        # time_index: np.array
         return pd.to_datetime(time_index.astype(str))
 
     def _get_meta(self, ds, *ds_slice):
