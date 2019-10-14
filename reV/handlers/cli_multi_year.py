@@ -242,7 +242,7 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
-    cmd = ('python -m reV.handlers.cli_multi_year {} collect-groups {}'
+    cmd = ('python -m reV.handlers.cli_multi_year {} my-groups {}'
            .format(main_args, collect_args))
     logger.debug('Creating the following command line call:\n\t{}'
                  .format(cmd))
