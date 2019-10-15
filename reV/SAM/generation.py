@@ -10,6 +10,9 @@ import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
+import PySAM.Pvwattsv5 as pysam_pv
+import PySAM.Windpower as pysam_wind
+import PySAM.TcsmoltenSalt as pysam_csp
 
 from reV.handlers.resource import Resource
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
@@ -24,16 +27,6 @@ logger = logging.getLogger(__name__)
 
 class Generation(SAM):
     """Base class for SAM generation simulations."""
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
-        """Initialize a SAM generation object."""
-
-        # check timezone input and set missing timezone from json if necessary
-        meta = self.tz_check(parameters, meta)
-
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
 
     @staticmethod
     def get_res_mean(res_file, res_df, output_request):
@@ -116,36 +109,138 @@ class Generation(SAM):
                     raise SAMExecutionError(msg)
         return meta
 
-    def gen_exec(self, module_to_run):
-        """Run SAM generation with possibility for follow on econ analysis.
+    def cf_mean(self):
+        """Get mean capacity factor (fractional) from SAM.
 
-        Parameters
-        ----------
-        module_to_run : str
-            SAM module name (e.g., 'pvwattsv5', 'tcsmolten_salt', 'windpower').
+        Returns
+        -------
+        output : float
+            Mean capacity factor (fractional).
+        """
+        return self['capacity_factor'] / 100
+
+    def cf_profile(self):
+        """Get hourly capacity factor (frac) profile in orig timezone.
+
+        Returns
+        -------
+        cf_profile : np.ndarray
+            1D numpy array of capacity factor profile.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        return self.gen_profile() / self.parameters['system_capacity']
+
+    def annual_energy(self):
+        """Get annual energy generation value in kWh from SAM.
+
+        Returns
+        -------
+        output : float
+            Annual energy generation (kWh).
+        """
+        return self['annual_energy']
+
+    def energy_yield(self):
+        """Get annual energy yield value in kwh/kw from SAM.
+
+        Returns
+        -------
+        output : float
+            Annual energy yield (kwh/kw).
+        """
+        return self['kwh_per_kw']
+
+    def gen_profile(self):
+        """Get AC inverter power generation profile (orig timezone) in kW.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of hourly AC inverter power generation in kW.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        gen = np.array(self['ac'], dtype=np.float32) / 1000
+        # Roll back to native timezone if resource meta has a timezone
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                gen = np.roll(gen, -1 * int(self.meta['timezone']
+                                            * self.time_interval))
+        return gen
+
+    def poa(self):
+        """Get plane-of-array irradiance profile (orig timezone) in W/m2.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of plane-of-array irradiance in W/m2.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        poa = np.array(self['poa'], dtype=np.float32)
+        # Roll back to native timezone if resource meta has a timezone
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                poa = np.roll(poa, -1 * int(self.meta['timezone']
+                                            * self.time_interval))
+        return poa
+
+    def ppa_price(self):
+        """Get PPA price ($/MWh).
+
+        Native units are cents/kWh, mult by 10 for $/MWh.
+        """
+        return self['ppa'] * 10
+
+    def npv(self):
+        """Get net present value (NPV) ($).
+
+        Native units are dollars.
+        """
+        return self['project_return_aftertax_npv']
+
+    def collect_outputs(self):
+        """Collect SAM output_request.
+
+        Returns
+        -------
+        output : Dict
+            Dictionary keyed by SAM variable names with SAM numerical results.
         """
 
-        self.set_parameters()
+        output_lookup = {'cf_mean': self.cf_mean,
+                         'cf_profile': self.cf_profile,
+                         'annual_energy': self.annual_energy,
+                         'energy_yield': self.energy_yield,
+                         'gen_profile': self.gen_profile,
+                         'poa': self.poa,
+                         }
+
+        super().collect_outputs(output_lookup)
+
+    def _gen_exec(self):
+        """Run SAM generation with possibility for follow on econ analysis."""
+
+        self.assign_inputs()
+        self.execute()
+        self.collect_outputs()
 
         if 'lcoe_fcr' in self.output_request:
             # econ outputs requested, run LCOE model after generation.
-            self.execute(module_to_run, close=False)
-            lcoe = LCOE(self.ssc, self.data, self.parameters,
-                        output_request=('lcoe_fcr',))
-            lcoe.execute(LCOE.MODULE)
+            self.parameters['annual_energy'] = self.annual_energy()
+            lcoe = LCOE(self.parameters, output_request=('lcoe_fcr',))
+            lcoe.assign_inputs()
+            lcoe.execute()
+            lcoe.collect_outputs()
             self.outputs.update(lcoe.outputs)
 
         elif 'ppa_price' in self.output_request:
             # econ outputs requested, run SingleOwner model after generation.
-            self.execute(module_to_run, close=False)
-            so = SingleOwner(self.ssc, self.data, self.parameters,
-                             output_request=('ppa_price',))
-            so.execute(so.MODULE)
+            self.parameters['gen'] = self.gen_profile()
+            so = SingleOwner(self.parameters, output_request=('ppa_price',))
+            so.assign_inputs()
+            so.execute()
+            so.collect_outputs()
             self.outputs.update(so.outputs)
-
-        else:
-            # normal run, no econ analysis
-            self.execute(module_to_run, close=True)
 
     @classmethod
     def reV_run(cls, points_control, res_file, output_request=('cf_mean',),
@@ -205,10 +300,11 @@ class Generation(SAM):
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
                       output_request=out_req_nomeans)
-            sim.gen_exec(cls.MODULE)
+            sim._gen_exec()
 
             # collect outputs to dictout
             out[site] = sim.outputs
+
             if res_mean is not None:
                 out[site].update(res_mean)
 
@@ -251,8 +347,7 @@ class Solar(Generation):
         parameters = self.set_latitude_tilt_az(parameters, meta)
 
         # don't pass resource to base class, set in set_nsrdb instead.
-        super().__init__(resource=None, meta=meta, parameters=parameters,
-                         output_request=output_request)
+        super().__init__(meta, parameters, output_request)
 
         # Set the site number using resource
         if isinstance(resource, pd.DataFrame):
@@ -260,11 +355,7 @@ class Solar(Generation):
         else:
             self._site = None
 
-        if resource is None or meta is None:
-            # if no resource input data is specified, you need a resource file
-            self.parameters.require_resource_file(res_type='solar')
-
-        elif resource is not None and meta is not None:
+        if resource is not None and meta is not None:
             self.set_nsrdb(resource)
 
     def set_latitude_tilt_az(self, parameters, meta):
@@ -320,9 +411,8 @@ class Solar(Generation):
         resource : pd.DataFrame
             2D table with resource data. Available columns must have var_list.
         """
-
-        # call generic set resource method from the base class
-        super().set_resource(resource=resource)
+        time_index = resource.index
+        self.time_interval = self.get_time_interval(resource.index.values)
 
         # map resource data names to SAM required data names
         var_map = {'dni': 'dn',
@@ -335,35 +425,48 @@ class Solar(Generation):
                    'air_temperature': 'tdry',
                    }
 
-        irrad_vars = ['dni', 'dhi', 'ghi', 'clearsky_dni', 'clearsky_dhi',
-                      'clearsky_ghi']
+        irrad_vars = ['dn', 'df', 'gh']
+
+        resource = resource.rename(mapper=var_map, axis='columns')
+        resource = {k: np.array(v) for (k, v) in
+                    resource.to_dict(orient='list').items()}
 
         # set resource variables
-        for var in resource.columns.values:
+        for var, arr in resource.items():
             if var != 'time_index':
+
                 # ensure that resource array length is multiple of 8760
-                res_arr = np.roll(
-                    self.ensure_res_len(resource[var]),
-                    int(self.meta['timezone'] * self.time_interval))
+                arr = np.roll(
+                    self.ensure_res_len(arr),
+                    int(self._meta['timezone'] * self.time_interval))
+
                 if var in irrad_vars:
-                    if np.min(res_arr) < 0:
+                    if np.min(arr) < 0:
                         warn('Solar irradiance variable "{}" has a minimum '
                              'value of {}. Truncating to zero.'
-                             .format(var, np.min(res_arr)), SAMInputWarning)
-                        res_arr = np.where(res_arr < 0, 0, res_arr)
+                             .format(var, np.min(arr)), SAMInputWarning)
+                        arr = np.where(arr < 0, 0, arr)
 
-                self.ssc.data_set_array(self.res_data, var_map[var], res_arr)
+                resource[var] = arr.tolist()
 
-        # add resource data to self.data and clear
-        self.ssc.data_set_table(self.data, 'solar_resource_data',
-                                self.res_data)
-        self.ssc.data_free(self.res_data)
+        resource['lat'] = self.meta['latitude']
+        resource['lon'] = self.meta['longitude']
+        resource['tz'] = self.meta['timezone']
+
+        resource['minute'] = self.ensure_res_len(time_index.minute)
+        resource['hour'] = self.ensure_res_len(time_index.hour)
+        resource['year'] = self.ensure_res_len(time_index.year)
+        resource['month'] = self.ensure_res_len(time_index.month)
+        resource['day'] = self.ensure_res_len(time_index.day)
+
+        self['solar_resource_data'] = resource
 
 
 class PV(Solar):
     """Photovoltaic (PV) generation with pvwattsv5.
     """
     MODULE = 'pvwattsv5'
+    PYSAM = pysam_pv
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
@@ -390,6 +493,7 @@ class CSP(Solar):
     """Concentrated Solar Power (CSP) generation
     """
     MODULE = 'tcsmolten_salt'
+    PYSAM = pysam_csp
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
@@ -402,6 +506,8 @@ class CSP(Solar):
 class Wind(Generation):
     """Base class for Wind generation from SAM
     """
+    MODULE = 'windpower'
+    PYSAM = pysam_wind
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -428,8 +534,7 @@ class Wind(Generation):
             resource = self.drop_leap(resource)
 
         # don't pass resource to base class, set in set_wtk instead.
-        super().__init__(resource=None, meta=meta, parameters=parameters,
-                         output_request=output_request)
+        super().__init__(meta, parameters, output_request)
 
         # Set the site number using resource
         if isinstance(resource, pd.DataFrame):
@@ -437,59 +542,75 @@ class Wind(Generation):
         else:
             self._site = None
 
-        if resource is None or meta is None:
-            # if no resource input data is specified, you need a resource file
-            self.parameters.require_resource_file(res_type='wind')
-
-        elif resource is not None and meta is not None:
+        if resource is not None and meta is not None:
             self.set_wtk(resource)
 
-    def set_wtk(self, resource, var_list=('temperature', 'pressure',
-                                          'windspeed', 'winddirection')):
+    def gen_profile(self):
+        """Get AC inverter power generation profile (orig timezone) in kW.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of hourly AC inverter power generation in kW.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        gen = np.array(self['gen'], dtype=np.float32)
+        # Roll back to native timezone if resource meta has a timezone
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                gen = np.roll(gen, -1 * int(self.meta['timezone']
+                                            * self.time_interval))
+        return gen
+
+    def set_wtk(self, resource):
         """Set SSC WTK resource data arrays.
 
         Parameters
         ----------
         resource : pd.DataFrame
             2D table with resource data. Available columns must have var_list.
-        var_list : list | tuple
-            List of variable names to set to SAM.
         """
 
-        if isinstance(var_list, tuple):
-            var_list = list(var_list)
+        data_dict = {}
+        var_list = ['temperature', 'pressure', 'windspeed', 'winddirection']
+        time_index = resource.index
+        self.time_interval = self.get_time_interval(resource.index.values)
 
-        # call generic set resource method from the base class
-        super().set_resource(resource=resource)
-
-        fields = [1, 2, 3, 4]
-        heights = 4 * [self.parameters['wind_turbine_hub_ht']]
-        self.ssc.data_set_array(self.res_data, 'fields', fields)
-        self.ssc.data_set_array(self.res_data, 'heights', heights)
+        data_dict['fields'] = [1, 2, 3, 4]
+        data_dict['heights'] = 4 * [self.parameters['wind_turbine_hub_ht']]
 
         if 'rh' in resource:
             # set relative humidity for icing.
             rh = np.roll(self.ensure_res_len(resource['rh'].values),
                          int(self.meta['timezone'] * self.time_interval),
                          axis=0)
-            self.ssc.data_set_array(self.res_data, 'rh', rh)
+            data_dict['rh'] = rh.tolist()
 
         # must be set as matrix in [temperature, pres, speed, direction] order
         # ensure that resource array length is multiple of 8760
         # roll the truncated resource array to local timezone
         temp = np.roll(self.ensure_res_len(resource[var_list].values),
                        int(self.meta['timezone'] * self.time_interval), axis=0)
-        self.ssc.data_set_matrix(self.res_data, 'data', temp)
+        data_dict['data'] = temp.tolist()
+
+        resource['lat'] = self.meta['latitude']
+        resource['lon'] = self.meta['longitude']
+        resource['tz'] = self.meta['timezone']
+        resource['elev'] = self.meta['elevation']
+
+        data_dict['minute'] = self.ensure_res_len(time_index.minute)
+        data_dict['hour'] = self.ensure_res_len(time_index.hour)
+        data_dict['year'] = self.ensure_res_len(time_index.year)
+        data_dict['month'] = self.ensure_res_len(time_index.month)
+        data_dict['day'] = self.ensure_res_len(time_index.day)
 
         # add resource data to self.data and clear
-        self.ssc.data_set_table(self.data, 'wind_resource_data', self.res_data)
-        self.ssc.data_free(self.res_data)
+        self['wind_resource_data'] = data_dict
 
 
 class LandBasedWind(Wind):
     """Onshore wind generation
     """
-    MODULE = 'windpower'
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
@@ -502,7 +623,6 @@ class LandBasedWind(Wind):
 class OffshoreWind(LandBasedWind):
     """Offshore wind generation
     """
-    MODULE = 'windpower'
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):

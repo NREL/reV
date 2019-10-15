@@ -72,7 +72,7 @@ def single_owner():
 
 if __name__ == '__main__':
     a = pvwattsv5()
-    b = windpower()
-    c = csp()
-    d = lcoe()
-    e = single_owner()
+#    b = windpower()
+#    c = csp()
+#    d = lcoe()
+#    e = single_owner()

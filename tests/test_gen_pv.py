@@ -259,4 +259,5 @@ def execute_pytest(capture='all', flags='-rapP'):
 if __name__ == '__main__':
     execute_pytest()
 #    test_smart(2012)
+#    test_pv_gen_profiles(2012)
 #    test_pv_gen_slice('project_outputs.h5', slice(0, 10), '2012', 1)
