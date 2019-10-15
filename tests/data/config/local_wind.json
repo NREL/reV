@@ -16,7 +16,8 @@
     "name": "rev",
     "output_request": [
       "cf_mean",
-      "cf_profile"
+      "cf_profile",
+      "monthly_energy"
     ],
     "technology": "wind"
   },

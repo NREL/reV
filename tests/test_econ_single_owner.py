@@ -31,7 +31,10 @@ OUT_BASELINE = {'ppa_price': np.array([75.7973, 74.618286, 73.2412,
                 'lcoe_real': np.array([63.769077, 62.777153, 61.618607,
                                        62.49445, 62.476658, 59.62954,
                                        57.952553, 58.30198, 58.16315,
-                                       56.314293], dtype=np.float32)}
+                                       56.314293], dtype=np.float32),
+                'size_of_equity': np.array(10 * [1343680]),
+                'wacc': np.array(10 * [8.280014]),
+                }
 
 
 def test_single_owner():
@@ -40,7 +43,7 @@ def test_single_owner():
     sam_files = os.path.join(TESTDATADIR, 'SAM/wind_single_owner.json')
 
     output_request = ('ppa_price', 'project_return_aftertax_npv', 'lcoe_nom',
-                      'lcoe_real')
+                      'lcoe_real', 'size_of_equity', 'wacc')
 
     obj = Econ.reV_run(points=slice(0, 10), sam_files=sam_files,
                        cf_file=cf_file, cf_year=2012,

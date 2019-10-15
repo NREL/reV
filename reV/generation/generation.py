@@ -453,7 +453,9 @@ class Gen:
             n = 100
             self._site_mem = 0
             for request in self.output_request:
-                dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+                dtype = 'float32'
+                if request in self.OUT_ATTRS:
+                    dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
                 shape = self._get_data_shape(request, n)
                 self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
             self._site_mem = self._site_mem / 1e6 / n
@@ -854,6 +856,9 @@ class Gen:
                 global_site_index = self.site_index(site_gid)
                 self._init_out_arrays(index_0=global_site_index)
                 i = self.site_index(site_gid, out_index=True)
+
+            if isinstance(value, (list, tuple)):
+                value = np.array(value)
 
             if isinstance(value, np.ndarray):
                 # set the new timeseries to the 2D array

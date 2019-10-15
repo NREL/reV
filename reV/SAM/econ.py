@@ -623,11 +623,12 @@ class SingleOwner(Economic):
         """
 
         outputs = {}
-        if isinstance(inputs['total_installed_cost'], str):
-            if inputs['total_installed_cost'].lower() == 'windbos':
-                wb = WindBos(inputs)
-                inputs['total_installed_cost'] = wb.total_installed_cost
-                outputs = wb.output
+        if inputs is not None:
+            if isinstance(inputs['total_installed_cost'], str):
+                if inputs['total_installed_cost'].lower() == 'windbos':
+                    wb = WindBos(inputs)
+                    inputs['total_installed_cost'] = wb.total_installed_cost
+                    outputs = wb.output
         return inputs, outputs
 
     @property
