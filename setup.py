@@ -111,7 +111,7 @@ setup(
     ],
     test_suite="tests",
     install_requires=["click", "h5py", "numpy", "pandas", "psutil",
-                      "rasterio", "scipy", "xarray"],
+                      "rasterio", "scipy", "xarray", "NREL-PySAM"],
     extras_require={
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],
