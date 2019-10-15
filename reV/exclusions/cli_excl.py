@@ -148,7 +148,6 @@ def exclusions(ctx, verbose):
     runtime = (time.time() - t0) / 60
 
     # add job to reV status file.
-    print(config, type(config))
     finput = str([excl['fpath'] for excl in config])
     status = {'finput': finput, 'fout': fout, 'dirout': dirout,
               'job_status': 'successful', 'runtime': runtime}

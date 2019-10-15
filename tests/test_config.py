@@ -26,7 +26,7 @@ def test_clearsky():
         # Get the SAM resource object
         SAM.get_sam_res(res_file, pp, pp.tech)
         assert False
-    except HandlerKeyError as e:
+    except HandlerKeyError:
         # Should look for clearsky_dni and not find it in RI data
         assert True
 
@@ -95,8 +95,6 @@ def test_split_iter():
 
             split = pp_split.project_points.df
             target = pp.df.iloc[i0_nom:i1_nom]
-            print('split = ', split.head())
-            print('target = ', target.head())
 
             msg = 'PointsControl iterator split did not function correctly!'
             assert split.equals(target), msg

@@ -1,19 +1,23 @@
 # -*- coding: utf-8 -*-
 """reV-to-SAM econ interface module.
 
-Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
-SAM software development kit (SDK).
+Wraps the NREL-PySAM lcoefcr and singleowner modules with
+additional reV features.
 """
+import os
 from copy import deepcopy
 import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
+import PySAM.Pvwattsv5 as pysam_pv
+import PySAM.Lcoefcr as pysam_lcoe
+import PySAM.Singleowner as pysam_so
 
+from reV import TESTDATADIR
 from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
-from reV.SAM.PySSC import PySSC
-from reV.SAM.SAM import SAM, ParametersManager
+from reV.SAM.SAM import SAM
 from reV.utilities.exceptions import SAMExecutionError
 
 
@@ -24,24 +28,12 @@ class Economic(SAM):
     """Base class for SAM economic models."""
     MODULE = None
 
-    def __init__(self, ssc, data, parameters, site_parameters=None,
+    def __init__(self, parameters, site_parameters=None,
                  output_request='lcoe_fcr'):
         """Initialize a SAM economic model object.
 
         Parameters
         ----------
-        ssc : PySSC() | None
-            Python SAM Simulation Core (SSC) object. Can be passed from a
-            technology generation class after the SAM technology generation
-            simulation has been run. This can be None, signifying that a new
-            LCOE analysis is to be performed, not based on a SAM generation
-            instance.
-        data : PySSC.data_create() | None
-            SSC data creation object. If passed from a technology generation
-            class, do not run ssc.data_free(data) until after the Economic
-            model has been run. This can be None, signifying that a new
-            LCOE analysis is to be performed, not based on a SAM generation
-            instance.
         parameters : dict | ParametersManager()
             Site-agnostic SAM model input parameters.
         site_parameters : dict
@@ -53,38 +45,34 @@ class Economic(SAM):
         """
 
         self._site = None
-
-        if ssc is None and data is None:
-            # SAM generation simulation core not passed in. Create new SSC.
-            self._ssc = PySSC()
-            self._data = self._ssc.data_create()
-        else:
-            # Received SAM generation SSC.
-            self._ssc = ssc
-            self._data = data
-
-        # check if offshore wind
-        offshore = False
-        if site_parameters is not None:
-            if 'offshore' in site_parameters:
-                offshore = (bool(site_parameters['offshore'])
-                            and not np.isnan(site_parameters['offshore']))
+        self.parameters = parameters
 
         if isinstance(output_request, (list, tuple)):
             self.output_request = output_request
         else:
             self.output_request = (output_request,)
 
-        # Use Parameters class to manage inputs, defaults, and requirements.
-        if isinstance(parameters, ParametersManager):
-            self.parameters = parameters
-        elif isinstance(parameters, dict) and offshore:
-            # use parameters manager for offshore but do not verify or
-            # set defaults (ORCA handles this)
-            self.parameters = ParametersManager(parameters, self.module,
-                                                verify=False, set_def=False)
-        else:
-            self.parameters = ParametersManager(parameters, self.module)
+        self._parse_site_parameters(site_parameters)
+
+        super().__init__(meta=None, parameters=parameters,
+                         output_request=output_request)
+
+    def _parse_site_parameters(self, site_parameters):
+        """Parse site-specific parameters including offshore flags.
+
+        Parameters
+        ----------
+        site_parameters : dict
+            Optional set of site-specific parameters to complement the
+            site-agnostic 'parameters' input arg. Must have an 'offshore'
+            column with boolean dtype if running ORCA.
+        """
+        # check if offshore wind
+        offshore = False
+        if site_parameters is not None:
+            if 'offshore' in site_parameters:
+                offshore = (bool(site_parameters['offshore'])
+                            and not np.isnan(site_parameters['offshore']))
 
         # handle site-specific parameters
         if offshore:
@@ -93,16 +81,11 @@ class Economic(SAM):
         # Non-offshore parameters can be added to ParametersManager class
         else:
             self._site_parameters = None
-            self.parameters.update(site_parameters)
-
-    def execute(self, module_to_run, close=True):
-        """Execute a SAM economic model calculation.
-        """
-        self.set_parameters()
-        super().execute(module_to_run, close=close)
+            if site_parameters is not None:
+                self.parameters.update(site_parameters)
 
     @staticmethod
-    def parse_sys_cap(site, inputs, site_df):
+    def _parse_sys_cap(site, inputs, site_df):
         """Find the system capacity variable in either inputs or df.
 
         Parameters
@@ -145,7 +128,7 @@ class Economic(SAM):
         return sys_cap
 
     @staticmethod
-    def get_annual_energy(site, site_df, site_gids, cf_arr, inputs, calc_aey):
+    def _get_annual_energy(site, site_df, site_gids, cf_arr, inputs, calc_aey):
         """Get the single-site cf and annual energy and add to site_df.
 
         Parameters
@@ -193,7 +176,7 @@ class Economic(SAM):
         # offshore requires that ORCA does the aey calc
         if calc_aey and not offshore:
             # get the system capacity
-            sys_cap = Economic.parse_sys_cap(site, inputs, site_df)
+            sys_cap = Economic._parse_sys_cap(site, inputs, site_df)
 
             # Calc annual energy, mult by 8760 to convert kW to kWh
             aey = sys_cap * cf * 8760
@@ -203,7 +186,7 @@ class Economic(SAM):
         return site_df
 
     @staticmethod
-    def get_gen_profile(site, site_df, cf_file, cf_year, inputs):
+    def _get_gen_profile(site, site_df, cf_file, cf_year, inputs):
         """Get the single-site generation time series and add to inputs dict.
 
         Parameters
@@ -231,7 +214,7 @@ class Economic(SAM):
         """
 
         # get the system capacity
-        sys_cap = Economic.parse_sys_cap(site, inputs, site_df)
+        sys_cap = Economic._parse_sys_cap(site, inputs, site_df)
 
         # Retrieve the generation profile for single owner input
         with Outputs(cf_file) as cfh:
@@ -258,6 +241,75 @@ class Economic(SAM):
 
         return inputs
 
+    def ppa_price(self):
+        """Get PPA price ($/MWh).
+
+        Native units are cents/kWh, mult by 10 for $/MWh.
+        """
+        return self['ppa'] * 10
+
+    def npv(self):
+        """Get net present value (NPV) ($).
+
+        Native units are dollars.
+        """
+        return self['project_return_aftertax_npv']
+
+    def lcoe_fcr(self):
+        """Get LCOE ($/MWh).
+
+        Native units are $/kWh, mult by 1000 for $/MWh.
+        """
+        if 'lcoe_fcr' in self.outputs:
+            lcoe = self.outputs['lcoe_fcr']
+        else:
+            lcoe = self['lcoe_fcr'] * 1000
+        return lcoe
+
+    def lcoe_nom(self):
+        """Get nominal LCOE ($/MWh) (from PPA/SingleOwner model).
+
+        Native units are cents/kWh, mult by 10 for $/MWh.
+        """
+        return self['lcoe_nom'] * 10
+
+    def lcoe_real(self):
+        """Get real LCOE ($/MWh) (from PPA/SingleOwner model).
+
+        Native units are cents/kWh, mult by 10 for $/MWh.
+        """
+        return self['lcoe_real'] * 10
+
+    def flip_actual_irr(self):
+        """Get actual IRR (from PPA/SingleOwner model).
+
+        Native units are %.
+        """
+        return self['flip_actual_irr']
+
+    def gross_revenue(self):
+        """Get cash flow total revenue (from PPA/SingleOwner model).
+
+        Native units are $.
+        """
+        cf_tr = np.array(self['cf_total_revenue'], dtype=np.float32)
+        cf_tr = np.sum(cf_tr, axis=0)
+        return cf_tr
+
+    def collect_outputs(self):
+        """Collect SAM econ output_request."""
+
+        output_lookup = {'ppa_price': self.ppa_price,
+                         'project_return_aftertax_npv': self.npv,
+                         'lcoe_fcr': self.lcoe_fcr,
+                         'lcoe_nom': self.lcoe_nom,
+                         'lcoe_real': self.lcoe_real,
+                         'flip_actual_irr': self.flip_actual_irr,
+                         'gross_revenue': self.gross_revenue,
+                         }
+
+        super().collect_outputs(output_lookup)
+
     @classmethod
     def reV_run(cls, site, site_df, inputs, output_request):
         """Run the SAM econ model for a single site.
@@ -283,11 +335,15 @@ class Economic(SAM):
         """
 
         # Create SAM econ instance and calculate requested output.
-        sim = cls(ssc=None, data=None, parameters=inputs,
+        sim = cls(parameters=inputs,
                   site_parameters=dict(site_df.loc[site, :]),
                   output_request=output_request)
         sim._site = site
-        sim.execute(cls.MODULE)
+
+        sim.assign_inputs()
+        sim.execute()
+        sim.collect_outputs()
+
         return sim.outputs
 
 
@@ -295,12 +351,12 @@ class LCOE(Economic):
     """SAM LCOE model.
     """
     MODULE = 'lcoefcr'
+    PYSAM = pysam_lcoe
 
-    def __init__(self, ssc, data, parameters, site_parameters=None,
+    def __init__(self, parameters, site_parameters=None,
                  output_request=('lcoe_fcr',)):
         """Initialize a SAM LCOE economic model object."""
-        super().__init__(ssc, data, parameters,
-                         site_parameters=site_parameters,
+        super().__init__(parameters, site_parameters=site_parameters,
                          output_request=output_request)
 
     @staticmethod
@@ -361,7 +417,7 @@ class LCOE(Economic):
                                'Available datasets: {}'.format(cfh.dsets))
         return site_gids, calc_aey, cf_arr
 
-    def execute(self, module_to_run, close=True):
+    def execute(self):
         """Execute a SAM economic model calculation."""
         # check to see if there is an offshore flag and set for this run
         offshore = False
@@ -375,7 +431,29 @@ class LCOE(Economic):
             self.outputs = {'lcoe_fcr': orca.lcoe}
         else:
             # run SAM LCOE normally for non-offshore technologies
-            super().execute(module_to_run, close=close)
+            super().execute()
+
+    @property
+    def default(self):
+        """Get the executed default pysam LCOE FCR object.
+
+        Returns
+        -------
+        _default : PySAM.Lcoefcr
+            Executed Lcoefcr pysam object.
+        """
+        if self._default is None:
+            res_file = os.path.join(
+                TESTDATADIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            x = pysam_pv.default('PVWattsLCOECalculator')
+            x.LocationAndResource.solar_resource_file = res_file
+            x.execute()
+
+            self._default = pysam_lcoe.default('PVWattsLCOECalculator')
+            self._default.SimpleLCOE.annual_energy = x.Outputs.annual_energy
+            self._default.execute()
+        return self._default
 
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, cf_year,
@@ -417,8 +495,8 @@ class LCOE(Economic):
             # get SAM inputs from project_points based on the current site
             _, inputs = points_control.project_points[site]
 
-            site_df = cls.get_annual_energy(site, site_df, site_gids, cf_arr,
-                                            inputs, calc_aey)
+            site_df = cls._get_annual_energy(site, site_df, site_gids, cf_arr,
+                                             inputs, calc_aey)
 
             out[site] = super().reV_run(site, site_df, inputs, output_request)
 
@@ -445,31 +523,12 @@ class ORCA_LCOE:
         from ORCA.data import Data as ORCAData
 
         # make an ORCA tech system instance
-        self._system_inputs = self._parse_system_inputs(system_inputs)
+        self._system_inputs = system_inputs
         self.system = ORCASystem(self.system_inputs)
 
         # make a site-specific data structure
         self._site_data = self._parse_site_data(site_data)
         self.orca_data_struct = ORCAData(self.site_data)
-
-    @staticmethod
-    def _parse_system_inputs(inp):
-        """Parse the system (site-agnostic) inputs.
-
-        Parameters
-        ----------
-        inp : dict | ParametersManager
-            System/technology configuration inputs (non-site-specific).
-
-        Returns
-        -------
-        inp : dict
-            System/technology configuration inputs (non-site-specific).
-        """
-        # extract config inputs as dict if ParametersManager was received
-        if isinstance(inp, ParametersManager):
-            inp = inp.parameters
-        return inp
 
     @staticmethod
     def _parse_site_data(inp):
@@ -531,42 +590,18 @@ class SingleOwner(Economic):
     """SAM single owner economic model.
     """
     MODULE = 'singleowner'
+    PYSAM = pysam_so
 
-    def __init__(self, ssc, data, parameters, site_parameters=None,
+    def __init__(self, parameters, site_parameters=None,
                  output_request=('ppa_price',)):
         """Initialize a SAM single owner economic model object.
         """
-        super().__init__(ssc, data, parameters,
-                         site_parameters=site_parameters,
+        super().__init__(parameters, site_parameters=site_parameters,
                          output_request=output_request)
 
         # run balance of system cost model if required
-        self.parameters._parameters, self.windbos_outputs = \
-            self._windbos(self.parameters._parameters)
-
-    def collect_outputs(self):
-        """Collect SAM output_request, including windbos results.
-
-        Returns
-        -------
-        results : Dict
-            Dictionary keyed by SAM variable names with SAM numerical results.
-        """
-
-        windbos_out_vars = [v for v in self.output_request
-                            if v in self.windbos_outputs]
-        self.output_request = [v for v in self.output_request
-                               if v not in windbos_out_vars]
-
-        results = super().collect_outputs()
-
-        windbos_results = {}
-        for request in windbos_out_vars:
-            windbos_results[request] = self.windbos_outputs[request]
-
-        results.update(windbos_results)
-
-        return results
+        self.parameters, self.windbos_outputs = \
+            self._windbos(self.parameters)
 
     @staticmethod
     def _windbos(inputs):
@@ -594,6 +629,44 @@ class SingleOwner(Economic):
                 inputs['total_installed_cost'] = wb.total_installed_cost
                 outputs = wb.output
         return inputs, outputs
+
+    @property
+    def default(self):
+        """Get the executed default pysam Single Owner object.
+
+        Returns
+        -------
+        _default : PySAM.Singleowner
+            Executed Singleowner pysam object.
+        """
+        if self._default is None:
+            res_file = os.path.join(
+                TESTDATADIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            x = pysam_pv.default('PVWattsSingleOwner')
+            x.LocationAndResource.solar_resource_file = res_file
+            x.execute()
+
+            self._default = pysam_so.default('PVWattsSingleOwner')
+            self._default.SystemOutput.gen = x.Outputs.ac
+            self._default.execute()
+        return self._default
+
+    def collect_outputs(self):
+        """Collect SAM output_request, including windbos results."""
+
+        windbos_out_vars = [v for v in self.output_request
+                            if v in self.windbos_outputs]
+        self.output_request = [v for v in self.output_request
+                               if v not in windbos_out_vars]
+
+        super().collect_outputs()
+
+        windbos_results = {}
+        for request in windbos_out_vars:
+            windbos_results[request] = self.windbos_outputs[request]
+
+        self.outputs.update(windbos_results)
 
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, cf_year,
@@ -636,8 +709,8 @@ class SingleOwner(Economic):
             site_inputs = deepcopy(inputs)
 
             # set the generation profile as an input.
-            site_inputs = cls.get_gen_profile(site, site_df, cf_file, cf_year,
-                                              site_inputs)
+            site_inputs = cls._get_gen_profile(site, site_df, cf_file, cf_year,
+                                               site_inputs)
 
             out[site] = super().reV_run(site, site_df, site_inputs,
                                         output_request)

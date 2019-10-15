@@ -144,8 +144,8 @@ class BaseConfig(dict):
         if os.path.exists(fname) and fname.endswith('.json'):
             config = safe_json_load(fname)
         elif os.path.exists(fname) is False:
-            raise IOError('Configuration file does not exist: "{}"'
-                          .format(fname))
+            raise FileNotFoundError('Configuration file does not exist: "{}"'
+                                    .format(fname))
         else:
             raise ConfigError('Unknown error getting configuration file: "{}"'
                               .format(fname))

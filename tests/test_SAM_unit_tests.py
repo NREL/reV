@@ -6,10 +6,8 @@ import os
 import pytest
 import numpy as np
 import pandas as pd
-import json
 import warnings
 
-from reV.SAM.SAM import SAM, ParametersManager
 from reV.SAM.generation import PV
 from reV.handlers.resource import NSRDB
 from reV import TESTDATADIR
@@ -30,20 +28,6 @@ def res():
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
     res = NSRDB.preload_SAM(res_file, pp)
     return res
-
-
-@pytest.mark.parametrize('module', ('pvwattsv5', 'tcsmolten_salt', 'lcoefcr',
-                                    'windpower', 'singleowner'))
-def test_param_manager(module):
-    """Test the parameters manager default setting."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        pm = ParametersManager({}, module)
-    jf = os.path.join(SAM.DIR, 'defaults', module + '.json')
-    with open(jf, 'r') as f:
-        defaults = json.load(f)
-    for key in pm.keys():
-        assert pm[key] == defaults[key]
 
 
 def test_res_length(res):
