@@ -124,6 +124,12 @@ class SAMInputWarning(Warning):
     """
 
 
+class SAMExecutionWarning(Warning):
+    """
+    Warning for problematic SAM execution
+    """
+
+
 class HandlerWarning(Warning):
     """
     Warning during .h5 handling

@@ -15,6 +15,7 @@ from reV.handlers.outputs import Outputs
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
 from reV.generation.generation import Gen
+from reV.utilities.exceptions import OutputWarning, ExecutionError
 
 
 logger = logging.getLogger(__name__)
@@ -23,23 +24,25 @@ logger = logging.getLogger(__name__)
 class Econ(Gen):
     """Base econ class"""
 
-    # Mapping of reV econ output strings to SAM econ functions
-    OPTIONS = {'lcoe_fcr': SAM_LCOE.reV_run,
-               'ppa_price': SingleOwner.reV_run,
-               'project_return_aftertax_npv': SingleOwner.reV_run,
-               'lcoe_real': SingleOwner.reV_run,
-               'lcoe_nom': SingleOwner.reV_run,
-               'flip_actual_irr': SingleOwner.reV_run,
-               'gross_revenue': SingleOwner.reV_run,
-               'total_installed_cost': WindBos.reV_run,
-               'turbine_cost': WindBos.reV_run,
-               'sales_tax_cost': WindBos.reV_run,
-               'bos_cost': WindBos.reV_run,
+    # Mapping of reV econ output strings to SAM econ modules
+    OPTIONS = {'lcoe_fcr': SAM_LCOE,
+               'ppa_price': SingleOwner,
+               'project_return_aftertax_npv': SingleOwner,
+               'lcoe_real': SingleOwner,
+               'lcoe_nom': SingleOwner,
+               'flip_actual_irr': SingleOwner,
+               'gross_revenue': SingleOwner,
+               'total_installed_cost': WindBos,
+               'turbine_cost': WindBos,
+               'sales_tax_cost': WindBos,
+               'bos_cost': WindBos,
                }
 
     # Mapping of reV econ outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
-    OUT_ATTRS = {'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
+    OUT_ATTRS = {'other': {'scale_factor': 1, 'units': 'unknown',
+                           'dtype': 'float32', 'chunks': None},
+                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
@@ -116,6 +119,8 @@ class Econ(Gen):
         self._time_index = None
         self._meta = None
         self._fun = None
+        self._sam_module = None
+        self._sam_obj_default = None
         self.mem_util_lim = mem_util_lim
         self._output_request = self._parse_output_request(output_request)
         self._site_data = self._parse_site_data(site_data)
@@ -149,27 +154,38 @@ class Econ(Gen):
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
-                raise ValueError('User output request "{}" not recognized. '
-                                 'The following output requests are available '
-                                 'in "{}": "{}"'
-                                 .format(request, self.__class__,
-                                         list(self.OUT_ATTRS.keys())))
+                msg = ('User output request "{}" not recognized. '
+                       'Will attempt to extract from PySAM.'.format(request))
+                logger.warning(msg)
+                warn(msg, OutputWarning)
 
-        funs = []
+        modules = []
         for request in output_request:
-            funs.append(self.OPTIONS[request])
-        b1 = [f == funs[0] for f in funs]
-        b2 = np.array([f == WindBos.reV_run for f in funs])
-        b3 = np.array([f == SingleOwner.reV_run for f in funs])
+            if request in self.OPTIONS:
+                modules.append(self.OPTIONS[request])
+
+        if not any(modules):
+            msg = ('None of the user output requests were recognized. '
+                   'Cannot run reV econ. '
+                   'At least one of the following must be requested: {}'
+                   .format(list(self.OPTIONS.keys())))
+            logger.exception(msg)
+            raise ExecutionError(msg)
+
+        b1 = [m == modules[0] for m in modules]
+        b2 = np.array([m == WindBos for m in modules])
+        b3 = np.array([m == SingleOwner for m in modules])
 
         if all(b1):
-            self._fun = funs[0]
+            self._sam_module = modules[0]
+            self._fun = modules[0].reV_run
         elif all(b2 | b3):
+            self._sam_module = SingleOwner
             self._fun = SingleOwner.reV_run
         else:
             msg = ('Econ outputs requested from different SAM modules not '
                    'currently supported. Output request variables require '
-                   'SAM methods: {}'.format(funs))
+                   'SAM methods: {}'.format(modules))
             raise ValueError(msg)
 
         return list(set(output_request))
