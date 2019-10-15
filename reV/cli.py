@@ -72,15 +72,18 @@ def collect(ctx, verbose):
 @main.command()
 @click.option('--cancel', is_flag=True,
               help='Flag to cancel all jobs associated with a given pipeline.')
+@click.option('--monitor', is_flag=True,
+              help='Flag to monitor pipeline jobs continuously. '
+              'Default is not to monitor (kick off jobs and exit).')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def pipeline(ctx, cancel, verbose):
+def pipeline(ctx, cancel, monitor, verbose):
     """Execute multiple steps in a reV analysis pipeline."""
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_pipeline_from_config, config_file=config_file,
-               cancel=cancel, verbose=verbose)
+               cancel=cancel, monitor=monitor, verbose=verbose)
 
 
 @main.command()
