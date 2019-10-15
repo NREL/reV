@@ -14,6 +14,7 @@ import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Lcoefcr as pysam_lcoe
 import PySAM.Singleowner as pysam_so
 
+from reV import TESTDATADIR
 from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
 from reV.SAM.SAM import SAM
@@ -296,13 +297,7 @@ class Economic(SAM):
         return cf_tr
 
     def collect_outputs(self):
-        """Collect SAM output_request.
-
-        Returns
-        -------
-        output : Dict
-            Dictionary keyed by SAM variable names with SAM numerical results.
-        """
+        """Collect SAM econ output_request."""
 
         output_lookup = {'ppa_price': self.ppa_price,
                          'project_return_aftertax_npv': self.npv,
@@ -448,7 +443,6 @@ class LCOE(Economic):
             Executed Lcoefcr pysam object.
         """
         if self._default is None:
-            from reV import TESTDATADIR
             res_file = os.path.join(
                 TESTDATADIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
@@ -646,7 +640,6 @@ class SingleOwner(Economic):
             Executed Singleowner pysam object.
         """
         if self._default is None:
-            from reV import TESTDATADIR
             res_file = os.path.join(
                 TESTDATADIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')

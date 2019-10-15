@@ -15,6 +15,7 @@ import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Windpower as pysam_wind
 import PySAM.TcsmoltenSalt as pysam_csp
 
+from reV import TESTDATADIR
 from reV.handlers.resource import Resource
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
@@ -30,7 +31,7 @@ class Generation(SAM):
     """Base class for SAM generation simulations."""
 
     @staticmethod
-    def get_res_mean(res_file, res_df, output_request):
+    def _get_res_mean(res_file, res_df, output_request):
         """Get the resource annual means.
 
         Parameters
@@ -185,28 +186,8 @@ class Generation(SAM):
                                             * self.time_interval))
         return poa
 
-    def ppa_price(self):
-        """Get PPA price ($/MWh).
-
-        Native units are cents/kWh, mult by 10 for $/MWh.
-        """
-        return self['ppa'] * 10
-
-    def npv(self):
-        """Get net present value (NPV) ($).
-
-        Native units are dollars.
-        """
-        return self['project_return_aftertax_npv']
-
     def collect_outputs(self):
-        """Collect SAM output_request.
-
-        Returns
-        -------
-        output : Dict
-            Dictionary keyed by SAM variable names with SAM numerical results.
-        """
+        """Collect SAM gen output_request."""
 
         output_lookup = {'cf_mean': self.cf_mean,
                          'cf_profile': self.cf_profile,
@@ -226,7 +207,6 @@ class Generation(SAM):
         self.collect_outputs()
 
         if 'lcoe_fcr' in self.output_request:
-            # econ outputs requested, run LCOE model after generation.
             self.parameters['annual_energy'] = self.annual_energy()
             lcoe = LCOE(self.parameters, output_request=('lcoe_fcr',))
             lcoe.assign_inputs()
@@ -235,7 +215,6 @@ class Generation(SAM):
             self.outputs.update(lcoe.outputs)
 
         elif 'ppa_price' in self.output_request:
-            # econ outputs requested, run SingleOwner model after generation.
             self.parameters['gen'] = self.gen_profile()
             so = SingleOwner(self.parameters, output_request=('ppa_price',))
             so.assign_inputs()
@@ -295,8 +274,8 @@ class Generation(SAM):
             site = res_df.name
             _, inputs = points_control.project_points[site]
 
-            res_mean, out_req_nomeans = cls.get_res_mean(res_file, res_df,
-                                                         output_request)
+            res_mean, out_req_nomeans = cls._get_res_mean(res_file, res_df,
+                                                          output_request)
 
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
@@ -344,8 +323,8 @@ class Solar(Generation):
         if drop_leap:
             resource = self.drop_leap(resource)
 
-        # set PV tilt to latitude if applicable
         parameters = self.set_latitude_tilt_az(parameters, meta)
+        meta = self.tz_check(parameters, meta)
 
         # don't pass resource to base class, set in set_nsrdb instead.
         super().__init__(meta, parameters, output_request)
@@ -405,7 +384,7 @@ class Solar(Generation):
         return parameters
 
     def set_nsrdb(self, resource):
-        """Set SSC NSRDB resource data arrays.
+        """Set NSRDB resource data arrays.
 
         Parameters
         ----------
@@ -499,7 +478,6 @@ class PV(Solar):
             Executed pvwatts pysam object.
         """
         if self._default is None:
-            from reV import TESTDATADIR
             res_file = os.path.join(
                 TESTDATADIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
@@ -532,7 +510,6 @@ class CSP(Solar):
             Executed TcsmoltenSalt pysam object.
         """
         if self._default is None:
-            from reV import TESTDATADIR
             res_file = os.path.join(
                 TESTDATADIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
@@ -572,6 +549,8 @@ class Wind(Generation):
         if drop_leap:
             resource = self.drop_leap(resource)
 
+        meta = self.tz_check(parameters, meta)
+
         # don't pass resource to base class, set in set_wtk instead.
         super().__init__(meta, parameters, output_request)
 
@@ -602,7 +581,7 @@ class Wind(Generation):
         return gen
 
     def set_wtk(self, resource):
-        """Set SSC WTK resource data arrays.
+        """Set WTK resource data arrays.
 
         Parameters
         ----------
@@ -656,7 +635,6 @@ class Wind(Generation):
             Executed Windpower pysam object.
         """
         if self._default is None:
-            from reV import TESTDATADIR
             res_file = os.path.join(
                 TESTDATADIR, 'SAM/WY Southern-Flat Lands.csv')
             self._default = pysam_wind.default('WindPowerNone')

@@ -277,7 +277,9 @@ class RevPySAM:
         Returns
         -------
         _attr_dict : dict
-            Dictionary with attribute group keys and low level attribute values
+            Dictionary with:
+               keys: variable groups
+               values: lowest level attribute/variable names
         """
         if self._attr_dict is None:
             keys = self._get_pysam_attrs(self.pysam)
@@ -287,7 +289,7 @@ class RevPySAM:
 
     @property
     def input_list(self):
-        """Get the list of lowest level input attribute names.
+        """Get the list of lowest level input attribute/variable names.
 
         Returns
         -------
@@ -301,20 +303,20 @@ class RevPySAM:
         return self._inputs
 
     def _get_group(self, key, outputs=True):
-        """Get the attribute group that the input key belongs to.
+        """Get the group that the input key belongs to.
 
         Parameters
         ----------
         key : str
-            Low level PySAM attribute.
+            Lowest level PySAM attribute/variable name.
         outputs : bool
             Flag if this key might be in outputs group. False ignores the
-            outputs group.
+            outputs group (looks for inputs only).
 
         Returns
         -------
         group : str | None
-            Higher level PySAM attribute that key belongs to. None if not found
+            PySAM attribute group that key belongs to. None if not found.
         """
         group = None
 
@@ -348,7 +350,7 @@ class RevPySAM:
         return attrs
 
     def execute(self):
-        """Call the PySAM execute method."""
+        """Call the PySAM execute method. Raise SAMExecutionError if error."""
         try:
             self.pysam.execute()
         except Exception as e:
@@ -370,19 +372,10 @@ class RevPySAM:
             if k in self.input_list:
                 self[k] = v
             elif raise_warning:
-                wmsg = 'Not setting input "{}". Not in PySAM inputs.'.format(k)
+                wmsg = ('Not setting input "{}". Not found in PySAM inputs.'
+                        .format(k))
                 warn(wmsg, SAMInputWarning)
                 logger.warning(wmsg)
-
-    def outputs(self):
-        """Get the PySAM outputs object.
-
-        Returns
-        -------
-        out : PySAM.Outputs
-            Outputs object with attributes corresponding to output var names.
-        """
-        return self.pysam.Outputs
 
 
 class SAM(RevPySAM):
