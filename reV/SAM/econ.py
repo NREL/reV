@@ -4,11 +4,13 @@
 Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
 SAM software development kit (SDK).
 """
+import os
 from copy import deepcopy
 import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
+import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Lcoefcr as pysam_lcoe
 import PySAM.Singleowner as pysam_so
 
@@ -436,6 +438,29 @@ class LCOE(Economic):
             # run SAM LCOE normally for non-offshore technologies
             super().execute()
 
+    @property
+    def default(self):
+        """Get the executed default pysam LCOE FCR object.
+
+        Returns
+        -------
+        _default : PySAM.Lcoefcr
+            Executed Lcoefcr pysam object.
+        """
+        if self._default is None:
+            from reV import TESTDATADIR
+            res_file = os.path.join(
+                TESTDATADIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            x = pysam_pv.default('PVWattsLCOECalculator')
+            x.LocationAndResource.solar_resource_file = res_file
+            x.execute()
+
+            self._default = pysam_lcoe.default('PVWattsLCOECalculator')
+            self._default.SimpleLCOE.annual_energy = x.Outputs.annual_energy
+            self._default.execute()
+        return self._default
+
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, cf_year,
                 output_request=('lcoe_fcr',)):
@@ -584,22 +609,6 @@ class SingleOwner(Economic):
         self.parameters, self.windbos_outputs = \
             self._windbos(self.parameters)
 
-    def collect_outputs(self):
-        """Collect SAM output_request, including windbos results."""
-
-        windbos_out_vars = [v for v in self.output_request
-                            if v in self.windbos_outputs]
-        self.output_request = [v for v in self.output_request
-                               if v not in windbos_out_vars]
-
-        super().collect_outputs()
-
-        windbos_results = {}
-        for request in windbos_out_vars:
-            windbos_results[request] = self.windbos_outputs[request]
-
-        self.outputs.update(windbos_results)
-
     @staticmethod
     def _windbos(inputs):
         """Run SAM Wind Balance of System cost model if requested.
@@ -626,6 +635,45 @@ class SingleOwner(Economic):
                 inputs['total_installed_cost'] = wb.total_installed_cost
                 outputs = wb.output
         return inputs, outputs
+
+    @property
+    def default(self):
+        """Get the executed default pysam Single Owner object.
+
+        Returns
+        -------
+        _default : PySAM.Singleowner
+            Executed Singleowner pysam object.
+        """
+        if self._default is None:
+            from reV import TESTDATADIR
+            res_file = os.path.join(
+                TESTDATADIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            x = pysam_pv.default('PVWattsSingleOwner')
+            x.LocationAndResource.solar_resource_file = res_file
+            x.execute()
+
+            self._default = pysam_so.default('PVWattsSingleOwner')
+            self._default.SystemOutput.gen = x.Outputs.ac
+            self._default.execute()
+        return self._default
+
+    def collect_outputs(self):
+        """Collect SAM output_request, including windbos results."""
+
+        windbos_out_vars = [v for v in self.output_request
+                            if v in self.windbos_outputs]
+        self.output_request = [v for v in self.output_request
+                               if v not in windbos_out_vars]
+
+        super().collect_outputs()
+
+        windbos_results = {}
+        for request in windbos_out_vars:
+            windbos_results[request] = self.windbos_outputs[request]
+
+        self.outputs.update(windbos_results)
 
     @classmethod
     def reV_run(cls, points_control, site_df, cf_file, cf_year,

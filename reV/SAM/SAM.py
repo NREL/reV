@@ -198,7 +198,9 @@ class RevPySAM:
     def __init__(self):
         self._pysam = self.PYSAM.new()
         self._attr_dict = None
+        self._default = None
         self._inputs = []
+
         try:
             self['constant'] = 0.0
         except SAMInputError:
@@ -256,10 +258,17 @@ class RevPySAM:
 
     @property
     def default(self):
-        """Get the executed default pysam object."""
-        _default = self.PYSAM.default('GenericSystemNone')
-        _default.execute()
-        return _default
+        """Get the executed default pysam object.
+
+        Returns
+        -------
+        _default : PySAM.GenericSystem
+            Executed generic system pysam object.
+        """
+        if self._default is None:
+            self._default = self.PYSAM.default('GenericSystemNone')
+            self._default.execute()
+        return self._default
 
     @property
     def attr_dict(self):

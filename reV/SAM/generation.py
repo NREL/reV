@@ -6,6 +6,7 @@ SAM software development kit (SDK).
 """
 import copy
 import gc
+import os
 import logging
 import numpy as np
 import pandas as pd
@@ -488,6 +489,25 @@ class PV(Solar):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
+    @property
+    def default(self):
+        """Get the executed default pysam PVWATTS object.
+
+        Returns
+        -------
+        _default : PySAM.Pvwattsv5
+            Executed pvwatts pysam object.
+        """
+        if self._default is None:
+            from reV import TESTDATADIR
+            res_file = os.path.join(
+                TESTDATADIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            self._default = pysam_pv.default('PVWattsNone')
+            self._default.LocationAndResource.solar_resource_file = res_file
+            self._default.execute()
+        return self._default
+
 
 class CSP(Solar):
     """Concentrated Solar Power (CSP) generation
@@ -501,6 +521,25 @@ class CSP(Solar):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
+
+    @property
+    def default(self):
+        """Get the executed default pysam CSP object.
+
+        Returns
+        -------
+        _default : PySAM.TcsmoltenSalt
+            Executed TcsmoltenSalt pysam object.
+        """
+        if self._default is None:
+            from reV import TESTDATADIR
+            res_file = os.path.join(
+                TESTDATADIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            self._default = pysam_csp.default('MSPTSingleOwner')
+            self._default.LocationAndResource.solar_resource_file = res_file
+            self._default.execute()
+        return self._default
 
 
 class Wind(Generation):
@@ -606,6 +645,24 @@ class Wind(Generation):
 
         # add resource data to self.data and clear
         self['wind_resource_data'] = data_dict
+
+    @property
+    def default(self):
+        """Get the executed default pysam WindPower object.
+
+        Returns
+        -------
+        _default : PySAM.Windpower
+            Executed Windpower pysam object.
+        """
+        if self._default is None:
+            from reV import TESTDATADIR
+            res_file = os.path.join(
+                TESTDATADIR, 'SAM/WY Southern-Flat Lands.csv')
+            self._default = pysam_wind.default('WindPowerNone')
+            self._default.WindResourceFile.wind_resource_filename = res_file
+            self._default.execute()
+        return self._default
 
 
 class LandBasedWind(Wind):
