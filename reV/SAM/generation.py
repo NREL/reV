@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """reV-to-SAM generation interface module.
 
-Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
-SAM software development kit (SDK).
+Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
+additional reV features.
 """
 import copy
 import gc

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """reV-to-SAM econ interface module.
 
-Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
-SAM software development kit (SDK).
+Wraps the NREL-PySAM lcoefcr and singleowner modules with
+additional reV features.
 """
 import os
 from copy import deepcopy

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """reV-to-SAM interface module.
 
-Relies heavily upon the SAM Simulation Core (SSC) API module (sscapi) from the
-SAM software development kit (SDK).
+Wraps the NREL-PySAM library with additional reV features.
 """
 import logging
 import numpy as np
@@ -52,6 +51,7 @@ class SAMResourceRetriever:
                    'module or reV technology "{}" requires. Expecting one of '
                    'the following SAM modules or reV technologies: {}'
                    .format(module, list(SAM.RESOURCE_TYPES.keys())))
+            logger.exception(msg)
             raise SAMExecutionError(msg)
 
         if res_handler == SolarResource and 'nsrdb' in res_file.lower():
@@ -97,7 +97,8 @@ class SAMResourceRetriever:
                        'resource file. reV does not have this capability at '
                        'the current time. Please contact a developer for '
                        'more information on this feature.')
-                raise SAMInputWarning(msg)
+                logger.warning(msg)
+                warn(msg, SAMInputWarning)
             else:
                 # pass through the downscaling request
                 kwargs['downscale'] = downscale
@@ -238,18 +239,22 @@ class RevPySAM:
             Data to set to the key.
         """
         if key not in self.input_list:
-            raise SAMInputError('Could not set input key "{}". Attribute not '
-                                'found in PySAM object: "{}"'
-                                .format(key, self.pysam))
+            msg = ('Could not set input key "{}". Attribute not '
+                   'found in PySAM object: "{}"'
+                   .format(key, self.pysam))
+            logger.exception(msg)
+            raise SAMInputError(msg)
         else:
             group = self._get_group(key, outputs=False)
             try:
                 setattr(getattr(self.pysam, group), key, value)
             except Exception as e:
-                raise SAMInputError('Could not set input key "{}" to '
-                                    'group "{}" in "{}". '
-                                    'Received the following error: "{}"'
-                                    .format(key, group, self.pysam, e))
+                msg = ('Could not set input key "{}" to '
+                       'group "{}" in "{}". '
+                       'Received the following error: "{}"'
+                       .format(key, group, self.pysam, e))
+                logger.exception(msg)
+                raise SAMInputError(msg)
 
     @property
     def pysam(self):
@@ -354,8 +359,9 @@ class RevPySAM:
         try:
             self.pysam.execute()
         except Exception as e:
-            raise SAMExecutionError('PySAM raised an error while executing: '
-                                    '"{}"'.format(e))
+            msg = 'PySAM raised an error while executing: "{}"'.format(e)
+            logger.exception(msg)
+            raise SAMExecutionError(msg)
 
     def assign_inputs(self, inputs, raise_warning=False):
         """Assign a flat dictionary of inputs to the PySAM object.
@@ -478,9 +484,11 @@ class SAM(RevPySAM):
         """
 
         if len(res_arr) < 8760:
-            raise ResourceError('Resource timeseries must be hourly. '
-                                'Received timeseries of length {}.'
-                                .format(len(res_arr)))
+            msg = ('Resource timeseries must be hourly. '
+                   'Received timeseries of length {}.'
+                   .format(len(res_arr)))
+            logger.exception(msg)
+            raise ResourceError(msg)
 
         if len(res_arr) % base != 0:
             div = np.floor(len(res_arr) / 8760)
