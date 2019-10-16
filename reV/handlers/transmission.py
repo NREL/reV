@@ -22,7 +22,7 @@ class TransmissionFeatures:
     def __init__(self, trans_table, features=None,
                  line_tie_in_cost=14000, line_cost=3667,
                  station_tie_in_cost=0, center_tie_in_cost=0,
-                 sink_tie_in_cost=0, available_capacity=0.1,
+                 sink_tie_in_cost=14000, available_capacity=0.1,
                  line_limited=False):
         """
         Parameters
@@ -544,7 +544,7 @@ class TransmissionFeatures:
     def feature_costs(cls, trans_table, features=None,
                       capacity=None, line_tie_in_cost=14000,
                       line_cost=3667, station_tie_in_cost=0,
-                      center_tie_in_cost=0, sink_tie_in_cost=0,
+                      center_tie_in_cost=0, sink_tie_in_cost=14000,
                       available_capacity=0.1, **kwargs):
         """
         Compute costs for all connections in given transmission table
