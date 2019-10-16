@@ -52,19 +52,22 @@ def baseline_verify(sc_full, fpath_baseline):
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
-        for c in baseline.columns:
-            numeric = (np.issubdtype(sc_full[c].values.dtype, np.floating)
-                       | np.issubdtype(sc_full[c].values.dtype, np.integer))
-            if numeric:
-                np.seterr(divide='ignore', invalid='ignore')
-                diff = np.divide(baseline[c].values,
-                                 (baseline[c].values - sc_full[c].values))
-                diff = np.nan_to_num(diff)
-                msg = 'Bad column: {}, max diff: {}'.format(c, diff.max())
-                assert np.allclose(baseline[c].values,
-                                   sc_full[c].values, rtol=0.01), msg
+        verify_numeric_cols(baseline, sc_full)
     else:
         sc_full.to_csv(fpath_baseline, index=False)
+
+
+def verify_numeric_cols(df1, df2):
+    """Verify numeric columns in two dataframes."""
+
+    for c in df1.columns:
+        numeric = (np.issubdtype(df2[c].values.dtype, np.floating)
+                   | np.issubdtype(df2[c].values.dtype, np.integer))
+        if numeric:
+            diff = np.abs(df1[c].values - df2[c].values)
+            msg = 'Bad column: {}, max diff: {}'.format(c, diff.max())
+            assert np.allclose(df1[c].values,
+                               df2[c].values, rtol=0.01), msg
 
 
 @pytest.mark.parametrize(('i', 'tcosts'), ((1, TRANS_COSTS_1),
@@ -126,6 +129,22 @@ def test_sc_warning2(sc_points, trans_table, multipliers):
         msg = ('Warning failed! Should have Unconnected sc_gid: '
                '{}'.format(s2))
         assert s1 in s2, msg
+
+
+def test_parallel(sc_points, trans_table, multipliers):
+    """Test a parallel compute against a serial compute"""
+
+    sc_full_parallel = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
+                                        sc_features=multipliers,
+                                        transmission_costs=TRANS_COSTS_1,
+                                        max_workers=4)
+
+    sc_full_serial = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
+                                      sc_features=multipliers,
+                                      transmission_costs=TRANS_COSTS_1,
+                                      max_workers=1)
+
+    verify_numeric_cols(sc_full_parallel, sc_full_serial)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

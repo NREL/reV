@@ -4,6 +4,7 @@ reV supply curve module
 - Calculation of LCOT
 - Supply Curve creation
 """
+import os
 import concurrent.futures as cf
 import logging
 import numpy as np
@@ -179,7 +180,7 @@ class SupplyCurve:
         return sorted(merge_cols)
 
     @staticmethod
-    def _compute_lcot(trans_table, fcr, trans_costs=None, max_workers=1,
+    def _compute_lcot(trans_table, fcr, trans_costs=None, max_workers=None,
                       connectable=True, **kwargs):
         """
         Compute levelized cost of transmission for all combinations of
@@ -196,7 +197,8 @@ class SupplyCurve:
             Transmission feature costs to use with TransmissionFeatures
             handler
         max_workers : int | NoneType
-            Number of workers to use to compute lcot, if > 1 run in parallel
+            Number of workers to use to compute lcot, if > 1 run in parallel.
+            None uses all available cpu's.
         connectable : bool
             Determine if connection is possible
         kwargs : dict
@@ -219,9 +221,12 @@ class SupplyCurve:
         if trans_costs is not None:
             kwargs.update(trans_costs)
 
+        if max_workers is None:
+            max_workers = os.cpu_count()
+
         logger.info('Computing LCOT costs for all possible connections...')
         if max_workers > 1:
-            groups = trans_table.sort_values('sc_gid').groupby('sc_gid')
+            groups = trans_table.groupby('sc_gid')
             with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
                 futures = []
                 for sc_gid, sc_table in groups:
@@ -344,7 +349,7 @@ class SupplyCurve:
         sc_cap = sc_cap.rename(columns=rename)
 
         trans_table = trans_table.merge(sc_cap, on=table_merge_cols,
-                                        how='inner').sort_values('sc_gid')
+                                        how='inner')
 
         sc_gids = set(sc_cap['sc_gid'].unique())
         trans_sc_gids = set(trans_table['sc_gid'].unique())
@@ -360,6 +365,7 @@ class SupplyCurve:
 
         trans_table = SupplyCurve._feature_capacity(trans_table,
                                                     trans_costs=trans_costs)
+        trans_table = trans_table.sort_values('sc_gid')
         lcot, cost = SupplyCurve._compute_lcot(trans_table, fcr,
                                                trans_costs=trans_costs,
                                                **kwargs)

@@ -50,6 +50,7 @@ class TransmissionFeatures:
             Substation connection is limited by maximum capacity of the
             attached lines
         """
+
         logger.debug('Line tie in cost: {} $/MW'.format(line_tie_in_cost))
         logger.debug('Line cost: {} $/MW-mile'.format(line_cost))
         logger.debug('Station tie in cost: {} $/MW'
@@ -542,7 +543,7 @@ class TransmissionFeatures:
     @classmethod
     def feature_costs(cls, trans_table, features=None,
                       capacity=None, line_tie_in_cost=14000,
-                      line_cost=3667, station_tine_in_cost=0,
+                      line_cost=3667, station_tie_in_cost=0,
                       center_tie_in_cost=0, sink_tie_in_cost=0,
                       available_capacity=0.1, **kwargs):
         """
@@ -583,7 +584,7 @@ class TransmissionFeatures:
             feature = cls(trans_table, features=features,
                           line_tie_in_cost=line_tie_in_cost,
                           line_cost=line_cost,
-                          station_tie_in_cost=station_tine_in_cost,
+                          station_tie_in_cost=station_tie_in_cost,
                           center_tie_in_cost=center_tie_in_cost,
                           sink_tie_in_cost=sink_tie_in_cost,
                           available_capacity=available_capacity)
