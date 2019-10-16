@@ -382,7 +382,7 @@ class Resource:
         Parameters
         ----------
         ds : str
-            Dataset to extract time_index from
+            Dataset to extract meta from
         ds_slice : tuple of int | list | slice
             Pandas slicing describing which sites and columns to extract
 
