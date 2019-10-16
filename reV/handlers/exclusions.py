@@ -156,6 +156,23 @@ class ExclusionLayers:
         profile = json.loads(self.h5[layer].attrs['profile'])
         return profile
 
+    def get_layer_values(self, layer):
+        """
+        Get values for given layer in Geotiff format (bands, y, x)
+
+        Parameters
+        ----------
+        layer : str
+            Layer to get values for
+
+        Returns
+        -------
+        values : ndarray
+            GeoTiff values for single exclusion layer
+        """
+        values = self.h5[layer][...]
+        return values
+
     def _get_meta(self, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
