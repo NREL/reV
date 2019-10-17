@@ -131,7 +131,7 @@ class ExclusionLayers:
         """
         if self._meta is None:
             if 'meta' in self.h5:
-                self._meta = self._get_meta('meta', slice(None))
+                self._meta = self._get_meta(slice(None))
             else:
                 msg = "'meta' is not a valid dataset"
                 logger.exception(msg)
