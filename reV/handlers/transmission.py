@@ -10,7 +10,7 @@ import pandas as pd
 from warnings import warn
 
 from reV.utilities import safe_json_load
-from reV.utilities.exceptions import HandlerWarning
+from reV.utilities.exceptions import HandlerWarning, HandlerKeyError
 
 logger = logging.getLogger(__name__)
 
@@ -187,6 +187,12 @@ class TransmissionFeatures:
 
             elif name == 'pcaloadcen':
                 avail_capacities[gid] = None
+
+            else:
+                msg = ('Cannot not recognize feature type "{}" '
+                       'for trans gid {}!'.format(name, gid))
+                logger.error(msg)
+                raise HandlerKeyError(msg)
 
         return feature_types, avail_capacities, substation_lines
 
@@ -503,6 +509,7 @@ class TransmissionFeatures:
             tie_in_cost = 0
             msg = ("Do not recognize feature type {}, tie_in_cost set to 0"
                    .format(feature_type))
+            logger.warning(msg)
             warn(msg, HandlerWarning)
 
         cost = self._calc_cost(distance, line_cost=line_cost,
