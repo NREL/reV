@@ -411,15 +411,15 @@ class SupplyCurve:
         pos = trans_table['lcot'].isnull()
         trans_table = trans_table.loc[~pos].sort_values('total_lcoe')
 
-        trans_sc_gids = trans_table['sc_gid'].values.tolist()
-        trans_gids = trans_table['trans_line_gid'].values.tolist()
-        trans_cap = trans_table['avail_cap'].values.tolist()
-        capacities = trans_table['capacity'].values.tolist()
-        categories = trans_table['category'].values.tolist()
-        dists = trans_table['dist_mi'].values.tolist()
-        trans_cap_costs = trans_table['trans_cap_cost'].values.tolist()
-        lcots = trans_table['lcot'].values.tolist()
-        total_lcoes = trans_table['total_lcoe'].values.tolist()
+        trans_sc_gids = trans_table['sc_gid'].values
+        trans_gids = trans_table['trans_line_gid'].values
+        trans_cap = trans_table['avail_cap'].values
+        capacities = trans_table['capacity'].values
+        categories = trans_table['category'].values
+        dists = trans_table['dist_mi'].values
+        trans_cap_costs = trans_table['trans_cap_cost'].values
+        lcots = trans_table['lcot'].values
+        total_lcoes = trans_table['total_lcoe'].values
 
         progress = 0
         for i in range(len(trans_table)):

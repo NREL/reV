@@ -258,11 +258,12 @@ class TransmissionFeatures:
         """
 
         line_caps = [self._avail_capacities[gid] for gid in line_gids]
-        avail_cap = np.sum(line_caps) / 2
+        avail_cap = sum(line_caps) / 2
 
         if self._line_limited:
-            if np.max(line_caps) < avail_cap:
-                avail_cap = np.max(line_caps)
+            max_cap = max(line_caps) / 2
+            if max_cap < avail_cap:
+                avail_cap = max_cap
 
         return avail_cap
 
