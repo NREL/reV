@@ -467,7 +467,7 @@ class TransmissionFeatures:
         return connected
 
     def cost(self, gid, distance, transmission_multiplier=1,
-             capacity=None, **kwargs):
+             capacity=None):
         """
         Compute levelized cost of transmission (LCOT) for connecting to give
         feature
@@ -483,8 +483,6 @@ class TransmissionFeatures:
         capacity : float
             Capacity needed in MW, if None DO NOT check if connection is
             possible
-        kwargs : dict
-            Internal kwargs for connect
 
         Returns
         -------
@@ -512,7 +510,7 @@ class TransmissionFeatures:
                                tie_in_cost=tie_in_cost,
                                transmission_multiplier=transmission_multiplier)
         if capacity is not None:
-            if not self.connect(gid, capacity, apply=False, **kwargs):
+            if not self.connect(gid, capacity, apply=False):
                 cost = None
 
         return cost

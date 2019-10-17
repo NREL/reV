@@ -65,9 +65,10 @@ def verify_numeric_cols(df1, df2):
                    | np.issubdtype(df2[c].values.dtype, np.integer))
         if numeric:
             diff = np.abs(df1[c].values - df2[c].values)
-            msg = 'Bad column: {}, max diff: {}'.format(c, diff.max())
-            assert np.allclose(df1[c].values,
-                               df2[c].values, rtol=0.01), msg
+            if not np.isnan(diff.max()):
+                msg = 'Bad column: {}, max diff: {}'.format(c, diff.max())
+                assert np.allclose(df1[c].values,
+                                   df2[c].values, rtol=0.01), msg
 
 
 @pytest.mark.parametrize(('i', 'tcosts'), ((1, TRANS_COSTS_1),

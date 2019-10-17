@@ -4,6 +4,7 @@ reV supply curve module
 - Calculation of LCOT
 - Supply Curve creation
 """
+from copy import deepcopy
 import os
 import concurrent.futures as cf
 import logging
@@ -260,7 +261,7 @@ class SupplyCurve:
                 tm = row.get('transmission_multiplier', 1)
                 cost.append(feature.cost(row['trans_line_gid'], row['dist_mi'],
                                          capacity=capacity,
-                                         transmission_multiplier=tm, **kwargs))
+                                         transmission_multiplier=tm))
 
             cost = np.array(cost, dtype='float32')
 
@@ -404,8 +405,8 @@ class SupplyCurve:
                    'lcot',
                    'total_lcoe']
 
-        init_list = [np.nan] * int(np.max(self._sc_gids))
-        conn_lists = {k: init_list for k in columns}
+        init_list = [np.nan] * int(1 + np.max(self._sc_gids))
+        conn_lists = {k: deepcopy(init_list) for k in columns}
 
         pos = trans_table['lcot'].isnull()
         trans_table = trans_table.loc[~pos].sort_values('total_lcoe')
@@ -445,10 +446,10 @@ class SupplyCurve:
                         logger.info('{} % of supply curve points connected'
                                     .format(progress))
 
-        index = range(0, np.max(self._sc_gids))
+        index = range(0, int(1 + np.max(self._sc_gids)))
         connections = pd.DataFrame(conn_lists, index=index)
         connections.index.name = 'sc_gid'
-        connections = connections.dropna()
+        connections = connections.dropna(subset=['total_lcoe'])
         connections = connections[columns]
         connections = connections.reset_index()
 
