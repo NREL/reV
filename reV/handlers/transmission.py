@@ -70,8 +70,8 @@ class TransmissionFeatures:
             self._get_features(trans_table)
 
         self._feature_gid_list = list(self._feature_types.keys())
-        self._available_mask = np.ones((len(self._feature_types), ),
-                                       dtype=bool)
+        self._available_mask = np.ones(
+            (int(1 + max(list(self._feature_types.keys()))), ), dtype=bool)
 
         self._line_limited = line_limited
 
@@ -302,8 +302,7 @@ class TransmissionFeatures:
         """
         avail_cap = self.available_capacity(gid)
         if avail_cap == 0:
-            i = self._feature_gid_list.index(gid)
-            self._available_mask[i] = False
+            self._available_mask[gid] = False
 
     def check_availability(self, gid):
         """
@@ -319,8 +318,7 @@ class TransmissionFeatures:
         bool
             Whether the gid is available or not
         """
-        i = self._feature_gid_list.index(gid)
-        return self._available_mask[i]
+        return self._available_mask[gid]
 
     def _connect(self, gid, capacity):
         """

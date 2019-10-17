@@ -56,7 +56,7 @@ class SupplyCurve:
                                                     trans_costs=trans_costs)
 
         self._sc_gids = list(np.sort(self._trans_table['sc_gid'].unique()))
-        self._mask = np.ones((len(self._sc_gids), ), dtype=bool)
+        self._mask = np.ones((int(1 + max(self._sc_gids)), ), dtype=bool)
 
     def __repr__(self):
         msg = "{} with {} points".format(self.__class__.__name__, len(self))
@@ -421,16 +421,17 @@ class SupplyCurve:
         lcots = trans_table['lcot'].values
         total_lcoes = trans_table['total_lcoe'].values
 
+        connected = 0
         progress = 0
         for i in range(len(trans_table)):
             sc_gid = trans_sc_gids[i]
-            i_mask = self._sc_gids.index(sc_gid)
-            if self._mask[i_mask]:
+            if self._mask[sc_gid]:
                 trans_gid = trans_gids[i]
                 connect = self._trans_features.connect(trans_gid,
                                                        capacities[i])
                 if connect:
-                    self._mask[i_mask] = False
+                    connected += 1
+                    self._mask[sc_gid] = False
 
                     conn_lists['trans_gid'][sc_gid] = trans_gid
                     conn_lists['trans_capacity'][sc_gid] = trans_cap[i]
@@ -440,7 +441,7 @@ class SupplyCurve:
                     conn_lists['lcot'][sc_gid] = lcots[i]
                     conn_lists['total_lcoe'][sc_gid] = total_lcoes[i]
 
-                    current_prog = np.sum(~self._mask) // (len(self) / 100)
+                    current_prog = connected // (len(self) / 100)
                     if current_prog > progress:
                         progress = current_prog
                         logger.info('{} % of supply curve points connected'
@@ -453,11 +454,11 @@ class SupplyCurve:
         connections = connections[columns]
         connections = connections.reset_index()
 
-        if np.any(self._mask):
+        if connected != len(self):
             msg = ("{} supply curve points were not connected to tranmission! "
                    "Unconnected sc_gid's: {}"
-                   .format(np.sum(self._mask),
-                           np.array(self._sc_gids)[self._mask]))
+                   .format(len(self) - connected,
+                           np.where(self._mask[self._sc_gids])[0].tolist()))
             logger.warning(msg)
             warn(msg)
 
