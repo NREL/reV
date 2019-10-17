@@ -18,7 +18,8 @@ from reV.handlers.outputs import Outputs
 from reV.supply_curve.points import ExclusionPoints, SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      OutputWarning, FileInputError)
+                                      OutputWarning, FileInputError,
+                                      InputWarning)
 
 
 logger = logging.getLogger(__name__)
@@ -155,7 +156,8 @@ class Aggregation:
     def __init__(self, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                  res_class_dset=None, res_class_bins=None,
                  dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
-                 data_layers=None, resolution=64, gids=None, n_cores=None):
+                 data_layers=None, resolution=64, power_density=None,
+                 gids=None, n_cores=None):
         """
         Parameters
         ----------
@@ -186,6 +188,9 @@ class Aggregation:
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
+        power_density : float | None
+            Power density in MW/km2. None will attempt to infer power density
+            from the generation meta data technology.
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -203,7 +208,15 @@ class Aggregation:
         self._dset_cf = dset_cf
         self._dset_lcoe = dset_lcoe
         self._resolution = resolution
+        self._power_density = power_density
         self._data_layers = data_layers
+
+        if self._power_density is None:
+            msg = ('Supply curve aggregation power density not specified. '
+                   'Will try to infer based on lookup table: {}'
+                   .format(SupplyCurvePointSummary.POWER_DENSITY))
+            logger.warning(msg)
+            warn(msg, InputWarning)
 
         if n_cores is None:
             n_cores = os.cpu_count()
@@ -356,7 +369,8 @@ class Aggregation:
     def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                         gen_index, res_class_dset=None, res_class_bins=None,
                         dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
-                        data_layers=None, resolution=64, gids=None, **kwargs):
+                        data_layers=None, resolution=64, power_density=None,
+                        gids=None, **kwargs):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -392,6 +406,9 @@ class Aggregation:
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
+        power_density : float | None
+            Power density in MW/km2. None will attempt to infer power density
+            from the generation meta data technology.
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -440,6 +457,7 @@ class Aggregation:
                             data_layers=fhandler.data_layers,
                             resolution=resolution,
                             exclusion_shape=exclusion_shape,
+                            power_density=power_density,
                             **kwargs)
 
                     except EmptySupplyCurvePointError:
@@ -497,6 +515,7 @@ class Aggregation:
                     dset_cf=self._dset_cf, dset_lcoe=self._dset_lcoe,
                     data_layers=self._data_layers,
                     resolution=self._resolution,
+                    power_density=self._power_density,
                     gids=gid_set, **kwargs))
 
             # gather results
@@ -549,8 +568,8 @@ class Aggregation:
     def summary(cls, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                 res_class_dset=None, res_class_bins=None,
                 dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
-                data_layers=None, resolution=64, gids=None, n_cores=None,
-                option='dataframe', **kwargs):
+                data_layers=None, resolution=64, power_density=None,
+                gids=None, n_cores=None, option='dataframe', **kwargs):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -582,6 +601,9 @@ class Aggregation:
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
+        power_density : float | None
+            Power density in MW/km2. None will attempt to infer power density
+            from the generation meta data technology.
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -603,8 +625,8 @@ class Aggregation:
         agg = cls(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
                   res_class_dset=res_class_dset, res_class_bins=res_class_bins,
                   dset_cf=dset_cf, dset_lcoe=dset_lcoe,
-                  data_layers=data_layers,
-                  resolution=resolution, gids=gids, n_cores=n_cores)
+                  data_layers=data_layers, resolution=resolution,
+                  power_density=power_density, gids=gids, n_cores=n_cores)
 
         if n_cores == 1:
             summary = agg._serial_summary(agg._fpath_excl, agg._fpath_gen,
@@ -616,6 +638,7 @@ class Aggregation:
                                           dset_lcoe=agg._dset_lcoe,
                                           data_layers=agg._data_layers,
                                           resolution=agg._resolution,
+                                          power_density=agg._power_density,
                                           gids=gids, **kwargs)
         else:
             summary = agg._parallel_summary(**kwargs)
