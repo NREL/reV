@@ -649,7 +649,7 @@ class TransmissionCosts(TransmissionFeatures):
     def feature_costs(cls, trans_table, capacity=None, line_tie_in_cost=14000,
                       line_cost=3667, station_tie_in_cost=0,
                       center_tie_in_cost=0, sink_tie_in_cost=14000,
-                      available_capacity=0.1, **kwargs):
+                      available_capacity=0.1, line_limited=False, **kwargs):
         """
         Compute costs for all connections in given transmission table
 
@@ -673,6 +673,9 @@ class TransmissionCosts(TransmissionFeatures):
             in $/MW
         available_capacity : float
             Fraction of capacity that is available for connection
+        line_lmited : bool
+            Substation connection is limited by maximum capacity of the
+            attached lines
         kwargs : dict
             Internal kwargs for connect
 
@@ -689,7 +692,8 @@ class TransmissionCosts(TransmissionFeatures):
                           station_tie_in_cost=station_tie_in_cost,
                           center_tie_in_cost=center_tie_in_cost,
                           sink_tie_in_cost=sink_tie_in_cost,
-                          available_capacity=available_capacity)
+                          available_capacity=available_capacity,
+                          line_limited=line_limited)
 
             costs = []
             for _, row in trans_table.iterrows():
