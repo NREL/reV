@@ -87,7 +87,7 @@ def test_connect(trans_costs, capacity, gid, trans_table):
     Test connection to transmission lines and load centers
     """
     tf = TF(trans_table, **trans_costs)
-    avail_cap = tf._avail_capacities.get(gid, None)
+    avail_cap = tf[gid].get('avail_cap', None)
     if avail_cap is not None:
         if avail_cap > capacity:
             assert tf.connect(gid, capacity, apply=False)
@@ -118,10 +118,10 @@ def test_substation_load_spreading(i, trans_costs, trans_table):
     connect = tf.connect(gid, capacity, apply=True)
     assert connect
 
-    line_gids = tf._substation_lines[gid]
+    line_gids = tf[gid]['lines']
     missing = [gid for gid in line_gids if gid not in LINE_CAPS[i]]
 
     assert not any(missing), 'New gids not in baseline: {}'.format(missing)
     for line_id in line_gids:
         msg = 'Bad line cap: {}'.format(line_id)
-        assert LINE_CAPS[i][line_id] == tf._avail_capacities[line_id], msg
+        assert LINE_CAPS[i][line_id] == tf[line_id]['avail_cap'], msg

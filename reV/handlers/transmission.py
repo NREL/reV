@@ -10,7 +10,8 @@ import pandas as pd
 from warnings import warn
 
 from reV.utilities import safe_json_load
-from reV.utilities.exceptions import HandlerWarning, HandlerKeyError
+from reV.utilities.exceptions import (HandlerWarning, HandlerKeyError,
+                                      HandlerRuntimeError)
 
 logger = logging.getLogger(__name__)
 
@@ -66,12 +67,11 @@ class TransmissionFeatures:
         self._sink_tie_in_cost = sink_tie_in_cost
         self._available_capacity_frac = available_capacity
 
-        self._feature_types, self._avail_capacities, self._substation_lines = \
-            self._get_features(trans_table)
+        self._features = self._get_features(trans_table)
 
-        self._feature_gid_list = list(self._feature_types.keys())
+        self._feature_gid_list = list(self._features.keys())
         self._available_mask = np.ones(
-            (int(1 + max(list(self._feature_types.keys()))), ), dtype=bool)
+            (int(1 + max(list(self._features.keys()))), ), dtype=bool)
 
         self._line_limited = line_limited
 
@@ -80,7 +80,15 @@ class TransmissionFeatures:
         return msg
 
     def __len__(self):
-        return len(self._feature_types)
+        return len(self._features)
+
+    def __getitem__(self, gid):
+        if gid not in self._features:
+            msg = "Invalid feature gid {}".format(gid)
+            logger.error(msg)
+            raise HandlerKeyError(msg)
+
+        return self._features[gid]
 
     @staticmethod
     def _parse_dictionary(features):
@@ -165,28 +173,26 @@ class TransmissionFeatures:
             loadcenters : {capacity}
         """
 
-        feature_types = {}
-        avail_capacities = {}
-        substation_lines = {}
+        features = {}
 
         cap_frac = self._available_capacity_frac
         trans_features = trans_table.groupby('trans_line_gid').first()
 
         for gid, feature in trans_features.iterrows():
             name = feature['category'].lower()
-            feature_types[gid] = name
+            feature_dict = {'type': name}
 
             if name == 'transline':
-                avail_capacities[gid] = feature['ac_cap'] * cap_frac
+                feature_dict['avail_cap'] = feature['ac_cap'] * cap_frac
 
             elif name == 'substation':
-                substation_lines[gid] = json.loads(feature['trans_gids'])
+                feature_dict['lines'] = json.loads(feature['trans_gids'])
 
             elif name == 'loadcen':
-                avail_capacities[gid] = feature['ac_cap'] * cap_frac
+                feature_dict['avail_cap'] = feature['ac_cap'] * cap_frac
 
             elif name == 'pcaloadcen':
-                avail_capacities[gid] = None
+                feature_dict['avail_cap'] = None
 
             else:
                 msg = ('Cannot not recognize feature type "{}" '
@@ -194,7 +200,9 @@ class TransmissionFeatures:
                 logger.error(msg)
                 raise HandlerKeyError(msg)
 
-        return feature_types, avail_capacities, substation_lines
+            features[gid] = feature_dict
+
+        return features
 
     def _get_features(self, trans_table):
         """
@@ -216,10 +224,9 @@ class TransmissionFeatures:
         """
 
         trans_table = self._parse_table(trans_table)
-        feature_types, avail_capacities, substation_lines = \
-            self._features_from_table(trans_table)
+        features = self._features_from_table(trans_table)
 
-        return feature_types, avail_capacities, substation_lines
+        return features
 
     @staticmethod
     def _calc_cost(distance, line_cost=3667, tie_in_cost=0,
@@ -263,7 +270,7 @@ class TransmissionFeatures:
             Substation available capacity
         """
 
-        line_caps = [self._avail_capacities[gid] for gid in line_gids]
+        line_caps = [self[gid]['avail_cap'] for gid in line_gids]
         avail_cap = sum(line_caps) / 2
 
         if self._line_limited:
@@ -289,11 +296,19 @@ class TransmissionFeatures:
             default = 10%
         """
 
-        if gid in self._avail_capacities:
-            avail_cap = self._avail_capacities[gid]
+        feature = self[gid]
+
+        if 'avail_cap' in feature:
+            avail_cap = feature['avail_cap']
+
+        elif 'lines' in feature:
+            avail_cap = self._substation_capacity(feature['lines'])
 
         else:
-            avail_cap = self._substation_capacity(self._substation_lines[gid])
+            msg = ('Could not parse available capacity from feature: {}'
+                   .format(feature))
+            logger.error(msg)
+            raise HandlerRuntimeError(msg)
 
         return avail_cap
 
@@ -328,23 +343,28 @@ class TransmissionFeatures:
 
     def _connect(self, gid, capacity):
         """
-        Get capacity of a substation from its tranmission lines
+        Connect to a standalone transmission feature (not a substation)
+        and decrement the feature's available capacity.
+        Raise exception if not able to connect.
 
         Parameters
         ----------
-        gid : list
+        gid : int
             Feature gid to connect to
         capacity : float
             Capacity needed in MW
         """
-        avail_cap = self._avail_capacities[gid]
-        if avail_cap < capacity:
-            raise RuntimeError("Cannot connect to {}: "
-                               "needed capacity({} MW) > "
-                               "available capacity({} MW)"
-                               .format(gid, capacity, avail_cap))
+        avail_cap = self[gid]['avail_cap']
 
-        self._avail_capacities[gid] -= capacity
+        if avail_cap < capacity:
+            msg = ("Cannot connect to {}: "
+                   "needed capacity({} MW) > "
+                   "available capacity({} MW)"
+                   .format(gid, capacity, avail_cap))
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        self[gid]['avail_cap'] -= capacity
 
     def _fill_lines(self, line_gids, line_caps, capacity):
         """
@@ -418,7 +438,7 @@ class TransmissionFeatures:
             Substation connection is limited by maximum capacity of the
             attached lines
         """
-        line_caps = np.array([self._avail_capacities[gid]
+        line_caps = np.array([self[gid]['avail_cap']
                               for gid in line_gids])
         if self._line_limited:
             gid = line_gids[np.argmax(line_caps)]
@@ -456,11 +476,11 @@ class TransmissionFeatures:
             else:
                 connected = True
                 if apply:
-                    feature_type = self._feature_types[gid]
+                    feature_type = self[gid]['type']
                     if feature_type == 'transline':
                         self._connect(gid, capacity)
                     elif feature_type == 'substation':
-                        lines = self._substation_lines[gid]
+                        lines = self[gid]['lines']
                         self._connect_to_substation(lines, capacity)
                     elif feature_type == 'loadcen':
                         self._connect(gid, capacity)
@@ -495,7 +515,7 @@ class TransmissionFeatures:
             Cost of transmission in $/MW, if None indicates connection is
             NOT possible
         """
-        feature_type = self._feature_types[gid]
+        feature_type = self[gid]['type']
         line_cost = self._line_cost
         if feature_type == 'transline':
             tie_in_cost = self._line_tie_in_cost
@@ -553,7 +573,7 @@ class TransmissionFeatures:
             feature = cls(trans_table, available_capacity=available_capacity)
 
             feature_cap = {}
-            for gid in feature._feature_types:
+            for gid, _ in feature._features.items():
                 feature_cap[gid] = feature.available_capacity(gid)
         except Exception:
             logger.exception("Error computing available capacity for all "
@@ -591,9 +611,7 @@ class TransmissionCosts(TransmissionFeatures):
             loadcenters : {capacity}
         """
 
-        feature_types = {}
-        avail_capacities = {}
-        substation_lines = {}
+        features = {}
 
         if 'avail_cap' not in trans_table:
             kwargs = {'available_capacity': self._available_capacity_frac}
@@ -603,10 +621,11 @@ class TransmissionCosts(TransmissionFeatures):
 
         trans_features = trans_table.groupby('trans_line_gid').first()
         for gid, feature in trans_features.iterrows():
-            feature_types[gid] = feature['category'].lower()
-            avail_capacities[gid] = feature['avail_cap']
+            name = feature['category'].lower()
+            feature_dict = {'type': name, 'avail_cap': feature['avail_cap']}
+            features[gid] = feature_dict
 
-        return feature_types, avail_capacities, substation_lines
+        return features
 
     def available_capacity(self, gid):
         """
@@ -624,7 +643,7 @@ class TransmissionCosts(TransmissionFeatures):
             default = 10%
         """
 
-        return self._avail_capacities[gid]
+        return self[gid]['avail_cap']
 
     @classmethod
     def feature_costs(cls, trans_table, capacity=None, line_tie_in_cost=14000,
