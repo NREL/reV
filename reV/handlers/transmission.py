@@ -595,7 +595,7 @@ class TransmissionCosts(TransmissionFeatures):
     def _features_from_table(self, trans_table):
         """
         Extract features and their capacity from supply curve transmission
-        mapping table
+        mapping table and pre-compute the available capacity of each feature
 
         Parameters
         ----------
