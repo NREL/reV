@@ -104,6 +104,24 @@ class IntType(click.ParamType):
                       .format(value, type(value)), param, ctx)
 
 
+class FloatType(click.ParamType):
+    """Float click input argument type with option for None."""
+    name = 'float'
+
+    def convert(self, value, param, ctx):
+        """Convert to float or return as None."""
+        if isinstance(value, str):
+            if 'None' in value:
+                return None
+            else:
+                return float(value)
+        elif isinstance(value, float):
+            return value
+        else:
+            self.fail('Cannot recognize float type: {} {}'
+                      .format(value, type(value)), param, ctx)
+
+
 class StrType(click.ParamType):
     """String click input argument type with option for None."""
     name = 'str'
@@ -213,6 +231,7 @@ class PathListType(ListType):
 
 
 INT = IntType()
+FLOAT = FloatType()
 STR = StrType()
 SAMFILES = SAMFilesType()
 PROJECTPOINTS = ProjectPointsType()

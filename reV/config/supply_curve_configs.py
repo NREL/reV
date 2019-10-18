@@ -150,6 +150,11 @@ class AggregationConfig(AnalysisConfig):
         """Get the SC resolution"""
         return self.get('resolution', self._default_resolution)
 
+    @property
+    def power_density(self):
+        """Get the power density (MW/km2)"""
+        return self.get('power_density', None)
+
 
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""

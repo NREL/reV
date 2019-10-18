@@ -11,7 +11,7 @@ import time
 
 from reV.config.supply_curve_configs import AggregationConfig
 from reV.utilities.execution import SLURM
-from reV.utilities.cli_dtypes import STR, INT, FLOATLIST
+from reV.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST
 from reV.utilities.loggers import init_mult
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.aggregation import Aggregation
@@ -68,8 +68,8 @@ def from_config(ctx, config_file, verbose):
                        config.fpath_res, config.fpath_techmap, config.dset_tm,
                        config.res_class_dset, config.res_class_bins,
                        config.dset_cf, config.dset_lcoe, config.data_layers,
-                       config.resolution, config.dirout, config.logdir,
-                       verbose)
+                       config.resolution, config.power_density, config.dirout,
+                       config.logdir, verbose)
 
     elif config.execution_control.option == 'eagle':
 
@@ -85,6 +85,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['DSET_LCOE'] = config.dset_lcoe
         ctx.obj['DATA_LAYERS'] = config.data_layers
         ctx.obj['RESOLUTION'] = config.resolution
+        ctx.obj['POWER_DENSITY'] = config.power_density
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
@@ -126,6 +127,9 @@ def from_config(ctx, config_file, verbose):
 @click.option('--resolution', '-r', type=INT, default=64,
               help='Number of exclusion points along a squares edge to '
               'include in an aggregated supply curve point.')
+@click.option('--power_density', '-pd', type=FLOAT, default=None,
+              help='Power density in MW/km2. None will attempt to infer '
+              'power density from the generation meta data technology.')
 @click.option('--out_dir', '-o', type=STR, default='./',
               help='Directory to save aggregation summary output.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
@@ -135,7 +139,7 @@ def from_config(ctx, config_file, verbose):
 @click.pass_context
 def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
          res_class_dset, res_class_bins, dset_cf, dset_lcoe, data_layers,
-         resolution, out_dir, log_dir, verbose):
+         resolution, power_density, out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
 
     ctx.ensure_object(dict)
@@ -151,6 +155,7 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
     ctx.obj['DSET_LCOE'] = dset_lcoe
     ctx.obj['DATA_LAYERS'] = data_layers
     ctx.obj['RESOLUTION'] = resolution
+    ctx.obj['POWER_DENSITY'] = power_density
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -173,7 +178,8 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
                                       dset_cf=dset_cf,
                                       dset_lcoe=dset_lcoe,
                                       data_layers=data_layers,
-                                      resolution=resolution)
+                                      resolution=resolution,
+                                      power_density=power_density)
 
         fn_out = '{}.csv'.format(name)
         fpath_out = os.path.join(out_dir, fn_out)
@@ -197,9 +203,9 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
 
 
 def get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
-                 dset_tm, res_class_dset, res_class_bins,
-                 dset_cf, dset_lcoe, data_layers,
-                 resolution, out_dir, log_dir, verbose):
+                 dset_tm, res_class_dset, res_class_bins, dset_cf, dset_lcoe,
+                 data_layers, resolution, power_density, out_dir, log_dir,
+                 verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ('-n {name} '
@@ -214,6 +220,7 @@ def get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
             '-dlc {dset_lcoe} '
             '-d {data_layers} '
             '-r {resolution} '
+            '-pd {power_density} '
             '-o {out_dir} '
             '-ld {log_dir} '
             )
@@ -230,6 +237,7 @@ def get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
                        dset_lcoe=SLURM.s(dset_lcoe),
                        data_layers=SLURM.s(data_layers),
                        resolution=SLURM.s(resolution),
+                       power_density=SLURM.s(power_density),
                        out_dir=SLURM.s(out_dir),
                        log_dir=SLURM.s(log_dir),
                        )
@@ -269,6 +277,7 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     dset_lcoe = ctx.obj['DSET_LCOE']
     data_layers = ctx.obj['DATA_LAYERS']
     resolution = ctx.obj['RESOLUTION']
+    power_density = ctx.obj['POWER_DENSITY']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -278,8 +287,8 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
 
     cmd = get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
                        dset_tm, res_class_dset, res_class_bins,
-                       dset_cf, dset_lcoe, data_layers,
-                       resolution, out_dir, log_dir, verbose)
+                       dset_cf, dset_lcoe, data_layers, resolution,
+                       power_density, out_dir, log_dir, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'aggregation', name)
     if status == 'successful':

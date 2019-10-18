@@ -106,6 +106,12 @@ class ExtrapolationWarning(Warning):
     """
 
 
+class InputWarning(Warning):
+    """
+    Warning for unclear or default configuration inputs
+    """
+
+
 class ConfigWarning(Warning):
     """
     Warning for unclear or default configuration inputs
