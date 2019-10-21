@@ -28,7 +28,7 @@ class Economic(SAM):
     """Base class for SAM economic models."""
     MODULE = None
 
-    def __init__(self, parameters, site_parameters=None,
+    def __init__(self, parameters=None, site_parameters=None,
                  output_request='lcoe_fcr'):
         """Initialize a SAM economic model object.
 
@@ -353,7 +353,7 @@ class LCOE(Economic):
     MODULE = 'lcoefcr'
     PYSAM = pysam_lcoe
 
-    def __init__(self, parameters, site_parameters=None,
+    def __init__(self, parameters=None, site_parameters=None,
                  output_request=('lcoe_fcr',)):
         """Initialize a SAM LCOE economic model object."""
         super().__init__(parameters, site_parameters=site_parameters,
@@ -592,7 +592,7 @@ class SingleOwner(Economic):
     MODULE = 'singleowner'
     PYSAM = pysam_so
 
-    def __init__(self, parameters, site_parameters=None,
+    def __init__(self, parameters=None, site_parameters=None,
                  output_request=('ppa_price',)):
         """Initialize a SAM single owner economic model object.
         """
@@ -623,11 +623,12 @@ class SingleOwner(Economic):
         """
 
         outputs = {}
-        if isinstance(inputs['total_installed_cost'], str):
-            if inputs['total_installed_cost'].lower() == 'windbos':
-                wb = WindBos(inputs)
-                inputs['total_installed_cost'] = wb.total_installed_cost
-                outputs = wb.output
+        if inputs is not None:
+            if isinstance(inputs['total_installed_cost'], str):
+                if inputs['total_installed_cost'].lower() == 'windbos':
+                    wb = WindBos(inputs)
+                    inputs['total_installed_cost'] = wb.total_installed_cost
+                    outputs = wb.output
         return inputs, outputs
 
     @property

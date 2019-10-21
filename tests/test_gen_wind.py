@@ -102,6 +102,28 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     assert result is True, msg
 
 
+def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, n_workers=1):
+    """Test reV 2.0 generation for wind with new outputs."""
+    # get full file paths.
+    sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+    res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
+
+    output_request = ('cf_mean', 'cf_profile', 'monthly_energy')
+
+    # run reV 2.0 generation
+    gen = Gen.reV_run('wind', points, sam_files, res_file,
+                      n_workers=n_workers, sites_per_split=3, fout=None,
+                      return_obj=True, output_request=output_request)
+
+    assert gen.out['cf_mean'].shape == (10, )
+    assert gen.out['cf_profile'].shape == (8760, 10)
+    assert gen.out['monthly_energy'].shape == (12, 10)
+
+    assert gen.out['cf_mean'].dtype == np.uint16
+    assert gen.out['cf_profile'].dtype == np.uint16
+    assert gen.out['monthly_energy'].dtype == np.float32
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

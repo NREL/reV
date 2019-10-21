@@ -59,7 +59,16 @@ def test_gen_from_config(tech):
     for fname in flist:
         if job_name in fname and fname.endswith('.h5'):
             with Outputs(os.path.join(config_obj.dirout, fname), 'r') as cf:
+
+                msg = 'cf_profile not written to disk'
+                assert 'cf_profile' in cf.dsets, msg
                 rev2_profiles = cf['cf_profile']
+
+                msg = 'monthly_energy not written to disk'
+                assert 'monthly_energy' in cf.dsets, msg
+                monthly = cf['monthly_energy']
+                assert monthly.shape == (12, 10)
+
             break
 
     # get reV 1.0 generation profiles

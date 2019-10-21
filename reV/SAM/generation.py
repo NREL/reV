@@ -202,21 +202,30 @@ class Generation(SAM):
     def _gen_exec(self):
         """Run SAM generation with possibility for follow on econ analysis."""
 
+        lcoe_out_req = None
+        so_out_req = None
+        if 'lcoe_fcr' in self.output_request:
+            lcoe_out_req = self.output_request.pop(
+                self.output_request.index('lcoe_fcr'))
+        elif 'ppa_price' in self.output_request:
+            so_out_req = self.output_request.pop(
+                self.output_request.index('ppa_price'))
+
         self.assign_inputs()
         self.execute()
         self.collect_outputs()
 
-        if 'lcoe_fcr' in self.output_request:
+        if lcoe_out_req is not None:
             self.parameters['annual_energy'] = self.annual_energy()
-            lcoe = LCOE(self.parameters, output_request=('lcoe_fcr',))
+            lcoe = LCOE(self.parameters, output_request=(lcoe_out_req,))
             lcoe.assign_inputs()
             lcoe.execute()
             lcoe.collect_outputs()
             self.outputs.update(lcoe.outputs)
 
-        elif 'ppa_price' in self.output_request:
+        elif so_out_req is not None:
             self.parameters['gen'] = self.gen_profile()
-            so = SingleOwner(self.parameters, output_request=('ppa_price',))
+            so = SingleOwner(self.parameters, output_request=(so_out_req,))
             so.assign_inputs()
             so.execute()
             so.collect_outputs()

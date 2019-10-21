@@ -16,6 +16,7 @@ from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
 from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, FiveMinWTK
+from reV.utilities.exceptions import OutputWarning, ExecutionError
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,9 @@ class Gen:
 
     # Mapping of reV generation outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
-    OUT_ATTRS = {'cf_mean': {'scale_factor': 1000, 'units': 'unitless',
+    OUT_ATTRS = {'other': {'scale_factor': 1, 'units': 'unknown',
+                           'dtype': 'float32', 'chunks': None},
+                 'cf_mean': {'scale_factor': 1000, 'units': 'unitless',
                              'dtype': 'uint16', 'chunks': None,
                              'type': 'scalar'},
                  'cf_profile': {'scale_factor': 1000, 'units': 'unitless',
@@ -111,6 +114,8 @@ class Gen:
         self._fpath = None
         self._time_index = None
         self._year = None
+        self._sam_obj_default = None
+        self._sam_module = self.OPTIONS[self.tech]
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
 
@@ -158,11 +163,10 @@ class Gen:
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
-                raise ValueError('User output request "{}" not recognized. '
-                                 'The following output requests are available '
-                                 'in "{}": "{}"'
-                                 .format(request, self.__class__,
-                                         list(self.OUT_ATTRS.keys())))
+                msg = ('User output request "{}" not recognized. '
+                       'Will attempt to extract from PySAM.'.format(request))
+                logger.warning(msg)
+                warn(msg, OutputWarning)
 
         return list(set(output_request))
 
@@ -239,6 +243,51 @@ class Gen:
         ti = make_time_index(year, ds_freq)
         self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
 
+    def _get_data_shape(self, dset, n_sites):
+        """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
+
+        Parameters
+        ----------
+        dset : str
+            Variable name to get shape for.
+        n_sites : int
+            Number of sites for this data shape.
+
+        Returns
+        -------
+        shape : tuple
+            1D or 2D shape tuple for dset.
+        """
+
+        if dset in self.OUT_ATTRS:
+            if self.OUT_ATTRS[dset]['type'] == 'array':
+                data_shape = (len(self.time_index), n_sites)
+            else:
+                data_shape = (n_sites, )
+
+        else:
+            if self._sam_obj_default is None:
+                init_obj = self._sam_module()
+                self._sam_obj_default = init_obj.default
+            try:
+                out_data = getattr(self._sam_obj_default.Outputs, dset)
+            except AttributeError as e:
+                msg = ('Could not get data shape for dset "{}" '
+                       'from object "{}". '
+                       'Received the following error: "{}"'
+                       .format(dset, self._sam_obj_default, e))
+                logger.error(msg)
+                raise ExecutionError(msg)
+            else:
+                if isinstance(out_data, (int, float, str)):
+                    data_shape = (n_sites, )
+                elif len(out_data) % len(self.time_index) == 0:
+                    data_shape = (len(self.time_index), n_sites)
+                else:
+                    data_shape = (len(out_data), n_sites)
+
+        return data_shape
+
     def _init_fpath(self):
         """Combine directory and filename, ensure .h5 ext., make out dirs."""
 
@@ -280,24 +329,20 @@ class Gen:
             write_ti = False
 
             for dset in self.output_request:
-                attrs[dset]['units'] = self.OUT_ATTRS[dset]['units']
+
+                tmp = 'other'
+                if dset in self.OUT_ATTRS:
+                    tmp = dset
+
+                attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
+                                                               'unknown')
                 attrs[dset]['scale_factor'] = \
-                    self.OUT_ATTRS[dset]['scale_factor']
-                chunks[dset] = self.OUT_ATTRS[dset]['chunks']
-                dtypes[dset] = self.OUT_ATTRS[dset]['dtype']
-
-                if self.OUT_ATTRS[dset]['type'] == 'array':
-                    shapes[dset] = (len(self.time_index), len(self.meta))
+                    self.OUT_ATTRS[tmp].get('scale_factor', 1)
+                chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)
+                dtypes[dset] = self.OUT_ATTRS[tmp].get('dtype', 'float32')
+                shapes[dset] = self._get_data_shape(dset, len(self.meta))
+                if len(shapes[dset]) > 1:
                     write_ti = True
-
-                elif self.OUT_ATTRS[dset]['type'] == 'scalar':
-                    shapes[dset] = (len(self.meta), )
-
-                else:
-                    raise ValueError('Output dset "{}" must have type "array" '
-                                     'or "scalar", but neither was found in '
-                                     'the OUT_ATTRS class attribute.'
-                                     .format(dset))
 
             # only write time index if profiles were found in output request
             if write_ti:
@@ -337,11 +382,10 @@ class Gen:
                             self.out_chunk[0], self.out_chunk[1]))
 
         for request in self.output_request:
-            dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
-            if self.OUT_ATTRS[request]['type'] == 'array':
-                shape = (len(self.time_index), self._out_n_sites)
-            else:
-                shape = (self._out_n_sites, )
+            dtype = 'float32'
+            if request in self.OUT_ATTRS:
+                dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+            shape = self._get_data_shape(request, self._out_n_sites)
 
             # initialize the output request as an array of zeros
             self._out[request] = np.zeros(shape, dtype=dtype)
@@ -409,12 +453,10 @@ class Gen:
             n = 100
             self._site_mem = 0
             for request in self.output_request:
-                dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
-                if self.OUT_ATTRS[request]['type'] == 'array':
-                    ti_len = len(self.time_index)
-                    shape = (ti_len, n)
-                else:
-                    shape = (n, )
+                dtype = 'float32'
+                if request in self.OUT_ATTRS:
+                    dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+                shape = self._get_data_shape(request, n)
                 self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
             self._site_mem = self._site_mem / 1e6 / n
             logger.info('Output results from a single site are calculated to '
@@ -814,6 +856,9 @@ class Gen:
                 global_site_index = self.site_index(site_gid)
                 self._init_out_arrays(index_0=global_site_index)
                 i = self.site_index(site_gid, out_index=True)
+
+            if isinstance(value, (list, tuple)):
+                value = np.array(value)
 
             if isinstance(value, np.ndarray):
                 # set the new timeseries to the 2D array

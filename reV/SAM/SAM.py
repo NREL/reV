@@ -201,11 +201,8 @@ class RevPySAM:
         self._attr_dict = None
         self._default = None
         self._inputs = []
-
-        try:
+        if 'constant' in self.input_list:
             self['constant'] = 0.0
-        except SAMInputError:
-            pass
 
     def __getitem__(self, key):
         """Get the value of a PySAM attribute (either input or output).
@@ -547,9 +544,21 @@ class SAM(RevPySAM):
         output_lookup : dict
             Lookup dictionary mapping output keys to special output methods.
         """
-        for request in self.output_request:
-            if request in output_lookup:
-                self.outputs[request] = output_lookup[request]()
+        bad_requests = []
+        for req in self.output_request:
+            if req in output_lookup:
+                self.outputs[req] = output_lookup[req]()
+            else:
+                try:
+                    self.outputs[req] = getattr(self.pysam.Outputs, req)
+                except AttributeError:
+                    bad_requests.append(req)
+
+        if any(bad_requests):
+            msg = ('Could not retrieve outputs "{}" from PySAM object "{}".'
+                   .format(bad_requests, self.pysam))
+            logger.error(msg)
+            raise SAMExecutionError(msg)
 
     def assign_inputs(self):
         """Assign the self.parameters attribute to the PySAM object."""
