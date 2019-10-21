@@ -271,12 +271,12 @@ class Gen:
                 self._sam_obj_default = init_obj.default
             try:
                 out_data = getattr(self._sam_obj_default.Outputs, dset)
-            except Exception as e:
+            except AttributeError as e:
                 msg = ('Could not get data shape for dset "{}" '
                        'from object "{}". '
                        'Received the following error: "{}"'
                        .format(dset, self._sam_obj_default, e))
-                logger.exception(msg)
+                logger.error(msg)
                 raise ExecutionError(msg)
             else:
                 if isinstance(out_data, (int, float, str)):

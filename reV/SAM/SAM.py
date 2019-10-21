@@ -13,8 +13,7 @@ import PySAM.GenericSystem as generic
 from reV.handlers.resource import (WindResource, SolarResource, NSRDB,
                                    FiveMinWTK)
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
-                                      SAMExecutionError, SAMExecutionWarning,
-                                      ResourceError)
+                                      SAMExecutionError, ResourceError)
 
 
 logger = logging.getLogger(__name__)
@@ -545,19 +544,21 @@ class SAM(RevPySAM):
         output_lookup : dict
             Lookup dictionary mapping output keys to special output methods.
         """
-        for request in self.output_request:
-            if request in output_lookup:
-                self.outputs[request] = output_lookup[request]()
+        bad_requests = []
+        for req in self.output_request:
+            if req in output_lookup:
+                self.outputs[req] = output_lookup[req]()
             else:
                 try:
-                    self.outputs[request] = getattr(self.pysam.Outputs,
-                                                    request)
-                except Exception as e:
-                    msg = ('Could not retrieve output "{}" from PySAM object '
-                           '"{}". Received the following error: "{}"'
-                           .format(request, self.pysam, e))
-                    logger.warning(msg)
-                    warn(msg, SAMExecutionWarning)
+                    self.outputs[req] = getattr(self.pysam.Outputs, req)
+                except AttributeError:
+                    bad_requests.append(req)
+
+        if any(bad_requests):
+            msg = ('Could not retrieve outputs "{}" from PySAM object "{}".'
+                   .format(bad_requests, self.pysam))
+            logger.error(msg)
+            raise SAMExecutionError(msg)
 
     def assign_inputs(self):
         """Assign the self.parameters attribute to the PySAM object."""
