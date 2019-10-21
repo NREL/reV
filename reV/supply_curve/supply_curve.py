@@ -4,6 +4,7 @@ reV supply curve module
 - Calculation of LCOT
 - Supply Curve creation
 """
+from copy import deepcopy
 import os
 import concurrent.futures as cf
 import logging
@@ -55,7 +56,7 @@ class SupplyCurve:
                                                     trans_costs=trans_costs)
 
         self._sc_gids = list(np.sort(self._trans_table['sc_gid'].unique()))
-        self._mask = np.ones((len(self._sc_gids), ), dtype=bool)
+        self._mask = np.ones((int(1 + max(self._sc_gids)), ), dtype=bool)
 
     def __repr__(self):
         msg = "{} with {} points".format(self.__class__.__name__, len(self))
@@ -260,7 +261,7 @@ class SupplyCurve:
                 tm = row.get('transmission_multiplier', 1)
                 cost.append(feature.cost(row['trans_line_gid'], row['dist_mi'],
                                          capacity=capacity,
-                                         transmission_multiplier=tm, **kwargs))
+                                         transmission_multiplier=tm))
 
             cost = np.array(cost, dtype='float32')
 
@@ -396,10 +397,16 @@ class SupplyCurve:
         if trans_table is None:
             trans_table = self._trans_table
 
-        columns = ['trans_gid', 'trans_capacity', 'trans_type', 'lcot',
+        columns = ['trans_gid',
+                   'trans_capacity',
+                   'trans_type',
+                   'trans_cap_cost',
+                   'dist_mi',
+                   'lcot',
                    'total_lcoe']
-        connections = pd.DataFrame(columns=columns, index=self._sc_gids)
-        connections.index.name = 'sc_gid'
+
+        init_list = [np.nan] * int(1 + np.max(self._sc_gids))
+        conn_lists = {k: deepcopy(init_list) for k in columns}
 
         pos = trans_table['lcot'].isnull()
         trans_table = trans_table.loc[~pos].sort_values('total_lcoe')
@@ -414,40 +421,48 @@ class SupplyCurve:
         lcots = trans_table['lcot'].values
         total_lcoes = trans_table['total_lcoe'].values
 
+        connected = 0
         progress = 0
         for i in range(len(trans_table)):
             sc_gid = trans_sc_gids[i]
-            i_mask = self._sc_gids.index(sc_gid)
-            if self._mask[i_mask]:
+            if self._mask[sc_gid]:
                 trans_gid = trans_gids[i]
                 connect = self._trans_features.connect(trans_gid,
                                                        capacities[i])
                 if connect:
-                    self._mask[i_mask] = False
-                    connections.at[sc_gid, 'trans_gid'] = trans_gid
-                    connections.at[sc_gid, 'trans_capacity'] = trans_cap[i]
-                    connections.at[sc_gid, 'trans_type'] = categories[i]
-                    connections.at[sc_gid, 'dist_mi'] = dists[i]
-                    connections.at[sc_gid, 'trans_cap_cost'] = \
-                        trans_cap_costs[i]
-                    connections.at[sc_gid, 'lcot'] = lcots[i]
-                    connections.at[sc_gid, 'total_lcoe'] = total_lcoes[i]
+                    connected += 1
+                    self._mask[sc_gid] = False
 
-                    current_prog = np.sum(~self._mask) // (len(self) / 100)
+                    conn_lists['trans_gid'][sc_gid] = trans_gid
+                    conn_lists['trans_capacity'][sc_gid] = trans_cap[i]
+                    conn_lists['trans_type'][sc_gid] = categories[i]
+                    conn_lists['trans_cap_cost'][sc_gid] = trans_cap_costs[i]
+                    conn_lists['dist_mi'][sc_gid] = dists[i]
+                    conn_lists['lcot'][sc_gid] = lcots[i]
+                    conn_lists['total_lcoe'][sc_gid] = total_lcoes[i]
+
+                    current_prog = connected // (len(self) / 100)
                     if current_prog > progress:
                         progress = current_prog
                         logger.info('{} % of supply curve points connected'
                                     .format(progress))
 
-        if np.any(self._mask):
+        index = range(0, int(1 + np.max(self._sc_gids)))
+        connections = pd.DataFrame(conn_lists, index=index)
+        connections.index.name = 'sc_gid'
+        connections = connections.dropna(subset=['total_lcoe'])
+        connections = connections[columns]
+        connections = connections.reset_index()
+
+        if connected != len(self):
             msg = ("{} supply curve points were not connected to tranmission! "
                    "Unconnected sc_gid's: {}"
-                   .format(np.sum(self._mask),
-                           np.array(self._sc_gids)[self._mask]))
+                   .format(len(self) - connected,
+                           np.where(self._mask[self._sc_gids])[0].tolist()))
             logger.warning(msg)
             warn(msg)
 
-        return connections.reset_index()
+        return connections
 
     def simple_sort(self, trans_table=None):
         """
