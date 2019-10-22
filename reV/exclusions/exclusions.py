@@ -1,53 +1,95 @@
 # -*- coding: utf-8 -*-
 """
-Basic reV Exclusions
-
-Sample Usage:
-
-    exclusions = Exclusions()
-
-    layer = ExclusionLayer("ri_srtm_slope.tif", max_thresh=5)
-    exclusions.add_layer(layer)
-
-    layer = ExclusionLayer("ri_padus.tif", classes_exclude=[1])
-    exclusions.add_layer(layer)
-
-    exclusions.apply_all_layers()
-    exclusions.apply_filter('queen')
-    exclusions.export(fpath='exclusions.tif')
-
-    --- OR ---
-
-    exclusions = Exclusions([{"fpath": "ri_srtm_slope.tif",
-                             "max_thresh": 5,
-                            },
-                            {"fpath": "ri_padus.tif",
-                             "classes_exclude": [1],
-                            }],
-                            use_blocks = True,
-                            contiguous_filter = 'queen')
-    exclusions.build_from_config()
-    exclusions.export(fpath='exclusions.tif')
-
-    --- OR ---
-
-    Exclusions.run(config = [{"fpath": "ri_srtm_slope.tif",
-                              "max_thresh": 5,
-                             },
-                             {"fpath": "ri_padus.tif",
-                              "classes_exclude": [1],
-                             }],
-                   use_blocks = True,
-                   contiguous_filter = 'queen',
-                   output_fpath = 'exclusions.tif')
-
+Generate reV Inclusion mask from exclusion layers
 """
 import logging
-import rasterio
 import numpy as np
+import rasterio
 from scipy import ndimage
 
 logger = logging.getLogger(__name__)
+
+
+class InclusionLayer:
+    """
+    Class to convert exclusion layer to inclusion layer
+    """
+    def __init__(self, layer, inclusion_range=(None, None),
+                 exclude_values=None, include_values=None):
+        """
+        Parameters
+        ----------
+        layer : str
+            Layer name
+        inclusion_range : tuple
+            (min threshold, max threshold) for values to include
+        exclude_values : list
+            list of values to exclude
+            Note: Only supply exclusions OR inclusions
+        include_values : list
+            List of values to include
+            Note: Only supply inclusions OR exclusions
+        """
+        self._layer = layer
+        self._inclusion_range = inclusion_range
+        self._exclude_values = exclude_values
+        self._include_values = include_values
+        # self._check_mask()
+
+    @property
+    def layer(self):
+        """
+        Layer name to extract from exclusions .h5 file
+
+        Returns
+        -------
+        _layer : str
+        """
+        return self._layer
+
+    @property
+    def min_value(self):
+        """
+        Minimum value to include
+
+        Returns
+        -------
+        float
+        """
+        return self._inclusion_range[0]
+
+    @property
+    def max_value(self):
+        """
+        Maximum value to include
+
+        Returns
+        -------
+        float
+        """
+        return self._inclusion_range[1]
+
+    @property
+    def exclude_values(self):
+        """
+        Values to exclude
+
+        Returns
+        -------
+        _exclude_values : list
+        """
+        return self._exclude_values
+
+    @property
+    def include_values(self):
+        """
+        Values to include
+
+        Returns
+        -------
+        _include_values : list
+        """
+        return self._include_values
 
 
 class ExclusionLayer:
