@@ -2,9 +2,13 @@
 """
 Generate reV inclusion mask from exclusion layers
 """
+from collections import OrderedDict
 import logging
 import numpy as np
 from scipy import ndimage
+from warnings import warn
+
+from reV.handlers.exclusions import ExclusionLayers
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +38,14 @@ class LayerMask:
         self._exclude_values = exclude_values
         self._include_values = include_values
         self._mask = self._mask_type()
+
+    def __repr__(self):
+        msg = ("{} for {} exclusions"
+               .format(self.__class__.__name__, self.layer))
+        return msg
+
+    def __getitem__(self, data):
+        return self.mask_func(data)
 
     @property
     def layer(self):
@@ -125,9 +137,9 @@ class LayerMask:
         mask : str
             Mask type
         """
-        masks = {'range': all(i is None for i in self._inclusion_range),
-                 'exclude': self._exclude_values is None,
-                 'include': self._include_values is None}
+        masks = {'range': any(i is not None for i in self._inclusion_range),
+                 'exclude': self._exclude_values is not None,
+                 'include': self._include_values is not None}
         mask = None
         for k, v in masks.items():
             if v:
@@ -136,7 +148,7 @@ class LayerMask:
                 else:
                     msg = ('Only one approach can be used to create the '
                            'inclusion mask, but you supplied {} and {}'
-                           .format(mask, v))
+                           .format(mask, k))
                     logger.error(msg)
                     raise RuntimeError(msg)
 
@@ -231,9 +243,9 @@ class LayerMask:
         return mask
 
 
-class Inclusions:
+class InclusionMask:
     """
-    Class to create final inclusion
+    Class to create final inclusion mask
     """
 
     FILTER_KERNELS = {
@@ -244,86 +256,217 @@ class Inclusions:
                           [1, 0, 1],
                           [0, 1, 0]])}
 
-    def __init__(self, layer_configs=None, use_blocks=False,
-                 contiguous_filter=None):
+    def __init__(self, excl_h5, *layers, contiguous_filter='queen',
+                 hsds=False):
         """
         Parameters
         ----------
-        layer_configs : dictionary | list | None
-            Optional configs list for the addition of layers
-        use_blocks : boolean
-            Use blocks when applying layers to exclusions
+        excl_h5 : str
+            Path to exclusions .h5 file
+        layers : LayerMask
+            Instance of LayerMask for each exclusion layer to combine
         contiguous_filter : str | None
             Contiguous filter method to use on final exclusion
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
         """
-        self._layers = []
-        self._data = None
-        self._profile = None
-        # validate and set use_blocks argument
-        if isinstance(use_blocks, bool):
-            self._use_blocks = use_blocks
-        else:
-            raise TypeError('use_blocks argument must be a boolean')
-        # validate and set contiguous filter argument
+        self._layers = OrderedDict()
+        self._excl_h5 = excl_h5
+        self._hsds = hsds
+        self._excl_layers = None
+
+        for layer in layers:
+            self.add_layer(layer)
+
         if contiguous_filter in [None, "queen", "rook"]:
             self._contiguous_filter = contiguous_filter
         else:
-            raise TypeError('contiguous_filter must be "queen" or "rook"')
-        # validate and set layer_configs argument
-        if isinstance(layer_configs, (list, type(None))):
-            self._layer_configs = layer_configs
-        else:
-            raise TypeError('layer_configs argument must be a list or None')
+            raise ValueError('contiguous_filter must be "queen", "rook" '
+                             ' or "None"')
+
+    def __repr__(self):
+        msg = ("{} from {} with {} input layers"
+               .format(self.__class__.__name__, self.excl_h5, len(self)))
+        return msg
+
+    def __len__(self):
+        return len(self.layers)
+
+    def __getitem__(self, *ds_slice):
+        return self._generate_mask(*ds_slice)
+
+    @property
+    def excl_h5(self):
+        """
+        Path to .h5 file containing exclusion layers
+
+        Returns
+        -------
+        _excl_h5 : str
+         """
+        return self._excl_h5
+
+    @property
+    def excl_layers(self):
+        """
+        List of available exclusion layers in exclusions .h5
+
+        Returns
+        -------
+        _excl_layers : list
+        """
+        if self._excl_layers is None:
+            with ExclusionLayers(self._excl_h5, hsds=self._hsds) as excl:
+                self._excl_layers = excl.layers
+
+        return self._excl_layers
+
+    @property
+    def layer_names(self):
+        """
+        List of layers to combines
+
+        Returns
+        -------
+        list
+         """
+        return self._layers.keys()
 
     @property
     def layers(self):
-        """ Get the layers for exclusion """
-        return self._layers
+        """
+        List of LayerMask instances for each exclusion layer to combine
+
+        Returns
+        -------
+         list
+         """
+        return self._layers.values()
 
     @property
-    def data(self):
-        """ Get the data for exclusion """
-        return self._data
+    def mask(self):
+        """
+        Inclusion mask for entire exclusion domain
 
-    @property
-    def profile(self):
-        """ Get the profile for exclusion """
-        return self._profile
+        Returns
+        -------
+        mask : ndarray
+        """
+        mask = self[...]
+        return mask
 
-    @property
-    def use_blocks(self):
-        """ Get the blocks setting for exclusion """
-        return self._use_blocks
-
-    @property
-    def contiguous_filter(self):
-        """ Get the contiguous filter method for exclusion """
-        return self._contiguous_filter
-
-    def apply_filter(self, contiguous_filter=None):
-        """ Read, process, and apply an input layer to the
-        final output layer
+    def add_layer(self, layer, replace=False):
+        """
+        Add layer to be combined
 
         Parameters
         ----------
+        layer : LayerMask
+            LayerMask instance to add to set of layers to be combined
+        """
+        layer_name = layer.layer
+
+        if layer_name not in self.excl_layers:
+            msg = "{} does not existin in {}".format(layer_name, self._excl_h5)
+            logger.error(msg)
+            raise ValueError(layer_name)
+
+        if layer_name in self.layer_names:
+            msg = "{} is already in {}".format(layer_name, self)
+            if replace:
+                msg += " replacing existing layer"
+                logger.warning(msg)
+                warn(msg)
+            else:
+                logger.error(msg)
+                raise RuntimeError(msg)
+
+        self._layers[layer_name] = layer
+
+    def _generate_mask(self, *ds_slice):
+        """
+        Generate inclusion mask from exclusion layers
+
+        Parameters
+        ----------
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis
+
+        Returns
+        -------
+        mask : ndarray
+            Inclusion mask
+        """
+        mask = None
+        for layer in self.layers:
+            with ExclusionLayers(self._excl_h5, hsds=self._hsds) as f:
+                layer_slice = (layer.layer, ) + ds_slice
+                layer_mask = layer[f[layer_slice]]
+                if mask is None:
+                    mask = layer_mask
+                else:
+                    mask *= layer_mask
+
+        if self._contiguous_filter is not None:
+            kernel = self.FILTER_KERNELS[self._contiguous_filter]
+            mask = ndimage.convolve(mask, kernel, mode='constant', cval=0.0)
+
+        return mask
+
+    @classmethod
+    def run(cls, excl_h5, *layers, contiguous_filter='queen', hsds=False):
+        """
+        Create inclusion mask from given layers
+
+        Parameters
+        ----------
+        excl_h5 : str
+            Path to exclusions .h5 file
+        layers : LayerMask
+            Instance of LayerMask for each exclusion layer to combine
         contiguous_filter : str | None
             Contiguous filter method to use on final exclusion
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+
+        Returns
+        -------
+        mask : ndarray
+            Full inclusion mask
         """
+        mask = cls(excl_h5, *layers, contiguous_filter=contiguous_filter,
+                   hsds=hsds)
+        return mask.mask
 
-        if not contiguous_filter:
-            contiguous_filter = self._contiguous_filter
-        if contiguous_filter not in [None, "queen", "rook"]:
-            raise TypeError('contiguous_filter must be "queen" or "rook"')
+    @classmethod
+    def run_from_dict(cls, excl_h5, layers_dict,
+                      contiguous_filter='queen', hsds=False):
+        """
+        Create inclusion mask from dictionary of LayerMask arguments
 
-        if isinstance(self._data, type(None)):
-            raise AttributeError('Exclusion has not been created yet'
-                                 '(i.e. self.apply_layer())')
-        if isinstance(contiguous_filter, type(None)):
-            logger.info('No contiguous filter provided')
-            return None
+        Parameters
+        ----------
+        excl_h5 : str
+            Path to exclusions .h5 file
+        layers_dict : dcit
+            Dictionary of LayerMask arugments {layer: {kwarg: value}}
+        contiguous_filter : str | None
+            Contiguous filter method to use on final exclusion
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
 
-        mask = (self._data != 0).astype('int8')
-        kernel = self.FILTER_KERNELS[contiguous_filter]
-        mask = ndimage.convolve(mask, kernel, mode='constant', cval=0.0)
+        Returns
+        -------
+        mask : ndarray
+            Full inclusion mask
+        """
+        layers = []
+        for layer, kwargs in layers_dict:
+            layers.append(LayerMask(layer, **kwargs))
 
-        return None
+        mask = cls(excl_h5, *layers, contiguous_filter=contiguous_filter,
+                   hsds=hsds)
+        return mask.mask
