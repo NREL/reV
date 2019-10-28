@@ -8,6 +8,7 @@ import json
 import pandas as pd
 
 from reV.handlers.parse_keys import parse_keys
+from reV.handlers.resource import Resource
 from reV.utilities.exceptions import HandlerKeyError
 
 logger = logging.getLogger(__name__)
@@ -234,6 +235,7 @@ class ExclusionLayers:
             raise HandlerKeyError(msg)
 
         slices = (0, ) + ds_slice
-        layer_data = self.h5[layer_name][slices]
+        layer_data = Resource._extract_ds_slice(self.h5[layer_name],
+                                                *slices)
 
         return layer_data
