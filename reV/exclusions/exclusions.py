@@ -250,14 +250,14 @@ class InclusionMask:
 
     FILTER_KERNELS = {
         'queen': np.array([[1, 1, 1],
-                           [1, 0, 1],
+                           [1, 1, 1],
                            [1, 1, 1]]),
         'rook': np.array([[0, 1, 0],
-                          [1, 0, 1],
+                          [1, 1, 1],
                           [0, 1, 0]])}
 
-    def __init__(self, excl_h5, *layers, contiguous_filter='queen',
-                 hsds=False):
+    def __init__(self, excl_h5, *layers, min_area=None,
+                 contiguous_filter='queen', hsds=False):
         """
         Parameters
         ----------
@@ -265,6 +265,8 @@ class InclusionMask:
             Path to exclusions .h5 file
         layers : LayerMask
             Instance of LayerMask for each exclusion layer to combine
+        min_area : float | NoneType
+            Minimum required contiguous area in sq-km
         contiguous_filter : str | None
             Contiguous filter method to use on final exclusion
         hsds : bool
@@ -279,11 +281,11 @@ class InclusionMask:
         for layer in layers:
             self.add_layer(layer)
 
-        if contiguous_filter in [None, "queen", "rook"]:
+        if contiguous_filter in ["queen", "rook"]:
+            self._min_area = min_area
             self._contiguous_filter = contiguous_filter
         else:
-            raise ValueError('contiguous_filter must be "queen", "rook" '
-                             ' or "None"')
+            raise ValueError('contiguous_filter must be "queen" or "rook"')
 
     def __repr__(self):
         msg = ("{} from {} with {} input layers"
@@ -384,6 +386,38 @@ class InclusionMask:
 
         self._layers[layer_name] = layer
 
+    @staticmethod
+    def _area_filter(mask, min_area=1, kernel='queen'):
+        """
+        Ensure the contiguous area of included pixels is greater than
+        prescribed minimum in sq-km
+
+        Parameters
+        ----------
+        mask : ndarray
+            Inclusion mask
+        min_area : float
+            Minimum required contiguous area in sq-km
+        kernel : str
+            Kernel type, either 'queen' or 'rook'
+
+        Returns
+        -------
+        mask : ndarray
+            Updated inclusion mask
+        """
+        s = InclusionMask.FILTER_KERNELS[kernel]
+        labels, _ = ndimage.label(mask, structure=s)
+        l, c = np.unique(labels, return_counts=True)
+
+        min_counts = np.ceil(min_area / (90 / 1000)**2)  # assumes 90m pixels
+        pos = c[1:] < min_counts
+        bad_labels = l[1:][pos]
+
+        mask[np.isin(labels, bad_labels)] = False
+
+        return mask
+
     def _generate_mask(self, *ds_slice):
         """
         Generate inclusion mask from exclusion layers
@@ -408,9 +442,9 @@ class InclusionMask:
                 else:
                     mask *= layer_mask
 
-        if self._contiguous_filter is not None:
-            kernel = self.FILTER_KERNELS[self._contiguous_filter]
-            mask = ndimage.convolve(mask, kernel, mode='constant', cval=0.0)
+        if self._min_area is not None:
+            mask = self._area_filter(mask, min_area=self._min_area,
+                                     kernel=self._contiguous_filter)
 
         return mask
 
