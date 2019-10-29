@@ -8,7 +8,6 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 from math import ceil
-import os
 
 from reV.config.output_request import SAMOutputRequest
 from reV.config.base_analysis_config import AnalysisConfig
@@ -228,95 +227,6 @@ class GenConfig(SAMAnalysisConfig):
                               '\n\tYears: \n\t\t{}'
                               .format(self._res_files, self.years))
         return self._res_files
-
-
-class ExclConfig(AnalysisConfig):
-    """Class to import and manage user exclusion configuration inputs."""
-
-    def __init__(self, config):
-        """
-        Parameters
-        ----------
-        config : str | dict
-            File path to config json (str), serialized json object (str),
-            or dictionary with pre-extracted config.
-        """
-        self._exclusions = None
-        self._fout = None
-        self._use_blocks = False
-        self._filter = None
-
-        super().__init__(config)
-
-    @property
-    def exclusions(self):
-        """Get the exclusions layer config object.
-
-        Returns
-        -------
-        _exclusions : NoneType | dict list
-            Returns None if no exclusions config is specified. If one is
-            specified, this returns the reV exclusions config object.
-        """
-        if self._exclusions is None:
-            if 'exclusions' in self:
-                self._exclusions = self['exclusions']
-
-        return self._exclusions
-
-    @property
-    def fout(self):
-        """Get the exclusions output filename.
-
-        Returns
-        -------
-        _fout : NoneType | dict list
-            Returns None if no fout is specified. If one is
-            specified, this returns the reV fout object.
-        """
-        if self._fout is None:
-            if 'fout' in self:
-                fout = os.path.join(self.dirout,
-                                    self['fout'])
-            else:
-                fout = os.path.join(self.dirout,
-                                    'exclusions.tif')
-            self._fout = fout
-        return self._fout
-
-    @property
-    def use_blocks(self):
-        """Get the use_blocks config object.
-
-        Returns
-        -------
-        _use_blocks : NoneType | dict list
-            Returns None if no use_blocks config is specified.
-            If one is specified, this returns the reV use_blocks
-            config object.
-        """
-        if self._use_blocks is False:
-            if 'use_blocks' in self:
-                use_blocks = bool(self['use_blocks'])
-                self._use_blocks = use_blocks
-
-        return self._use_blocks
-
-    @property
-    def filter(self):
-        """Get filter config object that the gen config points to.
-
-        Returns
-        -------
-        _filter : NoneType | dict list
-            Returns None if no filter config is specified. If one is
-            specified, this returns the reV filter config object.
-        """
-        if self._filter is None:
-            if 'filter' in self:
-                self._filter = self['filter']
-
-        return self._filter
 
 
 class EconConfig(SAMAnalysisConfig):
