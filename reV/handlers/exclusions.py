@@ -174,6 +174,23 @@ class ExclusionLayers:
         values = self.h5[layer][...]
         return values
 
+    def get_layer_description(self, layer):
+        """
+        Get description for given layer
+
+        Parameters
+        ----------
+        layer : str
+            Layer to get description for
+
+        Returns
+        -------
+        description : str
+            Description of layer
+        """
+        description = self.h5[layer].attrs['description']
+        return description
+
     def _get_meta(self, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
