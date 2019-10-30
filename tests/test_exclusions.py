@@ -1,78 +1,127 @@
 # -*- coding: utf-8 -*-
-# pylint: skip-file
-"""Exclusions unit test module
 """
+Exclusions unit test module
+"""
+import numpy as np
 import os
 import pytest
-import rasterio
-import numpy as np
-import shlex
-from subprocess import Popen, PIPE
 
 from reV import TESTDATADIR
-from reV.config.analysis_configs import ExclConfig
-from reV.exclusions.exclusions import Exclusions
+from reV.handlers.exclusions import ExclusionLayers
+from reV.supply_curve.exclusions import LayerMask, InclusionMask
 
 
-PURGE = True
+CONFIGS = {'urban_pv': {'ri_smod': {'exclude_values': [1, ]},
+                        'ri_srtm_slope': {'inclusion_range': (0, 5)}},
+           'rural_pv': {'ri_smod': {'include_values': [1, any]},
+                        'ri_srtm_slope': {'inclusion_range': (0, 5)}},
+           'wind': {'ri_smod': {'include_values': [1, ]},
+                    'ri_padus': {'exclude_values': [1, ]},
+                    'ri_srtm_slope': {'inclusion_range': (0, 20)}}}
+
+AREA = {'urban_pv': 0.018, 'rural_pv': 1, 'wind': None}
 
 
-def test_exclusions_output():
-    """Validate exclusions output
+def mask_data(data, inclusion_range, exclude_values, include_values):
     """
-    f_path = os.path.join(TESTDATADIR, 'ri_exclusions')
+    Apply proper mask to data
 
-    with rasterio.open(os.path.join(f_path, "exclusions.tif"), 'r') as file:
-        valid_exclusions_data = file.read(1)
+    Parameters
+    ----------
+    data : ndarray
+        data to mask
+    inclusion_range : tuple
+        (min threshold, max threshold) for values to include
+    exclude_values : list
+        list of values to exclude
+        Note: Only supply exclusions OR inclusions
+    include_values : list
+        List of values to include
+        Note: Only supply inclusions OR exclusions
 
-    layer_configs = [{"fpath": os.path.join(f_path, "ri_srtm_slope.tif"),
-                      "max_thresh": 5},
-                     {"fpath": os.path.join(f_path, "ri_padus.tif"),
-                      "classes_exclude": [1]}]
-
-    exclusions = Exclusions(layer_configs, contiguous_filter='queen')
-    exclusions.build_from_config()
-
-    assert np.array_equal(exclusions.data, valid_exclusions_data)
-
-
-def test_excl_from_cli():
-    """Validate exclusions run from CLI call.
+    Returns
+    -------
+    mask : ndarray
+        Boolean mask of data
     """
-    f_config = os.path.join(TESTDATADIR, 'config', 'local_exclusions.json')
+    if any(i is not None for i in inclusion_range):
+        min, max = inclusion_range
+        mask = True
+        if min is not None:
+            mask = data >= min
 
-    cmd = ('python -m reV.cli -n "{}" -c "{}" exclusions'
-           .format('test_excl', f_config))
-    cmd = shlex.split(cmd)
+        if max is not None:
+            mask *= data <= max
 
-    # use subprocess to submit command and get piped o/e
-    process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate()
-    stderr = stderr.decode('ascii').rstrip()
-    stdout = stdout.decode('ascii').rstrip()
+    elif exclude_values is not None:
+        mask = ~np.isin(data, exclude_values)
 
-    config_obj = ExclConfig(f_config)
+    elif include_values is not None:
+        mask = np.isin(data, include_values)
 
-    if stderr:
-        print(stderr)
-        ferr = os.path.join(config_obj.dirout, 'test_config.e')
-        with open(ferr, 'w') as f:
-            f.write(stderr)
-        assert False, 'Check stderr file: "{}"'.format(ferr)
+    return mask
 
-    f_test_out = os.path.join(config_obj.dirout, "exclusions.tif")
-    f_baseline = os.path.join(TESTDATADIR, 'ri_exclusions', "exclusions.tif")
 
-    with rasterio.open(f_test_out, 'r') as file:
-        test_exclusions_data = file.read(1)
-    with rasterio.open(f_baseline, 'r') as file:
-        valid_exclusions_data = file.read(1)
+@pytest.mark.parametrize(('layer', 'inclusion_range', 'exclude_values',
+                          'include_values'), [
+    ('ri_padus', (None, None), [1, ], None),
+    ('ri_smod', (None, None), None, [1, ]),
+    ('ri_srtm_slope', (None, 5), None, None),
+    ('ri_srtm_slope', (0, 5), None, None)])
+def test_layer_mask(layer, inclusion_range, exclude_values, include_values):
+    """
+    Test creation of layer masks
 
-    assert np.array_equal(test_exclusions_data, valid_exclusions_data)
+    Parameters
+    ----------
+    layer : str
+        Layer name
+    inclusion_range : tuple
+        (min threshold, max threshold) for values to include
+    exclude_values : list
+        list of values to exclude
+        Note: Only supply exclusions OR inclusions
+    include_values : list
+        List of values to include
+        Note: Only supply inclusions OR exclusions
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with ExclusionLayers(excl_h5) as f:
+        data = f[layer]
 
-    if PURGE:
-        for fname in os.listdir(config_obj.dirout):
-            os.remove(os.path.join(config_obj.dirout, fname))
+    truth = mask_data(data, inclusion_range, exclude_values,
+                      include_values)
+
+    layer = LayerMask(layer, inclusion_range=inclusion_range,
+                      exclude_values=exclude_values,
+                      include_values=include_values)
+    layer_test = layer.mask_func(data)
+
+    inclusion_test = InclusionMask.run(excl_h5, layer)
+
+    assert np.allclose(truth, layer_test)
+    assert np.allclose(truth, inclusion_test)
+
+
+@pytest.mark.parametrize(('scenario'), ['urban_pv', 'rural_pv', 'wind'])
+def test_inclusion_mask(scenario):
+    """
+    Test creation of inclusion mask
+
+    Parameters
+    ----------
+    scenario : str
+        Standard reV exclusion scenario
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    truth_path = os.path.join(TESTDATADIR, 'ri_exclusions',
+                              '{}.npy'.format(scenario))
+    truth = np.load(truth_path)
+
+    test = InclusionMask.run_from_dict(excl_h5, CONFIGS[scenario],
+                                       min_area=AREA[scenario])
+
+    assert np.allclose(truth, test)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
