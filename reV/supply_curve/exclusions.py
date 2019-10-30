@@ -168,15 +168,12 @@ class LayerMask:
         mask : ndarray
             Boolean mask of which values to include
         """
-        mask = None
+        mask = True
         if self.min_value is not None:
             mask = data >= self.min_value
 
         if self.max_value is not None:
-            if mask is not None:
-                mask *= data <= self.max_value
-            else:
-                mask = data <= self.max_value
+            mask *= data <= self.max_value
 
         return mask
 

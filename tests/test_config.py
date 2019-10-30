@@ -31,7 +31,7 @@ def test_clearsky():
         assert True
 
 
-@pytest.mark.parametrize('start, interval',
+@pytest.mark.parametrize(('start', 'interval'),
                          [[0, 1], [13, 1], [10, 2], [13, 3]])
 def test_proj_control_iter(start, interval):
     """Test the iteration of the points control."""
@@ -52,7 +52,7 @@ def test_proj_control_iter(start, interval):
         assert all(split == target), msg
 
 
-@pytest.mark.parametrize('start, interval',
+@pytest.mark.parametrize(('start', 'interval'),
                          [[0, 1], [13, 1], [10, 2], [13, 3]])
 def test_proj_points_split(start, interval):
     """Test the split operation of project points."""

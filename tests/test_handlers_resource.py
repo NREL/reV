@@ -146,7 +146,6 @@ def check_dset(res_cls, ds_name):
     assert ds.shape == (ds_shape[0], 20)
     assert np.allclose(arr[:, sites], ds)
     # site list single time
-    sites = sorted(np.random.choice(ds_shape[1], 20, replace=False))
     ds = res_cls[ds_name, 0, sites]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (20,)
@@ -158,16 +157,17 @@ def check_dset(res_cls, ds_name):
     assert ds.shape == (100, ds_shape[1])
     assert np.allclose(arr[times], ds)
     # time list single site
-    times = sorted(np.random.choice(ds_shape[0], 100, replace=False))
     ds = res_cls[ds_name, times, 0]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (100,)
     assert np.allclose(arr[times, 0], ds)
     # time and site lists
-    ds = res_cls[ds_name, times, sites]
+    ds = res_cls[ds_name, times[:20], sites]
     assert isinstance(ds, np.ndarray)
-    assert ds.shape == (100, 20)
-    assert np.allclose(arr[times][:, sites], ds)
+    assert ds.shape == (20,)
+    assert np.allclose(arr[times[:20], sites], ds)
+    with pytest.raises(IndexError):
+        assert res_cls[ds_name, times, sites]
 
 
 def check_scale(res_cls, ds_name):
@@ -455,3 +455,23 @@ class TestGroupResource:
     #     assert wind_group.get_units('windspeed_100m') == 'm s-1'
     #     assert wind_group.get_units('temperature_100m') == 'C'
     #     wind_group.close()
+
+
+def execute_pytest(capture='all', flags='-rapP'):
+    """Execute module as pytest with detailed summary report.
+
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
+        all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
+    """
+
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+
+
+if __name__ == '__main__':
+    execute_pytest()

@@ -73,7 +73,8 @@ def to_list(gen_out):
     return out
 
 
-@pytest.mark.parametrize('f_rev1_out, rev2_points, year, n_workers', [
+@pytest.mark.parametrize(('f_rev1_out', 'rev2_points', 'year', 'n_workers'),
+                         [
     ('project_outputs.h5', slice(0, 10), '2012', 1),
     ('project_outputs.h5', slice(0, 100, 10), '2013', 1)])
 def test_wind_gen_slice(f_rev1_out, rev2_points, year, n_workers):

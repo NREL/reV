@@ -28,7 +28,7 @@ def test_points_calc(resolution):
         assert len(sc) == (sc.n_rows * sc.n_cols)
 
 
-@pytest.mark.parametrize('gids, resolution',
+@pytest.mark.parametrize(('gids', 'resolution'),
                          [(range(361), 64), (range(12), 377)])
 def test_slicer(gids, resolution):
     """Run tests on the different extent slicing algorithms."""
