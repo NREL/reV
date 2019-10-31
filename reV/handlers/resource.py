@@ -1173,22 +1173,27 @@ class WindResource(Resource):
         return SAM_res
 
 
-class FiveMinWTK(WindResource):
+class MultiFileResource(Resource):
     """
-    Class to handle 5min WIND Toolkit data
+    Class to handle fine spatial resolution resource data stored in
+    multiple .h5 files
     """
-    def __init__(self, h5_dir):
+    def __init__(self, h5_dir, prefix='', suffix='.h5'):
         """
         Parameters
         ----------
         h5_dir : str
             Path to directory containing 5min .h5 files
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
         """
-        # Find 5min wind files
-        self._variable_map = self._map_variables(h5_dir)
-        self._heighs = None
+        # Map variables to their .h5 files
+        self._variable_map = self._map_variables(h5_dir, prefix=prefix,
+                                                 suffix=suffix)
 
-        # Substitute hourly for 5min time_index
+        # Pull meta and time_index from one file
         h5_path = self._variable_map.values()[0]
         self._meta = self._get_meta(h5_path)
         self._time_index = self._get_time_index(h5_path)
@@ -1229,7 +1234,7 @@ class FiveMinWTK(WindResource):
         return variables
 
     @staticmethod
-    def _map_variables(h5_dir):
+    def _map_variables(h5_dir, prefix='', suffix='.h5'):
         """
         Map 5min variables to their .h5 files in given directory
 
@@ -1237,6 +1242,10 @@ class FiveMinWTK(WindResource):
         ----------
         h5_dir : str
             Path to directory containing 5min .h5 files
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
 
         Returns
         -------
@@ -1245,7 +1254,7 @@ class FiveMinWTK(WindResource):
         """
         var_map = {}
         for file in os.listdir(h5_dir):
-            if file.endswith('m.h5'):
+            if file.startswith(prefix) and file.endswith(suffix):
                 path = os.path.join(h5_dir, file)
                 for var in FiveMinWTK._get_variables(path):
                     var_map[var] = path
@@ -1291,3 +1300,108 @@ class FiveMinWTK(WindResource):
             time_index = f.time_index
 
         return time_index
+
+    def _get_5min_ds(self, ds_name, *ds_slice):
+        """
+        Extract data from given dataset
+
+        Parameters
+        ----------
+        ds_name : str
+            Variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        h5_path = self._variable_map[ds_name]
+        with super().__init__(h5_path) as f:
+            out = f._get_ds(ds_name, *ds_slice)
+
+        return out
+
+    def _get_ds(self, ds_name, *ds_slice):
+        """
+        Extract data from given dataset
+
+        Parameters
+        ----------
+        ds_name : str
+            Variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        return self._get_5min_ds(ds_name, *ds_slice)
+
+
+class MultiFileNSRDB(MultiFileResource, NSRDB):
+    """
+    Class to handle 2018 and beyond NSRDB data that is at 2km and
+    sub 30 min resolution
+    """
+
+
+class FiveMinWTK(MultiFileResource, WindResource):
+    """
+    Class to handle 5min WIND Toolkit data
+    """
+    def __init__(self, h5_dir, prefix='', suffix='m.h5'):
+        """
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+        """
+        super().__init__(h5_dir, prefix=prefix, suffix=suffix)
+        self._heighs = None
+
+    def _get_ds(self, ds_name, *ds_slice):
+        """
+        Extract data from given dataset
+
+        Parameters
+        ----------
+        ds_name : str
+            Variable dataset to be extracted
+        ds_slice : tuple of int | list | slice
+            tuple describing list ds_slice to extract
+
+        Returns
+        -------
+        out : ndarray
+            ndarray of variable timeseries data
+            If unscale, returned in native units else in scaled units
+        """
+        var_name, h = self._parse_name(ds_name)
+        heights = self.heights[var_name]
+        if len(heights) == 1:
+            h = heights[0]
+            ds_name = '{}_{}m'.format(var_name, h)
+            warnings.warn('Only one hub-height available, returning {}'
+                          .format(ds_name), HandlerWarning)
+        if h in heights:
+            ds_name = '{}_{}m'.format(var_name, int(h))
+            out = self._get_5min_ds(ds_name, *ds_slice)
+        else:
+            (h1, h2), extrapolate = self.get_nearest_h(h, heights)
+            ts1 = self._get_5min_ds('{}_{}m'.format(var_name, h1), *ds_slice)
+            ts2 = self._get_5min_ds('{}_{}m'.format(var_name, h2), *ds_slice)
+
+            if (var_name == 'windspeed') and extrapolate:
+                out = self.power_law_interp(ts1, h1, ts2, h2, h)
+            elif var_name == 'winddirection':
+                out = self.circular_interp(ts1, h1, ts2, h2, h)
+            else:
+                out = self.linear_interp(ts1, h1, ts2, h2, h)
+
+        return out
