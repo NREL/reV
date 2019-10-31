@@ -67,7 +67,7 @@ class Resource:
             raise
 
     def __len__(self):
-        return self.h5['meta'].shape[0]
+        return len(self.meta)
 
     def __getitem__(self, keys):
         ds, ds_slice = parse_keys(keys)
@@ -173,7 +173,7 @@ class Resource:
         shape : tuple
             Shape of resource variable arrays (timesteps, sites)
         """
-        _shape = (self.h5['time_index'].shape[0], self.h5['meta'].shape[0])
+        _shape = (len(self.time_index), len(self.meta))
         return _shape
 
     @property
@@ -732,6 +732,29 @@ class WindResource(Resource):
         super().__init__(h5_file, **kwargs)
 
     @staticmethod
+    def _parse_hub_height(name):
+        """
+        Extract hub height from given string
+
+        Parameters
+        ----------
+        name : str
+            String to parse hub height from
+
+        Returns
+        -------
+        h : int | float
+            Hub Height as a numeric value
+        """
+        h = name.strip('m')
+        try:
+            h = int(h)
+        except ValueError:
+            h = float(h)
+
+        return h
+
+    @staticmethod
     def _parse_name(ds_name):
         """
         Extract dataset name and height from dataset name
@@ -750,14 +773,13 @@ class WindResource(Resource):
         """
         try:
             name, h = ds_name.split('_')
-            h = h.strip('m')
-            try:
-                h = int(h)
-            except ValueError:
-                h = float(h)
-        except Exception:
+            h = WindResource._parse_hub_height(h)
+        except Exception as ex:
             name = ds_name
             h = None
+            msg = ('Could not extract hub-height from {}:\n{}'
+                   .format(ds_name, ex))
+            warnings.warn(msg)
 
         return name, h
 
@@ -1155,164 +1177,117 @@ class FiveMinWTK(WindResource):
     """
     Class to handle 5min WIND Toolkit data
     """
-    def __init__(self, hourly_h5, h5_dir, **kwargs):
+    def __init__(self, h5_dir):
         """
         Parameters
         ----------
-        hourly_h5 : str
-            Path to hourly .h5 file
         h5_dir : str
             Path to directory containing 5min .h5 files
-        kwargs : dict
-            kwargs to init Resource
         """
-        # Init on hourly_h5 file
-        super().__init__(hourly_h5, **kwargs)
-        self._hourly_time_index = self.time_index
-
         # Find 5min wind files
-        wind_files = self.get_wind_files(h5_dir)
-        self._wind_files = wind_files
-        # Substitute wind hub_heights
-        wind_h = sorted(wind_files)
-        self.heights['windspeed'] = wind_h
-        self.heights['winddirection'] = wind_h
+        self._variable_map = self._map_variables(h5_dir)
+        self._heighs = None
+
         # Substitute hourly for 5min time_index
-        self._time_index = self.get_new_time_index(h5_dir)
+        h5_path = self._variable_map.values()[0]
+        self._meta = self._get_meta(h5_path)
+        self._time_index = self._get_time_index(h5_path)
+
+    @property
+    def dsets(self):
+        """
+        Datasets available
+
+        Returns
+        -------
+        list
+            List of datasets
+        """
+        return list(self._variable_map.keys())
 
     @staticmethod
-    def get_new_time_index(h5_dir):
+    def _get_variables(h5_path):
         """
-        Get the time index for the high temporal res h5 dir.
+        Get variables in given .h5 file
+
+        Parameters
+        ----------
+        h5_path : str
+            Path to .h5 file to get variables for
+
+        Returns
+        -------
+        variables : list
+            List of variables excluding 'meta', 'time_index', 'coordinates'
+        """
+        variables = []
+        with h5py.File(h5_path, mode='r') as f:
+            for dset in f:
+                if dset not in ['meta', 'time_index', 'coordinates']:
+                    variables.append(dset)
+
+        return variables
+
+    @staticmethod
+    def _map_variables(h5_dir):
+        """
+        Map 5min variables to their .h5 files in given directory
 
         Parameters
         ----------
         h5_dir : str
             Path to directory containing 5min .h5 files
+
+        Returns
+        -------
+        var_map : dict
+            Dictionary mapping datasets to file paths
+        """
+        var_map = {}
+        for file in os.listdir(h5_dir):
+            if file.endswith('m.h5'):
+                path = os.path.join(h5_dir, file)
+                for var in FiveMinWTK._get_variables(path):
+                    var_map[var] = path
+
+        return var_map
+
+    @staticmethod
+    def _get_meta(h5_path):
+        """
+        Get 5min meta data
+
+        Parameters
+        ----------
+        h5_path : str
+            Path to 5min .h5 file
+
+        Returns
+        -------
+        meta : pandas.DataFrame
+            Resource meta data
+        """
+        with Resource(h5_path) as f:
+            meta = f.meta
+
+        return meta
+
+    @staticmethod
+    def _get_time_index(h5_path):
+        """
+        Get 5min time index
+
+        Parameters
+        ----------
+        h5_path : str
+            Path to 5min .h5 file
 
         Returns
         -------
         time_index : pandas.DatetimeIndex
             Resource datetime index
         """
-        files = FiveMinWTK.get_wind_files(h5_dir)
-        with Resource(list(files.values())[0]) as f:
+        with Resource(h5_path) as f:
             time_index = f.time_index
+
         return time_index
-
-    @staticmethod
-    def get_wind_files(h5_dir):
-        """
-        Find .h5 files for wind hub-heights in h5_dir
-
-        Parameters
-        ----------
-        h5_dir : str
-            Path to directory containing 5min .h5 files
-
-        Returns
-        -------
-        wind_files : dict
-            Dictionary mapping wind files to hub-heights
-        """
-        wind_files = {}
-        for file in os.listdir(h5_dir):
-            if file.startswith('wind') and file.endswith('.h5'):
-                h = WindResource._parse_name(file.split('.')[0])[1]
-                wind_files[h] = os.path.join(h5_dir, file)
-
-        return wind_files
-
-    def _get_wind_ds(self, ds_name, *ds_slice):
-        """
-        Extract 5min wind data
-
-        Parameters
-        ----------
-        ds_name : str
-            5min wind variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
-        """
-        var_name, h = self._parse_name(ds_name)
-        heights = self.heights[var_name]
-        if len(heights) == 1:
-            h = heights[0]
-            ds_name = '{}_{}m'.format(var_name, h)
-            warnings.warn('Only one hub-height available, returning {}'
-                          .format(ds_name), HandlerWarning)
-
-        if h in heights:
-            ds_name = '{}_{}m'.format(var_name, int(h))
-            with Resource(self._wind_files[h], unscale=self._unscale) as f:
-                out = f._get_ds(ds_name, *ds_slice)
-        else:
-            (h1, h2), extrapolate = self.get_nearest_h(h, heights)
-            with Resource(self._wind_files[h1], unscale=self._unscale) as f:
-                ts1 = f._get_ds('{}_{}m'.format(var_name, h1), *ds_slice)
-
-            with Resource(self._wind_files[h2], unscale=self._unscale) as f:
-                ts2 = f._get_ds('{}_{}m'.format(var_name, h2), *ds_slice)
-
-            if (var_name == 'windspeed') and extrapolate:
-                out = self.power_law_interp(ts1, h1, ts2, h2, h)
-            elif var_name == 'winddirection':
-                out = self.circular_interp(ts1, h1, ts2, h2, h)
-            else:
-                out = self.linear_interp(ts1, h1, ts2, h2, h)
-
-        return out
-
-    def _interp_hourly_ds(self, ds_name, *ds_slice):
-        """
-        Extract and interp hourly data to 5min
-
-        Parameters
-        ----------
-        ds_name : str
-            Hourly variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
-        """
-        out = super()._get_ds(ds_name, *ds_slice)
-        out = pd.DataFrame(out, index=self._hourly_time_index)
-        out = out.reindex(self.time_index).interpolate(method='time').values
-
-        return out
-
-    def _get_ds(self, ds_name, *ds_slice):
-        """
-        Extract data from given dataset
-
-        Parameters
-        ----------
-        ds_name : str
-            Variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
-        """
-        var_name, _ = self._parse_name(ds_name)
-        if var_name in ['windspeed', 'winddirection']:
-            out = self._get_wind_ds(ds_name, *ds_slice)
-        else:
-            out = self._interp_hourly_ds(ds_name, *ds_slice)
-
-        return out
