@@ -526,8 +526,12 @@ class RepProfiles:
             dtypes = {dset: self.profiles.dtype}
             Outputs.init_h5(fout, [dset], shapes, attrs, chunks, dtypes,
                             self.meta, time_index=self.time_index)
+
             with Outputs(fout, mode='a') as out:
                 out[dset] = self.profiles
+                rev_sum = Outputs.to_records_array(self._rev_summary)
+                out._create_dset('rev_summary', rev_sum.shape, rev_sum.dtype,
+                                 data=rev_sum)
 
     def _run_serial(self):
         """Compute all representative profiles in serial."""
