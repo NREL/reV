@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
-from reV.handlers.resource import NSRDB, WindResource
+from reV.handlers.resource import (NSRDB, WindResource, MultiFileNSRDB)
 from reV.utilities.exceptions import HandlerKeyError
 
 
@@ -20,6 +20,15 @@ def NSRDB_res():
     """
     path = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
     return NSRDB(path)
+
+
+@pytest.fixture
+def NSRDB_2018():
+    """
+    Init NSRDB resource handler
+    """
+    path = os.path.join(TESTDATADIR, 'nsrdb')
+    return MultiFileNSRDB(path, prefix='nsrdb', suffix='2018.h5')
 
 
 @pytest.fixture
@@ -253,14 +262,58 @@ class TestNSRDB:
         check_scale(NSRDB_res, 'surface_pressure')
         NSRDB_res.close()
 
-    # @staticmethod
-    # def test_units(NSRDB_res):
-    #     """
-    #     test unit attributes
-    #     """
-    #     assert NSRDB_res.get_units('dni') == 'W/m2'
-    #     assert NSRDB_res.get_units('wind_speed') == 'm/s'
-    #     NSRDB_res.close()
+
+class TestNSRDB2018:
+    """
+    MultiFileNSRDB Resource handler tests
+    """
+    @staticmethod
+    def test_res(NSRDB_res):
+        """
+        test NSRDB class calls
+        """
+        check_res(NSRDB_res)
+        NSRDB_res.close()
+
+    @staticmethod
+    def test_meta(NSRDB_res):
+        """
+        test extraction of NSRDB meta data
+        """
+        check_meta(NSRDB_res)
+        NSRDB_res.close()
+
+    @staticmethod
+    def test_time_index(NSRDB_res):
+        """
+        test extraction of NSRDB time_index
+        """
+        check_time_index(NSRDB_res)
+        NSRDB_res.close()
+
+    @staticmethod
+    def test_ds(NSRDB_res, ds_name='dni'):
+        """
+        test extraction of a variable array
+        """
+        check_dset(NSRDB_res, ds_name)
+        NSRDB_res.close()
+
+    @staticmethod
+    def test_unscale_dni(NSRDB_res):
+        """
+        test unscaling of dni values
+        """
+        check_scale(NSRDB_res, 'dni')
+        NSRDB_res.close()
+
+    @staticmethod
+    def test_unscale_pressure(NSRDB_res):
+        """
+        test unscaling of pressure values
+        """
+        check_scale(NSRDB_res, 'surface_pressure')
+        NSRDB_res.close()
 
 
 class TestWindResource:
@@ -344,15 +397,6 @@ class TestWindResource:
             check_interp(WindResource_res, var, h)
 
         WindResource_res.close()
-
-    # @staticmethod
-    # def test_units(WindResource_res):
-    #     """
-    #     test unit attributes
-    #     """
-    #     assert WindResource_res.get_units('windspeed_100m') == 'm s-1'
-    #     assert WindResource_res.get_units('temperature_100m') == 'C'
-    #     WindResource_res.close()
 
 
 class TestGroupResource:

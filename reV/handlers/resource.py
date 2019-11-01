@@ -67,7 +67,7 @@ class Resource:
             raise
 
     def __len__(self):
-        return len(self.meta)
+        return self.h5['meta'].shape[0]
 
     def __getitem__(self, keys):
         ds, ds_slice = parse_keys(keys)
@@ -173,7 +173,7 @@ class Resource:
         shape : tuple
             Shape of resource variable arrays (timesteps, sites)
         """
-        _shape = (len(self.time_index), len(self.meta))
+        _shape = (self.h5['time_index'].shape[0], self.h5['meta'].shape[0])
         return _shape
 
     @property
@@ -1173,10 +1173,9 @@ class WindResource(Resource):
         return SAM_res
 
 
-class MultiFileResource(Resource):
+class MultiH5:
     """
-    Class to handle fine spatial resolution resource data stored in
-    multiple .h5 files
+    Class to handle multiple h5 file handlers
     """
     def __init__(self, h5_dir, prefix='', suffix='.h5'):
         """
@@ -1189,31 +1188,92 @@ class MultiFileResource(Resource):
         suffix : str
             Suffix for resource .h5 files
         """
-        # Map variables to their .h5 files
-        self._variable_map = self._map_variables(h5_dir, prefix=prefix,
-                                                 suffix=suffix)
+        self.h5_dir = h5_dir
+        self._dset_map = self._map_file_dsets(h5_dir, prefix=prefix,
+                                              suffix=suffix)
+        self._h5_map = self._map_file_instances(set(self._dset_map.values()))
 
-        # Pull meta and time_index from one file
-        h5_path = self._variable_map.values()[0]
-        self._meta = self._get_meta(h5_path)
-        self._time_index = self._get_time_index(h5_path)
+        self._i = 0
+
+    def __repr__(self):
+        msg = ("{} for {}:\n Contains {} files and {} datasets"
+               .format(self.__class__.__name__, self.h5_dir,
+                       len(self), len(self._dset_map)))
+        return msg
+
+    def __len__(self):
+        return len(self._h5_map)
+
+    def __getitem__(self, dset):
+        if dset in self:
+            path = self._dset_map[dset]
+            h5 = self._h5_map[path]
+            ds = h5[dset]
+
+        return ds
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._i >= len(self.dsets):
+            raise StopIteration
+
+        dset = self.dsets[self._i]
+        self._i += 1
+
+        return dset
+
+    def __contains__(self, dset):
+        test = dset in self.dsets
+        if not test:
+            msg = "{} does not exist in {}".format(dset, self)
+            raise HandlerKeyError(msg)
+
+        return test
+
+    @property
+    def attrs(self):
+        """
+        Global .h5 file attributes sourced from first .h5 file
+
+        Returns
+        -------
+        attrs : dict
+            .h5 file attributes sourced from first .h5 file
+        """
+        path = self.h5_files[0]
+        attrs = dict(self._h5_map[path].attrs)
+        return attrs
 
     @property
     def dsets(self):
         """
-        Datasets available
+        Available datasets
 
         Returns
         -------
         list
-            List of datasets
+            List of dataset present in .h5 files
         """
-        return list(self._variable_map.keys())
+        return sorted(self._dset_map)
+
+    @property
+    def h5_files(self):
+        """
+        .h5 files data is being sourced from
+
+        Returns
+        -------
+        list
+            List of .h5 files data is being sourced form
+        """
+        return sorted(self._h5_map)
 
     @staticmethod
-    def _get_variables(h5_path):
+    def _get_dsets(h5_path):
         """
-        Get variables in given .h5 file
+        Get datasets in given .h5 file
 
         Parameters
         ----------
@@ -1222,19 +1282,24 @@ class MultiFileResource(Resource):
 
         Returns
         -------
-        variables : list
-            List of variables excluding 'meta', 'time_index', 'coordinates'
+        unique_dsets : list
+            List of unique datasets in .h5 file
+        shared_dsets : list
+            List of shared datasets in .h5 file
         """
-        variables = []
+        unique_dsets = []
+        shared_dsets = []
         with h5py.File(h5_path, mode='r') as f:
             for dset in f:
                 if dset not in ['meta', 'time_index', 'coordinates']:
-                    variables.append(dset)
+                    unique_dsets.append(dset)
+                else:
+                    shared_dsets.append(dset)
 
-        return variables
+        return unique_dsets, shared_dsets
 
     @staticmethod
-    def _map_variables(h5_dir, prefix='', suffix='.h5'):
+    def _map_file_dsets(h5_dir, prefix='', suffix='.h5'):
         """
         Map 5min variables to their .h5 files in given directory
 
@@ -1249,99 +1314,87 @@ class MultiFileResource(Resource):
 
         Returns
         -------
-        var_map : dict
+        dset_map : dict
             Dictionary mapping datasets to file paths
         """
-        var_map = {}
-        for file in os.listdir(h5_dir):
+        dset_map = {}
+        for file in sorted(os.listdir(h5_dir)):
             if file.startswith(prefix) and file.endswith(suffix):
                 path = os.path.join(h5_dir, file)
-                for var in FiveMinWTK._get_variables(path):
-                    var_map[var] = path
+                unique_dsets, shared_dsets = MultiH5._get_dsets(path)
+                for dset in shared_dsets:
+                    if dset not in dset_map:
+                        dset_map[dset] = path
 
-        return var_map
+                for dset in unique_dsets:
+                    dset_map[dset] = path
 
-    @staticmethod
-    def _get_meta(h5_path):
-        """
-        Get 5min meta data
-
-        Parameters
-        ----------
-        h5_path : str
-            Path to 5min .h5 file
-
-        Returns
-        -------
-        meta : pandas.DataFrame
-            Resource meta data
-        """
-        with Resource(h5_path) as f:
-            meta = f.meta
-
-        return meta
+        return dset_map
 
     @staticmethod
-    def _get_time_index(h5_path):
+    def _map_file_instances(h5_files):
         """
-        Get 5min time index
+        Open all .h5 files and map the open h5py instances to the
+        associated file paths
 
         Parameters
         ----------
-        h5_path : str
-            Path to 5min .h5 file
+        h5_files : list
+            List of .h5 files to open
 
         Returns
         -------
-        time_index : pandas.DatetimeIndex
-            Resource datetime index
+        h5_map : dict
+            Dictionary mapping file paths to open resource instances
         """
-        with Resource(h5_path) as f:
-            time_index = f.time_index
+        h5_map = {}
+        for f_path in h5_files:
+            h5_map[f_path] = h5py.File(f_path, mode='r')
 
-        return time_index
+        return h5_map
 
-    def _get_5min_ds(self, ds_name, *ds_slice):
+    def close(self):
         """
-        Extract data from given dataset
+        Close all h5py.File instances
+        """
+        for f in self._h5_map.values():
+            f.close()
 
+
+class MultiFileResource(Resource):
+    """
+    Class to handle fine spatial resolution resource data stored in
+    multiple .h5 files
+    """
+    def __init__(self, h5_dir, prefix='', suffix='.h5', unscale=True,
+                 str_decode=True):
+        """
         Parameters
         ----------
-        ds_name : str
-            Variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
         """
-        h5_path = self._variable_map[ds_name]
-        with super().__init__(h5_path) as f:
-            out = f._get_ds(ds_name, *ds_slice)
+        self.h5_dir = h5_dir
+        self._unscale = unscale
+        self._meta = None
+        self._time_index = None
+        self._str_decode = str_decode
+        self._group = None
+        # Map variables to their .h5 files
+        self._h5 = MultiH5(h5_dir, prefix=prefix, suffix=suffix)
 
-        return out
-
-    def _get_ds(self, ds_name, *ds_slice):
-        """
-        Extract data from given dataset
-
-        Parameters
-        ----------
-        ds_name : str
-            Variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
-        """
-        return self._get_5min_ds(ds_name, *ds_slice)
+    def __repr__(self):
+        msg = "{} for {}".format(self.__class__.__name__, self.h5_dir)
+        return msg
 
 
 class MultiFileNSRDB(MultiFileResource, NSRDB):
@@ -1364,44 +1417,3 @@ class FiveMinWTK(MultiFileResource, WindResource):
         """
         super().__init__(h5_dir, prefix=prefix, suffix=suffix)
         self._heighs = None
-
-    def _get_ds(self, ds_name, *ds_slice):
-        """
-        Extract data from given dataset
-
-        Parameters
-        ----------
-        ds_name : str
-            Variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
-        """
-        var_name, h = self._parse_name(ds_name)
-        heights = self.heights[var_name]
-        if len(heights) == 1:
-            h = heights[0]
-            ds_name = '{}_{}m'.format(var_name, h)
-            warnings.warn('Only one hub-height available, returning {}'
-                          .format(ds_name), HandlerWarning)
-        if h in heights:
-            ds_name = '{}_{}m'.format(var_name, int(h))
-            out = self._get_5min_ds(ds_name, *ds_slice)
-        else:
-            (h1, h2), extrapolate = self.get_nearest_h(h, heights)
-            ts1 = self._get_5min_ds('{}_{}m'.format(var_name, h1), *ds_slice)
-            ts2 = self._get_5min_ds('{}_{}m'.format(var_name, h2), *ds_slice)
-
-            if (var_name == 'windspeed') and extrapolate:
-                out = self.power_law_interp(ts1, h1, ts2, h2, h)
-            elif var_name == 'winddirection':
-                out = self.circular_interp(ts1, h1, ts2, h2, h)
-            else:
-                out = self.linear_interp(ts1, h1, ts2, h2, h)
-
-        return out
