@@ -12,6 +12,7 @@ from reV.handlers.resource import Resource
 
 
 GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
+PURGE_OUT = True
 
 
 def test_rep_region_interval():
@@ -95,6 +96,7 @@ def test_many_regions():
                                 'region2': region2})
     reg_cols = ['region1', 'region2']
     p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols, parallel=False)
+
     assert p1.shape == (17520, 6)
     assert len(m1) == 6
 
@@ -103,6 +105,32 @@ def test_many_regions():
 
     for r2 in set(region2):
         assert r2 in m1['region2'].values
+
+
+def test_write_to_file():
+    """Test rep profiles with file write."""
+
+    sites = np.arange(100)
+    zeros = np.zeros((100,))
+    regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+    rev_summary = pd.DataFrame({'gen_gids': sites,
+                                'res_gids': sites,
+                                'res_class': zeros,
+                                'region': regions})
+    fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
+    p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                             parallel=True, fout=fout)
+    with Resource(fout) as res:
+        disk_profiles = res['rep_profiles']
+        disk_meta = res.meta
+
+    assert np.allclose(p1, disk_profiles)
+    assert len(disk_meta) == 3
+    assert np.allclose(m1['rep_gen_gid'].values,
+                       disk_meta['rep_gen_gid'].values)
+
+    if PURGE_OUT:
+        os.remove(fout)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

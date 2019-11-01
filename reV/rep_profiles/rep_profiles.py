@@ -14,6 +14,7 @@ import os
 import logging
 
 from reV.handlers.resource import Resource
+from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import FileInputError
 
 
@@ -511,6 +512,25 @@ class RepProfiles:
                                             err_method=self._err_method)
         return out
 
+    def _write_fout(self, fout):
+        """Write profiles and meta to an output file.
+
+        Parameters
+        ----------
+        fout : None | str
+            None or filepath to output h5 file.
+        """
+        if fout is not None:
+            dset = 'rep_profiles'
+            shapes = {dset: self.profiles.shape}
+            attrs = {dset: None}
+            chunks = {dset: None}
+            dtypes = {dset: self.profiles.dtype}
+            Outputs.init_h5(fout, [dset], shapes, attrs, chunks, dtypes,
+                            self.meta, time_index=self.time_index)
+            with Outputs(fout, mode='a') as out:
+                out[dset] = self.profiles
+
     def _run_serial(self):
         """Compute all representative profiles in serial."""
 
@@ -520,8 +540,8 @@ class RepProfiles:
             region_dict = {k: v for (k, v) in row.to_dict().items()
                            if k in self._reg_cols}
             profile, _, ggid, rgid = self._get_rep_profile(region_dict)
-            self._meta.loc[i, 'rep_gen_gid'] = ggid
-            self._meta.loc[i, 'rep_res_gid'] = rgid
+            self._meta.at[i, 'rep_gen_gid'] = ggid
+            self._meta.at[i, 'rep_res_gid'] = rgid
             self._profiles[:, i] = profile
 
     def _run_parallel(self):
@@ -539,13 +559,13 @@ class RepProfiles:
                 i = futures[future]
                 profile, _, ggid, rgid = future.result()
 
-                self._meta.loc[i, 'rep_gen_gid'] = ggid
-                self._meta.loc[i, 'rep_res_gid'] = rgid
+                self._meta.at[i, 'rep_gen_gid'] = ggid
+                self._meta.at[i, 'rep_res_gid'] = rgid
                 self._profiles[:, i] = profile
 
     @classmethod
     def run(cls, gen_fpath, rev_summary, reg_col, rep_method='meanoid',
-            err_method='rmse', parallel=True):
+            err_method='rmse', parallel=True, fout=None):
         """Run representative profiles.
 
         Parameters
@@ -567,6 +587,13 @@ class RepProfiles:
             Flag to run in parallel.
         fout : None | str
             None or filepath to output h5 file.
+
+        Returns
+        -------
+        profiles : np.ndarray
+            (time, n) array for the representative profiles for each region.
+        meta : pd.DataFrame
+            Meta data recording the regions and the selected rep profile gid.
         """
 
         rp = cls(gen_fpath, rev_summary, reg_col, rep_method=rep_method,
@@ -575,4 +602,7 @@ class RepProfiles:
             rp._run_parallel()
         else:
             rp._run_serial()
+
+        rp._write_fout(fout)
+
         return rp._profiles, rp.meta
