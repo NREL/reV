@@ -350,7 +350,7 @@ class RepProfiles:
             Filepath to reV gen output file to extract "cf_profile" from.
         rev_summary : str | pd.DataFrame
             Aggregated rev supply curve summary file. Str filepath or full df.
-        reg_cols : str | list
+        reg_cols : str | list | None
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
             in the "state" column in rev_summary.
@@ -360,16 +360,17 @@ class RepProfiles:
             Method identifier for calculation of error from the representative
             profile.
         """
-        if isinstance(reg_cols, str):
+
+        if reg_cols is None:
+            reg_cols = []
+        elif isinstance(reg_cols, str):
             reg_cols = [reg_cols]
+
         self._gen_fpath = gen_fpath
         self._rev_summary = self._parse_rev_summary(rev_summary, reg_cols)
         self._reg_cols = reg_cols
-        self._res_classes = self._rev_summary['res_class'].unique().tolist()
         self._regions = {k: self._rev_summary[k].unique().tolist()
                          for k in self._reg_cols}
-        self._reg_cols.append('res_class')
-        self._regions['res_class'] = self._res_classes
         self._time_index = None
         self._meta = None
         self._profiles = np.zeros((len(self.time_index), len(self.meta)),
@@ -415,9 +416,6 @@ class RepProfiles:
             if c not in rev_summary:
                 logger.error(e.format(c))
                 raise KeyError(e.format(c))
-
-        if 'res_class' not in rev_summary:
-            rev_summary['res_class'] == 0
 
         return rev_summary
 
@@ -564,7 +562,7 @@ class RepProfiles:
                 self._profiles[:, i] = profile
 
     @classmethod
-    def run(cls, gen_fpath, rev_summary, reg_col, rep_method='meanoid',
+    def run(cls, gen_fpath, rev_summary, reg_cols, rep_method='meanoid',
             err_method='rmse', parallel=True, fout=None):
         """Run representative profiles.
 
@@ -574,10 +572,10 @@ class RepProfiles:
             Filepath to reV gen output file to extract "cf_profile" from.
         rev_summary : str | pd.DataFrame
             Aggregated rev supply curve summary file. Str filepath or full df.
-        reg_col : str
-            Label for a categorical region column to extract profiles for.
-            e.g. "state" will extract a rep profile for each unique entry in
-            the "state" column in rev_summary.
+        reg_cols : str | list | None
+            Label(s) for a categorical region column(s) to extract profiles
+            for. e.g. "state" will extract a rep profile for each unique entry
+            in the "state" column in rev_summary.
         rep_method : str
             Method identifier for calculation of the representative profile.
         err_method : str
@@ -596,7 +594,7 @@ class RepProfiles:
             Meta data recording the regions and the selected rep profile gid.
         """
 
-        rp = cls(gen_fpath, rev_summary, reg_col, rep_method=rep_method,
+        rp = cls(gen_fpath, rev_summary, reg_cols, rep_method=rep_method,
                  err_method=err_method)
         if parallel:
             rp._run_parallel()
