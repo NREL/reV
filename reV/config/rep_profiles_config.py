@@ -85,7 +85,29 @@ class RepProfilesConfig(AnalysisConfig):
     @property
     def rev_summary(self):
         """Get the rev summary input arg."""
-        return self['rev_summary']
+
+        fpath = self['rev_summary']
+
+        if fpath == 'PIPELINE':
+            target_modules = ['aggregation', 'supply-curve']
+            for target_module in target_modules:
+                try:
+                    fpath = Pipeline.parse_previous(
+                        self.dirout, 'rep_profiles', target='fpath',
+                        target_module=target_module)[0]
+                except KeyError:
+                    pass
+                else:
+                    break
+
+            if fpath == 'PIPELINE':
+                raise PipelineError('Could not parse rev_summary from '
+                                    'previous pipeline jobs.')
+            else:
+                logger.info('Rep profiles using the following '
+                            'pipeline input for rev_summary: {}'.format(fpath))
+
+        return fpath
 
     @property
     def reg_cols(self):
