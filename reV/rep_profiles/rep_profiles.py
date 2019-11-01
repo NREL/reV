@@ -12,7 +12,6 @@ import pandas as pd
 import numpy as np
 import os
 import logging
-import itertools
 
 from reV.handlers.resource import Resource
 from reV.utilities.exceptions import FileInputError
@@ -341,7 +340,7 @@ class Region:
 class RepProfiles:
     """Framework for calculating the representative profiles."""
 
-    def __init__(self, gen_fpath, rev_summary, reg_col, rep_method='meanoid',
+    def __init__(self, gen_fpath, rev_summary, reg_cols, rep_method='meanoid',
                  err_method='rmse'):
         """
         Parameters
@@ -350,21 +349,26 @@ class RepProfiles:
             Filepath to reV gen output file to extract "cf_profile" from.
         rev_summary : str | pd.DataFrame
             Aggregated rev supply curve summary file. Str filepath or full df.
-        reg_col : str
-            Label for a categorical region column to extract profiles for.
-            e.g. "state" will extract a rep profile for each unique entry in
-            the "state" column in rev_summary.
+        reg_cols : str | list
+            Label(s) for a categorical region column(s) to extract profiles
+            for. e.g. "state" will extract a rep profile for each unique entry
+            in the "state" column in rev_summary.
         rep_method : str
             Method identifier for calculation of the representative profile.
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
         """
+        if isinstance(reg_cols, str):
+            reg_cols = [reg_cols]
         self._gen_fpath = gen_fpath
-        self._rev_summary = self._parse_rev_summary(rev_summary, reg_col)
-        self._reg_col = reg_col
-        self._regions = self._rev_summary[self._reg_col].unique()
-        self._res_classes = self._rev_summary['res_class'].unique()
+        self._rev_summary = self._parse_rev_summary(rev_summary, reg_cols)
+        self._reg_cols = reg_cols
+        self._res_classes = self._rev_summary['res_class'].unique().tolist()
+        self._regions = {k: self._rev_summary[k].unique().tolist()
+                         for k in self._reg_cols}
+        self._reg_cols.append('res_class')
+        self._regions['res_class'] = self._res_classes
         self._time_index = None
         self._meta = None
         self._profiles = np.zeros((len(self.time_index), len(self.meta)),
@@ -373,15 +377,15 @@ class RepProfiles:
         self._err_method = err_method
 
     @staticmethod
-    def _parse_rev_summary(rev_summary, reg_col):
+    def _parse_rev_summary(rev_summary, reg_cols):
         """Extract, parse, and check the rev summary table.
 
         Parameters
         ----------
         rev_summary : str | pd.DataFrame
             Aggregated rev supply curve summary file. Str filepath or full df.
-        reg_col : str
-            Column label for a region column to extract profiles for.
+        reg_cols : list
+            Column label(s) for a region column to extract profiles for.
 
         Returns
         -------
@@ -405,7 +409,7 @@ class RepProfiles:
             raise TypeError(e)
 
         e = 'Column label "{}" not found in rev_summary table!'
-        req_cols = ['gen_gids', reg_col]
+        req_cols = ['gen_gids'] + reg_cols
         for c in req_cols:
             if c not in rev_summary:
                 logger.error(e.format(c))
@@ -441,10 +445,8 @@ class RepProfiles:
             this has columns for the region and res class.
         """
         if self._meta is None:
-            iter_list = list(itertools.product(self._regions,
-                                               self._res_classes))
-            columns = [self._reg_col, 'res_class']
-            self._meta = pd.DataFrame(iter_list, columns=columns)
+            self._meta = self._rev_summary[self._reg_cols].drop_duplicates()
+            self._meta = self._meta.reset_index(drop=True)
             self._meta['rep_gen_gid'] = -1
             self._meta['rep_res_gid'] = -1
         return self._meta
@@ -460,30 +462,36 @@ class RepProfiles:
         """
         return self._profiles
 
-    def _get_mask(self, region, res_class):
+    def _get_mask(self, region_dict):
         """Get the mask for a given region and res class.
 
         Parameters
         ----------
-        region : str
-            Column value in reg_col to extract attrs for.
-        res_class : str | int
-            Resource class to extract attrs for.
-        """
+        region_dict : dict
+            Column-value pairs to filter the rev summary on.
 
-        mask = ((self._rev_summary[self._reg_col] == region)
-                & (self._rev_summary['res_class'] == res_class))
+        Returns
+        -------
+        mask : np.ndarray
+            Boolean mask to filter rev_summary to the appropriate
+            region_dict values.
+        """
+        mask = None
+        for k, v in region_dict.items():
+            temp = (self._rev_summary[k] == v)
+            if mask is None:
+                mask = temp
+            else:
+                mask = (mask & temp)
         return mask
 
-    def _get_rep_profile(self, region, res_class):
+    def _get_rep_profile(self, region_dict):
         """Get the representative profile data for a given region and res class
 
         Parameters
         ----------
-        region : str
-            Column value in reg_col to extract attrs for.
-        res_class : str | int
-            Resource class to extract attrs for.
+        region_dict : dict
+            Column-value pairs to filter the rev summary on.
 
         Returns
         -------
@@ -496,7 +504,7 @@ class RepProfiles:
         res_gid_rep : int
             Resource gid of the representative profile.
         """
-        mask = self._get_mask(region, res_class)
+        mask = self._get_mask(region_dict)
         out = Region.get_region_rep_profile(self._gen_fpath,
                                             self._rev_summary[mask],
                                             rep_method=self._rep_method,
@@ -509,8 +517,9 @@ class RepProfiles:
         meta_static = deepcopy(self.meta)
 
         for i, row in meta_static.iterrows():
-            profile, _, ggid, rgid = self._get_rep_profile(row['region'],
-                                                           row['res_class'])
+            region_dict = {k: v for (k, v) in row.to_dict().items()
+                           if k in self._reg_cols}
+            profile, _, ggid, rgid = self._get_rep_profile(region_dict)
             self._meta.loc[i, 'rep_gen_gid'] = ggid
             self._meta.loc[i, 'rep_res_gid'] = rgid
             self._profiles[:, i] = profile
@@ -521,8 +530,9 @@ class RepProfiles:
         futures = {}
         with ProcessPoolExecutor() as exe:
             for i, row in self.meta.iterrows():
-                future = exe.submit(self._get_rep_profile, row['region'],
-                                    row['res_class'])
+                region_dict = {k: v for (k, v) in row.to_dict().items()
+                               if k in self._reg_cols}
+                future = exe.submit(self._get_rep_profile, region_dict)
                 futures[future] = i
 
             for future in as_completed(futures):
@@ -555,6 +565,8 @@ class RepProfiles:
             profile.
         parallel : bool
             Flag to run in parallel.
+        fout : None | str
+            None or filepath to output h5 file.
         """
 
         rp = cls(gen_fpath, rev_summary, reg_col, rep_method=rep_method,

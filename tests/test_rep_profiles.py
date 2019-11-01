@@ -62,7 +62,7 @@ def test_meanoid():
     assert np.allclose(meanoid, truth)
 
 
-def test_mult_regions():
+def test_integrated():
     """Test a multi-region rep profile calc serial vs. parallel and against
     baseline results."""
     sites = np.arange(100)
@@ -80,6 +80,29 @@ def test_mult_regions():
     assert m1.loc[0, 'rep_res_gid'] == 4
     assert m1.loc[1, 'rep_res_gid'] == 15
     assert m1.loc[2, 'rep_res_gid'] == 60
+
+
+def test_many_regions():
+    """Test multiple complicated regions."""
+    sites = np.arange(100)
+    zeros = np.zeros((100,))
+    region1 = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+    region2 = (['a0'] * 20) + (['b1'] * 10) + (['c2'] * 20) + (['d3'] * 50)
+    rev_summary = pd.DataFrame({'gen_gids': sites,
+                                'res_gids': sites,
+                                'res_class': zeros,
+                                'region1': region1,
+                                'region2': region2})
+    reg_cols = ['region1', 'region2']
+    p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols, parallel=False)
+    assert p1.shape == (17520, 6)
+    assert len(m1) == 6
+
+    for r1 in set(region1):
+        assert r1 in m1['region1'].values
+
+    for r2 in set(region2):
+        assert r2 in m1['region2'].values
 
 
 def execute_pytest(capture='all', flags='-rapP'):
