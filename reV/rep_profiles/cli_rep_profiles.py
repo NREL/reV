@@ -63,11 +63,11 @@ def from_config(ctx, config_file, verbose):
     for name, fpath_gen in zip(names, fpaths):
 
         if config.execution_control.option == 'local':
-            status = Status.retrieve_job_status(config.dirout, 'rep_profiles',
+            status = Status.retrieve_job_status(config.dirout, 'rep-profiles',
                                                 name)
             if status != 'successful':
                 Status.add_job(
-                    config.dirout, 'rep_profiles', name, replace=True,
+                    config.dirout, 'rep-profiles', name, replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': '{}.h5'.format(name),
                                'dirout': config.dirout})
@@ -152,7 +152,7 @@ def main(ctx, name, fpath_gen, rev_summary, reg_cols, rep_method, err_method,
                   'job_status': 'successful',
                   'runtime': runtime,
                   'finput': [fpath_gen, rev_summary]}
-        Status.make_job_file(out_dir, 'rep_profiles', name, status)
+        Status.make_job_file(out_dir, 'rep-profiles', name, status)
 
 
 def get_node_cmd(name, fpath_gen, rev_summary, reg_cols, rep_method,
@@ -218,7 +218,7 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     cmd = get_node_cmd(name, fpath_gen, rev_summary, reg_cols, rep_method,
                        err_method, out_dir, log_dir, verbose)
 
-    status = Status.retrieve_job_status(out_dir, 'rep_profiles', name)
+    status = Status.retrieve_job_status(out_dir, 'rep-profiles', name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -234,7 +234,7 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
                    '(SLURM jobid #{}) on Eagle.'
                    .format(name, slurm.id))
             Status.add_job(
-                out_dir, 'rep_profiles', name, replace=True,
+                out_dir, 'rep-profiles', name, replace=True,
                 job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                            'fout': '{}.h5'.format(name), 'dirout': out_dir})
         else:

@@ -58,7 +58,7 @@ class RepProfilesConfig(AnalysisConfig):
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep_profiles', target='fpath',
+                        self.dirout, 'rep-profiles', target='fpath',
                         target_module=target_module)[0]
                 except KeyError:
                     pass
@@ -93,7 +93,7 @@ class RepProfilesConfig(AnalysisConfig):
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self.dirout, 'rep_profiles', target='fpath',
+                        self.dirout, 'rep-profiles', target='fpath',
                         target_module=target_module)[0]
                 except KeyError:
                     pass

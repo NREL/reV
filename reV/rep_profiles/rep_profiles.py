@@ -361,11 +361,23 @@ class RepProfiles:
             profile.
         """
 
+        logger.debug('Running rep profiles with gen_fpath: "{}"'
+                     .format(gen_fpath))
+        logger.debug('Running rep profiles with rev_summary: "{}"'
+                     .format(rev_summary))
+        logger.debug('Running rep profiles with region columns: "{}"'
+                     .format(reg_cols))
+        logger.debug('Running rep profiles with representative method: "{}"'
+                     .format(rep_method))
+        logger.debug('Running rep profiles with error method: "{}"'
+                     .format(err_method))
+
         if reg_cols is None:
             reg_cols = []
         elif isinstance(reg_cols, str):
             reg_cols = [reg_cols]
 
+        self._check_rev_gen(gen_fpath)
         self._gen_fpath = gen_fpath
         self._rev_summary = self._parse_rev_summary(rev_summary, reg_cols)
         self._reg_cols = reg_cols
@@ -418,6 +430,24 @@ class RepProfiles:
                 raise KeyError(e.format(c))
 
         return rev_summary
+
+    @staticmethod
+    def _check_rev_gen(gen_fpath):
+        """Check rev gen file for requisite datasets.
+
+        Parameters
+        ----------
+        gen_fpath : str
+            Filepath to reV gen output file to extract "cf_profile" from.
+        """
+        with Resource(gen_fpath) as res:
+            dsets = res.dsets
+        if 'cf_profile' not in dsets:
+            raise KeyError('reV gen file needs to have "cf_profile" '
+                           'dataset to calculate representative profiles!')
+        if 'time_index' not in dsets:
+            raise KeyError('reV gen file needs to have "time_index" '
+                           'dataset to calculate representative profiles!')
 
     @property
     def time_index(self):
