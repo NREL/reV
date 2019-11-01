@@ -75,6 +75,14 @@ class RepProfilesConfig(AnalysisConfig):
         return fpath
 
     @property
+    def analysis_years(self):
+        """Get analysis years."""
+        analysis_years = None
+        if 'analysis_years' in self:
+            analysis_years = self['analysis_years']
+        return analysis_years
+
+    @property
     def rev_summary(self):
         """Get the rev summary input arg."""
         return self['rev_summary']

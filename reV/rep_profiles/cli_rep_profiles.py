@@ -53,36 +53,45 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'rep_profiles',
-                                            name)
-        if status != 'successful':
-            Status.add_job(
-                config.dirout, 'rep_profiles', name, replace=True,
-                job_attrs={'hardware': 'local',
-                           'fout': '{}.h5'.format(name),
-                           'dirout': config.dirout})
-            ctx.invoke(main, name, config.fpath_gen, config.rev_summary,
-                       config.reg_cols, config.rep_method, config.err_method,
-                       config.dirout, config.logdir, verbose)
+    if config.analysis_years is not None and '{}' in config.fpath_gen:
+        fpaths = [config.fpath_gen.format(y) for y in config.analysis_years]
+        names = [name + '_{}'.format(y) for y in config.analysis_years]
+    else:
+        fpaths = [config.fpath_gen]
+        names = [name]
 
-    elif config.execution_control.option == 'eagle':
+    for name, fpath_gen in zip(names, fpaths):
 
-        ctx.obj['NAME'] = name
-        ctx.obj['FPATH_GEN'] = config.fpath_gen
-        ctx.obj['REV_SUMMARY'] = config.rev_summary
-        ctx.obj['REG_COLS'] = config.reg_cols
-        ctx.obj['REP_METHOD'] = config.rep_method
-        ctx.obj['ERR_METHOD'] = config.err_method
-        ctx.obj['OUT_DIR'] = config.dirout
-        ctx.obj['LOG_DIR'] = config.logdir
-        ctx.obj['VERBOSE'] = verbose
+        if config.execution_control.option == 'local':
+            status = Status.retrieve_job_status(config.dirout, 'rep_profiles',
+                                                name)
+            if status != 'successful':
+                Status.add_job(
+                    config.dirout, 'rep_profiles', name, replace=True,
+                    job_attrs={'hardware': 'local',
+                               'fout': '{}.h5'.format(name),
+                               'dirout': config.dirout})
+                ctx.invoke(main, name, fpath_gen, config.rev_summary,
+                           config.reg_cols, config.rep_method,
+                           config.err_method, config.dirout, config.logdir,
+                           verbose)
 
-        ctx.invoke(eagle,
-                   alloc=config.execution_control.alloc,
-                   memory=config.execution_control.node_mem,
-                   walltime=config.execution_control.walltime,
-                   feature=config.execution_control.feature)
+        elif config.execution_control.option == 'eagle':
+            ctx.obj['NAME'] = name
+            ctx.obj['FPATH_GEN'] = fpath_gen
+            ctx.obj['REV_SUMMARY'] = config.rev_summary
+            ctx.obj['REG_COLS'] = config.reg_cols
+            ctx.obj['REP_METHOD'] = config.rep_method
+            ctx.obj['ERR_METHOD'] = config.err_method
+            ctx.obj['OUT_DIR'] = config.dirout
+            ctx.obj['LOG_DIR'] = config.logdir
+            ctx.obj['VERBOSE'] = verbose
+
+            ctx.invoke(eagle,
+                       alloc=config.execution_control.alloc,
+                       memory=config.execution_control.node_mem,
+                       walltime=config.execution_control.walltime,
+                       feature=config.execution_control.feature)
 
 
 @click.group(invoke_without_command=True)
