@@ -565,32 +565,36 @@ class RepProfiles:
 
     def _run_serial(self):
         """Compute all representative profiles in serial."""
-
+        logger.info('Running {} rep profile calculations in serial.'
+                    .format(len(self.meta)))
         meta_static = deepcopy(self.meta)
-
         for i, row in meta_static.iterrows():
             region_dict = {k: v for (k, v) in row.to_dict().items()
                            if k in self._reg_cols}
             profile, _, ggid, rgid = self._get_rep_profile(region_dict)
+            logger.debug('Selected gen gid {} for region: {}'
+                         .format(ggid, region_dict))
             self._meta.at[i, 'rep_gen_gid'] = ggid
             self._meta.at[i, 'rep_res_gid'] = rgid
             self._profiles[:, i] = profile
 
     def _run_parallel(self):
         """Compute all representative profiles in parallel."""
-
+        logger.info('Kicking off {} rep profile futures.'
+                    .format(len(self.meta)))
         futures = {}
         with ProcessPoolExecutor() as exe:
             for i, row in self.meta.iterrows():
                 region_dict = {k: v for (k, v) in row.to_dict().items()
                                if k in self._reg_cols}
                 future = exe.submit(self._get_rep_profile, region_dict)
-                futures[future] = i
+                futures[future] = [i, region_dict]
 
             for future in as_completed(futures):
-                i = futures[future]
+                i, region_dict = futures[future]
                 profile, _, ggid, rgid = future.result()
-
+                logger.debug('Selected gen gid {} for region {}.'
+                             .format(ggid, region_dict))
                 self._meta.at[i, 'rep_gen_gid'] = ggid
                 self._meta.at[i, 'rep_res_gid'] = rgid
                 self._profiles[:, i] = profile
@@ -636,5 +640,5 @@ class RepProfiles:
             rp._run_serial()
 
         rp._write_fout(fout)
-
+        logger.info('Representative profiles complete!')
         return rp._profiles, rp.meta
