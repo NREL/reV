@@ -200,7 +200,7 @@ def get_node_cmd(name, fpath_gen, rev_summary, reg_cols, rep_method,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
 def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
-    """Eagle submission tool for reV supply curve aggregation."""
+    """Eagle submission tool for reV representative profiles."""
 
     name = ctx.obj['NAME']
     fpath_gen = ctx.obj['FPATH_GEN']
