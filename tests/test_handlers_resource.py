@@ -9,7 +9,8 @@ import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
-from reV.handlers.resource import (NSRDB, WindResource, MultiFileNSRDB)
+from reV.handlers.resource import (NSRDB, WindResource, MultiFileNSRDB,
+                                   FiveMinWTK)
 from reV.utilities.exceptions import HandlerKeyError
 
 
@@ -41,6 +42,15 @@ def WindResource_res():
 
 
 @pytest.fixture
+def FiveMinWind_res():
+    """
+    Init NSRDB resource handler
+    """
+    path = os.path.join(TESTDATADIR, 'wtk')
+    return FiveMinWTK(path, prefix='wtk', suffix='m.h5')
+
+
+@pytest.fixture
 def wind_group():
     """
     Init WindResource resource handler
@@ -68,16 +78,18 @@ def check_meta(res_cls):
     meta = res_cls['meta']
     assert isinstance(meta, pd.DataFrame)
     meta_shape = meta.shape
+    max_sites = int(meta_shape[0] * 0.8)
     # single site
-    meta = res_cls['meta', 50]
+    meta = res_cls['meta', max_sites]
     assert isinstance(meta, pd.DataFrame)
     assert meta.shape == (1, meta_shape[1])
     # site slice
-    meta = res_cls['meta', :10]
+
+    meta = res_cls['meta', :max_sites]
     assert isinstance(meta, pd.DataFrame)
-    assert meta.shape == (10, meta_shape[1])
+    assert meta.shape == (max_sites, meta_shape[1])
     # site list
-    sites = sorted(np.random.choice(meta_shape[0], 20, replace=False))
+    sites = sorted(np.random.choice(meta_shape[0], max_sites, replace=False))
     meta = res_cls['meta', sites]
     assert isinstance(meta, pd.DataFrame)
     assert meta.shape == (len(sites), meta_shape[1])
@@ -115,6 +127,7 @@ def check_dset(res_cls, ds_name):
     time_index = res_cls['time_index']
     meta = res_cls['meta']
     ds_shape = (len(time_index), len(meta))
+    max_sites = int(ds_shape[1] * 0.8)
     arr = res_cls[ds_name]
     ds = res_cls[ds_name]
     assert isinstance(ds, np.ndarray)
@@ -130,34 +143,36 @@ def check_dset(res_cls, ds_name):
     assert ds.shape == (ds_shape[1],)
     assert np.allclose(arr[10], ds)
     # single value
-    ds = res_cls[ds_name, 10, 10]
+    ds = res_cls[ds_name, 10, max_sites]
     assert isinstance(ds, (np.integer, np.floating))
-    assert np.allclose(arr[10, 10], ds)
+    assert np.allclose(arr[10, max_sites], ds)
     # site slice
-    ds = res_cls[ds_name, :, 10:20]
+    sites = slice(int(max_sites / 2), max_sites)
+    ds = res_cls[ds_name, :, sites]
     assert isinstance(ds, np.ndarray)
-    assert ds.shape == (ds_shape[0], 10)
-    assert np.allclose(arr[:, 10:20], ds)
+    assert ds.shape == (ds_shape[0], sites.stop - sites.start)
+    assert np.allclose(arr[:, sites], ds)
     # time slice
     ds = res_cls[ds_name, 10:20]
     assert isinstance(ds, np.ndarray)
     assert ds.shape == (10, ds_shape[1])
     assert np.allclose(arr[10:20], ds)
     # slice in time and space
-    ds = res_cls[ds_name, 100:200, 20:30]
+    ds = res_cls[ds_name, 100:200, sites]
     assert isinstance(ds, np.ndarray)
-    assert ds.shape == (100, 10)
-    assert np.allclose(arr[100:200, 20:30], ds)
+    assert ds.shape == (100, sites.stop - sites.start)
+    assert np.allclose(arr[100:200, sites], ds)
     # site list
-    sites = sorted(np.random.choice(ds_shape[1], 20, replace=False))
+    sites = sorted(np.random.choice(ds_shape[1], max_sites, replace=False))
     ds = res_cls[ds_name, :, sites]
     assert isinstance(ds, np.ndarray)
-    assert ds.shape == (ds_shape[0], 20)
+    assert ds.shape == (ds_shape[0], len(sites))
     assert np.allclose(arr[:, sites], ds)
     # site list single time
+    sites = sorted(np.random.choice(ds_shape[1], max_sites, replace=False))
     ds = res_cls[ds_name, 0, sites]
     assert isinstance(ds, np.ndarray)
-    assert ds.shape == (20,)
+    assert ds.shape == (len(sites),)
     assert np.allclose(arr[0, sites], ds)
     # time list
     times = sorted(np.random.choice(ds_shape[0], 100, replace=False))
@@ -173,10 +188,8 @@ def check_dset(res_cls, ds_name):
     # time and site lists
     ds = res_cls[ds_name, times[:20], sites]
     assert isinstance(ds, np.ndarray)
-    assert ds.shape == (20,)
-    assert np.allclose(arr[times[:20], sites], ds)
-    with pytest.raises(IndexError):
-        assert res_cls[ds_name, times, sites]
+    assert ds.shape == (len(times), len(sites))
+    assert np.allclose(arr[times][:, sites], ds)
 
 
 def check_scale(res_cls, ds_name):
@@ -491,31 +504,85 @@ class TestGroupResource:
 
         wind_group.close()
 
-    # @staticmethod
-    # def test_units(wind_group):
-    #     """
-    #     test unit attributes
-    #     """
-    #     assert wind_group.get_units('windspeed_100m') == 'm s-1'
-    #     assert wind_group.get_units('temperature_100m') == 'C'
-    #     wind_group.close()
 
-
-def execute_pytest(capture='all', flags='-rapP'):
-    """Execute module as pytest with detailed summary report.
-
-    Parameters
-    ----------
-    capture : str
-        Log or stdout/stderr capture option. ex: log (only logger),
-        all (includes stdout/stderr)
-    flags : str
-        Which tests to show logs and results for.
+class TestFiveMinWTK:
     """
+    FiveMinWTK Resource handler tests
+    """
+    @staticmethod
+    def test_res(FiveMinWind_res):
+        """
+        test FiveMinWTK class calls
+        """
+        check_res(FiveMinWind_res)
+        FiveMinWind_res.close()
 
-    fname = os.path.basename(__file__)
-    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+    @staticmethod
+    def test_meta(FiveMinWind_res):
+        """
+        test extraction of FiveMinWTK meta data
+        """
+        check_meta(FiveMinWind_res)
+        FiveMinWind_res.close()
 
+    @staticmethod
+    def test_time_index(FiveMinWind_res):
+        """
+        test extraction of FiveMinWTK time_index
+        """
+        check_time_index(FiveMinWind_res)
+        FiveMinWind_res.close()
 
-if __name__ == '__main__':
-    execute_pytest()
+    @staticmethod
+    def test_ds(FiveMinWind_res, ds_name='windspeed_100m'):
+        """
+        test extraction of a variable array
+        """
+        check_dset(FiveMinWind_res, ds_name)
+        FiveMinWind_res.close()
+
+    @staticmethod
+    def test_new_hubheight(FiveMinWind_res, ds_name='windspeed_150m'):
+        """
+        test extraction of a variable array
+        """
+        check_dset(FiveMinWind_res, ds_name)
+        FiveMinWind_res.close()
+
+    @staticmethod
+    def test_unscale_windspeed(FiveMinWind_res):
+        """
+        test unscaling of windspeed values
+        """
+        check_scale(FiveMinWind_res, 'windspeed_100m')
+        FiveMinWind_res.close()
+
+    @staticmethod
+    def test_unscale_pressure(FiveMinWind_res):
+        """
+        test unscaling of pressure values
+        """
+        check_scale(FiveMinWind_res, 'pressure_100m')
+        FiveMinWind_res.close()
+
+    @staticmethod
+    def test_interpolation(FiveMinWind_res, h=150):
+        """
+        test variable interpolation
+        """
+        ignore = ['winddirection', 'precipitationrate', 'relativehumidity']
+        for var in FiveMinWind_res.heights.keys():
+            if var not in ignore:
+                check_interp(FiveMinWind_res, var, h)
+
+        FiveMinWind_res.close()
+
+    @staticmethod
+    def test_extrapolation(FiveMinWind_res, h=80):
+        """
+        test variable interpolation
+        """
+        for var in ['temperature', 'pressure']:
+            check_interp(FiveMinWind_res, var, h)
+
+        FiveMinWind_res.close()

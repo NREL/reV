@@ -796,17 +796,19 @@ class WindResource(Resource):
             windspeed, winddirection, temperature, and pressure
         """
         if self._heights is None:
-            dsets = self.dsets
             heights = {'pressure': [],
                        'temperature': [],
                        'windspeed': [],
                        'winddirection': [],
                        'precipitationrate': [],
                        'relativehumidity': []}
-            for ds in dsets:
-                ds_name, h = self._parse_name(ds)
-                if ds_name in heights.keys():
-                    heights[ds_name].append(h)
+
+            ignore = ['meta', 'time_index', 'coordinates']
+            for ds in self.dsets:
+                if ds not in ignore:
+                    ds_name, h = self._parse_name(ds)
+                    if ds_name in heights.keys():
+                        heights[ds_name].append(h)
 
             self._heights = heights
 
@@ -1217,6 +1219,7 @@ class MultiH5:
 
     def __next__(self):
         if self._i >= len(self.dsets):
+            self._i = 0
             raise StopIteration
 
         dset = self.dsets[self._i]
@@ -1416,4 +1419,4 @@ class FiveMinWTK(MultiFileResource, WindResource):
             Path to directory containing 5min .h5 files
         """
         super().__init__(h5_dir, prefix=prefix, suffix=suffix)
-        self._heighs = None
+        self._heights = None
