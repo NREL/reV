@@ -186,10 +186,8 @@ def check_dset(res_cls, ds_name):
     assert ds.shape == (100,)
     assert np.allclose(arr[times, 0], ds)
     # time and site lists
-    ds = res_cls[ds_name, times[:20], sites]
-    assert isinstance(ds, np.ndarray)
-    assert ds.shape == (len(times), len(sites))
-    assert np.allclose(arr[times][:, sites], ds)
+    with pytest.raises(IndexError):
+        assert res_cls[ds_name, times, sites]
 
 
 def check_scale(res_cls, ds_name):
@@ -586,3 +584,23 @@ class TestFiveMinWTK:
             check_interp(FiveMinWind_res, var, h)
 
         FiveMinWind_res.close()
+
+
+def execute_pytest(capture='all', flags='-rapP'):
+    """Execute module as pytest with detailed summary report.
+
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
+        all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
+    """
+
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+
+
+if __name__ == '__main__':
+    execute_pytest()
