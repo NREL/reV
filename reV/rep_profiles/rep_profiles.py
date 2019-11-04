@@ -526,33 +526,6 @@ class RepProfiles:
                 mask = (mask & temp)
         return mask
 
-    def _get_rep_profile(self, region_dict):
-        """Get the representative profile data for a given region and res class
-
-        Parameters
-        ----------
-        region_dict : dict
-            Column-value pairs to filter the rev summary on.
-
-        Returns
-        -------
-        rep_profile : np.ndarray
-            (time, 1) array for the most representative profile
-        i_rep : int
-            Column Index in profiles of the representative profile.
-        gen_gid_rep : int
-            Generation gid of the representative profile.
-        res_gid_rep : int
-            Resource gid of the representative profile.
-        """
-        mask = self._get_mask(region_dict)
-        out = Region.get_region_rep_profile(self._gen_fpath,
-                                            self._rev_summary[mask],
-                                            cf_dset=self._cf_dset,
-                                            rep_method=self._rep_method,
-                                            err_method=self._err_method)
-        return out
-
     def _write_fout(self, fout):
         """Write profiles and meta to an output file.
 
@@ -584,7 +557,13 @@ class RepProfiles:
         for i, row in meta_static.iterrows():
             region_dict = {k: v for (k, v) in row.to_dict().items()
                            if k in self._reg_cols}
-            profile, _, ggid, rgid = self._get_rep_profile(region_dict)
+
+            mask = self._get_mask(region_dict)
+            profile, _, ggid, rgid = Region.get_region_rep_profile(
+                self._gen_fpath, self._rev_summary[mask],
+                cf_dset=self._cf_dset, rep_method=self._rep_method,
+                err_method=self._err_method)
+
             logger.debug('Selected gen gid {} for region: {}'
                          .format(ggid, region_dict))
             self._meta.at[i, 'rep_gen_gid'] = ggid
@@ -600,7 +579,15 @@ class RepProfiles:
             for i, row in self.meta.iterrows():
                 region_dict = {k: v for (k, v) in row.to_dict().items()
                                if k in self._reg_cols}
-                future = exe.submit(self._get_rep_profile, region_dict)
+
+                mask = self._get_mask(region_dict)
+
+                future = exe.submit(Region.get_region_rep_profile,
+                                    self._gen_fpath, self._rev_summary[mask],
+                                    cf_dset=self._cf_dset,
+                                    rep_method=self._rep_method,
+                                    err_method=self._err_method)
+
                 futures[future] = [i, region_dict]
 
             for future in as_completed(futures):
