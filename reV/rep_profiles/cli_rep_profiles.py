@@ -53,19 +53,20 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    if config.analysis_years is not None and '{}' in config.cf_dset:
-        dsets = [config.cf_dset.format(y) for y in config.analysis_years]
-        fpaths = [config.fpath_gen for _ in config.analysis_years]
-        names = [name + '_{}'.format(y) for y in config.analysis_years]
+    if config.years[0] is not None and '{}' in config.cf_dset:
+        fpaths = [config.fpath_gen for _ in config.years]
+        names = [name + '_{}'.format(y) for y in config.years]
+        dsets = [config.cf_dset.format(y) for y in config.years]
 
-    elif config.analysis_years is not None and '{}' in config.fpath_gen:
-        dsets = [config.cf_dset for _ in config.analysis_years]
-        fpaths = [config.fpath_gen.format(y) for y in config.analysis_years]
-        names = [name + '_{}'.format(y) for y in config.analysis_years]
+    elif config.years[0] is not None and '{}' in config.fpath_gen:
+        fpaths = [config.fpath_gen.format(y) for y in config.years]
+        names = [name + '_{}'.format(y) for y in config.years]
+        dsets = [config.cf_dset for _ in config.years]
 
     else:
         fpaths = [config.fpath_gen]
         names = [name]
+        dsets = [config.cf_dset]
 
     for name, fpath_gen, dset in zip(names, fpaths, dsets):
 

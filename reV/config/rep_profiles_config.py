@@ -81,14 +81,6 @@ class RepProfilesConfig(AnalysisConfig):
         return self.get('cf_dset', self._default_cf_dset)
 
     @property
-    def analysis_years(self):
-        """Get analysis years."""
-        analysis_years = None
-        if 'analysis_years' in self:
-            analysis_years = self['analysis_years']
-        return analysis_years
-
-    @property
     def rev_summary(self):
         """Get the rev summary input arg."""
 
