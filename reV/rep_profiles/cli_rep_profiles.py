@@ -53,14 +53,21 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    if config.analysis_years is not None and '{}' in config.fpath_gen:
+    if config.analysis_years is not None and '{}' in config.cf_dset:
+        dsets = [config.cf_dset.format(y) for y in config.analysis_years]
+        fpaths = [config.fpath_gen for _ in config.analysis_years]
+        names = [name + '_{}'.format(y) for y in config.analysis_years]
+
+    elif config.analysis_years is not None and '{}' in config.fpath_gen:
+        dsets = [config.cf_dset for _ in config.analysis_years]
         fpaths = [config.fpath_gen.format(y) for y in config.analysis_years]
         names = [name + '_{}'.format(y) for y in config.analysis_years]
+
     else:
         fpaths = [config.fpath_gen]
         names = [name]
 
-    for name, fpath_gen in zip(names, fpaths):
+    for name, fpath_gen, dset in zip(names, fpaths, dsets):
 
         if config.execution_control.option == 'local':
             status = Status.retrieve_job_status(config.dirout, 'rep-profiles',
@@ -72,7 +79,7 @@ def from_config(ctx, config_file, verbose):
                                'fout': '{}.h5'.format(name),
                                'dirout': config.dirout})
                 ctx.invoke(main, name, fpath_gen, config.rev_summary,
-                           config.reg_cols, config.rep_method,
+                           config.reg_cols, dset, config.rep_method,
                            config.err_method, config.dirout, config.logdir,
                            verbose)
 
@@ -81,6 +88,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['FPATH_GEN'] = fpath_gen
             ctx.obj['REV_SUMMARY'] = config.rev_summary
             ctx.obj['REG_COLS'] = config.reg_cols
+            ctx.obj['CF_DSET'] = dset
             ctx.obj['REP_METHOD'] = config.rep_method
             ctx.obj['ERR_METHOD'] = config.err_method
             ctx.obj['OUT_DIR'] = config.dirout
@@ -104,6 +112,8 @@ def from_config(ctx, config_file, verbose):
 @click.option('--reg_cols', '-rc', type=STRLIST,
               help='List of column rev summary column labels to define '
               'regions to get rep profiles for.')
+@click.option('--cf_dset', '-cf', type=str, default='cf_profile',
+              help='Capacity factor dataset in fpath_gen to get profiles from')
 @click.option('--rep_method', '-rm', type=STR, default='meanoid',
               help='String identifier for representative method '
               '(e.g. meanoid, medianoid).')
@@ -117,8 +127,8 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, fpath_gen, rev_summary, reg_cols, rep_method, err_method,
-         out_dir, log_dir, verbose):
+def main(ctx, name, fpath_gen, rev_summary, reg_cols, cf_dset, rep_method,
+         err_method, out_dir, log_dir, verbose):
     """reV representative profiles CLI."""
 
     ctx.ensure_object(dict)
@@ -126,6 +136,7 @@ def main(ctx, name, fpath_gen, rev_summary, reg_cols, rep_method, err_method,
     ctx.obj['FPATH_GEN'] = fpath_gen
     ctx.obj['REV_SUMMARY'] = rev_summary
     ctx.obj['REG_COLS'] = reg_cols
+    ctx.obj['CF_DSET'] = cf_dset
     ctx.obj['REP_METHOD'] = rep_method
     ctx.obj['ERR_METHOD'] = err_method
     ctx.obj['OUT_DIR'] = out_dir
@@ -139,7 +150,7 @@ def main(ctx, name, fpath_gen, rev_summary, reg_cols, rep_method, err_method,
 
         fn_out = '{}.h5'.format(name)
         fout = os.path.join(out_dir, fn_out)
-        RepProfiles.run(fpath_gen, rev_summary, reg_cols,
+        RepProfiles.run(fpath_gen, rev_summary, reg_cols, cf_dset=cf_dset,
                         rep_method=rep_method, err_method=err_method,
                         fout=fout)
 
@@ -155,7 +166,7 @@ def main(ctx, name, fpath_gen, rev_summary, reg_cols, rep_method, err_method,
         Status.make_job_file(out_dir, 'rep-profiles', name, status)
 
 
-def get_node_cmd(name, fpath_gen, rev_summary, reg_cols, rep_method,
+def get_node_cmd(name, fpath_gen, rev_summary, reg_cols, cf_dset, rep_method,
                  err_method, out_dir, log_dir, verbose):
     """Get a CLI call command for the rep profiles cli."""
 
@@ -163,6 +174,7 @@ def get_node_cmd(name, fpath_gen, rev_summary, reg_cols, rep_method,
             '-g {fpath_gen} '
             '-r {rev_summary} '
             '-rc {reg_cols} '
+            '-cf {cf_dset} '
             '-rm {rep_method} '
             '-em {err_method} '
             '-od {out_dir} '
@@ -173,6 +185,7 @@ def get_node_cmd(name, fpath_gen, rev_summary, reg_cols, rep_method,
                        fpath_gen=SLURM.s(fpath_gen),
                        rev_summary=SLURM.s(rev_summary),
                        reg_cols=SLURM.s(reg_cols),
+                       cf_dset=SLURM.s(cf_dset),
                        rep_method=SLURM.s(rep_method),
                        err_method=SLURM.s(err_method),
                        out_dir=SLURM.s(out_dir),
@@ -206,6 +219,7 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     fpath_gen = ctx.obj['FPATH_GEN']
     rev_summary = ctx.obj['REV_SUMMARY']
     reg_cols = ctx.obj['REG_COLS']
+    cf_dset = ctx.obj['CF_DSET']
     rep_method = ctx.obj['REP_METHOD']
     err_method = ctx.obj['ERR_METHOD']
     out_dir = ctx.obj['OUT_DIR']
@@ -215,8 +229,8 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(name, fpath_gen, rev_summary, reg_cols, rep_method,
-                       err_method, out_dir, log_dir, verbose)
+    cmd = get_node_cmd(name, fpath_gen, rev_summary, reg_cols, cf_dset,
+                       rep_method, err_method, out_dir, log_dir, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'rep-profiles', name)
     if status == 'successful':

@@ -32,6 +32,7 @@ class RepProfilesConfig(AnalysisConfig):
         """
         super().__init__(config)
 
+        self._default_cf_dset = 'cf_profile'
         self._default_rep_method = 'meanoid'
         self._default_err_method = 'rmse'
 
@@ -73,6 +74,11 @@ class RepProfilesConfig(AnalysisConfig):
                             'pipeline input for fpath_gen: {}'.format(fpath))
 
         return fpath
+
+    @property
+    def cf_dset(self):
+        """Get the capacity factor dataset to get gen profiles from"""
+        return self.get('cf_dset', self._default_cf_dset)
 
     @property
     def analysis_years(self):

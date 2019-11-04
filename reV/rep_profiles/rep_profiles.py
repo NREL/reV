@@ -198,8 +198,8 @@ class Methods:
 class Region:
     """Framework to handle rep profile for one resource region"""
 
-    def __init__(self, gen_fpath, rev_summary, rep_method='meanoid',
-                 err_method='rmse'):
+    def __init__(self, gen_fpath, rev_summary, cf_dset='cf_profile',
+                 rep_method='meanoid', err_method='rmse'):
         """
         Parameters
         ----------
@@ -208,6 +208,8 @@ class Region:
         rev_summary : pd.DataFrame
             Aggregated rev supply curve summary file trimmed to just one
             region to get a rep profile for.
+        cf_dset : str
+            Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
         err_method : str
@@ -217,6 +219,7 @@ class Region:
 
         self._gen_fpath = gen_fpath
         self._rev_summary = rev_summary
+        self._cf_dset = cf_dset
         self._profile = None
         self._i_rep = None
         self._rep_method = rep_method
@@ -236,7 +239,7 @@ class Region:
             Timeseries array of cf profile data.
         """
         with Resource(self._gen_fpath) as res:
-            profiles = res['cf_profile', :, sorted(gen_gids)]
+            profiles = res[self._cf_dset, :, sorted(gen_gids)]
         return profiles
 
     @staticmethod
@@ -306,7 +309,8 @@ class Region:
 
     @classmethod
     def get_region_rep_profile(cls, gen_fpath, rev_summary,
-                               rep_method='meanoid', err_method='rmse'):
+                               cf_dset='cf_profile', rep_method='meanoid',
+                               err_method='rmse'):
         """Class method for parallelization of rep profile calc.
 
         Parameters
@@ -316,6 +320,8 @@ class Region:
         rev_summary : pd.DataFrame
             Aggregated rev supply curve summary file trimmed to just one
             region to get a rep profile for.
+        cf_dset : str
+            Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
         err_method : str
@@ -333,7 +339,7 @@ class Region:
         res_gid_rep : int
             Resource gid of the representative profile.
         """
-        r = cls(gen_fpath, rev_summary, rep_method=rep_method,
+        r = cls(gen_fpath, rev_summary, cf_dset=cf_dset, rep_method=rep_method,
                 err_method=err_method)
         return r.rep_profile, r.i_rep, r.gen_gid_rep, r.res_gid_rep
 
@@ -341,8 +347,8 @@ class Region:
 class RepProfiles:
     """Framework for calculating the representative profiles."""
 
-    def __init__(self, gen_fpath, rev_summary, reg_cols, rep_method='meanoid',
-                 err_method='rmse'):
+    def __init__(self, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
+                 rep_method='meanoid', err_method='rmse'):
         """
         Parameters
         ----------
@@ -354,6 +360,8 @@ class RepProfiles:
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
             in the "state" column in rev_summary.
+        cf_dset : str
+            Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
         err_method : str
@@ -377,7 +385,8 @@ class RepProfiles:
         elif isinstance(reg_cols, str):
             reg_cols = [reg_cols]
 
-        self._check_rev_gen(gen_fpath)
+        self._check_rev_gen(gen_fpath, cf_dset)
+        self._cf_dset = cf_dset
         self._gen_fpath = gen_fpath
         self._rev_summary = self._parse_rev_summary(rev_summary, reg_cols)
         self._reg_cols = reg_cols
@@ -432,19 +441,22 @@ class RepProfiles:
         return rev_summary
 
     @staticmethod
-    def _check_rev_gen(gen_fpath):
+    def _check_rev_gen(gen_fpath, cf_dset):
         """Check rev gen file for requisite datasets.
 
         Parameters
         ----------
         gen_fpath : str
             Filepath to reV gen output file to extract "cf_profile" from.
+        cf_dset : str
+            Dataset name to pull generation profiles from.
         """
         with Resource(gen_fpath) as res:
             dsets = res.dsets
-        if 'cf_profile' not in dsets:
-            raise KeyError('reV gen file needs to have "cf_profile" '
-                           'dataset to calculate representative profiles!')
+        if cf_dset not in dsets:
+            raise KeyError('reV gen file needs to have "{}" '
+                           'dataset to calculate representative profiles!'
+                           .format(cf_dset))
         if 'time_index' not in dsets:
             raise KeyError('reV gen file needs to have "time_index" '
                            'dataset to calculate representative profiles!')
@@ -536,6 +548,7 @@ class RepProfiles:
         mask = self._get_mask(region_dict)
         out = Region.get_region_rep_profile(self._gen_fpath,
                                             self._rev_summary[mask],
+                                            cf_dset=self._cf_dset,
                                             rep_method=self._rep_method,
                                             err_method=self._err_method)
         return out
@@ -600,8 +613,8 @@ class RepProfiles:
                 self._profiles[:, i] = profile
 
     @classmethod
-    def run(cls, gen_fpath, rev_summary, reg_cols, rep_method='meanoid',
-            err_method='rmse', parallel=True, fout=None):
+    def run(cls, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
+            rep_method='meanoid', err_method='rmse', parallel=True, fout=None):
         """Run representative profiles.
 
         Parameters
@@ -614,6 +627,8 @@ class RepProfiles:
             Label(s) for a categorical region column(s) to extract profiles
             for. e.g. "state" will extract a rep profile for each unique entry
             in the "state" column in rev_summary.
+        cf_dset : str
+            Dataset name to pull generation profiles from.
         rep_method : str
             Method identifier for calculation of the representative profile.
         err_method : str
@@ -632,8 +647,8 @@ class RepProfiles:
             Meta data recording the regions and the selected rep profile gid.
         """
 
-        rp = cls(gen_fpath, rev_summary, reg_cols, rep_method=rep_method,
-                 err_method=err_method)
+        rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
+                 rep_method=rep_method, err_method=err_method)
         if parallel:
             rp._run_parallel()
         else:
