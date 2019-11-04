@@ -1394,6 +1394,7 @@ class MultiFileResource(Resource):
         self._group = None
         # Map variables to their .h5 files
         self._h5 = MultiH5(h5_dir, prefix=prefix, suffix=suffix)
+        self.h5_file = list(self._h5._h5_map.keys())[0]
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_dir)
