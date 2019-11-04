@@ -16,6 +16,7 @@ import logging
 from reV.handlers.resource import Resource
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import FileInputError
+from reV.utilities.utilities import parse_year
 
 
 logger = logging.getLogger(__name__)
@@ -457,7 +458,7 @@ class RepProfiles:
             raise KeyError('reV gen file needs to have "{}" '
                            'dataset to calculate representative profiles!'
                            .format(cf_dset))
-        if 'time_index' not in dsets:
+        if 'time_index' not in str(dsets):
             raise KeyError('reV gen file needs to have "time_index" '
                            'dataset to calculate representative profiles!')
 
@@ -472,7 +473,11 @@ class RepProfiles:
         """
         if self._time_index is None:
             with Resource(self._gen_fpath) as res:
-                self._time_index = res.time_index
+                ds = 'time_index'
+                if parse_year(self._cf_dset, option='bool'):
+                    year = parse_year(self._cf_dset, option='raise')
+                    ds += '-{}'.format(year)
+                self._time_index = res._get_time_index(ds, slice(None))
         return self._time_index
 
     @property
