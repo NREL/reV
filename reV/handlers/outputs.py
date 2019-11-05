@@ -40,12 +40,12 @@ class Outputs(Resource):
         """
         self._h5_file = h5_file
         self._h5 = h5py.File(h5_file, mode=mode)
-        self._group = group
         self._unscale = unscale
         self._mode = mode
         self._meta = None
         self._time_index = None
         self._str_decode = str_decode
+        self._group = self._check_group(group)
 
     def __len__(self):
         _len = 0
@@ -157,6 +157,27 @@ class Outputs(Resource):
             configs = {}
 
         return configs
+
+    def _check_group(self, group):
+        """
+        Ensure group is in .h5 file
+
+        Parameters
+        ----------
+        group : str
+            Group of interest
+        """
+        if group is not None:
+            if group not in self._h5:
+                try:
+                    if self.writable:
+                        self._h5.create_group(group)
+                except Exception as ex:
+                    msg = ('Cannot create group {}: {}'
+                           .format(group, ex))
+                    raise HandlerRuntimeError(msg)
+
+        return group
 
     def _set_meta(self, ds, meta):
         """
