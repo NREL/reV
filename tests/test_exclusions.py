@@ -13,7 +13,7 @@ from reV.supply_curve.exclusions import LayerMask, InclusionMask
 
 CONFIGS = {'urban_pv': {'ri_smod': {'exclude_values': [1, ]},
                         'ri_srtm_slope': {'inclusion_range': (0, 5)}},
-           'rural_pv': {'ri_smod': {'include_values': [1, any]},
+           'rural_pv': {'ri_smod': {'include_values': [1, ]},
                         'ri_srtm_slope': {'inclusion_range': (0, 5)}},
            'wind': {'ri_smod': {'include_values': [1, ]},
                     'ri_padus': {'exclude_values': [1, ]},
