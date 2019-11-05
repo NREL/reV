@@ -506,7 +506,7 @@ class Outputs(Resource):
         if not np.array_equal(arr, dset_array):
             self._set_ds_array(dset, dset_array, *dset_slice)
 
-    def create_dataset(self, dset_name, data, dtype, chunks=None, attrs=None):
+    def write_dataset(self, dset_name, data, dtype, chunks=None, attrs=None):
         """
         Write dataset to disk. Dataset it created in .h5 file and data is
         scaled if needed.
