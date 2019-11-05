@@ -27,20 +27,18 @@ logger = logging.getLogger(__name__)
 class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
-    def __init__(self, fpath_excl, fpath_map, fpath_out, dset,
-                 distance_upper_bound=0.03, map_chunk=2560, n_cores=None):
+    def __init__(self, fpath_excl, fpath_res, dset, distance_upper_bound=0.03,
+                 map_chunk=2560, n_cores=None):
         """
         Parameters
         ----------
         fpath_excl : str
-            Filepath to exclusions geotiff (tech layer).
-        fpath_map : str
-            Filepath to .h5 resource or generation file that we're mapping to.
-        fpath_out : str
-            .h5 filepath to save tech mapping results to, or to read from
-            (if exists).
+            Filepath to exclusions h5 (tech layer). res_map_dset will be
+            created in fpath_excl.
+        fpath_res : str
+            Filepath to .h5 resource file that we're mapping to.
         dset : str
-            Dataset name in fpath_out to save mapping results to.
+            Dataset name in fpath_excl to save mapping results to.
         distance_upper_bound : float | None
             Upper boundary distance for KNN lookup between exclusion points and
             resource points. None will calculate a good distance based on the
@@ -54,8 +52,7 @@ class TechMapping:
 
         self._distance_upper_bound = distance_upper_bound
         self._fpath_excl = fpath_excl
-        self._fpath_map = fpath_map
-        self._fpath_out = fpath_out
+        self._fpath_res = fpath_res
         self._dset = dset
         self._check_fout()
 
@@ -75,34 +72,19 @@ class TechMapping:
 
         emsg = None
         wmsg = None
-        if os.path.exists(self._fpath_out):
-            with h5py.File(self._fpath_out, 'a') as f:
-
-                if 'fpath_excl' not in f.attrs:
-                    wmsg = ('Pre-existing TechMapping file does not have a '
-                            '"fpath_excl" attribute to verify the exclusions '
-                            'layer it was based on. TechMapping proceeding '
-                            'at-risk.')
-
-                if (os.path.basename(f.attrs['fpath_excl'])
-                        != os.path.basename(self._fpath_excl)):
-                    wmsg = ('Exclusions file "{}" used to create the '
-                            'pre-existing TechMapping file did not match the '
-                            'new input exclusions file "{}". '
-                            'TechMapping proceeding at-risk.'
-                            .format(os.path.basename(f.attrs['fpath_excl']),
-                                    os.path.basename(self._fpath_excl)))
+        if os.path.exists(self._fpath_excl):
+            with h5py.File(self._fpath_excl, 'a') as f:
 
                 if 'latitude' not in f or 'longitude' not in f:
                     emsg = ('Datasets "latitude" and/or "longitude" not in '
-                            'pre-existing TechMapping file "{}". '
+                            'pre-existing Exclusions TechMapping file "{}". '
                             'Cannot proceed.'
                             .format(os.path.basename(self._fpath_excl)))
 
                 if self._dset in f:
                     wmsg = ('TechMap results dataset "{}" is being replaced '
-                            'in pre-existing TechMapping file "{}"'
-                            .format(self._dset, self._fpath_out))
+                            'in pre-existing Exclusions TechMapping file "{}"'
+                            .format(self._dset, self._fpath_excl))
 
         if wmsg is not None:
             logger.warning(wmsg)
@@ -143,7 +125,7 @@ class TechMapping:
 
         if self._distance_upper_bound is None:
 
-            with Resource(self._fpath_map, str_decode=False) as res:
+            with Resource(self._fpath_res, str_decode=False) as res:
                 lats = res.get_meta_arr('latitude')
 
             dists = np.abs(lats - np.roll(lats, 1))
@@ -156,7 +138,7 @@ class TechMapping:
         return self._distance_upper_bound
 
     @staticmethod
-    def _unpack_coords(gids, sc, fpath_out,
+    def _unpack_coords(gids, sc, fpath_excl,
                        coord_labels=('latitude', 'longitude')):
         """Unpack the exclusion layer coordinates for TechMapping.
 
@@ -167,9 +149,9 @@ class TechMapping:
             resource meta points.
         sc : SupplyCurveExtent
             reV supply curve extent object
-        fpath_out : str
-            .h5 filepath to save tech mapping results to, or to read from
-            (if exists).
+        fpath_excl : str
+            .h5 filepath to save exclusions tech mapping results to, or to
+            read from (if exists).
         coord_labels : tuple
             Labels for the coordinate datasets.
 
@@ -193,8 +175,8 @@ class TechMapping:
         for gid in gids:
             row_slice, col_slice = sc.get_excl_slices(gid)
 
-            if os.path.exists(fpath_out):
-                with h5py.File(fpath_out, 'r') as f:
+            if os.path.exists(fpath_excl):
+                with h5py.File(fpath_excl, 'r') as f:
                     emeta = np.vstack(
                         (f['latitude'][row_slice, col_slice].flatten(),
                          f['longitude'][row_slice, col_slice].flatten())).T
@@ -246,8 +228,7 @@ class TechMapping:
                 futures[executor.submit(self.map_resource_gids,
                                         gid_set,
                                         self._fpath_excl,
-                                        self._fpath_map,
-                                        self._fpath_out,
+                                        self._fpath_res,
                                         self.distance_upper_bound,
                                         self._map_chunk)] = i
 
@@ -267,8 +248,8 @@ class TechMapping:
         return ind_all, coords_all
 
     @staticmethod
-    def map_resource_gids(gids, fpath_excl, fpath_res, fpath_out,
-                          distance_upper_bound, map_chunk, margin=0.1):
+    def map_resource_gids(gids, fpath_excl, fpath_res, distance_upper_bound,
+                          map_chunk, margin=0.1):
         """Map exclusion gids to the resource meta.
 
         Parameters
@@ -277,12 +258,10 @@ class TechMapping:
             Supply curve gids with tech exclusion points to map to the
             resource meta points.
         fpath_excl : str
-            Filepath to exclusions geotiff (tech layer).
+            Filepath to exclusions h5 (tech layer). res_map_dset will be
+            created in fpath_excl.
         fpath_res : str
             Filepath to .h5 resource file that we're mapping to.
-        fpath_out : str
-            .h5 filepath to save tech mapping results to, or to read from
-            (if exists).
         distance_upper_bound : float | None
             Upper boundary distance for KNN lookup between exclusion points and
             resource points.
@@ -310,7 +289,7 @@ class TechMapping:
         sc = SupplyCurveExtent(fpath_excl, resolution=map_chunk)
 
         coords_out, lat_range, lon_range = TechMapping._unpack_coords(
-            gids, sc, fpath_out, coord_labels=coord_labels)
+            gids, sc, fpath_excl, coord_labels=coord_labels)
 
         with Resource(fpath_res, str_decode=False) as res:
             res_meta = np.vstack((res.get_meta_arr(coord_labels[0]),
@@ -378,7 +357,6 @@ class TechMapping:
                                      dtype=coords.dtype,
                                      data=coords[:, 1].reshape(shape),
                                      chunks=chunks)
-                    f.attrs['fpath_excl'] = self._fpath_excl
 
         with h5py.File(fpath_out, 'a') as f:
             if dset in list(f):
@@ -387,31 +365,29 @@ class TechMapping:
                 f.create_dataset(dset, shape=shape, dtype=ind.dtype,
                                  data=ind.reshape(shape), chunks=chunks)
 
-            f[dset].attrs['fpath'] = self._fpath_map
+            f[dset].attrs['fpath'] = self._fpath_res
             f[dset].attrs['distance_upper_bound'] = self.distance_upper_bound
 
         logger.info('Successfully saved tech map "{}" to {}'
                     .format(dset, fpath_out))
 
     @classmethod
-    def run(cls, fpath_excl, fpath_res, fpath_out, res_map_dset,
-            **kwargs):
+    def run(cls, fpath_excl, fpath_res, res_map_dset, **kwargs):
         """Run parallel mapping and save to h5 file.
 
         Parameters
         ----------
         fpath_excl : str
-            Filepath to exclusions geotiff (tech layer).
+            Filepath to exclusions h5 (tech layer). res_map_dset will be
+            created in fpath_excl.
         fpath_res : str
             Filepath to .h5 resource file that we're mapping to.
-        fpath_out : str
-            .h5 filepath to save tech mapping results.
         res_map_dset : str
-            Dataset name in fpath_out to save mapping results to.
+            Dataset name in fpath_excl to save mapping results to.
         kwargs : dict
             Keyword args to initialize the TechMapping object.
         """
 
-        mapper = cls(fpath_excl, fpath_res, fpath_out, res_map_dset, **kwargs)
+        mapper = cls(fpath_excl, fpath_res, res_map_dset, **kwargs)
         ind, coords = mapper._parallel_resource_map()
-        mapper.save_tech_map(ind, coords, fpath_out, res_map_dset)
+        mapper.save_tech_map(ind, coords, fpath_excl, res_map_dset)
