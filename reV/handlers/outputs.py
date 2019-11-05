@@ -73,10 +73,10 @@ class Outputs(Resource):
         if self.writable:
             ds, ds_slice = parse_keys(keys)
             slice_test = ds_slice == (slice(None, None, None),)
-            if ds == 'meta' and slice_test:
-                self.meta = arr
-            elif ds == 'time_index' and slice_test:
-                self.time_index = arr
+            if ds.endswith('meta') and slice_test:
+                self._set_meta(ds, arr)
+            elif ds.endswith('time_index') and slice_test:
+                self._set_time_index(ds, arr)
             else:
                 self._set_ds_array(ds, arr, *ds_slice)
 
@@ -149,15 +149,7 @@ class Outputs(Resource):
         meta : pandas.DataFrame | numpy.recarray
             Locational meta data
         """
-        if isinstance(meta, pd.DataFrame):
-            meta = self.to_records_array(meta)
-
-        if 'meta' in self.dsets:
-            self.update_dset('meta', meta)
-        else:
-            self._create_dset('meta', meta.shape, meta.dtype, data=meta)
-
-        self._meta = meta
+        self._set_meta('meta', meta)
 
     @Resource.time_index.setter  # pylint: disable-msg=E1101
     def time_index(self, time_index):
@@ -169,16 +161,6 @@ class Outputs(Resource):
         time_index : pandas.DatetimeIndex | ndarray
             Temporal index of timesteps
         """
-        if isinstance(time_index, pd.DatetimeIndex):
-            time_index = np.array(time_index.astype(str), dtype='S20')
-
-        if 'time_index' in self.dsets:
-            self.update_dset('time_index', time_index)
-        else:
-            self._create_dset('time_index', time_index.shape, time_index.dtype,
-                              data=time_index)
-
-        self._time_index = time_index
 
     @property
     def SAM_configs(self):
@@ -197,6 +179,47 @@ class Outputs(Resource):
             configs = {}
 
         return configs
+
+    def _set_meta(self, ds, meta):
+        """
+        Write meta data to disk
+
+        Parameters
+        ----------
+        ds : str
+            meta dataset name
+        meta : pandas.DataFrame | numpy.recarray
+            Locational meta data
+        """
+        self._meta = meta
+        if isinstance(meta, pd.DataFrame):
+            meta = self.to_records_array(meta)
+
+        if ds in self.dsets:
+            self.update_dset(ds, meta)
+        else:
+            self._create_dset(ds, meta.shape, meta.dtype, data=meta)
+
+    def _set_time_index(self, ds, time_index):
+        """
+        Write time index to disk
+
+        Parameters
+        ----------
+        ds : str
+            time index dataset name
+        time_index : pandas.DatetimeIndex | ndarray
+            Temporal index of timesteps
+        """
+        self._time_index = time_index
+        if isinstance(time_index, pd.DatetimeIndex):
+            time_index = np.array(time_index.astype(str), dtype='S20')
+
+        if ds in self.dsets:
+            self.update_dset(ds, time_index)
+        else:
+            self._create_dset(ds, time_index.shape, time_index.dtype,
+                              data=time_index)
 
     def get_config(self, config_name):
         """
