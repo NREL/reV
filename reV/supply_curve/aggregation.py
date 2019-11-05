@@ -13,7 +13,7 @@ import pandas as pd
 from warnings import warn
 import logging
 
-from reV.handlers.geotiff import Geotiff
+from reV.handlers.exclusions import ExclusionLayers
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.points import ExclusionPoints, SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
@@ -28,26 +28,22 @@ logger = logging.getLogger(__name__)
 class AggFileHandler:
     """Simple framework to handle aggregation file context managers."""
 
-    def __init__(self, fpath_excl, fpath_gen, fpath_techmap, data_layers):
+    def __init__(self, fpath_excl, fpath_gen, data_layers):
         """
         Parameters
         ----------
         fpath_excl : str
-            Filepath to exclusions geotiff.
+            Filepath to exclusions h5 with techmap dataset.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
-        fpath_techmap : str
-            Filepath to tech mapping between exclusions and generation results
-            The tech mapping module will be run if this file does not exist.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "band", "method",
+            name. Each value must be another dictionary with "method",
             and "fpath".
         """
 
         self._excl = ExclusionPoints(fpath_excl)
         self._gen = Outputs(fpath_gen, mode='r')
-        self._techmap = h5py.File(fpath_techmap, 'r')
         self._data_layers = self._open_data_layers(data_layers)
 
         # pre-initialize any import attributes
@@ -63,13 +59,13 @@ class AggFileHandler:
 
     @staticmethod
     def _open_data_layers(data_layers):
-        """Open data layer geotiff handlers.
+        """Open data layer Exclusion h5 handlers.
 
         Parameters
         ----------
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "band", "method",
+            name. Each value must be another dictionary with "method",
             and "fpath".
 
         Returns
@@ -81,17 +77,17 @@ class AggFileHandler:
 
         if data_layers is not None:
             for name, attrs in data_layers.items():
-                data_layers[name]['fobj'] = Geotiff(attrs['fpath'])
+                data_layers[name]['fobj'] = ExclusionLayers(attrs['fpath'])
         return data_layers
 
     @staticmethod
     def _close_data_layers(data_layers):
-        """Open data layer geotiff handlers.
+        """Close all data layers with exclusion h5 handlers.
 
         Parameters
         ----------
         data_layers : None | dict
-            Aggregation data layers. Must have fobj geotiff handlers to close.
+            Aggregation data layers. Must have fobj exclusion handlers to close
         """
 
         if data_layers is not None:
@@ -102,7 +98,6 @@ class AggFileHandler:
         """Close all file handlers."""
         self._excl.close()
         self._gen.close()
-        self._techmap.close()
         self._close_data_layers(self._data_layers)
 
     @property
@@ -112,7 +107,7 @@ class AggFileHandler:
         Returns
         -------
         _excl : ExclusionPoints
-            Exclusions geotiff handler object.
+            Exclusions h5 handler object.
         """
         return self._excl
 
@@ -126,17 +121,6 @@ class AggFileHandler:
             reV gen outputs handler object.
         """
         return self._gen
-
-    @property
-    def techmap(self):
-        """Get the techmap file handler object.
-
-        Returns
-        -------
-        _techmap : h5py.File
-            Techmap h5 file handler.
-        """
-        return self._techmap
 
     @property
     def data_layers(self):
@@ -153,7 +137,7 @@ class AggFileHandler:
 class Aggregation:
     """Supply points aggregation framework."""
 
-    def __init__(self, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+    def __init__(self, fpath_excl, fpath_gen, dset_tm,
                  res_class_dset=None, res_class_bins=None,
                  dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                  data_layers=None, resolution=64, power_density=None,
@@ -162,12 +146,9 @@ class Aggregation:
         Parameters
         ----------
         fpath_excl : str
-            Filepath to exclusions geotiff.
+            Filepath to exclusions h5 with techmap dataset.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
-        fpath_techmap : str
-            Filepath to tech mapping between exclusions and generation results
-            The tech mapping module will be run if this file does not exist.
         dset_tm : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
@@ -183,7 +164,7 @@ class Aggregation:
             Dataset name from f_gen containing LCOE mean values.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "band", "method",
+            name. Each value must be another dictionary with "method",
             and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -201,7 +182,6 @@ class Aggregation:
 
         self._fpath_excl = fpath_excl
         self._fpath_gen = fpath_gen
-        self._fpath_techmap = fpath_techmap
         self._dset_tm = dset_tm
         self._res_class_dset = res_class_dset
         self._res_class_bins = self._convert_bins(res_class_bins)
@@ -236,29 +216,27 @@ class Aggregation:
     def _check_files(self):
         """Do a preflight check on input files"""
 
-        for fpath in (self._fpath_excl, self._fpath_gen, self._fpath_techmap):
+        for fpath in (self._fpath_excl, self._fpath_gen):
             if not os.path.exists(fpath):
                 raise FileNotFoundError('Could not find required input file: '
                                         '{}'.format(fpath))
 
-        with h5py.File(self._fpath_techmap, 'r') as f:
+        with h5py.File(self._fpath_excl, 'r') as f:
             if self._dset_tm not in f:
-                raise FileInputError('Could not find "{}" in techmap file: {}'
+                raise FileInputError('Could not find techmap dataset "{}" '
+                                     'in exclusions file: {}'
                                      .format(self._dset_tm,
-                                             self._fpath_techmap))
+                                             self._fpath_excl))
 
     def _check_data_layers(self):
         """Run pre-flight checks on requested aggregation data layers."""
 
         if self._data_layers is not None:
 
-            with Geotiff(self._fpath_excl) as f:
+            with ExclusionLayers(self._fpath_excl) as f:
                 shape_base = f.shape
 
             for k, v in self._data_layers.items():
-                if 'band' not in v:
-                    raise KeyError('Data band for aggregation data layer "{}" '
-                                   'must be specified.'.format(k))
                 if 'method' not in v:
                     raise KeyError('Data aggregation method data layer "{}" '
                                    'must be specified.'.format(k))
@@ -269,9 +247,9 @@ class Aggregation:
                     raise FileInputError('Cannot find file path (fpath) for '
                                          'aggregation data layer "{}".'
                                          .format(k))
-                with Geotiff(v['fpath']) as f:
+                with ExclusionLayers(v['fpath']) as f:
                     if f.shape != shape_base:
-                        raise FileInputError('Geotiff shape of data layer '
+                        raise FileInputError('Data shape of data layer '
                                              '"{}" is {}, which does not '
                                              'match the baseline exclusions '
                                              'shape {}.'
@@ -366,7 +344,7 @@ class Aggregation:
         return res_data, res_class_bins, cf_data, lcoe_data
 
     @staticmethod
-    def _serial_summary(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+    def _serial_summary(fpath_excl, fpath_gen, dset_tm,
                         gen_index, res_class_dset=None, res_class_bins=None,
                         dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                         data_layers=None, resolution=64, power_density=None,
@@ -376,14 +354,11 @@ class Aggregation:
         Parameters
         ----------
         fpath_excl : str
-            Filepath to exclusions geotiff.
+            Filepath to exclusions h5 with techmap dataset.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
-        fpath_techmap : str
-            Filepath to tech mapping between exclusions and generation results
-            (created using the reV TechMapping framework).
         dset_tm : str
-            Dataset name in the techmap file containing the
+            Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         gen_index : np.ndarray
             Array of generation gids with array index equal to resource gid.
@@ -401,7 +376,7 @@ class Aggregation:
             Dataset name from f_gen containing LCOE mean values.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "band", "method",
+            name. Each value must be another dictionary with "method",
             and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -431,8 +406,7 @@ class Aggregation:
                 gids = range(len(sc))
 
         # pre-extract handlers so they are not repeatedly initialized
-        with AggFileHandler(fpath_excl, fpath_gen, fpath_techmap,
-                            data_layers) as fhandler:
+        with AggFileHandler(fpath_excl, fpath_gen, data_layers) as fhandler:
 
             inputs = Aggregation._get_input_data(fhandler.gen, fpath_gen,
                                                  res_class_dset,
@@ -447,7 +421,6 @@ class Aggregation:
                             gid,
                             fhandler.exclusions,
                             fhandler.gen,
-                            fhandler.techmap,
                             dset_tm,
                             gen_index,
                             res_class_dset=inputs[0],
@@ -508,7 +481,7 @@ class Aggregation:
                 # submit executions and append to futures list
                 futures.append(executor.submit(
                     self._serial_summary,
-                    self._fpath_excl, self._fpath_gen, self._fpath_techmap,
+                    self._fpath_excl, self._fpath_gen,
                     self._dset_tm, self._gen_index,
                     res_class_dset=self._res_class_dset,
                     res_class_bins=self._res_class_bins,
@@ -565,7 +538,7 @@ class Aggregation:
             return bbins
 
     @classmethod
-    def summary(cls, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+    def summary(cls, fpath_excl, fpath_gen, dset_tm,
                 res_class_dset=None, res_class_bins=None,
                 dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
@@ -575,14 +548,11 @@ class Aggregation:
         Parameters
         ----------
         fpath_excl : str
-            Filepath to exclusions geotiff.
+            Filepath to exclusions h5 with techmap dataset.
         fpath_gen : str
             Filepath to .h5 reV generation output results.
-        fpath_techmap : str
-            Filepath to tech mapping between exclusions and generation results
-            The tech mapping module will be run if this file does not exist.
         dset_tm : str
-            Dataset name in the techmap file containing the
+            Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
@@ -596,7 +566,7 @@ class Aggregation:
             Dataset name from f_gen containing LCOE mean values.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "band", "method",
+            name. Each value must be another dictionary with "method",
             and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -622,7 +592,7 @@ class Aggregation:
             Summary of the SC points.
         """
 
-        agg = cls(fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+        agg = cls(fpath_excl, fpath_gen, dset_tm,
                   res_class_dset=res_class_dset, res_class_bins=res_class_bins,
                   dset_cf=dset_cf, dset_lcoe=dset_lcoe,
                   data_layers=data_layers, resolution=resolution,
@@ -630,7 +600,6 @@ class Aggregation:
 
         if n_cores == 1:
             summary = agg._serial_summary(agg._fpath_excl, agg._fpath_gen,
-                                          agg._fpath_techmap,
                                           agg._dset_tm, agg._gen_index,
                                           res_class_dset=agg._res_class_dset,
                                           res_class_bins=agg._res_class_bins,
