@@ -138,6 +138,7 @@ class Outputs(Resource):
         time_index : pandas.DatetimeIndex | ndarray
             Temporal index of timesteps
         """
+        self._set_time_index('time_index', time_index)
 
     @property
     def SAM_configs(self):
