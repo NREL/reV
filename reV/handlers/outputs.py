@@ -93,9 +93,9 @@ class Outputs(Resource):
         _shape = None
         dsets = self.dsets
         if 'meta' in dsets:
-            _shape = self._h5['meta'].shape
+            _shape = self.h5['meta'].shape
             if 'time_index' in dsets:
-                _shape = self._h5['time_index'].shape + _shape
+                _shape = self.h5['time_index'].shape + _shape
 
         return _shape
 
@@ -151,7 +151,7 @@ class Outputs(Resource):
         """
         if 'meta' in self.dsets:
             configs = {k: json.loads(v)
-                       for k, v in self._h5['meta'].attrs.items()}
+                       for k, v in self.h5['meta'].attrs.items()}
         else:
             configs = {}
 
@@ -213,7 +213,7 @@ class Outputs(Resource):
             SAM config JSON as a dictionary
         """
         if 'meta' in self.dsets:
-            config = json.loads(self._h5['meta'].attrs[config_name])
+            config = json.loads(self.h5['meta'].attrs[config_name])
         else:
             config = None
 
@@ -236,7 +236,7 @@ class Outputs(Resource):
                 if not isinstance(key, str):
                     key = str(key)
 
-                self._h5['meta'].attrs[key] = config
+                self.h5['meta'].attrs[key] = config
 
     @staticmethod
     def get_dtype(col):
@@ -352,8 +352,8 @@ class Outputs(Resource):
         dtype = self._h5[ds_name].dtype
         scale_factor = self.get_scale(ds_name)
 
-        self._h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
-                                                             scale_factor)
+        self.h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
+                                                            scale_factor)
 
     def _check_chunks(self, chunks, data=None):
         """
@@ -415,8 +415,8 @@ class Outputs(Resource):
         """
         if self.writable:
             chunks = self._check_chunks(chunks, data=data)
-            ds = self._h5.create_dataset(ds_name, shape=shape, dtype=dtype,
-                                         chunks=chunks)
+            ds = self.h5.create_dataset(ds_name, shape=shape, dtype=dtype,
+                                        chunks=chunks)
             if attrs is not None:
                 for key, value in attrs.items():
                     ds.attrs[key] = value
