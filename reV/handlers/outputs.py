@@ -116,29 +116,6 @@ class Outputs(Resource):
 
         return True
 
-    def update_dset(self, dset, dset_array, dset_slice=None):
-        """
-        Check to see if dset needs to be updated on disk
-        If so write dset_array to disk
-
-        Parameters
-        ----------
-        dset : str
-            dataset to update
-        dset_array : ndarray
-            dataset array
-        dset_slice : tuple
-            slice of dataset to update, it None update all
-        """
-        if dset_slice is None:
-            dset_slice = (slice(None, None, None), )
-
-        keys = (dset, ) + dset_slice
-
-        arr = self.__getitem__(keys)
-        if not np.array_equal(arr, dset_array):
-            self._set_ds_array(dset, dset_array, *dset_slice)
-
     @Resource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
         """
@@ -505,6 +482,49 @@ class Outputs(Resource):
 
         self._create_dset(dset_name, data.shape, dtype,
                           chunks=chunks, attrs=attrs, data=data)
+
+    def update_dset(self, dset, dset_array, dset_slice=None):
+        """
+        Check to see if dset needs to be updated on disk
+        If so write dset_array to disk
+
+        Parameters
+        ----------
+        dset : str
+            dataset to update
+        dset_array : ndarray
+            dataset array
+        dset_slice : tuple
+            slice of dataset to update, it None update all
+        """
+        if dset_slice is None:
+            dset_slice = (slice(None, None, None), )
+
+        keys = (dset, ) + dset_slice
+
+        arr = self.__getitem__(keys)
+        if not np.array_equal(arr, dset_array):
+            self._set_ds_array(dset, dset_array, *dset_slice)
+
+    def create_dataset(self, dset_name, data, dtype, chunks=None, attrs=None):
+        """
+        Write dataset to disk. Dataset it created in .h5 file and data is
+        scaled if needed.
+
+        Parameters
+        ----------
+        dset_name : str
+            Name of dataset to be added to h5 file.
+        data : ndarray
+            Data to be added to h5 file.
+        dtype : str
+            Intended dataset datatype after scaling.
+        chunks : tuple
+            Chunk size for capacity factor means dataset.
+        attrs : dict
+            Attributes to be set. May include 'scale_factor'.
+        """
+        self._add_dset(dset_name, data, dtype, chunks=chunks, attrs=attrs)
 
     @classmethod
     def write_profiles(cls, h5_file, meta, time_index, dset_name, profiles,
