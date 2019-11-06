@@ -298,7 +298,7 @@ class ExclusionMask:
         return self
 
     def __exit__(self, type, value, traceback):
-        self._excl_h5.close()
+        self.close()
 
         if type is not None:
             raise
@@ -314,6 +314,24 @@ class ExclusionMask:
 
     def __getitem__(self, *ds_slice):
         return self._generate_mask(*ds_slice)
+
+    def close(self):
+        """
+        Close h5 instance
+        """
+        self.excl_h5.close()
+
+    @property
+    def shape(self):
+        """
+        Get the exclusions shape.
+
+        Returns
+        -------
+        shape : tuple
+            (rows, cols) shape tuple
+        """
+        return self.excl_h5.shape
 
     @property
     def excl_h5(self):
@@ -339,28 +357,6 @@ class ExclusionMask:
             self._excl_layers = self.excl_h5.layers
 
         return self._excl_layers
-
-    @property
-    def latitude(self):
-        """
-        Get the h5 latitude dataset.
-
-        Returns
-        -------
-        h5.File.dset
-        """
-        return self._excl_h5['latitude']
-
-    @property
-    def longitude(self):
-        """
-        Get the h5 longitude dataset.
-
-        Returns
-        -------
-        h5.File.dset
-        """
-        return self._excl_h5['longitude']
 
     @property
     def layer_names(self):

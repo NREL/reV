@@ -13,9 +13,10 @@ import pandas as pd
 from warnings import warn
 import logging
 
-from reV.handlers.exclusions import ExclusionLayers
 from reV.handlers.outputs import Outputs
-from reV.supply_curve.points import ExclusionPoints, SupplyCurveExtent
+from reV.handlers.exclusions import ExclusionLayers
+from reV.supply_curve.exclusions import ExclusionMask
+from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 class AggFileHandler:
     """Simple framework to handle aggregation file context managers."""
 
-    def __init__(self, fpath_excl, fpath_gen, data_layers):
+    def __init__(self, fpath_excl, fpath_gen, data_layers, excl_dict):
         """
         Parameters
         ----------
@@ -38,11 +39,13 @@ class AggFileHandler:
             Filepath to .h5 reV generation output results.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "method",
+            name. Each value must be another dictionary with "dset", "method",
             and "fpath".
+        excl_dict : dict
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         """
 
-        self._excl = ExclusionPoints(fpath_excl)
+        self._excl = ExclusionMask.from_dict(fpath_excl, excl_dict)
         self._gen = Outputs(fpath_gen, mode='r')
         self._data_layers = self._open_data_layers(data_layers)
 
@@ -65,7 +68,7 @@ class AggFileHandler:
         ----------
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "method",
+            name. Each value must be another dictionary with "dset", "method",
             and "fpath".
 
         Returns
@@ -91,8 +94,9 @@ class AggFileHandler:
         """
 
         if data_layers is not None:
-            for name in data_layers.keys():
-                data_layers[name]['fobj'].close()
+            for layer in data_layers.values():
+                if 'fobj' in layer:
+                    layer['fobj'].close()
 
     def close(self):
         """Close all file handlers."""
@@ -106,7 +110,7 @@ class AggFileHandler:
 
         Returns
         -------
-        _excl : ExclusionPoints
+        _excl : ExclusionMask
             Exclusions h5 handler object.
         """
         return self._excl
@@ -137,7 +141,7 @@ class AggFileHandler:
 class Aggregation:
     """Supply points aggregation framework."""
 
-    def __init__(self, fpath_excl, fpath_gen, dset_tm,
+    def __init__(self, fpath_excl, fpath_gen, dset_tm, excl_dict,
                  res_class_dset=None, res_class_bins=None,
                  dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                  data_layers=None, resolution=64, power_density=None,
@@ -152,6 +156,8 @@ class Aggregation:
         dset_tm : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        excl_dict : dict
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -164,7 +170,7 @@ class Aggregation:
             Dataset name from f_gen containing LCOE mean values.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "method",
+            name. Each value must be another dictionary with "dset", "method",
             and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -183,6 +189,7 @@ class Aggregation:
         self._fpath_excl = fpath_excl
         self._fpath_gen = fpath_gen
         self._dset_tm = dset_tm
+        self._excl_dict = excl_dict
         self._res_class_dset = res_class_dset
         self._res_class_bins = self._convert_bins(res_class_bins)
         self._dset_cf = dset_cf
@@ -237,11 +244,19 @@ class Aggregation:
                 shape_base = f.shape
 
             for k, v in self._data_layers.items():
-                if 'method' not in v:
-                    raise KeyError('Data aggregation method data layer "{}" '
+                if 'dset' not in v:
+                    raise KeyError('Data aggregation "dset" data layer "{}" '
                                    'must be specified.'.format(k))
+                if 'method' not in v:
+                    raise KeyError('Data aggregation "method" data layer "{}" '
+                                   'must be specified.'.format(k))
+                elif (v['method'].lower() != 'mean'
+                      and v['method'].lower() != 'mode'):
+                    raise ValueError('Cannot recognize data layer agg method: '
+                                     '"{}". Can only do mean and mode.'
+                                     .format(v['method']))
                 if 'fpath' not in v:
-                    raise KeyError('File path (fpath) for aggregation data '
+                    raise KeyError('File path "fpath" for aggregation data '
                                    'layer "{}" must be specified.'.format(k))
                 if not os.path.exists(v['fpath']):
                     raise FileInputError('Cannot find file path (fpath) for '
@@ -344,7 +359,7 @@ class Aggregation:
         return res_data, res_class_bins, cf_data, lcoe_data
 
     @staticmethod
-    def _serial_summary(fpath_excl, fpath_gen, dset_tm,
+    def _serial_summary(fpath_excl, fpath_gen, dset_tm, excl_dict,
                         gen_index, res_class_dset=None, res_class_bins=None,
                         dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                         data_layers=None, resolution=64, power_density=None,
@@ -360,6 +375,8 @@ class Aggregation:
         dset_tm : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
+        excl_dict : dict
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         gen_index : np.ndarray
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
@@ -376,7 +393,7 @@ class Aggregation:
             Dataset name from f_gen containing LCOE mean values.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "method",
+            name. Each value must be another dictionary with "dset", "method",
             and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -406,7 +423,8 @@ class Aggregation:
                 gids = range(len(sc))
 
         # pre-extract handlers so they are not repeatedly initialized
-        with AggFileHandler(fpath_excl, fpath_gen, data_layers) as fhandler:
+        file_args = [fpath_excl, fpath_gen, data_layers, excl_dict]
+        with AggFileHandler(*file_args) as fhandler:
 
             inputs = Aggregation._get_input_data(fhandler.gen, fpath_gen,
                                                  res_class_dset,
@@ -482,7 +500,7 @@ class Aggregation:
                 futures.append(executor.submit(
                     self._serial_summary,
                     self._fpath_excl, self._fpath_gen,
-                    self._dset_tm, self._gen_index,
+                    self._dset_tm, self._excl_dict, self._gen_index,
                     res_class_dset=self._res_class_dset,
                     res_class_bins=self._res_class_bins,
                     dset_cf=self._dset_cf, dset_lcoe=self._dset_lcoe,
@@ -538,7 +556,7 @@ class Aggregation:
             return bbins
 
     @classmethod
-    def summary(cls, fpath_excl, fpath_gen, dset_tm,
+    def summary(cls, fpath_excl, fpath_gen, dset_tm, excl_dict,
                 res_class_dset=None, res_class_bins=None,
                 dset_cf='cf_mean-means', dset_lcoe='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
@@ -554,6 +572,8 @@ class Aggregation:
         dset_tm : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
+        excl_dict : dict
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -566,7 +586,7 @@ class Aggregation:
             Dataset name from f_gen containing LCOE mean values.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "method",
+            name. Each value must be another dictionary with "dset", "method",
             and "fpath".
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
@@ -592,7 +612,7 @@ class Aggregation:
             Summary of the SC points.
         """
 
-        agg = cls(fpath_excl, fpath_gen, dset_tm,
+        agg = cls(fpath_excl, fpath_gen, dset_tm, excl_dict,
                   res_class_dset=res_class_dset, res_class_bins=res_class_bins,
                   dset_cf=dset_cf, dset_lcoe=dset_lcoe,
                   data_layers=data_layers, resolution=resolution,
@@ -600,7 +620,8 @@ class Aggregation:
 
         if n_cores == 1:
             summary = agg._serial_summary(agg._fpath_excl, agg._fpath_gen,
-                                          agg._dset_tm, agg._gen_index,
+                                          agg._dset_tm, agg._excl_dict,
+                                          agg._gen_index,
                                           res_class_dset=agg._res_class_dset,
                                           res_class_bins=agg._res_class_bins,
                                           dset_cf=agg._dset_cf,

@@ -2,58 +2,41 @@
 """
 reV supply curve extent and points base frameworks.
 """
-import h5py
 import pandas as pd
 import numpy as np
 
 from reV.handlers.outputs import Outputs
-from reV.handlers.geotiff import Geotiff
+from reV.handlers.exclusions import ExclusionLayers
+from reV.supply_curve.exclusions import ExclusionMask
 from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
                                       EmptySupplyCurvePointError)
-
-
-class ExclusionPoints(Geotiff):
-    """Exclusion points framework"""
-
-    def __init__(self, fpath, chunks=(128, 128)):
-        """
-        Parameters
-        ----------
-        fpath : str
-            Path to .tiff file.
-        chunks : tuple
-            GeoTIFF chunk (tile) shape/size.
-        """
-
-        super().__init__(fpath, chunks=chunks)
 
 
 class SupplyCurvePoint:
     """Single supply curve point framework"""
 
-    def __init__(self, gid, f_excl, f_gen, f_techmap, dset_tm, gen_index,
+    def __init__(self, gid, excl, gen, dset_tm, gen_index, excl_dict=None,
                  resolution=64, exclusion_shape=None, close=True):
         """
         Parameters
         ----------
         gid : int
             gid for supply curve point to analyze.
-        f_excl : str | ExclusionPoints
-            Filepath to exclusions geotiff or ExclusionPoints file handler.
-        f_gen : str | reV.handlers.Outputs
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        gen : str | reV.handlers.Outputs
             Filepath to .h5 reV generation output results or reV Outputs file
             handler.
-        f_techmap : str | h5py.File
-            Filepath to tech mapping between exclusions and resource data
-            (created using the reV TechMapping framework) or an h5py file
-            handler object.
         dset_tm : str
-            Dataset name in the techmap file containing the
+            Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         gen_index : np.ndarray
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
             generation run.
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
@@ -67,83 +50,68 @@ class SupplyCurvePoint:
         self._close = close
         self._centroid = None
         self._excl_data = None
+        self._excl_dict = excl_dict
 
         # filepaths
         self._fpath_excl = None
         self._fpath_gen = None
-        self._fpath_techmap = None
 
         # handler objects
         self._exclusions = None
         self._gen = None
-        self._techmap = None
 
         # Parse inputs
-        self._parse_files(f_excl, f_gen, f_techmap)
+        self._parse_files(excl, gen)
         self._rows, self._cols = self._parse_slices(
-            gid, f_excl, resolution, exclusion_shape=exclusion_shape)
+            gid, excl, resolution, exclusion_shape=exclusion_shape)
         self._gen_gids, self._res_gids = self._parse_techmap(dset_tm,
                                                              gen_index)
 
-    def _parse_files(self, f_excl, f_gen, f_techmap):
+    def _parse_files(self, excl, gen):
         """Parse gen + excl filepath input or handler object and set to attrs.
 
         Parameters
         ----------
-        f_excl : str | ExclusionPoints
-            Filepath to exclusions geotiff or ExclusionPoints file handler
-        f_gen : str | reV.handlers.Outputs
+        excl : str | ExclusionMask
+            Filepath to exclusions geotiff or ExclusionMask handler
+        gen : str | reV.handlers.Outputs
             Filepath to .h5 reV generation output results or reV Outputs file
             handler.
-        f_techmap : str | h5py.File
-            Filepath to tech mapping between exclusions and resource data
-            (created using the reV TechMapping framework) or an h5py file
-            handler object.
         """
 
-        if isinstance(f_excl, str):
-            self._fpath_excl = f_excl
-        elif isinstance(f_excl, ExclusionPoints):
-            self._fpath_excl = f_excl._fpath
-            self._exclusions = f_excl
+        if isinstance(excl, str):
+            self._fpath_excl = excl
+            if self._excl_dict is None:
+                raise SupplyCurveInputError('Exclusion fpath cannot be used '
+                                            'without an exclusions dictionary '
+                                            'input.')
+        elif isinstance(excl, ExclusionMask):
+            self._fpath_excl = excl._fpath
+            self._exclusions = excl
         else:
             raise SupplyCurveInputError('SupplyCurvePoints needs an '
                                         'exclusions file path, or '
-                                        'ExclusionPoints handler but '
+                                        'ExclusionMask handler but '
                                         'received: {}'
-                                        .format(type(f_excl)))
-
-        if isinstance(f_gen, str):
-            self._fpath_gen = f_gen
-        elif isinstance(f_gen, Outputs):
-            self._fpath_gen = f_gen._h5_file
-            self._gen = f_gen
+                                        .format(type(excl)))
+        if isinstance(gen, str):
+            self._fpath_gen = gen
+        elif isinstance(gen, Outputs):
+            self._fpath_gen = gen._h5_file
+            self._gen = gen
         else:
             raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
                                         'generation output file path or '
                                         'output handler, but received: {}'
-                                        .format(type(f_gen)))
+                                        .format(type(gen)))
 
-        if isinstance(f_techmap, str):
-            self._fpath_techmap = f_techmap
-        elif isinstance(f_techmap, h5py.File):
-            self._fpath_techmap = f_techmap.filename
-            self._techmap = f_techmap
-        else:
-            raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
-                                        'techmap file path or h5py file '
-                                        'handler, but received: {}'
-                                        .format(type(f_techmap)))
-
-    def _parse_slices(self, gid, f_excl, resolution, exclusion_shape=None):
+    def _parse_slices(self, gid, resolution, exclusion_shape=None):
         """Parse inputs for the definition of this SC point.
 
         Parameters
         ----------
         gid : int | None
             gid for supply curve point to analyze.
-        f_excl : str | ExclusionPoints
-            Filepath to exclusions geotiff or ExclusionPoints file handler
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
@@ -161,8 +129,7 @@ class SupplyCurvePoint:
         """
 
         if exclusion_shape is None:
-            sc = SupplyCurveExtent(f_excl, resolution=resolution)
-            rows, cols = sc.get_excl_slices(gid)
+            rows, cols = self.exclusions.shape
         else:
             rows, cols = self.get_agg_slices(gid, exclusion_shape, resolution)
 
@@ -174,7 +141,7 @@ class SupplyCurvePoint:
         Parameters
         ----------
         dset_tm : str
-            Dataset name in the techmap file containing the
+            Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         gen_index : np.ndarray
             Array of generation gids with array index equal to resource gid.
@@ -194,10 +161,10 @@ class SupplyCurvePoint:
         """
 
         emsg = ('Supply curve point gid {} has no viable exclusion points '
-                'based on techmap file: "{}"'
-                .format(self._gid, self._fpath_techmap))
+                'based on exclusions file: "{}"'
+                .format(self._gid, self._fpath_excl))
 
-        res_gids = self.techmap[dset_tm][self.rows, self.cols]
+        res_gids = self.exclusions[dset_tm, self.rows, self.cols]
         res_gids = res_gids.astype(np.int32).flatten()
 
         if (res_gids != -1).sum() == 0:
@@ -229,8 +196,6 @@ class SupplyCurvePoint:
                 self._exclusions.close()
             if self._gen is not None:
                 self._gen.close()
-            if self._techmap is not None:
-                self._techmap.close()
 
     @staticmethod
     def get_agg_slices(gid, shape, resolution):
@@ -314,8 +279,8 @@ class SupplyCurvePoint:
         decimals = 3
 
         if self._centroid is None:
-            lats = self.techmap['latitude'][self.rows, self.cols]
-            lons = self.techmap['longitude'][self.rows, self.cols]
+            lats = self.exclusions['latitude', self.rows, self.cols]
+            lons = self.exclusions['longitude', self.rows, self.cols]
             self._centroid = (np.round(lats.mean(), decimals=decimals),
                               np.round(lons.mean(), decimals=decimals))
 
@@ -327,11 +292,12 @@ class SupplyCurvePoint:
 
         Returns
         -------
-        _exclusions : ExclusionPoints
-            Exclusions geotiff handler object.
+        _exclusions : ExclusionMask
+            ExclusionMask h5 handler object.
         """
         if self._exclusions is None:
-            self._exclusions = ExclusionPoints(self._fpath_excl)
+            self._exclusions = ExclusionMask.from_dict(self._fpath_excl,
+                                                       self._excl_dict)
         return self._exclusions
 
     @property
@@ -379,19 +345,6 @@ class SupplyCurvePoint:
             self._gen = Outputs(self._fpath_gen, str_decode=False)
         return self._gen
 
-    @property
-    def techmap(self):
-        """Get the reV technology mapping object.
-
-        Returns
-        -------
-        _techmap : h5py.File
-            reV techmap file object.
-        """
-        if self._techmap is None:
-            self._techmap = h5py.File(self._fpath_techmap, 'r')
-        return self._techmap
-
 
 class SupplyCurveExtent:
     """Supply curve full extent framework."""
@@ -400,9 +353,9 @@ class SupplyCurveExtent:
         """
         Parameters
         ----------
-        f_excl : str | ExclusionPoints
+        f_excl : str | ExclusionLayers
             File path to the exclusions grid, or pre-initialized
-            ExclusionPoints. The exclusions dictate the SC analysis extent.
+            ExclusionLayers. The exclusions dictate the SC analysis extent.
         resolution : int
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
@@ -416,14 +369,14 @@ class SupplyCurveExtent:
 
         if isinstance(f_excl, str):
             self._fpath_excl = f_excl
-            self._exclusions = ExclusionPoints(f_excl)
-        elif isinstance(f_excl, ExclusionPoints):
-            self._fpath_excl = f_excl._fpath
+            self._exclusions = ExclusionLayers(f_excl)
+        elif isinstance(f_excl, ExclusionLayers):
+            self._fpath_excl = f_excl.h5_file
             self._exclusions = f_excl
         else:
             raise SupplyCurveInputError('SupplyCurvePoints needs an '
                                         'exclusions file path, or '
-                                        'ExclusionPoints handler but '
+                                        'ExclusionLayers handler but '
                                         'received: {}'
                                         .format(type(f_excl)))
 
@@ -475,8 +428,8 @@ class SupplyCurveExtent:
 
         Returns
         -------
-        _exclusions : ExclusionPoints
-            Exclusions geotiff handler object.
+        _exclusions : ExclusionLayers
+            ExclusionLayers h5 handler object.
         """
         return self._exclusions
 
@@ -502,7 +455,7 @@ class SupplyCurveExtent:
         excl_rows : np.ndarray
             Array of exclusion row indices.
         """
-        return np.arange(self.exclusions.n_rows)
+        return np.arange(self.exclusions.shape[0])
 
     @property
     def excl_cols(self):
@@ -513,7 +466,7 @@ class SupplyCurveExtent:
         excl_cols : np.ndarray
             Array of exclusion column indices.
         """
-        return np.arange(self.exclusions.n_cols)
+        return np.arange(self.exclusions.shape[1])
 
     @property
     def rows_of_excl(self):
@@ -558,7 +511,7 @@ class SupplyCurveExtent:
         n_rows : int
             Number of row entries in the full supply curve grid.
         """
-        return int(np.ceil(self.exclusions.n_rows / self.resolution))
+        return int(np.ceil(self.exclusions.shape[0] / self.resolution))
 
     @property
     def n_cols(self):
@@ -569,7 +522,7 @@ class SupplyCurveExtent:
         n_cols : int
             Number of column entries in the full supply curve grid.
         """
-        return int(np.ceil(self.exclusions.n_cols / self.resolution))
+        return int(np.ceil(self.exclusions.shape[1] / self.resolution))
 
     @property
     def points(self):
