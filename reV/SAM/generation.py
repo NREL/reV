@@ -408,6 +408,8 @@ class Solar(Generation):
                    'clearsky_ghi': 'gh',
                    'wind_speed': 'wspd',
                    'air_temperature': 'tdry',
+                   'dew_point': 'tdew',
+                   'surface_pressure': 'pres',
                    }
 
         irrad_vars = ['dn', 'df', 'gh']

@@ -18,7 +18,9 @@ class SAMResource:
     """
 
     # Resource variables to load for each res type
-    RES_VARS = {'solar': ('dni', 'dhi', 'wind_speed', 'air_temperature'),
+    RES_VARS = {'pv': ('dni', 'dhi', 'wind_speed', 'air_temperature'),
+                'csp': ('dni', 'dhi', 'wind_speed', 'air_temperature',
+                        'dew_point', 'surface_pressure'),
                 'wind': ('pressure', 'temperature', 'winddirection',
                          'windspeed')}
 
@@ -50,9 +52,11 @@ class SAMResource:
         self._runnable = False
         self._res_arrays = {}
         h = project_points.h
-        if h is None:
-            # no hub height specified, get NSRDB solar data
-            self._res_type = 'solar'
+
+        if project_points.tech.lower() == 'pv':
+            self._res_type = 'pv'
+        elif project_points.tech.lower() == 'csp':
+            self._res_type = 'csp'
         else:
             # hub height specified, get WTK wind data.
             self._res_type = 'wind'

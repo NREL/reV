@@ -670,6 +670,11 @@ class Gen:
             PointsControl object instance.
         """
 
+        if tech not in Gen.OPTIONS:
+            raise KeyError('Did not recognize gen tech "{}". '
+                           'Gen options are: {}'
+                           .format(tech, list(Gen.OPTIONS.keys())))
+
         if sites_per_split is None:
             # get the optimal sites per split based on res file chunk size
             sites_per_split = Gen.sites_per_core(res_file)
