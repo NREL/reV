@@ -119,7 +119,8 @@ class Pipeline:
 
         command, f_config = self._get_command_config(i)
         cmd = self._get_cmd(command, f_config)
-        logger.info('reV pipeline submitting: "{}"'.format(command))
+        logger.info('reV pipeline submitting: "{}" for job "{}"'
+                    .format(command, self._config.name))
         logger.debug('reV pipeline submitting subprocess call:\n\t"{}"'
                      .format(cmd))
         SubprocessManager.submit(cmd)
@@ -254,8 +255,8 @@ class Pipeline:
         fail_str = ''
         if check_failed and status != 'failed':
             fail_str = ', but some jobs have failed'
-        logger.info('reV "{}" is {}{}.'
-                    .format(module, status, fail_str))
+        logger.info('reV "{}" for job "{}" is {}{}.'
+                    .format(module, self._config.name, status, fail_str))
 
         return return_code
 
