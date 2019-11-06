@@ -8,7 +8,7 @@ import pytest
 
 from reV import TESTDATADIR
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.exclusions import LayerMask, InclusionMask
+from reV.supply_curve.exclusions import LayerMask, ExclusionMask
 
 
 CONFIGS = {'urban_pv': {'ri_smod': {'exclude_values': [1, ]},
@@ -97,7 +97,7 @@ def test_layer_mask(layer, inclusion_range, exclude_values, include_values):
                       include_values=include_values)
     layer_test = layer.mask_func(data)
 
-    inclusion_test = InclusionMask.run(excl_h5, layer)
+    inclusion_test = ExclusionMask.run(excl_h5, layer)
 
     assert np.allclose(truth, layer_test)
     assert np.allclose(truth, inclusion_test)
@@ -118,7 +118,7 @@ def test_inclusion_mask(scenario):
                               '{}.npy'.format(scenario))
     truth = np.load(truth_path)
 
-    test = InclusionMask.run_from_dict(excl_h5, CONFIGS[scenario],
+    test = ExclusionMask.run_from_dict(excl_h5, CONFIGS[scenario],
                                        min_area=AREA[scenario])
 
     assert np.allclose(truth, test)
