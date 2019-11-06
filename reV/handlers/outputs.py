@@ -40,12 +40,12 @@ class Outputs(Resource):
         """
         self._h5_file = h5_file
         self._h5 = h5py.File(h5_file, mode=mode)
-        self._group = group
         self._unscale = unscale
         self._mode = mode
         self._meta = None
         self._time_index = None
         self._str_decode = str_decode
+        self._group = self._check_group(group)
 
     def __len__(self):
         _len = 0
@@ -57,10 +57,10 @@ class Outputs(Resource):
     def __getitem__(self, keys):
         ds, ds_slice = parse_keys(keys)
         if ds in self.dsets:
-            if ds == 'time_index':
-                out = self._get_time_index(*ds_slice)
-            elif ds == 'meta':
-                out = self._get_meta(*ds_slice)
+            if ds.endswith('time_index'):
+                out = self._get_time_index(ds, *ds_slice)
+            elif ds.endswith('meta'):
+                out = self._get_meta(ds, *ds_slice)
             else:
                 out = self._get_ds(ds, *ds_slice)
         else:
@@ -73,10 +73,10 @@ class Outputs(Resource):
         if self.writable:
             ds, ds_slice = parse_keys(keys)
             slice_test = ds_slice == (slice(None, None, None),)
-            if ds == 'meta' and slice_test:
-                self.meta = arr
-            elif ds == 'time_index' and slice_test:
-                self.time_index = arr
+            if ds.endswith('meta') and slice_test:
+                self._set_meta(ds, arr)
+            elif ds.endswith('time_index') and slice_test:
+                self._set_time_index(ds, arr)
             else:
                 self._set_ds_array(ds, arr, *ds_slice)
 
@@ -93,9 +93,9 @@ class Outputs(Resource):
         _shape = None
         dsets = self.dsets
         if 'meta' in dsets:
-            _shape = self._h5['meta'].shape
+            _shape = self.h5['meta'].shape
             if 'time_index' in dsets:
-                _shape = self._h5['time_index'].shape + _shape
+                _shape = self.h5['time_index'].shape + _shape
 
         return _shape
 
@@ -116,29 +116,6 @@ class Outputs(Resource):
 
         return True
 
-    def update_dset(self, dset, dset_array, dset_slice=None):
-        """
-        Check to see if dset needs to be updated on disk
-        If so write dset_array to disk
-
-        Parameters
-        ----------
-        dset : str
-            dataset to update
-        dset_array : ndarray
-            dataset array
-        dset_slice : tuple
-            slice of dataset to update, it None update all
-        """
-        if dset_slice is None:
-            dset_slice = (slice(None, None, None), )
-
-        keys = (dset, ) + dset_slice
-
-        arr = self.__getitem__(keys)
-        if not np.array_equal(arr, dset_array):
-            self._set_ds_array(dset, dset_array, *dset_slice)
-
     @Resource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
         """
@@ -149,15 +126,7 @@ class Outputs(Resource):
         meta : pandas.DataFrame | numpy.recarray
             Locational meta data
         """
-        if isinstance(meta, pd.DataFrame):
-            meta = self.to_records_array(meta)
-
-        if 'meta' in self.dsets:
-            self.update_dset('meta', meta)
-        else:
-            self._create_dset('meta', meta.shape, meta.dtype, data=meta)
-
-        self._meta = meta
+        self._set_meta('meta', meta)
 
     @Resource.time_index.setter  # pylint: disable-msg=E1101
     def time_index(self, time_index):
@@ -169,16 +138,7 @@ class Outputs(Resource):
         time_index : pandas.DatetimeIndex | ndarray
             Temporal index of timesteps
         """
-        if isinstance(time_index, pd.DatetimeIndex):
-            time_index = np.array(time_index.astype(str), dtype='S20')
-
-        if 'time_index' in self.dsets:
-            self.update_dset('time_index', time_index)
-        else:
-            self._create_dset('time_index', time_index.shape, time_index.dtype,
-                              data=time_index)
-
-        self._time_index = time_index
+        self._set_time_index('time_index', time_index)
 
     @property
     def SAM_configs(self):
@@ -192,11 +152,73 @@ class Outputs(Resource):
         """
         if 'meta' in self.dsets:
             configs = {k: json.loads(v)
-                       for k, v in self._h5['meta'].attrs.items()}
+                       for k, v in self.h5['meta'].attrs.items()}
         else:
             configs = {}
 
         return configs
+
+    def _check_group(self, group):
+        """
+        Ensure group is in .h5 file
+
+        Parameters
+        ----------
+        group : str
+            Group of interest
+        """
+        if group is not None:
+            if group not in self._h5:
+                try:
+                    if self.writable:
+                        self._h5.create_group(group)
+                except Exception as ex:
+                    msg = ('Cannot create group {}: {}'
+                           .format(group, ex))
+                    raise HandlerRuntimeError(msg)
+
+        return group
+
+    def _set_meta(self, ds, meta):
+        """
+        Write meta data to disk
+
+        Parameters
+        ----------
+        ds : str
+            meta dataset name
+        meta : pandas.DataFrame | numpy.recarray
+            Locational meta data
+        """
+        self._meta = meta
+        if isinstance(meta, pd.DataFrame):
+            meta = self.to_records_array(meta)
+
+        if ds in self.dsets:
+            self.update_dset(ds, meta)
+        else:
+            self._create_dset(ds, meta.shape, meta.dtype, data=meta)
+
+    def _set_time_index(self, ds, time_index):
+        """
+        Write time index to disk
+
+        Parameters
+        ----------
+        ds : str
+            time index dataset name
+        time_index : pandas.DatetimeIndex | ndarray
+            Temporal index of timesteps
+        """
+        self._time_index = time_index
+        if isinstance(time_index, pd.DatetimeIndex):
+            time_index = np.array(time_index.astype(str), dtype='S20')
+
+        if ds in self.dsets:
+            self.update_dset(ds, time_index)
+        else:
+            self._create_dset(ds, time_index.shape, time_index.dtype,
+                              data=time_index)
 
     def get_config(self, config_name):
         """
@@ -213,7 +235,7 @@ class Outputs(Resource):
             SAM config JSON as a dictionary
         """
         if 'meta' in self.dsets:
-            config = json.loads(self._h5['meta'].attrs[config_name])
+            config = json.loads(self.h5['meta'].attrs[config_name])
         else:
             config = None
 
@@ -236,7 +258,7 @@ class Outputs(Resource):
                 if not isinstance(key, str):
                     key = str(key)
 
-                self._h5['meta'].attrs[key] = config
+                self.h5['meta'].attrs[key] = config
 
     @staticmethod
     def get_dtype(col):
@@ -303,7 +325,7 @@ class Outputs(Resource):
         return np.core.records.fromarrays(meta_arrays, dtype=dtypes)
 
     @staticmethod
-    def _check_data_dtype(data, dtype, scale_factor):
+    def _check_data_dtype(data, dtype, scale_factor=1):
         """
         Check data dtype and scale if needed
 
@@ -323,6 +345,10 @@ class Outputs(Resource):
             - Scaled and converted to dtype
         """
         if not np.issubdtype(data.dtype, np.dtype(dtype)):
+            if scale_factor == 1:
+                raise HandlerRuntimeError("A scale_factor is needed to"
+                                          "scale data to {}.".format(dtype))
+
             # apply scale factor and dtype
             data = np.multiply(data, scale_factor)
             if np.issubdtype(dtype, np.integer):
@@ -352,8 +378,8 @@ class Outputs(Resource):
         dtype = self._h5[ds_name].dtype
         scale_factor = self.get_scale(ds_name)
 
-        self._h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
-                                                             scale_factor)
+        self.h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
+                                                            scale_factor)
 
     def _check_chunks(self, chunks, data=None):
         """
@@ -415,8 +441,8 @@ class Outputs(Resource):
         """
         if self.writable:
             chunks = self._check_chunks(chunks, data=data)
-            ds = self._h5.create_dataset(ds_name, shape=shape, dtype=dtype,
-                                         chunks=chunks)
+            ds = self.h5.create_dataset(ds_name, shape=shape, dtype=dtype,
+                                        chunks=chunks)
             if attrs is not None:
                 for key, value in attrs.items():
                     ds.attrs[key] = value
@@ -473,15 +499,58 @@ class Outputs(Resource):
         """
         self._check_dset_shape(data)
 
-        if 'scale_factor' in attrs:
-            scale_factor = attrs['scale_factor']
-            data = self._check_data_dtype(data, dtype, scale_factor)
+        if attrs is not None:
+            scale_factor = attrs.get('scale_factor', 1)
         else:
-            raise HandlerRuntimeError("A scale_factor is needed to"
-                                      "scale data to {}.".format(dtype))
+            scale_factor = 1
+
+        data = self._check_data_dtype(data, dtype, scale_factor=scale_factor)
 
         self._create_dset(dset_name, data.shape, dtype,
                           chunks=chunks, attrs=attrs, data=data)
+
+    def update_dset(self, dset, dset_array, dset_slice=None):
+        """
+        Check to see if dset needs to be updated on disk
+        If so write dset_array to disk
+
+        Parameters
+        ----------
+        dset : str
+            dataset to update
+        dset_array : ndarray
+            dataset array
+        dset_slice : tuple
+            slice of dataset to update, it None update all
+        """
+        if dset_slice is None:
+            dset_slice = (slice(None, None, None), )
+
+        keys = (dset, ) + dset_slice
+
+        arr = self.__getitem__(keys)
+        if not np.array_equal(arr, dset_array):
+            self._set_ds_array(dset, dset_array, *dset_slice)
+
+    def write_dataset(self, dset_name, data, dtype, chunks=None, attrs=None):
+        """
+        Write dataset to disk. Dataset it created in .h5 file and data is
+        scaled if needed.
+
+        Parameters
+        ----------
+        dset_name : str
+            Name of dataset to be added to h5 file.
+        data : ndarray
+            Data to be added to h5 file.
+        dtype : str
+            Intended dataset datatype after scaling.
+        chunks : tuple
+            Chunk size for capacity factor means dataset.
+        attrs : dict
+            Attributes to be set. May include 'scale_factor'.
+        """
+        self._add_dset(dset_name, data, dtype, chunks=chunks, attrs=attrs)
 
     @classmethod
     def write_profiles(cls, h5_file, meta, time_index, dset_name, profiles,
