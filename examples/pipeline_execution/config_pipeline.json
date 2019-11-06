@@ -6,16 +6,16 @@
   "name": "rev_pipeline",
   "pipeline": [
     {
-      "generation": "/scratch/gbuster/rev/test_pipeline/config_gen.json"
+      "generation": "./config_gen.json"
     },
     {
-      "collect": "/scratch/gbuster/rev/test_pipeline/config_collect.json"
+      "collect": "./config_collect.json"
     },
     {
-      "econ": "/scratch/gbuster/rev/test_pipeline/config_econ.json"
+      "econ": "./config_econ.json"
     },
     {
-      "multi-year": "/scratch/gbuster/rev/test_pipeline/config_multi-year.json"
+      "multi-year": "./config_multi-year.json"
     }
   ]
 }

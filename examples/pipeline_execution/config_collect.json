@@ -1,8 +1,8 @@
 {
   "directories": {
     "collect_directory": "PIPELINE",
-    "logging_directory": "/scratch/gbuster/rev/test_pipeline",
-    "output_directory": "/scratch/gbuster/rev/test_pipeline"
+    "logging_directory": "./logs/",
+    "output_directory": "./"
   },
   "execution_control": {
     "allocation": "rev",

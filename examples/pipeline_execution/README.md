@@ -6,8 +6,6 @@ The full pipeline can be executed using the following CLI call:
 
 `rev -c "../config_pipeline.json" pipeline`
 
-Please note that the project directory (for configs, logs, outputs, etc...) in all of the configs is set to: `/scratch/gbuster/rev/test_pipeline/` and should be changed for your run.
-
 ## Pipeline Input Requirements
 
 The reV pipeline manager will perform several checks to ensure the following input requirements are satisfied.
