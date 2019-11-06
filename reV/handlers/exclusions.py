@@ -5,6 +5,7 @@ Exclusion layers handler
 import h5py
 import logging
 import json
+import numpy as np
 
 from reV.handlers.parse_keys import parse_keys
 from reV.handlers.resource import Resource
@@ -33,6 +34,8 @@ class ExclusionLayers:
             self._h5 = h5pyd.File(self.h5_file, 'r')
         else:
             self._h5 = h5py.File(self.h5_file, 'r')
+
+        self._iarr = None
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_file)
@@ -79,6 +82,23 @@ class ExclusionLayers:
             Open h5py File or Group instance
         """
         return self._h5
+
+    @property
+    def iarr(self):
+        """Get an array of 1D index values for the flattened h5 excl extent.
+
+        Returns
+        -------
+        iarr : np.ndarray
+            Uint array with same shape as exclusion extent, representing the 1D
+            index values if the geotiff extent was flattened
+            (with default flatten order 'C')
+        """
+        if self._iarr is None:
+            N = self.shape[0] * self.shape[1]
+            self._iarr = np.arange(N, dtype=np.uint32)
+            self._iarr = self._iarr.reshape(self.shape)
+        return self._iarr
 
     @property
     def profile(self):
