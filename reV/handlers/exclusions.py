@@ -5,7 +5,6 @@ Exclusion layers handler
 import h5py
 import logging
 import json
-import pandas as pd
 
 from reV.handlers.parse_keys import parse_keys
 from reV.handlers.resource import Resource
@@ -35,8 +34,6 @@ class ExclusionLayers:
         else:
             self._h5 = h5py.File(self.h5_file, 'r')
 
-        self._meta = None
-
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_file)
         return msg
@@ -56,8 +53,10 @@ class ExclusionLayers:
     def __getitem__(self, keys):
         ds, ds_slice = parse_keys(keys)
 
-        if ds.endswith('meta'):
-            out = self._get_meta(ds, *ds_slice)
+        if ds.lower().startswith('lat'):
+            out = self._get_latitude(*ds_slice)
+        elif ds.lower().startswith('lon'):
+            out = self._get_longitude(*ds_slice)
         else:
             out = self._get_layer(ds, *ds_slice)
 
@@ -91,7 +90,7 @@ class ExclusionLayers:
         profile : dict
             Generic GeoTiff profile for exclusions in .h5 file
         """
-        return json.loads(self._h5.attrs['profile'])
+        return json.loads(self.h5.attrs['profile'])
 
     @property
     def layers(self):
@@ -103,7 +102,7 @@ class ExclusionLayers:
         layers : list
             List of exclusion layers
         """
-        layers = [ds for ds in self._h5
+        layers = [ds for ds in self.h5
                   if ds != 'meta']
         return layers
 
@@ -118,27 +117,29 @@ class ExclusionLayers:
         shape : tuple
             Shape of resource variable arrays (timesteps, sites)
         """
-        return self._h5.attrs['shape']
+        return self.h5.attrs['shape']
 
     @property
-    def meta(self):
+    def latitude(self):
         """
-        Meta data DataFrame
+        Latitude coordinates array
 
         Returns
         -------
-        meta : pandas.DataFrame
-            Resource Meta Data
+        ndarray
         """
-        if self._meta is None:
-            if 'meta' in self.h5:
-                self._meta = self._get_meta(slice(None))
-            else:
-                msg = "'meta' is not a valid dataset"
-                logger.exception(msg)
-                raise HandlerKeyError(msg)
+        return self['latitude']
 
-        return self._meta
+    @property
+    def longitude(self):
+        """
+        Longitude coordinates array
+
+        Returns
+        -------
+        ndarray
+        """
+        return self['longitude']
 
     def get_layer_profile(self, layer):
         """
@@ -191,9 +192,9 @@ class ExclusionLayers:
         description = self.h5[layer].attrs['description']
         return description
 
-    def _get_meta(self, *ds_slice):
+    def _get_latitude(self, *ds_slice):
         """
-        Extract and convert meta to a pandas DataFrame
+        Extract latitude coordinates
 
         Parameters
         ----------
@@ -202,32 +203,42 @@ class ExclusionLayers:
 
         Returns
         -------
-        meta : pandas.Dataframe
-            Dataframe of (lat, lon) to (i, j) mapping
+        lat : ndarray
+            Latitude coordinates
         """
-        if 'meta' not in self._h5:
-            msg = ('"meta" is missing from {}'
+        if 'latitude' not in self.h5:
+            msg = ('"latitude" is missing from {}'
                    .format(self.h5_file))
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        sites = ds_slice[0]
-        if isinstance(sites, int):
-            sites = slice(sites, sites + 1)
+        lat = Resource._extract_ds_slice(self.h5['latitude'], *ds_slice)
 
-        meta = self.h5['meta'][sites]
+        return lat
 
-        if isinstance(sites, slice):
-            if sites.stop:
-                sites = list(range(*sites.indices(sites.stop)))
-            else:
-                sites = list(range(len(meta)))
+    def _get_longitude(self, *ds_slice):
+        """
+        Extract longitude coordinates
 
-        meta = pd.DataFrame(meta, index=sites)
-        if len(ds_slice) == 2:
-            meta = meta[ds_slice[1]]
+        Parameters
+        ----------
+        ds_slice : tuple of int | list | slice
+            Pandas slicing describing which sites and columns to extract
 
-        return meta
+        Returns
+        -------
+        lon : ndarray
+            Longitude coordinates
+        """
+        if 'longitude' not in self.h5:
+            msg = ('"longitude" is missing from {}'
+                   .format(self.h5_file))
+            logger.error(msg)
+            raise HandlerKeyError(msg)
+
+        lat = Resource._extract_ds_slice(self.h5['longitude'], *ds_slice)
+
+        return lat
 
     def _get_layer(self, layer_name, *ds_slice):
         """
