@@ -341,6 +341,28 @@ class ExclusionMask:
         return self._excl_layers
 
     @property
+    def latitude(self):
+        """
+        Get the h5 latitude dataset.
+
+        Returns
+        -------
+        h5.File.dset
+        """
+        return self._excl_h5['latitude']
+
+    @property
+    def longitude(self):
+        """
+        Get the h5 longitude dataset.
+
+        Returns
+        -------
+        h5.File.dset
+        """
+        return self._excl_h5['longitude']
+
+    @property
     def layer_names(self):
         """
         List of layers to combines
@@ -530,3 +552,36 @@ class ExclusionMask:
             mask = f.mask
 
         return mask
+
+    @classmethod
+    def from_dict(cls, excl_h5, layers_dict, min_area=None,
+                  kernel='queen', hsds=False):
+        """
+        Create inclusion handler from dictionary of LayerMask arguments
+
+        Parameters
+        ----------
+        excl_h5 : str
+            Path to exclusions .h5 file
+        layers_dict : dcit
+            Dictionary of LayerMask arugments {layer: {kwarg: value}}
+        min_area : float | NoneType
+            Minimum required contiguous area in sq-km
+        kernel : str
+            Contiguous filter method to use on final exclusion
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+
+        Returns
+        -------
+        incl_mask : InclusionMask
+            Initialized inclusion mask object.
+        """
+        layers = []
+        for layer, kwargs in layers_dict.items():
+            layers.append(LayerMask(layer, **kwargs))
+
+        incl_mask = cls(excl_h5, *layers, min_area=min_area,
+                        kernel=kernel, hsds=hsds)
+        return incl_mask
