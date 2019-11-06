@@ -37,11 +37,11 @@ class LayerMask:
         self._inclusion_range = inclusion_range
         self._exclude_values = exclude_values
         self._include_values = include_values
-        self._mask = self._mask_type()
+        self._mask_type = self._check_mask_type()
 
     def __repr__(self):
-        msg = ("{} for {} exclusions"
-               .format(self.__class__.__name__, self.layer))
+        msg = ("{} for {} exclusion, of type {}"
+               .format(self.__class__.__name__, self.layer, self.mask_type))
         return msg
 
     def __getitem__(self, data):
@@ -103,6 +103,17 @@ class LayerMask:
         return self._include_values
 
     @property
+    def mask_type(self):
+        """
+        Type of exclusion mask for this layer
+
+        Returns
+        -------
+        str
+        """
+        return self._mask_type
+
+    @property
     def mask_func(self):
         """
         Function to use for masking exclusion data
@@ -112,22 +123,22 @@ class LayerMask:
         func
             Masking function
         """
-        if self._mask == 'range':
+        if self.mask_type == 'range':
             func = self._range_mask
-        elif self._mask == 'exclude':
+        elif self.mask_type == 'exclude':
             func = self._exclusion_mask
-        elif self._mask == 'include':
+        elif self.mask_type == 'include':
             func = self._inclusion_mask
         else:
             msg = ('{} is an invalid mask type: expecting '
                    '"range", "exclude", or "include"'
-                   .format(self._mask))
+                   .format(self.mask_type))
             logger.error(msg)
             raise ValueError(msg)
 
         return func
 
-    def _mask_type(self):
+    def _check_mask_type(self):
         """
         Ensure that the initialization arguments are valid and not
         contradictory
@@ -240,9 +251,9 @@ class LayerMask:
         return mask
 
 
-class InclusionMask:
+class ExclusionMask:
     """
-    Class to create final inclusion mask
+    Class to create final exclusion mask
     """
 
     FILTER_KERNELS = {
@@ -271,8 +282,7 @@ class InclusionMask:
             behind HSDS
         """
         self._layers = OrderedDict()
-        self._excl_h5 = excl_h5
-        self._hsds = hsds
+        self._excl_h5 = ExclusionLayers(excl_h5, hsds=hsds)
         self._excl_layers = None
 
         for layer in layers:
@@ -284,9 +294,19 @@ class InclusionMask:
         else:
             raise ValueError('kernel must be "queen" or "rook"')
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self._excl_h5.close()
+
+        if type is not None:
+            raise
+
     def __repr__(self):
         msg = ("{} from {} with {} input layers"
-               .format(self.__class__.__name__, self.excl_h5, len(self)))
+               .format(self.__class__.__name__, self.excl_h5.h5_file,
+                       len(self)))
         return msg
 
     def __len__(self):
@@ -298,11 +318,11 @@ class InclusionMask:
     @property
     def excl_h5(self):
         """
-        Path to .h5 file containing exclusion layers
+        Open ExclusionLayers instance
 
         Returns
         -------
-        _excl_h5 : str
+        _excl_h5 : ExclusionLayers
          """
         return self._excl_h5
 
@@ -316,8 +336,7 @@ class InclusionMask:
         _excl_layers : list
         """
         if self._excl_layers is None:
-            with ExclusionLayers(self._excl_h5, hsds=self._hsds) as excl:
-                self._excl_layers = excl.layers
+            self._excl_layers = self.excl_h5.layers
 
         return self._excl_layers
 
@@ -384,7 +403,7 @@ class InclusionMask:
         self._layers[layer_name] = layer
 
     @staticmethod
-    def _area_filter(mask, min_area=1, kernel='queen'):
+    def _area_filter(mask, min_area=1, kernel='queen', ex_area=0.0081):
         """
         Ensure the contiguous area of included pixels is greater than
         prescribed minimum in sq-km
@@ -397,17 +416,19 @@ class InclusionMask:
             Minimum required contiguous area in sq-km
         kernel : str
             Kernel type, either 'queen' or 'rook'
+        ex_area : float
+            Area of each exclusion pixel in km^2, assumes 90m resolution
 
         Returns
         -------
         mask : ndarray
             Updated inclusion mask
         """
-        s = InclusionMask.FILTER_KERNELS[kernel]
+        s = ExclusionMask.FILTER_KERNELS[kernel]
         labels, _ = ndimage.label(mask, structure=s)
         l, c = np.unique(labels, return_counts=True)
 
-        min_counts = np.ceil(min_area / (90 / 1000)**2)  # assumes 90m pixels
+        min_counts = np.ceil(min_area / ex_area)
         pos = c[1:] < min_counts
         bad_labels = l[1:][pos]
 
@@ -431,13 +452,12 @@ class InclusionMask:
         """
         mask = None
         for layer in self.layers:
-            with ExclusionLayers(self._excl_h5, hsds=self._hsds) as f:
-                layer_slice = (layer.layer, ) + ds_slice
-                layer_mask = layer[f[layer_slice]]
-                if mask is None:
-                    mask = layer_mask
-                else:
-                    mask *= layer_mask
+            layer_slice = (layer.layer, ) + ds_slice
+            layer_mask = layer[self.excl_h5[layer_slice]]
+            if mask is None:
+                mask = layer_mask
+            else:
+                mask *= layer_mask
 
         if self._min_area is not None:
             mask = self._area_filter(mask, min_area=self._min_area,
@@ -470,9 +490,11 @@ class InclusionMask:
         mask : ndarray
             Full inclusion mask
         """
-        mask = cls(excl_h5, *layers, min_area=min_area,
-                   kernel=kernel, hsds=hsds)
-        return mask.mask
+        with cls(excl_h5, *layers, min_area=min_area,
+                 kernel=kernel, hsds=hsds) as f:
+            mask = f.mask
+
+        return mask
 
     @classmethod
     def run_from_dict(cls, excl_h5, layers_dict, min_area=None,
@@ -503,6 +525,8 @@ class InclusionMask:
         for layer, kwargs in layers_dict.items():
             layers.append(LayerMask(layer, **kwargs))
 
-        mask = cls(excl_h5, *layers, min_area=min_area,
-                   kernel=kernel, hsds=hsds)
-        return mask.mask
+        with cls(excl_h5, *layers, min_area=min_area,
+                 kernel=kernel, hsds=hsds) as f:
+            mask = f.mask
+
+        return mask

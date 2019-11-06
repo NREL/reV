@@ -109,13 +109,12 @@ class ExclusionLayers:
     @property
     def shape(self):
         """
-        Resource shape (timesteps, sites)
-        shape = (len(time_index), len(meta))
+        Exclusion shape (latitude, longitude)
 
         Returns
         -------
         shape : tuple
-            Shape of resource variable arrays (timesteps, sites)
+            Shape of exclusion array (latitude, longitude)
         """
         return self.h5.attrs['shape']
 
