@@ -325,7 +325,7 @@ class Outputs(Resource):
         return np.core.records.fromarrays(meta_arrays, dtype=dtypes)
 
     @staticmethod
-    def _check_data_dtype(data, dtype, scale_factor):
+    def _check_data_dtype(data, dtype, scale_factor=1):
         """
         Check data dtype and scale if needed
 
@@ -345,6 +345,10 @@ class Outputs(Resource):
             - Scaled and converted to dtype
         """
         if not np.issubdtype(data.dtype, np.dtype(dtype)):
+            if scale_factor == 1:
+                raise HandlerRuntimeError("A scale_factor is needed to"
+                                          "scale data to {}.".format(dtype))
+
             # apply scale factor and dtype
             data = np.multiply(data, scale_factor)
             if np.issubdtype(dtype, np.integer):
@@ -495,12 +499,12 @@ class Outputs(Resource):
         """
         self._check_dset_shape(data)
 
-        if 'scale_factor' in attrs:
-            scale_factor = attrs['scale_factor']
-            data = self._check_data_dtype(data, dtype, scale_factor)
+        if attrs is not None:
+            scale_factor = attrs.get('scale_factor', 1)
         else:
-            raise HandlerRuntimeError("A scale_factor is needed to"
-                                      "scale data to {}.".format(dtype))
+            scale_factor = 1
+
+        data = self._check_data_dtype(data, dtype, scale_factor=scale_factor)
 
         self._create_dset(dset_name, data.shape, dtype,
                           chunks=chunks, attrs=attrs, data=data)

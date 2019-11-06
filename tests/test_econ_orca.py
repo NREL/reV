@@ -12,6 +12,7 @@ import os
 import pytest
 import numpy as np
 
+pytest.importorskip("ORCA")
 from reV.econ.econ import Econ
 from reV import TESTDATADIR
 
