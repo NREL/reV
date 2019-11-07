@@ -73,7 +73,7 @@ class TechMapping:
         emsg = None
         wmsg = None
         if os.path.exists(self._fpath_excl):
-            with h5py.File(self._fpath_excl, 'a') as f:
+            with h5py.File(self._fpath_excl, 'r') as f:
 
                 if 'latitude' not in f or 'longitude' not in f:
                     emsg = ('Datasets "latitude" and/or "longitude" not in '
@@ -106,7 +106,7 @@ class TechMapping:
             number of tech exclusion points in the supply curve extent.
         """
 
-        N = len(self._sc.exclusions)
+        N = (self._sc.exclusions.shape[0] * self._sc.exclusions.shape[1])
         ind = -1 * np.ones((N, ), dtype=np.int32)
         coords = np.zeros((N, 2), dtype=np.float32)
         return ind, coords
@@ -201,15 +201,15 @@ class TechMapping:
 
         Returns
         -------
+        lats : np.ndarray
+            2D un-projected latitude array of tech exclusion points.
+            0's if no res point found. Shape is equal to exclusions shape.
+        lons : np.ndarray
+            2D un-projected longitude array of tech exclusion points.
+            0's if no res point found. Shape is equal to exclusions shape.
         ind_all : np.ndarray
             Index values of the NN resource point. -1 if no res point found.
-            1D integer array with length equal to the number of tech exclusion
-            points in the supply curve extent.
-        coords_all : np.ndarray
-            Un-projected latitude, longitude array of tech exclusion points.
-            0's if no res point found. 2D integer array (N, 2) filled with 0's
-            with length equal to the number of tech exclusion points in the
-            supply curve extent.
+            2D integer array with shape equal to the exclusions extent shape.
         """
 
         gids = np.array(list(range(len(self._sc))), dtype=np.uint32)
@@ -245,7 +245,10 @@ class TechMapping:
                     ind_all[i_out_arr] = result[0][j]
                     coords_all[i_out_arr, :] = result[1][j]
 
-        return ind_all, coords_all
+        ind_all = ind_all.reshape(self._sc.exclusions.shape)
+        lats = coords_all[:, 0].reshape(self._sc.exclusions.shape)
+        lons = coords_all[:, 1].reshape(self._sc.exclusions.shape)
+        return lats, lons, ind_all
 
     @staticmethod
     def map_resource_gids(gids, fpath_excl, fpath_res, distance_upper_bound,
@@ -321,15 +324,21 @@ class TechMapping:
 
         return ind_out, coords_out
 
-    def save_tech_map(self, ind, coords, fpath_out, dset, chunks=(128, 128)):
+    def save_tech_map(self, lats, lons, ind, fpath_out, dset,
+                      chunks=(128, 128)):
         """Save tech mapping indices and coordinates to an h5 output file.
 
         Parameters
         ----------
+        lats : np.ndarray
+            2D un-projected latitude array of tech exclusion points.
+            0's if no res point found. Shape is equal to exclusions shape.
+        lons : np.ndarray
+            2D un-projected longitude array of tech exclusion points.
+            0's if no res point found. Shape is equal to exclusions shape.
         ind : np.ndarray
-            Index values of the NN resource point.
-        coords : np.ndarray
-            Un-projected latitude, longitude array of tech exclusion points.
+            Index values of the NN resource point. -1 if no res point found.
+            2D integer array with shape equal to the exclusions extent shape.
         fpath_out : str
             .h5 filepath to save tech mapping results.
         dset : str
@@ -347,23 +356,23 @@ class TechMapping:
         chunks = (np.min((shape[0], chunks[0])), np.min((shape[1], chunks[1])))
 
         if not os.path.exists(fpath_out):
-            if coords is not None:
+            if lats is not None and lons is None:
                 with h5py.File(fpath_out, 'w') as f:
                     f.create_dataset('latitude', shape=shape,
-                                     dtype=coords.dtype,
-                                     data=coords[:, 0].reshape(shape),
+                                     dtype=lats.dtype,
+                                     data=lats,
                                      chunks=chunks)
                     f.create_dataset('longitude', shape=shape,
-                                     dtype=coords.dtype,
-                                     data=coords[:, 1].reshape(shape),
+                                     dtype=lons.dtype,
+                                     data=lons,
                                      chunks=chunks)
 
         with h5py.File(fpath_out, 'a') as f:
             if dset in list(f):
-                f[dset][...] = ind.reshape(shape)
+                f[dset][...] = ind
             else:
                 f.create_dataset(dset, shape=shape, dtype=ind.dtype,
-                                 data=ind.reshape(shape), chunks=chunks)
+                                 data=ind, chunks=chunks)
 
             f[dset].attrs['fpath'] = self._fpath_res
             f[dset].attrs['distance_upper_bound'] = self.distance_upper_bound
@@ -372,7 +381,8 @@ class TechMapping:
                     .format(dset, fpath_out))
 
     @classmethod
-    def run(cls, fpath_excl, fpath_res, res_map_dset, **kwargs):
+    def run(cls, fpath_excl, fpath_res, res_map_dset, save_flag=True,
+            return_flag=False, **kwargs):
         """Run parallel mapping and save to h5 file.
 
         Parameters
@@ -384,10 +394,29 @@ class TechMapping:
             Filepath to .h5 resource file that we're mapping to.
         res_map_dset : str
             Dataset name in fpath_excl to save mapping results to.
+        save_flag : bool
+            Flag to write techmap to fpath_excl.
+        return_flag : bool
+            Flag to return variables.
         kwargs : dict
             Keyword args to initialize the TechMapping object.
+
+        Returns
+        -------
+        lats : np.ndarray
+            2D un-projected latitude array of tech exclusion points.
+            0's if no res point found. Shape is equal to exclusions shape.
+        lons : np.ndarray
+            2D un-projected longitude array of tech exclusion points.
+            0's if no res point found. Shape is equal to exclusions shape.
+        ind_all : np.ndarray
+            Index values of the NN resource point. -1 if no res point found.
+            2D integer array with shape equal to the exclusions extent shape.
         """
 
         mapper = cls(fpath_excl, fpath_res, res_map_dset, **kwargs)
-        ind, coords = mapper._parallel_resource_map()
-        mapper.save_tech_map(ind, coords, fpath_excl, res_map_dset)
+        lats, lons, ind = mapper._parallel_resource_map()
+        if save_flag:
+            mapper.save_tech_map(lats, lons, ind, fpath_excl, res_map_dset)
+        if return_flag:
+            return lats, lons, ind

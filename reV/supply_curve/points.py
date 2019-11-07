@@ -381,7 +381,7 @@ class SupplyCurveExtent:
                                         .format(type(f_excl)))
 
         # limit the resolution to the exclusion shape.
-        self._res = int(np.min(self.exclusions.shape + (resolution, )))
+        self._res = int(np.min(list(self.exclusions.shape) + [resolution]))
 
         self._cols_of_excl = None
         self._rows_of_excl = None
