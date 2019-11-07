@@ -469,6 +469,9 @@ class ExclusionMask:
             Inclusion mask
         """
         mask = None
+        if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
+            ds_slice = ds_slice[0]
+
         for layer in self.layers:
             layer_slice = (layer.layer, ) + ds_slice
             layer_mask = layer[self.excl_h5[layer_slice]]
