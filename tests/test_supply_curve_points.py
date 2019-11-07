@@ -12,7 +12,7 @@ from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
 
 
-F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.h5')
+F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_TECHMAP = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
 DSET_TM = 'res_ri_pv'
@@ -23,8 +23,8 @@ def test_points_calc(resolution):
     """Test the calculation of the SC points setup from exclusions tiff."""
 
     with SupplyCurveExtent(F_EXCL, resolution=resolution) as sc:
-        assert sc.n_cols >= (sc.exclusions.n_cols / resolution)
-        assert sc.n_rows >= (sc.exclusions.n_rows / resolution)
+        assert sc.n_cols >= (sc.exclusions.shape[1] / resolution)
+        assert sc.n_rows >= (sc.exclusions.shape[0] / resolution)
         assert len(sc) == (sc.n_rows * sc.n_cols)
 
 
