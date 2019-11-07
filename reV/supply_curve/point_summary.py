@@ -101,7 +101,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         This removes all res/gen entries that are masked by the exclusions or
         resource bin."""
 
-        exclude = (self.excl_data == 0)
+        # exclusions mask is False where excluded
+        # pylint: disable-msg=C0121
+        exclude = (self.excl_data == False).flatten()  # noqa: E712
         exclude = self._resource_exclusion(exclude)
 
         self._gen_gids[exclude] = -1
@@ -392,7 +394,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 else:
                     data = attrs['fobj'][attrs['dset'], self.rows, self.cols]
 
-                data = data[self.mask]
+                data = data.flatten()[self.mask]
                 if attrs['method'].lower() == 'mode':
                     data = stats.mode(data)[0][0]
                 elif attrs['method'].lower() == 'mean':

@@ -63,7 +63,7 @@ class SupplyCurvePoint:
         # Parse inputs
         self._parse_files(excl, gen)
         self._rows, self._cols = self._parse_slices(
-            gid, excl, resolution, exclusion_shape=exclusion_shape)
+            gid, resolution, exclusion_shape=exclusion_shape)
         self._gen_gids, self._res_gids = self._parse_techmap(dset_tm,
                                                              gen_index)
 
@@ -86,7 +86,7 @@ class SupplyCurvePoint:
                                             'without an exclusions dictionary '
                                             'input.')
         elif isinstance(excl, ExclusionMask):
-            self._fpath_excl = excl._fpath
+            self._fpath_excl = excl.excl_h5.h5_file
             self._exclusions = excl
         else:
             raise SupplyCurveInputError('SupplyCurvePoints needs an '
@@ -164,7 +164,7 @@ class SupplyCurvePoint:
                 'based on exclusions file: "{}"'
                 .format(self._gid, self._fpath_excl))
 
-        res_gids = self.exclusions[dset_tm, self.rows, self.cols]
+        res_gids = self.exclusions.excl_h5[dset_tm, self.rows, self.cols]
         res_gids = res_gids.astype(np.int32).flatten()
 
         if (res_gids != -1).sum() == 0:
@@ -279,8 +279,8 @@ class SupplyCurvePoint:
         decimals = 3
 
         if self._centroid is None:
-            lats = self.exclusions['latitude', self.rows, self.cols]
-            lons = self.exclusions['longitude', self.rows, self.cols]
+            lats = self.exclusions.excl_h5['latitude', self.rows, self.cols]
+            lons = self.exclusions.excl_h5['longitude', self.rows, self.cols]
             self._centroid = (np.round(lats.mean(), decimals=decimals),
                               np.round(lons.mean(), decimals=decimals))
 
@@ -311,7 +311,7 @@ class SupplyCurvePoint:
         """
 
         if self._excl_data is None:
-            self._excl_data = self.exclusions[0, self.rows, self.cols]
+            self._excl_data = self.exclusions[self.rows, self.cols]
 
             # infer exclusions that are scaled percentages from 0 to 100
             if self._excl_data.max() > 1:
