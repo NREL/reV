@@ -22,7 +22,7 @@ class AggregationConfig(AnalysisConfig):
     """SC Aggregation config."""
 
     NAME = 'agg'
-    REQUIREMENTS = ('fpath_excl', 'fpath_gen', 'fpath_techmap', 'dset_tm')
+    REQUIREMENTS = ('fpath_excl', 'fpath_gen', 'dset_tm', 'excl_dict')
 
     def __init__(self, config):
         """
@@ -55,7 +55,7 @@ class AggregationConfig(AnalysisConfig):
                               'keys: {}'.format(missing))
 
         with h5py.File(self.fpath_excl) as f:
-            dsets = f.dsets
+            dsets = list(f)
         if self.dset_tm not in dsets and self.fpath_res is None:
             raise ConfigError('Techmap dataset "{}" not found in exclusions '
                               'file, resource file input "fpath_res" is '
