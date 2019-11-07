@@ -162,8 +162,8 @@ class Aggregation:
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
         res_class_bins : list | None
-            List of two-entry lists dictating the resource class bins.
-            None if no resource classes.
+            List of floats or ints (bin edges) to convert to list of two-entry
+            bin boundaries or list of two-entry bind boundaries in final format
         dset_cf : str
             Dataset name from f_gen containing capacity factor mean values.
         dset_lcoe : str
@@ -197,6 +197,8 @@ class Aggregation:
         self._resolution = resolution
         self._power_density = power_density
         self._data_layers = data_layers
+
+        logger.debug('Resource class bins: {}'.format(self._res_class_bins))
 
         if self._power_density is None:
             msg = ('Supply curve aggregation power density not specified. '
@@ -263,7 +265,7 @@ class Aggregation:
                                          'aggregation data layer "{}".'
                                          .format(k))
                 with ExclusionLayers(v['fpath']) as f:
-                    if f.shape != shape_base:
+                    if any(f.shape != shape_base):
                         raise FileInputError('Data shape of data layer '
                                              '"{}" is {}, which does not '
                                              'match the baseline exclusions '
