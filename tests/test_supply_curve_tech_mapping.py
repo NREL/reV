@@ -13,6 +13,7 @@ import os
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.tech_mapping import TechMapping
+from reV.handlers.exclusions import ExclusionLayers
 
 
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
@@ -122,3 +123,17 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 if __name__ == '__main__':
     execute_pytest()
+
+    F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
+    F_RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
+    F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
+    DSET_TM = 'techmap_nsrdb_ri_truth'
+
+    lats, lons, ind = TechMapping.run(F_EXCL, F_RES, DSET_TM, n_cores=2,
+                                      save_flag=False, return_flag=True)
+    with ExclusionLayers(F_EXCL) as ex:
+        lat_truth = ex.latitude
+        lon_truth = ex.longitude
+
+    print(np.allclose(lats, lat_truth))
+    print(np.allclose(lons, lon_truth))
