@@ -281,7 +281,10 @@ class ExclusionLayers:
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        slices = (0, ) + ds_slice
+        if len(self.h5[layer_name].shape) == 3:
+            slices = (0, ) + ds_slice
+        else:
+            slices = ds_slice
         layer_data = Resource._extract_ds_slice(self.h5[layer_name],
                                                 *slices)
 

@@ -63,9 +63,17 @@ class TechMapping:
             n_cores = os.cpu_count()
         self._n_cores = n_cores
 
+        n_exc = self._sc.exclusions.shape[0] * self._sc.exclusions.shape[1]
         logger.info('Initialized TechMapping object with {} calc chunks for '
-                    '{} tech exclusion points'
-                    .format(len(self._sc), len(self._sc.exclusions)))
+                    '{} tech exclusion points'.format(len(self._sc), n_exc))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+        if type is not None:
+            raise
 
     def _check_fout(self):
         """Check the TechMapping output file for cached data."""
@@ -80,11 +88,6 @@ class TechMapping:
                             'pre-existing Exclusions TechMapping file "{}". '
                             'Cannot proceed.'
                             .format(os.path.basename(self._fpath_excl)))
-
-                if self._dset in f:
-                    wmsg = ('TechMap results dataset "{}" is being replaced '
-                            'in pre-existing Exclusions TechMapping file "{}"'
-                            .format(self._dset, self._fpath_excl))
 
         if wmsg is not None:
             logger.warning(wmsg)
@@ -110,6 +113,10 @@ class TechMapping:
         ind = -1 * np.ones((N, ), dtype=np.int32)
         coords = np.zeros((N, 2), dtype=np.float32)
         return ind, coords
+
+    def close(self):
+        """Close any open file handlers"""
+        self._sc.close()
 
     @property
     def distance_upper_bound(self):
@@ -324,8 +331,9 @@ class TechMapping:
 
         return ind_out, coords_out
 
-    def save_tech_map(self, lats, lons, ind, fpath_out, dset,
-                      chunks=(128, 128)):
+    @staticmethod
+    def save_tech_map(lats, lons, ind, fpath_out, fpath_res, dset,
+                      distance_upper_bound, chunks=(128, 128)):
         """Save tech mapping indices and coordinates to an h5 output file.
 
         Parameters
@@ -341,8 +349,12 @@ class TechMapping:
             2D integer array with shape equal to the exclusions extent shape.
         fpath_out : str
             .h5 filepath to save tech mapping results.
+        fpath_res : str
+            Filepath to .h5 resource file that we're mapping to.
         dset : str
             Dataset name in fpath_out to save mapping results to.
+        distance_upper_bound : float
+            Distance upper bound to save as attr.
         chunks : tuple
             Chunk shape of the 2D output datasets.
         """
@@ -352,7 +364,7 @@ class TechMapping:
 
         logger.info('Writing tech map "{}" to {}'.format(dset, fpath_out))
 
-        shape = self._sc.exclusions.shape
+        shape = ind.shape
         chunks = (np.min((shape[0], chunks[0])), np.min((shape[1], chunks[1])))
 
         if not os.path.exists(fpath_out):
@@ -369,13 +381,18 @@ class TechMapping:
 
         with h5py.File(fpath_out, 'a') as f:
             if dset in list(f):
+                wmsg = ('TechMap results dataset "{}" is being replaced '
+                        'in pre-existing Exclusions TechMapping file "{}"'
+                        .format(dset, fpath_out))
+                logger.warning(wmsg)
+                warn(wmsg, FileInputWarning)
                 f[dset][...] = ind
             else:
                 f.create_dataset(dset, shape=shape, dtype=ind.dtype,
                                  data=ind, chunks=chunks)
 
-            f[dset].attrs['fpath'] = self._fpath_res
-            f[dset].attrs['distance_upper_bound'] = self.distance_upper_bound
+            f[dset].attrs['fpath'] = fpath_res
+            f[dset].attrs['distance_upper_bound'] = distance_upper_bound
 
         logger.info('Successfully saved tech map "{}" to {}'
                     .format(dset, fpath_out))
@@ -413,10 +430,11 @@ class TechMapping:
             Index values of the NN resource point. -1 if no res point found.
             2D integer array with shape equal to the exclusions extent shape.
         """
-
-        mapper = cls(fpath_excl, fpath_res, res_map_dset, **kwargs)
-        lats, lons, ind = mapper._parallel_resource_map()
+        with cls(fpath_excl, fpath_res, res_map_dset, **kwargs) as mapper:
+            lats, lons, ind = mapper._parallel_resource_map()
+            distance_upper_bound = mapper._distance_upper_bound
         if save_flag:
-            mapper.save_tech_map(lats, lons, ind, fpath_excl, res_map_dset)
+            mapper.save_tech_map(lats, lons, ind, fpath_excl, fpath_res,
+                                 res_map_dset, distance_upper_bound)
         if return_flag:
             return lats, lons, ind

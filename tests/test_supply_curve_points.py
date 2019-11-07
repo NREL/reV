@@ -12,7 +12,7 @@ from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
 
 
-F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
+F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.h5')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 F_TECHMAP = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
 DSET_TM = 'res_ri_pv'
