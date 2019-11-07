@@ -8,6 +8,7 @@ import logging
 import json
 import pprint
 import time
+import h5py
 
 from reV.config.supply_curve_configs import AggregationConfig
 from reV.utilities.execution import SLURM
@@ -65,7 +66,7 @@ def from_config(ctx, config_file, verbose):
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
             ctx.invoke(main, name, config.fpath_excl, config.fpath_gen,
-                       config.fpath_res, config.fpath_techmap, config.dset_tm,
+                       config.fpath_res, config.dset_tm, config.excl_dict,
                        config.res_class_dset, config.res_class_bins,
                        config.dset_cf, config.dset_lcoe, config.data_layers,
                        config.resolution, config.power_density, config.dirout,
@@ -77,8 +78,8 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FPATH_EXCL'] = config.fpath_excl
         ctx.obj['FPATH_GEN'] = config.fpath_gen
         ctx.obj['FPATH_RES'] = config.fpath_res
-        ctx.obj['FPATH_TECHMAP'] = config.fpath_techmap
         ctx.obj['DSET_TM'] = config.dset_tm
+        ctx.obj['EXCL_DICT'] = config.excl_dict
         ctx.obj['RES_CLASS_DSET'] = config.res_class_dset
         ctx.obj['RES_CLASS_BINS'] = config.res_class_bins
         ctx.obj['DSET_CF'] = config.dset_cf
@@ -101,17 +102,19 @@ def from_config(ctx, config_file, verbose):
 @click.option('--name', '-n', default='agg', type=STR,
               help='Job name. Default is "agg".')
 @click.option('--fpath_excl', '-fex', type=STR, required=True,
-              help='Exclusions file (.tiff).')
+              help='Exclusions file (.h5).')
 @click.option('--fpath_gen', '-fg', type=STR, required=True,
               help='reV generation/econ output file.')
 @click.option('--fpath_res', '-fr', type=STR, default=None,
-              help='Resource file (required if techmap file is to be '
-              'created).')
-@click.option('--fpath_techmap', '-ftm', type=STR, required=True,
-              help='reV techmap file.')
+              help='Resource file, required if techmap dset is to be created.')
 @click.option('--dset_tm', '-dtm', type=STR, required=True,
-              help='Dataset in the techmap corresponding to the resource '
-              'being analyzed.')
+              help='Dataset in the exclusions file that maps the exclusions '
+              'to the resource being analyzed.')
+@click.option('--excl_dict', '-exd', type=STR, required=True,
+              help='String representation of a dictionary of exclusion '
+              'LayerMask arguments {layer: kwarg: value} where layer is a '
+              'dataset in fpath_excl and kwarg can be inclusion_range, '
+              'exclude_values, or include_values.')
 @click.option('--res_class_dset', '-cd', type=STR, default=None,
               help='Dataset to determine the resource class '
               '(must be in fpath_gen).')
@@ -122,8 +125,10 @@ def from_config(ctx, config_file, verbose):
 @click.option('--dset_lcoe', '-dlc', type=STR, default='lcoe_fcr-means',
               help='Dataset containing lcoe values to aggregate.')
 @click.option('--data_layers', '-d', type=STR, default=None,
-              help='A serialized dictionary of additional data layers to '
-              'include in the aggregation.')
+              help='String representation of a dictionary of additional data '
+              'layers to include in the aggregation e.g. '
+              '{"slope": {"dset": "srtm_slope", "method": "mean", '
+              '"fpath": "./f_excl.h5"}}')
 @click.option('--resolution', '-r', type=INT, default=64,
               help='Number of exclusion points along a squares edge to '
               'include in an aggregated supply curve point.')
@@ -137,7 +142,7 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
+def main(ctx, name, fpath_excl, fpath_gen, fpath_res, dset_tm, excl_dict,
          res_class_dset, res_class_bins, dset_cf, dset_lcoe, data_layers,
          resolution, power_density, out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
@@ -147,8 +152,8 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
     ctx.obj['FPATH_EXCL'] = fpath_excl
     ctx.obj['FPATH_GEN'] = fpath_gen
     ctx.obj['FPATH_RES'] = fpath_res
-    ctx.obj['FPATH_TECHMAP'] = fpath_techmap
     ctx.obj['DSET_TM'] = dset_tm
+    ctx.obj['EXCL_DICT'] = excl_dict
     ctx.obj['RES_CLASS_DSET'] = res_class_dset
     ctx.obj['RES_CLASS_BINS'] = res_class_bins
     ctx.obj['DSET_CF'] = dset_cf
@@ -165,14 +170,18 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
         init_mult(name, log_dir, modules=[__name__, 'reV.supply_curve'],
                   verbose=verbose)
 
-        if not os.path.exists(fpath_techmap):
-            TechMapping.run(fpath_excl, fpath_res, fpath_techmap, dset_tm)
+        with h5py.File(fpath_excl) as f:
+            dsets = list(f)
+        if dset_tm not in dsets:
+            TechMapping.run(fpath_excl, fpath_res, dset_tm)
 
-        if data_layers is not None:
-            json.loads(data_layers)
+        if isinstance(excl_dict, str):
+            excl_dict = json.loads(excl_dict)
+        if isinstance(data_layers, str):
+            data_layers = json.loads(data_layers)
 
-        summary = Aggregation.summary(fpath_excl, fpath_gen, fpath_techmap,
-                                      dset_tm,
+        summary = Aggregation.summary(fpath_excl, fpath_gen,
+                                      dset_tm, excl_dict,
                                       res_class_dset=res_class_dset,
                                       res_class_bins=res_class_bins,
                                       dset_cf=dset_cf,
@@ -190,7 +199,7 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
                     'Time elapsed: {:.2f} min. Target output dir: {}'
                     .format(runtime, out_dir))
 
-        finput = [fpath_excl, fpath_gen, fpath_techmap]
+        finput = [fpath_excl, fpath_gen]
         if fpath_res is not None:
             finput.append(fpath_res)
 
@@ -202,18 +211,18 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, fpath_techmap, dset_tm,
         Status.make_job_file(out_dir, 'aggregation', name, status)
 
 
-def get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
-                 dset_tm, res_class_dset, res_class_bins, dset_cf, dset_lcoe,
-                 data_layers, resolution, power_density, out_dir, log_dir,
-                 verbose):
+def get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, dset_tm, excl_dict,
+                 res_class_dset, res_class_bins, dset_cf, dset_lcoe,
+                 data_layers, resolution, power_density,
+                 out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ('-n {name} '
             '-fex {fpath_excl} '
             '-fg {fpath_gen} '
             '-fr {fpath_res} '
-            '-ftm {fpath_techmap} '
             '-dtm {dset_tm} '
+            '-exd {excl_dict} '
             '-cd {res_class_dset} '
             '-cb {res_class_bins} '
             '-dcf {dset_cf} '
@@ -229,8 +238,8 @@ def get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
                        fpath_excl=SLURM.s(fpath_excl),
                        fpath_gen=SLURM.s(fpath_gen),
                        fpath_res=SLURM.s(fpath_res),
-                       fpath_techmap=SLURM.s(fpath_techmap),
                        dset_tm=SLURM.s(dset_tm),
+                       excl_dict=SLURM.s(excl_dict),
                        res_class_dset=SLURM.s(res_class_dset),
                        res_class_bins=SLURM.s(res_class_bins),
                        dset_cf=SLURM.s(dset_cf),
@@ -269,8 +278,8 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     fpath_excl = ctx.obj['FPATH_EXCL']
     fpath_gen = ctx.obj['FPATH_GEN']
     fpath_res = ctx.obj['FPATH_RES']
-    fpath_techmap = ctx.obj['FPATH_TECHMAP']
     dset_tm = ctx.obj['DSET_TM']
+    excl_dict = ctx.obj['EXCL_DICT']
     res_class_dset = ctx.obj['RES_CLASS_DSET']
     res_class_bins = ctx.obj['RES_CLASS_BINS']
     dset_cf = ctx.obj['DSET_CF']
@@ -285,8 +294,8 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(name, fpath_excl, fpath_gen, fpath_res, fpath_techmap,
-                       dset_tm, res_class_dset, res_class_bins,
+    cmd = get_node_cmd(name, fpath_excl, fpath_gen, fpath_res,
+                       dset_tm, excl_dict, res_class_dset, res_class_bins,
                        dset_cf, dset_lcoe, data_layers, resolution,
                        power_density, out_dir, log_dir, verbose)
 
