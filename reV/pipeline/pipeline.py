@@ -26,7 +26,6 @@ class Pipeline:
     COMMANDS = ('generation',
                 'econ',
                 'collect',
-                'exclusions',
                 'multi-year',
                 'aggregation',
                 'supply-curve')
