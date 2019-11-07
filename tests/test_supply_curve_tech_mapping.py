@@ -18,7 +18,6 @@ from reV.handlers.exclusions import ExclusionLayers
 
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 F_RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
-F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 DSET_TM = 'techmap_nsrdb_ri_truth'
 
@@ -32,9 +31,7 @@ def test_resource_tech_mapping():
     with ExclusionLayers(F_EXCL) as ex:
         lat_truth = ex.latitude
         lon_truth = ex.longitude
-
-    with h5py.File(F_BASELINE) as f:
-        ind_truth = f[DSET_TM][...]
+        ind_truth = ex[DSET_TM]
 
     msg = 'Tech mapping failed for {} vs. baseline results.'
     assert np.allclose(lats, lat_truth), msg.format('latitudes')
@@ -54,8 +51,6 @@ def plot_tech_mapping():
     with h5py.File(F_EXCL, 'r') as f:
         lats = f['latitude'][...].flatten()
         lons = f['longitude'][...].flatten()
-
-    with h5py.File(F_BASELINE, 'r') as f:
         ind = f[DSET_TM][...].flatten()
 
     with Outputs(F_GEN) as fgen:
