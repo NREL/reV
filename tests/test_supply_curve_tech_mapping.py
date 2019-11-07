@@ -16,43 +16,33 @@ from reV.supply_curve.tech_mapping import TechMapping
 from reV.handlers.exclusions import ExclusionLayers
 
 
-F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/exclusions.tif')
+F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 F_RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
-F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
-F_OUT = os.path.join(TESTDATADIR, 'sc_out/tech_map.h5')
 F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
-DSET_TM = 'res_ri_pv'
-
-PURGE_OUT = True
+F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
+DSET_TM = 'techmap_nsrdb_ri_truth'
 
 
 def test_resource_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
 
-    TechMapping.run(F_EXCL, F_RES, F_OUT, DSET_TM, n_cores=2)
+    lats, lons, ind = TechMapping.run(F_EXCL, F_RES, DSET_TM, n_cores=2,
+                                      save_flag=False, return_flag=True)
 
-    with h5py.File(F_BASELINE, 'r') as f_baseline:
-        with h5py.File(F_OUT, 'r') as f_test:
+    with ExclusionLayers(F_EXCL) as ex:
+        lat_truth = ex.latitude
+        lon_truth = ex.longitude
 
-            for d in list(f_test):
+    with h5py.File(F_BASELINE) as f:
+        ind_truth = f[DSET_TM][...]
 
-                msg1 = ('Dset "{}" not in the baseline file! '
-                        'Please check the test file: {}'
-                        .format(d, F_OUT))
-                msg2 = ('Data from "{}" does not match the baseline file! '
-                        'Please check the test file: {}'
-                        .format(d, F_OUT))
+    msg = 'Tech mapping failed for {} vs. baseline results.'
+    assert np.allclose(lats, lat_truth), msg.format('latitudes')
+    assert np.allclose(lons, lon_truth), msg.format('longitudes')
+    assert np.allclose(ind, ind_truth), msg.format('index mappings')
 
-                assert d in list(f_baseline), msg1
-                assert np.array_equal(f_baseline[d][...], f_test[d][...]), msg2
-
-                if d == DSET_TM:
-                    inds = f_test[d][...].flatten()
-                    msg = 'Tech mapping didnt find all 100 generation points!'
-                    assert len(set(inds)) == 101, msg
-
-    if PURGE_OUT:
-        os.remove(F_OUT)
+    msg = 'Tech mapping didnt find all 100 generation points!'
+    assert len(set(ind.flatten())) == 101, msg
 
 
 def plot_tech_mapping():
@@ -61,14 +51,12 @@ def plot_tech_mapping():
 
     import matplotlib.pyplot as plt
 
-    TechMapping.run(F_EXCL, F_GEN, F_OUT, DSET_TM, n_cores=2)
-
-    with h5py.File(F_OUT, 'r') as f:
-        ind = f[DSET_TM][...].flatten()
+    with h5py.File(F_EXCL, 'r') as f:
         lats = f['latitude'][...].flatten()
         lons = f['longitude'][...].flatten()
 
-    os.remove(F_OUT)
+    with h5py.File(F_BASELINE, 'r') as f:
+        ind = f[DSET_TM][...].flatten()
 
     with Outputs(F_GEN) as fgen:
         gen_meta = fgen.meta
@@ -123,17 +111,3 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 if __name__ == '__main__':
     execute_pytest()
-
-    F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
-    F_RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
-    F_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
-    DSET_TM = 'techmap_nsrdb_ri_truth'
-
-    lats, lons, ind = TechMapping.run(F_EXCL, F_RES, DSET_TM, n_cores=2,
-                                      save_flag=False, return_flag=True)
-    with ExclusionLayers(F_EXCL) as ex:
-        lat_truth = ex.latitude
-        lon_truth = ex.longitude
-
-    print(np.allclose(lats, lat_truth))
-    print(np.allclose(lons, lon_truth))
