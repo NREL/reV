@@ -173,22 +173,36 @@ def main(ctx, name, fpath_excl, fpath_gen, fpath_res, dset_tm, excl_dict,
         with h5py.File(fpath_excl) as f:
             dsets = list(f)
         if dset_tm not in dsets:
-            TechMapping.run(fpath_excl, fpath_res, dset_tm)
+            try:
+                TechMapping.run(fpath_excl, fpath_res, dset_tm)
+            except Exception as e:
+                logger.exception('TechMapping process failed. Received the '
+                                 'following error:\n{}'.format(e))
+                raise e
 
         if isinstance(excl_dict, str):
+            excl_dict = excl_dict.replace('\'', '\"')
+            excl_dict = excl_dict.replace('None', 'null')
             excl_dict = json.loads(excl_dict)
         if isinstance(data_layers, str):
+            data_layers = data_layers.replace('\'', '\"')
+            data_layers = data_layers.replace('None', 'null')
             data_layers = json.loads(data_layers)
 
-        summary = Aggregation.summary(fpath_excl, fpath_gen,
-                                      dset_tm, excl_dict,
-                                      res_class_dset=res_class_dset,
-                                      res_class_bins=res_class_bins,
-                                      dset_cf=dset_cf,
-                                      dset_lcoe=dset_lcoe,
-                                      data_layers=data_layers,
-                                      resolution=resolution,
-                                      power_density=power_density)
+        try:
+            summary = Aggregation.summary(fpath_excl, fpath_gen,
+                                          dset_tm, excl_dict,
+                                          res_class_dset=res_class_dset,
+                                          res_class_bins=res_class_bins,
+                                          dset_cf=dset_cf,
+                                          dset_lcoe=dset_lcoe,
+                                          data_layers=data_layers,
+                                          resolution=resolution,
+                                          power_density=power_density)
+        except Exception as e:
+            logger.exception('Supply curve Aggregation failed. Received the '
+                             'following error:\n{}'.format(e))
+            raise e
 
         fn_out = '{}.csv'.format(name)
         fpath_out = os.path.join(out_dir, fn_out)
