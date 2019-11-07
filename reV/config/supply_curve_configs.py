@@ -6,6 +6,7 @@ Created on Mon Jan 28 11:43:27 2019
 
 @author: gbuster
 """
+import h5py
 import os
 import logging
 
@@ -53,10 +54,13 @@ class AggregationConfig(AnalysisConfig):
             raise ConfigError('SC Aggregation config missing the following '
                               'keys: {}'.format(missing))
 
-        if not os.path.exists(self.fpath_techmap) and self.fpath_res is None:
-            raise ConfigError('Techmap file not found, resource file input'
-                              '"fpath_res" is required to create the techmap '
-                              'file.')
+        with h5py.File(self.fpath_excl) as f:
+            dsets = f.dsets
+        if self.dset_tm not in dsets and self.fpath_res is None:
+            raise ConfigError('Techmap dataset "{}" not found in exclusions '
+                              'file, resource file input "fpath_res" is '
+                              'required to create the techmap file.'
+                              .format(self.dset_tm))
 
     @property
     def fpath_excl(self):
@@ -111,14 +115,14 @@ class AggregationConfig(AnalysisConfig):
         return fpath_res
 
     @property
-    def fpath_techmap(self):
-        """Get the techmap data filepath"""
-        return self['fpath_techmap']
-
-    @property
     def dset_tm(self):
         """Get the techmap dataset"""
         return self['dset_tm']
+
+    @property
+    def excl_dict(self):
+        """Get the exclusions dictionary"""
+        return self['excl_dict']
 
     @property
     def res_class_dset(self):
