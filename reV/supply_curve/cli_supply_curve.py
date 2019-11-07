@@ -7,6 +7,7 @@ import click
 import logging
 import pprint
 import time
+import json
 
 from reV.config.supply_curve_configs import SupplyCurveConfig
 from reV.utilities.execution import SLURM
@@ -132,14 +133,24 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
                                           'reV.handlers'],
                   verbose=verbose)
 
+        if isinstance(transmission_costs, str):
+            transmission_costs = transmission_costs.replace('\'', '\"')
+            transmission_costs = transmission_costs.replace('None', 'null')
+            transmission_costs = json.loads(transmission_costs)
+
         if simple:
-            out = SupplyCurve.simple(sc_points, trans_table, fixed_charge_rate,
-                                     sc_features=sc_features,
-                                     transmission_costs=transmission_costs)
+            sc_fun = SupplyCurve.simple
         else:
-            out = SupplyCurve.full(sc_points, trans_table, fixed_charge_rate,
-                                   sc_features=sc_features,
-                                   transmission_costs=transmission_costs)
+            sc_fun = SupplyCurve.full
+
+        try:
+            out = sc_fun(sc_points, trans_table, fixed_charge_rate,
+                         sc_features=sc_features,
+                         transmission_costs=transmission_costs)
+        except Exception as e:
+            logger.exception('Supply curve compute failed. Received the '
+                             'following error:\n{}'.format(e))
+            raise e
 
         fn_out = '{}.csv'.format(name)
         fpath_out = os.path.join(out_dir, fn_out)

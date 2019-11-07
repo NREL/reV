@@ -26,7 +26,7 @@ def from_config(ctx, config_file, cancel, monitor, verbose):
     if cancel:
         Pipeline.cancel_all(config_file)
     else:
-        Pipeline.run(config_file, monitor=monitor)
+        Pipeline.run(config_file, monitor=monitor, verbose=verbose)
 
 
 if __name__ == '__main__':

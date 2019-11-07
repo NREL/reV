@@ -35,7 +35,7 @@ class Pipeline:
                     2: 'failed',
                     3: 'complete'}
 
-    def __init__(self, pipeline, monitor=True):
+    def __init__(self, pipeline, monitor=True, verbose=False):
         """
         Parameters
         ----------
@@ -43,8 +43,11 @@ class Pipeline:
             Pipeline config file path or dictionary.
         monitor : bool
             Flag to perform continuous monitoring of the pipeline.
+        verbose : bool
+            Flag to submit pipeline steps with -v flag for debug logging
         """
         self.monitor = monitor
+        self.verbose = verbose
         self._config = PipelineConfig(pipeline)
         self._run_list = self._config.pipeline_steps
         self._init_status()
@@ -117,7 +120,7 @@ class Pipeline:
         """
 
         command, f_config = self._get_command_config(i)
-        cmd = self._get_cmd(command, f_config)
+        cmd = self._get_cmd(command, f_config, verbose=self.verbose)
         logger.info('reV pipeline submitting: "{}"'.format(command))
         logger.debug('reV pipeline submitting subprocess call:\n\t"{}"'
                      .format(cmd))
@@ -312,7 +315,7 @@ class Pipeline:
         return key_pair
 
     @staticmethod
-    def _get_cmd(command, f_config):
+    def _get_cmd(command, f_config, verbose=False):
         """Get the python cli call string based on the command and config arg.
 
         Parameters
@@ -321,6 +324,8 @@ class Pipeline:
             reV cli command which should be a reV module.
         f_config : str
             File path for the config file corresponding to the command.
+        verbose : bool
+            Flag to submit pipeline steps with -v flag for debug logging
 
         Returns
         -------
@@ -333,6 +338,8 @@ class Pipeline:
                            .format(command, Pipeline.COMMANDS))
         cmd = ('python -m reV.cli -c {} {}'
                .format(f_config, command))
+        if verbose:
+            cmd += ' -v'
         return cmd
 
     @staticmethod
@@ -470,7 +477,7 @@ class Pipeline:
         pipe._cancel_all_jobs()
 
     @classmethod
-    def run(cls, pipeline, monitor=True):
+    def run(cls, pipeline, monitor=True, verbose=False):
         """Run the reV pipeline.
 
         Parameters
@@ -479,7 +486,9 @@ class Pipeline:
             Pipeline config file path or dictionary.
         monitor : bool
             Flag to perform continuous monitoring of the pipeline.
+        verbose : bool
+            Flag to submit pipeline steps with -v flag for debug logging
         """
 
-        pipe = cls(pipeline, monitor=monitor)
+        pipe = cls(pipeline, monitor=monitor, verbose=verbose)
         pipe._main()

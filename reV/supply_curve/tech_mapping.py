@@ -55,17 +55,21 @@ class TechMapping:
         self._fpath_res = fpath_res
         self._dset = dset
         self._check_fout()
-
-        self._sc = SupplyCurveExtent(fpath_excl, resolution=map_chunk)
-        self._map_chunk = self._sc._res
+        self._map_chunk = map_chunk
 
         if n_cores is None:
             n_cores = os.cpu_count()
         self._n_cores = n_cores
 
-        n_exc = self._sc.exclusions.shape[0] * self._sc.exclusions.shape[1]
-        logger.info('Initialized TechMapping object with {} calc chunks for '
-                    '{} tech exclusion points'.format(len(self._sc), n_exc))
+        with SupplyCurveExtent(self._fpath_excl,
+                               resolution=self._map_chunk) as sc:
+            self._map_chunk = sc._res
+            self._n_sc = len(sc)
+            self._excl_shape = sc.exclusions.shape
+            self._n_excl = (self._excl_shape[0] * self._excl_shape[1])
+            logger.info('Initialized TechMapping object with {} calc chunks '
+                        'for {} tech exclusion points'
+                        .format(len(sc), self._n_excl))
 
     def __enter__(self):
         return self
@@ -109,14 +113,13 @@ class TechMapping:
             number of tech exclusion points in the supply curve extent.
         """
 
-        N = (self._sc.exclusions.shape[0] * self._sc.exclusions.shape[1])
-        ind = -1 * np.ones((N, ), dtype=np.int32)
-        coords = np.zeros((N, 2), dtype=np.float32)
+        ind = -1 * np.ones((self._n_excl, ), dtype=np.int32)
+        coords = np.zeros((self._n_excl, 2), dtype=np.float32)
         return ind, coords
 
     def close(self):
         """Close any open file handlers"""
-        self._sc.close()
+        pass
 
     @property
     def distance_upper_bound(self):
@@ -179,28 +182,30 @@ class TechMapping:
         lat_range = None
         lon_range = None
 
-        for gid in gids:
-            row_slice, col_slice = sc.get_excl_slices(gid)
+        with h5py.File(fpath_excl, 'r') as f:
+            for gid in gids:
+                row_slice, col_slice = sc.get_excl_slices(gid)
+                try:
+                    lats = f[coord_labels[0]][row_slice, col_slice]
+                    lons = f[coord_labels[1]][row_slice, col_slice]
+                    emeta = np.vstack((lats.flatten(), lons.flatten())).T
+                except Exception as e:
+                    m = ('Could not unpack coordinates for gid {} with '
+                         'row/col slice {}/{}. Received the following '
+                         'error:\n{}'.format(gid, row_slice, col_slice, e))
+                    logger.error(m)
+                    raise e
 
-            if os.path.exists(fpath_excl):
-                with h5py.File(fpath_excl, 'r') as f:
-                    emeta = np.vstack(
-                        (f['latitude'][row_slice, col_slice].flatten(),
-                         f['longitude'][row_slice, col_slice].flatten())).T
-            else:
-                emeta = sc.exclusions['meta', row_slice, col_slice]
-                emeta = emeta[coord_labels].values
+                coords_out.append(emeta)
 
-            coords_out.append(emeta)
-
-            if lat_range is None:
-                lat_range = [np.min(emeta[:, 0]), np.max(emeta[:, 0])]
-                lon_range = [np.min(emeta[:, 1]), np.max(emeta[:, 1])]
-            else:
-                lat_range[0] = np.min((lat_range[0], np.min(emeta[:, 0])))
-                lat_range[1] = np.max((lat_range[1], np.max(emeta[:, 0])))
-                lon_range[0] = np.min((lon_range[0], np.min(emeta[:, 1])))
-                lon_range[1] = np.max((lon_range[1], np.max(emeta[:, 1])))
+                if lat_range is None:
+                    lat_range = [np.min(emeta[:, 0]), np.max(emeta[:, 0])]
+                    lon_range = [np.min(emeta[:, 1]), np.max(emeta[:, 1])]
+                else:
+                    lat_range[0] = np.min((lat_range[0], np.min(emeta[:, 0])))
+                    lat_range[1] = np.max((lat_range[1], np.max(emeta[:, 0])))
+                    lon_range[0] = np.min((lon_range[0], np.min(emeta[:, 1])))
+                    lon_range[1] = np.max((lon_range[1], np.max(emeta[:, 1])))
         return coords_out, lat_range, lon_range
 
     def _parallel_resource_map(self):
@@ -219,7 +224,7 @@ class TechMapping:
             2D integer array with shape equal to the exclusions extent shape.
         """
 
-        gids = np.array(list(range(len(self._sc))), dtype=np.uint32)
+        gids = np.array(list(range(self._n_sc)), dtype=np.uint32)
         gid_chunks = np.array_split(gids, int(np.ceil(len(gids) / 2)))
 
         # init full output arrays
@@ -247,14 +252,17 @@ class TechMapping:
 
                 i = futures[future]
                 result = future.result()
-                for j, gid in enumerate(gid_chunks[i]):
-                    i_out_arr = self._sc.get_flat_excl_ind(gid)
-                    ind_all[i_out_arr] = result[0][j]
-                    coords_all[i_out_arr, :] = result[1][j]
 
-        ind_all = ind_all.reshape(self._sc.exclusions.shape)
-        lats = coords_all[:, 0].reshape(self._sc.exclusions.shape)
-        lons = coords_all[:, 1].reshape(self._sc.exclusions.shape)
+                res = self._map_chunk
+                with SupplyCurveExtent(self._fpath_excl, resolution=res) as sc:
+                    for j, gid in enumerate(gid_chunks[i]):
+                        i_out_arr = sc.get_flat_excl_ind(gid)
+                        ind_all[i_out_arr] = result[0][j]
+                        coords_all[i_out_arr, :] = result[1][j]
+
+        ind_all = ind_all.reshape(self._excl_shape)
+        lats = coords_all[:, 0].reshape(self._excl_shape)
+        lons = coords_all[:, 1].reshape(self._excl_shape)
         return lats, lons, ind_all
 
     @staticmethod
@@ -296,10 +304,9 @@ class TechMapping:
         ind_out = []
         coord_labels = ['latitude', 'longitude']
 
-        sc = SupplyCurveExtent(fpath_excl, resolution=map_chunk)
-
-        coords_out, lat_range, lon_range = TechMapping._unpack_coords(
-            gids, sc, fpath_excl, coord_labels=coord_labels)
+        with SupplyCurveExtent(fpath_excl, resolution=map_chunk) as sc:
+            coords_out, lat_range, lon_range = TechMapping._unpack_coords(
+                gids, sc, fpath_excl, coord_labels=coord_labels)
 
         with Resource(fpath_res, str_decode=False) as res:
             res_meta = np.vstack((res.get_meta_arr(coord_labels[0]),
