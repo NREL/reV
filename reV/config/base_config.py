@@ -8,10 +8,11 @@ import os
 
 from reV.utilities import safe_json_load
 from reV.utilities.exceptions import ConfigError
-from reV import REVDIR, TESTDATADIR
 
 
 logger = logging.getLogger(__name__)
+REVDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+DEFAULTSDIR = os.path.join(os.path.dirname(REVDIR), 'tests', 'data')
 
 
 class BaseConfig(dict):
@@ -28,7 +29,7 @@ class BaseConfig(dict):
 
         # str_rep is a mapping of config strings to replace with real values
         self.str_rep = {'REVDIR': REVDIR,
-                        'TESTDATADIR': TESTDATADIR,
+                        'DEFAULTSDIR': DEFAULTSDIR,
                         }
 
         self.dir = None

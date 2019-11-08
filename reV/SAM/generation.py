@@ -14,7 +14,6 @@ import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Windpower as pysam_wind
 import PySAM.TcsmoltenSalt as pysam_csp
 
-from reV import TESTDATADIR
 from reV.handlers.resource import Resource
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
@@ -24,6 +23,8 @@ from reV.SAM.econ import LCOE, SingleOwner
 
 
 logger = logging.getLogger(__name__)
+DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
 
 
 class Generation(SAM):
@@ -550,7 +551,7 @@ class PV(Solar):
         """
         if self._default is None:
             res_file = os.path.join(
-                TESTDATADIR,
+                DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
             self._default = pysam_pv.default('PVWattsNone')
             self._default.LocationAndResource.solar_resource_file = res_file
@@ -615,7 +616,7 @@ class CSP(Solar):
         """
         if self._default is None:
             res_file = os.path.join(
-                TESTDATADIR,
+                DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
             self._default = pysam_csp.default('MSPTSingleOwner')
             self._default.LocationAndResource.solar_resource_file = res_file
@@ -724,7 +725,7 @@ class Wind(Generation):
         """
         if self._default is None:
             res_file = os.path.join(
-                TESTDATADIR, 'SAM/WY Southern-Flat Lands.csv')
+                DEFAULTSDIR, 'SAM/WY Southern-Flat Lands.csv')
             self._default = pysam_wind.default('WindPowerNone')
             self._default.WindResourceFile.wind_resource_filename = res_file
             self._default.execute()
