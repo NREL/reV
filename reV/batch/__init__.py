@@ -2,4 +2,4 @@
 """
 reV batch execution
 """
-from batch import BatchJob
+from .batch import BatchJob

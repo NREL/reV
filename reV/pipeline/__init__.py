@@ -2,5 +2,5 @@
 """
 reV data pipeline architecture.
 """
-from pipeline import Pipeline
-from status import Status
+from .pipeline import Pipeline
+from .status import Status

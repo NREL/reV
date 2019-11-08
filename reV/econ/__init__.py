@@ -2,4 +2,4 @@
 """
 reV Econ analysis module.
 """
-from econ import Econ
+from .econ import Econ
