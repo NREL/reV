@@ -5,8 +5,8 @@ The Renewable Energy Potential Model
 from __future__ import print_function, division, absolute_import
 import os
 from reV.version import __version__
-from reV.econ import Econ
-from reV.generation import Gen
+from reV.econ import Econ as reVEcon
+from reV.generation import Gen as reVGen
 from reV.handlers import Resource, NSRDB, WindResource, FiveMinWTK
 
 __author__ = """Galen Maclaurin"""
