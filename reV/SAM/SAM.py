@@ -175,7 +175,8 @@ class SAMResourceRetriever:
         return res_handler, kwargs, res_file
 
     @classmethod
-    def get(cls, res_file, project_points, module, downscale=None):
+    def get(cls, res_file, project_points, module, downscale=None,
+            res_5min_dir=None, hsds=False):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -195,6 +196,12 @@ class SAMResourceRetriever:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
 
         Returns
         -------
@@ -215,6 +222,9 @@ class SAMResourceRetriever:
         res_handler, kwargs, res_file = cls._multi_file_mods(res_handler,
                                                              kwargs,
                                                              res_file)
+
+        if hsds:
+            kwargs['hsds'] = True
 
         res = res_handler.preload_SAM(res_file, project_points, **kwargs)
 

@@ -969,7 +969,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, downscale=None):
+            scale_outputs=True, downscale=None, res_5min_dir=None, hsds=False):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -989,6 +989,12 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
 
         Returns
         -------
@@ -1001,7 +1007,9 @@ class Gen:
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
                                             output_request=output_request,
-                                            downscale=downscale)
+                                            downscale=downscale,
+                                            res_5min_dir=res_5min_dir,
+                                            hsds=hsds)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -1189,7 +1197,9 @@ class Gen:
                   'res_file': gen.res_file,
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
-                  'downscale': downscale}
+                  'downscale': downscale,
+                  'res_5min_dir': res_5min_dir,
+                  'hsds': hsds}
 
         logger.info('Running reV generation for: {}'.format(pc))
         logger.debug('The following project points were specified: "{}"'
