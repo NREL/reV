@@ -687,6 +687,9 @@ class Gen:
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
 
         Returns
         -------
@@ -747,6 +750,9 @@ class Gen:
         default : int
             Sites to be analyzed on a single core if the chunk size cannot be
             determined from res_file.
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
 
         Returns
         -------
@@ -758,7 +764,7 @@ class Gen:
         if not res_file or not os.path.isfile(res_file):
             return default
 
-        with Resource(res_file) as res:
+        with Resource(res_file, hsds=hsds) as res:
             if 'wtk' in res_file.lower():
                 for dset in res.dsets:
                     if 'speed' in dset:
