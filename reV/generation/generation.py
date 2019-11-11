@@ -769,11 +769,11 @@ class Gen:
                 for dset in res.dsets:
                     if 'speed' in dset:
                         # take nominal WTK chunks from windspeed
-                        chunks = res._h5[dset].chunks
+                        _, _, chunks = res.get_dset_properties(dset)
                         break
             elif 'nsrdb' in res_file.lower():
                 # take nominal NSRDB chunks from dni
-                chunks = res._h5['dni'].chunks
+                _, _, chunks = res.get_dset_properties('dni')
             else:
                 warn('Expected "nsrdb" or "wtk" to be in resource filename: {}'
                      .format(res_file))
