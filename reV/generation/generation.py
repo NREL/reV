@@ -96,7 +96,8 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.4, downscale=None):
+                 mem_util_lim=0.4, downscale=None, res_5min_dir=None,
+                 hsds=False):
         """
         Parameters
         ----------
@@ -122,6 +123,12 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
+        res_5min_dir : str
+            Path to directory containing extra h5 resource files for
+            5-minute resource that supplement the res_file input.
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
         """
 
         self._points_control = points_control
@@ -137,6 +144,7 @@ class Gen:
         self._sam_module = self.OPTIONS[self.tech]
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
+        self._hsds = hsds
 
         self._output_request = self._parse_output_request(output_request)
 
@@ -583,8 +591,10 @@ class Gen:
             with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
                 meta = mres.meta.iloc[self.project_points.sites, :]
 
-        meta.loc[:, 'gid'] = self.project_points.sites
-        meta.loc[:, 'reV_tech'] = self.project_points.tech
+        with Resource(self.res_file, hsds=self._hsds) as res:
+            meta = res.meta.iloc[self.project_points.sites, :]
+            meta.loc[:, 'gid'] = self.project_points.sites
+            meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
 
@@ -633,7 +643,7 @@ class Gen:
         """
 
         if self._time_index is None:
-            with Resource(self.res_file) as res:
+            with Resource(self.res_file, hsds=self._hsds) as res:
                 self._time_index = self.handle_leap_ti(
                     res.time_index, drop_leap=self._drop_leap)
 
@@ -1197,7 +1207,7 @@ class Gen:
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout, mem_util_lim=mem_util_lim,
-                  downscale=downscale)
+                  downscale=downscale, res_5min_dir=res_5min_dir, hsds=hsds)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,
