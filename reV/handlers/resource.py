@@ -275,7 +275,11 @@ class Resource:
             Dataset chunk size
         """
         ds = self.h5[dset]
-        return ds.shape, ds.dtype, ds.chunks
+        shape, dtype, chunks = ds.shape, ds.dtype, ds.chunks
+        if isinstance(chunks, dict):
+            chunks = tuple(chunks.get('dims', (None, 100)))
+
+        return shape, dtype, chunks
 
     def get_scale(self, dset):
         """
