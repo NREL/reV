@@ -171,7 +171,7 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
                   'job_status': 'successful',
                   'runtime': runtime,
                   'finput': finput}
-        Status.make_job_file(out_dir, 'aggregation', name, status)
+        Status.make_job_file(out_dir, 'supply-curve', name, status)
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
