@@ -635,7 +635,7 @@ class Gen:
 
         Parameters
         ----------
-        points : slice | str | reV.config.project_points.PointsControl
+        points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.
         points_range : list | None
@@ -672,7 +672,7 @@ class Gen:
             # get the optimal sites per split based on res file chunk size
             sites_per_split = Gen.sites_per_core(res_file)
 
-        if isinstance(points, (slice, str)):
+        if isinstance(points, (slice, list, str)):
             # make Project Points instance
             pp = ProjectPoints(points, sam_files, tech=tech, res_file=res_file,
                                curtailment=curtailment)
@@ -1020,7 +1020,7 @@ class Gen:
         ----------
         tech : str
             Technology to analyze (pv, csp, landbasedwind, offshorewind).
-        points : slice | str | reV.config.project_points.PointsControl
+        points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.
         sam_files : dict | str | list

@@ -365,7 +365,7 @@ class Econ(Gen):
 
         Parameters
         ----------
-        points : slice | str | reV.config.project_points.PointsControl
+        points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.
         sam_files : dict | str | list
