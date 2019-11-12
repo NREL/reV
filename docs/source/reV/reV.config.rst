@@ -4,14 +4,6 @@ reV.config package
 Submodules
 ----------
 
-reV.config.analysis\_configs module
------------------------------------
-
-.. automodule:: reV.config.analysis_configs
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 reV.config.base\_analysis\_config module
 ----------------------------------------
 
@@ -88,6 +80,14 @@ reV.config.project\_points module
 ---------------------------------
 
 .. automodule:: reV.config.project_points
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+reV.config.sam\_analysis\_configs module
+----------------------------------------
+
+.. automodule:: reV.config.sam_analysis_configs
    :members:
    :undoc-members:
    :show-inheritance:
