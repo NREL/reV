@@ -9,6 +9,8 @@ from reV.econ import Econ as reVEcon
 from reV.generation import Gen as reVGen
 from reV.handlers import (NSRDB, MultiFileNSRDB, MultiFileWTK, Resource,
                           SolarResource, WindResource)
+from reV.supply_curve import SupplyCurve, SupplyCurvePointSummary
+
 
 __author__ = """Galen Maclaurin"""
 __email__ = "galen.maclaruin@nrel.gov"
