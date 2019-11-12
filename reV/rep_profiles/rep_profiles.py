@@ -730,6 +730,8 @@ class RepProfiles:
         out_meta = {}
 
         for i in range(n_profiles):
+            logger.info('Starting representative profiles for i_profile #{}'
+                        .format(i))
             rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
                      rep_method=rep_method, err_method=err_method)
             if parallel:
