@@ -382,7 +382,7 @@ class Resource:
         Parameters
         ----------
         ds : str
-            Dataset to extract time_index from
+            Dataset to extract meta from
         ds_slice : tuple of int | list | slice
             Pandas slicing describing which sites and columns to extract
 
@@ -441,22 +441,18 @@ class Resource:
             Slice that encompasses the entire range
         ds_idx : ndarray
             Adjusted list to extract points of interest from sliced array
-        idx_slice : tuple
-            Tuple to add to ds_idx slicing
         """
         ds_idx = None
-        idx_slice = ()
         if isinstance(ds_slice, (list, np.ndarray)):
             in_slice = np.array(ds_slice)
             s = in_slice.min()
             e = in_slice.max() + 1
             ds_slice = slice(s, e, None)
             ds_idx = in_slice - s
-            idx_slice = (slice(None, None, None),)
         elif isinstance(ds_slice, slice):
-            idx_slice = (slice(None, None, None),)
+            ds_idx = slice(None)
 
-        return ds_slice, ds_idx, idx_slice
+        return ds_slice, ds_idx
 
     @staticmethod
     def _extract_ds_slice(ds, *ds_slice):
@@ -476,19 +472,15 @@ class Resource:
             Extracted array of data from ds
         """
         slices = ()
-        idx = []
         idx_slice = ()
         for ax_slice in ds_slice:
-            ax_slice, ax_idx, ax_idx_slice = Resource._check_slice(ax_slice)
+            ax_slice, ax_idx = Resource._check_slice(ax_slice)
             slices += (ax_slice,)
             if ax_idx is not None:
-                ax_idx = idx_slice + (ax_idx,)
-                idx.append(ax_idx)
-
-            idx_slice += ax_idx_slice
+                idx_slice += (ax_idx,)
 
         out = ds[slices]
-        for idx_slice in idx:
+        if idx_slice:
             out = out[idx_slice]
 
         return out
@@ -581,7 +573,7 @@ class SolarResource(Resource):
         res_df.index.name = 'time_index'
         res_df.name = "{}-{}".format(ds_name, site)
         for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
-            var_array = self._get_ds(var, slice(None, None, None), site)
+            var_array = self._get_ds(var, slice(None), site)
             res_df[var] = SAMResource.check_units(var, var_array)
 
         return res_df
@@ -1077,7 +1069,7 @@ class WindResource(Resource):
             variables.append('relativehumidity')
         for var in variables:
             var_name = "{}_{}m".format(var, h)
-            var_array = self._get_ds(var_name, slice(None, None, None),
+            var_array = self._get_ds(var_name, slice(None),
                                      site)
             res_df[var_name] = SAMResource.check_units(var_name, var_array)
             res_df[var_name] = SAMResource.enforce_arr_range(

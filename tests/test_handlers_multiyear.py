@@ -90,7 +90,7 @@ def compare_arrays(my_arr, test_arr, desc):
     assert np.allclose(my_arr, test_arr, atol=1.e-3), msg
 
 
-@pytest.mark.parametrize('dset, group', [
+@pytest.mark.parametrize(('dset', 'group'), [
     ('cf_profile', None),
     ('cf_mean', None),
     ('cf_profile', 'pytest'),
@@ -130,7 +130,7 @@ def test_my_collection(dset, group):
         os.remove(my_out)
 
 
-@pytest.mark.parametrize('dset, group', [
+@pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_my_means(dset, group):
@@ -162,7 +162,7 @@ def test_my_means(dset, group):
         os.remove(my_out)
 
 
-@pytest.mark.parametrize('dset, group', [
+@pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_update(dset, group):
@@ -205,7 +205,7 @@ def test_update(dset, group):
         os.remove(my_out)
 
 
-@pytest.mark.parametrize('dset, group', [
+@pytest.mark.parametrize(('dset', 'group'), [
     ('cf_mean', None),
     ('cf_mean', 'pytest')])
 def test_my_stdev(dset, group):
@@ -235,3 +235,23 @@ def test_my_stdev(dset, group):
 
     if PURGE_OUT:
         os.remove(my_out)
+
+
+def execute_pytest(capture='all', flags='-rapP'):
+    """Execute module as pytest with detailed summary report.
+
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
+        all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
+    """
+
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+
+
+if __name__ == '__main__':
+    execute_pytest()

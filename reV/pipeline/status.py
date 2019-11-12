@@ -8,6 +8,7 @@ import json
 import logging
 import time
 from warnings import warn
+import shutil
 
 from reV.utilities import safe_json_load
 from reV.utilities.execution import SLURM, PBS
@@ -90,16 +91,15 @@ class Status(dict):
         return data
 
     def _dump(self):
-        """Load json config into config class instance.
-
-        Parameters
-        ----------
-        data : dict
-            reV data pipeline status info.
-        """
+        """Dump status json w/ backup file in case process gets killed."""
+        backup = self._fpath.replace('.json', '_backup.json')
         self._sort_by_index()
+        if os.path.exists(self._fpath):
+            shutil.copy(self._fpath, backup)
         with open(self._fpath, 'w') as f:
             json.dump(self.data, f, indent=4, separators=(',', ': '))
+        if os.path.exists(backup):
+            os.remove(backup)
 
     def _sort_by_index(self):
         """Sort modules in data dictionary by pipeline index."""
@@ -174,7 +174,7 @@ class Status(dict):
         for fname in os.listdir(status_dir):
             if fname.startswith('jobstatus_') and fname.endswith('.json'):
                 # wait one second to make sure file is finished being written
-                time.sleep(0.1)
+                time.sleep(0.01)
                 status = safe_json_load(os.path.join(status_dir, fname))
                 self.data = self.update_dict(self.data, status)
                 os.remove(os.path.join(status_dir, fname))
@@ -200,7 +200,7 @@ class Status(dict):
         for fname in os.listdir(status_dir):
             if fname == target_fname:
                 # wait one second to make sure file is finished being written
-                time.sleep(0.1)
+                time.sleep(0.01)
                 status = safe_json_load(os.path.join(status_dir, fname))
                 os.remove(os.path.join(status_dir, fname))
                 break

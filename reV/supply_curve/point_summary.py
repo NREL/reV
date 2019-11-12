@@ -10,7 +10,7 @@ from warnings import warn
 import logging
 from scipy import stats
 
-from reV.handlers.geotiff import Geotiff
+from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import SupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning)
@@ -25,31 +25,31 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
     # technology-dependent power density estimates in MW/km2
     POWER_DENSITY = {'pv': 36, 'wind': 3}
 
-    def __init__(self, gid, f_excl, f_gen, f_techmap, tm_dset_gen, tm_dset_res,
+    def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
                  res_class_dset=None, res_class_bin=None, ex_area=0.0081,
-                 power_density=None, dset_cf='cf_mean-means',
-                 dset_lcoe='lcoe_fcr-means', resolution=64,
+                 power_density=None, cf_dset='cf_mean-means',
+                 lcoe_dset='lcoe_fcr-means', resolution=64,
                  exclusion_shape=None, close=False):
         """
         Parameters
         ----------
         gid : int
             gid for supply curve point to analyze.
-        f_excl : str | ExclusionPoints
-            Filepath to exclusions geotiff or ExclusionPoints file handler.
-        f_gen : str | reV.handlers.Outputs
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        gen : str | reV.handlers.Outputs
             Filepath to .h5 reV generation output results or reV Outputs file
             handler.
-        f_techmap : str | h5py.File
-            Filepath to tech mapping between exclusions and resource data
-            (created using the reV TechMapping framework) or an h5py file
-            handler object.
-        tm_dset_gen : str
-            Dataset name in the techmap file containing the
-            exclusions-to-generation mapping data.
-        tm_dset_res : str
+        tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
         res_class_dset : str | np.ndarray | None
             Dataset in the generation file dictating resource classes.
             Can be pre-extracted resource data in np.ndarray.
@@ -62,11 +62,11 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         power_density : float | None
             Power density in MW/km2. None will attempt to infer power density
             from the generation meta data technology.
-        dset_cf : str | np.ndarray
-            Dataset name from f_gen containing capacity factor mean values.
+        cf_dset : str | np.ndarray
+            Dataset name from gen containing capacity factor mean values.
             Can be pre-extracted generation output data in np.ndarray.
-        dset_lcoe : str | np.ndarray
-            Dataset name from f_gen containing LCOE mean values.
+        lcoe_dset : str | np.ndarray
+            Dataset name from gen containing LCOE mean values.
             Can be pre-extracted generation output data in np.ndarray.
         resolution : int | None
             SC resolution, must be input in combination with gid.
@@ -79,8 +79,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         self._res_class_dset = res_class_dset
         self._res_class_bin = res_class_bin
-        self._dset_cf = dset_cf
-        self._dset_lcoe = dset_lcoe
+        self._cf_dset = cf_dset
+        self._lcoe_dset = lcoe_dset
         self._res_gid_set = None
         self._gen_gid_set = None
         self._mean_res = None
@@ -90,8 +90,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         self._ex_area = ex_area
         self._power_density = power_density
 
-        super().__init__(gid, f_excl, f_gen, f_techmap, tm_dset_gen,
-                         tm_dset_res, resolution=resolution,
+        super().__init__(gid, excl, gen, tm_dset, gen_index,
+                         excl_dict=excl_dict, resolution=resolution,
                          exclusion_shape=exclusion_shape, close=close)
 
         self._apply_exclusions()
@@ -101,7 +101,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         This removes all res/gen entries that are masked by the exclusions or
         resource bin."""
 
-        exclude = (self.excl_data == 0)
+        # exclusions mask is False where excluded
+        # pylint: disable-msg=C0121
+        exclude = (self.excl_data == False).flatten()  # noqa: E712
         exclude = self._resource_exclusion(exclude)
 
         self._gen_gids[exclude] = -1
@@ -200,13 +202,13 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             generation data output file.
         """
 
-        if isinstance(self._dset_cf, np.ndarray):
-            return self._dset_cf
+        if isinstance(self._cf_dset, np.ndarray):
+            return self._cf_dset
 
         else:
             if self._gen_data is None:
-                if self._dset_cf in self.gen.dsets:
-                    self._gen_data = self.gen[self._dset_cf]
+                if self._cf_dset in self.gen.dsets:
+                    self._gen_data = self.gen[self._cf_dset]
 
         return self._gen_data
 
@@ -221,13 +223,13 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             generation data output file.
         """
 
-        if isinstance(self._dset_lcoe, np.ndarray):
-            return self._dset_lcoe
+        if isinstance(self._lcoe_dset, np.ndarray):
+            return self._lcoe_dset
 
         else:
             if self._lcoe_data is None:
-                if self._dset_lcoe in self.gen.dsets:
-                    self._lcoe_data = self.gen[self._dset_lcoe]
+                if self._lcoe_dset in self.gen.dsets:
+                    self._lcoe_data = self.gen[self._lcoe_dset]
 
         return self._lcoe_data
 
@@ -373,7 +375,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "band", "method",
+            name. Each value must be another dictionary with "dset", "method",
             and "fpath".
 
         Returns
@@ -387,24 +389,27 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             for name, attrs in data_layers.items():
 
                 if 'fobj' not in attrs:
-                    with Geotiff(attrs['fpath']) as f:
-                        data = f[int(attrs['band']), self.rows, self.cols]
+                    with ExclusionLayers(attrs['fpath']) as f:
+                        data = f[attrs['dset'], self.rows, self.cols]
                 else:
-                    data = attrs['fobj'][int(attrs['band']),
-                                         self.rows, self.cols]
+                    data = attrs['fobj'][attrs['dset'], self.rows, self.cols]
 
-                data = data[self.mask]
-                if attrs['method'] == 'mode':
+                data = data.flatten()[self.mask]
+                if attrs['method'].lower() == 'mode':
                     data = stats.mode(data)[0][0]
-                else:
+                elif attrs['method'].lower() == 'mean':
                     data = data.mean()
+                else:
+                    raise ValueError('Cannot recognize data layer agg method: '
+                                     '"{}". Can only do mean and mode.'
+                                     .format(attrs['method']))
 
                 summary[name] = data
 
         return summary
 
     @classmethod
-    def summary(cls, gid, fpath_excl, fpath_gen, fpath_techmap, dset_tm,
+    def summary(cls, gid, excl_fpath, gen_fpath, tm_dset,
                 gen_index, args=None, data_layers=None, **kwargs):
         """Get a summary dictionary of a single supply curve point.
 
@@ -412,14 +417,11 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         ----------
         gid : int
             gid for supply curve point to analyze.
-        fpath_excl : str
+        excl_fpath : str
             Filepath to exclusions geotiff.
-        fpath_gen : str
+        gen_fpath : str
             Filepath to .h5 reV generation output results.
-        fpath_techmap : str
-            Filepath to tech mapping between exclusions and generation results
-            (created using the reV TechMapping framework).
-        dset_tm : str
+        tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-generation mapping data.
         gen_index : np.ndarray
@@ -431,7 +433,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             available args defined in the class attr.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "band", "method",
+            name. Each value must be another dictionary with "dset", "method",
             and "fpath".
         kwargs : dict
             Keyword args to init the SC point.
@@ -442,7 +444,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        with cls(gid, fpath_excl, fpath_gen, fpath_techmap, dset_tm, gen_index,
+        with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                  **kwargs) as point:
 
             ARGS = {'res_gids': point.res_gid_set,

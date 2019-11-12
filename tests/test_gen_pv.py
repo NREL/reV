@@ -74,7 +74,8 @@ def to_list(gen_out):
     return out
 
 
-@pytest.mark.parametrize('f_rev1_out, rev2_points, year, n_workers', [
+@pytest.mark.parametrize(('f_rev1_out', 'rev2_points', 'year', 'n_workers'),
+                         [
     ('project_outputs.h5', slice(0, 10), '2012', 1),
     ('project_outputs.h5', slice(0, None, 10), '2013', 1),
     ('project_outputs.h5', slice(3, 25, 2), '2012', 2),

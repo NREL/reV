@@ -125,3 +125,23 @@ def test_substation_load_spreading(i, trans_costs, trans_table):
     for line_id in line_gids:
         msg = 'Bad line cap: {}'.format(line_id)
         assert LINE_CAPS[i][line_id] == tf[line_id]['avail_cap'], msg
+
+
+def execute_pytest(capture='all', flags='-rapP'):
+    """Execute module as pytest with detailed summary report.
+
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
+        all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
+    """
+
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+
+
+if __name__ == '__main__':
+    execute_pytest()

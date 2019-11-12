@@ -37,7 +37,7 @@ def get_curtailment(year):
     return out, non_curtailed_res, pp
 
 
-@pytest.mark.parametrize('year, site',
+@pytest.mark.parametrize(('year', 'site'),
                          [('2012', 0),
                           ('2012', 10),
                           ('2013', 0),
@@ -79,7 +79,7 @@ def test_cf_curtailment(year, site):
     return results
 
 
-@pytest.mark.parametrize('year, site',
+@pytest.mark.parametrize(('year', 'site'),
                          [('2012', 10),
                           ('2013', 10)])
 def test_random(year, site):
@@ -122,7 +122,7 @@ def test_random(year, site):
     assert diff < 2, msg
 
 
-@pytest.mark.parametrize('year, site',
+@pytest.mark.parametrize(('year', 'site'),
                          [('2012', 50),
                           ('2013', 50)])
 def test_res_curtailment(year, site):

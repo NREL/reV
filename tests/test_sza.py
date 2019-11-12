@@ -46,7 +46,7 @@ def extract_nsrdb(year, site=None):
     return time_index, lat_lon, sza
 
 
-@pytest.mark.parametrize('year, site',
+@pytest.mark.parametrize(('year', 'site'),
                          [(2012, None),
                           (2012, True),
                           (2013, None),
@@ -74,3 +74,23 @@ def test_sza(year, site):
     assert sza.shape == nsrdb_sza.shape, 'Shapes do not match!'
     msg = 'Zenith angle differ by more than ~1 degree'
     assert np.allclose(sza, nsrdb_sza, rtol=0.01, atol=1), msg
+
+
+def execute_pytest(capture='all', flags='-rapP'):
+    """Execute module as pytest with detailed summary report.
+
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
+        all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
+    """
+
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+
+
+if __name__ == '__main__':
+    execute_pytest()

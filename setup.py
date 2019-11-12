@@ -75,6 +75,10 @@ setup(
                             "reV-gen=reV.generation.cli_gen:main",
                             "reV-multiyear=reV.handerlers.cli_multi_year:main",
                             "reV-pipeline=reV.pipeline.cli_pipeline:main",
+                            ("reV-aggregation=reV.supply_curve."
+                             "cli_aggregation:main"),
+                            ("reV-supply-curve=reV.supply_curve."
+                             "cli_supply_curve:main"),
                             ],
     },
     include_package_data=True,
@@ -91,7 +95,7 @@ setup(
     ],
     test_suite="tests",
     install_requires=["click", "h5py", "numpy", "pandas", "psutil",
-                      "rasterio", "scipy", "xarray", "NREL-PySAM"],
+                      "scipy", "NREL-PySAM"],
     extras_require={
         "test": test_requires,
         "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],
