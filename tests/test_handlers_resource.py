@@ -10,7 +10,7 @@ import pytest
 
 from reV import TESTDATADIR
 from reV.handlers.resource import (NSRDB, WindResource, MultiFileNSRDB,
-                                   FiveMinWTK)
+                                   MultiFileWTK)
 from reV.utilities.exceptions import HandlerKeyError
 
 
@@ -47,7 +47,7 @@ def FiveMinWind_res():
     Init NSRDB resource handler
     """
     path = os.path.join(TESTDATADIR, 'wtk')
-    return FiveMinWTK(path, prefix='wtk', suffix='m.h5')
+    return MultiFileWTK(path, prefix='wtk', suffix='m.h5')
 
 
 @pytest.fixture
@@ -503,14 +503,14 @@ class TestGroupResource:
         wind_group.close()
 
 
-class TestFiveMinWTK:
+class TestMultiFileWTK:
     """
-    FiveMinWTK Resource handler tests
+    MultiFileWTK Resource handler tests
     """
     @staticmethod
     def test_res(FiveMinWind_res):
         """
-        test FiveMinWTK class calls
+        test MultiFileWTK class calls
         """
         check_res(FiveMinWind_res)
         FiveMinWind_res.close()
@@ -518,7 +518,7 @@ class TestFiveMinWTK:
     @staticmethod
     def test_meta(FiveMinWind_res):
         """
-        test extraction of FiveMinWTK meta data
+        test extraction of MultiFileWTK meta data
         """
         check_meta(FiveMinWind_res)
         FiveMinWind_res.close()
@@ -526,7 +526,7 @@ class TestFiveMinWTK:
     @staticmethod
     def test_time_index(FiveMinWind_res):
         """
-        test extraction of FiveMinWTK time_index
+        test extraction of MultiFileWTK time_index
         """
         check_time_index(FiveMinWind_res)
         FiveMinWind_res.close()

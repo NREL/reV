@@ -11,7 +11,7 @@ from warnings import warn
 import PySAM.GenericSystem as generic
 
 from reV.handlers.resource import (WindResource, SolarResource, NSRDB,
-                                   MultiFileResource, FiveMinWTK,
+                                   MultiFileResource, MultiFileWTK,
                                    MultiFileNSRDB)
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
                                       SAMExecutionError, ResourceError)
@@ -122,7 +122,7 @@ class SAMResourceRetriever:
         -------
         kwargs : dict
             Extra input args to preload sam resource.
-        res_handler : WindResource | FiveMinWTK
+        res_handler : WindResource | MultiFileWTK
             Wind resource handler.
         """
 
@@ -166,7 +166,7 @@ class SAMResourceRetriever:
             kwargs['suffix'] = suffix
 
             if res_handler == WindResource:
-                res_handler = FiveMinWTK
+                res_handler = MultiFileWTK
             elif res_handler == NSRDB:
                 res_handler = MultiFileNSRDB
             else:

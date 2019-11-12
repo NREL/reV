@@ -1465,7 +1465,7 @@ class MultiFileNSRDB(MultiFileResource, NSRDB):
     """
 
 
-class FiveMinWTK(MultiFileResource, WindResource):
+class MultiFileWTK(MultiFileResource, WindResource):
     """
     Class to handle 5min WIND Toolkit data
     """
