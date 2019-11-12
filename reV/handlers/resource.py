@@ -1412,12 +1412,23 @@ class FiveMinWTK(MultiFileResource, WindResource):
     """
     Class to handle 5min WIND Toolkit data
     """
-    def __init__(self, h5_dir, prefix='', suffix='m.h5'):
+    def __init__(self, h5_dir, prefix='', suffix='m.h5', unscale=True,
+                 str_decode=True):
         """
         Parameters
         ----------
         h5_dir : str
             Path to directory containing 5min .h5 files
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
         """
-        super().__init__(h5_dir, prefix=prefix, suffix=suffix)
+        super().__init__(h5_dir, prefix=prefix, suffix=suffix, unscale=unscale,
+                         str_decode=str_decode)
         self._heights = None
