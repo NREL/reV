@@ -125,6 +125,21 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, n_workers=1):
     assert gen.out['monthly_energy'].dtype == np.float32
 
 
+def test_multi_file_5min_wtk():
+    """Test running reV gen from a multi-h5 directory with prefix and suffix"""
+    points = slice(0, 10)
+    n_workers = 1
+    sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+    res_file = TESTDATADIR + '/wtk/wtk_{}_*m.h5'.format(2010)
+    # run reV 2.0 generation
+    gen = Gen.reV_run(tech='wind', points=points, sam_files=sam_files,
+                      res_file=res_file, n_workers=n_workers,
+                      sites_per_split=3, fout=None, return_obj=True)
+    gen_outs = list(gen.out['cf_mean'] / 1000)
+    assert len(gen_outs) == 10
+    assert np.mean(gen_outs) > 0.55
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
