@@ -7,7 +7,8 @@ import os
 from reV.version import __version__
 from reV.econ import Econ as reVEcon
 from reV.generation import Gen as reVGen
-from reV.handlers import Resource, NSRDB, WindResource, FiveMinWTK
+from reV.handlers import (NSRDB, MultiFileNSRDB, MultiFileWTK, Resource,
+                          SolarResource, WindResource)
 
 __author__ = """Galen Maclaurin"""
 __email__ = "galen.maclaruin@nrel.gov"
