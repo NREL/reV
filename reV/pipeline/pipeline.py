@@ -95,7 +95,7 @@ class Pipeline:
 
                 time.sleep(1)
                 while return_code == 1 and self.monitor:
-                    time.sleep(1)
+                    time.sleep(5)
                     return_code = self._check_step_completed(i)
 
                     if return_code == 2:
