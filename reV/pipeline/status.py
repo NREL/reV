@@ -94,10 +94,12 @@ class Status(dict):
         """Dump status json w/ backup file in case process gets killed."""
         backup = self._fpath.replace('.json', '_backup.json')
         self._sort_by_index()
-        shutil.copy(self._fpath, backup)
+        if os.path.exists(self._fpath):
+            shutil.copy(self._fpath, backup)
         with open(self._fpath, 'w') as f:
             json.dump(self.data, f, indent=4, separators=(',', ': '))
-        os.remove(backup)
+        if os.path.exists(backup):
+            os.remove(backup)
 
     def _sort_by_index(self):
         """Sort modules in data dictionary by pipeline index."""
