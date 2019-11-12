@@ -119,10 +119,9 @@ class Gen:
 
         self._output_request = self._parse_output_request(output_request)
 
+        self._multi_h5_res = MultiFileResource.is_multi(self._res_file)
         self._set_high_res_ti()
-
-        if downscale is not None:
-            self._set_downscaled_ti(downscale)
+        self._set_downscaled_ti(downscale)
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -216,7 +215,7 @@ class Gen:
 
     def _set_high_res_ti(self):
         """Set the 5-minute time index if res_file is a multi-file directory"""
-        if MultiFileResource.is_multi(self._res_file):
+        if self._multi_h5_res:
             h5_dir, pre, suf = MultiFileResource.multi_args(self._res_file)
             with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
                 ti = mres.time_index
@@ -231,11 +230,13 @@ class Gen:
         frequency : str
             String in the Pandas frequency format, e.g. '5min'.
         """
-        from reV.utilities.downscale import make_time_index
-        with Resource(self.res_file) as res:
-            year = res.time_index.year[0]
-        ti = make_time_index(year, ds_freq)
-        self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
+        if ds_freq is not None:
+            from reV.utilities.downscale import make_time_index
+            with Resource(self.res_file) as res:
+                year = res.time_index.year[0]
+            ti = make_time_index(year, ds_freq)
+            self._time_index = self.handle_leap_ti(
+                ti, drop_leap=self._drop_leap)
 
     def _get_data_shape(self, dset, n_sites):
         """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
@@ -550,11 +551,16 @@ class Gen:
             does not indicate the site number if the project points are
             non-sequential or do not start from 0, so a 'gid' column is added.
         """
+        if not self._multi_h5_res:
+            with Resource(self.res_file) as res:
+                meta = res.meta.iloc[self.project_points.sites, :]
+        else:
+            h5_dir, pre, suf = MultiFileResource.multi_args(self.res_file)
+            with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
+                meta = mres.meta.iloc[self.project_points.sites, :]
 
-        with Resource(self.res_file) as res:
-            meta = res.meta.iloc[self.project_points.sites, :]
-            meta.loc[:, 'gid'] = self.project_points.sites
-            meta.loc[:, 'reV_tech'] = self.project_points.tech
+        meta.loc[:, 'gid'] = self.project_points.sites
+        meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
 
