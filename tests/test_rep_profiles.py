@@ -6,7 +6,8 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from reV.rep_profiles.rep_profiles import Region, RepProfiles, Methods
+from reV.rep_profiles.rep_profiles import (RegionRepProfile, RepProfiles,
+                                           RepresentativeMethods)
 from reV import TESTDATADIR
 from reV.handlers.resource import Resource
 
@@ -20,7 +21,7 @@ def test_rep_region_interval():
     sites = np.arange(40) * 2
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites})
-    r = Region(GEN_FPATH, rev_summary)
+    r = RegionRepProfile(GEN_FPATH, rev_summary)
     assert r.i_rep == 14
 
 
@@ -30,19 +31,24 @@ def test_rep_methods():
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites})
 
-    r = Region(GEN_FPATH, rev_summary, rep_method='meanoid', err_method='rmse')
+    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
+                         err_method='rmse')
     assert r.i_rep == 15
 
-    r = Region(GEN_FPATH, rev_summary, rep_method='meanoid', err_method='mbe')
+    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
+                         err_method='mbe')
     assert r.i_rep == 13
 
-    r = Region(GEN_FPATH, rev_summary, rep_method='meanoid', err_method='mae')
+    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
+                         err_method='mae')
     assert r.i_rep == 15
 
-    r = Region(GEN_FPATH, rev_summary, rep_method='median', err_method='rmse')
+    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='median',
+                         err_method='rmse')
     assert r.i_rep == 15
 
-    r = Region(GEN_FPATH, rev_summary, rep_method='median', err_method='mbe')
+    r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='median',
+                         err_method='mbe')
     assert r.i_rep == 13
 
 
@@ -51,11 +57,11 @@ def test_meanoid():
     sites = np.arange(100)
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites})
-    r = Region(GEN_FPATH, rev_summary)
+    r = RegionRepProfile(GEN_FPATH, rev_summary)
     gids = r._get_region_attr(r._rev_summary, 'gen_gids')
     all_profiles = r._get_profiles(gids)
 
-    meanoid = Methods.meanoid(all_profiles)
+    meanoid = RepresentativeMethods.meanoid(all_profiles)
 
     with Resource(GEN_FPATH) as res:
         truth_profiles = res['cf_profile', :, sites]
@@ -76,11 +82,12 @@ def test_integrated():
     p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, 'region', parallel=True)
     p2, m2 = RepProfiles.run(GEN_FPATH, rev_summary, 'region', parallel=False)
 
-    assert np.allclose(m1['rep_res_gid'].values, m2['rep_res_gid'].values)
-    assert np.allclose(p1, p2)
-    assert m1.loc[0, 'rep_res_gid'] == 4
-    assert m1.loc[1, 'rep_res_gid'] == 15
-    assert m1.loc[2, 'rep_res_gid'] == 60
+    assert np.allclose(m1[0]['rep_res_gid'].values,
+                       m2[0]['rep_res_gid'].values)
+    assert np.allclose(p1[0], p2[0])
+    assert m1[0].loc[0, 'rep_res_gid'] == 4
+    assert m1[0].loc[1, 'rep_res_gid'] == 15
+    assert m1[0].loc[2, 'rep_res_gid'] == 60
 
 
 def test_many_regions():
@@ -97,14 +104,14 @@ def test_many_regions():
     reg_cols = ['region1', 'region2']
     p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols, parallel=False)
 
-    assert p1.shape == (17520, 6)
-    assert len(m1) == 6
+    assert p1[0].shape == (17520, 6)
+    assert len(m1[0]) == 6
 
     for r1 in set(region1):
-        assert r1 in m1['region1'].values
+        assert r1 in m1[0]['region1'].values
 
     for r2 in set(region2):
-        assert r2 in m1['region2'].values
+        assert r2 in m1[0]['region2'].values
 
 
 def test_write_to_file():
@@ -119,14 +126,16 @@ def test_write_to_file():
                                 'region': regions})
     fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
     p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                             parallel=True, fout=fout)
+                             parallel=True, fout=fout, n_profiles=3)
     with Resource(fout) as res:
-        disk_profiles = res['rep_profiles']
+        disk_profiles = res['rep_profiles_0']
         disk_meta = res.meta
+        assert 'rep_profiles_2' in res.dsets
+        assert not np.array_equal(res['rep_profiles_0'], res['rep_profiles_1'])
 
-    assert np.allclose(p1, disk_profiles)
+    assert np.allclose(p1[0], disk_profiles)
     assert len(disk_meta) == 3
-    assert np.allclose(m1['rep_gen_gid'].values,
+    assert np.allclose(m1[0]['rep_gen_gid'].values,
                        disk_meta['rep_gen_gid'].values)
 
     if PURGE_OUT:

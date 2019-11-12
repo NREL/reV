@@ -20,7 +20,7 @@ class RepProfilesConfig(AnalysisConfig):
     """Representative Profiles config."""
 
     NAME = 'rep_profiles'
-    REQUIREMENTS = ('fpath_gen', 'rev_summary', 'reg_cols')
+    REQUIREMENTS = ('gen_fpath', 'rev_summary', 'reg_cols')
 
     def __init__(self, config):
         """
@@ -35,6 +35,7 @@ class RepProfilesConfig(AnalysisConfig):
         self._default_cf_dset = 'cf_profile'
         self._default_rep_method = 'meanoid'
         self._default_err_method = 'rmse'
+        self._default_n_profiles = 1
 
         self._preflight()
 
@@ -49,10 +50,10 @@ class RepProfilesConfig(AnalysisConfig):
                               'keys: {}'.format(missing))
 
     @property
-    def fpath_gen(self):
+    def gen_fpath(self):
         """Get the generation data filepath"""
 
-        fpath = self['fpath_gen']
+        fpath = self['gen_fpath']
 
         if fpath == 'PIPELINE':
             target_modules = ['multi-year', 'collect', 'generation']
@@ -67,11 +68,11 @@ class RepProfilesConfig(AnalysisConfig):
                     break
 
             if fpath == 'PIPELINE':
-                raise PipelineError('Could not parse fpath_gen from previous '
+                raise PipelineError('Could not parse gen_fpath from previous '
                                     'pipeline jobs.')
             else:
                 logger.info('Rep profiles using the following '
-                            'pipeline input for fpath_gen: {}'.format(fpath))
+                            'pipeline input for gen_fpath: {}'.format(fpath))
 
         return fpath
 
@@ -124,3 +125,8 @@ class RepProfilesConfig(AnalysisConfig):
     def err_method(self):
         """Get the representative profile error method"""
         return self.get('err_method', self._default_err_method)
+
+    @property
+    def n_profiles(self):
+        """Get the number of representative profiles to save."""
+        return self.get('n_profiles', self._default_n_profiles)
