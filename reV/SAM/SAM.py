@@ -11,7 +11,8 @@ from warnings import warn
 import PySAM.GenericSystem as generic
 
 from reV.handlers.resource import (WindResource, SolarResource, NSRDB,
-                                   FiveMinWTK)
+                                   MultiFileResource, FiveMinWTK,
+                                   MultiFileNSRDB)
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
                                       SAMExecutionError, ResourceError)
 
@@ -106,7 +107,7 @@ class SAMResourceRetriever:
         return kwargs, res_handler
 
     @staticmethod
-    def _make_wind_kwargs(res_handler, project_points, res_5min_dir=None):
+    def _make_wind_kwargs(res_handler, project_points):
         """Make kwargs dict for Wind resource handler initialization.
 
         Parameters
@@ -116,9 +117,6 @@ class SAMResourceRetriever:
         project_points : reV.config.ProjectPoints
             reV 2.0 Project Points instance used to retrieve resource data at a
             specific set of sites.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -134,15 +132,50 @@ class SAMResourceRetriever:
             if project_points.curtailment.precipitation:
                 # make precip rate available for curtailment analysis
                 kwargs['precip_rate'] = True
-        if res_5min_dir is not None:
-            kwargs['h5_dir'] = res_5min_dir
-            res_handler = FiveMinWTK
 
         return kwargs, res_handler
 
+    @staticmethod
+    def _multi_file_mods(res_handler, kwargs, res_file):
+        """Check if res_file is a multi-file resource dir and add kwargs.
+
+        Parameters
+        ----------
+        res_handler : Resource
+            Resource handler.
+        kwargs : dict
+            Key word arguments for resource init.
+        res_file : str
+            Single resource file (with full path) or multi h5 dir.
+
+        Returns
+        -------
+        res_handler : Resource | MultiFileResource
+            Resource handler, replaced by the multi file resource handler if
+            necessary.
+        kwargs : dict
+            Key word arguments for resource init with h5_dir, prefix,
+            and suffix.
+        res_file : str
+            Single resource file (with full path) or multi h5 dir.
+        """
+        if MultiFileResource.is_multi(res_file):
+            h5_dir, prefix, suffix = MultiFileResource.multi_args(res_file)
+            res_file = h5_dir
+            kwargs['prefix'] = prefix
+            kwargs['suffix'] = suffix
+
+            if res_handler == WindResource:
+                res_handler = FiveMinWTK
+            elif res_handler == NSRDB:
+                res_handler = MultiFileNSRDB
+            else:
+                res_handler = MultiFileResource
+
+        return res_handler, kwargs, res_file
+
     @classmethod
-    def get(cls, res_file, project_points, module, downscale=None,
-            res_5min_dir=None):
+    def get(cls, res_file, project_points, module, downscale=None):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -162,9 +195,6 @@ class SAMResourceRetriever:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -180,7 +210,11 @@ class SAMResourceRetriever:
 
         elif res_handler == WindResource:
             kwargs, res_handler = cls._make_wind_kwargs(
-                res_handler, project_points, res_5min_dir=res_5min_dir)
+                res_handler, project_points)
+
+        res_handler, kwargs, res_file = cls._multi_file_mods(res_handler,
+                                                             kwargs,
+                                                             res_file)
 
         res = res_handler.preload_SAM(res_file, project_points, **kwargs)
 

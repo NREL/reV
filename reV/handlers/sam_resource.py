@@ -379,8 +379,9 @@ class SAMResource:
                 var_arr[var_slice] = arr
                 self._res_arrays[var] = var_arr
             else:
-                raise HandlerValueError('{} does not have proper shape: {}'
-                                        .format(var, self._shape))
+                raise HandlerValueError('{} has shape {}, '
+                                        'needs proper shape: {}'
+                                        .format(var, arr.shape, self._shape))
         else:
             raise HandlerKeyError('{} not in {}'
                                   .format(var, self.var_list))

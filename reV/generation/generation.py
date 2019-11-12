@@ -15,7 +15,7 @@ from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
 from reV.handlers.outputs import Outputs
-from reV.handlers.resource import Resource, FiveMinWTK
+from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import OutputWarning, ExecutionError
 
 
@@ -75,14 +75,15 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.4, downscale=None, res_5min_dir=None):
+                 mem_util_lim=0.4, downscale=None):
         """
         Parameters
         ----------
         points_control : reV.config.project_points.PointsControl
             Project points control instance for site and SAM config spec.
         res_file : str
-            Resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         output_request : list | tuple
             Output variables requested from SAM.
         fout : str | None
@@ -100,9 +101,6 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
         """
 
         self._points_control = points_control
@@ -121,11 +119,9 @@ class Gen:
 
         self._output_request = self._parse_output_request(output_request)
 
-        if res_5min_dir is not None:
-            self._set_high_res_ti(res_5min_dir)
-
-        if downscale is not None:
-            self._set_downscaled_ti(downscale)
+        self._multi_h5_res = MultiFileResource.is_multi(self._res_file)
+        self._set_high_res_ti()
+        self._set_downscaled_ti(downscale)
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -217,17 +213,14 @@ class Gen:
 
         return output_request
 
-    def _set_high_res_ti(self, res_5min_dir):
-        """Set the 5-minute resource directory time index.
-
-        Parameters
-        ----------
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
-        """
-        ti = FiveMinWTK.get_new_time_index(res_5min_dir)
-        self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
+    def _set_high_res_ti(self):
+        """Set the 5-minute time index if res_file is a multi-file directory"""
+        if self._multi_h5_res:
+            h5_dir, pre, suf = MultiFileResource.multi_args(self._res_file)
+            with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
+                ti = mres.time_index
+            self._time_index = self.handle_leap_ti(
+                ti, drop_leap=self._drop_leap)
 
     def _set_downscaled_ti(self, ds_freq):
         """Set the downscaled time index based on a requested frequency.
@@ -237,11 +230,13 @@ class Gen:
         frequency : str
             String in the Pandas frequency format, e.g. '5min'.
         """
-        from reV.utilities.downscale import make_time_index
-        with Resource(self.res_file) as res:
-            year = res.time_index.year[0]
-        ti = make_time_index(year, ds_freq)
-        self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
+        if ds_freq is not None:
+            from reV.utilities.downscale import make_time_index
+            with Resource(self.res_file) as res:
+                year = res.time_index.year[0]
+            ti = make_time_index(year, ds_freq)
+            self._time_index = self.handle_leap_ti(
+                ti, drop_leap=self._drop_leap)
 
     def _get_data_shape(self, dset, n_sites):
         """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
@@ -516,7 +511,8 @@ class Gen:
         Returns
         -------
         res_file : str
-            Resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         """
         return self._res_file
 
@@ -555,11 +551,16 @@ class Gen:
             does not indicate the site number if the project points are
             non-sequential or do not start from 0, so a 'gid' column is added.
         """
+        if not self._multi_h5_res:
+            with Resource(self.res_file) as res:
+                meta = res.meta.iloc[self.project_points.sites, :]
+        else:
+            h5_dir, pre, suf = MultiFileResource.multi_args(self.res_file)
+            with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
+                meta = mres.meta.iloc[self.project_points.sites, :]
 
-        with Resource(self.res_file) as res:
-            meta = res.meta.iloc[self.project_points.sites, :]
-            meta.loc[:, 'gid'] = self.project_points.sites
-            meta.loc[:, 'reV_tech'] = self.project_points.tech
+        meta.loc[:, 'gid'] = self.project_points.sites
+        meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
 
@@ -653,7 +654,8 @@ class Gen:
             Number of sites to run in series on a core. None defaults to the
             resource file chunk size.
         res_file : str
-            Single resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
@@ -708,7 +710,8 @@ class Gen:
         Parameters
         ----------
         res_file : str
-            Full resource file path + filename.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         default : int
             Sites to be analyzed on a single core if the chunk size cannot be
             determined from res_file.
@@ -720,7 +723,7 @@ class Gen:
             chunk size for windspeed and dni datasets for the WTK and NSRDB
             data, respectively.
         """
-        if not res_file:
+        if not res_file or not os.path.isfile(res_file):
             return default
 
         with Resource(res_file) as res:
@@ -940,7 +943,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, downscale=None, res_5min_dir=None):
+            scale_outputs=True, downscale=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -950,7 +953,8 @@ class Gen:
         tech : str
             Technology to analyze (pv, csp, landbasedwind, offshorewind).
         res_file : str
-            Single resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         output_request : list | tuple
             Output variables requested from SAM.
         scale_outputs : bool
@@ -959,9 +963,6 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -974,8 +975,7 @@ class Gen:
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
                                             output_request=output_request,
-                                            downscale=downscale,
-                                            res_5min_dir=res_5min_dir)
+                                            downscale=downscale)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -1013,7 +1013,7 @@ class Gen:
                 downscale=None, n_workers=1, sites_per_split=None,
                 points_range=None, fout=None, dirout='./gen_out',
                 mem_util_lim=0.4, return_obj=False,
-                scale_outputs=True, res_5min_dir=None):
+                scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1029,7 +1029,8 @@ class Gen:
             Can also be a single config file str. If it's a list, it is mapped
             to the sorted list of unique configs requested by points csv.
         res_file : str
-            Single resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         output_request : list | tuple
             Output variables requested from SAM.
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
@@ -1064,9 +1065,6 @@ class Gen:
             Option to return the Gen object instance.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
         """
 
         # get a points control instance
@@ -1076,17 +1074,15 @@ class Gen:
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout, mem_util_lim=mem_util_lim,
-                  downscale=downscale, res_5min_dir=res_5min_dir)
+                  downscale=downscale)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
-                  'downscale': downscale,
-                  'res_5min_dir': res_5min_dir}
+                  'downscale': downscale}
 
-        logger.info('Running parallel generation with smart data flushing '
-                    'for: {}'.format(pc))
+        logger.info('Running reV generation for: {}'.format(pc))
         logger.debug('The following project points were specified: "{}"'
                      .format(points))
         logger.debug('The following SAM configs are available to this run:\n{}'
@@ -1117,7 +1113,7 @@ class Gen:
                 SmartParallelJob.execute(gen, pc, n_workers=n_workers,
                                          mem_util_lim=1.0, **kwargs)
         except Exception as e:
-            logger.exception('SmartParallelJob.execute() failed for gen.')
+            logger.exception('reV generation failed!')
             raise e
 
         if return_obj:

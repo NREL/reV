@@ -732,6 +732,29 @@ class WindResource(Resource):
         super().__init__(h5_file, **kwargs)
 
     @staticmethod
+    def _parse_hub_height(name):
+        """
+        Extract hub height from given string
+
+        Parameters
+        ----------
+        name : str
+            String to parse hub height from
+
+        Returns
+        -------
+        h : int | float
+            Hub Height as a numeric value
+        """
+        h = name.strip('m')
+        try:
+            h = int(h)
+        except ValueError:
+            h = float(h)
+
+        return h
+
+    @staticmethod
     def _parse_name(ds_name):
         """
         Extract dataset name and height from dataset name
@@ -750,14 +773,13 @@ class WindResource(Resource):
         """
         try:
             name, h = ds_name.split('_')
-            h = h.strip('m')
-            try:
-                h = int(h)
-            except ValueError:
-                h = float(h)
-        except Exception:
+            h = WindResource._parse_hub_height(h)
+        except Exception as ex:
             name = ds_name
             h = None
+            msg = ('Could not extract hub-height from {}:\n{}'
+                   .format(ds_name, ex))
+            warnings.warn(msg)
 
         return name, h
 
@@ -774,17 +796,19 @@ class WindResource(Resource):
             windspeed, winddirection, temperature, and pressure
         """
         if self._heights is None:
-            dsets = self.dsets
             heights = {'pressure': [],
                        'temperature': [],
                        'windspeed': [],
                        'winddirection': [],
                        'precipitationrate': [],
                        'relativehumidity': []}
-            for ds in dsets:
-                ds_name, h = self._parse_name(ds)
-                if ds_name in heights.keys():
-                    heights[ds_name].append(h)
+
+            ignore = ['meta', 'time_index', 'coordinates']
+            for ds in self.dsets:
+                if ds not in ignore:
+                    ds_name, h = self._parse_name(ds)
+                    if ds_name in heights.keys():
+                        heights[ds_name].append(h)
 
             self._heights = heights
 
@@ -1151,168 +1175,317 @@ class WindResource(Resource):
         return SAM_res
 
 
-class FiveMinWTK(WindResource):
+class MultiH5:
+    """
+    Class to handle multiple h5 file handlers
+    """
+    def __init__(self, h5_dir, prefix='', suffix='.h5'):
+        """
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
+        """
+        self.h5_dir = h5_dir
+        self._dset_map = self._map_file_dsets(h5_dir, prefix=prefix,
+                                              suffix=suffix)
+        self._h5_map = self._map_file_instances(set(self._dset_map.values()))
+
+        self._i = 0
+
+    def __repr__(self):
+        msg = ("{} for {}:\n Contains {} files and {} datasets"
+               .format(self.__class__.__name__, self.h5_dir,
+                       len(self), len(self._dset_map)))
+        return msg
+
+    def __len__(self):
+        return len(self._h5_map)
+
+    def __getitem__(self, dset):
+        if dset in self:
+            path = self._dset_map[dset]
+            h5 = self._h5_map[path]
+            ds = h5[dset]
+
+        return ds
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._i >= len(self.dsets):
+            self._i = 0
+            raise StopIteration
+
+        dset = self.dsets[self._i]
+        self._i += 1
+
+        return dset
+
+    def __contains__(self, dset):
+        test = dset in self.dsets
+        if not test:
+            msg = "{} does not exist in {}".format(dset, self)
+            raise HandlerKeyError(msg)
+
+        return test
+
+    @property
+    def attrs(self):
+        """
+        Global .h5 file attributes sourced from first .h5 file
+
+        Returns
+        -------
+        attrs : dict
+            .h5 file attributes sourced from first .h5 file
+        """
+        path = self.h5_files[0]
+        attrs = dict(self._h5_map[path].attrs)
+        return attrs
+
+    @property
+    def dsets(self):
+        """
+        Available datasets
+
+        Returns
+        -------
+        list
+            List of dataset present in .h5 files
+        """
+        return sorted(self._dset_map)
+
+    @property
+    def h5_files(self):
+        """
+        .h5 files data is being sourced from
+
+        Returns
+        -------
+        list
+            List of .h5 files data is being sourced form
+        """
+        return sorted(self._h5_map)
+
+    @staticmethod
+    def _get_dsets(h5_path):
+        """
+        Get datasets in given .h5 file
+
+        Parameters
+        ----------
+        h5_path : str
+            Path to .h5 file to get variables for
+
+        Returns
+        -------
+        unique_dsets : list
+            List of unique datasets in .h5 file
+        shared_dsets : list
+            List of shared datasets in .h5 file
+        """
+        unique_dsets = []
+        shared_dsets = []
+        with h5py.File(h5_path, mode='r') as f:
+            for dset in f:
+                if dset not in ['meta', 'time_index', 'coordinates']:
+                    unique_dsets.append(dset)
+                else:
+                    shared_dsets.append(dset)
+
+        return unique_dsets, shared_dsets
+
+    @staticmethod
+    def _map_file_dsets(h5_dir, prefix='', suffix='.h5'):
+        """
+        Map 5min variables to their .h5 files in given directory
+
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
+
+        Returns
+        -------
+        dset_map : dict
+            Dictionary mapping datasets to file paths
+        """
+        dset_map = {}
+        for file in sorted(os.listdir(h5_dir)):
+            if file.startswith(prefix) and file.endswith(suffix):
+                path = os.path.join(h5_dir, file)
+                unique_dsets, shared_dsets = MultiH5._get_dsets(path)
+                for dset in shared_dsets:
+                    if dset not in dset_map:
+                        dset_map[dset] = path
+
+                for dset in unique_dsets:
+                    dset_map[dset] = path
+
+        return dset_map
+
+    @staticmethod
+    def _map_file_instances(h5_files):
+        """
+        Open all .h5 files and map the open h5py instances to the
+        associated file paths
+
+        Parameters
+        ----------
+        h5_files : list
+            List of .h5 files to open
+
+        Returns
+        -------
+        h5_map : dict
+            Dictionary mapping file paths to open resource instances
+        """
+        h5_map = {}
+        for f_path in h5_files:
+            h5_map[f_path] = h5py.File(f_path, mode='r')
+
+        return h5_map
+
+    def close(self):
+        """
+        Close all h5py.File instances
+        """
+        for f in self._h5_map.values():
+            f.close()
+
+
+class MultiFileResource(Resource):
+    """
+    Class to handle fine spatial resolution resource data stored in
+    multiple .h5 files
+    """
+    def __init__(self, h5_dir, prefix='', suffix='.h5', unscale=True,
+                 str_decode=True):
+        """
+        Parameters
+        ----------
+        h5_dir : str
+            Path to directory containing 5min .h5 files
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        """
+        self.h5_dir = h5_dir
+        self._unscale = unscale
+        self._meta = None
+        self._time_index = None
+        self._str_decode = str_decode
+        self._group = None
+        # Map variables to their .h5 files
+        self._h5 = MultiH5(h5_dir, prefix=prefix, suffix=suffix)
+        self.h5_file = list(self._h5._h5_map.keys())[0]
+
+    def __repr__(self):
+        msg = "{} for {}".format(self.__class__.__name__, self.h5_dir)
+        return msg
+
+    @staticmethod
+    def is_multi(path):
+        """Check a path string to see if it is a multi-h5 directory.
+
+        Parameters
+        ----------
+        path : str
+            Path to file or directory containing multi file resource file sets.
+
+        Returns
+        -------
+        is_multi : bool
+            Path is a multi file resource directory or specification if True.
+        """
+
+        if os.path.isfile(path):
+            return False
+        if os.path.isdir(path):
+            return True
+        if '*' in path:
+            return True
+
+    @staticmethod
+    def multi_args(path):
+        """Get multi-h5 directory arguments for multi file resource paths.
+
+        Parameters
+        ----------
+        path : str
+            Path to directory containing multi file resource file sets.
+            Available formats:
+                /h5_dir/
+                /h5_dir/prefix*suffix
+
+        Returns
+        -------
+        h5_dir : str
+            Directory containing multi-file resource files.
+        prefix : str
+            File prefix for files in h5_dir.
+        suffix : str
+            File suffix for files in h5_dir.
+        """
+        h5_dir = path
+        prefix = ''
+        suffix = '.h5'
+
+        if '*' in path:
+            h5_dir, fn = os.path.split(path)
+            prefix, suffix = fn.split('*')
+        elif os.path.isfile(path):
+            h5_dir = path
+            prefix = None
+            suffix = None
+
+        return h5_dir, prefix, suffix
+
+
+class MultiFileNSRDB(MultiFileResource, NSRDB):
+    """
+    Class to handle 2018 and beyond NSRDB data that is at 2km and
+    sub 30 min resolution
+    """
+
+
+class FiveMinWTK(MultiFileResource, WindResource):
     """
     Class to handle 5min WIND Toolkit data
     """
-    def __init__(self, hourly_h5, h5_dir, **kwargs):
+    def __init__(self, h5_dir, prefix='', suffix='m.h5', unscale=True,
+                 str_decode=True):
         """
-        Parameters
-        ----------
-        hourly_h5 : str
-            Path to hourly .h5 file
-        h5_dir : str
-            Path to directory containing 5min .h5 files
-        kwargs : dict
-            kwargs to init Resource
-        """
-        # Init on hourly_h5 file
-        super().__init__(hourly_h5, **kwargs)
-        self._hourly_time_index = self.time_index
-
-        # Find 5min wind files
-        wind_files = self.get_wind_files(h5_dir)
-        self._wind_files = wind_files
-        # Substitute wind hub_heights
-        wind_h = sorted(wind_files)
-        self.heights['windspeed'] = wind_h
-        self.heights['winddirection'] = wind_h
-        # Substitute hourly for 5min time_index
-        self._time_index = self.get_new_time_index(h5_dir)
-
-    @staticmethod
-    def get_new_time_index(h5_dir):
-        """
-        Get the time index for the high temporal res h5 dir.
-
         Parameters
         ----------
         h5_dir : str
             Path to directory containing 5min .h5 files
-
-        Returns
-        -------
-        time_index : pandas.DatetimeIndex
-            Resource datetime index
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
         """
-        files = FiveMinWTK.get_wind_files(h5_dir)
-        with Resource(list(files.values())[0]) as f:
-            time_index = f.time_index
-        return time_index
-
-    @staticmethod
-    def get_wind_files(h5_dir):
-        """
-        Find .h5 files for wind hub-heights in h5_dir
-
-        Parameters
-        ----------
-        h5_dir : str
-            Path to directory containing 5min .h5 files
-
-        Returns
-        -------
-        wind_files : dict
-            Dictionary mapping wind files to hub-heights
-        """
-        wind_files = {}
-        for file in os.listdir(h5_dir):
-            if file.startswith('wind') and file.endswith('.h5'):
-                h = WindResource._parse_name(file.split('.')[0])[1]
-                wind_files[h] = os.path.join(h5_dir, file)
-
-        return wind_files
-
-    def _get_wind_ds(self, ds_name, *ds_slice):
-        """
-        Extract 5min wind data
-
-        Parameters
-        ----------
-        ds_name : str
-            5min wind variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
-        """
-        var_name, h = self._parse_name(ds_name)
-        heights = self.heights[var_name]
-        if len(heights) == 1:
-            h = heights[0]
-            ds_name = '{}_{}m'.format(var_name, h)
-            warnings.warn('Only one hub-height available, returning {}'
-                          .format(ds_name), HandlerWarning)
-
-        if h in heights:
-            ds_name = '{}_{}m'.format(var_name, int(h))
-            with Resource(self._wind_files[h], unscale=self._unscale) as f:
-                out = f._get_ds(ds_name, *ds_slice)
-        else:
-            (h1, h2), extrapolate = self.get_nearest_h(h, heights)
-            with Resource(self._wind_files[h1], unscale=self._unscale) as f:
-                ts1 = f._get_ds('{}_{}m'.format(var_name, h1), *ds_slice)
-
-            with Resource(self._wind_files[h2], unscale=self._unscale) as f:
-                ts2 = f._get_ds('{}_{}m'.format(var_name, h2), *ds_slice)
-
-            if (var_name == 'windspeed') and extrapolate:
-                out = self.power_law_interp(ts1, h1, ts2, h2, h)
-            elif var_name == 'winddirection':
-                out = self.circular_interp(ts1, h1, ts2, h2, h)
-            else:
-                out = self.linear_interp(ts1, h1, ts2, h2, h)
-
-        return out
-
-    def _interp_hourly_ds(self, ds_name, *ds_slice):
-        """
-        Extract and interp hourly data to 5min
-
-        Parameters
-        ----------
-        ds_name : str
-            Hourly variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
-        """
-        out = super()._get_ds(ds_name, *ds_slice)
-        out = pd.DataFrame(out, index=self._hourly_time_index)
-        out = out.reindex(self.time_index).interpolate(method='time').values
-
-        return out
-
-    def _get_ds(self, ds_name, *ds_slice):
-        """
-        Extract data from given dataset
-
-        Parameters
-        ----------
-        ds_name : str
-            Variable dataset to be extracted
-        ds_slice : tuple of int | list | slice
-            tuple describing list ds_slice to extract
-
-        Returns
-        -------
-        out : ndarray
-            ndarray of variable timeseries data
-            If unscale, returned in native units else in scaled units
-        """
-        var_name, _ = self._parse_name(ds_name)
-        if var_name in ['windspeed', 'winddirection']:
-            out = self._get_wind_ds(ds_name, *ds_slice)
-        else:
-            out = self._interp_hourly_ds(ds_name, *ds_slice)
-
-        return out
+        super().__init__(h5_dir, prefix=prefix, suffix=suffix, unscale=unscale,
+                         str_decode=str_decode)
+        self._heights = None

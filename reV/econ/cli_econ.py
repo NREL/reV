@@ -12,7 +12,7 @@ from warnings import warn
 
 from reV.generation.cli_gen import get_node_name_fout, make_fout
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.config.analysis_configs import EconConfig
+from reV.config.sam_analysis_configs import EconConfig
 from reV.econ.econ import Econ
 from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
