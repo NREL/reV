@@ -127,8 +127,7 @@ def from_config(ctx, config_file, verbose):
 @click.option('--data_layers', '-d', type=STR, default=None,
               help='String representation of a dictionary of additional data '
               'layers to include in the aggregation e.g. '
-              '{"slope": {"dset": "srtm_slope", "method": "mean", '
-              '"fpath": "./f_excl.h5"}}')
+              '{"slope": {"dset": "srtm_slope", "method": "mean"}}')
 @click.option('--resolution', '-r', type=INT, default=64,
               help='Number of exclusion points along a squares edge to '
               'include in an aggregated supply curve point.')
