@@ -175,31 +175,6 @@ class GenConfig(SAMAnalysisConfig):
         return self._downscale
 
     @property
-    def resource_5min(self):
-        """Get the supplemental 5-minute resource data directory.
-
-        Returns
-        -------
-        _resource_5min : list
-            List with length equal to res_files. None's if no 5-minute data.
-            Otherwise, returns the directory containing 5minute data files
-            for the given year.
-        """
-        self._resource_5min = self.get('resource_5min', None)
-
-        if self._resource_5min is None:
-            self._resource_5min = [None] * len(self.years)
-
-        elif isinstance(self._resource_5min, str):
-            if '{}' in self._resource_5min:
-                self._resource_5min = [self._resource_5min.format(year)
-                                       for year in self.years]
-            else:
-                self._resource_5min = [self._resource_5min]
-
-        return self._resource_5min
-
-    @property
     def res_files(self):
         """Get a list of the resource files with years filled in.
 
@@ -219,7 +194,7 @@ class GenConfig(SAMAnalysisConfig):
             else:
                 # only one resource file request, still put in list
                 self._res_files = [fname]
-        self.check_files(self._res_files)
+
         if len(self._res_files) != len(self.years):
             raise ConfigError('The number of resource files does not match '
                               'the number of analysis years!'

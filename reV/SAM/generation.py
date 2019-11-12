@@ -233,7 +233,7 @@ class Generation(SAM):
 
     @classmethod
     def reV_run(cls, points_control, res_file, output_request=('cf_mean',),
-                downscale=None, res_5min_dir=None):
+                downscale=None):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -249,9 +249,6 @@ class Generation(SAM):
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -268,8 +265,7 @@ class Generation(SAM):
         resources = SAM.get_sam_res(res_file,
                                     points_control.project_points,
                                     points_control.project_points.tech,
-                                    downscale=downscale,
-                                    res_5min_dir=res_5min_dir)
+                                    downscale=downscale)
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment

@@ -232,6 +232,21 @@ def test_smart(year):
     assert result is True
 
 
+def test_multi_file_nsrdb_2018():
+    """Test running reV gen from a multi-h5 directory with prefix and suffix"""
+    points = slice(0, 10)
+    n_workers = 1
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    res_file = TESTDATADIR + '/nsrdb/nsrdb_*{}.h5'.format(2018)
+    # run reV 2.0 generation
+    gen = Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
+                      res_file=res_file, n_workers=n_workers,
+                      sites_per_split=3, fout=None, return_obj=True)
+    gen_outs = list(gen.out['cf_mean'] / 1000)
+    assert len(gen_outs) == 10
+    assert np.mean(gen_outs) > 0.14
+
+
 def get_r1_profiles(year=2012):
     """Get the first 100 reV 1.0 ri pv generation profiles."""
     rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
@@ -259,6 +274,3 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 if __name__ == '__main__':
     execute_pytest()
-#    test_smart(2012)
-#    test_pv_gen_profiles(2012)
-#    test_pv_gen_slice('project_outputs.h5', slice(0, 10), '2012', 1)

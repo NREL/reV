@@ -15,7 +15,7 @@ from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import (execute_parallel, execute_single,
                                      SmartParallelJob)
 from reV.handlers.outputs import Outputs
-from reV.handlers.resource import Resource, FiveMinWTK
+from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import OutputWarning, ExecutionError
 
 
@@ -75,7 +75,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.4, downscale=None, res_5min_dir=None):
+                 mem_util_lim=0.4, downscale=None):
         """
         Parameters
         ----------
@@ -100,9 +100,6 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
         """
 
         self._points_control = points_control
@@ -121,8 +118,7 @@ class Gen:
 
         self._output_request = self._parse_output_request(output_request)
 
-        if res_5min_dir is not None:
-            self._set_high_res_ti(res_5min_dir)
+        self._set_high_res_ti()
 
         if downscale is not None:
             self._set_downscaled_ti(downscale)
@@ -217,17 +213,14 @@ class Gen:
 
         return output_request
 
-    def _set_high_res_ti(self, res_5min_dir):
-        """Set the 5-minute resource directory time index.
-
-        Parameters
-        ----------
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
-        """
-        ti = FiveMinWTK.get_new_time_index(res_5min_dir)
-        self._time_index = self.handle_leap_ti(ti, drop_leap=self._drop_leap)
+    def _set_high_res_ti(self):
+        """Set the 5-minute time index if res_file is a multi-file directory"""
+        if MultiFileResource.is_multi(self._res_file):
+            h5_dir, pre, suf = MultiFileResource.multi_args(self._res_file)
+            with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
+                ti = mres.time_index
+            self._time_index = self.handle_leap_ti(
+                ti, drop_leap=self._drop_leap)
 
     def _set_downscaled_ti(self, ds_freq):
         """Set the downscaled time index based on a requested frequency.
@@ -940,7 +933,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, downscale=None, res_5min_dir=None):
+            scale_outputs=True, downscale=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -959,9 +952,6 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
 
         Returns
         -------
@@ -974,8 +964,7 @@ class Gen:
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
                                             output_request=output_request,
-                                            downscale=downscale,
-                                            res_5min_dir=res_5min_dir)
+                                            downscale=downscale)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -1013,7 +1002,7 @@ class Gen:
                 downscale=None, n_workers=1, sites_per_split=None,
                 points_range=None, fout=None, dirout='./gen_out',
                 mem_util_lim=0.4, return_obj=False,
-                scale_outputs=True, res_5min_dir=None):
+                scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1064,9 +1053,6 @@ class Gen:
             Option to return the Gen object instance.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
         """
 
         # get a points control instance
@@ -1076,17 +1062,15 @@ class Gen:
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout, mem_util_lim=mem_util_lim,
-                  downscale=downscale, res_5min_dir=res_5min_dir)
+                  downscale=downscale)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
-                  'downscale': downscale,
-                  'res_5min_dir': res_5min_dir}
+                  'downscale': downscale}
 
-        logger.info('Running parallel generation with smart data flushing '
-                    'for: {}'.format(pc))
+        logger.info('Running reV generation for: {}'.format(pc))
         logger.debug('The following project points were specified: "{}"'
                      .format(points))
         logger.debug('The following SAM configs are available to this run:\n{}'
@@ -1117,7 +1101,7 @@ class Gen:
                 SmartParallelJob.execute(gen, pc, n_workers=n_workers,
                                          mem_util_lim=1.0, **kwargs)
         except Exception as e:
-            logger.exception('SmartParallelJob.execute() failed for gen.')
+            logger.exception('reV generation failed!')
             raise e
 
         if return_obj:

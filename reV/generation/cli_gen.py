@@ -134,7 +134,6 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
 
     # set the year-specific variables
     ctx.obj['RES_FILE'] = config.res_files[i]
-    ctx.obj['RES_5MIN_DIR'] = config.resource_5min[i]
 
     # check to make sure that the year matches the resource file
     if str(year) not in config.res_files[i]:
@@ -261,15 +260,12 @@ def make_fout(name, year):
 @click.option('-ds', '--downscale', type=STR, default=None,
               help=('Option to request temporal downscaling for NSRDB '
                     'resource data. Example request: "5min".'))
-@click.option('--res_5min_dir', '-r5', default=None,
-              type=click.Path(exists=True),
-              help='Directory with supplemental files for 5 minute resource.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
-           dirout, logdir, output_request, mem_util_lim,
-           curtailment, downscale, res_5min_dir, verbose):
+           dirout, logdir, output_request, mem_util_lim, curtailment,
+           downscale, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
@@ -283,7 +279,6 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_core, fout,
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
     ctx.obj['DOWNSCALE'] = downscale
-    ctx.obj['RES_5MIN_DIR'] = res_5min_dir
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
 
@@ -311,7 +306,6 @@ def gen_local(ctx, n_workers, points_range, verbose):
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
     downscale = ctx.obj['DOWNSCALE']
-    res_5min_dir = ctx.obj['RES_5MIN_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -336,7 +330,6 @@ def gen_local(ctx, n_workers, points_range, verbose):
                 output_request=output_request,
                 curtailment=curtailment,
                 downscale=downscale,
-                res_5min_dir=res_5min_dir,
                 n_workers=n_workers,
                 sites_per_split=sites_per_core,
                 points_range=points_range,
@@ -450,7 +443,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  fout='reV.h5', dirout='./out/gen_out',
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  mem_util_lim=0.4, curtailment=None, downscale=None,
-                 res_5min_dir=None, verbose=False):
+                 verbose=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -493,9 +486,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
         Option for NSRDB resource downscaling to higher temporal
         resolution. Expects a string in the Pandas frequency format,
         e.g. '5min'.
-    res_5min_dir : str
-        Path to directory containing extra h5 resource files for
-        5-minute resource that supplement the res_file input.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -513,7 +503,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     # make some strings only if specified
     cstr = '-curt {} '.format(SubprocessManager.s(curtailment))
     dstr = '-ds {} '.format(SubprocessManager.s(downscale))
-    r5str = '-r5 {} '.format(SubprocessManager.s(res_5min_dir))
 
     # make a cli arg string for direct() in this module
     arg_direct = ('-t {tech} '
@@ -528,7 +517,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-mem {mem} '
                   '{curt}'
                   '{ds}'
-                  '{r5}'
                   .format(tech=SubprocessManager.s(tech),
                           points=SubprocessManager.s(points),
                           sam_files=SubprocessManager.s(sam_files),
@@ -541,7 +529,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                           mem=SubprocessManager.s(mem_util_lim),
                           curt=cstr if curtailment else '',
                           ds=dstr if downscale else '',
-                          r5=r5str if res_5min_dir else '',
                           ))
 
     # make a cli arg string for local() in this module
@@ -678,7 +665,6 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
     downscale = ctx.obj['DOWNSCALE']
-    res_5min_dir = ctx.obj['RES_5MIN_DIR']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -698,8 +684,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
                            fout=fout_node, dirout=dirout, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
-                           downscale=downscale, res_5min_dir=res_5min_dir,
-                           verbose=verbose)
+                           downscale=downscale, verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'generation', node_name)
         if status == 'successful':

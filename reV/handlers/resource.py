@@ -1400,6 +1400,63 @@ class MultiFileResource(Resource):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_dir)
         return msg
 
+    @staticmethod
+    def is_multi(path):
+        """Check a path string to see if it is a multi-h5 directory.
+
+        Parameters
+        ----------
+        path : str
+            Path to file or directory containing multi file resource file sets.
+
+        Returns
+        -------
+        is_multi : bool
+            Path is a multi file resource directory or specification if True.
+        """
+
+        if os.path.isfile(path):
+            return False
+        if os.path.isdir(path):
+            return True
+        if '*' in path:
+            return True
+
+    @staticmethod
+    def multi_args(path):
+        """Get multi-h5 directory arguments for multi file resource paths.
+
+        Parameters
+        ----------
+        path : str
+            Path to directory containing multi file resource file sets.
+            Available formats:
+                /h5_dir/
+                /h5_dir/prefix*suffix
+
+        Returns
+        -------
+        h5_dir : str
+            Directory containing multi-file resource files.
+        prefix : str
+            File prefix for files in h5_dir.
+        suffix : str
+            File suffix for files in h5_dir.
+        """
+        h5_dir = path
+        prefix = ''
+        suffix = '.h5'
+
+        if '*' in path:
+            h5_dir, fn = os.path.split(path)
+            prefix, suffix = fn.split('*')
+        elif os.path.isfile(path):
+            h5_dir = path
+            prefix = None
+            suffix = None
+
+        return h5_dir, prefix, suffix
+
 
 class MultiFileNSRDB(MultiFileResource, NSRDB):
     """
