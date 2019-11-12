@@ -12,18 +12,16 @@ from reV.supply_curve.aggregation import Aggregation
 from reV import TESTDATADIR
 
 
-F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
-F_GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_gen.h5')
-F_AGG_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
-DSET_TM = 'techmap_nsrdb'
+EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
+GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_gen.h5')
+AGG_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
+TM_DSET = 'techmap_nsrdb'
 RES_CLASS_DSET = 'ghi_mean-means'
 RES_CLASS_BINS = [0, 4, 100]
 DATA_LAYERS = {'pct_slope': {'dset': 'ri_srtm_slope',
-                             'method': 'mean',
-                             'fpath': F_EXCL},
+                             'method': 'mean'},
                'reeds_region': {'dset': 'ri_reeds_regions',
-                                'method': 'mode',
-                                'fpath': F_EXCL}}
+                                'method': 'mode'}}
 
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5)},
              'ri_padus': {'exclude_values': [1]}}
@@ -33,7 +31,7 @@ def test_aggregation_extent(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
     columns and that all resource gids were found"""
 
-    summary = Aggregation.summary(F_EXCL, F_GEN, DSET_TM, EXCL_DICT,
+    summary = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
                                   res_class_dset=None,
                                   res_class_bins=None,
                                   data_layers=DATA_LAYERS,
@@ -54,12 +52,12 @@ def test_parallel_agg(resolution=64):
     aggregation."""
 
     gids = list(range(50, 70))
-    summary_serial = Aggregation.summary(F_EXCL, F_GEN, DSET_TM, EXCL_DICT,
+    summary_serial = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
                                          res_class_dset=None,
                                          res_class_bins=None,
                                          resolution=resolution,
                                          gids=gids, n_cores=1)
-    summary_parallel = Aggregation.summary(F_EXCL, F_GEN, DSET_TM, EXCL_DICT,
+    summary_parallel = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
                                            res_class_dset=None,
                                            res_class_bins=None,
                                            resolution=resolution,
@@ -71,19 +69,19 @@ def test_parallel_agg(resolution=64):
 def test_aggregation_summary():
     """Test the aggregation summary method against a baseline file."""
 
-    s = Aggregation.summary(F_EXCL, F_GEN, DSET_TM, EXCL_DICT,
+    s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
                             data_layers=DATA_LAYERS,
                             n_cores=1)
 
-    if not os.path.exists(F_AGG_BASELINE):
-        s.to_csv(F_AGG_BASELINE)
+    if not os.path.exists(AGG_BASELINE):
+        s.to_csv(AGG_BASELINE)
         raise Exception('Aggregation summary baseline file did not exist. '
-                        'Created: {}'.format(F_AGG_BASELINE))
+                        'Created: {}'.format(AGG_BASELINE))
 
     else:
-        s_baseline = pd.read_csv(F_AGG_BASELINE, index_col=0)
+        s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
         for i, c in enumerate(s.columns):
             if c in s_baseline:

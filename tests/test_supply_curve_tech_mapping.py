@@ -16,22 +16,22 @@ from reV.supply_curve.tech_mapping import TechMapping
 from reV.handlers.exclusions import ExclusionLayers
 
 
-F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
-F_RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
-F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
-DSET_TM = 'techmap_nsrdb_ri_truth'
+EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
+RES = os.path.join(TESTDATADIR, 'nsrdb/ri_100_nsrdb_2012.h5')
+GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
+TM_DSET = 'techmap_nsrdb_ri_truth'
 
 
 def test_resource_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
 
-    lats, lons, ind = TechMapping.run(F_EXCL, F_RES, DSET_TM, n_cores=2,
+    lats, lons, ind = TechMapping.run(EXCL, RES, TM_DSET, n_cores=2,
                                       save_flag=False, return_flag=True)
 
-    with ExclusionLayers(F_EXCL) as ex:
+    with ExclusionLayers(EXCL) as ex:
         lat_truth = ex.latitude
         lon_truth = ex.longitude
-        ind_truth = ex[DSET_TM]
+        ind_truth = ex[TM_DSET]
 
     msg = 'Tech mapping failed for {} vs. baseline results.'
     assert np.allclose(lats, lat_truth), msg.format('latitudes')
@@ -48,36 +48,36 @@ def plot_tech_mapping():
 
     import matplotlib.pyplot as plt
 
-    with h5py.File(F_EXCL, 'r') as f:
+    with h5py.File(EXCL, 'r') as f:
         lats = f['latitude'][...].flatten()
         lons = f['longitude'][...].flatten()
-        ind = f[DSET_TM][...].flatten()
+        ind = f[TM_DSET][...].flatten()
 
-    with Outputs(F_GEN) as fgen:
+    with Outputs(GEN) as fgen:
         gen_meta = fgen.meta
 
     df = pd.DataFrame({'latitude': lats,
                        'longitude': lons,
-                       DSET_TM: ind})
+                       TM_DSET: ind})
 
     _, axs = plt.subplots(1, 1)
     colors = ['b', 'g', 'c', 'm', 'k', 'y']
     colors *= 100
 
-    for i, ind in enumerate(df[DSET_TM].unique()):
+    for i, ind in enumerate(df[TM_DSET].unique()):
         if ind != -1:
-            mask = df[DSET_TM] == ind
+            mask = df[TM_DSET] == ind
             axs.scatter(df.loc[mask, 'longitude'],
                         df.loc[mask, 'latitude'],
                         c=colors[i], s=0.001)
 
         elif ind == -1:
-            mask = df[DSET_TM] == ind
+            mask = df[TM_DSET] == ind
             axs.scatter(df.loc[mask, 'longitude'],
                         df.loc[mask, 'latitude'],
                         c='r', s=0.001)
 
-    for ind in df[DSET_TM].unique():
+    for ind in df[TM_DSET].unique():
         if ind != -1:
             axs.scatter(gen_meta.loc[ind, 'longitude'],
                         gen_meta.loc[ind, 'latitude'],

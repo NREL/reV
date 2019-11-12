@@ -25,10 +25,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
     # technology-dependent power density estimates in MW/km2
     POWER_DENSITY = {'pv': 36, 'wind': 3}
 
-    def __init__(self, gid, excl, gen, dset_tm, gen_index, excl_dict=None,
+    def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
                  res_class_dset=None, res_class_bin=None, ex_area=0.0081,
-                 power_density=None, dset_cf='cf_mean-means',
-                 dset_lcoe='lcoe_fcr-means', resolution=64,
+                 power_density=None, cf_dset='cf_mean-means',
+                 lcoe_dset='lcoe_fcr-means', resolution=64,
                  exclusion_shape=None, close=False):
         """
         Parameters
@@ -40,7 +40,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         gen : str | reV.handlers.Outputs
             Filepath to .h5 reV generation output results or reV Outputs file
             handler.
-        dset_tm : str
+        tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         gen_index : np.ndarray
@@ -62,10 +62,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         power_density : float | None
             Power density in MW/km2. None will attempt to infer power density
             from the generation meta data technology.
-        dset_cf : str | np.ndarray
+        cf_dset : str | np.ndarray
             Dataset name from gen containing capacity factor mean values.
             Can be pre-extracted generation output data in np.ndarray.
-        dset_lcoe : str | np.ndarray
+        lcoe_dset : str | np.ndarray
             Dataset name from gen containing LCOE mean values.
             Can be pre-extracted generation output data in np.ndarray.
         resolution : int | None
@@ -79,8 +79,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         self._res_class_dset = res_class_dset
         self._res_class_bin = res_class_bin
-        self._dset_cf = dset_cf
-        self._dset_lcoe = dset_lcoe
+        self._cf_dset = cf_dset
+        self._lcoe_dset = lcoe_dset
         self._res_gid_set = None
         self._gen_gid_set = None
         self._mean_res = None
@@ -90,7 +90,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         self._ex_area = ex_area
         self._power_density = power_density
 
-        super().__init__(gid, excl, gen, dset_tm, gen_index,
+        super().__init__(gid, excl, gen, tm_dset, gen_index,
                          excl_dict=excl_dict, resolution=resolution,
                          exclusion_shape=exclusion_shape, close=close)
 
@@ -202,13 +202,13 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             generation data output file.
         """
 
-        if isinstance(self._dset_cf, np.ndarray):
-            return self._dset_cf
+        if isinstance(self._cf_dset, np.ndarray):
+            return self._cf_dset
 
         else:
             if self._gen_data is None:
-                if self._dset_cf in self.gen.dsets:
-                    self._gen_data = self.gen[self._dset_cf]
+                if self._cf_dset in self.gen.dsets:
+                    self._gen_data = self.gen[self._cf_dset]
 
         return self._gen_data
 
@@ -223,13 +223,13 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             generation data output file.
         """
 
-        if isinstance(self._dset_lcoe, np.ndarray):
-            return self._dset_lcoe
+        if isinstance(self._lcoe_dset, np.ndarray):
+            return self._lcoe_dset
 
         else:
             if self._lcoe_data is None:
-                if self._dset_lcoe in self.gen.dsets:
-                    self._lcoe_data = self.gen[self._dset_lcoe]
+                if self._lcoe_dset in self.gen.dsets:
+                    self._lcoe_data = self.gen[self._lcoe_dset]
 
         return self._lcoe_data
 
@@ -409,7 +409,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         return summary
 
     @classmethod
-    def summary(cls, gid, fpath_excl, fpath_gen, dset_tm,
+    def summary(cls, gid, excl_fpath, gen_fpath, tm_dset,
                 gen_index, args=None, data_layers=None, **kwargs):
         """Get a summary dictionary of a single supply curve point.
 
@@ -417,11 +417,11 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         ----------
         gid : int
             gid for supply curve point to analyze.
-        fpath_excl : str
+        excl_fpath : str
             Filepath to exclusions geotiff.
-        fpath_gen : str
+        gen_fpath : str
             Filepath to .h5 reV generation output results.
-        dset_tm : str
+        tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-generation mapping data.
         gen_index : np.ndarray
@@ -444,7 +444,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        with cls(gid, fpath_excl, fpath_gen, dset_tm, gen_index,
+        with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                  **kwargs) as point:
 
             ARGS = {'res_gids': point.res_gid_set,
