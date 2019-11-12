@@ -15,7 +15,7 @@ from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
 class SupplyCurvePoint:
     """Single supply curve point framework"""
 
-    def __init__(self, gid, excl, gen, dset_tm, gen_index, excl_dict=None,
+    def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
                  resolution=64, exclusion_shape=None, close=True):
         """
         Parameters
@@ -27,7 +27,7 @@ class SupplyCurvePoint:
         gen : str | reV.handlers.Outputs
             Filepath to .h5 reV generation output results or reV Outputs file
             handler.
-        dset_tm : str
+        tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         gen_index : np.ndarray
@@ -53,8 +53,8 @@ class SupplyCurvePoint:
         self._excl_dict = excl_dict
 
         # filepaths
-        self._fpath_excl = None
-        self._fpath_gen = None
+        self._excl_fpath = None
+        self._gen_fpath = None
 
         # handler objects
         self._exclusions = None
@@ -64,7 +64,7 @@ class SupplyCurvePoint:
         self._parse_files(excl, gen)
         self._rows, self._cols = self._parse_slices(
             gid, resolution, exclusion_shape=exclusion_shape)
-        self._gen_gids, self._res_gids = self._parse_techmap(dset_tm,
+        self._gen_gids, self._res_gids = self._parse_techmap(tm_dset,
                                                              gen_index)
 
     def _parse_files(self, excl, gen):
@@ -80,13 +80,13 @@ class SupplyCurvePoint:
         """
 
         if isinstance(excl, str):
-            self._fpath_excl = excl
+            self._excl_fpath = excl
             if self._excl_dict is None:
                 raise SupplyCurveInputError('Exclusion fpath cannot be used '
                                             'without an exclusions dictionary '
                                             'input.')
         elif isinstance(excl, ExclusionMask):
-            self._fpath_excl = excl.excl_h5.h5_file
+            self._excl_fpath = excl.excl_h5.h5_file
             self._exclusions = excl
         else:
             raise SupplyCurveInputError('SupplyCurvePoints needs an '
@@ -95,9 +95,9 @@ class SupplyCurvePoint:
                                         'received: {}'
                                         .format(type(excl)))
         if isinstance(gen, str):
-            self._fpath_gen = gen
+            self._gen_fpath = gen
         elif isinstance(gen, Outputs):
-            self._fpath_gen = gen._h5_file
+            self._gen_fpath = gen._h5_file
             self._gen = gen
         else:
             raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
@@ -135,12 +135,12 @@ class SupplyCurvePoint:
 
         return rows, cols
 
-    def _parse_techmap(self, dset_tm, gen_index):
+    def _parse_techmap(self, tm_dset, gen_index):
         """Parse data from the tech map file (exclusions to resource mapping).
 
         Parameters
         ----------
-        dset_tm : str
+        tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
         gen_index : np.ndarray
@@ -152,7 +152,7 @@ class SupplyCurvePoint:
         -------
         gen_gids : np.ndarray
             1D array with length == number of exclusion points. reV generation
-            gids (gen results index) from the fpath_gen file corresponding to
+            gids (gen results index) from the gen_fpath file corresponding to
             the tech exclusions.
         res_gids : np.ndarray
             1D array with length == number of exclusion points. reV resource
@@ -162,9 +162,9 @@ class SupplyCurvePoint:
 
         emsg = ('Supply curve point gid {} has no viable exclusion points '
                 'based on exclusions file: "{}"'
-                .format(self._gid, self._fpath_excl))
+                .format(self._gid, self._excl_fpath))
 
-        res_gids = self.exclusions.excl_h5[dset_tm, self.rows, self.cols]
+        res_gids = self.exclusions.excl_h5[tm_dset, self.rows, self.cols]
         res_gids = res_gids.astype(np.int32).flatten()
 
         if (res_gids != -1).sum() == 0:
@@ -296,7 +296,7 @@ class SupplyCurvePoint:
             ExclusionMask h5 handler object.
         """
         if self._exclusions is None:
-            self._exclusions = ExclusionMask.from_dict(self._fpath_excl,
+            self._exclusions = ExclusionMask.from_dict(self._excl_fpath,
                                                        self._excl_dict)
         return self._exclusions
 
@@ -342,7 +342,7 @@ class SupplyCurvePoint:
             reV generation outputs object
         """
         if self._gen is None:
-            self._gen = Outputs(self._fpath_gen, str_decode=False)
+            self._gen = Outputs(self._gen_fpath, str_decode=False)
         return self._gen
 
 
@@ -368,10 +368,10 @@ class SupplyCurveExtent:
                                         .format(type(resolution)))
 
         if isinstance(f_excl, str):
-            self._fpath_excl = f_excl
+            self._excl_fpath = f_excl
             self._exclusions = ExclusionLayers(f_excl)
         elif isinstance(f_excl, ExclusionLayers):
-            self._fpath_excl = f_excl.h5_file
+            self._excl_fpath = f_excl.h5_file
             self._exclusions = f_excl
         else:
             raise SupplyCurveInputError('SupplyCurvePoints needs an '

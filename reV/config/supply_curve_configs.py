@@ -22,7 +22,7 @@ class AggregationConfig(AnalysisConfig):
     """SC Aggregation config."""
 
     NAME = 'agg'
-    REQUIREMENTS = ('fpath_excl', 'fpath_gen', 'dset_tm', 'excl_dict')
+    REQUIREMENTS = ('excl_fpath', 'gen_fpath', 'tm_dset', 'excl_dict')
 
     def __init__(self, config):
         """
@@ -34,11 +34,11 @@ class AggregationConfig(AnalysisConfig):
         """
         super().__init__(config)
 
-        self._default_fpath_res = None
+        self._default_res_fpath = None
         self._default_res_class_dset = None
         self._default_res_class_bins = None
-        self._default_dset_cf = 'cf_mean-means'
-        self._default_dset_lcoe = 'lcoe_fcr-means'
+        self._default_cf_dset = 'cf_mean-means'
+        self._default_lcoe_dset = 'lcoe_fcr-means'
         self._default_data_layers = None
         self._default_resolution = 64
 
@@ -54,19 +54,19 @@ class AggregationConfig(AnalysisConfig):
             raise ConfigError('SC Aggregation config missing the following '
                               'keys: {}'.format(missing))
 
-        with h5py.File(self.fpath_excl) as f:
+        with h5py.File(self.excl_fpath, mode='r') as f:
             dsets = list(f)
-        if self.dset_tm not in dsets and self.fpath_res is None:
+        if self.tm_dset not in dsets and self.res_fpath is None:
             raise ConfigError('Techmap dataset "{}" not found in exclusions '
-                              'file, resource file input "fpath_res" is '
+                              'file, resource file input "res_fpath" is '
                               'required to create the techmap file.'
-                              .format(self.dset_tm))
+                              .format(self.tm_dset))
 
     @property
-    def fpath_excl(self):
+    def excl_fpath(self):
         """Get the exclusions filepath"""
 
-        fpath = self['fpath_excl']
+        fpath = self['excl_fpath']
 
         if fpath == 'PIPELINE':
             fpath = Pipeline.parse_previous(
@@ -76,10 +76,10 @@ class AggregationConfig(AnalysisConfig):
         return fpath
 
     @property
-    def fpath_gen(self):
+    def gen_fpath(self):
         """Get the generation data filepath"""
 
-        fpath = self['fpath_gen']
+        fpath = self['gen_fpath']
 
         if fpath == 'PIPELINE':
             target_modules = ['multi-year', 'collect', 'generation']
@@ -94,30 +94,30 @@ class AggregationConfig(AnalysisConfig):
                     break
 
             if fpath == 'PIPELINE':
-                raise PipelineError('Could not parse fpath_gen from previous '
+                raise PipelineError('Could not parse gen_fpath from previous '
                                     'pipeline jobs.')
             else:
                 logger.info('Supply curve aggregation using the following '
-                            'pipeline input for fpath_gen: {}'.format(fpath))
+                            'pipeline input for gen_fpath: {}'.format(fpath))
 
         return fpath
 
     @property
-    def fpath_res(self):
+    def res_fpath(self):
         """Get the resource data filepath"""
-        fpath_res = self.get('fpath_res', self._default_fpath_res)
-        if isinstance(fpath_res, str):
-            if '{}' in fpath_res:
+        res_fpath = self.get('res_fpath', self._default_res_fpath)
+        if isinstance(res_fpath, str):
+            if '{}' in res_fpath:
                 for year in range(1998, 2018):
-                    if os.path.exists(fpath_res.format(year)):
+                    if os.path.exists(res_fpath.format(year)):
                         break
-                fpath_res = fpath_res.format(year)
-        return fpath_res
+                res_fpath = res_fpath.format(year)
+        return res_fpath
 
     @property
-    def dset_tm(self):
+    def tm_dset(self):
         """Get the techmap dataset"""
-        return self['dset_tm']
+        return self['tm_dset']
 
     @property
     def excl_dict(self):
@@ -135,14 +135,14 @@ class AggregationConfig(AnalysisConfig):
         return self.get('res_class_bins', self._default_res_class_bins)
 
     @property
-    def dset_cf(self):
+    def cf_dset(self):
         """Get the capacity factor dataset"""
-        return self.get('dset_cf', self._default_dset_cf)
+        return self.get('cf_dset', self._default_cf_dset)
 
     @property
-    def dset_lcoe(self):
+    def lcoe_dset(self):
         """Get the LCOE dataset"""
-        return self.get('dset_lcoe', self._default_dset_lcoe)
+        return self.get('lcoe_dset', self._default_lcoe_dset)
 
     @property
     def data_layers(self):
