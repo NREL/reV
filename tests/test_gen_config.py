@@ -14,7 +14,7 @@ import numpy as np
 from subprocess import Popen, PIPE
 import shlex
 
-from reV.config.analysis_configs import GenConfig
+from reV.config.sam_analysis_configs import GenConfig
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 

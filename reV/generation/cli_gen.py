@@ -231,8 +231,9 @@ def make_fout(name, year):
               help='reV tech to analyze (required).')
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
               help='SAM config files (required) (str, dict, or list).')
-@click.option('--res_file', '-rf', required=True, type=click.Path(exists=True),
-              help='Single resource file (required) (str).')
+@click.option('--res_file', '-rf', required=True,
+              help='Filepath to single resource file, multi-h5 directory, '
+              'or /h5_dir/prefix*suffix.')
 @click.option('--points', '-p', default=slice(0, 100), type=PROJECTPOINTS,
               help=('reV project points to analyze '
                     '(slice, list, or file string). '

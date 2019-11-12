@@ -82,7 +82,8 @@ class Gen:
         points_control : reV.config.project_points.PointsControl
             Project points control instance for site and SAM config spec.
         res_file : str
-            Resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         output_request : list | tuple
             Output variables requested from SAM.
         fout : str | None
@@ -509,7 +510,8 @@ class Gen:
         Returns
         -------
         res_file : str
-            Resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         """
         return self._res_file
 
@@ -646,7 +648,8 @@ class Gen:
             Number of sites to run in series on a core. None defaults to the
             resource file chunk size.
         res_file : str
-            Single resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
@@ -701,7 +704,8 @@ class Gen:
         Parameters
         ----------
         res_file : str
-            Full resource file path + filename.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         default : int
             Sites to be analyzed on a single core if the chunk size cannot be
             determined from res_file.
@@ -713,7 +717,7 @@ class Gen:
             chunk size for windspeed and dni datasets for the WTK and NSRDB
             data, respectively.
         """
-        if not res_file:
+        if not res_file or not os.path.isfile(res_file):
             return default
 
         with Resource(res_file) as res:
@@ -943,7 +947,8 @@ class Gen:
         tech : str
             Technology to analyze (pv, csp, landbasedwind, offshorewind).
         res_file : str
-            Single resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         output_request : list | tuple
             Output variables requested from SAM.
         scale_outputs : bool
@@ -1018,7 +1023,8 @@ class Gen:
             Can also be a single config file str. If it's a list, it is mapped
             to the sorted list of unique configs requested by points csv.
         res_file : str
-            Single resource file with path.
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
         output_request : list | tuple
             Output variables requested from SAM.
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
