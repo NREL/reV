@@ -11,7 +11,7 @@ import time
 from warnings import warn
 
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.config.analysis_configs import GenConfig
+from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
 from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
