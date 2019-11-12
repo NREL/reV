@@ -199,7 +199,7 @@ class RepresentativeMethods:
 
     @classmethod
     def run(cls, profiles, rep_method='meanoid', err_method='rmse',
-            i_profile=0):
+            n_profiles=1):
         """Run representative profile methods.
 
         Parameters
@@ -211,29 +211,36 @@ class RepresentativeMethods:
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        i_profile : int
-            The index of the represntative profile being saved
-            (for n_profiles). 0 is the most representative profile.
+        n_profiles : int
+            Number of representative profiles to save to fout.
 
         Returns
         -------
-        profile : np.ndarray
-            (time, 1) array for the most representative profile
-        i_rep : int
-            Column Index in profiles of the representative profile.
+        profiles : np.ndarray
+            (time, n_profiles) array for the most representative profile(s)
+        i_reps : list
+            List (length of n_profiles) with column Index in profiles of the
+            representative profile(s).
         """
         inst = cls(profiles, rep_method=rep_method, err_method=err_method)
         baseline = inst._rep_method(inst._profiles)
-        profile, i_rep = inst._err_method(inst._profiles, baseline,
-                                          i_profile=i_profile)
-        return profile, i_rep
+
+        profiles = None
+        i_reps = []
+        for i in range(n_profiles):
+            p, ir = inst._err_method(inst._profiles, baseline, i_profile=i)
+            if profiles is None:
+                profiles = np.zeros((len(p), n_profiles), dtype=p.dtype)
+            profiles[:, i] = p
+            i_reps.append(ir)
+        return profiles, i_reps
 
 
 class RegionRepProfile:
     """Framework to handle rep profile for one resource region"""
 
     def __init__(self, gen_fpath, rev_summary, cf_dset='cf_profile',
-                 rep_method='meanoid', err_method='rmse', i_profile=0):
+                 rep_method='meanoid', err_method='rmse', n_profiles=1):
         """
         Parameters
         ----------
@@ -249,20 +256,19 @@ class RegionRepProfile:
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        i_profile : int
-            The index of the represntative profile being saved
-            (for n_profiles). 0 is the most representative profile.
+        n_profiles : int
+            Number of representative profiles to retrieve.
         """
 
         self._gen_fpath = gen_fpath
         self._rev_summary = rev_summary
         self._cf_dset = cf_dset
-        self._profile = None
-        self._i_rep = None
+        self._profiles = None
+        self._i_reps = None
         self._rep_method = rep_method
         self._err_method = err_method
         self._err_method = err_method
-        self._i_profile = i_profile
+        self._n_profiles = n_profiles
 
     def _get_profiles(self, gen_gids):
         """Retrieve the cf profile array from the generation h5 file.
@@ -311,45 +317,45 @@ class RegionRepProfile:
         return data
 
     @property
-    def rep_profile(self):
-        """Get the representative profile of this region."""
-        if self._profile is None:
+    def rep_profiles(self):
+        """Get the representative profiles of this region."""
+        if self._profiles is None:
             gids = self._get_region_attr(self._rev_summary, 'gen_gids')
             all_profiles = self._get_profiles(gids)
-            self._profile, self._i_rep = RepresentativeMethods.run(
+            self._profiles, self._i_reps = RepresentativeMethods.run(
                 all_profiles, rep_method=self._rep_method,
-                err_method=self._err_method, i_profile=self._i_profile)
-        return self._profile
+                err_method=self._err_method, n_profiles=self._n_profiles)
+        return self._profiles
 
     @property
-    def i_rep(self):
-        """Get the representative profile index of this region."""
-        if self._i_rep is None:
+    def i_reps(self):
+        """Get the representative profile index(es) of this region."""
+        if self._i_reps is None:
             gids = self._get_region_attr(self._rev_summary, 'gen_gids')
             all_profiles = self._get_profiles(gids)
-            self._profile, self._i_rep = RepresentativeMethods.run(
+            self._profiles, self._i_reps = RepresentativeMethods.run(
                 all_profiles, rep_method=self._rep_method,
-                err_method=self._err_method)
-        return self._i_rep
+                err_method=self._err_method, n_profiles=self._n_profiles)
+        return self._i_reps
 
     @property
-    def gen_gid_rep(self):
-        """Get the representative profile gen gid of this region."""
+    def gen_gid_reps(self):
+        """Get the representative profile gen gids of this region."""
         gids = self._get_region_attr(self._rev_summary, 'gen_gids')
-        gen_gid_rep = gids[self.i_rep]
-        return gen_gid_rep
+        gen_gid_reps = [gids[i] for i in self.i_reps]
+        return gen_gid_reps
 
     @property
-    def res_gid_rep(self):
-        """Get the representative profile resource gid of this region."""
+    def res_gid_reps(self):
+        """Get the representative profile resource gids of this region."""
         gids = self._get_region_attr(self._rev_summary, 'res_gids')
-        res_gid_rep = gids[self.i_rep]
-        return res_gid_rep
+        res_gid_reps = [gids[i] for i in self.i_reps]
+        return res_gid_reps
 
     @classmethod
     def get_region_rep_profile(cls, gen_fpath, rev_summary,
                                cf_dset='cf_profile', rep_method='meanoid',
-                               err_method='rmse', i_profile=0):
+                               err_method='rmse', n_profiles=1):
         """Class method for parallelization of rep profile calc.
 
         Parameters
@@ -366,31 +372,30 @@ class RegionRepProfile:
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        i_profile : int
-            The index of the represntative profile being saved
-            (for n_profiles). 0 is the most representative profile.
+        n_profiles : int
+            Number of representative profiles to retrieve.
 
         Returns
         -------
         rep_profile : np.ndarray
-            (time, 1) array for the most representative profile
-        i_rep : int
-            Column Index in profiles of the representative profile.
-        gen_gid_rep : int
-            Generation gid of the representative profile.
-        res_gid_rep : int
-            Resource gid of the representative profile.
+            (time, n_profiles) array for the most representative profile(s)
+        i_rep : list
+            Column Index in profiles of the representative profile(s).
+        gen_gid_reps : list
+            Generation gid(s) of the representative profile(s).
+        res_gid_reps : list
+            Resource gid(s) of the representative profile(s).
         """
         r = cls(gen_fpath, rev_summary, cf_dset=cf_dset, rep_method=rep_method,
-                err_method=err_method, i_profile=i_profile)
-        return r.rep_profile, r.i_rep, r.gen_gid_rep, r.res_gid_rep
+                err_method=err_method, n_profiles=n_profiles)
+        return r.rep_profiles, r.i_reps, r.gen_gid_reps, r.res_gid_reps
 
 
 class RepProfiles:
     """Framework for calculating the representative profiles."""
 
     def __init__(self, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
-                 rep_method='meanoid', err_method='rmse'):
+                 rep_method='meanoid', err_method='rmse', n_profiles=1):
         """
         Parameters
         ----------
@@ -409,6 +414,8 @@ class RepProfiles:
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
+        n_profiles : int
+            Number of representative profiles to save to fout.
         """
 
         logger.debug('Running rep profiles with gen_fpath: "{}"'
@@ -427,6 +434,7 @@ class RepProfiles:
         elif isinstance(reg_cols, str):
             reg_cols = [reg_cols]
 
+        self._n_profiles = n_profiles
         self._check_rev_gen(gen_fpath, cf_dset)
         self._cf_dset = cf_dset
         self._gen_fpath = gen_fpath
@@ -436,8 +444,10 @@ class RepProfiles:
                          for k in self._reg_cols}
         self._time_index = None
         self._meta = None
-        self._profiles = np.zeros((len(self.time_index), len(self.meta)),
-                                  dtype=np.float32)
+        self._profiles = {k: np.zeros((len(self.time_index),
+                                       len(self.meta)),
+                                      dtype=np.float32)
+                          for k in range(self._n_profiles)}
         self._rep_method = rep_method
         self._err_method = err_method
 
@@ -534,8 +544,8 @@ class RepProfiles:
         if self._meta is None:
             self._meta = self._rev_summary[self._reg_cols].drop_duplicates()
             self._meta = self._meta.reset_index(drop=True)
-            self._meta['rep_gen_gid'] = -1
-            self._meta['rep_res_gid'] = -1
+            self._meta['rep_gen_gid'] = None
+            self._meta['rep_res_gid'] = None
         return self._meta
 
     @property
@@ -544,8 +554,9 @@ class RepProfiles:
 
         Returns
         -------
-        profiles : np.ndarray
-            (time, n) cf profiles. Array of zeros if not yet calculated.
+        profiles : dict
+            dict of n_profile-keyed arrays with shape (time, n) for the
+            representative profiles for each region.
         """
         return self._profiles
 
@@ -572,15 +583,13 @@ class RepProfiles:
                 mask = (mask & temp)
         return mask
 
-    def _init_fout(self, fout, n_profiles):
+    def _init_fout(self, fout):
         """Initialize an output h5 file for n_profiles
 
         Parameters
         ----------
         fout : None | str
             None or filepath to output h5 file.
-        n_profiles : int
-            The number of profiles to be saved.
         """
         if fout is not None:
             dsets = []
@@ -588,13 +597,13 @@ class RepProfiles:
             attrs = {}
             chunks = {}
             dtypes = {}
-            for i in range(n_profiles):
+            for i in range(self._n_profiles):
                 dset = 'rep_profiles_{}'.format(i)
                 dsets.append(dset)
-                shapes[dset] = self.profiles.shape
+                shapes[dset] = self.profiles[0].shape
                 attrs[dset] = None
                 chunks[dset] = None
-                dtypes[dset] = self.profiles.dtype
+                dtypes[dset] = self.profiles[0].dtype
 
             Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
                             self.meta, time_index=self.time_index)
@@ -604,32 +613,25 @@ class RepProfiles:
                 out._create_dset('rev_summary', rev_sum.shape,
                                  rev_sum.dtype, data=rev_sum)
 
-    def _write_fout(self, fout, i):
+    def _write_fout(self, fout):
         """Write profiles and meta to an output file.
 
         Parameters
         ----------
         fout : None | str
             None or filepath to output h5 file.
-        i : int
-            The index of the represntative profile being saved (for n_profiles)
         """
         if fout is not None:
             with Outputs(fout, mode='a') as out:
-                dset = 'rep_profiles_{}'.format(i)
                 rev_sum = Outputs.to_records_array(self._rev_summary)
-                out[dset] = self.profiles
                 out['rev_summary'] = rev_sum
+                for i in range(self._n_profiles):
+                    dset = 'rep_profiles_{}'.format(i)
+                    out[dset] = self.profiles[i]
 
-    def _run_serial(self, i_profile=0):
-        """Compute all representative profiles in serial.
+    def _run_serial(self):
+        """Compute all representative profiles in serial."""
 
-        Parameters
-        ----------
-        i_profile : int
-            The index of the represntative profile being saved
-            (for n_profiles). 0 is the most representative profile.
-        """
         logger.info('Running {} rep profile calculations in serial.'
                     .format(len(self.meta)))
         meta_static = deepcopy(self.meta)
@@ -638,26 +640,27 @@ class RepProfiles:
                            if k in self._reg_cols}
 
             mask = self._get_mask(region_dict)
-            profile, _, ggid, rgid = RegionRepProfile.get_region_rep_profile(
+            out = RegionRepProfile.get_region_rep_profile(
                 self._gen_fpath, self._rev_summary[mask],
                 cf_dset=self._cf_dset, rep_method=self._rep_method,
-                err_method=self._err_method, i_profile=i_profile)
-
+                err_method=self._err_method, n_profiles=self._n_profiles)
+            profiles, _, ggids, rgids = out
             logger.debug('Selected gen gid {} for region: {}'
-                         .format(ggid, region_dict))
-            self._meta.at[i, 'rep_gen_gid'] = ggid
-            self._meta.at[i, 'rep_res_gid'] = rgid
-            self._profiles[:, i] = profile
+                         .format(ggids, region_dict))
 
-    def _run_parallel(self, i_profile=0):
-        """Compute all representative profiles in parallel
+            for n in range(profiles.shape[1]):
+                self._profiles[n][:, i] = profiles[:, n]
 
-        Parameters
-        ----------
-        i_profile : int
-            The index of the represntative profile being saved
-            (for n_profiles). 0 is the most representative profile.
-        """
+                if len(ggids) == 1:
+                    self._meta.at[i, 'rep_gen_gid'] = ggids[0]
+                    self._meta.at[i, 'rep_res_gid'] = rgids[0]
+                else:
+                    self._meta.at[i, 'rep_gen_gid'] = str(ggids)
+                    self._meta.at[i, 'rep_res_gid'] = str(rgids)
+
+    def _run_parallel(self):
+        """Compute all representative profiles in parallel."""
+
         logger.info('Kicking off {} rep profile futures.'
                     .format(len(self.meta)))
         futures = {}
@@ -673,18 +676,25 @@ class RepProfiles:
                                     cf_dset=self._cf_dset,
                                     rep_method=self._rep_method,
                                     err_method=self._err_method,
-                                    i_profile=i_profile)
+                                    n_profiles=self._n_profiles)
 
                 futures[future] = [i, region_dict]
 
             for future in as_completed(futures):
                 i, region_dict = futures[future]
-                profile, _, ggid, rgid = future.result()
-                logger.debug('Selected gen gid {} for region {}.'
-                             .format(ggid, region_dict))
-                self._meta.at[i, 'rep_gen_gid'] = ggid
-                self._meta.at[i, 'rep_res_gid'] = rgid
-                self._profiles[:, i] = profile
+                profiles, _, ggids, rgids = future.result()
+                logger.debug('Selected gen gids {} for region {}.'
+                             .format(ggids, region_dict))
+
+                for n in range(profiles.shape[1]):
+                    self._profiles[n][:, i] = profiles[:, n]
+
+                if len(ggids) == 1:
+                    self._meta.at[i, 'rep_gen_gid'] = ggids[0]
+                    self._meta.at[i, 'rep_res_gid'] = rgids[0]
+                else:
+                    self._meta.at[i, 'rep_gen_gid'] = str(ggids)
+                    self._meta.at[i, 'rep_res_gid'] = str(rgids)
 
     @classmethod
     def run(cls, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
@@ -718,33 +728,24 @@ class RepProfiles:
 
         Returns
         -------
-        out_profiles : dict
+        profiles : dict
             dict of n_profile-keyed arrays with shape (time, n) for the
             representative profiles for each region.
         out_meta : pd.DataFrame
-            dict of n_profile-keyed Meta dataframes recording the regions and
-            the selected rep profile gid.
+            Meta dataframes recording the regions and the selected rep profile
+            gid.
         """
 
-        out_profiles = {}
-        out_meta = {}
+        rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
+                 rep_method=rep_method, err_method=err_method,
+                 n_profiles=n_profiles)
+        if parallel:
+            rp._run_parallel()
+        else:
+            rp._run_serial()
 
-        for i in range(n_profiles):
-            logger.info('Starting representative profiles for i_profile #{}'
-                        .format(i))
-            rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
-                     rep_method=rep_method, err_method=err_method)
-            if parallel:
-                rp._run_parallel(i_profile=i)
-            else:
-                rp._run_serial(i_profile=i)
-
-            if i == 0:
-                rp._init_fout(fout, n_profiles)
-            rp._write_fout(fout, i)
-
-            out_profiles[i] = rp._profiles
-            out_meta[i] = rp._meta
+        rp._init_fout(fout)
+        rp._write_fout(fout)
 
         logger.info('Representative profiles complete!')
-        return out_profiles, out_meta
+        return rp._profiles, rp._meta

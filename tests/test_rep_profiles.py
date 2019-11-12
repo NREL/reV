@@ -5,6 +5,7 @@ import os
 import pytest
 import pandas as pd
 import numpy as np
+import json
 
 from reV.rep_profiles.rep_profiles import (RegionRepProfile, RepProfiles,
                                            RepresentativeMethods)
@@ -22,7 +23,7 @@ def test_rep_region_interval():
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites})
     r = RegionRepProfile(GEN_FPATH, rev_summary)
-    assert r.i_rep == 14
+    assert r.i_reps[0] == 14
 
 
 def test_rep_methods():
@@ -33,23 +34,23 @@ def test_rep_methods():
 
     r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
                          err_method='rmse')
-    assert r.i_rep == 15
+    assert r.i_reps[0] == 15
 
     r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
                          err_method='mbe')
-    assert r.i_rep == 13
+    assert r.i_reps[0] == 13
 
     r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='meanoid',
                          err_method='mae')
-    assert r.i_rep == 15
+    assert r.i_reps[0] == 15
 
     r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='median',
                          err_method='rmse')
-    assert r.i_rep == 15
+    assert r.i_reps[0] == 15
 
     r = RegionRepProfile(GEN_FPATH, rev_summary, rep_method='median',
                          err_method='mbe')
-    assert r.i_rep == 13
+    assert r.i_reps[0] == 13
 
 
 def test_meanoid():
@@ -82,12 +83,12 @@ def test_integrated():
     p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, 'region', parallel=True)
     p2, m2 = RepProfiles.run(GEN_FPATH, rev_summary, 'region', parallel=False)
 
-    assert np.allclose(m1[0]['rep_res_gid'].values,
-                       m2[0]['rep_res_gid'].values)
+    assert np.allclose(m1['rep_res_gid'].values.astype(int),
+                       m2['rep_res_gid'].values.astype(int))
     assert np.allclose(p1[0], p2[0])
-    assert m1[0].loc[0, 'rep_res_gid'] == 4
-    assert m1[0].loc[1, 'rep_res_gid'] == 15
-    assert m1[0].loc[2, 'rep_res_gid'] == 60
+    assert m1.loc[0, 'rep_res_gid'] == 4
+    assert m1.loc[1, 'rep_res_gid'] == 15
+    assert m1.loc[2, 'rep_res_gid'] == 60
 
 
 def test_many_regions():
@@ -105,13 +106,13 @@ def test_many_regions():
     p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols, parallel=False)
 
     assert p1[0].shape == (17520, 6)
-    assert len(m1[0]) == 6
+    assert len(m1) == 6
 
     for r1 in set(region1):
-        assert r1 in m1[0]['region1'].values
+        assert r1 in m1['region1'].values
 
     for r2 in set(region2):
-        assert r2 in m1[0]['region2'].values
+        assert r2 in m1['region2'].values
 
 
 def test_write_to_file():
@@ -135,8 +136,11 @@ def test_write_to_file():
 
     assert np.allclose(p1[0], disk_profiles)
     assert len(disk_meta) == 3
-    assert np.allclose(m1[0]['rep_gen_gid'].values,
-                       disk_meta['rep_gen_gid'].values)
+
+    for i in m1.index:
+        v1 = json.loads(m1.loc[i, 'rep_gen_gid'])
+        v2 = json.loads(disk_meta.loc[i, 'rep_gen_gid'])
+        assert v1 == v2
 
     if PURGE_OUT:
         os.remove(fout)
