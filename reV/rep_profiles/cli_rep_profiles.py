@@ -122,7 +122,7 @@ def from_config(ctx, config_file, verbose):
 @click.option('--err_method', '-em', type=STR, default='rmse',
               help='String identifier for error method '
               '(e.g. rmse, mae, mbe).')
-@click.option('--n_profiles', '-n', type=INT, default=1,
+@click.option('--n_profiles', '-np', type=INT, default=1,
               help='Number of representative profiles to save.')
 @click.option('--out_dir', '-od', type=STR, default='./',
               help='Directory to save rep profile output h5.')
@@ -182,7 +182,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
             '-cf {cf_dset} '
             '-rm {rep_method} '
             '-em {err_method} '
-            '-n {n_profiles} '
+            '-np {n_profiles} '
             '-od {out_dir} '
             '-ld {log_dir} '
             )
