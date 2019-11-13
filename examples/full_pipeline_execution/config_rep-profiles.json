@@ -15,7 +15,7 @@
     "walltime": 4.0
   },
   "gen_fpath": "PIPELINE",
-  "n_profiles": 2,
+  "n_profiles": 5,
   "project_control": {
     "analysis_years": [
       2011,
@@ -25,6 +25,7 @@
     "logging_level": "INFO"
   },
   "reg_cols": [
+    "reeds_region",
     "res_class"
   ],
   "rep_method": "meanoid",

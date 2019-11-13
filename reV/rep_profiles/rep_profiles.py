@@ -645,8 +645,9 @@ class RepProfiles:
                 cf_dset=self._cf_dset, rep_method=self._rep_method,
                 err_method=self._err_method, n_profiles=self._n_profiles)
             profiles, _, ggids, rgids = out
-            logger.debug('Selected gen gid {} for region: {}'
-                         .format(ggids, region_dict))
+            logger.info('Profile {} out of {} complete '
+                        'for region: {}'
+                        .format(i + 1, len(meta_static), region_dict))
 
             for n in range(profiles.shape[1]):
                 self._profiles[n][:, i] = profiles[:, n]
@@ -680,11 +681,12 @@ class RepProfiles:
 
                 futures[future] = [i, region_dict]
 
-            for future in as_completed(futures):
+            for nf, future in enumerate(as_completed(futures)):
                 i, region_dict = futures[future]
                 profiles, _, ggids, rgids = future.result()
-                logger.debug('Selected gen gids {} for region {}.'
-                             .format(ggids, region_dict))
+                logger.info('Future {} out of {} complete '
+                            'for region: {}'
+                            .format(nf + 1, len(futures), region_dict))
 
                 for n in range(profiles.shape[1]):
                     self._profiles[n][:, i] = profiles[:, n]
