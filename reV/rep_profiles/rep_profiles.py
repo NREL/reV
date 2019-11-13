@@ -588,46 +588,55 @@ class RepProfiles:
 
         Parameters
         ----------
-        fout : None | str
+        fout : str
             None or filepath to output h5 file.
         """
-        if fout is not None:
-            dsets = []
-            shapes = {}
-            attrs = {}
-            chunks = {}
-            dtypes = {}
-            for i in range(self._n_profiles):
-                dset = 'rep_profiles_{}'.format(i)
-                dsets.append(dset)
-                shapes[dset] = self.profiles[0].shape
-                attrs[dset] = None
-                chunks[dset] = None
-                dtypes[dset] = self.profiles[0].dtype
+        dsets = []
+        shapes = {}
+        attrs = {}
+        chunks = {}
+        dtypes = {}
+        for i in range(self._n_profiles):
+            dset = 'rep_profiles_{}'.format(i)
+            dsets.append(dset)
+            shapes[dset] = self.profiles[0].shape
+            attrs[dset] = None
+            chunks[dset] = None
+            dtypes[dset] = self.profiles[0].dtype
 
-            Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
-                            self.meta, time_index=self.time_index)
+        Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
+                        self.meta, time_index=self.time_index)
 
-            with Outputs(fout, mode='a') as out:
-                rev_sum = Outputs.to_records_array(self._rev_summary)
-                out._create_dset('rev_summary', rev_sum.shape,
-                                 rev_sum.dtype, data=rev_sum)
+        with Outputs(fout, mode='a') as out:
+            rev_sum = Outputs.to_records_array(self._rev_summary)
+            out._create_dset('rev_summary', rev_sum.shape,
+                             rev_sum.dtype, data=rev_sum)
 
     def _write_fout(self, fout):
         """Write profiles and meta to an output file.
 
         Parameters
         ----------
-        fout : None | str
+        fout : str
             None or filepath to output h5 file.
         """
-        if fout is not None:
-            with Outputs(fout, mode='a') as out:
-                rev_sum = Outputs.to_records_array(self._rev_summary)
-                out['rev_summary'] = rev_sum
-                for i in range(self._n_profiles):
-                    dset = 'rep_profiles_{}'.format(i)
-                    out[dset] = self.profiles[i]
+        with Outputs(fout, mode='a') as out:
+            rev_sum = Outputs.to_records_array(self._rev_summary)
+            out['rev_summary'] = rev_sum
+            for i in range(self._n_profiles):
+                dset = 'rep_profiles_{}'.format(i)
+                out[dset] = self.profiles[i]
+
+    def save_profiles(self, fout):
+        """Initialize fout and save profiles.
+
+        Parameters
+        ----------
+        fout : str
+            None or filepath to output h5 file.
+        """
+        self._init_fout(fout)
+        self._write_fout(fout)
 
     def _run_serial(self):
         """Compute all representative profiles in serial."""
@@ -746,8 +755,8 @@ class RepProfiles:
         else:
             rp._run_serial()
 
-        rp._init_fout(fout)
-        rp._write_fout(fout)
+        if fout is not None:
+            rp.save_profiles(fout)
 
         logger.info('Representative profiles complete!')
         return rp._profiles, rp._meta
