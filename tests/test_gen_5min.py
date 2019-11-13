@@ -33,7 +33,7 @@ def test_gen_downscaling():
                       sam_files=sam_files, res_file=res_file,
                       output_request=('cf_mean', 'cf_profile'),
                       downscale='5min', n_workers=1, sites_per_split=100,
-                      fout=None, return_obj=True)
+                      fout=None)
     gen_outs = gen.out['cf_profile'].astype(np.int32)
 
     if not os.path.exists(baseline):

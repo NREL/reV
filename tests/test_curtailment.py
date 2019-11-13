@@ -62,7 +62,7 @@ def test_cf_curtailment(year, site):
                       output_request=('cf_profile',),
                       curtailment=curtailment,
                       n_workers=1, sites_per_split=50,
-                      return_obj=True, scale_outputs=True)
+                      scale_outputs=True)
     results, check_curtailment = test_res_curtailment(year, site=site)
     results['cf_profile'] = gen.out['cf_profile'].flatten()
 
@@ -109,7 +109,7 @@ def test_random(year, site):
                           output_request=('cf_profile',),
                           curtailment=c,
                           n_workers=1, sites_per_split=50,
-                          return_obj=True, scale_outputs=True)
+                          scale_outputs=True)
 
         results.append(gen.out['cf_mean'])
     assert results[0] > results[1], 'Curtailment did not decrease cf_mean!'

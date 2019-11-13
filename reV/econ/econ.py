@@ -360,7 +360,7 @@ class Econ(Gen):
     def reV_run(cls, points=None, sam_files=None, cf_file=None,
                 cf_year=None, site_data=None, output_request=('lcoe_fcr',),
                 n_workers=1, sites_per_split=100, points_range=None,
-                fout=None, dirout='./econ_out', return_obj=False):
+                fout=None, dirout='./econ_out'):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -396,12 +396,10 @@ class Econ(Gen):
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
         fout : str | None
-            Optional .h5 output file specification.
+            Optional .h5 output file specification. None will return object.
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
-        return_obj : bool
-            Option to return the Econ object instance.
 
         Returns
         -------
@@ -411,7 +409,7 @@ class Econ(Gen):
         """
 
         # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_files, tech=None)
+        pc = cls.get_pc(points, points_range, sam_files, tech='econ')
 
         # make a Gen class instance to operate with
         econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
@@ -442,7 +440,7 @@ class Econ(Gen):
                      .format(output_request))
 
         try:
-            if return_obj:
+            if not fout:
                 if n_workers == 1:
                     logger.debug('Running serial econ for: {}'.format(pc))
                     out = execute_single(econ.run, pc, econ_fun=econ._fun,
@@ -465,5 +463,5 @@ class Econ(Gen):
             logger.exception('SmartParallelJob.execute() failed for econ.')
             raise e
 
-        if return_obj:
+        if not fout:
             return econ

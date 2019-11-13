@@ -92,7 +92,7 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
     gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
                       res_file=res_file, n_workers=n_workers,
-                      sites_per_split=3, fout=None, return_obj=True)
+                      sites_per_split=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -117,7 +117,7 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
 
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, fout=None, return_obj=True)
+                      res_file=res_file, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -142,7 +142,7 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
                  enumerate(sam_files)}
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
     gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, fout=None, return_obj=True)
+                      res_file=res_file, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -169,8 +169,7 @@ def test_pv_gen_profiles(year):
     Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
                 res_file=res_file, fout=rev2_out,
                 output_request=('cf_profile',),
-                n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
-                return_obj=False)
+                n_workers=2, sites_per_split=50, dirout=rev2_out_dir)
 
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(rev2_out_dir)
@@ -208,7 +207,7 @@ def test_smart(year):
     Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
                 res_file=res_file, fout=rev2_out,
                 n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
-                output_request=('cf_profile',), return_obj=False)
+                output_request=('cf_profile',))
 
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(rev2_out_dir)
@@ -241,7 +240,7 @@ def test_multi_file_nsrdb_2018():
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
                       res_file=res_file, n_workers=n_workers,
-                      sites_per_split=3, fout=None, return_obj=True)
+                      sites_per_split=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.14

@@ -670,7 +670,7 @@ class Gen:
             PointsControl object instance.
         """
 
-        if tech not in Gen.OPTIONS:
+        if tech not in Gen.OPTIONS and tech.lower() != 'econ':
             raise KeyError('Did not recognize gen tech "{}". '
                            'Gen options are: {}'
                            .format(tech, list(Gen.OPTIONS.keys())))
@@ -1017,8 +1017,7 @@ class Gen:
                 output_request=('cf_mean',), curtailment=None,
                 downscale=None, n_workers=1, sites_per_split=None,
                 points_range=None, fout=None, dirout='./gen_out',
-                mem_util_lim=0.4, return_obj=False,
-                scale_outputs=True):
+                mem_util_lim=0.4, scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1059,15 +1058,14 @@ class Gen:
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
         fout : str | None
-            Optional .h5 output file specification.
+            Optional .h5 output file specification. Object will be returned
+            if None.
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
         mem_util_lim : float
             Memory utilization limit (fractional). This will determine how many
             site results are stored in memory at any given time.
-        return_obj : bool
-            Option to return the Gen object instance.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
         """
@@ -1097,7 +1095,7 @@ class Gen:
 
         # use serial or parallel execution control based on n_workers
         try:
-            if return_obj:
+            if not fout:
                 if n_workers == 1:
                     logger.debug('Running serial generation for: {}'
                                  .format(pc))
@@ -1121,5 +1119,5 @@ class Gen:
             logger.exception('reV generation failed!')
             raise e
 
-        if return_obj:
+        if not fout:
             return gen
