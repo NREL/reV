@@ -8,71 +8,71 @@ reV.supply\_curve.aggregation module
 ------------------------------------
 
 .. automodule:: reV.supply_curve.aggregation
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 reV.supply\_curve.cli\_aggregation module
 -----------------------------------------
 
 .. automodule:: reV.supply_curve.cli_aggregation
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 reV.supply\_curve.cli\_supply\_curve module
 -------------------------------------------
 
 .. automodule:: reV.supply_curve.cli_supply_curve
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 reV.supply\_curve.exclusions module
 -----------------------------------
 
 .. automodule:: reV.supply_curve.exclusions
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 reV.supply\_curve.point\_summary module
 ---------------------------------------
 
 .. automodule:: reV.supply_curve.point_summary
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 reV.supply\_curve.points module
 -------------------------------
 
 .. automodule:: reV.supply_curve.points
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 reV.supply\_curve.supply\_curve module
 --------------------------------------
 
 .. automodule:: reV.supply_curve.supply_curve
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 reV.supply\_curve.tech\_mapping module
 --------------------------------------
 
 .. automodule:: reV.supply_curve.tech_mapping
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 
 Module contents
 ---------------
 
 .. automodule:: reV.supply_curve
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    :members:
+    :undoc-members:
+    :show-inheritance:

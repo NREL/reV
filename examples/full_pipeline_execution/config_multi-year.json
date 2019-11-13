@@ -1,0 +1,29 @@
+{
+  "directories": {
+    "logging_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "memory": 90,
+    "option": "eagle",
+    "walltime": 0.5
+  },
+  "groups": {
+    "none": {
+      "dsets": [
+        "cf_mean",
+        "cf_profile",
+        "lcoe_fcr",
+        "ghi_mean"
+      ],
+      "source_dir": "./",
+      "source_files": "PIPELINE",
+      "source_prefix": ""
+    }
+  },
+  "project_control": {
+    "logging_level": "INFO"
+  }
+}

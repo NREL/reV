@@ -1,0 +1,33 @@
+{
+  "cf_dset": "cf_profile-{}",
+  "directories": {
+    "logging_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "err_method": "rmse",
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "memory": 190,
+    "nodes": 1,
+    "option": "eagle",
+    "sites_per_core": 100,
+    "walltime": 4.0
+  },
+  "gen_fpath": "PIPELINE",
+  "n_profiles": 5,
+  "project_control": {
+    "analysis_years": [
+      2011,
+      2012,
+      2013
+    ],
+    "logging_level": "INFO"
+  },
+  "reg_cols": [
+    "reeds_region",
+    "res_class"
+  ],
+  "rep_method": "meanoid",
+  "rev_summary": "PIPELINE"
+}

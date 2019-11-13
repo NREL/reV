@@ -29,6 +29,7 @@ class CollectionConfig(AnalysisConfig):
             or dictionary with pre-extracted config.
         """
         self._parallel = False
+        self._keep = False
         self._dsets = None
         self._file_prefixes = None
         self._ec = None
@@ -74,6 +75,19 @@ class CollectionConfig(AnalysisConfig):
         if 'parallel' in self['project_control']:
             self._parallel = self['project_control']['parallel']
         return self._parallel
+
+    @property
+    def keep_chunks(self):
+        """Get the flag to keep chunk files.
+
+        Returns
+        -------
+        _keep : bool
+            Flag to keep chunk files.
+        """
+        if 'keep_chunks' in self['project_control']:
+            self._keep = self['project_control']['keep_chunks']
+        return self._keep
 
     @property
     def dsets(self):

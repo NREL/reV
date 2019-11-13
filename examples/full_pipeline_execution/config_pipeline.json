@@ -1,0 +1,26 @@
+{
+  "logging": {
+    "log_file": null,
+    "log_level": "INFO"
+  },
+  "pipeline": [
+    {
+      "generation": "./config_gen.json"
+    },
+    {
+      "collect": "./config_collect.json"
+    },
+    {
+      "multi-year": "./config_multi-year.json"
+    },
+    {
+      "aggregation": "./config_aggregation.json"
+    },
+    {
+      "supply-curve": "./config_supply-curve.json"
+    },
+    {
+      "rep-profiles": "./config_rep-profiles.json"
+    }
+  ]
+}

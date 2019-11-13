@@ -371,6 +371,11 @@ class Collector:
             raise HandlerRuntimeError("gids: {} are missing"
                                       .format(missing))
 
+    def _purge_chunks(self):
+        """Remove the chunked files (after collection)."""
+        for fpath in self.h5_files:
+            os.remove(fpath)
+
     def combine_meta(self):
         """
         Load and combine meta data from .h5
@@ -477,6 +482,28 @@ class Collector:
         logger.info('Collection complete')
         logger.debug('\t- Colletion took {:.4f} minutes'
                      .format(tt))
+
+    @classmethod
+    def purge_chunks(cls, h5_file, h5_dir, project_points, file_prefix=None):
+        """
+        Purge (remove) chunked files from h5_dir (after collection).
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file into which data will be collected
+        h5_dir : str
+            Root directory containing .h5 files to combine
+        project_points : str | slice | list | pandas.DataFrame
+            Project points that correspond to the full collection of points
+            contained in the .h5 files to be collected
+        file_prefix : str
+            .h5 file prefix, if None collect all files on h5_dir
+        """
+
+        clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)
+        clt._purge_chunks()
+        logger.info('Purged chunk files from {}'.format(h5_dir))
 
     @classmethod
     def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
