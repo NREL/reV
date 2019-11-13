@@ -564,23 +564,6 @@ class CSP(Solar):
         """
         return np.abs(self.gen_profile() / self.parameters['system_capacity'])
 
-    def gen_profile(self):
-        """Get CSP power generation profile (orig timezone) in kWe.
-
-        Returns
-        -------
-        output : np.ndarray
-            1D array of hourly CSP power generation in kWe.
-            Datatype is float32 and array length is 8760*time_interval.
-        """
-        gen = np.array(self['gen'], dtype=np.float32)
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                gen = np.roll(gen, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return gen
-
     @property
     def default(self):
         """Get the executed default pysam CSP object.
