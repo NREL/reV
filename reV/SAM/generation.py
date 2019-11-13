@@ -153,15 +153,15 @@ class Generation(SAM):
         return self['kwh_per_kw']
 
     def gen_profile(self):
-        """Get AC inverter power generation profile (orig timezone) in kW.
+        """Get power generation profile (orig timezone) in kW.
 
         Returns
         -------
         output : np.ndarray
-            1D array of hourly AC inverter power generation in kW.
+            1D array of hourly power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        gen = np.array(self['ac'], dtype=np.float32) / 1000
+        gen = np.array(self['gen'], dtype=np.float32)
         # Roll back to native timezone if resource meta has a timezone
         if self._meta is not None:
             if 'timezone' in self.meta:
@@ -169,35 +169,25 @@ class Generation(SAM):
                                             * self.time_interval))
         return gen
 
-    def poa(self):
-        """Get plane-of-array irradiance profile (orig timezone) in W/m2.
+    def collect_outputs(self, output_lookup=None):
+        """Collect SAM gen output_request.
 
-        Returns
-        -------
-        output : np.ndarray
-            1D array of plane-of-array irradiance in W/m2.
-            Datatype is float32 and array length is 8760*time_interval.
+        Parameters
+        ----------
+        output_lookup : dict | None
+            Lookup dictionary mapping output keys to special output methods.
+            None defaults to generation default outputs.
         """
-        poa = np.array(self['poa'], dtype=np.float32)
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                poa = np.roll(poa, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return poa
 
-    def collect_outputs(self):
-        """Collect SAM gen output_request."""
+        if output_lookup is None:
+            output_lookup = {'cf_mean': self.cf_mean,
+                             'cf_profile': self.cf_profile,
+                             'annual_energy': self.annual_energy,
+                             'energy_yield': self.energy_yield,
+                             'gen_profile': self.gen_profile,
+                             }
 
-        output_lookup = {'cf_mean': self.cf_mean,
-                         'cf_profile': self.cf_profile,
-                         'annual_energy': self.annual_energy,
-                         'energy_yield': self.energy_yield,
-                         'gen_profile': self.gen_profile,
-                         'poa': self.poa,
-                         }
-
-        super().collect_outputs(output_lookup)
+        super().collect_outputs(output_lookup=output_lookup)
 
     def _gen_exec(self):
         """Run SAM generation with possibility for follow on econ analysis."""
@@ -408,6 +398,8 @@ class Solar(Generation):
                    'clearsky_ghi': 'gh',
                    'wind_speed': 'wspd',
                    'air_temperature': 'tdry',
+                   'dew_point': 'tdew',
+                   'surface_pressure': 'pres',
                    }
 
         irrad_vars = ['dn', 'df', 'gh']
@@ -473,6 +465,40 @@ class PV(Solar):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
+    def poa(self):
+        """Get plane-of-array irradiance profile (orig timezone) in W/m2.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of plane-of-array irradiance in W/m2.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        poa = np.array(self['poa'], dtype=np.float32)
+        # Roll back to native timezone if resource meta has a timezone
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                poa = np.roll(poa, -1 * int(self.meta['timezone']
+                                            * self.time_interval))
+        return poa
+
+    def gen_profile(self):
+        """Get AC inverter power generation profile (orig timezone) in kW.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of hourly AC inverter power generation in kW.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        gen = np.array(self['ac'], dtype=np.float32) / 1000
+        # Roll back to native timezone if resource meta has a timezone
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                gen = np.roll(gen, -1 * int(self.meta['timezone']
+                                            * self.time_interval))
+        return gen
+
     @property
     def default(self):
         """Get the executed default pysam PVWATTS object.
@@ -491,6 +517,27 @@ class PV(Solar):
             self._default.execute()
         return self._default
 
+    def collect_outputs(self, output_lookup=None):
+        """Collect SAM gen output_request.
+
+        Parameters
+        ----------
+        output_lookup : dict | None
+            Lookup dictionary mapping output keys to special output methods.
+            None defaults to generation default outputs.
+        """
+
+        if output_lookup is None:
+            output_lookup = {'cf_mean': self.cf_mean,
+                             'cf_profile': self.cf_profile,
+                             'annual_energy': self.annual_energy,
+                             'energy_yield': self.energy_yield,
+                             'gen_profile': self.gen_profile,
+                             'poa': self.poa,
+                             }
+
+        super().collect_outputs(output_lookup=output_lookup)
+
 
 class CSP(Solar):
     """Concentrated Solar Power (CSP) generation
@@ -504,6 +551,18 @@ class CSP(Solar):
         """
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
+
+    def cf_profile(self):
+        """Get absolute value hourly capacity factor (frac) profile in
+        orig timezone.
+
+        Returns
+        -------
+        cf_profile : np.ndarray
+            1D numpy array of capacity factor profile.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        return np.abs(self.gen_profile() / self.parameters['system_capacity'])
 
     @property
     def default(self):
@@ -567,23 +626,6 @@ class Wind(Generation):
 
         if resource is not None and meta is not None:
             self.set_wtk(resource)
-
-    def gen_profile(self):
-        """Get AC inverter power generation profile (orig timezone) in kW.
-
-        Returns
-        -------
-        output : np.ndarray
-            1D array of hourly AC inverter power generation in kW.
-            Datatype is float32 and array length is 8760*time_interval.
-        """
-        gen = np.array(self['gen'], dtype=np.float32)
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                gen = np.roll(gen, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return gen
 
     def set_wtk(self, resource):
         """Set WTK resource data arrays.

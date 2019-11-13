@@ -574,7 +574,7 @@ class SolarResource(Resource):
         res_df.name = "{}-{}".format(ds_name, site)
         for var in ['dni', 'dhi', 'wind_speed', 'air_temperature']:
             var_array = self._get_ds(var, slice(None), site)
-            res_df[var] = SAMResource.check_units(var, var_array)
+            res_df[var] = SAMResource.check_units(var, var_array, tech='pv')
 
         return res_df
 
@@ -1095,7 +1095,8 @@ class WindResource(Resource):
             var_name = "{}_{}m".format(var, h)
             var_array = self._get_ds(var_name, slice(None),
                                      site)
-            res_df[var_name] = SAMResource.check_units(var_name, var_array)
+            res_df[var_name] = SAMResource.check_units(var_name, var_array,
+                                                       tech='wind')
             res_df[var_name] = SAMResource.enforce_arr_range(
                 var, res_df[var_name],
                 SAMResource.WIND_DATA_RANGES[var], [site])

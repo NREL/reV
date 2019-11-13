@@ -269,6 +269,7 @@ class RevPySAM:
         value : object
             Data to set to the key.
         """
+
         if key not in self.input_list:
             msg = ('Could not set input key "{}". Attribute not '
                    'found in PySAM object: "{}"'
@@ -394,6 +395,27 @@ class RevPySAM:
             logger.exception(msg)
             raise SAMExecutionError(msg)
 
+    @staticmethod
+    def _filter_inputs(key):
+        """Perform any necessary filtering of input keys for PySAM.
+
+        Parameters
+        ----------
+        key : str
+            SAM input key.
+
+        Returns
+        -------
+        key : str
+            Filtered SAM input key.
+        """
+
+        if '.' in key:
+            key = key.replace('.', '_')
+        if ':constant' in key and 'adjust:' in key:
+            key = key.replace('adjust:', '')
+        return key
+
     def assign_inputs(self, inputs, raise_warning=False):
         """Assign a flat dictionary of inputs to the PySAM object.
 
@@ -406,6 +428,7 @@ class RevPySAM:
             are not found in the PySAM object.
         """
         for k, v in inputs.items():
+            k = self._filter_inputs(k)
             if k in self.input_list:
                 self[k] = v
             elif raise_warning:

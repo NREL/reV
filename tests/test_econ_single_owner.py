@@ -49,7 +49,7 @@ def test_single_owner():
                        cf_file=cf_file, cf_year=2012,
                        output_request=output_request,
                        n_workers=1, sites_per_split=10,
-                       points_range=None, fout=None, return_obj=True)
+                       points_range=None, fout=None)
 
     for k, v in obj.out.items():
         msg = 'Array for "{}" is bad!'.format(k)

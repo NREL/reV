@@ -48,7 +48,7 @@ def test_ORCA(rut_id):
                        cf_year=None, site_data=site_data,
                        output_request='lcoe_fcr', n_workers=1,
                        sites_per_split=25, points_range=None,
-                       fout=None, dirout=None, return_obj=True)
+                       fout=None, dirout=None)
 
     lcoe = list(obj.out['lcoe_fcr'])
 

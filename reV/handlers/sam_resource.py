@@ -18,7 +18,9 @@ class SAMResource:
     """
 
     # Resource variables to load for each res type
-    RES_VARS = {'solar': ('dni', 'dhi', 'wind_speed', 'air_temperature'),
+    RES_VARS = {'pv': ('dni', 'dhi', 'wind_speed', 'air_temperature'),
+                'csp': ('dni', 'dhi', 'wind_speed', 'air_temperature',
+                        'dew_point', 'surface_pressure'),
                 'wind': ('pressure', 'temperature', 'winddirection',
                          'windspeed')}
 
@@ -50,12 +52,14 @@ class SAMResource:
         self._runnable = False
         self._res_arrays = {}
         h = project_points.h
-        if h is None:
-            # no hub height specified, get NSRDB solar data
-            self._res_type = 'solar'
+
+        if project_points.tech.lower() == 'pv':
+            self._tech = 'pv'
+        elif project_points.tech.lower() == 'csp':
+            self._tech = 'csp'
         else:
             # hub height specified, get WTK wind data.
-            self._res_type = 'wind'
+            self._tech = 'wind'
             if isinstance(h, (list, np.ndarray)):
                 if len(h) != self._n:
                     msg = 'Must have a unique height for each site'
@@ -68,7 +72,7 @@ class SAMResource:
 
     def __repr__(self):
         msg = "{} with {} {} sites".format(self.__class__.__name__,
-                                           self._n, self._res_type)
+                                           self._n, self._tech)
         return msg
 
     def __len__(self):
@@ -151,8 +155,8 @@ class SAMResource:
         """
 
         if self._var_list is None:
-            if self._res_type in self.RES_VARS:
-                self._var_list = list(self.RES_VARS[self._res_type])
+            if self._tech in self.RES_VARS:
+                self._var_list = list(self.RES_VARS[self._tech])
             else:
                 raise HandlerValueError("Resource type is invalid!")
 
@@ -236,7 +240,7 @@ class SAMResource:
         return self._h
 
     @staticmethod
-    def check_units(var_name, var_array):
+    def check_units(var_name, var_array, tech):
         """
         Check units of variable array and convert to SAM units if needed
 
@@ -246,6 +250,8 @@ class SAMResource:
             Variable name
         var_array : ndarray
             Variable data
+        tech : str
+            Technology (wind, csp, pv).
 
         Returns
         -------
@@ -253,11 +259,20 @@ class SAMResource:
             Variable data with updated units if needed
         """
 
-        if 'pressure' in var_name:
+        if 'pressure' in var_name and tech.lower() == 'wind':
             # Check if pressure is in Pa, if so convert to atm
             if np.min(var_array) > 1e3:
                 # convert pressure from Pa to ATM
                 var_array *= 9.86923e-6
+
+        elif 'pressure' in var_name and tech.lower() == 'csp':
+            if np.min(var_array) < 200:
+                # convert pressure from 100 to 1000 hPa
+                var_array *= 10
+            if np.min(var_array) > 80000:
+                # convert pressure from Pa to hPa
+                var_array /= 100
+
         elif 'temperature' in var_name:
             # Check if tempearture is in K, if so convert to C
             if np.min(var_array) > 273.15:
@@ -329,7 +344,7 @@ class SAMResource:
                     and not isinstance(var_slice[1], slice)):
                 arr_sites = list(np.array(self.sites)[np.array(var_slice[1])])
 
-        if self._res_type == 'wind':
+        if self._tech == 'wind':
             if var in self.WIND_DATA_RANGES:
                 valid_range = self.WIND_DATA_RANGES[var]
                 arr = self.enforce_arr_range(var, arr, valid_range, arr_sites)
@@ -374,7 +389,7 @@ class SAMResource:
             var_arr = self._res_arrays.get(var, np.zeros(self._shape,
                                                          dtype='float32'))
             if var_arr[var_slice].shape == arr.shape:
-                arr = self.check_units(var, arr)
+                arr = self.check_units(var, arr, self._tech)
                 arr = self._check_physical_ranges(var, arr, var_slice)
                 var_arr[var_slice] = arr
                 self._res_arrays[var] = var_arr

@@ -88,8 +88,7 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'wind', res_file=res_file)
     gen = Gen.reV_run('wind', rev2_points, sam_files, res_file,
-                      n_workers=n_workers, sites_per_split=3, fout=None,
-                      return_obj=True)
+                      n_workers=n_workers, sites_per_split=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -114,7 +113,7 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, n_workers=1):
     # run reV 2.0 generation
     gen = Gen.reV_run('wind', points, sam_files, res_file,
                       n_workers=n_workers, sites_per_split=3, fout=None,
-                      return_obj=True, output_request=output_request)
+                      output_request=output_request)
 
     assert gen.out['cf_mean'].shape == (10, )
     assert gen.out['cf_profile'].shape == (8760, 10)
@@ -134,7 +133,7 @@ def test_multi_file_5min_wtk():
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='wind', points=points, sam_files=sam_files,
                       res_file=res_file, n_workers=n_workers,
-                      sites_per_split=3, fout=None, return_obj=True)
+                      sites_per_split=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.55
