@@ -150,9 +150,7 @@ class LayerMask:
 
             data = func(data)
 
-        data *= self._weight
-
-        return data
+        return data.astype('float16') * self._weight
 
     def _check_mask_type(self):
         """
