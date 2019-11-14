@@ -459,14 +459,14 @@ class ExclusionMask:
             Updated inclusion mask
         """
         s = ExclusionMask.FILTER_KERNELS[kernel]
-        labels, _ = ndimage.label(mask, structure=s)
+        labels, _ = ndimage.label(mask > 0, structure=s)
         l, c = np.unique(labels, return_counts=True)
 
         min_counts = np.ceil(min_area / ex_area)
         pos = c[1:] < min_counts
         bad_labels = l[1:][pos]
 
-        mask[np.isin(labels, bad_labels)] = False
+        mask[np.isin(labels, bad_labels)] = 0
 
         return mask
 
