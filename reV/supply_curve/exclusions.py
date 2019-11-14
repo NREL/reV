@@ -43,6 +43,12 @@ class LayerMask:
         self._exclude_values = exclude_values
         self._include_values = include_values
         self._as_weights = use_as_weights
+        if weight > 1 or weight < 0:
+            msg = ('Invalide weight ({}) provided for layer {}:'
+                   '\nWeight must fall between 0 and 1!'.format(weight, layer))
+            logger.error(msg)
+            raise ValueError(msg)
+
         self._weight = weight
         self._mask_type = self._check_mask_type()
 
