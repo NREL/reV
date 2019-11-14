@@ -18,7 +18,8 @@ class LayerMask:
     Class to convert exclusion layer to inclusion layer mask
     """
     def __init__(self, layer, inclusion_range=(None, None),
-                 exclude_values=None, include_values=None):
+                 exclude_values=None, include_values=None,
+                 use_as_weights=False, weight=1.0):
         """
         Parameters
         ----------
@@ -32,11 +33,17 @@ class LayerMask:
         include_values : list
             List of values to include
             Note: Only supply inclusions OR exclusions
+        use_as_weights : bool
+            Use layer as final inclusion weights
+        weight : float
+            How much to weight the inclusion of each pixel, Default = 1
         """
         self._layer = layer
         self._inclusion_range = inclusion_range
         self._exclude_values = exclude_values
         self._include_values = include_values
+        self._as_weights = use_as_weights
+        self._weight = weight
         self._mask_type = self._check_mask_type()
 
     def __repr__(self):
@@ -45,7 +52,7 @@ class LayerMask:
         return msg
 
     def __getitem__(self, data):
-        return self.mask_func(data)
+        return self._apply_mask(data)
 
     @property
     def layer(self):
@@ -113,30 +120,39 @@ class LayerMask:
         """
         return self._mask_type
 
-    @property
-    def mask_func(self):
+    def _apply_mask(self, data):
         """
-        Function to use for masking exclusion data
+        Apply mask function
+
+        Parameters
+        ----------
+        data : ndarray
+            Exclusions data to create mask from
 
         Returns
         -------
-        func
-            Masking function
+        data : ndarray
+            Masked exclusion data with weights applied
         """
-        if self.mask_type == 'range':
-            func = self._range_mask
-        elif self.mask_type == 'exclude':
-            func = self._exclusion_mask
-        elif self.mask_type == 'include':
-            func = self._inclusion_mask
-        else:
-            msg = ('{} is an invalid mask type: expecting '
-                   '"range", "exclude", or "include"'
-                   .format(self.mask_type))
-            logger.error(msg)
-            raise ValueError(msg)
+        if not self._as_weights:
+            if self.mask_type == 'range':
+                func = self._range_mask
+            elif self.mask_type == 'exclude':
+                func = self._exclusion_mask
+            elif self.mask_type == 'include':
+                func = self._inclusion_mask
+            else:
+                msg = ('{} is an invalid mask type: expecting '
+                       '"range", "exclude", or "include"'
+                       .format(self.mask_type))
+                logger.error(msg)
+                raise ValueError(msg)
 
-        return func
+            data = func(data)
+
+        data *= self._weight
+
+        return data
 
     def _check_mask_type(self):
         """
@@ -148,20 +164,22 @@ class LayerMask:
         mask : str
             Mask type
         """
-        masks = {'range': any(i is not None for i in self._inclusion_range),
-                 'exclude': self._exclude_values is not None,
-                 'include': self._include_values is not None}
         mask = None
-        for k, v in masks.items():
-            if v:
-                if mask is None:
-                    mask = k
-                else:
-                    msg = ('Only one approach can be used to create the '
-                           'inclusion mask, but you supplied {} and {}'
-                           .format(mask, k))
-                    logger.error(msg)
-                    raise RuntimeError(msg)
+        if not self._as_weights:
+            masks = {'range': any(i is not None
+                                  for i in self._inclusion_range),
+                     'exclude': self._exclude_values is not None,
+                     'include': self._include_values is not None}
+            for k, v in masks.items():
+                if v:
+                    if mask is None:
+                        mask = k
+                    else:
+                        msg = ('Only one approach can be used to create the '
+                               'inclusion mask, but you supplied {} and {}'
+                               .format(mask, k))
+                        logger.error(msg)
+                        raise RuntimeError(msg)
 
         return mask
 
