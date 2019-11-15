@@ -94,6 +94,29 @@ def test_aggregation_summary():
                                        rtol=RTOL), m
 
 
+def test_aggregation_scalar_excl():
+    """Test the aggregation summary with exclusions of 0.5"""
+
+    excl_dict_1 = {'ri_padus': {'exclude_values': [1]}}
+    s1 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_1,
+                             res_class_dset=RES_CLASS_DSET,
+                             res_class_bins=RES_CLASS_BINS,
+                             data_layers=DATA_LAYERS,
+                             n_cores=1)
+    excl_dict_2 = {'ri_padus': {'exclude_values': [1],
+                                'weight': 0.5}}
+    s2 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_2,
+                             res_class_dset=RES_CLASS_DSET,
+                             res_class_bins=RES_CLASS_BINS,
+                             data_layers=DATA_LAYERS,
+                             n_cores=1)
+
+    dsets = ['area_sq_km', 'capacity']
+    for dset in dsets:
+        diff = (s1[dset].values / s2[dset].values)
+        assert all(diff == 2)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
