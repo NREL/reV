@@ -102,12 +102,16 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         resource bin."""
 
         # exclusions mask is False where excluded
-        # pylint: disable-msg=C0121
-        exclude = (self.excl_data == False).flatten()  # noqa: E712
+        exclude = (self.excl_data == 0).flatten()
         exclude = self._resource_exclusion(exclude)
 
         self._gen_gids[exclude] = -1
         self._res_gids[exclude] = -1
+
+        # ensure that excluded pixels (including resource exclusions!)
+        # has an exclusions multiplier of 0
+        self._excl_data[exclude.reshape(self._excl_data.shape)] = 0.0
+        self._excl_data_flat = self._excl_data.flatten()
 
         if (self._gen_gids != -1).sum() == 0:
             msg = ('Supply curve point gid {} is completely excluded for res '
@@ -169,7 +173,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         area : float
             Non-excluded resource/generation area in square km.
         """
-        return self.mask.sum() * self._ex_area
+        return self.excl_data.sum() * self._ex_area
 
     @property
     def res_data(self):
@@ -287,7 +291,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     @property
     def mean_cf(self):
-        """Get the mean capacity factor for the non-excluded data.
+        """Get the mean capacity factor for the non-excluded data. Capacity
+        factor is weighted by the exclusions (usually 0 or 1, but 0.5
+        exclusions will weight appropriately).
 
         Returns
         -------
@@ -296,7 +302,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         """
         mean_cf = None
         if self.gen_data is not None:
-            mean_cf = self.gen_data[self._gen_gids[self.mask]].mean()
+            mean_cf = self.exclusion_weighted_mean(self.gen_data)
         return mean_cf
 
     @property
@@ -310,7 +316,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         """
         mean_lcoe = None
         if self.lcoe_data is not None:
-            mean_lcoe = self.lcoe_data[self._gen_gids[self.mask]].mean()
+            mean_lcoe = self.exclusion_weighted_mean(self.lcoe_data)
         return mean_lcoe
 
     @property
@@ -325,7 +331,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         mean_res = None
         if (self._res_class_dset is not None
                 and self._res_class_bin is not None):
-            mean_res = self.res_data[self._gen_gids[self.mask]].mean()
+            mean_res = self.exclusion_weighted_mean(self.res_data)
         return mean_res
 
     @property
@@ -394,7 +400,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 else:
                     data = attrs['fobj'][attrs['dset'], self.rows, self.cols]
 
-                data = data.flatten()[self.mask]
+                data = data.flatten()[self.bool_mask]
                 if attrs['method'].lower() == 'mode':
                     data = stats.mode(data)[0][0]
                 elif attrs['method'].lower() == 'mean':

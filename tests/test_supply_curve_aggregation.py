@@ -26,6 +26,8 @@ DATA_LAYERS = {'pct_slope': {'dset': 'ri_srtm_slope',
 EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5)},
              'ri_padus': {'exclude_values': [1]}}
 
+RTOL = 0.001
+
 
 def test_aggregation_extent(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
@@ -88,7 +90,8 @@ def test_aggregation_summary():
                 if not np.issubdtype(s.dtypes[i], np.object_):
                     m = ('Aggregation summary column did not match baseline '
                          'file: "{}"'.format(c))
-                    assert np.allclose(s[c].values, s_baseline[c].values), m
+                    assert np.allclose(s[c].values, s_baseline[c].values,
+                                       rtol=RTOL), m
 
 
 def execute_pytest(capture='all', flags='-rapP'):
