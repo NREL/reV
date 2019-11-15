@@ -49,7 +49,7 @@ def from_config(ctx, config_file, verbose):
               verbose=verbose)
 
     # Initial log statements
-    logger.info('Running reV 2.0 supply curve aggregation from config '
+    logger.info('Running reV supply curve aggregation from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.logdir))
@@ -276,17 +276,17 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 @main.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='Eagle allocation account name.')
-@click.option('--memory', '-mem', default=None, type=INT,
-              help='Eagle node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
               help='Eagle walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
+@click.option('--memory', '-mem', default=None, type=INT,
+              help='Eagle node memory request in GB. Default is None')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
+def eagle(ctx, alloc, walltime, feature, memory, stdout_path):
     """Eagle submission tool for reV supply curve aggregation."""
 
     name = ctx.obj['NAME']

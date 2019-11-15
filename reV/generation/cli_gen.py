@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, verbose):
-    """Command line interface (CLI) for the reV 2.0 modules."""
+    """reV Generation Command Line Interface"""
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
@@ -73,7 +73,7 @@ def from_config(ctx, config_file, verbose):
               verbose=verbose)
 
     # Initial log statements
-    logger.info('Running reV 2.0 generation from config file: "{}"'
+    logger.info('Running reV Generation from config file: "{}"'
                 .format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.logdir))

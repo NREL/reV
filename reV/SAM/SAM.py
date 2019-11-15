@@ -70,7 +70,7 @@ class SAMResourceRetriever:
         res_handler : SolarResource | NSRDB
             Solar resource handler.
         project_points : reV.config.ProjectPoints
-            reV 2.0 Project Points instance used to retrieve resource data at a
+            reV Project Points instance used to retrieve resource data at a
             specific set of sites.
         downscale : NoneType | str
             Option for NSRDB resource downscaling to higher temporal
@@ -115,7 +115,7 @@ class SAMResourceRetriever:
         res_handler : SolarResource | NSRDB
             Wind resource handler.
         project_points : reV.config.ProjectPoints
-            reV 2.0 Project Points instance used to retrieve resource data at a
+            reV Project Points instance used to retrieve resource data at a
             specific set of sites.
 
         Returns
@@ -183,7 +183,7 @@ class SAMResourceRetriever:
         res_file : str
             Single resource file (with full path) to retrieve.
         project_points : reV.config.ProjectPoints
-            reV 2.0 Project Points instance used to retrieve resource data at a
+            reV Project Points instance used to retrieve resource data at a
             specific set of sites.
         module : str
             SAM module name or reV technology to force interpretation

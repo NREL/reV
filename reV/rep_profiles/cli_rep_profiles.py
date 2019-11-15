@@ -46,7 +46,7 @@ def from_config(ctx, config_file, verbose):
               verbose=verbose)
 
     # Initial log statements
-    logger.info('Running reV 2.0 representative profiles from config '
+    logger.info('Running reV representative profiles from config '
                 'file: "{}"'.format(config_file))
     logger.info('Target output directory: "{}"'.format(config.dirout))
     logger.info('Target logging directory: "{}"'.format(config.logdir))
