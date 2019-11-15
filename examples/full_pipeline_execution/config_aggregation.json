@@ -19,7 +19,8 @@
       "inclusion_range": [
         null,
         5
-      ]
+      ],
+      "weight": 1.0
     }
   },
   "excl_fpath": "./rev_conus_exclusions.h5",
