@@ -17,6 +17,7 @@ from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import OutputWarning, ExecutionError
 from concurrent.futures import ProcessPoolExecutor
+from reV.utilities.utilities import check_res_file
 
 
 logger = logging.getLogger(__name__)
@@ -96,8 +97,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.4, downscale=None, res_5min_dir=None,
-                 hsds=False):
+                 mem_util_lim=0.4, downscale=None):
         """
         Parameters
         ----------
@@ -123,12 +123,6 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
         """
 
         self._points_control = points_control
@@ -144,13 +138,15 @@ class Gen:
         self._sam_module = self.OPTIONS[self.tech]
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
-        self._hsds = hsds
 
         self._output_request = self._parse_output_request(output_request)
 
-        self._multi_h5_res = MultiFileResource.is_multi(self._res_file)
-        self._set_high_res_ti()
-        self._set_downscaled_ti(downscale)
+        self._multi_h5_res, self._hsds = check_res_file(res_file)
+        if self._multi_h5_res:
+            self._set_high_res_ti()
+
+        if downscale is not None:
+            self._set_downscaled_ti(downscale)
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -244,12 +240,11 @@ class Gen:
 
     def _set_high_res_ti(self):
         """Set the 5-minute time index if res_file is a multi-file directory"""
-        if self._multi_h5_res:
-            h5_dir, pre, suf = MultiFileResource.multi_args(self._res_file)
-            with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
-                ti = mres.time_index
-            self._time_index = self.handle_leap_ti(
-                ti, drop_leap=self._drop_leap)
+        h5_dir, pre, suf = MultiFileResource.multi_args(self._res_file)
+        with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
+            ti = mres.time_index
+        self._time_index = self.handle_leap_ti(
+            ti, drop_leap=self._drop_leap)
 
     def _set_downscaled_ti(self, ds_freq):
         """Set the downscaled time index based on a requested frequency.
@@ -697,9 +692,6 @@ class Gen:
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
 
         Returns
         -------
@@ -760,9 +752,6 @@ class Gen:
         default : int
             Sites to be analyzed on a single core if the chunk size cannot be
             determined from res_file.
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
 
         Returns
         -------
@@ -774,7 +763,7 @@ class Gen:
         if not res_file or not os.path.isfile(res_file):
             return default
 
-        with Resource(res_file, hsds=hsds) as res:
+        with Resource(res_file) as res:
             if 'wtk' in res_file.lower():
                 for dset in res.dsets:
                     if 'speed' in dset:
@@ -985,7 +974,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, downscale=None, res_5min_dir=None, hsds=False):
+            scale_outputs=True, downscale=None):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -1005,12 +994,6 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
 
         Returns
         -------
@@ -1023,9 +1006,7 @@ class Gen:
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
                                             output_request=output_request,
-                                            downscale=downscale,
-                                            res_5min_dir=res_5min_dir,
-                                            hsds=hsds)
+                                            downscale=downscale)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -1134,7 +1115,7 @@ class Gen:
         self.flush()
 
     @classmethod
-    def reV_run(cls, tech=None, points=None, sam_files=None, res_file=None,
+    def reV_run(cls, tech, points, sam_files, res_file,
                 output_request=('cf_mean',), curtailment=None,
                 downscale=None, max_workers=1, sites_per_worker=None,
                 pool_size=72, points_range=None, fout=None,
@@ -1207,15 +1188,13 @@ class Gen:
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
                   dirout=dirout, mem_util_lim=mem_util_lim,
-                  downscale=downscale, res_5min_dir=res_5min_dir, hsds=hsds)
+                  downscale=downscale)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,
                   'output_request': gen.output_request,
                   'scale_outputs': scale_outputs,
-                  'downscale': downscale,
-                  'res_5min_dir': res_5min_dir,
-                  'hsds': hsds}
+                  'downscale': downscale}
 
         logger.info('Running reV generation for: {}'.format(pc))
         logger.debug('The following project points were specified: "{}"'

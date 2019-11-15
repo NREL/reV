@@ -102,3 +102,40 @@ def mean_irrad(arr):
 
     mean = arr.mean(axis=0) / 1000 * 24
     return mean
+
+
+def check_res_file(res_file):
+    """
+    Check resource to see if the given path
+    - It belongs to a multi-file handler
+    - Is on local disk
+    - Is a hsds path
+
+    Parameters
+    ----------
+    res_file : str
+        Filepath to single resource file, multi-h5 directory,
+        or /h5_dir/prefix*suffix
+
+    Returns
+    -------
+    multi_h5_res : bool
+        Boolean flag to use a MultiFileResource handler
+    hsds : bool
+        Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+        behind HSDS
+    """
+    multi_h5_res = False
+    hsds = False
+    if os.path.isdir(res_file) or ('*' in res_file):
+        multi_h5_res = True
+    else:
+        if not os.path.isfile(res_file):
+            import h5pyd
+            with h5pyd.Folder(os.path.dirname(res_file)) as f:
+                hsds = True
+                if res_file not in f:
+                    msg = '{} is not a valid file path!'.format(res_file)
+                    raise ValueError(msg)
+
+    return multi_h5_res, hsds

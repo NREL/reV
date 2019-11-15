@@ -15,7 +15,7 @@ from reV.handlers.resource import (WindResource, SolarResource, NSRDB,
                                    MultiFileNSRDB)
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
                                       SAMExecutionError, ResourceError)
-
+from reV.utilities.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
 
@@ -159,24 +159,22 @@ class SAMResourceRetriever:
         res_file : str
             Single resource file (with full path) or multi h5 dir.
         """
-        if MultiFileResource.is_multi(res_file):
-            h5_dir, prefix, suffix = MultiFileResource.multi_args(res_file)
-            res_file = h5_dir
-            kwargs['prefix'] = prefix
-            kwargs['suffix'] = suffix
+        h5_dir, prefix, suffix = MultiFileResource.multi_args(res_file)
+        res_file = h5_dir
+        kwargs['prefix'] = prefix
+        kwargs['suffix'] = suffix
 
-            if res_handler == WindResource:
-                res_handler = MultiFileWTK
-            elif res_handler == NSRDB:
-                res_handler = MultiFileNSRDB
-            else:
-                res_handler = MultiFileResource
+        if res_handler == WindResource:
+            res_handler = MultiFileWTK
+        elif res_handler == NSRDB:
+            res_handler = MultiFileNSRDB
+        else:
+            res_handler = MultiFileResource
 
         return res_handler, kwargs, res_file
 
     @classmethod
-    def get(cls, res_file, project_points, module, downscale=None,
-            res_5min_dir=None, hsds=False):
+    def get(cls, res_file, project_points, module, downscale=None):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -196,12 +194,6 @@ class SAMResourceRetriever:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        res_5min_dir : str
-            Path to directory containing extra h5 resource files for
-            5-minute resource that supplement the res_file input.
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
 
         Returns
         -------
@@ -219,12 +211,13 @@ class SAMResourceRetriever:
             kwargs, res_handler = cls._make_wind_kwargs(
                 res_handler, project_points)
 
-        res_handler, kwargs, res_file = cls._multi_file_mods(res_handler,
-                                                             kwargs,
-                                                             res_file)
-
-        if hsds:
-            kwargs['hsds'] = True
+        multi_h5_res, hsds = check_res_file(res_file)
+        if multi_h5_res:
+            res_handler, kwargs, res_file = cls._multi_file_mods(res_handler,
+                                                                 kwargs,
+                                                                 res_file)
+        else:
+            kwargs['hsds'] = hsds
 
         res = res_handler.preload_SAM(res_file, project_points, **kwargs)
 
