@@ -4,12 +4,13 @@ reV supply curve extent and points base frameworks.
 """
 import pandas as pd
 import numpy as np
+from warnings import warn
 
 from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMask
 from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
-                                      EmptySupplyCurvePointError)
+                                      EmptySupplyCurvePointError, InputWarning)
 
 
 class SupplyCurvePoint:
@@ -50,6 +51,7 @@ class SupplyCurvePoint:
         self._close = close
         self._centroid = None
         self._excl_data = None
+        self._excl_data_flat = None
         self._excl_dict = excl_dict
 
         # filepaths
@@ -197,6 +199,26 @@ class SupplyCurvePoint:
             if self._gen is not None:
                 self._gen.close()
 
+    def exclusion_weighted_mean(self, flat_arr):
+        """Calc the exclusions-weighted mean value of a flat array of gen data.
+
+        Parameters
+        ----------
+        flat_arr : np.ndarray
+            Flattened array of resource/generation/econ data. Must be
+            index-able with the self._gen_gids array.
+
+        Returns
+        -------
+        mean : float
+            Mean of flat_arr masked by the binary exclusions then weighted by
+            the non-zero exclusions.
+        """
+        x = flat_arr[self._gen_gids[self.bool_mask]]
+        x *= self.excl_data_flat[self.bool_mask]
+        mean = x.sum() / self.excl_data_flat[self.bool_mask].sum()
+        return mean
+
     @staticmethod
     def get_agg_slices(gid, shape, resolution):
         """Get the row, col slices of an aggregation gid.
@@ -313,15 +335,34 @@ class SupplyCurvePoint:
         if self._excl_data is None:
             self._excl_data = self.exclusions[self.rows, self.cols]
 
-            # infer exclusions that are scaled percentages from 0 to 100
+            # make sure exclusion pixels outside resource extent are excluded
+            out_of_extent = self._gen_gids.reshape(self._excl_data.shape) == -1
+            self._excl_data[out_of_extent] = 0.0
+
             if self._excl_data.max() > 1:
-                self._excl_data = self._excl_data.astype(np.float32)
-                self._excl_data /= 100
+                warn('Exclusions data max value is > 1: {}'
+                     .format(self._excl_data.max()), InputWarning)
 
         return self._excl_data
 
     @property
-    def mask(self):
+    def excl_data_flat(self):
+        """Get the flattened exclusions mask (normalized with expected
+        range: [0, 1]).
+
+        Returns
+        -------
+        _excl_data_flat : np.ndarray
+            1D flattened exclusions data mask.
+        """
+
+        if self._excl_data_flat is None:
+            self._excl_data_flat = self.excl_data.flatten()
+
+        return self._excl_data_flat
+
+    @property
+    def bool_mask(self):
         """Get a boolean inclusion mask (True if excl point is not excluded).
 
         Returns

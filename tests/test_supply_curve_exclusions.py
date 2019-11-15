@@ -17,12 +17,16 @@ CONFIGS = {'urban_pv': {'ri_smod': {'exclude_values': [1, ]},
                         'ri_srtm_slope': {'inclusion_range': (0, 5)}},
            'wind': {'ri_smod': {'include_values': [1, ]},
                     'ri_padus': {'exclude_values': [1, ]},
-                    'ri_srtm_slope': {'inclusion_range': (0, 20)}}}
+                    'ri_srtm_slope': {'inclusion_range': (0, 20)}},
+           'weighted': {'ri_smod': {'include_values': [1, ]},
+                        'ri_padus': {'exclude_values': [1, ], 'weight': 0.5},
+                        'ri_srtm_slope': {'inclusion_range': (0, 20)}}}
 
-AREA = {'urban_pv': 0.018, 'rural_pv': 1, 'wind': None}
+AREA = {'urban_pv': 0.018, 'rural_pv': 1}
 
 
-def mask_data(data, inclusion_range, exclude_values, include_values):
+def mask_data(data, inclusion_range, exclude_values, include_values,
+              weight):
     """
     Apply proper mask to data
 
@@ -38,6 +42,8 @@ def mask_data(data, inclusion_range, exclude_values, include_values):
     include_values : list
         List of values to include
         Note: Only supply inclusions OR exclusions
+    weight : float
+        Weight of pixel to include
 
     Returns
     -------
@@ -59,16 +65,20 @@ def mask_data(data, inclusion_range, exclude_values, include_values):
     elif include_values is not None:
         mask = np.isin(data, include_values)
 
-    return mask
+    return mask.astype('float16') * weight
 
 
 @pytest.mark.parametrize(('layer', 'inclusion_range', 'exclude_values',
-                          'include_values'), [
-    ('ri_padus', (None, None), [1, ], None),
-    ('ri_smod', (None, None), None, [1, ]),
-    ('ri_srtm_slope', (None, 5), None, None),
-    ('ri_srtm_slope', (0, 5), None, None)])
-def test_layer_mask(layer, inclusion_range, exclude_values, include_values):
+                          'include_values', 'weight'), [
+    ('ri_padus', (None, None), [1, ], None, 1),
+    ('ri_padus', (None, None), [1, ], None, 0.5),
+    ('ri_smod', (None, None), None, [1, ], 1),
+    ('ri_smod', (None, None), None, [1, ], 0.5),
+    ('ri_srtm_slope', (None, 5), None, None, 1),
+    ('ri_srtm_slope', (0, 5), None, None, 1),
+    ('ri_srtm_slope', (None, 5), None, None, 0.5)])
+def test_layer_mask(layer, inclusion_range, exclude_values, include_values,
+                    weight):
     """
     Test creation of layer masks
 
@@ -90,12 +100,12 @@ def test_layer_mask(layer, inclusion_range, exclude_values, include_values):
         data = f[layer]
 
     truth = mask_data(data, inclusion_range, exclude_values,
-                      include_values)
+                      include_values, weight)
 
     layer = LayerMask(layer, inclusion_range=inclusion_range,
                       exclude_values=exclude_values,
-                      include_values=include_values)
-    layer_test = layer.mask_func(data)
+                      include_values=include_values, weight=weight)
+    layer_test = layer._apply_mask(data)
 
     inclusion_test = ExclusionMask.run(excl_h5, layer)
 
@@ -103,7 +113,8 @@ def test_layer_mask(layer, inclusion_range, exclude_values, include_values):
     assert np.allclose(truth, inclusion_test)
 
 
-@pytest.mark.parametrize(('scenario'), ['urban_pv', 'rural_pv', 'wind'])
+@pytest.mark.parametrize(('scenario'),
+                         ['urban_pv', 'rural_pv', 'wind', 'weighted'])
 def test_inclusion_mask(scenario):
     """
     Test creation of inclusion mask
@@ -119,7 +130,7 @@ def test_inclusion_mask(scenario):
     truth = np.load(truth_path)
 
     test = ExclusionMask.run_from_dict(excl_h5, CONFIGS[scenario],
-                                       min_area=AREA[scenario])
+                                       min_area=AREA.get(scenario, None))
 
     assert np.allclose(truth, test)
 
