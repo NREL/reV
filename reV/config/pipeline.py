@@ -76,13 +76,15 @@ class PipelineConfig(AnalysisConfig):
     def _check_dirout_status(self):
         """Check unique status file in dirout."""
 
-        for fname in os.listdir(self.dirout):
-            if (fname.endswith('_status.json')
-                    and fname != '{}_status.json'.format(self.name)):
-                raise PipelineError('Cannot run pipeline "{}" in directory '
-                                    '{}. Another pipeline appears to have '
-                                    'been run here with status json: {}'
-                                    .format(self.name, self.dirout, fname))
+        if os.path.exists(self.dirout):
+            for fname in os.listdir(self.dirout):
+                if (fname.endswith('_status.json')
+                        and fname != '{}_status.json'.format(self.name)):
+                    msg = ('Cannot run pipeline "{}" in directory '
+                           '{}. Another pipeline appears to have '
+                           'been run here with status json: {}'
+                           .format(self.name, self.dirout, fname))
+                    raise PipelineError(msg)
 
     @property
     def pipeline_steps(self):

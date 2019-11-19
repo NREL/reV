@@ -92,6 +92,10 @@ class Status(dict):
 
     def _dump(self):
         """Dump status json w/ backup file in case process gets killed."""
+
+        if not os.path.exists(os.path.dirname(self._fpath)):
+            os.makedirs(os.path.dirname(self._fpath))
+
         backup = self._fpath.replace('.json', '_backup.json')
         self._sort_by_index()
         if os.path.exists(self._fpath):
