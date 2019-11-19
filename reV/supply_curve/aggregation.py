@@ -29,7 +29,8 @@ logger = logging.getLogger(__name__)
 class AggFileHandler:
     """Simple framework to handle aggregation file context managers."""
 
-    def __init__(self, excl_fpath, gen_fpath, data_layers, excl_dict):
+    def __init__(self, excl_fpath, gen_fpath, data_layers, excl_dict,
+                 power_density):
         """
         Parameters
         ----------
@@ -43,12 +44,18 @@ class AggFileHandler:
             and "fpath".
         excl_dict : dict
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        power_density : float | str | None
+            Power density in MW/km2 or filepath to variable power
+            density file. None will attempt to infer a constant
+            power density from the generation meta data technology
         """
 
         self._excl_fpath = excl_fpath
         self._excl = ExclusionMask.from_dict(excl_fpath, excl_dict)
         self._gen = Outputs(gen_fpath, mode='r')
         self._data_layers = self._open_data_layers(data_layers)
+        self._power_density = power_density
+        self._parse_power_density()
 
         # pre-initialize any import attributes
         _ = self._gen.meta
@@ -102,6 +109,29 @@ class AggFileHandler:
                 if 'fobj' in layer:
                     layer['fobj'].close()
 
+    def _parse_power_density(self):
+        """Parse the power density input. If file, open file handler."""
+
+        if isinstance(self._power_density, str):
+            self._pdf = self._power_density
+
+            if self._pdf.endswith('.csv'):
+                self._power_density = pd.read_csv(self._pdf)
+                if ('gid' in self._power_density
+                        and 'power_density' in self._power_density):
+                    self._power_density = self._power_density.set_index('gid')
+                else:
+                    msg = ('Variable power density file must include "gid" '
+                           'and "power_density" columns, but received: {}'
+                           .format(self._power_density.columns.values))
+                    logger.error(msg)
+                    raise FileInputError(msg)
+            else:
+                msg = ('Variable power density file must be csv but received: '
+                       '{}'.format(self._pdf))
+                logger.error(msg)
+                raise FileInputError(msg)
+
     def close(self):
         """Close all file handlers."""
         self._excl.close()
@@ -140,6 +170,18 @@ class AggFileHandler:
             Data layers namespace.
         """
         return self._data_layers
+
+    @property
+    def power_density(self):
+        """Get the power density object.
+
+        Returns
+        -------
+        _power_density : float | None | pd.DataFrame
+            Constant power density float, None, or opened dataframe with
+            (resource) "gid" and "power_density columns".
+        """
+        return self._power_density
 
 
 class Aggregation:
@@ -425,7 +467,8 @@ class Aggregation:
                 gids = range(len(sc))
 
         # pre-extract handlers so they are not repeatedly initialized
-        file_args = [excl_fpath, gen_fpath, data_layers, excl_dict]
+        file_args = [excl_fpath, gen_fpath, data_layers, excl_dict,
+                     power_density]
         with AggFileHandler(*file_args) as fhandler:
 
             inputs = Aggregation._get_input_data(fhandler.gen, gen_fpath,
@@ -450,7 +493,7 @@ class Aggregation:
                             data_layers=fhandler.data_layers,
                             resolution=resolution,
                             exclusion_shape=exclusion_shape,
-                            power_density=power_density,
+                            power_density=fhandler.power_density,
                             **kwargs)
 
                     except EmptySupplyCurvePointError:
@@ -562,7 +605,8 @@ class Aggregation:
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
-                gids=None, n_cores=None, option='dataframe', **kwargs):
+                gids=None, n_cores=None, option='dataframe',
+                **kwargs):
         """Get the supply curve points aggregation summary.
 
         Parameters

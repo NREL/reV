@@ -134,7 +134,7 @@ def from_config(ctx, config_file, verbose):
               'include in an aggregated supply curve point.')
 @click.option('--power_density', '-pd', type=STRFLOAT, default=None,
               help='Power density in MW/km2 or filepath to variable power '
-              'density file. None will attempt to infer a constant '
+              'density csv file. None will attempt to infer a constant '
               'power density from the generation meta data technology.')
 @click.option('--out_dir', '-o', type=STR, default='./',
               help='Directory to save aggregation summary output.')

@@ -5,6 +5,7 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
+import pandas as pd
 import numpy as np
 from warnings import warn
 import logging
@@ -59,10 +60,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             None if no resource classes.
         ex_area : float
             Area of an exclusion cell (square km).
-        power_density : float | str | None
-            Power density in MW/km2 or filepath to variable power
-            density file. None will attempt to infer a constant
-            power density from the generation meta data technology
+        power_density : float | None | pd.DataFrame
+            Constant power density float, None, or opened dataframe with
+            (resource) "gid" and "power_density columns".
         cf_dset : str | np.ndarray
             Dataset name from gen containing capacity factor mean values.
             Can be pre-extracted generation output data in np.ndarray.
@@ -89,6 +89,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         self._gen_data = None
         self._lcoe_data = None
         self._ex_area = ex_area
+        self._pd_obj = None
         self._power_density = power_density
 
         super().__init__(gid, excl, gen, tm_dset, gen_index,
@@ -250,7 +251,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     @property
     def res_gid_set(self):
-        """Get the list of resource gids corresponding to this sc point.
+        """Get list of unique resource gids corresponding to this sc point.
 
         Returns
         -------
@@ -265,7 +266,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     @property
     def gen_gid_set(self):
-        """Get the list of generation gids corresponding to this sc point.
+        """Get list of unique generation gids corresponding to this sc point.
 
         Returns
         -------
@@ -354,6 +355,12 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 warn('Could not recognize reV technology in generation meta '
                      'data: "{}". Cannot lookup an appropriate power density '
                      'to calculate SC point capacity.'.format(tech))
+
+        elif isinstance(self._power_density, pd.DataFrame):
+            self._pd_obj = self._power_density
+            self._power_density = self.exclusion_weighted_mean(
+                self._pd_obj.loc[self._res_gids, 'power_density'].values)
+
         return self._power_density
 
     @property
