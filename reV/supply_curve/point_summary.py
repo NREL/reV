@@ -14,7 +14,7 @@ from scipy import stats
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import SupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      OutputWarning)
+                                      OutputWarning, FileInputError)
 
 
 logger = logging.getLogger(__name__)
@@ -358,8 +358,19 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         elif isinstance(self._power_density, pd.DataFrame):
             self._pd_obj = self._power_density
-            self._power_density = self.exclusion_weighted_mean(
-                self._pd_obj.loc[self._res_gids, 'power_density'].values)
+
+            missing = set(self.res_gid_set) - set(self._pd_obj.index.values)
+            if any(missing):
+                msg = ('Variable power density input is missing the '
+                       'following resource GIDs: {}'.format(missing))
+                logger.error(msg)
+                raise FileInputError(msg)
+
+            pds = self._pd_obj.loc[self._res_gids, 'power_density'].values
+            pds[(self._res_gids == -1)] = 0.0
+            pds *= self.excl_data_flat
+            denom = self.excl_data_flat[self.bool_mask].sum()
+            self._power_density = pds.sum() / denom
 
         return self._power_density
 
