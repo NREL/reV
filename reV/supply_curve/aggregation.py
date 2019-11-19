@@ -179,9 +179,10 @@ class Aggregation:
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
-        power_density : float | None
-            Power density in MW/km2. None will attempt to infer power density
-            from the generation meta data technology.
+        power_density : float | str | None
+            Power density in MW/km2 or filepath to variable power
+            density file. None will attempt to infer a constant
+            power density from the generation meta data technology
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -398,9 +399,10 @@ class Aggregation:
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
-        power_density : float | None
-            Power density in MW/km2. None will attempt to infer power density
-            from the generation meta data technology.
+        power_density : float | str | None
+            Power density in MW/km2 or filepath to variable power
+            density file. None will attempt to infer a constant
+            power density from the generation meta data technology
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -591,9 +593,10 @@ class Aggregation:
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
-        power_density : float | None
-            Power density in MW/km2. None will attempt to infer power density
-            from the generation meta data technology.
+        power_density : float | str | None
+            Power density in MW/km2 or filepath to variable power
+            density file. None will attempt to infer a constant
+            power density from the generation meta data technology
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.

@@ -156,7 +156,8 @@ class AggregationConfig(AnalysisConfig):
 
     @property
     def power_density(self):
-        """Get the power density (MW/km2)"""
+        """Get the power density (MW/km2) or string to variable power
+        density file path."""
         return self.get('power_density', None)
 
 

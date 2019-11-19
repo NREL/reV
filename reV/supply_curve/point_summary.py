@@ -59,9 +59,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             None if no resource classes.
         ex_area : float
             Area of an exclusion cell (square km).
-        power_density : float | None
-            Power density in MW/km2. None will attempt to infer power density
-            from the generation meta data technology.
+        power_density : float | str | None
+            Power density in MW/km2 or filepath to variable power
+            density file. None will attempt to infer a constant
+            power density from the generation meta data technology
         cf_dset : str | np.ndarray
             Dataset name from gen containing capacity factor mean values.
             Can be pre-extracted generation output data in np.ndarray.
