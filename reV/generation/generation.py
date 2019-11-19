@@ -12,11 +12,11 @@ from warnings import warn
 
 from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.utilities.execution import (execute_parallel, execute_single,
-                                     SmartParallelJob)
+from reV.utilities.execution import execute_single
 from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import OutputWarning, ExecutionError
+from concurrent.futures import ProcessPoolExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -1012,6 +1012,77 @@ class Gen:
 
         return out
 
+    def _pre_split_pc(self, sub_size=None):
+        """Pre-split project control iterator into sub chunks to further
+        split the parallelization.
+
+        Parameters
+        ----------
+        sub_size : None | int
+            Size of the sub points control chunks.
+
+        Returns
+        -------
+        N : int
+            Total number of points control split instances.
+        pc_chunks : list
+            List of lists of points control split instances.
+        """
+        N = 0
+        if sub_size is None:
+            sub_size = os.cpu_count()
+        pc_chunks = []
+        i_chunk = []
+        for i, split in enumerate(self.points_control):
+            N += 1
+            i_chunk.append(split)
+            if (i + 1) % sub_size == 0:
+                pc_chunks.append(i_chunk)
+                i_chunk = []
+        if i_chunk:
+            pc_chunks.append(i_chunk)
+
+        logger.debug('Pre-splitting points control into {} chunks with the '
+                     'following chunk sizes: {}'
+                     .format(len(pc_chunks), [len(x) for x in pc_chunks]))
+        return N, pc_chunks
+
+    def _parallel_run(self, n_workers=None, **kwargs):
+        """Execute parallel compute.
+
+        Parameters
+        ----------
+        n_workers : None | int
+            Number of workers. None will default to cpu count.
+        kwargs : dict
+            Keyword arguments to self.run().
+        """
+
+        if n_workers is None:
+            n_workers = os.cpu_count()
+        i = 0
+        N, pc_chunks = self._pre_split_pc()
+        for j, pc_chunk in enumerate(pc_chunks):
+            logger.debug('Starting ProcessPoolExecutor for PC chunk {} '
+                         'out of {}'.format(j + 1, len(pc_chunks)))
+            futures = []
+            with ProcessPoolExecutor(max_workers=n_workers) as exe:
+                for pc in pc_chunk:
+                    futures.append(exe.submit(self.run, pc, **kwargs))
+
+                for future in futures:
+                    self.out = future.result()
+                    i += 1
+                    mem = psutil.virtual_memory()
+                    m = ('Parallel run at iteration {0} out of {1}. '
+                         'Memory utilization is {2:.3f} GB out of {3:.3f} GB '
+                         'total ({4:.1f}% used, intended limit of {5:.1f}%)'
+                         .format(i, N, mem.used / 1e9, mem.total / 1e9,
+                                 100 * mem.used / mem.total,
+                                 100 * self.mem_util_lim))
+                    logger.info(m)
+        self.flush()
+
     @classmethod
     def reV_run(cls, tech=None, points=None, sam_files=None, res_file=None,
                 output_request=('cf_mean',), curtailment=None,
@@ -1095,26 +1166,15 @@ class Gen:
 
         # use serial or parallel execution control based on n_workers
         try:
-            if not fout:
-                if n_workers == 1:
-                    logger.debug('Running serial generation for: {}'
-                                 .format(pc))
-                    out = execute_single(gen.run, pc, **kwargs)
-                else:
-                    logger.debug('Running parallel generation for: {}'
-                                 .format(pc))
-                    out = execute_parallel(gen.run, pc, n_workers=n_workers,
-                                           **kwargs)
+            if n_workers == 1:
+                logger.debug('Running serial generation for: {}'.format(pc))
+                out = execute_single(gen.run, pc, **kwargs)
                 gen.out = out
                 gen.flush()
-
             else:
-                logger.debug('Running smart parallel generation for: {}'
-                             .format(pc))
-                # use SmartParallelJob to manage runs, but set mem limit to 1
-                # because Gen() will manage the sites in-memory
-                SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                         mem_util_lim=1.0, **kwargs)
+                logger.debug('Running parallel generation for: {}'.format(pc))
+                gen._parallel_run(n_workers=n_workers, **kwargs)
+
         except Exception as e:
             logger.exception('reV generation failed!')
             raise e

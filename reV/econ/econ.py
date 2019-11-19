@@ -12,8 +12,7 @@ from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
-from reV.utilities.execution import (execute_parallel, execute_single,
-                                     SmartParallelJob)
+from reV.utilities.execution import execute_single
 from reV.generation.generation import Gen
 from reV.utilities.exceptions import OutputWarning, ExecutionError
 
@@ -440,25 +439,16 @@ class Econ(Gen):
                      .format(output_request))
 
         try:
-            if not fout:
-                if n_workers == 1:
-                    logger.debug('Running serial econ for: {}'.format(pc))
-                    out = execute_single(econ.run, pc, econ_fun=econ._fun,
-                                         **kwargs)
-                else:
-                    logger.debug('Running parallel econ for: {}'.format(pc))
-                    out = execute_parallel(econ.run, pc, econ_fun=econ._fun,
-                                           n_workers=n_workers, **kwargs)
-
+            kwargs['econ_fun'] = econ._fun
+            if n_workers == 1:
+                logger.debug('Running serial econ for: {}'.format(pc))
+                out = execute_single(econ.run, pc, **kwargs)
                 econ.out = out
                 econ.flush()
-
             else:
-                # use SmartParallelJob to manage runs, but set mem limit to 1
-                # because Econ() will manage the sites in-memory
-                SmartParallelJob.execute(econ, pc, econ_fun=econ._fun,
-                                         n_workers=n_workers, mem_util_lim=1.0,
-                                         **kwargs)
+                logger.debug('Running parallel econ for: {}'.format(pc))
+                econ._parallel_run(n_workers=n_workers, **kwargs)
+
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed for econ.')
             raise e
