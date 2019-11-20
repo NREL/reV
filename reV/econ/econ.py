@@ -358,7 +358,7 @@ class Econ(Gen):
     @classmethod
     def reV_run(cls, points=None, sam_files=None, cf_file=None,
                 cf_year=None, site_data=None, output_request=('lcoe_fcr',),
-                n_workers=1, sites_per_split=100, super_iter_size=None,
+                max_workers=1, sites_per_worker=100, pool_size=72,
                 points_range=None, fout=None, dirout='./econ_out'):
         """Execute a parallel reV econ run with smart data flushing.
 
@@ -386,13 +386,13 @@ class Econ(Gen):
             in the cf_file.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
-        n_workers : int
+        max_workers : int
             Number of local workers to run on.
-        sites_per_split : int
-            Number of sites to run in series on a core.
-        super_iter_size : None | int
-            Size of the points control chunks in super iterations for
-            parallel futures. None will default to 2 * cpu count.
+        sites_per_worker : int
+            Number of sites to run in series on a worker.
+        pool_size : int
+            Number of futures to submit to a single process pool for
+            parallel futures.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -410,7 +410,8 @@ class Econ(Gen):
         """
 
         # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_files, tech='econ')
+        pc = cls.get_pc(points, points_range, sam_files, tech='econ',
+                        sites_per_worker=sites_per_worker)
 
         # make a Gen class instance to operate with
         econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
@@ -442,16 +443,15 @@ class Econ(Gen):
 
         try:
             kwargs['econ_fun'] = econ._fun
-            if n_workers == 1:
+            if max_workers == 1:
                 logger.debug('Running serial econ for: {}'.format(pc))
                 out = execute_single(econ.run, pc, **kwargs)
                 econ.out = out
                 econ.flush()
             else:
                 logger.debug('Running parallel econ for: {}'.format(pc))
-                econ._parallel_run(n_workers=n_workers,
-                                   super_iter_size=super_iter_size,
-                                   **kwargs)
+                econ._parallel_run(max_workers=max_workers,
+                                   pool_size=pool_size, **kwargs)
 
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed for econ.')

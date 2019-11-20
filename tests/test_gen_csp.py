@@ -22,9 +22,9 @@ def test_gen_csp():
 
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='csp', points=points, sam_files=sam_files,
-                      res_file=res_file, n_workers=1,
+                      res_file=res_file, max_workers=1,
                       output_request=('cf_mean', 'cf_profile', 'gen_profile'),
-                      sites_per_split=1, fout=None, scale_outputs=False)
+                      sites_per_worker=1, fout=None, scale_outputs=False)
 
     cf_mean = gen.out['cf_mean']
     cf_profile = gen.out['cf_profile']

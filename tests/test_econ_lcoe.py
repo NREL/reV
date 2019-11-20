@@ -35,7 +35,7 @@ def test_lcoe(year):
     points = slice(0, 100)
     obj = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
                        cf_year=year, output_request='lcoe_fcr',
-                       n_workers=1, sites_per_split=25,
+                       max_workers=1, sites_per_worker=25,
                        points_range=None, fout=None)
     lcoe = list(obj.out['lcoe_fcr'])
 
@@ -63,7 +63,7 @@ def test_fout(year):
     points = slice(0, 100)
     Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
                  cf_year=year, output_request='lcoe_fcr',
-                 n_workers=1, sites_per_split=25,
+                 max_workers=1, sites_per_worker=25,
                  points_range=None, fout=fout, dirout=dirout)
 
     with Outputs(fpath) as f:

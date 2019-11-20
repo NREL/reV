@@ -46,8 +46,8 @@ def test_ORCA(rut_id):
 
     obj = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
                        cf_year=None, site_data=site_data,
-                       output_request='lcoe_fcr', n_workers=1,
-                       sites_per_split=25, points_range=None,
+                       output_request='lcoe_fcr', max_workers=1,
+                       sites_per_worker=25, points_range=None,
                        fout=None, dirout=None)
 
     lcoe = list(obj.out['lcoe_fcr'])

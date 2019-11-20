@@ -73,11 +73,11 @@ def to_list(gen_out):
     return out
 
 
-@pytest.mark.parametrize(('f_rev1_out', 'rev2_points', 'year', 'n_workers'),
+@pytest.mark.parametrize(('f_rev1_out', 'rev2_points', 'year', 'max_workers'),
                          [
     ('project_outputs.h5', slice(0, 10), '2012', 1),
     ('project_outputs.h5', slice(0, 100, 10), '2013', 1)])
-def test_wind_gen_slice(f_rev1_out, rev2_points, year, n_workers):
+def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
     # get full file paths.
     rev1_outs = os.path.join(TESTDATADIR, 'ri_wind', 'scalar_outputs',
@@ -88,7 +88,7 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'wind', res_file=res_file)
     gen = Gen.reV_run('wind', rev2_points, sam_files, res_file,
-                      n_workers=n_workers, sites_per_split=3, fout=None)
+                      max_workers=max_workers, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -102,7 +102,7 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     assert result is True, msg
 
 
-def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, n_workers=1):
+def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     """Test reV 2.0 generation for wind with new outputs."""
     # get full file paths.
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
@@ -112,7 +112,7 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, n_workers=1):
 
     # run reV 2.0 generation
     gen = Gen.reV_run('wind', points, sam_files, res_file,
-                      n_workers=n_workers, sites_per_split=3, fout=None,
+                      max_workers=max_workers, sites_per_worker=3, fout=None,
                       output_request=output_request)
 
     assert gen.out['cf_mean'].shape == (10, )
@@ -127,13 +127,13 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, n_workers=1):
 def test_multi_file_5min_wtk():
     """Test running reV gen from a multi-h5 directory with prefix and suffix"""
     points = slice(0, 10)
-    n_workers = 1
+    max_workers = 1
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
     res_file = TESTDATADIR + '/wtk/wtk_{}_*m.h5'.format(2010)
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='wind', points=points, sam_files=sam_files,
-                      res_file=res_file, n_workers=n_workers,
-                      sites_per_split=3, fout=None)
+                      res_file=res_file, max_workers=max_workers,
+                      sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.55
