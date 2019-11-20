@@ -74,13 +74,13 @@ def to_list(gen_out):
     return out
 
 
-@pytest.mark.parametrize(('f_rev1_out', 'rev2_points', 'year', 'n_workers'),
+@pytest.mark.parametrize(('f_rev1_out', 'rev2_points', 'year', 'max_workers'),
                          [
     ('project_outputs.h5', slice(0, 10), '2012', 1),
     ('project_outputs.h5', slice(0, None, 10), '2013', 1),
     ('project_outputs.h5', slice(3, 25, 2), '2012', 2),
     ('project_outputs.h5', slice(40, None, 10), '2013', 2)])
-def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
+def test_pv_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
     # get full file paths.
     rev1_outs = os.path.join(TESTDATADIR, 'ri_pv', 'scalar_outputs',
@@ -91,8 +91,8 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, n_workers):
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
     gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, n_workers=n_workers,
-                      sites_per_split=3, fout=None)
+                      res_file=res_file, max_workers=max_workers,
+                      sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -169,7 +169,7 @@ def test_pv_gen_profiles(year):
     Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
                 res_file=res_file, fout=rev2_out,
                 output_request=('cf_profile',),
-                n_workers=2, sites_per_split=50, dirout=rev2_out_dir)
+                max_workers=2, sites_per_worker=50, dirout=rev2_out_dir)
 
     # get reV 2.0 generation profiles from disk
     flist = os.listdir(rev2_out_dir)
@@ -206,7 +206,7 @@ def test_smart(year):
     # run reV 2.0 generation and write to disk
     Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
                 res_file=res_file, fout=rev2_out,
-                n_workers=2, sites_per_split=50, dirout=rev2_out_dir,
+                max_workers=2, sites_per_worker=50, dirout=rev2_out_dir,
                 output_request=('cf_profile',))
 
     # get reV 2.0 generation profiles from disk
@@ -234,13 +234,13 @@ def test_smart(year):
 def test_multi_file_nsrdb_2018():
     """Test running reV gen from a multi-h5 directory with prefix and suffix"""
     points = slice(0, 10)
-    n_workers = 1
+    max_workers = 1
     sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
     res_file = TESTDATADIR + '/nsrdb/nsrdb_*{}.h5'.format(2018)
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
-                      res_file=res_file, n_workers=n_workers,
-                      sites_per_split=3, fout=None)
+                      res_file=res_file, max_workers=max_workers,
+                      sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.14

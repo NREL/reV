@@ -178,7 +178,7 @@ def test_rev_windbos_sales():
                        rtol=RTOL)
 
 
-def test_rev_run_gen_econ(points=slice(0, 10), year=2012, n_workers=1):
+def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
     """Test full reV2 gen->econ pipeline with windbos inputs and benchmark
     against baseline results."""
 
@@ -191,7 +191,7 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, n_workers=1):
     # run reV 2.0 generation
     Gen.reV_run('wind', points, sam_files, res_file,
                 output_request=('cf_mean', 'cf_profile'),
-                n_workers=n_workers, sites_per_split=3, fout=fn_gen,
+                max_workers=max_workers, sites_per_worker=3, fout=fn_gen,
                 dirout=OUT_DIR)
 
     econ_outs = ('lcoe_nom', 'lcoe_real', 'flip_actual_irr',
@@ -199,7 +199,7 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, n_workers=1):
                  'turbine_cost', 'sales_tax_cost', 'bos_cost')
     e = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
                      cf_year=year, site_data=None, output_request=econ_outs,
-                     n_workers=n_workers, sites_per_split=3, fout=None)
+                     max_workers=max_workers, sites_per_worker=3, fout=None)
 
     for k in econ_outs:
         msg = 'Failed for {}'.format(k)
@@ -211,7 +211,7 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, n_workers=1):
     return e
 
 
-def test_rev_run_bos(points=slice(0, 5), n_workers=1):
+def test_rev_run_bos(points=slice(0, 5), max_workers=1):
     """Test full reV2 gen->econ pipeline with windbos inputs and benchmark
     against baseline results."""
 
@@ -225,7 +225,7 @@ def test_rev_run_bos(points=slice(0, 5), n_workers=1):
     e = Econ.reV_run(points=points, sam_files=sam_files, cf_file=None,
                      cf_year=None, site_data=site_data,
                      output_request=econ_outs,
-                     n_workers=n_workers, sites_per_split=3, fout=None)
+                     max_workers=max_workers, sites_per_worker=3, fout=None)
 
     for k in econ_outs:
         check = np.allclose(e.out[k], BASELINE_SITE_BOS[k],

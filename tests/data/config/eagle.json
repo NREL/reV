@@ -8,7 +8,7 @@
     "memory": 96,
     "nodes": 1,
     "option": "eagle",
-    "sites_per_core": null,
+    "sites_per_worker": null,
     "tmp": null,
     "walltime": 0.5
   },

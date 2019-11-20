@@ -5,11 +5,11 @@
   },
   "execution_control": {
     "allocation": "rev",
+    "max_workers": 16,
     "nodes": 2,
     "option": "peregrine",
-    "ppn": 16,
     "queue": "short",
-    "sites_per_core": null
+    "sites_per_worker": null
   },
   "project_control": {
     "analysis_years": 2012,

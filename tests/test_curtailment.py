@@ -61,7 +61,7 @@ def test_cf_curtailment(year, site):
     gen = Gen.reV_run('wind', points, sam_files, res_file, fout=None,
                       output_request=('cf_profile',),
                       curtailment=curtailment,
-                      n_workers=1, sites_per_split=50,
+                      max_workers=1, sites_per_worker=50,
                       scale_outputs=True)
     results, check_curtailment = test_res_curtailment(year, site=site)
     results['cf_profile'] = gen.out['cf_profile'].flatten()
@@ -108,7 +108,7 @@ def test_random(year, site):
         gen = Gen.reV_run('wind', points, sam_files, res_file, fout=None,
                           output_request=('cf_profile',),
                           curtailment=c,
-                          n_workers=1, sites_per_split=50,
+                          max_workers=1, sites_per_worker=50,
                           scale_outputs=True)
 
         results.append(gen.out['cf_mean'])

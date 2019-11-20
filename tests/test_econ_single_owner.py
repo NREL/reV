@@ -48,7 +48,7 @@ def test_single_owner():
     obj = Econ.reV_run(points=slice(0, 10), sam_files=sam_files,
                        cf_file=cf_file, cf_year=2012,
                        output_request=output_request,
-                       n_workers=1, sites_per_split=10,
+                       max_workers=1, sites_per_worker=10,
                        points_range=None, fout=None)
 
     for k, v in obj.out.items():

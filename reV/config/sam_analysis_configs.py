@@ -86,14 +86,15 @@ class SAMAnalysisConfig(AnalysisConfig):
                 # sites per split on peregrine or eagle is the number of sites
                 # in project points / number of nodes. This is for the initial
                 # division of the project sites between HPC nodes (jobs)
-                sites_per_split = ceil(len(pp) / self.execution_control.nodes)
+                sites_per_worker = ceil(len(pp) / self.execution_control.nodes)
 
             elif self.execution_control.option == 'local':
                 # sites per split on local is number of sites / # of processes
-                sites_per_split = ceil(len(pp) / self.execution_control.ppn)
+                sites_per_worker = ceil(len(pp)
+                                        / self.execution_control.max_workers)
 
             # make an instance of points control and set to protected attribute
-            self._pc = PointsControl(pp, sites_per_split=sites_per_split)
+            self._pc = PointsControl(pp, sites_per_split=sites_per_worker)
 
         return self._pc
 

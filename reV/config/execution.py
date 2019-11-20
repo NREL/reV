@@ -23,7 +23,8 @@ class BaseExecutionConfig(BaseConfig):
         """
         self._option = None
         self._nodes = None
-        self._ppn = None
+        self._max_workers = None
+        self._sites_per_worker = None
         self._mem_util_lim = None
         super().__init__(config_dict)
 
@@ -63,20 +64,32 @@ class BaseExecutionConfig(BaseConfig):
         return self._nodes
 
     @property
-    def ppn(self):
-        """Get the process per node (ppn) property.
+    def max_workers(self):
+        """Get the max_workers property (1 runs in serial).
 
         Returns
         -------
-        _ppn : int
-            Processes per node. Default is 1 ppn.
+        _max_workers : int
+            Processes per node. Default is None max_workers (all available).
         """
-        if self._ppn is None:
-            # set default option if not specified
-            self._ppn = 1
-            if 'ppn' in self:
-                self._ppn = self['ppn']
-        return self._ppn
+        if self._max_workers is None:
+            if 'max_workers' in self:
+                self._max_workers = self['max_workers']
+        return self._max_workers
+
+    @property
+    def sites_per_worker(self):
+        """Get the number of sites to run per worker.
+
+        Returns
+        -------
+        _sites_per_worker : int | None
+            Number of sites to run per worker in a parallel scheme.
+        """
+        if self._sites_per_worker is None:
+            if 'sites_per_worker' in self:
+                self._sites_per_worker = self['sites_per_worker']
+        return self._sites_per_worker
 
     @property
     def mem_util_lim(self):

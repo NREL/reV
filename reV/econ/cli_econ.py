@@ -80,7 +80,8 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
-    ctx.obj['SITES_PER_CORE'] = config.execution_control['sites_per_core']
+    ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
+    ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
 
     for i, year in enumerate(config.years):
         submit_from_config(ctx, name, year, config, verbose, i)
@@ -120,9 +121,6 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     if config.execution_control.option == 'local':
         name_year = make_fout(name, year).replace('.h5', '')
         ctx.obj['NAME'] = name_year
-        sites_per_core = ceil(len(config.points_control)
-                              / config.execution_control.ppn)
-        ctx.obj['SITES_PER_CORE'] = sites_per_core
         status = Status.retrieve_job_status(config.dirout, 'econ', name_year)
         if status != 'successful':
             Status.add_job(
@@ -130,7 +128,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                 job_attrs={'hardware': 'local',
                            'fout': ctx.obj['FOUT'],
                            'dirout': config.dirout})
-            ctx.invoke(econ_local, n_workers=config.execution_control.ppn,
+            ctx.invoke(econ_local,
+                       max_workers=config.execution_control.max_workers,
                        points_range=None, verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
@@ -172,8 +171,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                     'string). Default is slice(0, 100)'))
 @click.option('--site_data', '-sd', default=None, type=click.Path(exists=True),
               help='Site-specific data file for econ calculation.')
-@click.option('--sites_per_core', '-spc', default=None, type=INT,
-              help=('Number of sites to run in series on a single core. '
+@click.option('--sites_per_worker', '-spw', default=None, type=INT,
+              help=('Number of sites to run in series on a single worker. '
                     'Default is the resource column chunk size.'))
 @click.option('--fout', '-fo', default='econ_output.h5', type=STR,
               help=('Filename output specification (should be .h5). '
@@ -188,8 +187,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, sam_files, cf_file, cf_year, points, site_data, sites_per_core,
-           fout, dirout, logdir, output_request, verbose):
+def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
+           sites_per_worker, fout, dirout, logdir, output_request, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['POINTS'] = points
@@ -197,7 +196,7 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data, sites_per_core,
     ctx.obj['CF_FILE'] = cf_file
     ctx.obj['CF_YEAR'] = cf_year
     ctx.obj['SITE_DATA'] = site_data
-    ctx.obj['SITES_PER_CORE'] = sites_per_core
+    ctx.obj['SITES_PER_WORKER'] = sites_per_worker
     ctx.obj['FOUT'] = fout
     ctx.obj['DIROUT'] = dirout
     ctx.obj['LOGDIR'] = logdir
@@ -206,14 +205,14 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data, sites_per_core,
 
 
 @direct.command()
-@click.option('--n_workers', '-nw', type=INT,
+@click.option('--max_workers', '-mw', type=INT,
               help='Number of workers. Use 1 for serial, None for all cores.')
 @click.option('--points_range', '-pr', default=None, type=INTLIST,
               help='Optional range list to run a subset of sites.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def econ_local(ctx, n_workers, points_range, verbose):
+def econ_local(ctx, max_workers, points_range, verbose):
     """Run econ on local worker(s)."""
 
     name = ctx.obj['NAME']
@@ -222,7 +221,7 @@ def econ_local(ctx, n_workers, points_range, verbose):
     cf_file = ctx.obj['CF_FILE']
     cf_year = ctx.obj['CF_YEAR']
     site_data = ctx.obj['SITE_DATA']
-    sites_per_core = ctx.obj['SITES_PER_CORE']
+    sites_per_worker = ctx.obj['SITES_PER_WORKER']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
@@ -250,8 +249,8 @@ def econ_local(ctx, n_workers, points_range, verbose):
                  cf_year=cf_year,
                  site_data=site_data,
                  output_request=output_request,
-                 n_workers=n_workers,
-                 sites_per_split=sites_per_core,
+                 max_workers=max_workers,
+                 sites_per_worker=sites_per_worker,
                  points_range=points_range,
                  fout=fout,
                  dirout=dirout)
@@ -303,10 +302,10 @@ def get_node_pc(points, sam_files, nodes):
 
 
 def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
-                 points=slice(0, 100), points_range=None, sites_per_core=None,
-                 n_workers=None, fout='reV.h5', dirout='./out/econ_out',
-                 logdir='./out/log_econ', output_request='lcoe_fcr',
-                 verbose=False):
+                 points=slice(0, 100), points_range=None,
+                 sites_per_worker=None, max_workers=None, fout='reV.h5',
+                 dirout='./out/econ_out', logdir='./out/log_econ',
+                 output_request='lcoe_fcr', verbose=False):
     """Made a reV econ direct-local command line interface call string.
 
     Parameters
@@ -329,9 +328,9 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         Slice/list specifying project points, string pointing to a project
     points_range : list | None
         Optional range list to run a subset of sites
-    sites_per_core : int | None
+    sites_per_worker : int | None
         Number of sites to be analyzed in serial on a single local core.
-    n_workers : int | None
+    max_workers : int | None
         Number of workers to use on a node. None defaults to all available
         workers.
     fout : str
@@ -364,27 +363,27 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                   '-cf {cf_file} '
                   '-cfy {cf_year} '
                   '{site_data}'
-                  '-spc {sites_per_core} '
+                  '-spw {sites_per_worker} '
                   '-fo {fout} '
                   '-do {dirout} '
                   '-lo {logdir} '
-                  '-or {out_req} '
-                  .format(points=SubprocessManager.s(points),
-                          sam_files=SubprocessManager.s(sam_files),
-                          cf_file=SubprocessManager.s(cf_file),
-                          cf_year=SubprocessManager.s(cf_year),
-                          site_data=s_site_data if site_data else '',
-                          sites_per_core=SubprocessManager.s(sites_per_core),
-                          fout=SubprocessManager.s(fout),
-                          dirout=SubprocessManager.s(dirout),
-                          logdir=SubprocessManager.s(logdir),
-                          out_req=SubprocessManager.s(output_request),
-                          ))
+                  '-or {out_req} ')
+    arg_direct = arg_direct.format(
+        points=SubprocessManager.s(points),
+        sam_files=SubprocessManager.s(sam_files),
+        cf_file=SubprocessManager.s(cf_file),
+        cf_year=SubprocessManager.s(cf_year),
+        site_data=s_site_data if site_data else '',
+        sites_per_worker=SubprocessManager.s(sites_per_worker),
+        fout=SubprocessManager.s(fout),
+        dirout=SubprocessManager.s(dirout),
+        logdir=SubprocessManager.s(logdir),
+        out_req=SubprocessManager.s(output_request))
 
     # make a cli arg string for local() in this module
-    arg_loc = ('-nw {n_workers} '
+    arg_loc = ('-mw {max_workers} '
                '-pr {points_range} '
-               '{v}'.format(n_workers=SubprocessManager.s(n_workers),
+               '{v}'.format(max_workers=SubprocessManager.s(max_workers),
                             points_range=SubprocessManager.s(points_range),
                             v='-v' if verbose else ''))
 
@@ -423,7 +422,7 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
     cf_file = ctx.obj['CF_FILE']
     cf_year = ctx.obj['CF_YEAR']
     site_data = ctx.obj['SITE_DATA']
-    sites_per_core = ctx.obj['SITES_PER_CORE']
+    sites_per_worker = ctx.obj['SITES_PER_WORKER']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
@@ -446,7 +445,7 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,
                            points_range=split.split_range,
-                           sites_per_core=sites_per_core, n_workers=None,
+                           sites_per_worker=sites_per_worker, max_workers=None,
                            fout=fout_node, dirout=dirout, logdir=logdir,
                            output_request=output_request, verbose=verbose)
 
@@ -504,7 +503,8 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     cf_file = ctx.obj['CF_FILE']
     cf_year = ctx.obj['CF_YEAR']
     site_data = ctx.obj['SITE_DATA']
-    sites_per_core = ctx.obj['SITES_PER_CORE']
+    sites_per_worker = ctx.obj['SITES_PER_WORKER']
+    max_workers = ctx.obj['MAX_WORKERS']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
@@ -525,8 +525,9 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,
                            points_range=split.split_range,
-                           sites_per_core=sites_per_core, n_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
+                           sites_per_worker=sites_per_worker,
+                           max_workers=max_workers, fout=fout_node,
+                           dirout=dirout, logdir=logdir,
                            output_request=output_request, verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'econ', node_name)

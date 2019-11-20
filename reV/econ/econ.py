@@ -12,8 +12,7 @@ from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
-from reV.utilities.execution import (execute_parallel, execute_single,
-                                     SmartParallelJob)
+from reV.utilities.execution import execute_single
 from reV.generation.generation import Gen
 from reV.utilities.exceptions import OutputWarning, ExecutionError
 
@@ -359,8 +358,8 @@ class Econ(Gen):
     @classmethod
     def reV_run(cls, points=None, sam_files=None, cf_file=None,
                 cf_year=None, site_data=None, output_request=('lcoe_fcr',),
-                n_workers=1, sites_per_split=100, points_range=None,
-                fout=None, dirout='./econ_out'):
+                max_workers=1, sites_per_worker=100, pool_size=72,
+                points_range=None, fout=None, dirout='./econ_out'):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -387,10 +386,13 @@ class Econ(Gen):
             in the cf_file.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
-        n_workers : int
+        max_workers : int
             Number of local workers to run on.
-        sites_per_split : int
-            Number of sites to run in series on a core.
+        sites_per_worker : int
+            Number of sites to run in series on a worker.
+        pool_size : int
+            Number of futures to submit to a single process pool for
+            parallel futures.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -403,13 +405,13 @@ class Econ(Gen):
 
         Returns
         -------
-        econ : reV.econ.Econ
-            Econ object instance with outputs stored in .out attribute.
-            Only returned if return_obj is True.
+        econ : Econ
+            Econ object instance with outputs stored in econ.out dict.
         """
 
         # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_files, tech='econ')
+        pc = cls.get_pc(points, points_range, sam_files, tech='econ',
+                        sites_per_worker=sites_per_worker)
 
         # make a Gen class instance to operate with
         econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
@@ -440,28 +442,19 @@ class Econ(Gen):
                      .format(output_request))
 
         try:
-            if not fout:
-                if n_workers == 1:
-                    logger.debug('Running serial econ for: {}'.format(pc))
-                    out = execute_single(econ.run, pc, econ_fun=econ._fun,
-                                         **kwargs)
-                else:
-                    logger.debug('Running parallel econ for: {}'.format(pc))
-                    out = execute_parallel(econ.run, pc, econ_fun=econ._fun,
-                                           n_workers=n_workers, **kwargs)
-
+            kwargs['econ_fun'] = econ._fun
+            if max_workers == 1:
+                logger.debug('Running serial econ for: {}'.format(pc))
+                out = execute_single(econ.run, pc, **kwargs)
                 econ.out = out
                 econ.flush()
-
             else:
-                # use SmartParallelJob to manage runs, but set mem limit to 1
-                # because Econ() will manage the sites in-memory
-                SmartParallelJob.execute(econ, pc, econ_fun=econ._fun,
-                                         n_workers=n_workers, mem_util_lim=1.0,
-                                         **kwargs)
+                logger.debug('Running parallel econ for: {}'.format(pc))
+                econ._parallel_run(max_workers=max_workers,
+                                   pool_size=pool_size, **kwargs)
+
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed for econ.')
             raise e
 
-        if not fout:
-            return econ
+        return econ

@@ -9,7 +9,7 @@
     "memory": 90,
     "nodes": 20,
     "option": "eagle",
-    "sites_per_core": 100,
+    "sites_per_worker": 100,
     "walltime": 4.0
   },
   "project_control": {

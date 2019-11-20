@@ -8,7 +8,7 @@
     "feature": "--qos=high",
     "nodes": 5,
     "option": "eagle",
-    "sites_per_core": 100,
+    "sites_per_worker": 100,
     "walltime": 0.5
   },
   "project_control": {

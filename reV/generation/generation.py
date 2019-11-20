@@ -12,11 +12,11 @@ from warnings import warn
 
 from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.utilities.execution import (execute_parallel, execute_single,
-                                     SmartParallelJob)
+from reV.utilities.execution import execute_single
 from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import OutputWarning, ExecutionError
+from concurrent.futures import ProcessPoolExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -630,7 +630,7 @@ class Gen:
         return self._year
 
     @staticmethod
-    def get_pc(points, points_range, sam_files, tech, sites_per_split=None,
+    def get_pc(points, points_range, sam_files, tech, sites_per_worker=None,
                res_file=None, curtailment=None):
         """Get a PointsControl instance.
 
@@ -650,8 +650,8 @@ class Gen:
             to the sorted list of unique configs requested by points csv.
         tech : str
             Technology to analyze (pv, csp, landbasedwind, offshorewind).
-        sites_per_split : int
-            Number of sites to run in series on a core. None defaults to the
+        sites_per_worker : int
+            Number of sites to run in series on a worker. None defaults to the
             resource file chunk size.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
@@ -675,9 +675,12 @@ class Gen:
                            'Gen options are: {}'
                            .format(tech, list(Gen.OPTIONS.keys())))
 
-        if sites_per_split is None:
+        if sites_per_worker is None:
             # get the optimal sites per split based on res file chunk size
-            sites_per_split = Gen.sites_per_core(res_file)
+            sites_per_worker = Gen.get_sites_per_worker(res_file)
+
+        logger.debug('Sites per worker being set to {} for Gen/Econ '
+                     'PointsControl.'.format(sites_per_worker))
 
         if isinstance(points, (slice, list, str)):
             # make Project Points instance
@@ -687,13 +690,13 @@ class Gen:
             #  make Points Control instance
             if points_range is None:
                 # PointsControl is for all of the project points
-                pc = PointsControl(pp, sites_per_split=sites_per_split)
+                pc = PointsControl(pp, sites_per_split=sites_per_worker)
             else:
                 # PointsControl is for just a subset of the projec points...
                 # this is the case if generation is being initialized on one
                 # of many HPC nodes in a large project
                 pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                         sites_per_split=sites_per_split)
+                                         sites_per_split=sites_per_worker)
 
         elif isinstance(points, PointsControl):
             # received a pre-intialized instance of pointscontrol
@@ -704,8 +707,8 @@ class Gen:
         return pc
 
     @staticmethod
-    def sites_per_core(res_file, default=100):
-        """Get the nominal sites per core (x-chunk size) for a given file.
+    def get_sites_per_worker(res_file, default=100):
+        """Get the nominal sites per worker (x-chunk size) for a given file.
 
         This is based on the concept that it is most efficient for one core to
         perform one read on one chunk of resource data, such that chunks will
@@ -723,8 +726,8 @@ class Gen:
 
         Returns
         -------
-        sites_per_core : int
-            Nominal sites to be analyzed per core. This is set to the x-axis
+        sites_per_worker : int
+            Nominal sites to be analyzed per worker. This is set to the x-axis
             chunk size for windspeed and dni datasets for the WTK and NSRDB
             data, respectively.
         """
@@ -748,15 +751,15 @@ class Gen:
 
         if chunks is None:
             # if chunks not set, go to default
-            sites_per_core = default
-            logger.debug('Sites per core being set to {} (default) based on '
+            sites_per_worker = default
+            logger.debug('Sites per worker being set to {} (default) based on '
                          'no set chunk size in {}.'
-                         .format(sites_per_core, res_file))
+                         .format(sites_per_worker, res_file))
         else:
-            sites_per_core = chunks[1]
-            logger.debug('Sites per core being set to {} based on chunk size '
-                         'of {}.'.format(sites_per_core, res_file))
-        return sites_per_core
+            sites_per_worker = chunks[1]
+            logger.debug('Sites per worker being set to {} based on chunk '
+                         'size of {}.'.format(sites_per_worker, res_file))
+        return sites_per_worker
 
     @property
     def out(self):
@@ -804,9 +807,6 @@ class Gen:
 
                 # add site gid to the finished list after outputs are unpacked
                 self._finished_sites.append(site_gid)
-
-            # try to clear some memory
-            del result
 
         elif isinstance(result, type(None)):
             self._out.clear()
@@ -874,9 +874,6 @@ class Gen:
             else:
                 # set a scalar result to the list (1D array)
                 self._out[var][i] = value
-
-        # try to clear some memory
-        del site_output
 
     def site_index(self, site_gid, out_index=False):
         """Get the index corresponding to the site gid.
@@ -1012,12 +1009,88 @@ class Gen:
 
         return out
 
+    def _pre_split_pc(self, pool_size=72):
+        """Pre-split project control iterator into sub chunks to further
+        split the parallelization.
+
+        Parameters
+        ----------
+        pool_size : int
+            Number of futures to submit to a single process pool for
+            parallel futures.
+
+        Returns
+        -------
+        N : int
+            Total number of points control split instances.
+        pc_chunks : list
+            List of lists of points control split instances.
+        """
+        N = 0
+        pc_chunks = []
+        i_chunk = []
+
+        for i, split in enumerate(self.points_control):
+            N += 1
+            i_chunk.append(split)
+            if (i + 1) % pool_size == 0:
+                pc_chunks.append(i_chunk)
+                i_chunk = []
+
+        if i_chunk:
+            pc_chunks.append(i_chunk)
+
+        logger.debug('Pre-splitting points control into {} chunks with the '
+                     'following chunk sizes: {}'
+                     .format(len(pc_chunks), [len(x) for x in pc_chunks]))
+        return N, pc_chunks
+
+    def _parallel_run(self, max_workers=None, pool_size=72, **kwargs):
+        """Execute parallel compute.
+
+        Parameters
+        ----------
+        max_workers : None | int
+            Number of workers. None will default to cpu count.
+        pool_size : int
+            Number of futures to submit to a single process pool for
+            parallel futures.
+        kwargs : dict
+            Keyword arguments to self.run().
+        """
+
+        logger.debug('Running parallel execution with max_workers={}'
+                     .format(max_workers))
+        i = 0
+        N, pc_chunks = self._pre_split_pc(pool_size=pool_size)
+        for j, pc_chunk in enumerate(pc_chunks):
+            logger.debug('Starting process pool for points control '
+                         'iteration {} out of {}'
+                         .format(j + 1, len(pc_chunks)))
+            futures = []
+            with ProcessPoolExecutor(max_workers=max_workers) as exe:
+                for pc in pc_chunk:
+                    futures.append(exe.submit(self.run, pc, **kwargs))
+
+                for future in futures:
+                    self.out = future.result()
+                    i += 1
+                    mem = psutil.virtual_memory()
+                    m = ('Parallel run at iteration {0} out of {1}. '
+                         'Memory utilization is {2:.3f} GB out of {3:.3f} GB '
+                         'total ({4:.1f}% used, intended limit of {5:.1f}%)'
+                         .format(i, N, mem.used / 1e9, mem.total / 1e9,
+                                 100 * mem.used / mem.total,
+                                 100 * self.mem_util_lim))
+                    logger.info(m)
+        self.flush()
+
     @classmethod
     def reV_run(cls, tech=None, points=None, sam_files=None, res_file=None,
                 output_request=('cf_mean',), curtailment=None,
-                downscale=None, n_workers=1, sites_per_split=None,
-                points_range=None, fout=None, dirout='./gen_out',
-                mem_util_lim=0.4, scale_outputs=True):
+                downscale=None, max_workers=1, sites_per_worker=None,
+                pool_size=72, points_range=None, fout=None,
+                dirout='./gen_out', mem_util_lim=0.4, scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1048,11 +1121,14 @@ class Gen:
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        n_workers : int
+        max_workers : int
             Number of local workers to run on.
-        sites_per_split : int | None
-            Number of sites to run in series on a core. None defaults to the
+        sites_per_worker : int | None
+            Number of sites to run in series on a worker. None defaults to the
             resource file chunk size.
+        pool_size : int
+            Number of futures to submit to a single process pool for
+            parallel futures.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -1068,11 +1144,17 @@ class Gen:
             site results are stored in memory at any given time.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+
+        Returns
+        -------
+        gen : Gen
+            Gen instance with outputs saved to gen.out dict
         """
 
         # get a points control instance
-        pc = Gen.get_pc(points, points_range, sam_files, tech, sites_per_split,
-                        res_file=res_file, curtailment=curtailment)
+        pc = Gen.get_pc(points, points_range, sam_files, tech,
+                        sites_per_worker=sites_per_worker, res_file=res_file,
+                        curtailment=curtailment)
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
@@ -1093,31 +1175,20 @@ class Gen:
         logger.debug('The SAM output variables have been requested:\n{}'
                      .format(output_request))
 
-        # use serial or parallel execution control based on n_workers
+        # use serial or parallel execution control based on max_workers
         try:
-            if not fout:
-                if n_workers == 1:
-                    logger.debug('Running serial generation for: {}'
-                                 .format(pc))
-                    out = execute_single(gen.run, pc, **kwargs)
-                else:
-                    logger.debug('Running parallel generation for: {}'
-                                 .format(pc))
-                    out = execute_parallel(gen.run, pc, n_workers=n_workers,
-                                           **kwargs)
+            if max_workers == 1:
+                logger.debug('Running serial generation for: {}'.format(pc))
+                out = execute_single(gen.run, pc, **kwargs)
                 gen.out = out
                 gen.flush()
-
             else:
-                logger.debug('Running smart parallel generation for: {}'
-                             .format(pc))
-                # use SmartParallelJob to manage runs, but set mem limit to 1
-                # because Gen() will manage the sites in-memory
-                SmartParallelJob.execute(gen, pc, n_workers=n_workers,
-                                         mem_util_lim=1.0, **kwargs)
+                logger.debug('Running parallel generation for: {}'.format(pc))
+                gen._parallel_run(max_workers=max_workers, pool_size=pool_size,
+                                  **kwargs)
+
         except Exception as e:
             logger.exception('reV generation failed!')
             raise e
 
-        if not fout:
-            return gen
+        return gen

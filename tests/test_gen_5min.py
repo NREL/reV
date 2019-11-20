@@ -32,7 +32,7 @@ def test_gen_downscaling():
     gen = Gen.reV_run(tech='pv', points=slice(0, None),
                       sam_files=sam_files, res_file=res_file,
                       output_request=('cf_mean', 'cf_profile'),
-                      downscale='5min', n_workers=1, sites_per_split=100,
+                      downscale='5min', max_workers=1, sites_per_worker=100,
                       fout=None)
     gen_outs = gen.out['cf_profile'].astype(np.int32)
 

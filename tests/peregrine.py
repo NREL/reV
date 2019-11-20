@@ -102,7 +102,7 @@ def test_peregrine(year):
     cmd = get_node_cmd(name=name, tech='pv',
                        points=points, points_range=None,
                        sam_files=sam_files, res_file=res_file,
-                       sites_per_core=None, n_workers=None,
+                       sites_per_worker=None, max_workers=None,
                        fout=rev2_out, dirout=rev2_out_dir, logdir=rev2_out_dir,
                        output_request=('cf_profile', 'cf_mean'),
                        verbose=verbose)
