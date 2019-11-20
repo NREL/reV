@@ -402,9 +402,8 @@ class Econ(Gen):
 
         Returns
         -------
-        econ : reV.econ.Econ
-            Econ object instance with outputs stored in .out attribute.
-            Only returned if return_obj is True.
+        econ : Econ
+            Econ object instance with outputs stored in econ.out dict.
         """
 
         # get a points control instance
@@ -453,5 +452,4 @@ class Econ(Gen):
             logger.exception('SmartParallelJob.execute() failed for econ.')
             raise e
 
-        if not fout:
-            return econ
+        return econ

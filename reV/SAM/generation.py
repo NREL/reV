@@ -5,7 +5,6 @@ Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
 import copy
-import gc
 import os
 import logging
 import numpy as np
@@ -283,10 +282,6 @@ class Generation(SAM):
             if res_mean is not None:
                 out[site].update(res_mean)
 
-            del res_df, meta, sim
-
-        del resources
-        gc.collect()
         return out
 
 

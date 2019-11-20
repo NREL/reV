@@ -805,9 +805,6 @@ class Gen:
                 # add site gid to the finished list after outputs are unpacked
                 self._finished_sites.append(site_gid)
 
-            # try to clear some memory
-            del result
-
         elif isinstance(result, type(None)):
             self._out.clear()
             self._finished_sites.clear()
@@ -847,6 +844,8 @@ class Gen:
             SAM site output object.
         """
 
+        logger.debug('Saving data for site gid {}'.format(site_gid))
+
         # iterate through the site results
         for var, value in site_output.items():
             if var not in self._out:
@@ -874,9 +873,6 @@ class Gen:
             else:
                 # set a scalar result to the list (1D array)
                 self._out[var][i] = value
-
-        # try to clear some memory
-        del site_output
 
     def site_index(self, site_gid, out_index=False):
         """Get the index corresponding to the site gid.
@@ -1019,7 +1015,8 @@ class Gen:
         Parameters
         ----------
         sub_size : None | int
-            Size of the sub points control chunks.
+            Size of the sub points control chunks. None will default to
+            2 * cpu count.
 
         Returns
         -------
@@ -1030,7 +1027,7 @@ class Gen:
         """
         N = 0
         if sub_size is None:
-            sub_size = os.cpu_count()
+            sub_size = 2 * os.cpu_count()
         pc_chunks = []
         i_chunk = []
         for i, split in enumerate(self.points_control):
@@ -1063,8 +1060,9 @@ class Gen:
         i = 0
         N, pc_chunks = self._pre_split_pc()
         for j, pc_chunk in enumerate(pc_chunks):
-            logger.debug('Starting ProcessPoolExecutor for PC chunk {} '
-                         'out of {}'.format(j + 1, len(pc_chunks)))
+            logger.debug('Starting ProcessPoolExecutor for points control '
+                         'sub chunk {} out of {}'
+                         .format(j + 1, len(pc_chunks)))
             futures = []
             with ProcessPoolExecutor(max_workers=n_workers) as exe:
                 for pc in pc_chunk:
@@ -1139,6 +1137,11 @@ class Gen:
             site results are stored in memory at any given time.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
+
+        Returns
+        -------
+        gen : Gen
+            Gen instance with outputs saved to gen.out dict
         """
 
         # get a points control instance
@@ -1179,5 +1182,4 @@ class Gen:
             logger.exception('reV generation failed!')
             raise e
 
-        if not fout:
-            return gen
+        return gen
