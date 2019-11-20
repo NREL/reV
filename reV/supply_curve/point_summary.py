@@ -289,7 +289,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         gid_counts : list
             List of exclusion pixels in each resource/generation gid.
         """
-        return [(self._res_gids == gid).sum() for gid in self.res_gid_set]
+        gid_counts = [self.excl_data_flat[(self._res_gids == gid)].sum()
+                      for gid in self.res_gid_set]
+        return gid_counts
 
     @property
     def mean_cf(self):

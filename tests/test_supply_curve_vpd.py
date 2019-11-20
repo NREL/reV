@@ -57,6 +57,37 @@ def test_vpd():
         assert diff < 1, msg
 
 
+def test_vpd_fractional_excl():
+    """Test variable power density with fractional exclusions"""
+
+    gids_subset = list(range(0, 20))
+    excl_dict_1 = {'ri_padus': {'exclude_values': [1]}}
+    s1 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_1,
+                             res_class_dset=RES_CLASS_DSET,
+                             res_class_bins=RES_CLASS_BINS,
+                             data_layers=DATA_LAYERS,
+                             power_density=FVPD,
+                             n_cores=1, gids=gids_subset)
+
+    excl_dict_2 = {'ri_padus': {'exclude_values': [1],
+                                'weight': 0.5}}
+    s2 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_2,
+                             res_class_dset=RES_CLASS_DSET,
+                             res_class_bins=RES_CLASS_BINS,
+                             data_layers=DATA_LAYERS,
+                             power_density=FVPD,
+                             n_cores=1, gids=gids_subset)
+
+    for i in s1.index:
+        cap_full = s1.loc[i, 'capacity']
+        cap_half = s2.loc[i, 'capacity']
+
+        msg = ('Variable power density for fractional exclusions failed! '
+               'Index {} has cap full {} and cap half {}'
+               .format(i, cap_full, cap_half))
+        assert (cap_full / cap_half) == 2, msg
+
+
 def test_vpd_incomplete():
     """Test an incomplete VPD input and make sure an exception is raised"""
     try:
