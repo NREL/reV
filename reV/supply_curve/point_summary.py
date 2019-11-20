@@ -367,6 +367,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 raise FileInputError(msg)
 
             pds = self._pd_obj.loc[self._res_gids, 'power_density'].values
+            pds = pds.astype(np.float32)
             pds[(self._res_gids == -1)] = 0.0
             pds *= self.excl_data_flat
             denom = self.excl_data_flat[self.bool_mask].sum()
