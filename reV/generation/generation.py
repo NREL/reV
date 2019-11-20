@@ -844,8 +844,6 @@ class Gen:
             SAM site output object.
         """
 
-        logger.debug('Saving data for site gid {}'.format(site_gid))
-
         # iterate through the site results
         for var, value in site_output.items():
             if var not in self._out:
