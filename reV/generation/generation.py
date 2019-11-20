@@ -1006,15 +1006,15 @@ class Gen:
 
         return out
 
-    def _pre_split_pc(self, sub_size=None):
+    def _pre_split_pc(self, super_iter_size=None):
         """Pre-split project control iterator into sub chunks to further
         split the parallelization.
 
         Parameters
         ----------
-        sub_size : None | int
-            Size of the sub points control chunks. None will default to
-            2 * cpu count.
+        super_iter_size : None | int
+            Size of the points control chunks in super iterations for
+            parallel futures. None will default to 2 * cpu count.
 
         Returns
         -------
@@ -1024,14 +1024,14 @@ class Gen:
             List of lists of points control split instances.
         """
         N = 0
-        if sub_size is None:
-            sub_size = 2 * os.cpu_count()
+        if super_iter_size is None:
+            super_iter_size = 2 * os.cpu_count()
         pc_chunks = []
         i_chunk = []
         for i, split in enumerate(self.points_control):
             N += 1
             i_chunk.append(split)
-            if (i + 1) % sub_size == 0:
+            if (i + 1) % super_iter_size == 0:
                 pc_chunks.append(i_chunk)
                 i_chunk = []
         if i_chunk:
@@ -1042,13 +1042,16 @@ class Gen:
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
-    def _parallel_run(self, n_workers=None, **kwargs):
+    def _parallel_run(self, n_workers=None, super_iter_size=None, **kwargs):
         """Execute parallel compute.
 
         Parameters
         ----------
         n_workers : None | int
             Number of workers. None will default to cpu count.
+        super_iter_size : None | int
+            Size of the points control chunks in super iterations for
+            parallel futures. None will default to 2 * cpu count.
         kwargs : dict
             Keyword arguments to self.run().
         """
@@ -1056,10 +1059,10 @@ class Gen:
         if n_workers is None:
             n_workers = os.cpu_count()
         i = 0
-        N, pc_chunks = self._pre_split_pc()
+        N, pc_chunks = self._pre_split_pc(super_iter_size=super_iter_size)
         for j, pc_chunk in enumerate(pc_chunks):
             logger.debug('Starting ProcessPoolExecutor for points control '
-                         'sub chunk {} out of {}'
+                         'super iteration {} out of {}'
                          .format(j + 1, len(pc_chunks)))
             futures = []
             with ProcessPoolExecutor(max_workers=n_workers) as exe:
@@ -1083,8 +1086,8 @@ class Gen:
     def reV_run(cls, tech=None, points=None, sam_files=None, res_file=None,
                 output_request=('cf_mean',), curtailment=None,
                 downscale=None, n_workers=1, sites_per_split=None,
-                points_range=None, fout=None, dirout='./gen_out',
-                mem_util_lim=0.4, scale_outputs=True):
+                super_iter_size=None, points_range=None, fout=None,
+                dirout='./gen_out', mem_util_lim=0.4, scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1120,6 +1123,9 @@ class Gen:
         sites_per_split : int | None
             Number of sites to run in series on a core. None defaults to the
             resource file chunk size.
+        super_iter_size : None | int
+            Size of the points control chunks in super iterations for
+            parallel futures. None will default to 2 * cpu count.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -1174,7 +1180,9 @@ class Gen:
                 gen.flush()
             else:
                 logger.debug('Running parallel generation for: {}'.format(pc))
-                gen._parallel_run(n_workers=n_workers, **kwargs)
+                gen._parallel_run(n_workers=n_workers,
+                                  super_iter_size=super_iter_size,
+                                  **kwargs)
 
         except Exception as e:
             logger.exception('reV generation failed!')

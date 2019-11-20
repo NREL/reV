@@ -358,8 +358,8 @@ class Econ(Gen):
     @classmethod
     def reV_run(cls, points=None, sam_files=None, cf_file=None,
                 cf_year=None, site_data=None, output_request=('lcoe_fcr',),
-                n_workers=1, sites_per_split=100, points_range=None,
-                fout=None, dirout='./econ_out'):
+                n_workers=1, sites_per_split=100, super_iter_size=None,
+                points_range=None, fout=None, dirout='./econ_out'):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -390,6 +390,9 @@ class Econ(Gen):
             Number of local workers to run on.
         sites_per_split : int
             Number of sites to run in series on a core.
+        super_iter_size : None | int
+            Size of the points control chunks in super iterations for
+            parallel futures. None will default to 2 * cpu count.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -446,7 +449,9 @@ class Econ(Gen):
                 econ.flush()
             else:
                 logger.debug('Running parallel econ for: {}'.format(pc))
-                econ._parallel_run(n_workers=n_workers, **kwargs)
+                econ._parallel_run(n_workers=n_workers,
+                                   super_iter_size=super_iter_size,
+                                   **kwargs)
 
         except Exception as e:
             logger.exception('SmartParallelJob.execute() failed for econ.')
