@@ -97,24 +97,36 @@ def test_aggregation_summary():
 def test_aggregation_scalar_excl():
     """Test the aggregation summary with exclusions of 0.5"""
 
+    gids_subset = list(range(0, 20))
     excl_dict_1 = {'ri_padus': {'exclude_values': [1]}}
     s1 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_1,
                              res_class_dset=RES_CLASS_DSET,
                              res_class_bins=RES_CLASS_BINS,
                              data_layers=DATA_LAYERS,
-                             n_cores=1)
+                             n_cores=1, gids=gids_subset)
     excl_dict_2 = {'ri_padus': {'exclude_values': [1],
                                 'weight': 0.5}}
     s2 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_2,
                              res_class_dset=RES_CLASS_DSET,
                              res_class_bins=RES_CLASS_BINS,
                              data_layers=DATA_LAYERS,
-                             n_cores=1)
+                             n_cores=1, gids=gids_subset)
 
     dsets = ['area_sq_km', 'capacity']
     for dset in dsets:
         diff = (s1[dset].values / s2[dset].values)
-        assert all(diff == 2)
+        msg = ('Fractional exclusions failed for {} which has values {} and {}'
+               .format(dset, s1[dset].values, s2[dset].values))
+        assert all(diff == 2), msg
+
+    for i in s1.index:
+        counts_full = s1.loc[i, 'gid_counts']
+        counts_half = s2.loc[i, 'gid_counts']
+
+        for j, counts in enumerate(counts_full):
+            msg = ('GID counts for fractional exclusions failed for index {}!'
+                   .format(i))
+            assert counts == 2 * counts_half[j], msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):
