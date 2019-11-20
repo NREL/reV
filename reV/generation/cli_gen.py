@@ -93,6 +93,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
+    ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
 
     # get downscale request and raise exception if not NSRDB
@@ -660,6 +661,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    max_workers = ctx.obj['MAX_WORKERS']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
     downscale = ctx.obj['DOWNSCALE']
@@ -678,8 +680,9 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
 
         cmd = get_node_cmd(node_name, tech, sam_files, res_file,
                            points=points, points_range=split.split_range,
-                           sites_per_worker=sites_per_worker, max_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
+                           sites_per_worker=sites_per_worker,
+                           max_workers=max_workers, fout=fout_node,
+                           dirout=dirout, logdir=logdir,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, curtailment=curtailment,
                            downscale=downscale, verbose=verbose)

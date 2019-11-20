@@ -65,16 +65,14 @@ class BaseExecutionConfig(BaseConfig):
 
     @property
     def max_workers(self):
-        """Get the process per node (max_workers) property.
+        """Get the max_workers property (1 runs in serial).
 
         Returns
         -------
         _max_workers : int
-            Processes per node. Default is 1 max_workers.
+            Processes per node. Default is None max_workers (all available).
         """
         if self._max_workers is None:
-            # set default option if not specified
-            self._max_workers = 1
             if 'max_workers' in self:
                 self._max_workers = self['max_workers']
         return self._max_workers

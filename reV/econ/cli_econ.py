@@ -81,6 +81,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
+    ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
 
     for i, year in enumerate(config.years):
         submit_from_config(ctx, name, year, config, verbose, i)
@@ -503,6 +504,7 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     cf_year = ctx.obj['CF_YEAR']
     site_data = ctx.obj['SITE_DATA']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
+    max_workers = ctx.obj['MAX_WORKERS']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
@@ -523,8 +525,9 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,
                            points_range=split.split_range,
-                           sites_per_worker=sites_per_worker, max_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
+                           sites_per_worker=sites_per_worker,
+                           max_workers=max_workers, fout=fout_node,
+                           dirout=dirout, logdir=logdir,
                            output_request=output_request, verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'econ', node_name)
