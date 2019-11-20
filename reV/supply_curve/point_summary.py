@@ -5,6 +5,7 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
+import pandas as pd
 import numpy as np
 from warnings import warn
 import logging
@@ -13,7 +14,7 @@ from scipy import stats
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import SupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      OutputWarning)
+                                      OutputWarning, FileInputError)
 
 
 logger = logging.getLogger(__name__)
@@ -59,9 +60,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             None if no resource classes.
         ex_area : float
             Area of an exclusion cell (square km).
-        power_density : float | None
-            Power density in MW/km2. None will attempt to infer power density
-            from the generation meta data technology.
+        power_density : float | None | pd.DataFrame
+            Constant power density float, None, or opened dataframe with
+            (resource) "gid" and "power_density columns".
         cf_dset : str | np.ndarray
             Dataset name from gen containing capacity factor mean values.
             Can be pre-extracted generation output data in np.ndarray.
@@ -88,6 +89,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         self._gen_data = None
         self._lcoe_data = None
         self._ex_area = ex_area
+        self._pd_obj = None
         self._power_density = power_density
 
         super().__init__(gid, excl, gen, tm_dset, gen_index,
@@ -249,7 +251,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     @property
     def res_gid_set(self):
-        """Get the list of resource gids corresponding to this sc point.
+        """Get list of unique resource gids corresponding to this sc point.
 
         Returns
         -------
@@ -264,7 +266,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     @property
     def gen_gid_set(self):
-        """Get the list of generation gids corresponding to this sc point.
+        """Get list of unique generation gids corresponding to this sc point.
 
         Returns
         -------
@@ -287,7 +289,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         gid_counts : list
             List of exclusion pixels in each resource/generation gid.
         """
-        return [(self._res_gids == gid).sum() for gid in self.res_gid_set]
+        gid_counts = [self.excl_data_flat[(self._res_gids == gid)].sum()
+                      for gid in self.res_gid_set]
+        return gid_counts
 
     @property
     def mean_cf(self):
@@ -353,6 +357,24 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 warn('Could not recognize reV technology in generation meta '
                      'data: "{}". Cannot lookup an appropriate power density '
                      'to calculate SC point capacity.'.format(tech))
+
+        elif isinstance(self._power_density, pd.DataFrame):
+            self._pd_obj = self._power_density
+
+            missing = set(self.res_gid_set) - set(self._pd_obj.index.values)
+            if any(missing):
+                msg = ('Variable power density input is missing the '
+                       'following resource GIDs: {}'.format(missing))
+                logger.error(msg)
+                raise FileInputError(msg)
+
+            pds = self._pd_obj.loc[self._res_gids, 'power_density'].values
+            pds = pds.astype(np.float32)
+            pds[(self._res_gids == -1)] = 0.0
+            pds *= self.excl_data_flat
+            denom = self.excl_data_flat[self.bool_mask].sum()
+            self._power_density = pds.sum() / denom
+
         return self._power_density
 
     @property

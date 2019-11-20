@@ -12,7 +12,7 @@ import h5py
 
 from reV.config.supply_curve_configs import AggregationConfig
 from reV.utilities.execution import SLURM
-from reV.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST
+from reV.utilities.cli_dtypes import STR, INT, FLOATLIST, STRFLOAT
 from reV.utilities.loggers import init_mult
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.aggregation import Aggregation
@@ -132,8 +132,9 @@ def from_config(ctx, config_file, verbose):
 @click.option('--resolution', '-r', type=INT, default=64,
               help='Number of exclusion points along a squares edge to '
               'include in an aggregated supply curve point.')
-@click.option('--power_density', '-pd', type=FLOAT, default=None,
-              help='Power density in MW/km2. None will attempt to infer '
+@click.option('--power_density', '-pd', type=STRFLOAT, default=None,
+              help='Power density in MW/km2 or filepath to variable power '
+              'density csv file. None will attempt to infer a constant '
               'power density from the generation meta data technology.')
 @click.option('--out_dir', '-o', type=STR, default='./',
               help='Directory to save aggregation summary output.')
