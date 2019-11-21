@@ -575,8 +575,10 @@ class Aggregation:
 
         return summary
 
-    def _offshore_summary(self, offshore_gid_adder=1e6, offshore_capacity=600):
-        """Get the offshore supply curve point summary.
+    def _offshore_summary(self, offshore_gid_adder=1e6, offshore_capacity=600,
+                          offshore_gid_counts=494, offshore_pixel_area=4):
+        """Get the offshore supply curve point summary. Each offshore resource
+        pixel will be summarized in its own supply curve point.
 
         Parameters
         ----------
@@ -585,6 +587,11 @@ class Aggregation:
             resource gids plus this number.
         offshore_capacity : int | float
             Offshore resource pixel generation capacity in MW.
+        offshore_gid_counts : int
+            Approximate number of exclusion pixels that would fall into an
+            offshore pixel area.
+        offshore_pixel_area : int | float
+            Approximate area of offshore resource pixels in km2.
 
         Returns
         -------
@@ -599,12 +606,12 @@ class Aggregation:
                      self._excl_dict, self._power_density]
         with AggFileHandler(*file_args) as fhandler:
 
-            inputs = Aggregation._get_input_data(fhandler.gen, self._gen_fpath,
-                                                 self._res_class_dset,
-                                                 self._res_class_bins,
-                                                 self._cf_dset,
-                                                 self._lcoe_dset)
-            res_data, _, cf_data, lcoe_data, offshore_flag = inputs
+            inp = Aggregation._get_input_data(fhandler.gen, self._gen_fpath,
+                                              self._res_class_dset,
+                                              self._res_class_bins,
+                                              self._cf_dset,
+                                              self._lcoe_dset)
+            res_data, res_class_bins, cf_data, lcoe_data, offshore_flag = inp
 
             for gen_gid, offshore in enumerate(offshore_flag):
                 if offshore:
@@ -613,22 +620,30 @@ class Aggregation:
                     res_gid = fhandler.gen.meta.loc[gen_gid, 'gid']
                     latitude = fhandler.gen.meta.loc[gen_gid, 'latitude']
                     longitude = fhandler.gen.meta.loc[gen_gid, 'longitude']
+
                     offshore_sc_gid = int(res_gid + offshore_gid_adder)
+
+                    res_class = -1
+                    for ri, res_bin in enumerate(res_class_bins):
+                        if (res_data[gen_gid] > np.min(res_bin)
+                                and res_data[gen_gid] < np.max(res_bin)):
+                            res_class = ri
+                            break
 
                     pointsum = {'sc_point_gid': offshore_sc_gid,
                                 'sc_row_ind': offshore_sc_gid,
                                 'sc_col_ind': offshore_sc_gid,
                                 'res_gids': [res_gid],
                                 'gen_gids': [gen_gid],
-                                'gid_counts': [None],
+                                'gid_counts': [int(offshore_gid_counts)],
                                 'mean_cf': cf_data[gen_gid],
                                 'mean_lcoe': lcoe_data[gen_gid],
                                 'mean_res': res_data[gen_gid],
                                 'capacity': offshore_capacity,
-                                'area_sq_km': None,
+                                'area_sq_km': offshore_pixel_area,
                                 'latitude': latitude,
                                 'longitude': longitude,
-                                'res_class': None,
+                                'res_class': res_class,
                                 }
 
                     offshore_summary.append(pointsum)
