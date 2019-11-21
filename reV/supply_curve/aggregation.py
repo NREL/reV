@@ -575,6 +575,66 @@ class Aggregation:
 
         return summary
 
+    def _offshore_summary(self, offshore_gid_adder=1e6, offshore_capacity=600):
+        """Get the offshore supply curve point summary.
+
+        Parameters
+        ----------
+        offshore_gid_adder : int | float
+            The offshore Supply Curve gids will be set equal to the respective
+            resource gids plus this number.
+        offshore_capacity : int | float
+            Offshore resource pixel generation capacity in MW.
+
+        Returns
+        -------
+        summary : list
+            List of dictionaries, each being an SC point summary for a single
+            offshore resource pixel.
+        """
+
+        offshore_summary = []
+
+        file_args = [self._excl_fpath, self._gen_fpath, self._data_layers,
+                     self._excl_dict, self._power_density]
+        with AggFileHandler(*file_args) as fhandler:
+
+            inputs = Aggregation._get_input_data(fhandler.gen, self._gen_fpath,
+                                                 self._res_class_dset,
+                                                 self._res_class_bins,
+                                                 self._cf_dset,
+                                                 self._lcoe_dset)
+            res_data, _, cf_data, lcoe_data, offshore_flag = inputs
+
+            for gen_gid, offshore in enumerate(offshore_flag):
+                if offshore:
+
+                    # pylint: disable-msg=E1101
+                    res_gid = fhandler.gen.meta.loc[gen_gid, 'gid']
+                    latitude = fhandler.gen.meta.loc[gen_gid, 'latitude']
+                    longitude = fhandler.gen.meta.loc[gen_gid, 'longitude']
+                    offshore_sc_gid = int(res_gid + offshore_gid_adder)
+
+                    pointsum = {'sc_point_gid': offshore_sc_gid,
+                                'sc_row_ind': offshore_sc_gid,
+                                'sc_col_ind': offshore_sc_gid,
+                                'res_gids': [res_gid],
+                                'gen_gids': [gen_gid],
+                                'gid_counts': [None],
+                                'mean_cf': cf_data[gen_gid],
+                                'mean_lcoe': lcoe_data[gen_gid],
+                                'mean_res': res_data[gen_gid],
+                                'capacity': offshore_capacity,
+                                'area_sq_km': None,
+                                'latitude': latitude,
+                                'longitude': longitude,
+                                'res_class': None,
+                                }
+
+                    offshore_summary.append(pointsum)
+
+        return offshore_summary
+
     @staticmethod
     def _convert_bins(bins):
         """Convert a list of floats or ints to a list of two-entry bin bounds.
@@ -616,6 +676,7 @@ class Aggregation:
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
+                offshore_gid_adder=1e6, offshore_capacity=600,
                 gids=None, n_cores=None, option='dataframe',
                 **kwargs):
         """Get the supply curve points aggregation summary.
@@ -652,6 +713,11 @@ class Aggregation:
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
+        offshore_gid_adder : int | float
+            The offshore Supply Curve gids will be set equal to the respective
+            resource gids plus this number.
+        offshore_capacity : int | float
+            Offshore resource pixel generation capacity in MW.
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -690,6 +756,9 @@ class Aggregation:
                                           gids=gids, **kwargs)
         else:
             summary = agg._parallel_summary(**kwargs)
+
+        summary += agg._offshore_summary(offshore_gid_adder=offshore_gid_adder,
+                                         offshore_capacity=offshore_capacity)
 
         if 'dataframe' in option.lower():
             summary = pd.DataFrame(summary)
