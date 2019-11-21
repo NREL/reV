@@ -377,6 +377,9 @@ class Aggregation:
             Capacity factor data extracted from cf_dset in gen
         lcoe_data : np.ndarray | None
             LCOE data extracted from lcoe_dset in gen
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
         """
 
         if res_class_dset is None:
@@ -392,6 +395,7 @@ class Aggregation:
             warn('Could not find cf dataset "{}" in '
                  'generation file: {}'
                  .format(cf_dset, gen_fpath), OutputWarning)
+
         if lcoe_dset in gen.dsets:
             lcoe_data = gen[lcoe_dset]
         else:
@@ -399,7 +403,13 @@ class Aggregation:
             warn('Could not find lcoe dataset "{}" in '
                  'generation file: {}'
                  .format(lcoe_dset, gen_fpath), OutputWarning)
-        return res_data, res_class_bins, cf_data, lcoe_data
+
+        if 'offshore' in gen.meta:
+            offshore_flag = gen.meta['offshore'].values
+        else:
+            offshore_flag = None
+
+        return res_data, res_class_bins, cf_data, lcoe_data, offshore_flag
 
     @staticmethod
     def _serial_summary(excl_fpath, gen_fpath, tm_dset, excl_dict,
@@ -494,6 +504,7 @@ class Aggregation:
                             resolution=resolution,
                             exclusion_shape=exclusion_shape,
                             power_density=fhandler.power_density,
+                            offshore_flags=inputs[4],
                             **kwargs)
 
                     except EmptySupplyCurvePointError:
