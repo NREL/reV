@@ -616,7 +616,7 @@ class Aggregation:
 
             res_data, res_class_bins, cf_data, lcoe_data, offshore_flag = inp
 
-            if any(offshore_flag):
+            if offshore_flag is not None:
                 for i, _ in enumerate(summary):
                     summary[i]['offshore'] = 0
 
