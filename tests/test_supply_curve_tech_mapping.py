@@ -26,7 +26,7 @@ def test_resource_tech_mapping():
     """Run the supply curve technology mapping and compare to baseline file"""
 
     lats, lons, ind = TechMapping.run(EXCL, RES, TM_DSET, n_cores=2,
-                                      save_flag=False, return_flag=True)
+                                      save_flag=False)
 
     with ExclusionLayers(EXCL) as ex:
         lat_truth = ex.latitude
