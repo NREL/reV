@@ -10,6 +10,7 @@ import os
 import h5py
 import numpy as np
 import pandas as pd
+from scipy.spatial import cKDTree
 from warnings import warn
 import logging
 
@@ -575,13 +576,16 @@ class Aggregation:
 
         return summary
 
-    def _offshore_summary(self, offshore_gid_adder=1e6, offshore_capacity=600,
-                          offshore_gid_counts=494, offshore_pixel_area=4):
+    def _offshore_summary(self, summary, offshore_gid_adder=1e7,
+                          offshore_capacity=600, offshore_gid_counts=494,
+                          offshore_pixel_area=4):
         """Get the offshore supply curve point summary. Each offshore resource
         pixel will be summarized in its own supply curve point.
 
         Parameters
         ----------
+        summary : list
+            List of dictionaries, each being an onshore SC point summary.
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
@@ -596,11 +600,9 @@ class Aggregation:
         Returns
         -------
         summary : list
-            List of dictionaries, each being an SC point summary for a single
-            offshore resource pixel.
+            List of dictionaries, each being an SC point summary, includng SC
+            points for single offshore resource pixels.
         """
-
-        offshore_summary = []
 
         file_args = [self._excl_fpath, self._gen_fpath, self._data_layers,
                      self._excl_dict, self._power_density]
@@ -611,44 +613,88 @@ class Aggregation:
                                               self._res_class_bins,
                                               self._cf_dset,
                                               self._lcoe_dset)
+
             res_data, res_class_bins, cf_data, lcoe_data, offshore_flag = inp
 
-            for gen_gid, offshore in enumerate(offshore_flag):
-                if offshore:
+            if any(offshore_flag):
+                for i, _ in enumerate(summary):
+                    summary[i]['offshore'] = 0
 
-                    # pylint: disable-msg=E1101
-                    res_gid = fhandler.gen.meta.loc[gen_gid, 'gid']
-                    latitude = fhandler.gen.meta.loc[gen_gid, 'latitude']
-                    longitude = fhandler.gen.meta.loc[gen_gid, 'longitude']
+                for gen_gid, offshore in enumerate(offshore_flag):
+                    if offshore:
 
-                    offshore_sc_gid = int(res_gid + offshore_gid_adder)
+                        # pylint: disable-msg=E1101
+                        res_gid = fhandler.gen.meta.loc[gen_gid, 'gid']
+                        latitude = fhandler.gen.meta.loc[gen_gid, 'latitude']
+                        longitude = fhandler.gen.meta.loc[gen_gid, 'longitude']
 
-                    res_class = -1
-                    for ri, res_bin in enumerate(res_class_bins):
-                        if (res_data[gen_gid] > np.min(res_bin)
-                                and res_data[gen_gid] < np.max(res_bin)):
-                            res_class = ri
-                            break
+                        offshore_sc_gid = int(res_gid + offshore_gid_adder)
 
-                    pointsum = {'sc_point_gid': offshore_sc_gid,
-                                'sc_row_ind': offshore_sc_gid,
-                                'sc_col_ind': offshore_sc_gid,
-                                'res_gids': [res_gid],
-                                'gen_gids': [gen_gid],
-                                'gid_counts': [int(offshore_gid_counts)],
-                                'mean_cf': cf_data[gen_gid],
-                                'mean_lcoe': lcoe_data[gen_gid],
-                                'mean_res': res_data[gen_gid],
-                                'capacity': offshore_capacity,
-                                'area_sq_km': offshore_pixel_area,
-                                'latitude': latitude,
-                                'longitude': longitude,
-                                'res_class': res_class,
-                                }
+                        res_class = -1
+                        for ri, res_bin in enumerate(res_class_bins):
+                            if (res_data[gen_gid] > np.min(res_bin)
+                                    and res_data[gen_gid] < np.max(res_bin)):
+                                res_class = ri
+                                break
 
-                    offshore_summary.append(pointsum)
+                        pointsum = {'sc_point_gid': offshore_sc_gid,
+                                    'sc_row_ind': offshore_sc_gid,
+                                    'sc_col_ind': offshore_sc_gid,
+                                    'res_gids': [res_gid],
+                                    'gen_gids': [gen_gid],
+                                    'gid_counts': [int(offshore_gid_counts)],
+                                    'mean_cf': cf_data[gen_gid],
+                                    'mean_lcoe': lcoe_data[gen_gid],
+                                    'mean_res': res_data[gen_gid],
+                                    'capacity': offshore_capacity,
+                                    'area_sq_km': offshore_pixel_area,
+                                    'latitude': latitude,
+                                    'longitude': longitude,
+                                    'res_class': res_class,
+                                    'offshore': 1,
+                                    }
 
-        return offshore_summary
+                        summary.append(pointsum)
+
+        return summary
+
+    def _offshore_data_layers(self, summary):
+        """Agg categorical offshore data layers using NN to onshore points.
+
+        Parameters
+        ----------
+        summary : DataFrame
+            Summary of the SC points.
+
+        Returns
+        -------
+        summary : DataFrame
+            Summary of the SC points.
+        """
+        if 'offshore' in summary and self._data_layers is not None:
+            cat_layers = [k for k, v in self._data_layers.items()
+                          if v['method'].lower() == 'mode']
+
+            if any(summary['offshore']) and any(cat_layers):
+                logger.info('Aggregating the following columns for offshore '
+                            'wind sites based on NN onshore sites: {}'
+                            .format(cat_layers))
+                offshore_mask = (summary['offshore'] == 1)
+                offshore_summary = summary[offshore_mask]
+                onshore_summary = summary[~offshore_mask]
+
+                tree = cKDTree(onshore_summary[['latitude', 'longitude']])
+                _, nn = tree.query(offshore_summary[['latitude', 'longitude']])
+
+                for i, off_gid in enumerate(offshore_summary.index):
+                    on_gid = onshore_summary.index.values[nn[i]]
+                    logger.debug('Offshore gid {} is closest to onshore gid {}'
+                                 .format(off_gid, on_gid))
+
+                    for c in cat_layers:
+                        summary.at[off_gid, c] = onshore_summary.at[on_gid, c]
+
+        return summary
 
     @staticmethod
     def _convert_bins(bins):
@@ -686,14 +732,33 @@ class Aggregation:
 
             return bbins
 
+    @staticmethod
+    def _summary_to_df(summary):
+        """Convert the agg summary list to a DataFrame.
+
+        Parameters
+        ----------
+        summary : list
+            List of dictionaries, each being an SC point summary.
+
+        Returns
+        -------
+        summary : DataFrame
+            Summary of the SC points.
+        """
+        summary = pd.DataFrame(summary)
+        summary = summary.sort_values('sc_point_gid')
+        summary = summary.reset_index(drop=True)
+        summary.index.name = 'sc_gid'
+        return summary
+
     @classmethod
     def summary(cls, excl_fpath, gen_fpath, tm_dset, excl_dict,
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
-                offshore_gid_adder=1e6, offshore_capacity=600,
-                gids=None, n_cores=None, option='dataframe',
-                **kwargs):
+                offshore_gid_adder=1e7, offshore_capacity=600,
+                gids=None, n_cores=None, **kwargs):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -747,7 +812,7 @@ class Aggregation:
 
         Returns
         -------
-        summary : list | DataFrame
+        summary : DataFrame
             Summary of the SC points.
         """
 
@@ -772,13 +837,10 @@ class Aggregation:
         else:
             summary = agg._parallel_summary(**kwargs)
 
-        summary += agg._offshore_summary(offshore_gid_adder=offshore_gid_adder,
-                                         offshore_capacity=offshore_capacity)
-
-        if 'dataframe' in option.lower():
-            summary = pd.DataFrame(summary)
-            summary = summary.sort_values('sc_point_gid')
-            summary = summary.reset_index(drop=True)
-            summary.index.name = 'sc_gid'
+        summary = agg._offshore_summary(summary,
+                                        offshore_gid_adder=offshore_gid_adder,
+                                        offshore_capacity=offshore_capacity)
+        summary = agg._summary_to_df(summary)
+        summary = agg._offshore_data_layers(summary)
 
         return summary
