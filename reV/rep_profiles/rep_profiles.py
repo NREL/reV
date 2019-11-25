@@ -267,7 +267,6 @@ class RegionRepProfile:
         self._i_reps = None
         self._rep_method = rep_method
         self._err_method = err_method
-        self._err_method = err_method
         self._n_profiles = n_profiles
 
     def _get_profiles(self, gen_gids):
