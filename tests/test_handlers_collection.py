@@ -152,6 +152,13 @@ def test_low_mem():
     with h5py.File(h5_file, 'r') as f:
         assert 'cf_profile' in f
         assert 'cf_mean' in f
+        data = f['cf_profile'][...]
+
+    node_file = os.path.join(H5_DIR, 'peregrine_2012_node01_x001.h5')
+    with h5py.File(node_file, 'r') as f:
+        source_data = f['cf_profile'][...]
+
+    assert np.allclose(source_data, data[:, -1 * source_data.shape[1]:])
 
     if PURGE_OUT:
         os.remove(h5_file)

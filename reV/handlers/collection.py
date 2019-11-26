@@ -7,6 +7,7 @@ import numpy as np
 import os
 import pandas as pd
 import time
+import psutil
 from warnings import warn
 
 from reV.handlers.outputs import Outputs
@@ -499,8 +500,14 @@ class Collector:
                     elif axis == 2:
                         f_out[dset_out, slice(None), locs] = f_source[dset]
 
-                logger.debug('Low memory collection of "{}" complete '
-                             'from source: {}'.format(dset, fp))
+                logger.debug('\t- Low mem collection of "{}" complete '
+                             'from source: {}'
+                             .format(dset, os.path.basename(fp)))
+                mem = psutil.virtual_memory()
+                logger.debug('\t- Memory utilization is {0:.3f} GB out of '
+                             '{1:.3f} GB total ({2:.1f}% used)'
+                             .format(mem.used / 1e9, mem.total / 1e9,
+                                     100 * mem.used / mem.total))
 
     @classmethod
     def collect(cls, h5_file, h5_dir, project_points, dset_name,
@@ -551,11 +558,12 @@ class Collector:
             clt.low_mem_collect(dset_name, dset_out=dset_out)
         else:
             clt.combine_dset(dset_name, dset_out=dset_out)
-        logger.debug("\t- '{}' collected".format(dset_name))
+
+        logger.debug("\t- Collection of '{}' complete".format(dset_name))
 
         tt = (time.time() - ts) / 60
         logger.info('Collection complete')
-        logger.debug('\t- Colletion took {:.4f} minutes'
+        logger.debug('\t- Collection took {:.4f} minutes'
                      .format(tt))
 
     @classmethod
@@ -606,7 +614,7 @@ class Collector:
         else:
             clt.combine_dset(dset_name, dset_out=dset_out)
 
-        logger.debug("\t- '{}' collected".format(dset_name))
+        logger.debug("\t- Collection of '{}' complete".format(dset_name))
 
         tt = (time.time() - ts) / 60
         logger.info('{} collected'.format(dset_name))
