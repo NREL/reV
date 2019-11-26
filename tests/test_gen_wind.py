@@ -124,6 +124,26 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     assert gen.out['monthly_energy'].dtype == np.float32
 
 
+def test_windspeed_pass_through(rev2_points=slice(0, 10), year=2012,
+                                max_workers=1):
+    """Test a windspeed output request so that resource array is passed
+    through to output dict."""
+
+    sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
+    res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
+
+    output_requests = ('cf_mean', 'windspeed')
+
+    # run reV 2.0 generation
+    gen = Gen.reV_run('wind', rev2_points, sam_files, res_file,
+                      max_workers=max_workers, sites_per_worker=3, fout=None,
+                      output_request=output_requests)
+    assert 'windspeed' in gen.out
+    assert gen.out['windspeed'].shape == (8760, 10)
+    assert gen.out['windspeed'].max() == 2597
+    assert gen.out['windspeed'].min() == 1
+
+
 def test_multi_file_5min_wtk():
     """Test running reV gen from a multi-h5 directory with prefix and suffix"""
     points = slice(0, 10)
