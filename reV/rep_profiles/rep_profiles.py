@@ -25,12 +25,15 @@ logger = logging.getLogger(__name__)
 class RepresentativeMethods:
     """Class for organizing the methods to determine representative-ness"""
 
-    def __init__(self, profiles, rep_method='meanoid', err_method='rmse'):
+    def __init__(self, profiles, weights=None, rep_method='meanoid',
+                 err_method='rmse'):
         """
         Parameters
         ----------
         profiles : np.ndarray
             (time, sites) timeseries array of cf profile data.
+        weights : np.ndarray | list
+            1D array of weighting factors (multiplicative) for profiles.
         rep_method : str
             Method identifier for calculation of the representative profile.
         err_method : str
@@ -40,6 +43,18 @@ class RepresentativeMethods:
         self._rep_method = self.rep_methods[rep_method]
         self._err_method = self.err_methods[err_method]
         self._profiles = profiles
+        self._weights = weights
+        self._parse_weights()
+
+    def _parse_weights(self):
+        """Parse the weights attribute. Check shape and make np.array."""
+        if isinstance(self._weights, (list, tuple)):
+            self._weights = np.array(self._weights)
+        if self._weights is not None:
+            emsg = ('Weighting factors array of length {} does not match '
+                    'profiles of shape {}'
+                    .format(len(self._weights), self._profiles.shape[1]))
+            assert len(self._weights) == self._profiles.shape[1], emsg
 
     @property
     def rep_methods(self):
@@ -80,20 +95,28 @@ class RepresentativeMethods:
         return arr.argsort()[:(n + 1)][-1]
 
     @staticmethod
-    def meanoid(profiles):
+    def meanoid(profiles, weights=None):
         """Find the mean profile across all sites.
 
         Parameters
         ----------
         profiles : np.ndarray
             (time, sites) timeseries array of cf profile data.
+        weights : np.ndarray | list
+            1D array of weighting factors (multiplicative) for profiles.
 
         Returns
         -------
         arr : np.ndarray
             (time, 1) timeseries of the mean of all cf profiles across sites.
         """
-        arr = profiles.mean(axis=1).reshape((len(profiles), 1))
+        if weights is None:
+            arr = profiles.mean(axis=1).reshape((len(profiles), 1))
+        else:
+            if not isinstance(weights, np.ndarray):
+                weights = np.array(weights)
+            arr = (profiles * weights).sum(axis=1) / weights.sum()
+            arr = np.expand_dims(arr, axis=1)
         return arr
 
     @staticmethod
@@ -198,14 +221,16 @@ class RepresentativeMethods:
         return profiles[:, i_rep], i_rep
 
     @classmethod
-    def run(cls, profiles, rep_method='meanoid', err_method='rmse',
-            n_profiles=1):
+    def run(cls, profiles, weights=None, rep_method='meanoid',
+            err_method='rmse', n_profiles=1):
         """Run representative profile methods.
 
         Parameters
         ----------
         profiles : np.ndarray
             (time, sites) timeseries array of cf profile data.
+        weights : np.ndarray | list
+            1D array of weighting factors (multiplicative) for profiles.
         rep_method : str
             Method identifier for calculation of the representative profile.
         err_method : str
@@ -222,8 +247,13 @@ class RepresentativeMethods:
             List (length of n_profiles) with column Index in profiles of the
             representative profile(s).
         """
-        inst = cls(profiles, rep_method=rep_method, err_method=err_method)
-        baseline = inst._rep_method(inst._profiles)
+        inst = cls(profiles, weights=weights, rep_method=rep_method,
+                   err_method=err_method)
+
+        if inst._weights is not None:
+            baseline = inst._rep_method(inst._profiles, weights=inst._weights)
+        else:
+            baseline = inst._rep_method(inst._profiles)
 
         profiles = None
         i_reps = []
@@ -315,26 +345,33 @@ class RegionRepProfile:
 
         return data
 
+    def _run_rep_methods(self):
+        """Run the representative profile methods to find the meanoid/medianoid
+        profile and find the profiles most similar."""
+
+        gids = self._get_region_attr(self._rev_summary, 'gen_gids')
+        all_profiles = self._get_profiles(gids)
+
+        weights = None
+        if 'gid_counts' in self._rev_summary:
+            weights = self._get_region_attr(self._rev_summary, 'gid_counts')
+
+        self._profiles, self._i_reps = RepresentativeMethods.run(
+            all_profiles, weights=weights, rep_method=self._rep_method,
+            err_method=self._err_method, n_profiles=self._n_profiles)
+
     @property
     def rep_profiles(self):
         """Get the representative profiles of this region."""
         if self._profiles is None:
-            gids = self._get_region_attr(self._rev_summary, 'gen_gids')
-            all_profiles = self._get_profiles(gids)
-            self._profiles, self._i_reps = RepresentativeMethods.run(
-                all_profiles, rep_method=self._rep_method,
-                err_method=self._err_method, n_profiles=self._n_profiles)
+            self._run_rep_methods()
         return self._profiles
 
     @property
     def i_reps(self):
         """Get the representative profile index(es) of this region."""
         if self._i_reps is None:
-            gids = self._get_region_attr(self._rev_summary, 'gen_gids')
-            all_profiles = self._get_profiles(gids)
-            self._profiles, self._i_reps = RepresentativeMethods.run(
-                all_profiles, rep_method=self._rep_method,
-                err_method=self._err_method, n_profiles=self._n_profiles)
+            self._run_rep_methods()
         return self._i_reps
 
     @property
