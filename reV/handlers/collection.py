@@ -380,11 +380,11 @@ class Collector:
         with Outputs(self.h5_files[0], mode='r') as out:
             dsets_source = out.dsets
 
-        missing = [d not in dsets_collected for d in dsets_source]
+        missing = [d for d in dsets_source if d not in dsets_collected]
 
         if any(missing):
             w = ('Not purging chunked output files. These dsets '
-                 'have been collected: {}'.format(missing))
+                 'have not been collected: {}'.format(missing))
             warn(w, HandlerWarning)
             logger.warning(w)
         else:
