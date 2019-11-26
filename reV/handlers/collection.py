@@ -463,7 +463,7 @@ class Collector:
         else:
             h5_files = "{}*.h5".format(file_prefix)
 
-        logger.info('Collecting means ({}) from {} files in {} to {}'
+        logger.info('Collecting dataset "{}" from {} files in {} to {}'
                     .format(dset_name, h5_files, h5_dir, h5_file))
         ts = time.time()
         clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix,
@@ -532,7 +532,7 @@ class Collector:
         else:
             h5_files = "{}*.h5".format(file_prefix)
 
-        logger.info('Collecting {} from {} files in {} and adding to {}'
+        logger.info('Collecting "{}" from {} files in {} and adding to {}'
                     .format(dset_name, h5_files, h5_dir, h5_file))
         ts = time.time()
         with Outputs(h5_file, mode='a') as f:

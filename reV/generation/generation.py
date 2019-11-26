@@ -232,11 +232,14 @@ class Gen:
         """
         if ds_freq is not None:
             from reV.utilities.downscale import make_time_index
-            with Resource(self.res_file) as res:
-                year = res.time_index.year[0]
+            year = self.time_index.year[0]
             ti = make_time_index(year, ds_freq)
             self._time_index = self.handle_leap_ti(
                 ti, drop_leap=self._drop_leap)
+            logger.info('reV solar generation running with temporal '
+                        'downscaling frequency "{}" with final '
+                        'time_index length {}'
+                        .format(ds_freq, len(self._time_index)))
 
     def _get_data_shape(self, dset, n_sites):
         """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
