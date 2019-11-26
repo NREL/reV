@@ -13,7 +13,7 @@ from warnings import warn
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
                                       HandlerWarning)
-from reV.utilities.execution import execute_parallel, SmartParallelJob
+from reV.utilities.execution import SmartParallelJob
 
 logger = logging.getLogger(__name__)
 
@@ -109,8 +109,9 @@ class DatasetCollector:
             gid_slice = slice(start, end + 1, None)
 
             if not np.array_equal(self._gids[gid_slice], gids):
-                raise HandlerValueError('gids are not a valid slice of full '
-                                        'set of _gids')
+                m = ('gids are not a valid slice of full set of _gids')
+                logger.error(m)
+                raise HandlerValueError(m)
         if axis == 1:
             out_slice = (gid_slice,)
         else:
@@ -224,15 +225,22 @@ class Collector:
         if not isinstance(ignore, list):
             ignore = [ignore]
         h5_files = []
+        logger.debug('Looking for source files in {}'.format(h5_dir))
         for file in os.listdir(h5_dir):
             if file.endswith('.h5'):
                 if file_prefix is not None:
                     if file.startswith(file_prefix) and file not in ignore:
+                        logger.debug('\t- Found source file to collect: {}'
+                                     .format(file))
                         h5_files.append(os.path.join(h5_dir, file))
                 elif file not in ignore:
+                    logger.debug('\t- Found source file to collect: {}'
+                                 .format(file))
                     h5_files.append(os.path.join(h5_dir, file))
-
-        return sorted(h5_files)
+        h5_files = sorted(h5_files)
+        logger.debug('Final list of {} source files: {}'
+                     .format(len(h5_files), h5_files))
+        return h5_files
 
     @staticmethod
     def parse_project_points(project_points):
@@ -263,7 +271,9 @@ class Collector:
 
             e = project_points.stop
             if e is None:
-                raise HandlerValueError("slice must be bounded!")
+                m = "slice must be bounded!"
+                logger.error(m)
+                raise HandlerValueError(m)
 
             step = project_points.step
             if step is None:
@@ -271,7 +281,9 @@ class Collector:
 
             gids = list(range(s, e, step))
         else:
-            raise HandlerValueError('Cannot parse project_points')
+            m = 'Cannot parse project_points'
+            logger.error(m)
+            raise HandlerValueError(m)
 
         return gids
 
@@ -369,8 +381,16 @@ class Collector:
         if any(missing):
             # TODO: Convert HandlerRuntimeError to a custom collection error
             # TODO: Write missing gids to disk to allow for automated re-run
-            raise HandlerRuntimeError("gids: {} are missing"
-                                      .format(missing))
+            m = "gids: {} are missing".format(missing)
+            logger.error(m)
+            raise HandlerRuntimeError(m)
+
+        if len(set(meta_gids)) != len(meta):
+            m = ('Meta of length {} has {} unique gids! '
+                 'There are duplicate gids in the source file list: {}'
+                 .format(len(meta), len(set(meta_gids)), self.h5_files))
+            logger.error(m)
+            raise HandlerRuntimeError(m)
 
     def _purge_chunks(self):
         """Remove the chunked files (after collection). Will not delete files
@@ -400,13 +420,12 @@ class Collector:
             if 'meta' in f.dsets:
                 self._check_meta(f.meta)
             else:
-                if self._parallel:
-                    meta = execute_parallel(self.parse_meta, self.h5_files)
-                else:
-                    meta = [self.parse_meta(file) for file in self.h5_files]
+                meta = [self.parse_meta(file) for file in self.h5_files]
 
                 meta = pd.concat(meta, axis=0)
                 self._check_meta(meta)
+                logger.info('Writing meta data with shape {}'
+                            .format(meta.shape))
                 f.meta = meta
 
     def _pre_collect(self, dset, dset_out=None):
@@ -442,12 +461,17 @@ class Collector:
                 if 'time_index' in f.dsets:
                     dset_shape = f.shape
                 else:
-                    raise HandlerRuntimeError("'time_index' must be combined "
-                                              "before profiles can be "
-                                              "combined.")
+                    m = ("'time_index' must be combined "
+                         "before profiles can be "
+                         "combined.")
+                    logger.error(m)
+                    raise HandlerRuntimeError(m)
             else:
-                raise HandlerRuntimeError('Cannot collect dset "{}" with '
-                                          'axis {}'.format(dset, axis))
+                m = ('Cannot collect dset "{}" with '
+                     'axis {}'.format(dset, axis))
+                logger.error(m)
+                raise HandlerRuntimeError(m)
+
             if dset_out not in f.dsets:
                 f._create_dset(dset_out, dset_shape, dtype, chunks=chunks,
                                attrs=attrs)
@@ -494,15 +518,31 @@ class Collector:
                 with Outputs(fp, mode='r') as f_source:
                     source_gids = f_source.get_meta_arr('gid')
                     locs = np.where(np.isin(self.gids, source_gids))[0]
-                    locs = slice(locs.min(), locs.max() + 1)
-                    if axis == 1:
-                        f_out[dset_out, locs] = f_source[dset]
-                    elif axis == 2:
-                        f_out[dset_out, slice(None), locs] = f_source[dset]
+                    sequential_locs = np.arange(source_gids.min(),
+                                                source_gids.max() + 1)
 
-                logger.debug('\t- Low mem collection of "{}" complete '
-                             'from source: {}'
-                             .format(dset, os.path.basename(fp)))
+                    if not len(locs) == len(sequential_locs):
+                        emsg = ('GID indices for source file "{}" are not '
+                                'sequential in destination file!'
+                                .format(os.path.basename(fp)))
+                        logger.error(emsg)
+                        raise HandlerRuntimeError(emsg)
+
+                    locs = slice(locs.min(), locs.max() + 1)
+                    logger.debug('\t- Running low mem collection of "{}" for '
+                                 'site {} from source: {}'
+                                 .format(dset, locs, os.path.basename(fp)))
+
+                    try:
+                        if axis == 1:
+                            f_out[dset_out, locs] = f_source[dset]
+                        elif axis == 2:
+                            f_out[dset_out, slice(None), locs] = f_source[dset]
+                    except Exception as e:
+                        logger.exception('Failed to collect source file {}. '
+                                         'Raised the following exception:\n{}'
+                                         .format(os.path.basename(fp), e))
+                        raise e
                 mem = psutil.virtual_memory()
                 logger.debug('\t- Memory utilization is {0:.3f} GB out of '
                              '{1:.3f} GB total ({2:.1f}% used)'
@@ -598,7 +638,7 @@ class Collector:
         logger.info('Collecting "{}" from {} files in {} and adding to {}'
                     .format(dset_name, h5_files, h5_dir, h5_file))
         ts = time.time()
-        with Outputs(h5_file, mode='a') as f:
+        with Outputs(h5_file, mode='r') as f:
             points = f.meta
 
         clt = cls(h5_file, h5_dir, points, file_prefix=file_prefix,
