@@ -372,9 +372,24 @@ class Collector:
                                       .format(missing))
 
     def _purge_chunks(self):
-        """Remove the chunked files (after collection)."""
-        for fpath in self.h5_files:
-            os.remove(fpath)
+        """Remove the chunked files (after collection). Will not delete files
+        if any datasets were not collected."""
+
+        with Outputs(self._h5_out, mode='r') as out:
+            dsets_collected = out.dsets
+        with Outputs(self.h5_files[0], mode='r') as out:
+            dsets_source = out.dsets
+
+        missing = [d not in dsets_collected for d in dsets_source]
+
+        if any(missing):
+            w = ('Not purging chunked output files. These dsets '
+                 'have been collected: {}'.format(missing))
+            warn(w, HandlerWarning)
+            logger.warning(w)
+        else:
+            for fpath in self.h5_files:
+                os.remove(fpath)
 
     def combine_meta(self):
         """
