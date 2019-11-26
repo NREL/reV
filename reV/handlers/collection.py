@@ -408,9 +408,8 @@ class Collector:
                 self._check_meta(meta)
                 f.meta = meta
 
-    def combine_dset(self, dset, dset_out=None):
-        """
-        Collect, combine and save dset to disk
+    def _pre_collect(self, dset, dset_out=None):
+        """Run a pre-collection check and get relevant dset attrs.
 
         Parameters
         ----------
@@ -418,6 +417,15 @@ class Collector:
             dataset to collect
         dset_out : str
             name of dataset to be saved to disk, if None use dset
+
+        Returns
+        -------
+        dset_out : str
+            name of dataset to be saved to disk
+        attrs : dict
+            Dset attribute of dset from source files.
+        axis : int
+            Axis size (1 is 1D array, 2 is 2D array)
         """
         if dset_out is None:
             dset_out = dset
@@ -429,16 +437,34 @@ class Collector:
         with Outputs(self._h5_out, mode='a') as f:
             if axis == 1:
                 dset_shape = (len(f),)
-            else:
+            elif axis == 2:
                 if 'time_index' in f.dsets:
                     dset_shape = f.shape
                 else:
                     raise HandlerRuntimeError("'time_index' must be combined "
                                               "before profiles can be "
                                               "combined.")
+            else:
+                raise HandlerRuntimeError('Cannot collect dset "{}" with '
+                                          'axis {}'.format(dset, axis))
             if dset_out not in f.dsets:
                 f._create_dset(dset_out, dset_shape, dtype, chunks=chunks,
                                attrs=attrs)
+        return dset_out, attrs, axis
+
+    def combine_dset(self, dset, dset_out=None):
+        """
+        Collect, combine and save dset to disk
+
+        Parameters
+        ----------
+        dset : str
+            dataset to collect
+        dset_out : str
+            name of dataset to be saved to disk, if None use dset
+        """
+
+        dset_out, _, _ = self._pre_collect(dset, dset_out=dset_out)
 
         if self._parallel:
             dset_collector = DatasetCollector(self._h5_out, self.gids, dset,
@@ -448,9 +474,38 @@ class Collector:
             DatasetCollector.collect(self._h5_out, self.gids, dset,
                                      self.h5_files, dset_out=dset_out)
 
+    def low_mem_collect(self, dset, dset_out=None):
+        """Simple and robust serial collection optimized for low memory usage
+
+        Parameters
+        ----------
+        dset : str
+            dataset to collect
+        dset_out : str
+            name of dataset to be saved to disk, if None use dset
+        """
+
+        dset_out, _, axis = self._pre_collect(dset, dset_out=dset_out)
+
+        with Outputs(self._h5_out, mode='a') as f_out:
+            for fp in self.h5_files:
+
+                with Outputs(fp, mode='r') as f_source:
+                    source_gids = f_source.get_meta_arr('gid')
+                    locs = np.where(np.isin(self.gids, source_gids))[0]
+                    locs = slice(locs.min(), locs.max() + 1)
+                    if axis == 1:
+                        f_out[dset_out, locs] = f_source[dset]
+                    elif axis == 2:
+                        f_out[dset_out, slice(None), locs] = f_source[dset]
+
+                logger.debug('Low memory collection of "{}" complete '
+                             'from source: {}'.format(dset, fp))
+
     @classmethod
     def collect(cls, h5_file, h5_dir, project_points, dset_name,
-                dset_out=None, file_prefix=None, parallel=True):
+                dset_out=None, file_prefix=None, parallel=False,
+                low_mem=True):
         """
         Collect dataset from h5_dir to h5_file
 
@@ -472,6 +527,8 @@ class Collector:
             .h5 file prefix, if None collect all files on h5_dir
         parallel : bool
             Option to run in parallel
+        low_mem : bool
+            Flag to run serial low memory collection (overrides parallel)
         """
         if file_prefix is None:
             h5_files = "*.h5"
@@ -490,12 +547,70 @@ class Collector:
             clt.combine_time_index()
             logger.debug("\t- 'time_index' collected")
 
-        clt.combine_dset(dset_name, dset_out=dset_out)
+        if low_mem:
+            clt.low_mem_collect(dset_name, dset_out=dset_out)
+        else:
+            clt.combine_dset(dset_name, dset_out=dset_out)
         logger.debug("\t- '{}' collected".format(dset_name))
 
         tt = (time.time() - ts) / 60
         logger.info('Collection complete')
         logger.debug('\t- Colletion took {:.4f} minutes'
+                     .format(tt))
+
+    @classmethod
+    def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
+                    file_prefix=None, parallel=False, low_mem=True):
+        """
+        Collect and add dataset to h5_file from h5_dir
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file into which data will be collected
+        h5_dir : str
+            Root directory containing .h5 files to combine
+        dset_name : str
+            Dataset to be collected. If source shape is 2D, time index will be
+            collected.
+        dset_out : str
+            Dataset to collect means into
+        file_prefix : str
+            .h5 file prefix, if None collect all files on h5_dir
+        parallel : bool
+            Option to run in parallel
+        low_mem : bool
+            Flag to run serial low memory collection (overrides parallel)
+        """
+        if file_prefix is None:
+            h5_files = "*.h5"
+        else:
+            h5_files = "{}*.h5".format(file_prefix)
+
+        logger.info('Collecting "{}" from {} files in {} and adding to {}'
+                    .format(dset_name, h5_files, h5_dir, h5_file))
+        ts = time.time()
+        with Outputs(h5_file, mode='a') as f:
+            points = f.meta
+
+        clt = cls(h5_file, h5_dir, points, file_prefix=file_prefix,
+                  parallel=parallel)
+
+        dset_shape = clt.get_dset_shape(dset_name)
+        if len(dset_shape) > 1:
+            clt.combine_time_index()
+            logger.debug("\t- 'time_index' collected")
+
+        if low_mem:
+            clt.low_mem_collect(dset_name, dset_out=dset_out)
+        else:
+            clt.combine_dset(dset_name, dset_out=dset_out)
+
+        logger.debug("\t- '{}' collected".format(dset_name))
+
+        tt = (time.time() - ts) / 60
+        logger.info('{} collected'.format(dset_name))
+        logger.debug('\t- Collection took {:.4f} minutes'
                      .format(tt))
 
     @classmethod
@@ -519,52 +634,3 @@ class Collector:
         clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)
         clt._purge_chunks()
         logger.info('Purged chunk files from {}'.format(h5_dir))
-
-    @classmethod
-    def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
-                    file_prefix=None, parallel=True):
-        """
-        Collect and add dataset to h5_file from h5_dir
-
-        Parameters
-        ----------
-        h5_file : str
-            Path to .h5 file into which data will be collected
-        h5_dir : str
-            Root directory containing .h5 files to combine
-        dset_name : str
-            Dataset to be collected. If source shape is 2D, time index will be
-            collected.
-        dset_out : str
-            Dataset to collect means into
-        file_prefix : str
-            .h5 file prefix, if None collect all files on h5_dir
-        parallel : bool
-            Option to run in parallel
-        """
-        if file_prefix is None:
-            h5_files = "*.h5"
-        else:
-            h5_files = "{}*.h5".format(file_prefix)
-
-        logger.info('Collecting "{}" from {} files in {} and adding to {}'
-                    .format(dset_name, h5_files, h5_dir, h5_file))
-        ts = time.time()
-        with Outputs(h5_file, mode='a') as f:
-            points = f.meta
-
-        clt = cls(h5_file, h5_dir, points, file_prefix=file_prefix,
-                  parallel=parallel)
-
-        dset_shape = clt.get_dset_shape(dset_name)
-        if len(dset_shape) > 1:
-            clt.combine_time_index()
-            logger.debug("\t- 'time_index' collected")
-
-        clt.combine_dset(dset_name, dset_out=dset_out)
-        logger.debug("\t- '{}' collected".format(dset_name))
-
-        tt = (time.time() - ts) / 60
-        logger.info('{} collected'.format(dset_name))
-        logger.debug('\t- Collection took {:.4f} minutes'
-                     .format(tt))

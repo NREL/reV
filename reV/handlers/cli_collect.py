@@ -66,7 +66,6 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['DSETS'] = config.dsets
     ctx.obj['PROJECT_POINTS'] = config.project_points
     ctx.obj['KEEP_CHUNKS'] = config.keep_chunks
-    ctx.obj['PARALLEL'] = config.parallel
     ctx.obj['VERBOSE'] = verbose
 
     for file_prefix in config.file_prefixes:
@@ -112,13 +111,11 @@ def from_config(ctx, config_file, verbose):
               help='File prefix found in the h5 file names to be collected.')
 @click.option('-k', '--keep_chunks', is_flag=True,
               help='Flag to keep chunked files after collection.')
-@click.option('-par', '--parallel', is_flag=True,
-              help='Flag to turn on parallel collection.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
 def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
-         keep_chunks, parallel, verbose):
+         keep_chunks, verbose):
     """Main entry point for collection with context passing."""
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
@@ -128,7 +125,6 @@ def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
     ctx.obj['DSETS'] = dsets
     ctx.obj['FILE_PREFIX'] = file_prefix
     ctx.obj['KEEP_CHUNKS'] = keep_chunks
-    ctx.obj['PARALLEL'] = parallel
     ctx.obj['VERBOSE'] = verbose
 
 
@@ -146,7 +142,6 @@ def collect(ctx, verbose):
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
     keep_chunks = ctx.obj['KEEP_CHUNKS']
-    parallel = ctx.obj['PARALLEL']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -163,13 +158,13 @@ def collect(ctx, verbose):
     t0 = time.time()
 
     Collector.collect(h5_file, h5_dir, project_points, dsets[0],
-                      file_prefix=file_prefix, parallel=parallel)
+                      file_prefix=file_prefix, low_mem=True)
 
     if len(dsets) > 1:
         for dset_name in dsets[1:]:
             Collector.add_dataset(h5_file, h5_dir, dset_name,
                                   file_prefix=file_prefix,
-                                  parallel=parallel)
+                                  low_mem=True)
 
     if not keep_chunks:
         Collector.purge_chunks(h5_file, h5_dir, project_points,
@@ -187,8 +182,7 @@ def collect(ctx, verbose):
 
 
 def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
-                 file_prefix=None, keep_chunks=False, parallel=False,
-                 verbose=False):
+                 file_prefix=None, keep_chunks=False, verbose=False):
     """Make a reV collection local CLI call string.
 
     Parameters
@@ -208,8 +202,6 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         .h5 file prefix, if None collect all files on h5_dir
     keep_chunks : bool
         Flag to keep the chunked files after collection.
-    parallel : bool
-        Option to run in parallel
     verbose : bool
         Flag to turn on DEBUG logging
 
@@ -229,7 +221,6 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                 '-ds {dsets} '
                 '-fp {file_prefix} '
                 '{keep}'
-                '{parallel}'
                 '{v}'
                 .format(name=SubprocessManager.s(name),
                         h5_file=SubprocessManager.s(h5_file),
@@ -238,7 +229,6 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                         dsets=SubprocessManager.s(dsets),
                         file_prefix=SubprocessManager.s(file_prefix),
                         keep='-k ' if keep_chunks else '',
-                        parallel='-par ' if parallel else '',
                         v='-v ' if verbose else '',
                         ))
 
@@ -275,12 +265,11 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
     keep_chunks = ctx.obj['KEEP_CHUNKS']
-    parallel = ctx.obj['PARALLEL']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, keep_chunks=keep_chunks,
-                       parallel=parallel, verbose=verbose)
+                       verbose=verbose)
 
     status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
                                         name)

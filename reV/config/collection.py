@@ -28,7 +28,6 @@ class CollectionConfig(AnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
-        self._parallel = False
         self._keep = False
         self._dsets = None
         self._file_prefixes = None
@@ -62,19 +61,6 @@ class CollectionConfig(AnalysisConfig):
             Target path for project points file.
         """
         return self['project_points']
-
-    @property
-    def parallel(self):
-        """Get the flag to do a parallel collection.
-
-        Returns
-        -------
-        _parallel : bool
-            Flag to collect data in parallel.
-        """
-        if 'parallel' in self['project_control']:
-            self._parallel = self['project_control']['parallel']
-        return self._parallel
 
     @property
     def keep_chunks(self):
