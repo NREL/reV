@@ -642,8 +642,17 @@ class RepProfiles:
             chunks[dset] = None
             dtypes[dset] = self.profiles[0].dtype
 
+        meta = self.meta.copy()
+        for c in ['rep_gen_gid', 'rep_res_gid']:
+            dtype = 'uint16'
+            v_max = meta[c].max()
+            if v_max > 65535:
+                dtype = 'uint32'
+
+            meta[c] = meta[c].astype(dtype)
+
         Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
-                        self.meta, time_index=self.time_index)
+                        meta, time_index=self.time_index)
 
         with Outputs(fout, mode='a') as out:
             rev_sum = Outputs.to_records_array(self._rev_summary)
