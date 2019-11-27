@@ -83,7 +83,8 @@ class DatasetCollector:
 
     @staticmethod
     def _get_site_mem_req(shape, dtype, n=100):
-        """Get the memory requirement to collect a dataset of shape and dtype
+        """Get the memory requirement to collect one site from a dataset of
+        shape and dtype
 
         Parameters
         ----------
@@ -97,7 +98,8 @@ class DatasetCollector:
         Returns
         -------
         site_mem : float
-            Memory requirement for the full dataset shape and dtype in bytes.
+            Memory requirement in bytes for one site from a dataset with
+            shape and dtype.
         """
 
         site_mem = sys.getsizeof(np.ones((shape[0], n), dtype=dtype)) / n
@@ -256,7 +258,7 @@ class DatasetCollector:
                              .format(os.path.basename(fp_source), e))
             raise e
 
-    def _low_mem_collect(self):
+    def _collect(self):
         """Simple & robust serial collection optimized for low memory usage."""
         with Outputs(self._h5_file, mode='a') as f_out:
             for fp in self._source_files:
@@ -294,7 +296,7 @@ class DatasetCollector:
         """
         dc = cls(h5_file, source_files, gids, dset_in, dset_out=dset_out,
                  mem_util_lim=mem_util_lim)
-        dc._low_mem_collect()
+        dc._collect()
 
 
 class Collector:
