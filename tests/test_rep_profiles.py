@@ -106,8 +106,10 @@ def test_integrated():
                                 'res_gids': sites,
                                 'res_class': zeros,
                                 'region': regions})
-    p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, 'region', parallel=True)
-    p2, m2 = RepProfiles.run(GEN_FPATH, rev_summary, 'region', parallel=False)
+    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                                parallel=True)
+    p2, m2, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                                parallel=False)
 
     assert np.allclose(m1['rep_res_gid'].values.astype(int),
                        m2['rep_res_gid'].values.astype(int))
@@ -129,7 +131,8 @@ def test_many_regions():
                                 'region1': region1,
                                 'region2': region2})
     reg_cols = ['region1', 'region2']
-    p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols, parallel=False)
+    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols,
+                                parallel=False)
 
     assert p1[0].shape == (17520, 6)
     assert len(m1) == 6
@@ -152,8 +155,8 @@ def test_write_to_file():
                                 'res_class': zeros,
                                 'region': regions})
     fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
-    p1, m1 = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                             parallel=True, fout=fout, n_profiles=3)
+    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                                parallel=True, fout=fout, n_profiles=3)
     with Resource(fout) as res:
         disk_profiles = res['rep_profiles_0']
         disk_meta = res.meta

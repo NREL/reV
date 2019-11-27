@@ -644,12 +644,10 @@ class RepProfiles:
 
         meta = self.meta.copy()
         for c in ['rep_gen_gid', 'rep_res_gid']:
-            dtype = 'uint16'
-            v_max = meta[c].max()
-            if v_max > 65535:
-                dtype = 'uint32'
-
-            meta[c] = meta[c].astype(dtype)
+            try:
+                meta[c] = pd.to_numeric(meta[c])
+            except ValueError:
+                pass
 
         Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
                         meta, time_index=self.time_index)
@@ -789,9 +787,11 @@ class RepProfiles:
         profiles : dict
             dict of n_profile-keyed arrays with shape (time, n) for the
             representative profiles for each region.
-        out_meta : pd.DataFrame
+        meta : pd.DataFrame
             Meta dataframes recording the regions and the selected rep profile
             gid.
+        time_index : pd.DatatimeIndex
+            Datetime Index for represntative profiles
         """
 
         rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
@@ -806,4 +806,4 @@ class RepProfiles:
             rp.save_profiles(fout)
 
         logger.info('Representative profiles complete!')
-        return rp._profiles, rp._meta
+        return rp._profiles, rp._meta, rp._time_index
