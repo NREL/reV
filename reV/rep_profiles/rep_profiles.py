@@ -469,6 +469,8 @@ class RepProfiles:
             reg_cols = []
         elif isinstance(reg_cols, str):
             reg_cols = [reg_cols]
+        elif not isinstance(reg_cols, list):
+            reg_cols = list(reg_cols)
 
         self._n_profiles = n_profiles
         self._check_rev_gen(gen_fpath, cf_dset)
