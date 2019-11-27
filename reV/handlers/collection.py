@@ -5,6 +5,8 @@ Base class to handle collection of profiles and means across multiple .h5 files
 import logging
 import numpy as np
 import os
+import sys
+import psutil
 import pandas as pd
 import time
 from warnings import warn
@@ -22,7 +24,8 @@ class DatasetCollector:
     Class to collect single datasets from several source files into a final
     output file.
     """
-    def __init__(self, h5_file, source_files, gids, dset_in, dset_out=None):
+    def __init__(self, h5_file, source_files, gids, dset_in, dset_out=None,
+                 mem_util_lim=0.7):
         """
         Parameters
         ----------
@@ -36,6 +39,9 @@ class DatasetCollector:
             Dataset to collect
         dset_out : str
             Dataset into which collected data is to be written
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many sites
+            will be collected at a time.
         """
         self._h5_file = h5_file
         self._source_files = source_files
@@ -45,6 +51,15 @@ class DatasetCollector:
         if dset_out is None:
             dset_out = dset_in
         self._dset_out = dset_out
+
+        tot_mem = psutil.virtual_memory().total
+        self._mem_avail = mem_util_lim * tot_mem
+        self._attrs, self._axis, self._site_mem_req = self._pre_collect()
+
+        logger.debug('Available memory for collection is {} bytes'
+                     .format(self._mem_avail))
+        logger.debug('Site memory requirement is: {} bytes'
+                     .format(self._site_mem_req))
 
     @staticmethod
     def parse_meta(h5_file):
@@ -66,6 +81,28 @@ class DatasetCollector:
 
         return meta
 
+    @staticmethod
+    def _get_site_mem_req(shape, dtype, n=100):
+        """Get the memory requirement to collect a dataset of shape and dtype
+
+        Parameters
+        ----------
+        shape : tuple
+            Shape of dataset to be collected (n_time, n_sites)
+        dtype : np.dtype
+            Numpy dtype of dataset (disk dtype)
+        n : int
+            Number of sites to prototype the memory req with.
+
+        Returns
+        -------
+        site_mem : float
+            Memory requirement for the full dataset shape and dtype in bytes.
+        """
+
+        site_mem = sys.getsizeof(np.ones((shape[0], n), dtype=dtype)) / n
+        return site_mem
+
     def _pre_collect(self):
         """Run a pre-collection check and get relevant dset attrs.
 
@@ -75,9 +112,12 @@ class DatasetCollector:
             Dictionary of dataset attributes for the dataset being collected.
         axis : int
             Axis size (1 is 1D array, 2 is 2D array)
+        site_mem_req : float
+            Memory requirement in bytes to collect a single site from one
+            source file.
         """
         with Outputs(self._source_files[0], mode='r') as f:
-            _, dtype, chunks = f.get_dset_properties(self._dset_in)
+            shape, dtype, chunks = f.get_dset_properties(self._dset_in)
             attrs = f.get_attrs(self._dset_in)
             axis = len(f[self._dset_in].shape)
 
@@ -102,27 +142,28 @@ class DatasetCollector:
             if self._dset_out not in f.dsets:
                 f._create_dset(self._dset_out, dset_shape, dtype,
                                chunks=chunks, attrs=attrs)
-        return attrs, axis
+
+        site_mem_req = self._get_site_mem_req(shape, dtype)
+
+        return attrs, axis, site_mem_req
 
     @staticmethod
-    def _gid_slice(gids_out, f_source):
-        """Find the site slice that the chunked f_source belongs to in
-        the final output gids
+    def _get_gid_slice(gids_out, source_gids):
+        """Find the site slice that the chunked set of source gids belongs to.
 
         Parameters
         ----------
         gids_out : list
             List of resource GIDS in the final output meta data f_out
-        f_source : reV.handlers.outputs.Output
-            Output handler for the chunked source file.
+        source_gids : list
+            List of resource GIDS in one chunk of source data.
 
         Returns
         -------
         site_slice : slice
-            Slice in the final output file to write data to from f_source.
+            Slice in the final output file to write data to from source gids.
         """
 
-        source_gids = f_source.get_meta_arr('gid')
         locs = np.where(np.isin(gids_out, source_gids))[0]
         sequential_locs = np.arange(source_gids.min(),
                                     source_gids.max() + 1)
@@ -136,37 +177,102 @@ class DatasetCollector:
         site_slice = slice(locs.min(), locs.max() + 1)
         return site_slice
 
+    def _get_source_gid_chunks(self, f_source):
+        """Split the gids from the f_source into chunks based on memory req.
+
+        Parameters
+        ----------
+        f_source : reV.handlers.outputs.Output
+            Source file handler
+
+        Returns
+        -------
+        all_source_gids : list
+            List of all source gids to be collected
+        source_gid_chunks : list
+            List of source gid chunks to collect.
+        """
+
+        all_source_gids = f_source.get_meta_arr('gid')
+        mem_req = (len(all_source_gids) * self._site_mem_req)
+
+        if mem_req > self._mem_avail:
+            n = 2
+            while True:
+                source_gid_chunks = np.array_split(all_source_gids, n)
+                new_mem_req = (len(source_gid_chunks[0]) * self._site_mem_req)
+                if new_mem_req > self._mem_avail:
+                    n += 1
+                else:
+                    logger.debug('Collecting dataset "{}" in {} chunks with '
+                                 'an estimated {} bytes in each chunk '
+                                 '(mem avail limit is {} bytes).'
+                                 .format(self._dset_in, n, new_mem_req,
+                                         self._mem_avail))
+                    break
+        else:
+            source_gid_chunks = [all_source_gids]
+
+        return all_source_gids, source_gid_chunks
+
+    def _collect_chunk(self, all_source_gids, source_gids, f_out,
+                       f_source, fp_source):
+        """Collect one set of source gids from f_source to f_out.
+
+        Parameters
+        ----------
+        all_source_gids : list
+            List of all source gids to be collected
+        source_gids : np.ndarray | list
+            Source gids to be collected
+        f_out : reV.handlers.outputs.Output
+            Output file handler
+        f_source : reV.handlers.outputs.Output
+            Source file handler
+        fp_source : str
+            Source filepath
+        """
+
+        out_slice = self._get_gid_slice(self._gids, source_gids)
+        source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
+        source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
+        source_slice = slice(source_i0, source_i1 + 1)
+        logger.debug('\t- Running low mem collection of "{}" for '
+                     'output site {} from source site {} and file : {}'
+                     .format(self._dset_in, out_slice, source_slice,
+                             os.path.basename(fp_source)))
+
+        try:
+            if self._axis == 1:
+                f_out[self._dset_out, out_slice] = \
+                    f_source[self._dset_in, source_slice]
+            elif self._axis == 2:
+                f_out[self._dset_out, slice(None), out_slice] = \
+                    f_source[self._dset_in, slice(None), source_slice]
+
+        except Exception as e:
+            logger.exception('Failed to collect source file {}. '
+                             'Raised the following exception:\n{}'
+                             .format(os.path.basename(fp_source), e))
+            raise e
+
     def _low_mem_collect(self):
         """Simple & robust serial collection optimized for low memory usage."""
-
-        _, axis = self._pre_collect()
-
         with Outputs(self._h5_file, mode='a') as f_out:
             for fp in self._source_files:
                 with Outputs(fp, mode='r') as f_source:
 
-                    site_slice = self._gid_slice(self._gids, f_source)
-                    logger.debug('\t- Running low mem collection of "{}" for '
-                                 'site {} from source: {}'
-                                 .format(self._dset_in, site_slice,
-                                         os.path.basename(fp)))
-                    try:
-                        if axis == 1:
-                            f_out[self._dset_out, site_slice] = \
-                                f_source[self._dset_in]
-                        elif axis == 2:
-                            f_out[self._dset_out, slice(None), site_slice] = \
-                                f_source[self._dset_in]
-                    except Exception as e:
-                        logger.exception('Failed to collect source file {}. '
-                                         'Raised the following exception:\n{}'
-                                         .format(os.path.basename(fp), e))
-                        raise e
+                    x = self._get_source_gid_chunks(f_source)
+                    all_source_gids, source_gid_chunks = x
+                    for source_gids in source_gid_chunks:
+                        self._collect_chunk(all_source_gids, source_gids,
+                                            f_out, f_source, fp)
 
                 log_mem(logger, log_level='DEBUG')
 
     @classmethod
-    def collect_dset(cls, h5_file, source_files, gids, dset_in, dset_out=None):
+    def collect_dset(cls, h5_file, source_files, gids, dset_in, dset_out=None,
+                     mem_util_lim=0.7):
         """Collect a single dataset from a list of source files into a final
         output file.
 
@@ -182,8 +288,12 @@ class DatasetCollector:
             Dataset to collect
         dset_out : str
             Dataset into which collected data is to be written
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many sites
+            will be collected at a time.
         """
-        dc = cls(h5_file, source_files, gids, dset_in, dset_out=dset_out)
+        dc = cls(h5_file, source_files, gids, dset_in, dset_out=dset_out,
+                 mem_util_lim=mem_util_lim)
         dc._low_mem_collect()
 
 
@@ -424,8 +534,8 @@ class Collector:
                 f.meta = meta
 
     @classmethod
-    def collect(cls, h5_file, h5_dir, project_points, dset_name,
-                dset_out=None, file_prefix=None):
+    def collect(cls, h5_file, h5_dir, project_points, dset_name, dset_out=None,
+                file_prefix=None, mem_util_lim=0.7):
         """
         Collect dataset from h5_dir to h5_file
 
@@ -445,6 +555,9 @@ class Collector:
             Dataset to collect means into
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many sites
+            will be collected at a time.
         """
         if file_prefix is None:
             h5_files = "*.h5"
@@ -464,7 +577,8 @@ class Collector:
             logger.debug("\t- 'time_index' collected")
 
         DatasetCollector.collect_dset(clt._h5_out, clt.h5_files, clt.gids,
-                                      dset_name, dset_out=dset_out)
+                                      dset_name, dset_out=dset_out,
+                                      mem_util_lim=mem_util_lim)
 
         logger.debug("\t- Collection of '{}' complete".format(dset_name))
 
@@ -475,7 +589,7 @@ class Collector:
 
     @classmethod
     def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
-                    file_prefix=None):
+                    file_prefix=None, mem_util_lim=0.7):
         """
         Collect and add dataset to h5_file from h5_dir
 
@@ -492,6 +606,9 @@ class Collector:
             Dataset to collect means into
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many sites
+            will be collected at a time.
         """
         if file_prefix is None:
             h5_files = "*.h5"
@@ -512,7 +629,8 @@ class Collector:
             logger.debug("\t- 'time_index' collected")
 
         DatasetCollector.collect_dset(clt._h5_out, clt.h5_files, clt.gids,
-                                      dset_name, dset_out=dset_out)
+                                      dset_name, dset_out=dset_out,
+                                      mem_util_lim=mem_util_lim)
 
         logger.debug("\t- Collection of '{}' complete".format(dset_name))
 

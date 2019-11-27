@@ -109,6 +109,30 @@ def test_profiles_means():
         os.remove(h5_file)
 
 
+def test_low_mem_collect():
+    """Test memory limited multi chunk collection"""
+
+    init_logger('reV.handlers.collection', log_level='DEBUG')
+    h5_file = os.path.join(TEMP_DIR, 'cf.h5')
+    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
+                      dset_out=None,
+                      file_prefix='peregrine_2012',
+                      mem_util_lim=0.00002)
+
+    with h5py.File(h5_file, 'r') as f:
+        assert 'cf_profile' in f
+        data = f['cf_profile'][...]
+
+    node_file = os.path.join(H5_DIR, 'peregrine_2012_node01_x001.h5')
+    with h5py.File(node_file, 'r') as f:
+        source_data = f['cf_profile'][...]
+
+    assert np.allclose(source_data, data[:, -1 * source_data.shape[1]:])
+
+    if PURGE_OUT:
+        os.remove(h5_file)
+
+
 def test_means_lcoe():
     """
     Test adding means to pre-collected profiles
