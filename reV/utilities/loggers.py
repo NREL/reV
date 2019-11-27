@@ -5,6 +5,7 @@ Logging for reV
 import logging
 import sys
 import os
+import psutil
 
 __all__ = ['setup_logger', 'LoggingAttributes', 'init_logger']
 
@@ -46,7 +47,7 @@ def get_handler(log_level="INFO", log_file=None, log_format=FORMAT):
         handler.setFormatter(logformat)
 
     # Set a handler-specific logging level (root logger should be at debug)
-    handler.setLevel(LOG_LEVEL[log_level])
+    handler.setLevel(LOG_LEVEL[log_level.upper()])
 
     return handler
 
@@ -212,3 +213,30 @@ def init_mult(name, logdir, modules, verbose=False, node=False):
             logger = init_logger(module, log_level=log_level, log_file=None)
         loggers.append(logger)
     return loggers
+
+
+def log_mem(logger, log_level='DEBUG'):
+    """Log the memory usage to the input logger object.
+
+    Parameters
+    ----------
+    logger : logging.Logger
+        Logger object to log memory message to.
+    log_level : str
+        DEBUG or INFO for different log levels for this log message.
+
+    Returns
+    -------
+    msg : str
+        Memory utilization log message string.
+    """
+    mem = psutil.virtual_memory()
+    msg = ('Memory utilization is {0:.3f} GB out of '
+           '{1:.3f} GB total ({2:.1f}% used)'
+           .format(mem.used / 1e9, mem.total / 1e9,
+                   100 * mem.used / mem.total))
+    if log_level.upper() == 'DEBUG':
+        logger.debug('\t- {}'.format(msg))
+    else:
+        logger.info(msg)
+    return msg

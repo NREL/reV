@@ -56,42 +56,13 @@ def test_collection():
     h5_file = os.path.join(TEMP_DIR, 'collection.h5')
     Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
                       dset_out=None,
-                      file_prefix='peregrine_2012',
-                      parallel=False)
+                      file_prefix='peregrine_2012')
     with h5py.File(h5_file) as f:
         cf_profiles = f['cf_profile'][...]
 
     diff = np.mean(np.abs(profiles - cf_profiles))
     msg = "Arrays differ by {:.4f}".format(diff)
     assert np.allclose(profiles, cf_profiles), msg
-
-    if PURGE_OUT:
-        os.remove(h5_file)
-
-
-def test_parallel_collection():
-    """
-    Test collection on 'cf_profile' in series and parallel
-    """
-    init_logger('reV.handlers.collection')
-    h5_file = os.path.join(TEMP_DIR, 'cf_profiles.h5')
-    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
-                      dset_out=None,
-                      file_prefix='peregrine_2012',
-                      parallel=False)
-    with h5py.File(h5_file) as f:
-        series_profiles = f['cf_profile'][...]
-
-    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
-                      dset_out=None,
-                      file_prefix='peregrine_2012',
-                      parallel=True)
-    with h5py.File(h5_file) as f:
-        parallel_profiles = f['cf_profile'][...]
-
-    diff = np.mean(np.abs(series_profiles - parallel_profiles))
-    msg = "Arrays differ by {:.4f}".format(diff)
-    assert np.allclose(series_profiles, parallel_profiles), msg
 
     if PURGE_OUT:
         os.remove(h5_file)
@@ -105,8 +76,7 @@ def test_collect_means():
     h5_file = os.path.join(TEMP_DIR, 'cf_means.h5')
     Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_mean',
                       dset_out=None,
-                      file_prefix='peregrine_2012',
-                      parallel=False)
+                      file_prefix='peregrine_2012')
     if PURGE_OUT:
         os.remove(h5_file)
 
@@ -119,16 +89,45 @@ def test_profiles_means():
     h5_file = os.path.join(TEMP_DIR, 'cf.h5')
     Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
                       dset_out=None,
-                      file_prefix='peregrine_2012',
-                      parallel=False)
+                      file_prefix='peregrine_2012')
     Collector.add_dataset(h5_file, H5_DIR, 'cf_mean',
                           dset_out=None,
-                          file_prefix='peregrine_2012',
-                          parallel=False)
+                          file_prefix='peregrine_2012')
 
     with h5py.File(h5_file, 'r') as f:
         assert 'cf_profile' in f
         assert 'cf_mean' in f
+        data = f['cf_profile'][...]
+
+    node_file = os.path.join(H5_DIR, 'peregrine_2012_node01_x001.h5')
+    with h5py.File(node_file, 'r') as f:
+        source_data = f['cf_profile'][...]
+
+    assert np.allclose(source_data, data[:, -1 * source_data.shape[1]:])
+
+    if PURGE_OUT:
+        os.remove(h5_file)
+
+
+def test_low_mem_collect():
+    """Test memory limited multi chunk collection"""
+
+    init_logger('reV.handlers.collection', log_level='DEBUG')
+    h5_file = os.path.join(TEMP_DIR, 'cf.h5')
+    Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
+                      dset_out=None,
+                      file_prefix='peregrine_2012',
+                      mem_util_lim=0.00002)
+
+    with h5py.File(h5_file, 'r') as f:
+        assert 'cf_profile' in f
+        data = f['cf_profile'][...]
+
+    node_file = os.path.join(H5_DIR, 'peregrine_2012_node01_x001.h5')
+    with h5py.File(node_file, 'r') as f:
+        source_data = f['cf_profile'][...]
+
+    assert np.allclose(source_data, data[:, -1 * source_data.shape[1]:])
 
     if PURGE_OUT:
         os.remove(h5_file)
@@ -142,12 +141,10 @@ def test_means_lcoe():
     h5_file = os.path.join(TEMP_DIR, 'cf_lcoe.h5')
     Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_mean',
                       dset_out=None,
-                      file_prefix='peregrine_2012',
-                      parallel=False)
+                      file_prefix='peregrine_2012')
     Collector.add_dataset(h5_file, H5_DIR, 'lcoe_fcr',
                           dset_out=None,
-                          file_prefix='peregrine_2012',
-                          parallel=False)
+                          file_prefix='peregrine_2012')
 
     with h5py.File(h5_file, 'r') as f:
         assert 'cf_mean' in f

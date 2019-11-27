@@ -70,6 +70,32 @@ def test_meanoid():
     assert np.allclose(meanoid, truth)
 
 
+def test_weighted_meanoid():
+    """Test a meanoid weighted by gid_counts vs. a non-weighted meanoid."""
+
+    sites = np.arange(100)
+    rev_summary = pd.DataFrame({'gen_gids': sites,
+                                'res_gids': sites,
+                                'gid_counts': [1] * 50 + [0] * 50})
+    r = RegionRepProfile(GEN_FPATH, rev_summary)
+    gids = r._get_region_attr(r._rev_summary, 'gen_gids')
+    weights = r._get_region_attr(r._rev_summary, 'gid_counts')
+    all_profiles = r._get_profiles(gids)
+
+    w_meanoid = RepresentativeMethods.meanoid(all_profiles, weights=weights)
+
+    sites = np.arange(50)
+    rev_summary = pd.DataFrame({'gen_gids': sites,
+                                'res_gids': sites})
+    r = RegionRepProfile(GEN_FPATH, rev_summary)
+    gids = r._get_region_attr(r._rev_summary, 'gen_gids')
+    all_profiles = r._get_profiles(gids)
+
+    meanoid = RepresentativeMethods.meanoid(all_profiles, weights=None)
+
+    assert np.allclose(meanoid, w_meanoid)
+
+
 def test_integrated():
     """Test a multi-region rep profile calc serial vs. parallel and against
     baseline results."""

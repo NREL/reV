@@ -30,21 +30,55 @@ class Generation(SAM):
     """Base class for SAM generation simulations."""
 
     @staticmethod
+    def _get_res(res_df, output_request):
+        """Get the resource arrays and pass through for output (single site).
+
+        Parameters
+        ----------
+        res_df : pd.DataFrame
+            2D table with resource data.
+        output_request : list
+            Outputs to retrieve from SAM.
+
+        Returns
+        -------
+        res_mean : dict | None
+            Dictionary object with variables for resource arrays.
+        out_req_cleaned : list
+            Output request list with the resource request entries removed.
+        """
+
+        out_req_cleaned = copy.deepcopy(output_request)
+        res_out = None
+
+        res_reqs = []
+        for req in out_req_cleaned:
+            if req in res_df:
+                res_reqs.append(req)
+                if res_out is None:
+                    res_out = {}
+                res_out[req] = Generation.ensure_res_len(res_df[req].values)
+        for req in res_reqs:
+            out_req_cleaned.remove(req)
+
+        return res_out, out_req_cleaned
+
+    @staticmethod
     def _get_res_mean(res_file, res_df, output_request):
-        """Get the resource annual means.
+        """Get the resource annual means (single site).
 
         Parameters
         ----------
         res_file : str
             Resource file with full path.
         res_df : pd.DataFrame
-            2D table with resource data. Available columns must have solar_vars
+            2D table with resource data.
         output_request : list
             Outputs to retrieve from SAM.
 
         Returns
         -------
-        res_mean : dict
+        res_mean : dict | None
             Dictionary object with variables for resource means.
         out_req_nomeans : list
             Output request list with the resource mean entries removed.
@@ -222,7 +256,7 @@ class Generation(SAM):
 
     @classmethod
     def reV_run(cls, points_control, res_file, output_request=('cf_mean',),
-                downscale=None):
+                downscale=None, drop_leap=False):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -238,6 +272,9 @@ class Generation(SAM):
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
 
         Returns
         -------
@@ -264,21 +301,28 @@ class Generation(SAM):
         # Use resource object iterator
         for res_df, meta in resources:
 
+            # drop the leap day
+            if drop_leap:
+                res_df = cls.drop_leap(res_df)
+
             # get SAM inputs from project_points based on the current site
             site = res_df.name
             _, inputs = points_control.project_points[site]
 
-            res_mean, out_req_nomeans = cls._get_res_mean(res_file, res_df,
-                                                          output_request)
+            res_outs, out_req_cleaned = cls._get_res(res_df, output_request)
+            res_mean, out_req_cleaned = cls._get_res_mean(res_file, res_df,
+                                                          out_req_cleaned)
 
             # iterate through requested sites.
             sim = cls(resource=res_df, meta=meta, parameters=inputs,
-                      output_request=out_req_nomeans)
+                      output_request=out_req_cleaned)
             sim._gen_exec()
 
             # collect outputs to dictout
             out[site] = sim.outputs
 
+            if res_outs is not None:
+                out[site].update(res_outs)
             if res_mean is not None:
                 out[site].update(res_mean)
 
@@ -306,7 +350,8 @@ class Solar(Generation):
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         drop_leap : bool
-            Drops February 29th from the resource data.
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
         """
 
         # drop the leap day
@@ -601,7 +646,8 @@ class Wind(Generation):
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         drop_leap : bool
-            Drops February 29th from the resource data.
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
         """
 
         # drop the leap day
@@ -691,8 +737,7 @@ class LandBasedWind(Wind):
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
-        """Initialize a SAM land based wind object.
-        """
+        """Initialize a SAM land based wind object."""
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
@@ -703,7 +748,6 @@ class OffshoreWind(LandBasedWind):
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
-        """Initialize a SAM offshore wind object.
-        """
+        """Initialize a SAM offshore wind object."""
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)

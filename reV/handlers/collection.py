@@ -5,6 +5,8 @@ Base class to handle collection of profiles and means across multiple .h5 files
 import logging
 import numpy as np
 import os
+import sys
+import psutil
 import pandas as pd
 import time
 from warnings import warn
@@ -12,160 +14,289 @@ from warnings import warn
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
                                       HandlerWarning)
-from reV.utilities.execution import execute_parallel, SmartParallelJob
+from reV.utilities.loggers import log_mem
 
 logger = logging.getLogger(__name__)
 
 
 class DatasetCollector:
     """
-    Class to use with SmartParallelJob to handle dataset collection from
-    .h5 files
+    Class to collect single datasets from several source files into a final
+    output file.
     """
-    def __init__(self, h5_file, gids, dset_in, dset_out=None):
+    def __init__(self, h5_file, source_files, gids, dset_in, dset_out=None,
+                 mem_util_lim=0.7):
         """
         Parameters
         ----------
         h5_file : str
             Path to h5_file into which dataset is to be collected
+        source_files : list
+            List of source filepaths.
         gids : list
             list of gids to be collected
         dset_in : str
             Dataset to collect
         dset_out : str
             Dataset into which collected data is to be written
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many sites
+            will be collected at a time.
         """
         self._h5_file = h5_file
+        self._source_files = source_files
         self._gids = gids
+
         self._dset_in = dset_in
         if dset_out is None:
             dset_out = dset_in
-
         self._dset_out = dset_out
-        self._out = None
 
-    @property
-    def out(self):
+        tot_mem = psutil.virtual_memory().total
+        self._mem_avail = mem_util_lim * tot_mem
+        self._attrs, self._axis, self._site_mem_req = self._pre_collect()
+
+        logger.debug('Available memory for collection is {} bytes'
+                     .format(self._mem_avail))
+        logger.debug('Site memory requirement is: {} bytes'
+                     .format(self._site_mem_req))
+
+    @staticmethod
+    def parse_meta(h5_file):
         """
-        Extract output from futures
-
-        Returns
-        -------
-        dset_slice : slice
-            Slice of dataset that corresponds to dset_out
-        dset_out : ndarray
-            Array of collected output for dset_in
-        """
-        out = None
-        out_slice = None
-        if self._out is not None:
-            gids = []
-            out = []
-            for ids, arr in self._out:
-                gids.extend(ids)
-                out.append(arr)
-
-            out = np.hstack(out)
-            out_slice = self._get_slice(gids, axis=len(out.shape))
-
-        return out_slice, out
-
-    @out.setter
-    def out(self, results):
-        """
-        Add results from SmartParallelJob to out
-
-        Parameters
-        ----------
-        results : list
-            Results extracted by SmartParallelJob
-        """
-        if isinstance(results, list) and self._out is not None:
-            self._out.extend(results)
-        else:
-            self._out = results
-
-    def _get_slice(self, gids, axis):
-        """
-        Determine to which slice of the dataset gids corresponds.
-        Confirm that gids is an inclusive list covering the slice.
-
-        Parameters
-        ----------
-        gids : list
-            List of gids collected
-
-        Returns
-        -------
-        gid_slice : slice
-            slice of full gids to be collected
-        """
-        pos = np.in1d(self._gids, gids)
-        if np.all(pos):
-            gid_slice = slice(None, None, None)
-        else:
-            start, end = np.where()[0][[0, -1]]
-            gid_slice = slice(start, end + 1, None)
-
-            if not np.array_equal(self._gids[gid_slice], gids):
-                raise HandlerValueError('gids are not a valid slice of full '
-                                        'set of _gids')
-        if axis == 1:
-            out_slice = (gid_slice,)
-        else:
-            out_slice = (slice(None, None, None), gid_slice)
-
-        return out_slice
-
-    def run(self, h5_file):
-        """
-        Base run method need for SmartParallelJob
+        Extract and convert meta data from a rec.array to pandas.DataFrame
 
         Parameters
         ----------
         h5_file : str
-            .h5 file path for file to be run
-        """
-        with Outputs(h5_file, mode='r', unscale=False) as f:
-            gids = f.meta['gid'].values
-            dset_out = f[self._dset_in]
+            Path to .h5 file from which meta is to be parsed
 
-        return gids, dset_out
+        Returns
+        -------
+        meta : pandas.DataFrame
+            Portion of meta data corresponding to sites in h5_file
+        """
+        with Outputs(h5_file, mode='r') as f:
+            meta = f.meta
 
-    def flush(self):
-        """
-        Base flush method needed for SmartParallelJob
-        """
-        dset_slice, dset_arr = self.out
-        keys = (self._dset_out,) + dset_slice
-        with Outputs(self._h5_file, mode='a') as f:
-            f.__setitem__(keys, dset_arr)
+        return meta
 
-    @classmethod
-    def collect(cls, handler, gids, dset_in, h5_files, dset_out=None):
-        """
-        Extract dset_in from h5_files and write to disk
+    @staticmethod
+    def _get_site_mem_req(shape, dtype, n=100):
+        """Get the memory requirement to collect one site from a dataset of
+        shape and dtype
 
         Parameters
         ----------
-        handler : Instance of Outputs
-            Resource class to handle writing of collected dataset
+        shape : tuple
+            Shape of dataset to be collected (n_time, n_sites)
+        dtype : np.dtype
+            Numpy dtype of dataset (disk dtype)
+        n : int
+            Number of sites to prototype the memory req with.
+
+        Returns
+        -------
+        site_mem : float
+            Memory requirement in bytes for one site from a dataset with
+            shape and dtype.
+        """
+
+        site_mem = sys.getsizeof(np.ones((shape[0], n), dtype=dtype)) / n
+        return site_mem
+
+    def _pre_collect(self):
+        """Run a pre-collection check and get relevant dset attrs.
+
+        Returns
+        -------
+        attrs : dict
+            Dictionary of dataset attributes for the dataset being collected.
+        axis : int
+            Axis size (1 is 1D array, 2 is 2D array)
+        site_mem_req : float
+            Memory requirement in bytes to collect a single site from one
+            source file.
+        """
+        with Outputs(self._source_files[0], mode='r') as f:
+            shape, dtype, chunks = f.get_dset_properties(self._dset_in)
+            attrs = f.get_attrs(self._dset_in)
+            axis = len(f[self._dset_in].shape)
+
+        with Outputs(self._h5_file, mode='a') as f:
+            if axis == 1:
+                dset_shape = (len(f),)
+            elif axis == 2:
+                if 'time_index' in f.dsets:
+                    dset_shape = f.shape
+                else:
+                    m = ("'time_index' must be combined "
+                         "before profiles can be "
+                         "combined.")
+                    logger.error(m)
+                    raise HandlerRuntimeError(m)
+            else:
+                m = ('Cannot collect dset "{}" with '
+                     'axis {}'.format(self._dset_in, axis))
+                logger.error(m)
+                raise HandlerRuntimeError(m)
+
+            if self._dset_out not in f.dsets:
+                f._create_dset(self._dset_out, dset_shape, dtype,
+                               chunks=chunks, attrs=attrs)
+
+        site_mem_req = self._get_site_mem_req(shape, dtype)
+
+        return attrs, axis, site_mem_req
+
+    @staticmethod
+    def _get_gid_slice(gids_out, source_gids):
+        """Find the site slice that the chunked set of source gids belongs to.
+
+        Parameters
+        ----------
+        gids_out : list
+            List of resource GIDS in the final output meta data f_out
+        source_gids : list
+            List of resource GIDS in one chunk of source data.
+
+        Returns
+        -------
+        site_slice : slice
+            Slice in the final output file to write data to from source gids.
+        """
+
+        locs = np.where(np.isin(gids_out, source_gids))[0]
+        sequential_locs = np.arange(source_gids.min(),
+                                    source_gids.max() + 1)
+
+        if not len(locs) == len(sequential_locs):
+            emsg = ('GID indices for source file are not '
+                    'sequential in destination file!')
+            logger.error(emsg)
+            raise HandlerRuntimeError(emsg)
+
+        site_slice = slice(locs.min(), locs.max() + 1)
+        return site_slice
+
+    def _get_source_gid_chunks(self, f_source):
+        """Split the gids from the f_source into chunks based on memory req.
+
+        Parameters
+        ----------
+        f_source : reV.handlers.outputs.Output
+            Source file handler
+
+        Returns
+        -------
+        all_source_gids : list
+            List of all source gids to be collected
+        source_gid_chunks : list
+            List of source gid chunks to collect.
+        """
+
+        all_source_gids = f_source.get_meta_arr('gid')
+        mem_req = (len(all_source_gids) * self._site_mem_req)
+
+        if mem_req > self._mem_avail:
+            n = 2
+            while True:
+                source_gid_chunks = np.array_split(all_source_gids, n)
+                new_mem_req = (len(source_gid_chunks[0]) * self._site_mem_req)
+                if new_mem_req > self._mem_avail:
+                    n += 1
+                else:
+                    logger.debug('Collecting dataset "{}" in {} chunks with '
+                                 'an estimated {} bytes in each chunk '
+                                 '(mem avail limit is {} bytes).'
+                                 .format(self._dset_in, n, new_mem_req,
+                                         self._mem_avail))
+                    break
+        else:
+            source_gid_chunks = [all_source_gids]
+
+        return all_source_gids, source_gid_chunks
+
+    def _collect_chunk(self, all_source_gids, source_gids, f_out,
+                       f_source, fp_source):
+        """Collect one set of source gids from f_source to f_out.
+
+        Parameters
+        ----------
+        all_source_gids : list
+            List of all source gids to be collected
+        source_gids : np.ndarray | list
+            Source gids to be collected
+        f_out : reV.handlers.outputs.Output
+            Output file handler
+        f_source : reV.handlers.outputs.Output
+            Source file handler
+        fp_source : str
+            Source filepath
+        """
+
+        out_slice = self._get_gid_slice(self._gids, source_gids)
+        source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
+        source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
+        source_slice = slice(source_i0, source_i1 + 1)
+        logger.debug('\t- Running low mem collection of "{}" for '
+                     'output site {} from source site {} and file : {}'
+                     .format(self._dset_in, out_slice, source_slice,
+                             os.path.basename(fp_source)))
+
+        try:
+            if self._axis == 1:
+                f_out[self._dset_out, out_slice] = \
+                    f_source[self._dset_in, source_slice]
+            elif self._axis == 2:
+                f_out[self._dset_out, slice(None), out_slice] = \
+                    f_source[self._dset_in, slice(None), source_slice]
+
+        except Exception as e:
+            logger.exception('Failed to collect source file {}. '
+                             'Raised the following exception:\n{}'
+                             .format(os.path.basename(fp_source), e))
+            raise e
+
+    def _collect(self):
+        """Simple & robust serial collection optimized for low memory usage."""
+        with Outputs(self._h5_file, mode='a') as f_out:
+            for fp in self._source_files:
+                with Outputs(fp, mode='r') as f_source:
+
+                    x = self._get_source_gid_chunks(f_source)
+                    all_source_gids, source_gid_chunks = x
+                    for source_gids in source_gid_chunks:
+                        self._collect_chunk(all_source_gids, source_gids,
+                                            f_out, f_source, fp)
+
+                log_mem(logger, log_level='DEBUG')
+
+    @classmethod
+    def collect_dset(cls, h5_file, source_files, gids, dset_in, dset_out=None,
+                     mem_util_lim=0.7):
+        """Collect a single dataset from a list of source files into a final
+        output file.
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to h5_file into which dataset is to be collected
+        source_files : list
+            List of source filepaths.
         gids : list
             list of gids to be collected
         dset_in : str
             Dataset to collect
-        h5_files : list
-            h5 files from which dset is to be collected
         dset_out : str
             Dataset into which collected data is to be written
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many sites
+            will be collected at a time.
         """
-        dset_cls = cls(handler, gids, dset_in, dset_out=dset_out)
-        futures = []
-        for file in h5_files:
-            futures.append(dset_cls.run(file))
-
-        dset_cls.out = futures
-        dset_cls.flush()
+        dc = cls(h5_file, source_files, gids, dset_in, dset_out=dset_out,
+                 mem_util_lim=mem_util_lim)
+        dc._collect()
 
 
 class Collector:
@@ -173,7 +304,7 @@ class Collector:
     Class to handle the collection and combination of .h5 files
     """
     def __init__(self, h5_file, h5_dir, project_points, file_prefix=None,
-                 parallel=False, clobber=False):
+                 clobber=False):
         """
         Parameters
         ----------
@@ -186,8 +317,6 @@ class Collector:
             contained in the .h5 files to be collected
         file_prefix : str
             .h5 file prefix, if None collect all files in h5_dir
-        parallel : bool
-            Option to run in parallel
         clobber : bool
             Flag to purge .h5 file if it already exists
         """
@@ -202,7 +331,6 @@ class Collector:
         self._h5_files = self.find_h5_files(h5_dir, file_prefix=file_prefix,
                                             ignore=ignore)
         self._gids = self.parse_project_points(project_points)
-        self._parallel = parallel
         self.combine_meta()
 
     @staticmethod
@@ -223,15 +351,22 @@ class Collector:
         if not isinstance(ignore, list):
             ignore = [ignore]
         h5_files = []
+        logger.debug('Looking for source files in {}'.format(h5_dir))
         for file in os.listdir(h5_dir):
             if file.endswith('.h5'):
                 if file_prefix is not None:
                     if file.startswith(file_prefix) and file not in ignore:
+                        logger.debug('\t- Found source file to collect: {}'
+                                     .format(file))
                         h5_files.append(os.path.join(h5_dir, file))
                 elif file not in ignore:
+                    logger.debug('\t- Found source file to collect: {}'
+                                 .format(file))
                     h5_files.append(os.path.join(h5_dir, file))
-
-        return sorted(h5_files)
+        h5_files = sorted(h5_files)
+        logger.debug('Final list of {} source files: {}'
+                     .format(len(h5_files), h5_files))
+        return h5_files
 
     @staticmethod
     def parse_project_points(project_points):
@@ -262,7 +397,9 @@ class Collector:
 
             e = project_points.stop
             if e is None:
-                raise HandlerValueError("slice must be bounded!")
+                m = "slice must be bounded!"
+                logger.error(m)
+                raise HandlerValueError(m)
 
             step = project_points.step
             if step is None:
@@ -270,29 +407,11 @@ class Collector:
 
             gids = list(range(s, e, step))
         else:
-            raise HandlerValueError('Cannot parse project_points')
+            m = 'Cannot parse project_points'
+            logger.error(m)
+            raise HandlerValueError(m)
 
         return gids
-
-    @staticmethod
-    def parse_meta(h5_file):
-        """
-        Extract and convert meta data from a rec.array to pandas.DataFrame
-
-        Parameters
-        ----------
-        h5_file : str
-            Path to .h5 file from which meta is to be parsed
-
-        Returns
-        -------
-        meta : pandas.DataFrame
-            Portion of meta data corresponding to sites in h5_file
-        """
-        with Outputs(h5_file, mode='r') as f:
-            meta = f.meta
-
-        return meta
 
     def get_dset_shape(self, dset_name):
         """
@@ -368,13 +487,36 @@ class Collector:
         if any(missing):
             # TODO: Convert HandlerRuntimeError to a custom collection error
             # TODO: Write missing gids to disk to allow for automated re-run
-            raise HandlerRuntimeError("gids: {} are missing"
-                                      .format(missing))
+            m = "gids: {} are missing".format(missing)
+            logger.error(m)
+            raise HandlerRuntimeError(m)
+
+        if len(set(meta_gids)) != len(meta):
+            m = ('Meta of length {} has {} unique gids! '
+                 'There are duplicate gids in the source file list: {}'
+                 .format(len(meta), len(set(meta_gids)), self.h5_files))
+            logger.error(m)
+            raise HandlerRuntimeError(m)
 
     def _purge_chunks(self):
-        """Remove the chunked files (after collection)."""
-        for fpath in self.h5_files:
-            os.remove(fpath)
+        """Remove the chunked files (after collection). Will not delete files
+        if any datasets were not collected."""
+
+        with Outputs(self._h5_out, mode='r') as out:
+            dsets_collected = out.dsets
+        with Outputs(self.h5_files[0], mode='r') as out:
+            dsets_source = out.dsets
+
+        missing = [d for d in dsets_source if d not in dsets_collected]
+
+        if any(missing):
+            w = ('Not purging chunked output files. These dsets '
+                 'have not been collected: {}'.format(missing))
+            warn(w, HandlerWarning)
+            logger.warning(w)
+        else:
+            for fpath in self.h5_files:
+                os.remove(fpath)
 
     def combine_meta(self):
         """
@@ -384,58 +526,18 @@ class Collector:
             if 'meta' in f.dsets:
                 self._check_meta(f.meta)
             else:
-                if self._parallel:
-                    meta = execute_parallel(self.parse_meta, self.h5_files)
-                else:
-                    meta = [self.parse_meta(file) for file in self.h5_files]
+                meta = [DatasetCollector.parse_meta(file)
+                        for file in self.h5_files]
 
                 meta = pd.concat(meta, axis=0)
                 self._check_meta(meta)
+                logger.info('Writing meta data with shape {}'
+                            .format(meta.shape))
                 f.meta = meta
 
-    def combine_dset(self, dset, dset_out=None):
-        """
-        Collect, combine and save dset to disk
-
-        Parameters
-        ----------
-        dset : str
-            dataset to collect
-        dset_out : str
-            name of dataset to be saved to disk, if None use dset
-        """
-        if dset_out is None:
-            dset_out = dset
-        with Outputs(self.h5_files[0], mode='r') as f:
-            _, dtype, chunks = f.get_dset_properties(dset)
-            attrs = f.get_attrs(dset)
-            axis = len(f[dset].shape)
-
-        with Outputs(self._h5_out, mode='a') as f:
-            if axis == 1:
-                dset_shape = (len(f),)
-            else:
-                if 'time_index' in f.dsets:
-                    dset_shape = f.shape
-                else:
-                    raise HandlerRuntimeError("'time_index' must be combined "
-                                              "before profiles can be "
-                                              "combined.")
-            if dset_out not in f.dsets:
-                f._create_dset(dset_out, dset_shape, dtype, chunks=chunks,
-                               attrs=attrs)
-
-        if self._parallel:
-            dset_collector = DatasetCollector(self._h5_out, self.gids, dset,
-                                              dset_out=dset_out)
-            SmartParallelJob.execute(dset_collector, self.h5_files)
-        else:
-            DatasetCollector.collect(self._h5_out, self.gids, dset,
-                                     self.h5_files, dset_out=dset_out)
-
     @classmethod
-    def collect(cls, h5_file, h5_dir, project_points, dset_name,
-                dset_out=None, file_prefix=None, parallel=True):
+    def collect(cls, h5_file, h5_dir, project_points, dset_name, dset_out=None,
+                file_prefix=None, mem_util_lim=0.7):
         """
         Collect dataset from h5_dir to h5_file
 
@@ -455,8 +557,9 @@ class Collector:
             Dataset to collect means into
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
-        parallel : bool
-            Option to run in parallel
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many sites
+            will be collected at a time.
         """
         if file_prefix is None:
             h5_files = "*.h5"
@@ -467,7 +570,7 @@ class Collector:
                     .format(dset_name, h5_files, h5_dir, h5_file))
         ts = time.time()
         clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix,
-                  parallel=parallel, clobber=True)
+                  clobber=True)
         logger.debug("\t- 'meta' collected")
 
         dset_shape = clt.get_dset_shape(dset_name)
@@ -475,12 +578,67 @@ class Collector:
             clt.combine_time_index()
             logger.debug("\t- 'time_index' collected")
 
-        clt.combine_dset(dset_name, dset_out=dset_out)
-        logger.debug("\t- '{}' collected".format(dset_name))
+        DatasetCollector.collect_dset(clt._h5_out, clt.h5_files, clt.gids,
+                                      dset_name, dset_out=dset_out,
+                                      mem_util_lim=mem_util_lim)
+
+        logger.debug("\t- Collection of '{}' complete".format(dset_name))
 
         tt = (time.time() - ts) / 60
         logger.info('Collection complete')
-        logger.debug('\t- Colletion took {:.4f} minutes'
+        logger.debug('\t- Collection took {:.4f} minutes'
+                     .format(tt))
+
+    @classmethod
+    def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
+                    file_prefix=None, mem_util_lim=0.7):
+        """
+        Collect and add dataset to h5_file from h5_dir
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file into which data will be collected
+        h5_dir : str
+            Root directory containing .h5 files to combine
+        dset_name : str
+            Dataset to be collected. If source shape is 2D, time index will be
+            collected.
+        dset_out : str
+            Dataset to collect means into
+        file_prefix : str
+            .h5 file prefix, if None collect all files on h5_dir
+        mem_util_lim : float
+            Memory utilization limit (fractional). This sets how many sites
+            will be collected at a time.
+        """
+        if file_prefix is None:
+            h5_files = "*.h5"
+        else:
+            h5_files = "{}*.h5".format(file_prefix)
+
+        logger.info('Collecting "{}" from {} files in {} and adding to {}'
+                    .format(dset_name, h5_files, h5_dir, h5_file))
+        ts = time.time()
+        with Outputs(h5_file, mode='r') as f:
+            points = f.meta
+
+        clt = cls(h5_file, h5_dir, points, file_prefix=file_prefix)
+
+        dset_shape = clt.get_dset_shape(dset_name)
+        if len(dset_shape) > 1:
+            clt.combine_time_index()
+            logger.debug("\t- 'time_index' collected")
+
+        DatasetCollector.collect_dset(clt._h5_out, clt.h5_files, clt.gids,
+                                      dset_name, dset_out=dset_out,
+                                      mem_util_lim=mem_util_lim)
+
+        logger.debug("\t- Collection of '{}' complete".format(dset_name))
+
+        tt = (time.time() - ts) / 60
+        logger.info('{} collected'.format(dset_name))
+        logger.debug('\t- Collection took {:.4f} minutes'
                      .format(tt))
 
     @classmethod
@@ -504,52 +662,3 @@ class Collector:
         clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)
         clt._purge_chunks()
         logger.info('Purged chunk files from {}'.format(h5_dir))
-
-    @classmethod
-    def add_dataset(cls, h5_file, h5_dir, dset_name, dset_out=None,
-                    file_prefix=None, parallel=True):
-        """
-        Collect and add dataset to h5_file from h5_dir
-
-        Parameters
-        ----------
-        h5_file : str
-            Path to .h5 file into which data will be collected
-        h5_dir : str
-            Root directory containing .h5 files to combine
-        dset_name : str
-            Dataset to be collected. If source shape is 2D, time index will be
-            collected.
-        dset_out : str
-            Dataset to collect means into
-        file_prefix : str
-            .h5 file prefix, if None collect all files on h5_dir
-        parallel : bool
-            Option to run in parallel
-        """
-        if file_prefix is None:
-            h5_files = "*.h5"
-        else:
-            h5_files = "{}*.h5".format(file_prefix)
-
-        logger.info('Collecting "{}" from {} files in {} and adding to {}'
-                    .format(dset_name, h5_files, h5_dir, h5_file))
-        ts = time.time()
-        with Outputs(h5_file, mode='a') as f:
-            points = f.meta
-
-        clt = cls(h5_file, h5_dir, points, file_prefix=file_prefix,
-                  parallel=parallel)
-
-        dset_shape = clt.get_dset_shape(dset_name)
-        if len(dset_shape) > 1:
-            clt.combine_time_index()
-            logger.debug("\t- 'time_index' collected")
-
-        clt.combine_dset(dset_name, dset_out=dset_out)
-        logger.debug("\t- '{}' collected".format(dset_name))
-
-        tt = (time.time() - ts) / 60
-        logger.info('{} collected'.format(dset_name))
-        logger.debug('\t- Collection took {:.4f} minutes'
-                     .format(tt))
