@@ -11,6 +11,7 @@ reV.pipeline.cli\_pipeline module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.pipeline.pipeline module
 ----------------------------
 
@@ -18,6 +19,7 @@ reV.pipeline.pipeline module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.pipeline.status module
 --------------------------
 

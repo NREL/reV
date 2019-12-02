@@ -11,6 +11,7 @@ reV.handlers.cli\_collect module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.cli\_multi\_year module
 ------------------------------------
 
@@ -18,6 +19,7 @@ reV.handlers.cli\_multi\_year module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.collection module
 ------------------------------
 
@@ -25,6 +27,7 @@ reV.handlers.collection module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.exclusions module
 ------------------------------
 
@@ -32,6 +35,7 @@ reV.handlers.exclusions module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.multi\_year module
 -------------------------------
 
@@ -39,6 +43,7 @@ reV.handlers.multi\_year module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.outputs module
 ---------------------------
 
@@ -46,6 +51,7 @@ reV.handlers.outputs module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.parse\_keys module
 -------------------------------
 
@@ -53,6 +59,7 @@ reV.handlers.parse\_keys module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.resource module
 ----------------------------
 
@@ -60,6 +67,7 @@ reV.handlers.resource module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.sam\_resource module
 ---------------------------------
 
@@ -67,6 +75,7 @@ reV.handlers.sam\_resource module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.handlers.transmission module
 --------------------------------
 

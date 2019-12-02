@@ -2,3 +2,4 @@
 """
 reV Generation
 """
+from .generation import Gen

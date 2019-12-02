@@ -8,10 +8,11 @@ import os
 
 from reV.utilities import safe_json_load
 from reV.utilities.exceptions import ConfigError
-from reV import REVDIR, TESTDATADIR
 
 
 logger = logging.getLogger(__name__)
+REVDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+TESTDATADIR = os.path.join(os.path.dirname(REVDIR), 'tests', 'data')
 
 
 class BaseConfig(dict):

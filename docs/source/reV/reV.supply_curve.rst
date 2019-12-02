@@ -11,6 +11,7 @@ reV.supply\_curve.aggregation module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.supply\_curve.cli\_aggregation module
 -----------------------------------------
 
@@ -18,6 +19,7 @@ reV.supply\_curve.cli\_aggregation module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.supply\_curve.cli\_supply\_curve module
 -------------------------------------------
 
@@ -25,6 +27,7 @@ reV.supply\_curve.cli\_supply\_curve module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.supply\_curve.exclusions module
 -----------------------------------
 
@@ -32,6 +35,7 @@ reV.supply\_curve.exclusions module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.supply\_curve.point\_summary module
 ---------------------------------------
 
@@ -39,6 +43,7 @@ reV.supply\_curve.point\_summary module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.supply\_curve.points module
 -------------------------------
 
@@ -46,6 +51,7 @@ reV.supply\_curve.points module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.supply\_curve.supply\_curve module
 --------------------------------------
 
@@ -53,6 +59,7 @@ reV.supply\_curve.supply\_curve module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.supply\_curve.tech\_mapping module
 --------------------------------------
 

@@ -11,6 +11,7 @@ reV.econ.cli\_econ module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.econ.econ module
 --------------------
 

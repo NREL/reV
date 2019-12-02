@@ -2,3 +2,4 @@
 """
 reV batch execution
 """
+from .batch import BatchJob

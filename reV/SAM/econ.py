@@ -14,7 +14,6 @@ import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Lcoefcr as pysam_lcoe
 import PySAM.Singleowner as pysam_so
 
-from reV import TESTDATADIR
 from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
 from reV.SAM.SAM import SAM
@@ -22,6 +21,8 @@ from reV.utilities.exceptions import SAMExecutionError
 
 
 logger = logging.getLogger(__name__)
+DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
 
 
 class Economic(SAM):
@@ -444,7 +445,7 @@ class LCOE(Economic):
         """
         if self._default is None:
             res_file = os.path.join(
-                TESTDATADIR,
+                DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
             x = pysam_pv.default('PVWattsLCOECalculator')
             x.LocationAndResource.solar_resource_file = res_file
@@ -642,7 +643,7 @@ class SingleOwner(Economic):
         """
         if self._default is None:
             res_file = os.path.join(
-                TESTDATADIR,
+                DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
             x = pysam_pv.default('PVWattsSingleOwner')
             x.LocationAndResource.solar_resource_file = res_file
