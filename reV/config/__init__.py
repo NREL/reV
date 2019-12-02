@@ -2,4 +2,4 @@
 """
 reV Configuration
 """
-from .project_points import ProjectControl, ProjectPoints
+from .project_points import ProjectPoints

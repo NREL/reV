@@ -5,7 +5,6 @@ The Renewable Energy Potential Model
 from __future__ import print_function, division, absolute_import
 import os
 
-from reV.config import ProjectPoints
 from reV.econ import Econ as reVEcon
 from reV.generation import Gen as reVGen
 from reV.handlers import (NSRDB, MultiFileNSRDB, MultiFileWTK, Resource,
