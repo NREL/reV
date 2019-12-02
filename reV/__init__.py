@@ -5,13 +5,14 @@ The Renewable Energy Potential Model
 from __future__ import print_function, division, absolute_import
 import os
 
-from reV.econ import Econ as reVEcon
-from reV.generation import Gen as reVGen
+from reV.econ import Econ
+from reV.generation import Gen
 from reV.handlers import (NSRDB, MultiFileNSRDB, MultiFileWTK, Resource,
                           SolarResource, WindResource)
+from reV.pipeline import Pipeline, Status
 from reV.rep_profiles import RepProfiles
 from reV.supply_curve import (Aggregation, ExclusionMask, SupplyCurve,
-                              SupplyCurvePointSummary)
+                              SupplyCurvePointSummary, TechMapping)
 from reV.version import __version__
 
 

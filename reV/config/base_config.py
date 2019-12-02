@@ -12,7 +12,7 @@ from reV.utilities.exceptions import ConfigError
 
 logger = logging.getLogger(__name__)
 REVDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-DEFAULTSDIR = os.path.join(os.path.dirname(REVDIR), 'tests', 'data')
+TESTDATADIR = os.path.join(os.path.dirname(REVDIR), 'tests', 'data')
 
 
 class BaseConfig(dict):
@@ -29,7 +29,7 @@ class BaseConfig(dict):
 
         # str_rep is a mapping of config strings to replace with real values
         self.str_rep = {'REVDIR': REVDIR,
-                        'DEFAULTSDIR': DEFAULTSDIR,
+                        'TESTDATADIR': TESTDATADIR,
                         }
 
         self.dir = None
