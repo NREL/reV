@@ -11,6 +11,7 @@ reV.utilities.cli\_dtypes module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.utilities.curtailment module
 --------------------------------
 
@@ -18,6 +19,7 @@ reV.utilities.curtailment module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.utilities.downscale module
 ------------------------------
 
@@ -25,6 +27,7 @@ reV.utilities.downscale module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.utilities.exceptions module
 -------------------------------
 
@@ -32,6 +35,7 @@ reV.utilities.exceptions module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.utilities.execution module
 ------------------------------
 
@@ -39,6 +43,7 @@ reV.utilities.execution module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.utilities.loggers module
 ----------------------------
 
@@ -46,6 +51,7 @@ reV.utilities.loggers module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.utilities.slots module
 --------------------------
 
@@ -53,6 +59,7 @@ reV.utilities.slots module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.utilities.solar\_position module
 ------------------------------------
 
@@ -60,6 +67,7 @@ reV.utilities.solar\_position module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.utilities.utilities module
 ------------------------------
 

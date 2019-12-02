@@ -11,6 +11,7 @@ reV.SAM.SAM module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.SAM.econ module
 -------------------
 
@@ -18,6 +19,7 @@ reV.SAM.econ module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.SAM.generation module
 -------------------------
 
@@ -25,6 +27,7 @@ reV.SAM.generation module
    :members:
    :undoc-members:
    :show-inheritance:
+
 reV.SAM.windbos module
 ----------------------
 
