@@ -158,13 +158,12 @@ def collect(ctx, verbose):
     t0 = time.time()
 
     Collector.collect(h5_file, h5_dir, project_points, dsets[0],
-                      file_prefix=file_prefix, low_mem=True)
+                      file_prefix=file_prefix)
 
     if len(dsets) > 1:
         for dset_name in dsets[1:]:
             Collector.add_dataset(h5_file, h5_dir, dset_name,
-                                  file_prefix=file_prefix,
-                                  low_mem=True)
+                                  file_prefix=file_prefix)
 
     if not keep_chunks:
         Collector.purge_chunks(h5_file, h5_dir, project_points,
