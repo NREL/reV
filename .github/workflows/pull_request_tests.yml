@@ -2,7 +2,7 @@ name: PR Merge
 
 on:
   pull_request:
-    types: [closed] 
+    types: [closed]
 
 jobs:
   build:
@@ -16,7 +16,9 @@ jobs:
     steps:
     - name: Pull request merged
       if: github.event.pull_request.merged == true
-    - uses: actions/checkout@v1
+          with:
+            ref: ${{ github.event.pull_request.head.ref }}
+            fetch-depth: 1
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -31,5 +33,3 @@ jobs:
         pytest
     - name: Closes issues related to a merged pull request.
       uses: ldez/gha-mjolnir@v1.0.0
-
-    
