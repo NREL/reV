@@ -2,3 +2,4 @@
 """
 reV representative profile extraction tool,
 """
+from .rep_profiles import RepProfiles
