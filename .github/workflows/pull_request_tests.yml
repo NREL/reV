@@ -14,11 +14,9 @@ jobs:
         python-version: [3.5, 3.6, 3.7]
 
     steps:
-    - name: Pull request merged
-      if: github.event.pull_request.merged == true
-          with:
-            ref: ${{ github.event.pull_request.head.ref }}
-            fetch-depth: 1
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
