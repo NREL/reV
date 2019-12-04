@@ -193,7 +193,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         else:
             if self._res_data is None:
-                self._res_data = self.gen[self._res_class_dset]
+                if self._res_class_dset in self.gen.dsets:
+                    self._res_data = self.gen[self._res_class_dset]
 
         return self._res_data
 
