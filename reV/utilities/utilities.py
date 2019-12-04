@@ -131,11 +131,17 @@ def check_res_file(res_file):
         multi_h5_res = True
     else:
         if not os.path.isfile(res_file):
-            import h5pyd
-            with h5pyd.Folder(os.path.dirname(res_file)) as f:
-                hsds = True
-                if res_file not in f:
-                    msg = '{} is not a valid file path!'.format(res_file)
-                    raise ValueError(msg)
+            try:
+                import h5pyd
+                with h5pyd.Folder(os.path.dirname(res_file)) as f:
+                    hsds = True
+                    if res_file not in f:
+                        msg = ('{} is not a valid HSDS file path!'
+                               .format(res_file))
+                        raise ValueError(msg)
+            except Exception as ex:
+                msg = ("{} is not a valid file path, and HSDS "
+                       "cannot be check for a file at this path:{}!"
+                       .format(res_file, ex))
 
     return multi_h5_res, hsds
