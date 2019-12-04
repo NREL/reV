@@ -539,11 +539,40 @@ class ExclusionMask:
 
         return mask
 
-    @classmethod
-    def run_from_dict(cls, excl_h5, layers_dict, min_area=None,
-                      kernel='queen', hsds=False):
+
+class ExclusionMaskFromDict(ExclusionMask):
+    """
+    Class to initialize ExclusionMask from a dictionary defining layers
+    """
+    def __init__(self, excl_h5, layers_dict, min_area=None,
+                 kernel='queen', hsds=False):
         """
-        Create inclusion mask from dictionary of LayerMask arguments
+        Parameters
+        ----------
+        excl_h5 : str
+            Path to exclusions .h5 file
+        layers_dict : dcit
+            Dictionary of LayerMask arugments {layer: {kwarg: value}}
+        min_area : float | NoneType
+            Minimum required contiguous area in sq-km
+        kernel : str
+            Contiguous filter method to use on final exclusion
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        """
+        layers = []
+        for layer, kwargs in layers_dict.items():
+            layers.append(LayerMask(layer, **kwargs))
+
+        super().__init__(excl_h5, *layers, min_area=min_area,
+                         kernel=kernel, hsds=hsds)
+
+    @classmethod
+    def run(cls, excl_h5, layers_dict, min_area=None,
+            kernel='queen', hsds=False):
+        """
+        Create inclusion mask from given layers dictionary
 
         Parameters
         ----------
@@ -564,45 +593,8 @@ class ExclusionMask:
         mask : ndarray
             Full inclusion mask
         """
-        layers = []
-        for layer, kwargs in layers_dict.items():
-            layers.append(LayerMask(layer, **kwargs))
-
-        with cls(excl_h5, *layers, min_area=min_area,
+        with cls(excl_h5, layers_dict, min_area=min_area,
                  kernel=kernel, hsds=hsds) as f:
             mask = f.mask
 
         return mask
-
-    @classmethod
-    def from_dict(cls, excl_h5, layers_dict, min_area=None,
-                  kernel='queen', hsds=False):
-        """
-        Create inclusion handler from dictionary of LayerMask arguments
-
-        Parameters
-        ----------
-        excl_h5 : str
-            Path to exclusions .h5 file
-        layers_dict : dcit
-            Dictionary of LayerMask arugments {layer: {kwarg: value}}
-        min_area : float | NoneType
-            Minimum required contiguous area in sq-km
-        kernel : str
-            Contiguous filter method to use on final exclusion
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
-
-        Returns
-        -------
-        incl_mask : InclusionMask
-            Initialized inclusion mask object.
-        """
-        layers = []
-        for layer, kwargs in layers_dict.items():
-            layers.append(LayerMask(layer, **kwargs))
-
-        incl_mask = cls(excl_h5, *layers, min_area=min_area,
-                        kernel=kernel, hsds=hsds)
-        return incl_mask

@@ -8,7 +8,8 @@ import pytest
 
 from reV import TESTDATADIR
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.exclusions import LayerMask, ExclusionMask
+from reV.supply_curve.exclusions import (LayerMask, ExclusionMask,
+                                         ExclusionMaskFromDict)
 
 
 CONFIGS = {'urban_pv': {'ri_smod': {'exclude_values': [1, ]},
@@ -68,7 +69,7 @@ def mask_data(data, inclusion_range, exclude_values, include_values,
     return mask.astype('float16') * weight
 
 
-@pytest.mark.parametrize(('layer', 'inclusion_range', 'exclude_values',
+@pytest.mark.parametrize(('layer_name', 'inclusion_range', 'exclude_values',
                           'include_values', 'weight'), [
     ('ri_padus', (None, None), [1, ], None, 1),
     ('ri_padus', (None, None), [1, ], None, 0.5),
@@ -77,14 +78,14 @@ def mask_data(data, inclusion_range, exclude_values, include_values,
     ('ri_srtm_slope', (None, 5), None, None, 1),
     ('ri_srtm_slope', (0, 5), None, None, 1),
     ('ri_srtm_slope', (None, 5), None, None, 0.5)])
-def test_layer_mask(layer, inclusion_range, exclude_values, include_values,
-                    weight):
+def test_layer_mask(layer_name, inclusion_range, exclude_values,
+                    include_values, weight):
     """
     Test creation of layer masks
 
     Parameters
     ----------
-    layer : str
+    layer_name : str
         Layer name
     inclusion_range : tuple
         (min threshold, max threshold) for values to include
@@ -97,20 +98,26 @@ def test_layer_mask(layer, inclusion_range, exclude_values, include_values,
     """
     excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
     with ExclusionLayers(excl_h5) as f:
-        data = f[layer]
+        data = f[layer_name]
 
     truth = mask_data(data, inclusion_range, exclude_values,
                       include_values, weight)
 
-    layer = LayerMask(layer, inclusion_range=inclusion_range,
+    layer = LayerMask(layer_name, inclusion_range=inclusion_range,
                       exclude_values=exclude_values,
                       include_values=include_values, weight=weight)
     layer_test = layer._apply_mask(data)
-
-    inclusion_test = ExclusionMask.run(excl_h5, layer)
-
     assert np.allclose(truth, layer_test)
-    assert np.allclose(truth, inclusion_test)
+
+    mask_test = ExclusionMask.run(excl_h5, layer)
+    assert np.allclose(truth, mask_test)
+
+    layer_dict = {layer_name: {"inclusion_range": inclusion_range,
+                               "exclude_values": exclude_values,
+                               "include_values": include_values,
+                               "weight": weight}}
+    dict_test = ExclusionMaskFromDict.run(excl_h5, layer_dict)
+    assert np.allclose(truth, dict_test)
 
 
 @pytest.mark.parametrize(('scenario'),
@@ -129,10 +136,20 @@ def test_inclusion_mask(scenario):
                               '{}.npy'.format(scenario))
     truth = np.load(truth_path)
 
-    test = ExclusionMask.run_from_dict(excl_h5, CONFIGS[scenario],
-                                       min_area=AREA.get(scenario, None))
+    layers_dict = CONFIGS[scenario]
+    min_area = AREA.get(scenario, None)
 
-    assert np.allclose(truth, test)
+    layers = []
+    for layer, kwargs in layers_dict.items():
+        layers.append(LayerMask(layer, **kwargs))
+
+    mask_test = ExclusionMask.run(excl_h5, *layers,
+                                  min_area=min_area)
+    assert np.allclose(truth, mask_test)
+
+    dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict,
+                                          min_area=min_area)
+    assert np.allclose(truth, dict_test)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
