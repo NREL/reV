@@ -15,7 +15,7 @@ import logging
 
 from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.exclusions import ExclusionMask
+from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
@@ -51,7 +51,7 @@ class AggFileHandler:
         """
 
         self._excl_fpath = excl_fpath
-        self._excl = ExclusionMask.from_dict(excl_fpath, excl_dict)
+        self._excl = ExclusionMaskFromDict(excl_fpath, excl_dict)
         self._gen = Outputs(gen_fpath, mode='r')
         self._data_layers = self._open_data_layers(data_layers)
         self._power_density = power_density

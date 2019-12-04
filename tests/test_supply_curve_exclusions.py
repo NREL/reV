@@ -138,17 +138,18 @@ def test_inclusion_mask(scenario):
 
     layers_dict = CONFIGS[scenario]
     min_area = AREA.get(scenario, None)
-    mask_test = ExclusionMask.run_from_dict(excl_h5, layers_dict,
-                                            min_area=min_area)
+
+    layers = []
+    for layer, kwargs in layers_dict.items():
+        layers.append(LayerMask(layer, **kwargs))
+
+    mask_test = ExclusionMask.run(excl_h5, *layers,
+                                  min_area=min_area)
     assert np.allclose(truth, mask_test)
 
     dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict,
                                           min_area=min_area)
     assert np.allclose(truth, dict_test)
-
-    dict_test2 = ExclusionMaskFromDict.run_from_dict(excl_h5, layers_dict,
-                                                     min_area=min_area)
-    assert np.allclose(truth, dict_test2)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
