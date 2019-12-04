@@ -3,8 +3,8 @@
 Supply Curve computation integrated tests
 """
 import os
-import numpy as np
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import pytest
 import warnings
 
@@ -52,23 +52,9 @@ def baseline_verify(sc_full, fpath_baseline):
 
     if os.path.exists(fpath_baseline):
         baseline = pd.read_csv(fpath_baseline)
-        verify_numeric_cols(baseline, sc_full)
+        assert_frame_equal(baseline, sc_full, check_dtype=False)
     else:
         sc_full.to_csv(fpath_baseline, index=False)
-
-
-def verify_numeric_cols(df1, df2):
-    """Verify numeric columns in two dataframes."""
-
-    for c in df1.columns:
-        numeric = (np.issubdtype(df2[c].values.dtype, np.floating)
-                   | np.issubdtype(df2[c].values.dtype, np.integer))
-        if numeric:
-            diff = np.abs(df1[c].values - df2[c].values)
-            if not np.isnan(diff.max()):
-                msg = 'Bad column: {}, max diff: {}'.format(c, diff.max())
-                assert np.allclose(df1[c].values,
-                                   df2[c].values, rtol=0.01), msg
 
 
 @pytest.mark.parametrize(('i', 'tcosts'), ((1, TRANS_COSTS_1),
@@ -145,7 +131,7 @@ def test_parallel(sc_points, trans_table, multipliers):
                                       transmission_costs=TRANS_COSTS_1,
                                       max_workers=1)
 
-    verify_numeric_cols(sc_full_parallel, sc_full_serial)
+    assert_frame_equal(sc_full_parallel, sc_full_serial)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
