@@ -251,6 +251,50 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         return self.centroid[1]
 
     @property
+    def country(self):
+        """Get the SC point country based on the resource meta data."""
+        country = None
+        if 'country' in self.gen.meta:
+            country = self.gen.meta.loc[self.gen_gid_set, 'country'].values
+            country = stats.mode(country).mode[0]
+        return country
+
+    @property
+    def state(self):
+        """Get the SC point state based on the resource meta data."""
+        state = None
+        if 'state' in self.gen.meta:
+            state = self.gen.meta.loc[self.gen_gid_set, 'state'].values
+            state = stats.mode(state).mode[0]
+        return state
+
+    @property
+    def county(self):
+        """Get the SC point county based on the resource meta data."""
+        county = None
+        if 'county' in self.gen.meta:
+            county = self.gen.meta.loc[self.gen_gid_set, 'county'].values
+            county = stats.mode(county).mode[0]
+        return county
+
+    @property
+    def elevation(self):
+        """Get the SC point elevation based on the resource meta data."""
+        elevation = None
+        if 'elevation' in self.gen.meta:
+            elevation = self.gen.meta.loc[self.gen_gid_set, 'elevation'].mean()
+        return elevation
+
+    @property
+    def timezone(self):
+        """Get the SC point timezone based on the resource meta data."""
+        timezone = None
+        if 'timezone' in self.gen.meta:
+            timezone = self.gen.meta.loc[self.gen_gid_set, 'timezone'].values
+            timezone = stats.mode(timezone).mode[0]
+        return timezone
+
+    @property
     def res_gid_set(self):
         """Get list of unique resource gids corresponding to this sc point.
 
@@ -425,7 +469,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
                 data = data.flatten()[self.bool_mask]
                 if attrs['method'].lower() == 'mode':
-                    data = stats.mode(data)[0][0]
+                    data = stats.mode(data).mode[0]
                 elif attrs['method'].lower() == 'mean':
                     data = data.mean()
                 else:
@@ -486,6 +530,11 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                     'area_sq_km': point.area,
                     'latitude': point.latitude,
                     'longitude': point.longitude,
+                    'country': point.country,
+                    'state': point.state,
+                    'county': point.county,
+                    'elevation': point.elevation,
+                    'timezone': point.timezone,
                     }
 
             if args is None:
