@@ -167,8 +167,7 @@ class DatasetCollector:
         """
 
         locs = np.where(np.isin(gids_out, source_gids))[0]
-        sequential_locs = np.arange(source_gids.min(),
-                                    source_gids.max() + 1)
+        sequential_locs = np.arange(locs.min(), locs.max() + 1)
 
         if not len(locs) == len(sequential_locs):
             emsg = ('GID indices for source file are not '
@@ -234,7 +233,6 @@ class DatasetCollector:
         fp_source : str
             Source filepath
         """
-
         out_slice = self._get_gid_slice(self._gids, source_gids)
         source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
         source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
@@ -267,6 +265,12 @@ class DatasetCollector:
                     x = self._get_source_gid_chunks(f_source)
                     all_source_gids, source_gid_chunks = x
                     for source_gids in source_gid_chunks:
+
+                        logger.debug('Collecting chunk from file {} with '
+                                     '{} source gids: {}'
+                                     .format(os.path.basename(fp),
+                                             len(source_gids), source_gids))
+
                         self._collect_chunk(all_source_gids, source_gids,
                                             f_out, f_source, fp)
 
