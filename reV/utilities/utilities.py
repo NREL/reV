@@ -133,11 +133,13 @@ def check_res_file(res_file):
         if not os.path.isfile(res_file):
             try:
                 import h5pyd
-                with h5pyd.Folder(os.path.dirname(res_file) + '/') as f:
+                hsds_dir, hsds_file = os.path.split(res_file)
+                with h5pyd.Folder(hsds_dir + '/') as f:
                     hsds = True
-                    if res_file not in f:
+                    if hsds_file not in f:
                         msg = ('{} is not a valid HSDS file path!'
                                .format(res_file))
+                        print(msg)
                         raise FileNotFoundError(msg)
             except Exception as ex:
                 msg = ("{} is not a valid file path, and HSDS "
