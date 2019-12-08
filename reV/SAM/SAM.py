@@ -203,7 +203,7 @@ class SAMResourceRetriever:
 
         res_handler = cls._get_base_handler(res_file, module)
 
-        if res_handler == SolarResource or res_handler == NSRDB:
+        if res_handler in (SolarResource, NSRDB):
             kwargs, res_handler = cls._make_solar_kwargs(
                 res_handler, project_points, downscale=downscale)
 
