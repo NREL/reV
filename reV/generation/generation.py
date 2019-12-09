@@ -17,6 +17,7 @@ from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import OutputWarning, ExecutionError
 from concurrent.futures import ProcessPoolExecutor
+from reV.utilities.utilities import check_res_file
 
 
 logger = logging.getLogger(__name__)
@@ -140,9 +141,12 @@ class Gen:
 
         self._output_request = self._parse_output_request(output_request)
 
-        self._multi_h5_res = MultiFileResource.is_multi(self._res_file)
-        self._set_high_res_ti()
-        self._set_downscaled_ti(downscale)
+        self._multi_h5_res, self._hsds = check_res_file(res_file)
+        if self._multi_h5_res:
+            self._set_high_res_ti()
+
+        if downscale is not None:
+            self._set_downscaled_ti(downscale)
 
         if self.tech not in self.OPTIONS:
             raise KeyError('Requested technology "{}" is not available. '
@@ -236,12 +240,11 @@ class Gen:
 
     def _set_high_res_ti(self):
         """Set the 5-minute time index if res_file is a multi-file directory"""
-        if self._multi_h5_res:
-            h5_dir, pre, suf = MultiFileResource.multi_args(self._res_file)
-            with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
-                ti = mres.time_index
-            self._time_index = self.handle_leap_ti(
-                ti, drop_leap=self._drop_leap)
+        h5_dir, pre, suf = MultiFileResource.multi_args(self._res_file)
+        with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
+            ti = mres.time_index
+        self._time_index = self.handle_leap_ti(
+            ti, drop_leap=self._drop_leap)
 
     def _set_downscaled_ti(self, ds_freq):
         """Set the downscaled time index based on a requested frequency.
@@ -583,8 +586,10 @@ class Gen:
             with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
                 meta = mres.meta.iloc[self.project_points.sites, :]
 
-        meta.loc[:, 'gid'] = self.project_points.sites
-        meta.loc[:, 'reV_tech'] = self.project_points.tech
+        with Resource(self.res_file, hsds=self._hsds) as res:
+            meta = res.meta.iloc[self.project_points.sites, :]
+            meta.loc[:, 'gid'] = self.project_points.sites
+            meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
 
@@ -633,7 +638,7 @@ class Gen:
         """
 
         if self._time_index is None:
-            with Resource(self.res_file) as res:
+            with Resource(self.res_file, hsds=self._hsds) as res:
                 self._time_index = self.handle_leap_ti(
                     res.time_index, drop_leap=self._drop_leap)
 
@@ -763,11 +768,11 @@ class Gen:
                 for dset in res.dsets:
                     if 'speed' in dset:
                         # take nominal WTK chunks from windspeed
-                        chunks = res._h5[dset].chunks
+                        _, _, chunks = res.get_dset_properties(dset)
                         break
             elif 'nsrdb' in res_file.lower():
                 # take nominal NSRDB chunks from dni
-                chunks = res._h5['dni'].chunks
+                _, _, chunks = res.get_dset_properties('dni')
             else:
                 warn('Expected "nsrdb" or "wtk" to be in resource filename: {}'
                      .format(res_file))
@@ -1110,7 +1115,7 @@ class Gen:
         self.flush()
 
     @classmethod
-    def reV_run(cls, tech=None, points=None, sam_files=None, res_file=None,
+    def reV_run(cls, tech, points, sam_files, res_file,
                 output_request=('cf_mean',), curtailment=None,
                 downscale=None, max_workers=1, sites_per_worker=None,
                 pool_size=72, points_range=None, fout=None,

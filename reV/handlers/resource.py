@@ -275,7 +275,11 @@ class Resource:
             Dataset chunk size
         """
         ds = self.h5[dset]
-        return ds.shape, ds.dtype, ds.chunks
+        shape, dtype, chunks = ds.shape, ds.dtype, ds.chunks
+        if isinstance(chunks, dict):
+            chunks = tuple(chunks.get('dims', (None, 100)))
+
+        return shape, dtype, chunks
 
     def get_scale(self, dset):
         """
@@ -1400,28 +1404,6 @@ class MultiFileResource(Resource):
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_dir)
         return msg
-
-    @staticmethod
-    def is_multi(path):
-        """Check a path string to see if it is a multi-h5 directory.
-
-        Parameters
-        ----------
-        path : str
-            Path to file or directory containing multi file resource file sets.
-
-        Returns
-        -------
-        is_multi : bool
-            Path is a multi file resource directory or specification if True.
-        """
-
-        if os.path.isfile(path):
-            return False
-        if os.path.isdir(path):
-            return True
-        if '*' in path:
-            return True
 
     @staticmethod
     def multi_args(path):
