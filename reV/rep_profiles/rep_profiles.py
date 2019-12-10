@@ -713,44 +713,58 @@ class RepProfiles:
                     self._meta.at[i, 'rep_gen_gid'] = str(ggids)
                     self._meta.at[i, 'rep_res_gid'] = str(rgids)
 
-    def _run_parallel(self):
-        """Compute all representative profiles in parallel."""
+    def _run_parallel(self, pool_size=72):
+        """Compute all representative profiles in parallel.
+
+        Parameters
+        ----------
+        pool_size : int
+            Number of futures to submit to a single process pool for
+            parallel futures.
+        """
 
         logger.info('Kicking off {} rep profile futures.'
                     .format(len(self.meta)))
-        futures = {}
-        with ProcessPoolExecutor() as exe:
-            for i, row in self.meta.iterrows():
-                region_dict = {k: v for (k, v) in row.to_dict().items()
-                               if k in self._reg_cols}
 
-                mask = self._get_mask(region_dict)
+        iter_chunks = np.array_split(self.meta.index.values,
+                                     np.ceil(len(self.meta) / pool_size))
 
-                future = exe.submit(RegionRepProfile.get_region_rep_profile,
-                                    self._gen_fpath, self._rev_summary[mask],
-                                    cf_dset=self._cf_dset,
-                                    rep_method=self._rep_method,
-                                    err_method=self._err_method,
-                                    n_profiles=self._n_profiles)
+        for iter_chunk in iter_chunks:
+            futures = {}
+            with ProcessPoolExecutor() as exe:
+                for i in iter_chunk:
+                    row = self.meta.loc[i, :]
+                    region_dict = {k: v for (k, v) in row.to_dict().items()
+                                   if k in self._reg_cols}
 
-                futures[future] = [i, region_dict]
+                    mask = self._get_mask(region_dict)
 
-            for nf, future in enumerate(as_completed(futures)):
-                i, region_dict = futures[future]
-                profiles, _, ggids, rgids = future.result()
-                logger.info('Future {} out of {} complete '
-                            'for region: {}'
-                            .format(nf + 1, len(futures), region_dict))
+                    future = exe.submit(
+                        RegionRepProfile.get_region_rep_profile,
+                        self._gen_fpath, self._rev_summary[mask],
+                        cf_dset=self._cf_dset,
+                        rep_method=self._rep_method,
+                        err_method=self._err_method,
+                        n_profiles=self._n_profiles)
 
-                for n in range(profiles.shape[1]):
-                    self._profiles[n][:, i] = profiles[:, n]
+                    futures[future] = [i, region_dict]
 
-                if len(ggids) == 1:
-                    self._meta.at[i, 'rep_gen_gid'] = ggids[0]
-                    self._meta.at[i, 'rep_res_gid'] = rgids[0]
-                else:
-                    self._meta.at[i, 'rep_gen_gid'] = str(ggids)
-                    self._meta.at[i, 'rep_res_gid'] = str(rgids)
+                for nf, future in enumerate(as_completed(futures)):
+                    i, region_dict = futures[future]
+                    profiles, _, ggids, rgids = future.result()
+                    logger.info('Future {} out of {} complete '
+                                'for region: {}'
+                                .format(nf + 1, len(futures), region_dict))
+
+                    for n in range(profiles.shape[1]):
+                        self._profiles[n][:, i] = profiles[:, n]
+
+                    if len(ggids) == 1:
+                        self._meta.at[i, 'rep_gen_gid'] = ggids[0]
+                        self._meta.at[i, 'rep_res_gid'] = rgids[0]
+                    else:
+                        self._meta.at[i, 'rep_gen_gid'] = str(ggids)
+                        self._meta.at[i, 'rep_res_gid'] = str(rgids)
 
     @classmethod
     def run(cls, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
