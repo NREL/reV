@@ -729,8 +729,9 @@ class RepProfiles:
 
         iter_chunks = np.array_split(self.meta.index.values,
                                      np.ceil(len(self.meta) / pool_size))
-
+        n_complete = 0
         for iter_chunk in iter_chunks:
+            logger.debug('Starting process pool...')
             futures = {}
             with ProcessPoolExecutor() as exe:
                 for i in iter_chunk:
@@ -750,12 +751,14 @@ class RepProfiles:
 
                     futures[future] = [i, region_dict]
 
-                for nf, future in enumerate(as_completed(futures)):
+                for future in as_completed(futures):
                     i, region_dict = futures[future]
                     profiles, _, ggids, rgids = future.result()
+                    n_complete += 1
                     logger.info('Future {} out of {} complete '
                                 'for region: {}'
-                                .format(nf + 1, len(futures), region_dict))
+                                .format(n_complete, len(self.meta),
+                                        region_dict))
                     log_mem(logger, log_level='DEBUG')
 
                     for n in range(profiles.shape[1]):
