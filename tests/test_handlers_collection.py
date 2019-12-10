@@ -57,12 +57,23 @@ def test_collection():
     Collector.collect(h5_file, H5_DIR, POINTS_PATH, 'cf_profile',
                       dset_out=None,
                       file_prefix='peregrine_2012')
-    with h5py.File(h5_file) as f:
+    with h5py.File(h5_file, 'r') as f:
         cf_profiles = f['cf_profile'][...]
 
     diff = np.mean(np.abs(profiles - cf_profiles))
     msg = "Arrays differ by {:.4f}".format(diff)
     assert np.allclose(profiles, cf_profiles), msg
+
+    source_file = os.path.join(H5_DIR, "peregrine_2012_node00_x000.h5")
+    with h5py.File(source_file, 'r') as f_s:
+        def check_attrs(name, object):
+            object_s = f_s[name]
+            for k, v in object.attrs.items():
+                v_s = object_s.attrs[k]
+                assert v == v_s
+
+        with h5py.File(h5_file, 'r') as f:
+            f.visititems(check_attrs)
 
     if PURGE_OUT:
         os.remove(h5_file)
