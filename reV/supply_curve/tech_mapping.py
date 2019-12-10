@@ -400,8 +400,7 @@ class TechMapping:
                     .format(dset, fpath_out))
 
     @classmethod
-    def run(cls, excl_fpath, res_fpath, dset, save_flag=True,
-            return_flag=False, **kwargs):
+    def run(cls, excl_fpath, res_fpath, dset, save_flag=True, **kwargs):
         """Run parallel mapping and save to h5 file.
 
         Parameters
@@ -415,8 +414,6 @@ class TechMapping:
             Dataset name in excl_fpath to save mapping results to.
         save_flag : bool
             Flag to write techmap to excl_fpath.
-        return_flag : bool
-            Flag to return variables.
         kwargs : dict
             Keyword args to initialize the TechMapping object.
 
@@ -435,8 +432,9 @@ class TechMapping:
         with cls(excl_fpath, res_fpath, dset, **kwargs) as mapper:
             lats, lons, ind = mapper._parallel_resource_map()
             distance_upper_bound = mapper._distance_upper_bound
+
         if save_flag:
             mapper.save_tech_map(lats, lons, ind, excl_fpath, res_fpath,
                                  dset, distance_upper_bound)
-        if return_flag:
-            return lats, lons, ind
+
+        return lats, lons, ind

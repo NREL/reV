@@ -112,6 +112,12 @@ class InputWarning(Warning):
     """
 
 
+class OffshoreWindInputWarning(Warning):
+    """
+    Warning for potentially dangerous offshore wind inputs
+    """
+
+
 class ConfigWarning(Warning):
     """
     Warning for unclear or default configuration inputs

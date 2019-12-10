@@ -14,7 +14,7 @@ from reV.utilities.exceptions import FileInputError
 
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
-GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_gen.h5')
+GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_gen.h5')
 AGG_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
 FVPD = os.path.join(TESTDATADIR, 'variable_power_density/vpd.csv')
 FVPDI = os.path.join(TESTDATADIR, 'variable_power_density/vpd_incomplete.csv')

@@ -30,7 +30,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                  res_class_dset=None, res_class_bin=None, ex_area=0.0081,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', resolution=64,
-                 exclusion_shape=None, close=False):
+                 exclusion_shape=None, close=False, offshore_flags=None):
         """
         Parameters
         ----------
@@ -76,6 +76,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             speed things up considerably.
         close : bool
             Flag to close object file handlers on exit.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
         """
 
         self._res_class_dset = res_class_dset
@@ -94,7 +97,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         super().__init__(gid, excl, gen, tm_dset, gen_index,
                          excl_dict=excl_dict, resolution=resolution,
-                         exclusion_shape=exclusion_shape, close=close)
+                         exclusion_shape=exclusion_shape,
+                         offshore_flags=offshore_flags, close=close)
 
         self._apply_exclusions()
 

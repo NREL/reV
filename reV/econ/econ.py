@@ -14,7 +14,8 @@ from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
 from reV.utilities.execution import execute_single
 from reV.generation.generation import Gen
-from reV.utilities.exceptions import OutputWarning, ExecutionError
+from reV.utilities.exceptions import (OutputWarning, ExecutionError,
+                                      OffshoreWindInputWarning)
 
 
 logger = logging.getLogger(__name__)
@@ -123,6 +124,7 @@ class Econ(Gen):
         self.mem_util_lim = mem_util_lim
         self._output_request = self._parse_output_request(output_request)
         self._site_data = self._parse_site_data(site_data)
+        self._offshore_preflight()
 
         # pre-initialize output arrays to store results when available.
         self._out = {}
@@ -230,21 +232,38 @@ class Econ(Gen):
                 # make gid the dataframe index if not already
                 site_data = site_data.set_index('gid', drop=True)
 
-        # add offshore if necessary
-        if 'offshore' in site_data:
-            # offshore is already in site data df, just make sure it's boolean
-            site_data['offshore'] = site_data['offshore'].astype(bool)
-
-        else:
-            # offshore not yet in site data df, check to see if in meta
-            if 'offshore' in self.meta:
-                logger.debug('Found "offshore" data in meta. Interpreting '
-                             'as wind sites that may be analyzed using '
-                             'ORCA.')
-                # save offshore flags as boolean array
-                site_data['offshore'] = self.meta['offshore'].astype(bool)
-
         return site_data
+
+    def _offshore_preflight(self):
+        """Preflight checks for offshore site data input."""
+
+        if self._site_data is not None:
+
+            if 'offshore' in self._site_data:
+                # offshore is already in site data df, just make sure it's bool
+                self._site_data['offshore'] = self._site_data['offshore']\
+                    .astype(bool)
+
+            else:
+                # offshore not yet in site data df, check to see if in meta
+                if 'offshore' in self.meta:
+                    logger.debug('Found "offshore" data in meta. Interpreting '
+                                 'as wind sites that may be analyzed using '
+                                 'ORCA.')
+                    # save offshore flags as boolean array
+                    self._site_data['offshore'] = self.meta['offshore']\
+                        .astype(bool)
+
+            if ('offshore' in self._site_data
+                    and 'dist_l_to_ts' in self._site_data):
+                if self._site_data['dist_l_to_ts'].sum() > 0:
+                    w = ('Possible incorrect ORCA input! "dist_l_to_ts" '
+                         '(distance land to transmission) input is non-zero. '
+                         'Most reV runs set this to zero and input the cost '
+                         'of transmission from landfall tie-in to '
+                         'transmission feature in the supply curve module.')
+                    logger.warning(w)
+                    warn(w, OffshoreWindInputWarning)
 
     @property
     def cf_file(self):
