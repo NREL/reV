@@ -179,7 +179,7 @@ class Outputs(Resource):
 
         return group
 
-    def _set_meta(self, ds, meta):
+    def _set_meta(self, ds, meta, attrs=None):
         """
         Write meta data to disk
 
@@ -189,6 +189,8 @@ class Outputs(Resource):
             meta dataset name
         meta : pandas.DataFrame | numpy.recarray
             Locational meta data
+        attrs : dict
+            Attributes to add to the meta data dataset
         """
         self._meta = meta
         if isinstance(meta, pd.DataFrame):
@@ -197,9 +199,10 @@ class Outputs(Resource):
         if ds in self.dsets:
             self.update_dset(ds, meta)
         else:
-            self._create_dset(ds, meta.shape, meta.dtype, data=meta)
+            self._create_dset(ds, meta.shape, meta.dtype, data=meta,
+                              attrs=attrs)
 
-    def _set_time_index(self, ds, time_index):
+    def _set_time_index(self, ds, time_index, attrs=None):
         """
         Write time index to disk
 
@@ -209,6 +212,8 @@ class Outputs(Resource):
             time index dataset name
         time_index : pandas.DatetimeIndex | ndarray
             Temporal index of timesteps
+        attrs : dict
+            Attributes to add to the meta data dataset
         """
         self._time_index = time_index
         if isinstance(time_index, pd.DatetimeIndex):
@@ -218,7 +223,7 @@ class Outputs(Resource):
             self.update_dset(ds, time_index)
         else:
             self._create_dset(ds, time_index.shape, time_index.dtype,
-                              data=time_index)
+                              data=time_index, attrs=attrs)
 
     def get_config(self, config_name):
         """
