@@ -17,6 +17,7 @@ from reV.handlers.resource import Resource
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import FileInputError
 from reV.utilities.utilities import parse_year
+from reV.utilities.loggers import log_mem
 
 
 logger = logging.getLogger(__name__)
@@ -755,6 +756,7 @@ class RepProfiles:
                     logger.info('Future {} out of {} complete '
                                 'for region: {}'
                                 .format(nf + 1, len(futures), region_dict))
+                    log_mem(logger, log_level='DEBUG')
 
                     for n in range(profiles.shape[1]):
                         self._profiles[n][:, i] = profiles[:, n]
