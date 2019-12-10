@@ -312,7 +312,12 @@ class Outputs(Resource):
         meta_arrays = []
         dtypes = []
         for c_name, c_data in df.iteritems():
-            dtype = Outputs.get_dtype(c_data)
+            try:
+                dtype = Outputs.get_dtype(c_data)
+            except TypeError as e:
+                logger.exception('Cannot recognize dtype for df data column '
+                                 '"{}". TypeError:\n{}'.format(c_name, e))
+                raise e
             if np.issubdtype(dtype, np.bytes_):
                 data = c_data.str.encode('utf-8').values
             else:
