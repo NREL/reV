@@ -73,7 +73,7 @@ setup(
                             "reV-collect=reV.handlers.cli_collect:main",
                             "reV-econ=reV.econ.cli_econ:main",
                             "reV-gen=reV.generation.cli_gen:main",
-                            "reV-multiyear=reV.handerlers.cli_multi_year:main",
+                            "reV-multiyear=reV.handlers.cli_multi_year:main",
                             "reV-pipeline=reV.pipeline.cli_pipeline:main",
                             ("reV-aggregation=reV.supply_curve."
                              "cli_aggregation:main"),
