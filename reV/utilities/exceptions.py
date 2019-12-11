@@ -136,6 +136,12 @@ class SAMExecutionWarning(Warning):
     """
 
 
+class SlurmWarning(Warning):
+    """
+    Warning for SLURM errors/warnings
+    """
+
+
 class HandlerWarning(Warning):
     """
     Warning during .h5 handling

@@ -13,7 +13,7 @@ import getpass
 import shlex
 from warnings import warn
 
-from reV.utilities.exceptions import ExecutionError
+from reV.utilities.exceptions import ExecutionError, SlurmWarning
 
 
 logger = logging.getLogger(__name__)
@@ -515,11 +515,15 @@ class SLURM(SubprocessManager):
             self.make_sh(fname, script)
             out, err = self.submit('sbatch {script}'.format(script=fname))
 
-            if not err:
+            if err:
+                w = 'Received a SLURM error or warning: {}'.format(err)
+                logger.warning(w)
+                warn(w, SlurmWarning)
+            else:
                 logger.debug('SLURM job "{}" with id #{} submitted '
                              'successfully'.format(name, out))
-                if not keep_sh:
-                    self.rm(fname)
+            if not keep_sh:
+                self.rm(fname)
 
         return out, err
 
