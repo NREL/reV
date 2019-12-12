@@ -231,9 +231,18 @@ class Generation(SAM):
         if 'lcoe_fcr' in self.output_request:
             lcoe_out_req = self.output_request.pop(
                 self.output_request.index('lcoe_fcr'))
-        elif 'ppa_price' in self.output_request:
-            so_out_req = self.output_request.pop(
-                self.output_request.index('ppa_price'))
+        else:
+            so_reqs = ('ppa_price', 'lcoe_real', 'lcoe_nom')
+            reqs = [r for r in so_reqs if r in self.output_request]
+            if len(reqs) > 1:
+                raise KeyError('Cannot request more than one single owner '
+                               'output in Generation module. Found the '
+                               'following {} single owner output requests in '
+                               'the generation run: {}'
+                               .format(len(reqs), reqs))
+            elif len(reqs) == 1:
+                so_out_req = self.output_request.pop(
+                    self.output_request.index(reqs[0]))
 
         self.assign_inputs()
         self.execute()
