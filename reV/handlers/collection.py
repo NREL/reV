@@ -465,6 +465,7 @@ class Collector:
         with Outputs(self.h5_files[0], mode='r') as f:
             if 'time_index' in f.dsets:
                 time_index = f.time_index
+                attrs = f.get_attrs('time_index')
             else:
                 time_index = None
                 warn("'time_index' was not processed as it is not "
@@ -473,7 +474,7 @@ class Collector:
 
         if time_index is not None:
             with Outputs(self._h5_out, mode='a') as f:
-                f.time_index = time_index
+                f._set_time_index('time_index', time_index, attrs=attrs)
 
     def _check_meta(self, meta):
         """
@@ -530,6 +531,13 @@ class Collector:
             if 'meta' in f.dsets:
                 self._check_meta(f.meta)
             else:
+                with Outputs(self.h5_files[0], mode='r') as f_in:
+                    global_attrs = f_in.get_attrs()
+                    meta_attrs = f_in.get_attrs('meta')
+
+                for key, value in global_attrs.items():
+                    f._h5.attrs[key] = value
+
                 meta = [DatasetCollector.parse_meta(file)
                         for file in self.h5_files]
 
@@ -537,7 +545,8 @@ class Collector:
                 self._check_meta(meta)
                 logger.info('Writing meta data with shape {}'
                             .format(meta.shape))
-                f.meta = meta
+
+                f._set_meta('meta', meta, attrs=meta_attrs)
 
     @classmethod
     def collect(cls, h5_file, h5_dir, project_points, dset_name, dset_out=None,
