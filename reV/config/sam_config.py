@@ -7,7 +7,7 @@ import os
 from warnings import warn
 
 from reV.utilities import safe_json_load
-from reV.utilities.exceptions import ConfigWarning
+from reV.utilities.exceptions import ConfigWarning, SAMInputWarning
 from reV.config.base_config import BaseConfig
 
 
@@ -90,7 +90,9 @@ class SAMConfig(BaseConfig):
 
                 if fname.endswith('.json') is True:
                     if os.path.exists(fname):
-                        self._inputs[key] = safe_json_load(fname)
+                        config = safe_json_load(fname)
+                        SAMInputsChecker.check(config)
+                        self._inputs[key] = config
 
                     else:
                         raise IOError('SAM inputs file does not exist: "{}"'
@@ -99,3 +101,49 @@ class SAMConfig(BaseConfig):
                     raise IOError('SAM inputs file must be a JSON: "{}"'
                                   .format(fname))
         return self._inputs
+
+
+class SAMInputsChecker:
+    """Class to check SAM input jsons and warn against bad inputs."""
+
+    # Keys that are used to identify a technology config
+    KEYS_PV = ('tilt', 'azimuth', 'module_type', 'array_type')
+
+    def __init__(self, config):
+        """
+        Parameters
+        ----------
+        config : dict
+            Extracted SAM technology input config in dict form.
+        """
+        if isinstance(config, dict):
+            self._config = config
+        else:
+            raise TypeError('Bad SAM tech config type: {}'
+                            .format(type(config)))
+
+    def check_pv(self):
+        """Run input checks for a pv input config."""
+        if self._config['array_type'] >= 2 and self._config['tilt'] != 0:
+            w = ('SAM input for PV has array type {} (tracking) and tilt '
+                 'of {}. This is uncommon!'
+                 .format(self._config['array_type'], self._config['tilt']))
+            logger.warning(w)
+            warn(w, SAMInputWarning)
+
+    def _run_checks(self):
+        """Infer config type and run applicable checks."""
+        if all([c in self._config for c in self.KEYS_PV]):
+            self.check_pv()
+
+    @classmethod
+    def check(cls, config):
+        """Run checks on a SAM input json config.
+
+        Parameters
+        ----------
+        config : dict
+            Extracted SAM technology input config in dict form.
+        """
+        c = cls(config)
+        c._run_checks()
