@@ -578,18 +578,18 @@ class Gen:
             does not indicate the site number if the project points are
             non-sequential or do not start from 0, so a 'gid' column is added.
         """
+
         if not self._multi_h5_res:
-            with Resource(self.res_file) as res:
+            with Resource(self.res_file, hsds=self._hsds) as res:
                 meta = res.meta.iloc[self.project_points.sites, :]
+                meta.loc[:, 'gid'] = self.project_points.sites
+                meta.loc[:, 'reV_tech'] = self.project_points.tech
         else:
             h5_dir, pre, suf = MultiFileResource.multi_args(self.res_file)
             with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
                 meta = mres.meta.iloc[self.project_points.sites, :]
-
-        with Resource(self.res_file, hsds=self._hsds) as res:
-            meta = res.meta.iloc[self.project_points.sites, :]
-            meta.loc[:, 'gid'] = self.project_points.sites
-            meta.loc[:, 'reV_tech'] = self.project_points.tech
+                meta.loc[:, 'gid'] = self.project_points.sites
+                meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
 
