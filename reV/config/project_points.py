@@ -10,9 +10,10 @@ from warnings import warn
 from math import ceil
 
 from reV.utilities.exceptions import ConfigError, ConfigWarning
-from reV.handlers.resource import Resource
+from reV.handlers.resource import Resource, MultiFileResource
 from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
+from reV.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
 
@@ -354,7 +355,17 @@ class ProjectPoints:
                     raise ValueError('Must supply a resource file if '
                                      'points is a slice of type '
                                      ' slice(*, None, *)')
-                stop = Resource(res_file).shape[1]
+
+                multi_h5_res, _ = check_res_file(res_file)
+                if multi_h5_res:
+                    if '*' in res_file:
+                        h5_dir, p, s = MultiFileResource.multi_args(res_file)
+                        stop = MultiFileResource(h5_dir, prefix=p,
+                                                 suffix=s).shape[1]
+                    else:
+                        stop = MultiFileResource(res_file).shape[1]
+                else:
+                    stop = Resource(res_file).shape[1]
 
             df['gid'] = list(range(*points.indices(stop)))
         else:
