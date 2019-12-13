@@ -57,8 +57,8 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+#source_suffix = '.rst'
 
 # source_parsers = {'.md': MarkdownParser}
 
@@ -180,3 +180,6 @@ autodoc_member_order = 'bysource'
 # released.
 # autodoc_special_members = ['__getitem__', '__setitem__','__iter__']
 numpy_show_class_member = True
+napoleon_google_docstring = False
+napoleon_use_param = False
+napoleon_use_ivar = False

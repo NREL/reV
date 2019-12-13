@@ -14,7 +14,7 @@ pip install sphinx
 
 - Make sure reV is in your PYTHONPATH
 - Delete the contents of `source/reV`.
-- Run `sphinx-apidoc -o source/reV ..` from the `docs` folder.
+- Run `sphinx-apidoc -o source/reV ../reV` from the `docs` folder.
 - Compare `source/reV/modules.rst` to `source/reV.rst`.
 - `git push` changes to the documentation source code as needed.
 - Make the documentation per below

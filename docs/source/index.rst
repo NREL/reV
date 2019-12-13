@@ -11,6 +11,7 @@ Welcome to reV's documentation!
    :caption: Contents:
 
    reV
+   README
 
 Indices and tables
 ==================
