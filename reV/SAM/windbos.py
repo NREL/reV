@@ -171,9 +171,10 @@ class WindBos:
                   'bos_cost': self.bos_cost}
         return output
 
+    # pylint: disable-msg=W0613
     @classmethod
     def reV_run(cls, points_control, site_df,
-                output_request=('total_installed_cost',)):
+                output_request=('total_installed_cost',), **kwargs):
         """Execute SAM SingleOwner simulations based on reV points control.
 
         Parameters
@@ -187,6 +188,10 @@ class WindBos:
             variable keys that will be passed forward as SAM parameters.
         output_request : list | tuple | str
             Output(s) to retrieve from SAM.
+        kwargs : dict
+            Not used but maintained for polymorphic calls with other
+            SAM econ reV_run() methods (lcoe and single owner).
+            Breaks pylint error W0613: unused argument.
 
         Returns
         -------
