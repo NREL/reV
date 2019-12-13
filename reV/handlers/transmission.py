@@ -673,7 +673,7 @@ class TransmissionCosts(TransmissionFeatures):
             in $/MW
         available_capacity : float
             Fraction of capacity that is available for connection
-        line_lmited : bool
+        line_limited : bool
             Substation connection is limited by maximum capacity of the
             attached lines
         kwargs : dict

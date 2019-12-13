@@ -41,6 +41,8 @@ class AggregationConfig(AnalysisConfig):
         self._default_lcoe_dset = 'lcoe_fcr-means'
         self._default_data_layers = None
         self._default_resolution = 64
+        self._default_area_filter_kernel = 'queen'
+        self._default_min_area = None
 
         self._preflight()
 
@@ -160,6 +162,16 @@ class AggregationConfig(AnalysisConfig):
         density file path."""
         return self.get('power_density', None)
 
+    @property
+    def area_filter_kernel(self):
+        """Get the minimum area filter kernel name ('queen' or 'rook')."""
+        return self.get('area_filter_kernel', self._default_area_filter_kernel)
+
+    @property
+    def min_area(self):
+        """Get the minimum area filter minimum area in km2."""
+        return self.get('min_area', self._default_min_area)
+
 
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
@@ -178,7 +190,6 @@ class SupplyCurveConfig(AnalysisConfig):
 
         self._default_sc_features = None
         self._default_transmission_costs = None
-        self._default_simple = False
 
     @property
     def sc_points(self):
@@ -218,4 +229,9 @@ class SupplyCurveConfig(AnalysisConfig):
     @property
     def simple(self):
         """Get the simple flag."""
-        return self.get('simple', self._default_simple)
+        return bool(self.get('simple', False))
+
+    @property
+    def line_limited(self):
+        """Get the line-limited flag."""
+        return bool(self.get('line_limited', False))
