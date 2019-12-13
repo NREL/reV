@@ -183,3 +183,4 @@ numpy_show_class_member = True
 napoleon_google_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = False
+napoleon_use_rtype = False
