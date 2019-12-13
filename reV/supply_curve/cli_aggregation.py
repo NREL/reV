@@ -69,8 +69,9 @@ def from_config(ctx, config_file, verbose):
                        config.res_fpath, config.tm_dset, config.excl_dict,
                        config.res_class_dset, config.res_class_bins,
                        config.cf_dset, config.lcoe_dset, config.data_layers,
-                       config.resolution, config.power_density, config.dirout,
-                       config.logdir, verbose)
+                       config.resolution, config.power_density,
+                       config.area_filter_kernel, config.min_area,
+                       config.dirout, config.logdir, verbose)
 
     elif config.execution_control.option == 'eagle':
 
@@ -87,6 +88,8 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['DATA_LAYERS'] = config.data_layers
         ctx.obj['RESOLUTION'] = config.resolution
         ctx.obj['POWER_DENSITY'] = config.power_density
+        ctx.obj['AREA_FILTER_KERNEL'] = config.area_filter_kernel
+        ctx.obj['MIN_AREA'] = config.min_area
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
@@ -136,6 +139,11 @@ def from_config(ctx, config_file, verbose):
               help='Power density in MW/km2 or filepath to variable power '
               'density csv file. None will attempt to infer a constant '
               'power density from the generation meta data technology.')
+@click.option('--area_filter_kernel', '-afk', type=STR, default='queen',
+              help='Contiguous area filter kernel name ("queen", "rook").')
+@click.option('--min_area', '-ma', type=STR, default=None,
+              help='Contiguous area filter minimum area, default is None '
+              '(No minimum area filter).')
 @click.option('--out_dir', '-o', type=STR, default='./',
               help='Directory to save aggregation summary output.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
@@ -145,7 +153,8 @@ def from_config(ctx, config_file, verbose):
 @click.pass_context
 def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
          res_class_dset, res_class_bins, cf_dset, lcoe_dset, data_layers,
-         resolution, power_density, out_dir, log_dir, verbose):
+         resolution, power_density, area_filter_kernel, min_area,
+         out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
 
     ctx.ensure_object(dict)
@@ -162,6 +171,8 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
     ctx.obj['DATA_LAYERS'] = data_layers
     ctx.obj['RESOLUTION'] = resolution
     ctx.obj['POWER_DENSITY'] = power_density
+    ctx.obj['AREA_FILTER_KERNEL'] = area_filter_kernel
+    ctx.obj['MIN_AREA'] = min_area
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -191,15 +202,18 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
             data_layers = json.loads(data_layers)
 
         try:
-            summary = Aggregation.summary(excl_fpath, gen_fpath,
-                                          tm_dset, excl_dict,
-                                          res_class_dset=res_class_dset,
-                                          res_class_bins=res_class_bins,
-                                          cf_dset=cf_dset,
-                                          lcoe_dset=lcoe_dset,
-                                          data_layers=data_layers,
-                                          resolution=resolution,
-                                          power_density=power_density)
+            summary = Aggregation.summary(
+                excl_fpath, gen_fpath, tm_dset, excl_dict,
+                res_class_dset=res_class_dset,
+                res_class_bins=res_class_bins,
+                cf_dset=cf_dset,
+                lcoe_dset=lcoe_dset,
+                data_layers=data_layers,
+                resolution=resolution,
+                power_density=power_density,
+                area_filter_kernel=area_filter_kernel,
+                min_area=min_area)
+
         except Exception as e:
             logger.exception('Supply curve Aggregation failed. Received the '
                              'following error:\n{}'.format(e))
@@ -228,8 +242,8 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 
 def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                  res_class_dset, res_class_bins, cf_dset, lcoe_dset,
-                 data_layers, resolution, power_density,
-                 out_dir, log_dir, verbose):
+                 data_layers, resolution, power_density, area_filter_kernel,
+                 min_area, out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ('-n {name} '
@@ -245,6 +259,8 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
             '-d {data_layers} '
             '-r {resolution} '
             '-pd {power_density} '
+            '-afk {area_filter_kernel} '
+            '-ma {min_area} '
             '-o {out_dir} '
             '-ld {log_dir} '
             )
@@ -262,6 +278,8 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                        data_layers=SLURM.s(data_layers),
                        resolution=SLURM.s(resolution),
                        power_density=SLURM.s(power_density),
+                       area_filter_kernel=SLURM.s(area_filter_kernel),
+                       min_area=SLURM.s(min_area),
                        out_dir=SLURM.s(out_dir),
                        log_dir=SLURM.s(log_dir),
                        )
@@ -302,6 +320,8 @@ def eagle(ctx, alloc, walltime, feature, memory, stdout_path):
     data_layers = ctx.obj['DATA_LAYERS']
     resolution = ctx.obj['RESOLUTION']
     power_density = ctx.obj['POWER_DENSITY']
+    area_filter_kernel = ctx.obj['AREA_FILTER_KERNEL']
+    min_area = ctx.obj['MIN_AREA']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -312,7 +332,8 @@ def eagle(ctx, alloc, walltime, feature, memory, stdout_path):
     cmd = get_node_cmd(name, excl_fpath, gen_fpath, res_fpath,
                        tm_dset, excl_dict, res_class_dset, res_class_bins,
                        cf_dset, lcoe_dset, data_layers, resolution,
-                       power_density, out_dir, log_dir, verbose)
+                       power_density, area_filter_kernel, min_area,
+                       out_dir, log_dir, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'aggregation', name)
     if status == 'successful':

@@ -31,7 +31,7 @@ class AggFileHandler:
     """Simple framework to handle aggregation file context managers."""
 
     def __init__(self, excl_fpath, gen_fpath, data_layers, excl_dict,
-                 power_density):
+                 power_density, area_filter_kernel='queen', min_area=None):
         """
         Parameters
         ----------
@@ -49,10 +49,16 @@ class AggFileHandler:
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | NoneType
+            Minimum required contiguous area filter in sq-km
         """
 
         self._excl_fpath = excl_fpath
-        self._excl = ExclusionMaskFromDict(excl_fpath, excl_dict)
+        self._excl = ExclusionMaskFromDict(excl_fpath, excl_dict,
+                                           min_area=min_area,
+                                           kernel=area_filter_kernel)
         self._gen = Outputs(gen_fpath, mode='r')
         self._data_layers = self._open_data_layers(data_layers)
         self._power_density = power_density
@@ -192,7 +198,8 @@ class Aggregation:
                  res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                  data_layers=None, resolution=64, power_density=None,
-                 gids=None, n_cores=None):
+                 gids=None, area_filter_kernel='queen', min_area=None,
+                 n_cores=None):
         """
         Parameters
         ----------
@@ -229,6 +236,10 @@ class Aggregation:
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | NoneType
+            Minimum required contiguous area filter in sq-km
         n_cores : int | None
             Number of cores to run summary on. 1 is serial, None is all
             available cpus.
@@ -245,6 +256,8 @@ class Aggregation:
         self._resolution = resolution
         self._power_density = power_density
         self._data_layers = data_layers
+        self._area_filter_kernel = area_filter_kernel
+        self._min_area = min_area
 
         logger.debug('Resource class bins: {}'.format(self._res_class_bins))
 
@@ -417,7 +430,8 @@ class Aggregation:
                         gen_index, res_class_dset=None, res_class_bins=None,
                         cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                         data_layers=None, resolution=64, power_density=None,
-                        gids=None, **kwargs):
+                        gids=None, area_filter_kernel='queen', min_area=None,
+                        **kwargs):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -456,6 +470,10 @@ class Aggregation:
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | NoneType
+            Minimum required contiguous area filter in sq-km
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -480,7 +498,9 @@ class Aggregation:
         # pre-extract handlers so they are not repeatedly initialized
         file_args = [excl_fpath, gen_fpath, data_layers, excl_dict,
                      power_density]
-        with AggFileHandler(*file_args) as fhandler:
+        file_kwargs = {'area_filter_kernel': area_filter_kernel,
+                       'min_area': min_area}
+        with AggFileHandler(*file_args, **file_kwargs) as fhandler:
 
             inputs = Aggregation._get_input_data(fhandler.gen, gen_fpath,
                                                  res_class_dset,
@@ -564,7 +584,10 @@ class Aggregation:
                     data_layers=self._data_layers,
                     resolution=self._resolution,
                     power_density=self._power_density,
-                    gids=gid_set, **kwargs))
+                    gids=gid_set,
+                    area_filter_kernel=self._area_filter_kernel,
+                    min_area=self._min_area,
+                    **kwargs))
 
             # gather results
             for future in cf.as_completed(futures):
@@ -758,7 +781,8 @@ class Aggregation:
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
                 offshore_gid_adder=1e7, offshore_capacity=600,
-                gids=None, n_cores=None, **kwargs):
+                gids=None, area_filter_kernel='queen', min_area=None,
+                n_cores=None, **kwargs):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -801,11 +825,13 @@ class Aggregation:
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | NoneType
+            Minimum required contiguous area filter in sq-km
         n_cores : int | None
             Number of cores to run summary on. 1 is serial, None is all
             available cpus.
-        option : str
-            Output dtype option (dict, dataframe).
         kwargs : dict
             Namespace of additional keyword args to init
             SupplyCurvePointSummary.
@@ -820,20 +846,25 @@ class Aggregation:
                   res_class_dset=res_class_dset, res_class_bins=res_class_bins,
                   cf_dset=cf_dset, lcoe_dset=lcoe_dset,
                   data_layers=data_layers, resolution=resolution,
-                  power_density=power_density, gids=gids, n_cores=n_cores)
+                  power_density=power_density, gids=gids,
+                  area_filter_kernel=area_filter_kernel, min_area=min_area,
+                  n_cores=n_cores)
 
         if n_cores == 1:
-            summary = agg._serial_summary(agg._excl_fpath, agg._gen_fpath,
-                                          agg._tm_dset, agg._excl_dict,
-                                          agg._gen_index,
-                                          res_class_dset=agg._res_class_dset,
-                                          res_class_bins=agg._res_class_bins,
-                                          cf_dset=agg._cf_dset,
-                                          lcoe_dset=agg._lcoe_dset,
-                                          data_layers=agg._data_layers,
-                                          resolution=agg._resolution,
-                                          power_density=agg._power_density,
-                                          gids=gids, **kwargs)
+            summary = agg._serial_summary(
+                agg._excl_fpath, agg._gen_fpath, agg._tm_dset,
+                agg._excl_dict, agg._gen_index,
+                res_class_dset=agg._res_class_dset,
+                res_class_bins=agg._res_class_bins,
+                cf_dset=agg._cf_dset,
+                lcoe_dset=agg._lcoe_dset,
+                data_layers=agg._data_layers,
+                resolution=agg._resolution,
+                power_density=agg._power_density,
+                area_filter_kernel=agg._area_filter_kernel,
+                min_area=agg._min_area,
+                gids=gids,
+                **kwargs)
         else:
             summary = agg._parallel_summary(**kwargs)
 
