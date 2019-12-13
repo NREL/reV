@@ -190,7 +190,6 @@ class SupplyCurveConfig(AnalysisConfig):
 
         self._default_sc_features = None
         self._default_transmission_costs = None
-        self._default_simple = False
 
     @property
     def sc_points(self):
@@ -230,4 +229,9 @@ class SupplyCurveConfig(AnalysisConfig):
     @property
     def simple(self):
         """Get the simple flag."""
-        return self.get('simple', self._default_simple)
+        return bool(self.get('simple', False))
+
+    @property
+    def line_limited(self):
+        """Get the line-limited flag."""
+        return bool(self.get('line_limited', False))

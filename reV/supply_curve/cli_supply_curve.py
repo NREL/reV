@@ -66,7 +66,7 @@ def from_config(ctx, config_file, verbose):
             ctx.invoke(main, name, config.sc_points, config.trans_table,
                        config.fixed_charge_rate, config.sc_features,
                        config.transmission_costs, config.dirout, config.logdir,
-                       config.simple, verbose)
+                       config.simple, config.line_limited, verbose)
 
     elif config.execution_control.option == 'eagle':
 
@@ -79,6 +79,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['SIMPLE'] = config.simple
+        ctx.obj['LINE_LIMITED'] = config.line_limited
         ctx.obj['VERBOSE'] = verbose
 
         ctx.invoke(eagle,
@@ -108,11 +109,15 @@ def from_config(ctx, config_file, verbose):
               help='Directory to save aggregation logs.')
 @click.option('-s', '--simple', is_flag=True,
               help='Flag to turn on simple supply curve calculation.')
+@click.option('-ll', '--line_limited', is_flag=True,
+              help='Flag to turn on line-limited substation capacity '
+              'calculation (legacy methodology). Alternative is multi-line '
+              'spread capacity.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
-         transmission_costs, out_dir, log_dir, simple, verbose):
+         transmission_costs, out_dir, log_dir, simple, line_limited, verbose):
     """reV Supply Curve CLI."""
 
     ctx.ensure_object(dict)
@@ -125,6 +130,7 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['SIMPLE'] = simple
+    ctx.obj['LINE_LIMITED'] = line_limited
     ctx.obj['VERBOSE'] = verbose
 
     if ctx.invoked_subcommand is None:
@@ -146,7 +152,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
         try:
             out = sc_fun(sc_points, trans_table, fixed_charge_rate,
                          sc_features=sc_features,
-                         transmission_costs=transmission_costs)
+                         transmission_costs=transmission_costs,
+                         line_limited=line_limited)
         except Exception as e:
             logger.exception('Supply curve compute failed. Received the '
                              'following error:\n{}'.format(e))
@@ -175,7 +182,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
-                 transmission_costs, out_dir, log_dir, simple, verbose):
+                 transmission_costs, out_dir, log_dir, simple, line_limited,
+                 verbose):
     """Get a CLI call command for the Supply Curve cli."""
 
     args = ('-n {name} '
@@ -200,6 +208,8 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
     if simple:
         args += '-s '
+    if line_limited:
+        args += '-ll '
     if verbose:
         args += '-v '
 
@@ -230,6 +240,7 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     sc_features = ctx.obj['SC_FEATURES']
     transmission_costs = ctx.obj['TRANSMISSION_COSTS']
     simple = ctx.obj['SIMPLE']
+    line_limited = ctx.obj['LINE_LIMITED']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -239,7 +250,7 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
 
     cmd = get_node_cmd(name, sc_points, trans_table, fixed_charge_rate,
                        sc_features, transmission_costs, out_dir, log_dir,
-                       simple, verbose)
+                       simple, line_limited, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'supply-curve', name)
     if status == 'successful':
