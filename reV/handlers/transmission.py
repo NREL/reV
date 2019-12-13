@@ -43,9 +43,9 @@ class TransmissionFeatures:
             in $/MW
         available_capacity : float
             Fraction of capacity that is available for connection
-        line_lmited : bool
+        line_limited : bool
             Substation connection is limited by maximum capacity of the
-            attached lines
+            attached lines, legacy method
         """
 
         logger.debug('Line tie in cost: {} $/MW'.format(line_tie_in_cost))
@@ -675,7 +675,7 @@ class TransmissionCosts(TransmissionFeatures):
             Fraction of capacity that is available for connection
         line_limited : bool
             Substation connection is limited by maximum capacity of the
-            attached lines
+            attached lines, legacy method
 
         Returns
         -------

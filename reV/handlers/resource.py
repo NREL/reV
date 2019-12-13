@@ -538,7 +538,7 @@ class Resource:
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, unscale=True, hsds=False,
-                    str_decode=True, group=None):
+                    str_decode=True, group=None, **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -558,6 +558,8 @@ class Resource:
             strings. Setting this to False will speed up the meta data read.
         group : str
             Group within .h5 resource file to open
+        kwargs : dict
+            Additional kwargs to init resource class
         """
 
 
@@ -595,7 +597,8 @@ class SolarResource(Resource):
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
-                    unscale=True, hsds=False, str_decode=True, group=None):
+                    unscale=True, hsds=False, str_decode=True, group=None,
+                    **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -617,6 +620,8 @@ class SolarResource(Resource):
             strings. Setting this to False will speed up the meta data read.
         group : str
             Group within .h5 resource file to open
+        kwargs : dict
+            Additional kwargs to init resource class
 
         Returns
         -------
@@ -624,8 +629,8 @@ class SolarResource(Resource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        kwargs = {"unscale": unscale, "hsds": hsds, "str_decode": str_decode,
-                  "group": group}
+        kwargs.update({"unscale": unscale, "hsds": hsds,
+                       "str_decode": str_decode, "group": group})
         with cls(h5_file, **kwargs) as res:
             SAM_res = SAMResource(project_points, res.time_index)
             sites_slice = project_points.sites_as_slice
@@ -696,7 +701,7 @@ class NSRDB(SolarResource):
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
                     downscale=None, unscale=True, hsds=False, str_decode=True,
-                    group=None):
+                    group=None, **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -722,6 +727,8 @@ class NSRDB(SolarResource):
             strings. Setting this to False will speed up the meta data read.
         group : str
             Group within .h5 resource file to open
+        kwargs : dict
+            Additional kwargs to init resource class
 
         Returns
         -------
@@ -729,8 +736,8 @@ class NSRDB(SolarResource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        kwargs = {"unscale": unscale, "hsds": hsds, "str_decode": str_decode,
-                  "group": group}
+        kwargs.update({"unscale": unscale, "hsds": hsds,
+                       "str_decode": str_decode, "group": group})
         with cls(h5_file, **kwargs) as res:
             SAM_res = SAMResource(project_points, res.time_index)
             sites_slice = project_points.sites_as_slice
@@ -1152,7 +1159,7 @@ class WindResource(Resource):
     @classmethod
     def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
                     precip_rate=False, icing=False, unscale=True, hsds=False,
-                    str_decode=True, group=None):
+                    str_decode=True, group=None, **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -1179,6 +1186,8 @@ class WindResource(Resource):
             strings. Setting this to False will speed up the meta data read.
         group : str
             Group within .h5 resource file to open
+        kwargs : dict
+            Additional kwargs to init resource class
 
         Returns
         -------
@@ -1186,8 +1195,8 @@ class WindResource(Resource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        kwargs = {"unscale": unscale, "hsds": hsds, "str_decode": str_decode,
-                  "group": group}
+        kwargs.update({"unscale": unscale, "hsds": hsds,
+                       "str_decode": str_decode, "group": group})
         with cls(h5_file, **kwargs) as res:
             SAM_res = SAMResource(project_points, res.time_index,
                                   require_wind_dir=require_wind_dir)

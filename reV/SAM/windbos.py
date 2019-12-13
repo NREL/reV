@@ -173,7 +173,7 @@ class WindBos:
 
     @classmethod
     def reV_run(cls, points_control, site_df,
-                output_request=('total_installed_cost',), **kwargs):
+                output_request=('total_installed_cost',)):
         """Execute SAM SingleOwner simulations based on reV points control.
 
         Parameters
@@ -195,8 +195,6 @@ class WindBos:
             the second level key is the variable name, second level value is
             the output variable value.
         """
-
-        del kwargs
         out = {}
 
         for site in points_control.sites:

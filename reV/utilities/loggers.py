@@ -142,7 +142,8 @@ class LoggingAttributes:
 REV_LOGGERS = LoggingAttributes()
 
 
-def init_logger(logger_name, **kwargs):
+def init_logger(logger_name, log_level="INFO", log_file=None,
+                log_format=FORMAT):
     """
     Starts logging instance and adds logging attributes to REV_LOGGERS
 
@@ -150,14 +151,23 @@ def init_logger(logger_name, **kwargs):
     ----------
     logger_name : str
         Name of logger to initialize
-    **kwargs
-        Logging attributes used to setup_logger
+    log_level : str
+        Level of logging to capture, must be key in LOG_LEVEL. If multiple
+        handlers/log_files are requested in a single call of this function,
+        the specified logging level will be applied to all requested handlers.
+    log_file : str | list
+        Path to file to use for logging, if None use a StreamHandler
+        list of multiple handlers is permitted
+    log_format : str
+        Format for loggings, default is FORMAT
 
     Returns
     -------
     logger : logging.logger
         logging instance that was initialized
     """
+    kwargs = {"log_level": log_level, "log_file": log_file,
+              "log_format": log_format}
     logger = setup_logger(logger_name, **kwargs)
 
     REV_LOGGERS[logger_name] = kwargs

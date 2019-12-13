@@ -24,7 +24,7 @@ class SupplyCurve:
     Class to handle LCOT calcuation and SupplyCurve sorting
     """
     def __init__(self, sc_points, trans_table, fcr, sc_features=None,
-                 transmission_costs=None, **kwargs):
+                 transmission_costs=None, line_limited=False):
         """
         Parameters
         ----------
@@ -42,8 +42,9 @@ class SupplyCurve:
         transmission_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
             handler
-        kwargs : dict
-            Internal kwargs for _parse_trans_table to compute LCOT
+        line_limited : bool
+            Substation connection is limited by maximum capacity of the
+            attached lines, legacy method
         """
         trans_costs = transmission_costs
         self._sc_points = self._parse_sc_points(sc_points,
@@ -51,7 +52,7 @@ class SupplyCurve:
         self._trans_table = self._parse_trans_table(self._sc_points,
                                                     trans_table, fcr,
                                                     trans_costs=trans_costs,
-                                                    **kwargs)
+                                                    line_limited=line_limited)
         self._trans_features = self._create_handler(self._trans_table,
                                                     trans_costs=trans_costs)
 
@@ -182,7 +183,7 @@ class SupplyCurve:
 
     @staticmethod
     def _compute_lcot(trans_table, fcr, trans_costs=None, max_workers=None,
-                      connectable=True, **kwargs):
+                      connectable=True, line_limited=False):
         """
         Compute levelized cost of transmission for all combinations of
         supply curve points and tranmission features in trans_table
@@ -202,8 +203,9 @@ class SupplyCurve:
             None uses all available cpu's.
         connectable : bool
             Determine if connection is possible
-        kwargs : dict
-            kwargs for feature.cost
+        line_limited : bool
+            Substation connection is limited by maximum capacity of the
+            attached lines, legacy method
 
         Returns
         -------
@@ -220,7 +222,9 @@ class SupplyCurve:
                                         'to compute lcot')
 
         if trans_costs is not None:
-            kwargs.update(trans_costs)
+            trans_costs = TF._parse_dictionary(trans_costs)
+        else:
+            trans_costs = {}
 
         if max_workers is None:
             max_workers = os.cpu_count()
@@ -245,12 +249,15 @@ class SupplyCurve:
                         capacity = None
 
                     futures.append(exe.submit(TC.feature_costs, sc_table,
-                                              capacity=capacity, **kwargs))
+                                              capacity=capacity,
+                                              line_limited=line_limited,
+                                              **trans_costs))
 
                 cost = [future.result() for future in futures]
                 cost = np.hstack(cost)
         else:
-            feature = TC(trans_table, **kwargs)
+            feature = TC(trans_table, line_limited=line_limited,
+                         **trans_costs)
             cost = []
             for _, row in trans_table.iterrows():
                 if connectable:
@@ -305,7 +312,7 @@ class SupplyCurve:
 
     @staticmethod
     def _parse_trans_table(sc_points, trans_table, fcr, trans_costs=None,
-                           **kwargs):
+                           line_limited=False):
         """
         Import supply curve table, add in supply curve point capacity
 
@@ -320,8 +327,9 @@ class SupplyCurve:
         trans_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
             handler
-        kwargs : dict
-            Internal kwargs for _parse_trans_table to compute LCOT
+        line_limited : bool
+            Substation connection is limited by maximum capacity of the
+            attached lines, legacy method
 
         Returns
         -------
@@ -369,7 +377,7 @@ class SupplyCurve:
         trans_table = trans_table.sort_values('sc_gid')
         lcot, cost = SupplyCurve._compute_lcot(trans_table, fcr,
                                                trans_costs=trans_costs,
-                                               **kwargs)
+                                               line_limited=line_limited)
         trans_table['trans_cap_cost'] = cost
         trans_table['lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
@@ -497,7 +505,7 @@ class SupplyCurve:
 
     @classmethod
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
-             transmission_costs=None, **kwargs):
+             transmission_costs=None, line_limited=False):
         """
         Run full supply curve taking into account available capacity of
         tranmission features when making connections.
@@ -518,8 +526,9 @@ class SupplyCurve:
         transmission_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
             handler
-        kwargs : dict
-            Internal kwargs for computing LCOT
+        line_limited : bool
+            Substation connection is limited by maximum capacity of the
+            attached lines, legacy method
 
         Returns
         -------
@@ -528,14 +537,15 @@ class SupplyCurve:
             and LCOE+LCOT
         """
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
-                 transmission_costs=transmission_costs, **kwargs)
+                 transmission_costs=transmission_costs,
+                 line_limited=line_limited)
         connections = sc.full_sort()
         supply_curve = sc._sc_points.merge(connections, on='sc_gid')
         return supply_curve
 
     @classmethod
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
-               transmission_costs=None, **kwargs):
+               transmission_costs=None):
         """
         Run simple supply curve by connecting to the cheapest tranmission
         feature.
@@ -556,8 +566,6 @@ class SupplyCurve:
         transmission_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
             handler
-        kwargs : dict
-            Internal kwargs for computing LCOT
 
         Returns
         -------
@@ -566,8 +574,7 @@ class SupplyCurve:
             and LCOE+LCOT
         """
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
-                 transmission_costs=transmission_costs, connectable=False,
-                 **kwargs)
+                 transmission_costs=transmission_costs, connectable=False)
         connections = sc.simple_sort()
         supply_curve = sc._sc_points.merge(connections, on='sc_gid')
         return supply_curve
