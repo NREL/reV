@@ -5,4 +5,3 @@ reV
    :maxdepth: 4
 
    reV
-   setup
