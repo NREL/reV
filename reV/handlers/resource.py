@@ -537,7 +537,8 @@ class Resource:
         self._h5.close()
 
     @classmethod
-    def preload_SAM(cls, h5_file, project_points, **kwargs):
+    def preload_SAM(cls, h5_file, project_points, unscale=True, hsds=False,
+                    str_decode=True, group=None):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -547,6 +548,16 @@ class Resource:
             h5_file to extract resource from
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
 
 
@@ -584,7 +595,7 @@ class SolarResource(Resource):
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
-                    **kwargs):
+                    unscale=True, hsds=False, str_decode=True, group=None):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -596,8 +607,16 @@ class SolarResource(Resource):
             Projects points to be pre-loaded from Resource for SAM
         clearsky : bool
             Boolean flag to pull clearsky instead of real irradiance
-        kwargs : dict
-            Kwargs to pass to cls
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
 
         Returns
         -------
@@ -605,6 +624,8 @@ class SolarResource(Resource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
+        kwargs = {"unscale": unscale, "hsds": hsds, "str_decode": str_decode,
+                  "group": group}
         with cls(h5_file, **kwargs) as res:
             SAM_res = SAMResource(project_points, res.time_index)
             sites_slice = project_points.sites_as_slice
@@ -674,7 +695,8 @@ class NSRDB(SolarResource):
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
-                    downscale=None, **kwargs):
+                    downscale=None, unscale=True, hsds=False, str_decode=True,
+                    group=None):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -690,8 +712,16 @@ class NSRDB(SolarResource):
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        kwargs : dict
-            Kwargs to pass to cls
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
 
         Returns
         -------
@@ -699,6 +729,8 @@ class NSRDB(SolarResource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
+        kwargs = {"unscale": unscale, "hsds": hsds, "str_decode": str_decode,
+                  "group": group}
         with cls(h5_file, **kwargs) as res:
             SAM_res = SAMResource(project_points, res.time_index)
             sites_slice = project_points.sites_as_slice
@@ -723,17 +755,27 @@ class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
     """
-    def __init__(self, h5_file, **kwargs):
+    def __init__(self, h5_file, unscale=True, hsds=False, str_decode=True,
+                 group=None):
         """
         Parameters
         ----------
         h5_file : str
             Path to .h5 resource file
-        kwargs : dict
-            kwargs to init Resource
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
         self._heights = None
-        super().__init__(h5_file, **kwargs)
+        super().__init__(h5_file, unscale=unscale, hsds=hsds,
+                         str_decode=str_decode, group=group)
 
     @staticmethod
     def _parse_hub_height(name):
@@ -1109,7 +1151,8 @@ class WindResource(Resource):
 
     @classmethod
     def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
-                    precip_rate=False, icing=False, **kwargs):
+                    precip_rate=False, icing=False, unscale=True, hsds=False,
+                    str_decode=True, group=None):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -1126,8 +1169,16 @@ class WindResource(Resource):
         icing : bool
             Boolean flag as to whether icing is analyzed.
             This will preload relative humidity.
-        kwargs : dict
-            Kwargs to pass to cls
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
 
         Returns
         -------
@@ -1135,6 +1186,8 @@ class WindResource(Resource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
+        kwargs = {"unscale": unscale, "hsds": hsds, "str_decode": str_decode,
+                  "group": group}
         with cls(h5_file, **kwargs) as res:
             SAM_res = SAMResource(project_points, res.time_index,
                                   require_wind_dir=require_wind_dir)

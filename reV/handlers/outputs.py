@@ -381,11 +381,11 @@ class Outputs(Resource):
         ds_slice : tuple
             Dataset slicing that corresponds to arr
         """
-        if ds_name not in self._h5:
+        if ds_name not in self.dsets:
             msg = '{} must be initialized!'.format(ds_name)
             raise HandlerRuntimeError(msg)
 
-        dtype = self._h5[ds_name].dtype
+        dtype = self.h5[ds_name].dtype
         scale_factor = self.get_scale(ds_name)
 
         self.h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
@@ -565,7 +565,7 @@ class Outputs(Resource):
     @classmethod
     def write_profiles(cls, h5_file, meta, time_index, dset_name, profiles,
                        attrs, dtype, SAM_configs=None, chunks=(None, 100),
-                       **kwargs):
+                       unscale=True, mode='w-', str_decode=True, group=None):
         """
         Write profiles to disk
 
@@ -589,15 +589,24 @@ class Outputs(Resource):
             Dictionary of SAM configuration JSONs used to compute cf profiles
         chunks : tuple
             Chunk size for profiles dataset
-        kwargs : dict
-            Extra kwargs to init Output
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        mode : str
+            Mode to instantiate h5py.File instance
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
         logger.info("Saving profiles ({}) to {}".format(dset_name, h5_file))
         if profiles.shape != (len(time_index), len(meta)):
             raise HandlerValueError("Profile dimensions does not match"
                                     "'time_index' and 'meta'")
         ts = time.time()
-        with cls(h5_file, mode=kwargs.pop('mode', 'w-'), **kwargs) as f:
+        kwargs = {"unscale": unscale, "mode": mode, "str_decode": str_decode,
+                  "group": group}
+        with cls(h5_file, **kwargs) as f:
             # Save time index
             f['time_index'] = time_index
             logger.debug("\t- 'time_index' saved to disc")
@@ -622,7 +631,8 @@ class Outputs(Resource):
 
     @classmethod
     def write_means(cls, h5_file, meta, dset_name, means, attrs, dtype,
-                    SAM_configs=None, chunks=None, **kwargs):
+                    SAM_configs=None, chunks=None, unscale=True, mode='w-',
+                    str_decode=True, group=None):
         """
         Write means array to disk
 
@@ -644,8 +654,15 @@ class Outputs(Resource):
             Dictionary of SAM configuration JSONs used to compute cf means
         chunks : tuple
             Chunk size for capacity factor means dataset
-        kwargs : dict
-            Extra kwargs to init Output
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        mode : str
+            Mode to instantiate h5py.File instance
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
         logger.info("Saving means ({}) to {}".format(dset_name, h5_file))
         if len(means) != len(meta):
@@ -653,7 +670,9 @@ class Outputs(Resource):
             raise HandlerValueError(msg)
 
         ts = time.time()
-        with cls(h5_file, mode=kwargs.get('mode', 'w-'), **kwargs) as f:
+        kwargs = {"unscale": unscale, "mode": mode, "str_decode": str_decode,
+                  "group": group}
+        with cls(h5_file, **kwargs) as f:
             # Save meta
             f['meta'] = meta
             logger.debug("\t- 'meta' saved to disc")
@@ -675,7 +694,8 @@ class Outputs(Resource):
 
     @classmethod
     def add_dataset(cls, h5_file, dset_name, dset_data, attrs, dtype,
-                    chunks=None, **kwargs):
+                    chunks=None, unscale=True, mode='a', str_decode=True,
+                    group=None):
         """
         Add dataset to h5_file
 
@@ -691,12 +711,21 @@ class Outputs(Resource):
             Attributes to be set. May include 'scale_factor'.
         dtype : str
             Intended dataset datatype after scaling.
-        kwargs : dict
-            Extra kwargs to init Output
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        mode : str
+            Mode to instantiate h5py.File instance
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
         logger.info("Adding {} to {}".format(dset_name, h5_file))
         ts = time.time()
-        with cls(h5_file, mode=kwargs.pop('mode', 'a'), **kwargs) as f:
+        kwargs = {"unscale": unscale, "mode": mode, "str_decode": str_decode,
+                  "group": group}
+        with cls(h5_file, **kwargs) as f:
             f._add_dset(dset_name, dset_data, dtype,
                         chunks=chunks, attrs=attrs)
 
@@ -707,7 +736,8 @@ class Outputs(Resource):
 
     @classmethod
     def init_h5(cls, h5_file, dsets, shapes, attrs, chunks, dtypes,
-                meta, time_index=None, configs=None, **kwargs):
+                meta, time_index=None, configs=None, unscale=True, mode='w',
+                str_decode=True, group=None):
         """Init a full output file with the final intended shape without data.
 
         Parameters
@@ -732,12 +762,21 @@ class Outputs(Resource):
             (no site profiles) are being written.
         configs : dict | None
             Optional input configs to set as attr on meta.
-        kwargs : dict
-            Extra kwargs to init Output
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        mode : str
+            Mode to instantiate h5py.File instance
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+        group : str
+            Group within .h5 resource file to open
         """
 
         logger.debug("Initializing output file: {}".format(h5_file))
-        with cls(h5_file, mode=kwargs.get('mode', 'w'), **kwargs) as f:
+        kwargs = {"unscale": unscale, "mode": mode, "str_decode": str_decode,
+                  "group": group}
+        with cls(h5_file, **kwargs) as f:
             f['meta'] = meta
 
             if time_index is not None:
