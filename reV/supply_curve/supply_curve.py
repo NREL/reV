@@ -42,7 +42,8 @@ class SupplyCurve:
             curve features, e.g. transmission multipliers, regions
         transmission_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
-            handler
+            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
+            center_tie_in_cost, sink_tie_in_cost
         line_limited : bool
             Substation connection is limited by maximum capacity of the
             attached lines, legacy method
@@ -154,7 +155,8 @@ class SupplyCurve:
             transmission mapping
         trans_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
-            handler
+            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
+            center_tie_in_cost, sink_tie_in_cost
 
         Returns
         -------
@@ -205,7 +207,8 @@ class SupplyCurve:
             Fixed charge rate needed to compute LCOT
         trans_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
-            handler
+            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
+            center_tie_in_cost, sink_tie_in_cost
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
@@ -297,7 +300,8 @@ class SupplyCurve:
             Table mapping supply curve points to transmission features
         trans_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
-            handler
+            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
+            center_tie_in_cost, sink_tie_in_cost
 
         Returns
         -------
@@ -335,7 +339,8 @@ class SupplyCurve:
             Fixed charge rate, used to compute LCOT
         trans_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
-            handler
+            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
+            center_tie_in_cost, sink_tie_in_cost
         line_limited : bool
             Substation connection is limited by maximum capacity of the
             attached lines, legacy method
@@ -541,7 +546,8 @@ class SupplyCurve:
             curve features, e.g. transmission multipliers, regions
         transmission_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
-            handler
+            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
+            center_tie_in_cost, sink_tie_in_cost
         line_limited : bool
             Substation connection is limited by maximum capacity of the
             attached lines, legacy method
@@ -584,7 +590,8 @@ class SupplyCurve:
             curve features, e.g. transmission multipliers, regions
         transmission_costs : str | dict
             Transmission feature costs to use with TransmissionFeatures
-            handler
+            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
+            center_tie_in_cost, sink_tie_in_cost
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
