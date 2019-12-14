@@ -536,9 +536,20 @@ class Resource:
         """
         self._h5.close()
 
+    def _preload_SAM(self, project_points, **kwargs):
+        """
+        Placeholder method to pre-load project_points for SAM
+
+        Parameters
+        ----------
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+        kwargs : dict
+            internal kwargs
+        """
+
     @classmethod
-    def preload_SAM(cls, h5_file, project_points, unscale=True, hsds=False,
-                    str_decode=True, group=None, **kwargs):
+    def preload_SAM(cls, h5_file, project_points, **kwargs):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -548,18 +559,8 @@ class Resource:
             h5_file to extract resource from
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
-        hsds : bool
-            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
-            behind HSDS
-        str_decode : bool
-            Boolean flag to decode the bytestring meta data into normal
-            strings. Setting this to False will speed up the meta data read.
-        group : str
-            Group within .h5 resource file to open
         kwargs : dict
-            Additional kwargs to init resource class
+            kwargs to init resource class
         """
 
 
@@ -595,12 +596,40 @@ class SolarResource(Resource):
 
         return res_df
 
+    def _preload_SAM(self, project_points, clearsky=False):
+        """
+        Pre-load project_points for SAM
+
+        Parameters
+        ----------
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+        clearsky : bool
+            Boolean flag to pull clearsky instead of real irradiance
+
+        Returns
+        -------
+        SAM_res : SAMResource
+            Instance of SAMResource pre-loaded with Solar resource for sites
+            in project_points
+        """
+        SAM_res = SAMResource(project_points, self.time_index)
+        sites_slice = project_points.sites_as_slice
+        SAM_res['meta'] = self['meta', sites_slice]
+        for var in SAM_res.var_list:
+            ds = var
+            if clearsky and var in ['dni', 'dhi']:
+                ds = 'clearsky_{}'.format(var)
+
+            SAM_res[var] = self[ds, :, sites_slice]
+
+        return SAM_res
+
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
-                    unscale=True, hsds=False, str_decode=True, group=None,
-                    **kwargs):
+                    unscale=True, hsds=False, str_decode=True, group=None):
         """
-        Placeholder for classmethod that will pre-load project_points for SAM
+        Pre-load project_points for SAM
 
         Parameters
         ----------
@@ -620,8 +649,6 @@ class SolarResource(Resource):
             strings. Setting this to False will speed up the meta data read.
         group : str
             Group within .h5 resource file to open
-        kwargs : dict
-            Additional kwargs to init resource class
 
         Returns
         -------
@@ -629,18 +656,10 @@ class SolarResource(Resource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        kwargs.update({"unscale": unscale, "hsds": hsds,
-                       "str_decode": str_decode, "group": group})
+        kwargs = {"unscale": unscale, "hsds": hsds,
+                  "str_decode": str_decode, "group": group}
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res.time_index)
-            sites_slice = project_points.sites_as_slice
-            SAM_res['meta'] = res['meta', sites_slice]
-            for var in SAM_res.var_list:
-                ds = var
-                if clearsky and var in ['dni', 'dhi']:
-                    ds = 'clearsky_{}'.format(var)
-
-                SAM_res[var] = res[ds, :, sites_slice]
+            SAM_res = res._preload_SAM(project_points, clearsky=clearsky)
 
         return SAM_res
 
@@ -698,12 +717,51 @@ class NSRDB(SolarResource):
 
         return out
 
+    def _preload_SAM(self, project_points, clearsky=False, downscale=None):
+        """
+        Pre-load project_points for SAM
+
+        Parameters
+        ----------
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+        clearsky : bool
+            Boolean flag to pull clearsky instead of real irradiance
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
+
+        Returns
+        -------
+        SAM_res : SAMResource
+            Instance of SAMResource pre-loaded with Solar resource for sites
+            in project_points
+        """
+        SAM_res = SAMResource(project_points, self.time_index)
+        sites_slice = project_points.sites_as_slice
+        SAM_res['meta'] = self['meta', sites_slice]
+
+        if clearsky:
+            SAM_res.set_clearsky()
+
+        if not downscale:
+            for var in SAM_res.var_list:
+                SAM_res[var] = self[var, :, sites_slice]
+        else:
+            # contingent import to avoid dependencies
+            from reV.utilities.downscale import downscale_nsrdb
+            SAM_res = downscale_nsrdb(SAM_res, self, project_points,
+                                      downscale, sam_vars=SAM_res.var_list)
+
+        return SAM_res
+
     @classmethod
     def preload_SAM(cls, h5_file, project_points, clearsky=False,
                     downscale=None, unscale=True, hsds=False, str_decode=True,
-                    group=None, **kwargs):
+                    group=None):
         """
-        Placeholder for classmethod that will pre-load project_points for SAM
+        Pre-load project_points for SAM
 
         Parameters
         ----------
@@ -727,8 +785,6 @@ class NSRDB(SolarResource):
             strings. Setting this to False will speed up the meta data read.
         group : str
             Group within .h5 resource file to open
-        kwargs : dict
-            Additional kwargs to init resource class
 
         Returns
         -------
@@ -736,24 +792,11 @@ class NSRDB(SolarResource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        kwargs.update({"unscale": unscale, "hsds": hsds,
-                       "str_decode": str_decode, "group": group})
+        kwargs = {"unscale": unscale, "hsds": hsds,
+                  "str_decode": str_decode, "group": group}
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res.time_index)
-            sites_slice = project_points.sites_as_slice
-            SAM_res['meta'] = res['meta', sites_slice]
-
-            if clearsky:
-                SAM_res.set_clearsky()
-
-            if not downscale:
-                for var in SAM_res.var_list:
-                    SAM_res[var] = res[var, :, sites_slice]
-            else:
-                # contingent import to avoid dependencies
-                from reV.utilities.downscale import downscale_nsrdb
-                SAM_res = downscale_nsrdb(SAM_res, res, project_points,
-                                          downscale, sam_vars=SAM_res.var_list)
+            SAM_res = res._preload_SAM(project_points, clearsky=clearsky,
+                                       downscale=downscale)
 
         return SAM_res
 
@@ -1156,10 +1199,76 @@ class WindResource(Resource):
 
         return res_df
 
+    def _preload_SAM(self, project_points, require_wind_dir=False,
+                     precip_rate=False, icing=False,):
+        """
+        Pre-load project_points for SAM
+
+        Parameters
+        ----------
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+        require_wind_dir : bool
+            Boolean flag as to whether wind direction will be loaded.
+        precip_rate : bool
+            Boolean flag as to whether precipitationrate_0m will be preloaded
+        icing : bool
+            Boolean flag as to whether icing is analyzed.
+            This will preload relative humidity.
+
+        Returns
+        -------
+        SAM_res : SAMResource
+            Instance of SAMResource pre-loaded with Solar resource for sites
+            in project_points
+        """
+        SAM_res = SAMResource(project_points, self.time_index,
+                              require_wind_dir=require_wind_dir)
+        sites_slice = project_points.sites_as_slice
+        SAM_res['meta'] = self['meta', sites_slice]
+        var_list = SAM_res.var_list
+        if not require_wind_dir:
+            var_list.remove('winddirection')
+
+        h = project_points.h
+        h = self._check_hub_height(h)
+        if isinstance(h, (int, float)):
+            for var in var_list:
+                ds_name = "{}_{}m".format(var, h)
+                SAM_res[var] = self[ds_name, :, sites_slice]
+        else:
+            _, unq_idx = np.unique(h, return_inverse=True)
+            unq_h = sorted(list(set(h)))
+
+            site_list = np.array(project_points.sites)
+            height_slices = {}
+            for i, h_i in enumerate(unq_h):
+                pos = np.where(unq_idx == i)[0]
+                height_slices[h_i] = (site_list[pos], pos)
+
+            for var in var_list:
+                for h_i, (h_pos, sam_pos) in height_slices.items():
+                    ds_name = '{}_{}m'.format(var, h_i)
+                    SAM_res[var, :, sam_pos] = self[ds_name, :, h_pos]
+
+        if precip_rate:
+            var = 'precipitationrate'
+            ds_name = '{}_0m'.format(var)
+            SAM_res.append_var_list(var)
+            SAM_res[var] = self[ds_name, :, sites_slice]
+
+        if icing:
+            var = 'rh'
+            ds_name = 'relativehumidity_2m'
+            SAM_res.append_var_list(var)
+            SAM_res[var] = self[ds_name, :, sites_slice]
+
+        return SAM_res
+
     @classmethod
     def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
                     precip_rate=False, icing=False, unscale=True, hsds=False,
-                    str_decode=True, group=None, **kwargs):
+                    str_decode=True, group=None):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
@@ -1186,8 +1295,6 @@ class WindResource(Resource):
             strings. Setting this to False will speed up the meta data read.
         group : str
             Group within .h5 resource file to open
-        kwargs : dict
-            Additional kwargs to init resource class
 
         Returns
         -------
@@ -1195,49 +1302,12 @@ class WindResource(Resource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        kwargs.update({"unscale": unscale, "hsds": hsds,
-                       "str_decode": str_decode, "group": group})
+        kwargs = {"unscale": unscale, "hsds": hsds,
+                  "str_decode": str_decode, "group": group}
         with cls(h5_file, **kwargs) as res:
-            SAM_res = SAMResource(project_points, res.time_index,
-                                  require_wind_dir=require_wind_dir)
-            sites_slice = project_points.sites_as_slice
-            SAM_res['meta'] = res['meta', sites_slice]
-            var_list = SAM_res.var_list
-            if not require_wind_dir:
-                var_list.remove('winddirection')
-
-            h = project_points.h
-            h = res._check_hub_height(h)
-            if isinstance(h, (int, float)):
-                for var in var_list:
-                    ds_name = "{}_{}m".format(var, h)
-                    SAM_res[var] = res[ds_name, :, sites_slice]
-            else:
-                _, unq_idx = np.unique(h, return_inverse=True)
-                unq_h = sorted(list(set(h)))
-
-                site_list = np.array(project_points.sites)
-                height_slices = {}
-                for i, h_i in enumerate(unq_h):
-                    pos = np.where(unq_idx == i)[0]
-                    height_slices[h_i] = (site_list[pos], pos)
-
-                for var in var_list:
-                    for h_i, (h_pos, sam_pos) in height_slices.items():
-                        ds_name = '{}_{}m'.format(var, h_i)
-                        SAM_res[var, :, sam_pos] = res[ds_name, :, h_pos]
-
-            if precip_rate:
-                var = 'precipitationrate'
-                ds_name = '{}_0m'.format(var)
-                SAM_res.append_var_list(var)
-                SAM_res[var] = res[ds_name, :, sites_slice]
-
-            if icing:
-                var = 'rh'
-                ds_name = 'relativehumidity_2m'
-                SAM_res.append_var_list(var)
-                SAM_res[var] = res[ds_name, :, sites_slice]
+            SAM_res = res._preload_SAM(project_points,
+                                       require_wind_dir=require_wind_dir,
+                                       precip_rate=precip_rate, icing=icing)
 
         return SAM_res
 
@@ -1508,6 +1578,48 @@ class MultiFileNSRDB(MultiFileResource, NSRDB):
     Class to handle 2018 and beyond NSRDB data that is at 2km and
     sub 30 min resolution
     """
+    @classmethod
+    def preload_SAM(cls, h5_file, project_points, clearsky=False,
+                    downscale=None, prefix='', suffix='.h5',
+                    unscale=True, str_decode=True):
+        """
+        Pre-load project_points for SAM
+
+        Parameters
+        ----------
+        h5_file : str
+            h5_file to extract resource from
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+        clearsky : bool
+            Boolean flag to pull clearsky instead of real irradiance
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+
+        Returns
+        -------
+        SAM_res : SAMResource
+            Instance of SAMResource pre-loaded with Solar resource for sites
+            in project_points
+        """
+        kwargs = {"prefix": prefix, "suffix": suffix,
+                  "unscale": unscale, "str_decode": str_decode}
+        with cls(h5_file, **kwargs) as res:
+            SAM_res = res._preload_SAM(project_points, clearsky=clearsky,
+                                       downscale=downscale)
+
+        return SAM_res
 
 
 class MultiFileWTK(MultiFileResource, WindResource):
@@ -1534,3 +1646,48 @@ class MultiFileWTK(MultiFileResource, WindResource):
         super().__init__(h5_dir, prefix=prefix, suffix=suffix, unscale=unscale,
                          str_decode=str_decode)
         self._heights = None
+
+    @classmethod
+    def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
+                    precip_rate=False, icing=False, prefix='', suffix='m.h5',
+                    unscale=True, str_decode=True):
+        """
+        Placeholder for classmethod that will pre-load project_points for SAM
+
+        Parameters
+        ----------
+        h5_file : str
+            h5_file to extract resource from
+        project_points : reV.config.ProjectPoints
+            Projects points to be pre-loaded from Resource for SAM
+        require_wind_dir : bool
+            Boolean flag as to whether wind direction will be loaded.
+        precip_rate : bool
+            Boolean flag as to whether precipitationrate_0m will be preloaded
+        icing : bool
+            Boolean flag as to whether icing is analyzed.
+            This will preload relative humidity.
+        prefix : str
+            Prefix for resource .h5 files
+        suffix : str
+            Suffix for resource .h5 files
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
+        str_decode : bool
+            Boolean flag to decode the bytestring meta data into normal
+            strings. Setting this to False will speed up the meta data read.
+
+        Returns
+        -------
+        SAM_res : SAMResource
+            Instance of SAMResource pre-loaded with Solar resource for sites
+            in project_points
+        """
+        kwargs = {"prefix": prefix, "suffix": suffix,
+                  "unscale": unscale, "str_decode": str_decode}
+        with cls(h5_file, **kwargs) as res:
+            SAM_res = res._preload_SAM(project_points,
+                                       require_wind_dir=require_wind_dir,
+                                       precip_rate=precip_rate, icing=icing)
+
+        return SAM_res
