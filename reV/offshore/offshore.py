@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-reV offshore wind module. This module aggregates offshore generation data
-from high res wind resource data to coarse wind farm sites and then
-calculates ORCA econ data.
+reV offshore wind farm aggregation  module. This module aggregates offshore
+generation data from high res wind resource data to coarse wind farm sites
+and then calculates the ORCA econ data.
 """
 import numpy as np
 import pandas as pd
@@ -54,6 +54,13 @@ class Offshore:
 
         self._out = self._init_out_arrays()
 
+        logger.info('Initialized offshore wind farm aggregation module with '
+                    '{} onshore resource points, {} offshore resource points, '
+                    'and {} output wind farms.'
+                    .format(len(self.meta_source_onshore),
+                            len(self.meta_source_offshore),
+                            len(self.meta_out_offshore)))
+
     @property
     def meta_source_full(self):
         """Get the full meta data (onshore + offshore)"""
@@ -84,22 +91,30 @@ class Offshore:
             self._meta_out_offshore = self._farm_coords.copy()
             new_offshore_gids = []
             new_timezones = []
+            new_agg_gids = []
 
             for i in self._offshore_data.index:
-                res_gid, farm_gid = self._get_farm_gid(i)
+                farm_gid, res_gid = self._get_farm_gid(i)
 
+                agg_gids = None
                 timezone = None
                 if (res_gid is not None
                         and 'timezone' in self.meta_source_offshore):
                     mask = self.meta_source_offshore['gid'] == res_gid
-                    timezone = self.meta_source_offshore.loc[mask, 'timezone']
+                    timezone = self.meta_source_offshore.loc[mask, 'timezone']\
+                        .values[0]
+                    ilocs = np.where(self._i == i)
+                    meta_sub = self.meta_source_offshore.iloc[ilocs]
+                    agg_gids = str(meta_sub['gid'].values.tolist())
 
                 new_timezones.append(timezone)
                 new_offshore_gids.append(farm_gid)
+                new_agg_gids.append(agg_gids)
 
             self._meta_out_offshore['elevation'] = 0.0
             self._meta_out_offshore['timezone'] = new_timezones
             self._meta_out_offshore['gid'] = new_offshore_gids
+            self._meta_out_offshore['aggregated_gids'] = new_agg_gids
             self._meta_out_offshore['reV_tech'] = 'offshore_wind'
 
             self._meta_out_offshore = self._meta_out_offshore.dropna(
@@ -142,6 +157,8 @@ class Offshore:
                 else:
                     dset_shape = (shape[0], len(self.meta_out_offshore))
 
+                logger.debug('Initializing offshore output data array for '
+                             '"{}" with shape {}.'.format(dset, dset_shape))
                 out_arrays[dset] = np.zeros(dset_shape, dtype=np.float32)
 
         return out_arrays
@@ -241,7 +258,7 @@ class Offshore:
 
         if len(self._farm_coords) > 1:
             d_lim, _ = tree.query(self._farm_coords, k=2)
-            d_lim = np.max(d_lim[:, 1])
+            d_lim = 0.5 * np.median(d_lim[:, 1])
             i[(d > d_lim)] = -1
 
         return d, i
@@ -353,7 +370,6 @@ class Offshore:
         orca.lcoe : float
             Site LCOE value with units: $/MWh.
         """
-
         site_data['gcf'] = cf_mean
         orca = ORCA_LCOE(system_inputs, site_data)
         return orca.lcoe
@@ -368,13 +384,13 @@ class Offshore:
 
         Returns
         -------
-        res_gid : int | None
-            Resource gid of the closest resource pixel to ifarm. None if farm
-            is not close to any resource sites in cf_file.
         farm_gid : int | None
             Unique resource GID for the offshore farm. This is the offshore
             gid adder plus the closest resource gid. None will be returned if
             the farm is not close to any resource sites in cf_file.
+        res_gid : int | None
+            Resource gid of the closest resource pixel to ifarm. None if farm
+            is not close to any resource sites in cf_file.
         """
         res_gid = None
         farm_gid = None
@@ -387,7 +403,7 @@ class Offshore:
             res_gid = res_site['gid']
             farm_gid = int(self._offshore_gid_adder + res_gid)
 
-        return res_gid, farm_gid
+        return farm_gid, res_gid
 
     def _get_system_inputs(self, res_gid):
         """Get the system inputs dict (SAM tech inputs) from project points.
@@ -403,28 +419,46 @@ class Offshore:
             Dictionary of SAM system inputs for wtk resource gid input.
         """
         system_inputs = self._project_points[res_gid][1]
+
+        if 'turbine_capacity' not in system_inputs:
+            # convert from SAM kw powercurve to MW.
+            cap = np.max(system_inputs['wind_turbine_powercurve_powerout'])
+            cap_mw = cap / 1000
+            system_inputs['turbine_capacity'] = cap_mw
+            m = ('Offshore wind farm system input key "turbine_capacity" not '
+                 'specified for res_gid {}. Setting to 1/1000 the max of the '
+                 'SAM power curve: {} MW'.format(res_gid, cap_mw))
+            logger.warning(m)
+            warn(m, OffshoreWindInputWarning)
+
         return system_inputs
 
     def _run_serial(self):
-        """Run offshore compute in serial.
-        """
+        """Run offshore gen aggregation and ORCA econ compute in serial."""
 
-        for ifarm, row in self._offshore_data.iterrows():
+        for i, (ifarm, meta) in enumerate(self.meta_out_offshore.iterrows()):
+
+            row = self._offshore_data.loc[ifarm, :]
             farm_gid, res_gid = self._get_farm_gid(ifarm)
+
             if farm_gid is not None:
                 cf_ilocs = np.where(self._i == ifarm)[0]
                 meta = self.meta_source_offshore.iloc[cf_ilocs]
                 system_inputs = self._get_system_inputs(res_gid)
                 site_data = row.to_dict()
 
+                logger.debug('Running offshore gen aggregation and ORCA econ '
+                             'compute for ifarm {}, farm gid {}, res gid {}'
+                             .format(ifarm, farm_gid, res_gid))
+
                 gen_data = self._get_farm_data(self._cf_file, meta,
                                                system_inputs, site_data)
 
                 for k, v in gen_data.items():
-                    if isinstance(v, (float, int)):
-                        self._out[k][ifarm] = v
+                    if isinstance(v, (np.ndarray, list, tuple)):
+                        self._out[k][:, i] = v
                     else:
-                        self._out[k][:, ifarm] = v
+                        self._out[k][i] = v
 
     @classmethod
     def run(cls, cf_file, offshore_file, points, sam_files,
@@ -459,4 +493,5 @@ class Offshore:
                         sites_per_worker=100)
         offshore = cls(cf_file, offshore_file, pc.project_points,
                        offshore_gid_adder)
+        offshore._run_serial()
         return offshore
