@@ -17,7 +17,7 @@ Tips:
 ::
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
-    - `Full pipeline example here <https://github.com/NREL/reV2/tree/master/examples/pipeline_execution>`_
+- `Full pipeline example <https://github.com/NREL/reV2/tree/master/examples/pipeline_execution>`_
 
 General Run times and Node configuration on Eagle
 -------------------------------------------------
