@@ -36,7 +36,7 @@ def test_sc_agg_offshore():
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
                             data_layers=DATA_LAYERS,
-                            n_cores=1)
+                            max_workers=1)
 
     with Outputs(GEN, mode='r') as out:
         meta = out.meta
@@ -63,7 +63,7 @@ def plot_sc_offshore(plot_var='mean_res'):
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
                             data_layers=DATA_LAYERS,
-                            n_cores=1)
+                            max_workers=1)
     import matplotlib.pyplot as plt
 
     plt.scatter(s['longitude'], s['latitude'], c=s[plot_var], marker='s')

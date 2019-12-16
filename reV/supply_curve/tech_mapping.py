@@ -28,7 +28,7 @@ class TechMapping:
     """Framework to create map between tech layer (exclusions), res, and gen"""
 
     def __init__(self, excl_fpath, res_fpath, dset, distance_upper_bound=0.03,
-                 map_chunk=2560, n_cores=None):
+                 map_chunk=2560, max_workers=None):
         """
         Parameters
         ----------
@@ -46,7 +46,7 @@ class TechMapping:
             resource grid and finer.
         map_chunk : int | None
             Calculation chunk used for the tech mapping calc.
-        n_cores : int | None
+        max_workers : int | None
             Number of cores to run mapping on. None uses all available cpus.
         """
 
@@ -57,9 +57,9 @@ class TechMapping:
         self._check_fout()
         self._map_chunk = map_chunk
 
-        if n_cores is None:
-            n_cores = os.cpu_count()
-        self._n_cores = n_cores
+        if max_workers is None:
+            max_workers = os.cpu_count()
+        self._max_workers = max_workers
 
         with SupplyCurveExtent(self._excl_fpath,
                                resolution=self._map_chunk) as sc:
@@ -227,7 +227,7 @@ class TechMapping:
 
         n_finished = 0
         futures = {}
-        with cf.ProcessPoolExecutor(max_workers=self._n_cores) as executor:
+        with cf.ProcessPoolExecutor(max_workers=self._max_workers) as executor:
 
             # iterate through split executions, submitting each to worker
             for i, gid_set in enumerate(gid_chunks):
@@ -400,7 +400,8 @@ class TechMapping:
                     .format(dset, fpath_out))
 
     @classmethod
-    def run(cls, excl_fpath, res_fpath, dset, save_flag=True, **kwargs):
+    def run(cls, excl_fpath, res_fpath, dset, save_flag=True,
+            distance_upper_bound=0.03, map_chunk=2560, max_workers=None):
         """Run parallel mapping and save to h5 file.
 
         Parameters
@@ -429,6 +430,8 @@ class TechMapping:
             Index values of the NN resource point. -1 if no res point found.
             2D integer array with shape equal to the exclusions extent shape.
         """
+        kwargs = {"distance_upper_bound": distance_upper_bound,
+                  "map_chunk": map_chunk, "max_workers": max_workers}
         with cls(excl_fpath, res_fpath, dset, **kwargs) as mapper:
             lats, lons, ind = mapper._parallel_resource_map()
             distance_upper_bound = mapper._distance_upper_bound

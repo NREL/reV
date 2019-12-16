@@ -58,12 +58,12 @@ def test_parallel_agg(resolution=64):
                                          res_class_dset=None,
                                          res_class_bins=None,
                                          resolution=resolution,
-                                         gids=gids, n_cores=1)
+                                         gids=gids, max_workers=1)
     summary_parallel = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
                                            res_class_dset=None,
                                            res_class_bins=None,
                                            resolution=resolution,
-                                           gids=gids, n_cores=3)
+                                           gids=gids, max_workers=3)
 
     assert all(summary_serial == summary_parallel)
 
@@ -75,7 +75,7 @@ def test_aggregation_summary():
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
                             data_layers=DATA_LAYERS,
-                            n_cores=1)
+                            max_workers=1)
 
     if not os.path.exists(AGG_BASELINE):
         s.to_csv(AGG_BASELINE)
@@ -103,14 +103,14 @@ def test_aggregation_scalar_excl():
                              res_class_dset=RES_CLASS_DSET,
                              res_class_bins=RES_CLASS_BINS,
                              data_layers=DATA_LAYERS,
-                             n_cores=1, gids=gids_subset)
+                             max_workers=1, gids=gids_subset)
     excl_dict_2 = {'ri_padus': {'exclude_values': [1],
                                 'weight': 0.5}}
     s2 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_2,
                              res_class_dset=RES_CLASS_DSET,
                              res_class_bins=RES_CLASS_BINS,
                              data_layers=DATA_LAYERS,
-                             n_cores=1, gids=gids_subset)
+                             max_workers=1, gids=gids_subset)
 
     dsets = ['area_sq_km', 'capacity']
     for dset in dsets:

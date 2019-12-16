@@ -39,7 +39,7 @@ def test_vpd():
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
                             data_layers=DATA_LAYERS,
-                            n_cores=1, power_density=FVPD)
+                            max_workers=1, power_density=FVPD)
 
     vpd = pd.read_csv(FVPD, index_col=0)
     for i in s.index:
@@ -67,7 +67,7 @@ def test_vpd_fractional_excl():
                              res_class_bins=RES_CLASS_BINS,
                              data_layers=DATA_LAYERS,
                              power_density=FVPD,
-                             n_cores=1, gids=gids_subset)
+                             max_workers=1, gids=gids_subset)
 
     excl_dict_2 = {'ri_padus': {'exclude_values': [1],
                                 'weight': 0.5}}
@@ -76,7 +76,7 @@ def test_vpd_fractional_excl():
                              res_class_bins=RES_CLASS_BINS,
                              data_layers=DATA_LAYERS,
                              power_density=FVPD,
-                             n_cores=1, gids=gids_subset)
+                             max_workers=1, gids=gids_subset)
 
     for i in s1.index:
         cap_full = s1.loc[i, 'capacity']
@@ -95,7 +95,7 @@ def test_vpd_incomplete():
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
                             data_layers=DATA_LAYERS,
-                            n_cores=1, power_density=FVPDI)
+                            max_workers=1, power_density=FVPDI)
     except FileInputError as e:
         if '1314958' in str(e):
             pass

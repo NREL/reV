@@ -134,10 +134,10 @@ def collect(ctx, group, source_files, dsets, verbose):
     for dset in dsets:
         if MultiYear.is_profile(source_files, dset):
             MultiYear.collect_profiles(my_file, source_files, dset,
-                                       my_group=group)
+                                       group=group)
         else:
             MultiYear.collect_means(my_file, source_files, dset,
-                                    my_group=group)
+                                    group=group)
 
     runtime = (time.time() - t0) / 60
     logger.info('Multi-year collection completed in: {:.2f} min.'
@@ -187,10 +187,10 @@ def my_groups(ctx, group_params, verbose):
         for dset in group['dsets']:
             if MultiYear.is_profile(group['source_files'], dset):
                 MultiYear.collect_profiles(my_file, group['source_files'],
-                                           dset, my_group=group['group'])
+                                           dset, group=group['group'])
             else:
                 MultiYear.collect_means(my_file, group['source_files'],
-                                        dset, my_group=group['group'])
+                                        dset, group=group['group'])
 
         runtime = (time.time() - t0) / 60
         logger.info('- {} collection completed in: {:.2f} min.'

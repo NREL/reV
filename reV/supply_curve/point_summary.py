@@ -487,7 +487,12 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
     @classmethod
     def summary(cls, gid, excl_fpath, gen_fpath, tm_dset,
-                gen_index, args=None, data_layers=None, **kwargs):
+                gen_index, args=None, data_layers=None,
+                excl_dict=None, res_class_dset=None, res_class_bin=None,
+                ex_area=0.0081, power_density=None,
+                cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
+                resolution=64, exclusion_shape=None, close=False,
+                offshore_flags=None):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -512,15 +517,49 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
             and "fpath".
-        kwargs : dict
-            Keyword args to init the SC point.
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        res_class_dset : str | np.ndarray | None
+            Dataset in the generation file dictating resource classes.
+            Can be pre-extracted resource data in np.ndarray.
+            None if no resource classes.
+        res_class_bin : list | None
+            Two-entry lists dictating the single resource class bin.
+            None if no resource classes.
+        ex_area : float
+            Area of an exclusion cell (square km).
+        power_density : float | None | pd.DataFrame
+            Constant power density float, None, or opened dataframe with
+            (resource) "gid" and "power_density columns".
+        cf_dset : str | np.ndarray
+            Dataset name from gen containing capacity factor mean values.
+            Can be pre-extracted generation output data in np.ndarray.
+        lcoe_dset : str | np.ndarray
+            Dataset name from gen containing LCOE mean values.
+            Can be pre-extracted generation output data in np.ndarray.
+        resolution : int | None
+            SC resolution, must be input in combination with gid.
+        exclusion_shape : tuple
+            Shape of the exclusions extent (rows, cols). Inputing this will
+            speed things up considerably.
+        close : bool
+            Flag to close object file handlers on exit.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
 
         Returns
         -------
         summary : dict
             Dictionary of summary outputs for this sc point.
         """
-
+        kwargs = {"excl_dict": excl_dict, "res_class_dset": res_class_dset,
+                  "res_class_bin": res_class_bin, "ex_area": ex_area,
+                  "power_density": power_density, "cf_dset": cf_dset,
+                  "lcoe_dset": lcoe_dset, "resolution": resolution,
+                  "exclusion_shape": exclusion_shape, "close": close,
+                  "offshore_flags": offshore_flags}
         with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                  **kwargs) as point:
 

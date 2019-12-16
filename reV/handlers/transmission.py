@@ -43,9 +43,9 @@ class TransmissionFeatures:
             in $/MW
         available_capacity : float
             Fraction of capacity that is available for connection
-        line_lmited : bool
+        line_limited : bool
             Substation connection is limited by maximum capacity of the
-            attached lines
+            attached lines, legacy method
         """
 
         logger.debug('Line tie in cost: {} $/MW'.format(line_tie_in_cost))
@@ -649,7 +649,7 @@ class TransmissionCosts(TransmissionFeatures):
     def feature_costs(cls, trans_table, capacity=None, line_tie_in_cost=14000,
                       line_cost=3667, station_tie_in_cost=0,
                       center_tie_in_cost=0, sink_tie_in_cost=14000,
-                      available_capacity=0.1, line_limited=False, **kwargs):
+                      available_capacity=0.1, line_limited=False):
         """
         Compute costs for all connections in given transmission table
 
@@ -675,9 +675,7 @@ class TransmissionCosts(TransmissionFeatures):
             Fraction of capacity that is available for connection
         line_limited : bool
             Substation connection is limited by maximum capacity of the
-            attached lines
-        kwargs : dict
-            Internal kwargs for connect
+            attached lines, legacy method
 
         Returns
         -------
@@ -700,8 +698,7 @@ class TransmissionCosts(TransmissionFeatures):
                 tm = row.get('transmission_multiplier', 1)
                 costs.append(feature.cost(row['trans_line_gid'],
                                           row['dist_mi'], capacity=capacity,
-                                          transmission_multiplier=tm,
-                                          **kwargs))
+                                          transmission_multiplier=tm))
         except Exception:
             logger.exception("Error computing costs for all connections in {}"
                              .format(cls))

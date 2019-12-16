@@ -199,7 +199,7 @@ class Aggregation:
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                  data_layers=None, resolution=64, power_density=None,
                  gids=None, area_filter_kernel='queen', min_area=None,
-                 n_cores=None):
+                 max_workers=None):
         """
         Parameters
         ----------
@@ -240,7 +240,7 @@ class Aggregation:
             Contiguous area filter method to use on final exclusions mask
         min_area : float | NoneType
             Minimum required contiguous area filter in sq-km
-        n_cores : int | None
+        max_workers : int | None
             Number of cores to run summary on. 1 is serial, None is all
             available cpus.
         """
@@ -268,9 +268,9 @@ class Aggregation:
             logger.warning(msg)
             warn(msg, InputWarning)
 
-        if n_cores is None:
-            n_cores = os.cpu_count()
-        self._n_cores = n_cores
+        if max_workers is None:
+            max_workers = os.cpu_count()
+        self._max_workers = max_workers
 
         if gids is None:
             with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
@@ -431,7 +431,7 @@ class Aggregation:
                         cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                         data_layers=None, resolution=64, power_density=None,
                         gids=None, area_filter_kernel='queen', min_area=None,
-                        **kwargs):
+                        args=None, ex_area=0.0081, close=False):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -477,9 +477,17 @@ class Aggregation:
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
-        kwargs : dict
-            Namespace of additional keyword args to init
-            SupplyCurvePointSummary.
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | NoneType
+            Minimum required contiguous area filter in sq-km
+        args : tuple | list | None
+            List of summary arguments to include. None defaults to all
+            available args defined in the class attr.
+        ex_area : float
+            Area of an exclusion cell (square km).
+        close : bool
+            Flag to close object file handlers on exit.
 
         Returns
         -------
@@ -526,7 +534,10 @@ class Aggregation:
                             exclusion_shape=exclusion_shape,
                             power_density=fhandler.power_density,
                             offshore_flags=inputs[4],
-                            **kwargs)
+                            args=args,
+                            excl_dict=excl_dict,
+                            ex_area=ex_area,
+                            close=close)
 
                     except EmptySupplyCurvePointError:
                         pass
@@ -541,14 +552,18 @@ class Aggregation:
 
         return summary
 
-    def _parallel_summary(self, **kwargs):
+    def _parallel_summary(self, args=None, ex_area=0.0081, close=False):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
         ----------
-        kwargs : dict
-            Namespace of additional keyword args to init
-            SupplyCurvePointSummary.
+        args : tuple | list | None
+            List of summary arguments to include. None defaults to all
+            available args defined in the class attr.
+        ex_area : float
+            Area of an exclusion cell (square km).
+        close : bool
+            Flag to close object file handlers on exit.
 
         Returns
         -------
@@ -563,13 +578,13 @@ class Aggregation:
                     'points {} through {} at a resolution of {} '
                     'on {} cores in {} chunks.'
                     .format(self._gids[0], self._gids[-1], self._resolution,
-                            self._n_cores, len(chunks)))
+                            self._max_workers, len(chunks)))
 
         n_finished = 0
         futures = []
         summary = []
 
-        with cf.ProcessPoolExecutor(max_workers=self._n_cores) as executor:
+        with cf.ProcessPoolExecutor(max_workers=self._max_workers) as executor:
 
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
@@ -584,10 +599,9 @@ class Aggregation:
                     data_layers=self._data_layers,
                     resolution=self._resolution,
                     power_density=self._power_density,
-                    gids=gid_set,
                     area_filter_kernel=self._area_filter_kernel,
                     min_area=self._min_area,
-                    **kwargs))
+                    gids=gid_set, args=args, ex_area=ex_area, close=close))
 
             # gather results
             for future in cf.as_completed(futures):
@@ -782,7 +796,7 @@ class Aggregation:
                 data_layers=None, resolution=64, power_density=None,
                 offshore_gid_adder=1e7, offshore_capacity=600,
                 gids=None, area_filter_kernel='queen', min_area=None,
-                n_cores=None, **kwargs):
+                max_workers=None, args=None, ex_area=0.0081, close=False):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -829,12 +843,22 @@ class Aggregation:
             Contiguous area filter method to use on final exclusions mask
         min_area : float | NoneType
             Minimum required contiguous area filter in sq-km
-        n_cores : int | None
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | NoneType
+            Minimum required contiguous area filter in sq-km
+        max_workers : int | None
             Number of cores to run summary on. 1 is serial, None is all
             available cpus.
-        kwargs : dict
-            Namespace of additional keyword args to init
-            SupplyCurvePointSummary.
+        option : str
+            Output dtype option (dict, dataframe).
+        args : tuple | list | None
+            List of summary arguments to include. None defaults to all
+            available args defined in the class attr.
+        ex_area : float
+            Area of an exclusion cell (square km).
+        close : bool
+            Flag to close object file handlers on exit.
 
         Returns
         -------
@@ -848,25 +872,27 @@ class Aggregation:
                   data_layers=data_layers, resolution=resolution,
                   power_density=power_density, gids=gids,
                   area_filter_kernel=area_filter_kernel, min_area=min_area,
-                  n_cores=n_cores)
+                  max_workers=max_workers)
 
-        if n_cores == 1:
-            summary = agg._serial_summary(
-                agg._excl_fpath, agg._gen_fpath, agg._tm_dset,
-                agg._excl_dict, agg._gen_index,
-                res_class_dset=agg._res_class_dset,
-                res_class_bins=agg._res_class_bins,
-                cf_dset=agg._cf_dset,
-                lcoe_dset=agg._lcoe_dset,
-                data_layers=agg._data_layers,
-                resolution=agg._resolution,
-                power_density=agg._power_density,
-                area_filter_kernel=agg._area_filter_kernel,
-                min_area=agg._min_area,
-                gids=gids,
-                **kwargs)
+        if max_workers == 1:
+            afk = agg._area_filter_kernel
+            summary = agg._serial_summary(agg._excl_fpath, agg._gen_fpath,
+                                          agg._tm_dset, agg._excl_dict,
+                                          agg._gen_index,
+                                          res_class_dset=agg._res_class_dset,
+                                          res_class_bins=agg._res_class_bins,
+                                          cf_dset=agg._cf_dset,
+                                          lcoe_dset=agg._lcoe_dset,
+                                          data_layers=agg._data_layers,
+                                          resolution=agg._resolution,
+                                          power_density=agg._power_density,
+                                          area_filter_kernel=afk,
+                                          min_area=agg._min_area,
+                                          gids=gids, args=args,
+                                          ex_area=ex_area, close=close)
         else:
-            summary = agg._parallel_summary(**kwargs)
+            summary = agg._parallel_summary(args=args, ex_area=ex_area,
+                                            close=close)
 
         summary = agg._offshore_summary(summary,
                                         offshore_gid_adder=offshore_gid_adder,
