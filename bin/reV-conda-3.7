@@ -1,0 +1,48 @@
+#%Module -*- tcl -*-
+
+#
+# Prerequsite modules
+#
+module purge
+module load conda
+
+# NOTE:
+#    the tags 'pkg_name', 'pkg_version', 'pkg_prefix',
+#    'pkg_root' and 'pkg_libname' would be replaced by the
+#    appropriate names 'by-hand' or by another script
+
+#################### Set top-level variables #########################
+
+# 'Real' name of package, appears in help,display message
+set PKG_NAME      reV
+
+# Version number (eg v major.minor.patch)
+set PKG_VERSION   0.1.0
+
+# Path to the top-level package install location.
+# Other enviro/path variable values constructed from this
+set PKG_ROOT     /projects/rev/modulefiles/gitrepos/reV
+######################################################################
+
+
+proc ModulesHelp { } {
+    global PKG_VERSION
+    global PKG_ROOT
+    global PKG_NAME
+    puts stdout "Build:       $PKG_NAME-$PKG_VERSION"
+    puts stdout "URL:         "
+    puts stdout "Description: reVX"
+    puts stdout "For assistance contact michael.rossol@nrel.gov"
+    puts stdout " "
+    puts stdout "Note: "
+    puts stdout "      "
+}
+
+module-whatis "$PKG_NAME: NSRDB handler using reVX $PKG_VERSION"
+
+
+if { [module-info mode load] || [module-info mode switch2] } {
+    system "source activate /projects/rev/modulefiles/conda_env;"
+} elseif { [module-info mode remove] && ![module-info mode switch3] } {
+    system "source deactivate;"
+}
