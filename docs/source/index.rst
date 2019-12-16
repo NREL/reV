@@ -3,13 +3,22 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to reV's documentation!
-====================================
+reV documentation
+*******************
+
+What is reV?
+=============
+reV stands for **Renewable Energy Potential(V)** model.
+
+reV enables the efficient and scalable computation of renewable energy
+generation, levelized cost of energy (LCOE), application of
+geospatial exclusion layers, and generation of renewable energy supply curves.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   readme_link
    reV
 
 Indices and tables
