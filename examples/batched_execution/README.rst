@@ -5,6 +5,7 @@ This example set shows how reV inputs can be parameterized and the execution can
 
 Batching Config Description
 ***************************
+
  - "sets" in the batch config is a list of batches.
  - Each "batch" is a dictionary containing "args" and "files".
  - "args" are the key/value pairs from which the batching combinations will be made. Each unique combination of args represents a job. If two args are specified with three possible values each, nine jobs will be run.
@@ -13,8 +14,8 @@ Batching Config Description
 
 How to Run
 **********
-All batch jobs will be kicked off using the following CLI call:
 
+All batch jobs will be kicked off using the following CLI call:
 ::
     rev -c "../config_batch.json" batch
 
@@ -28,6 +29,5 @@ All of the batch jobs can be collected into a single file using the multi-year c
 This utility is not part of the batch pipeline and needs to be executed and configured separately.
 See the ``config_multi-year.json`` file for details on how to setup this collection step.
 To execute, use the following command:
-
 ::
     rev -c "../config_multi-year.json" multi-year

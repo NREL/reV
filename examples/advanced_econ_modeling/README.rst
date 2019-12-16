@@ -7,8 +7,8 @@ More complex input sets on a site-by-site basis can be easily generated using a 
 
 Workflow Description
 ********************
-The batching config in this example represents the high-level executed module. The user executes the following command:
 
+The batching config in this example represents the high-level executed module. The user executes the following command:
 ::
     rev -c "../config_batch.json" batch
 
