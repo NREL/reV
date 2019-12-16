@@ -10,6 +10,7 @@ from scipy.spatial import cKDTree
 import logging
 from warnings import warn
 
+from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
 from reV.offshore.orca import ORCA_LCOE
 from reV.utilities.exceptions import OffshoreWindInputWarning
@@ -21,7 +22,8 @@ logger = logging.getLogger(__name__)
 class Offshore:
     """Framework to handle offshore wind analysis."""
 
-    def __init__(self, cf_file, offshore_file, offshore_gid_adder=1e7):
+    def __init__(self, cf_file, offshore_file, project_points,
+                 offshore_gid_adder=1e7):
         """
         Parameters
         ----------
@@ -29,6 +31,8 @@ class Offshore:
             Full filepath to reV gen h5 output file.
         offshore_file : str
             Full filepath to offshore wind farm data file.
+        project_points : reV.config.project_points.ProjectPoints
+            Instantiated project points instance.
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
@@ -36,6 +40,7 @@ class Offshore:
 
         self._cf_file = cf_file
         self._offshore_file = offshore_file
+        self._project_points = project_points
         self._offshore_gid_adder = offshore_gid_adder
         self._meta_out_offshore = None
 
@@ -66,7 +71,14 @@ class Offshore:
 
     @property
     def meta_out_offshore(self):
-        """Get the output offshore meta data."""
+        """Get the output offshore meta data.
+
+        Returns
+        -------
+        meta_out_offshore : pd.DataFrame
+            Offshore farm meta data. Offshore farms without resource
+            neighbors are dropped.
+        """
 
         if self._meta_out_offshore is None:
             self._meta_out_offshore = self._farm_coords.copy()
@@ -95,6 +107,19 @@ class Offshore:
 
         return self._meta_out_offshore
 
+    @property
+    def out(self):
+        """Output data.
+
+        Returns
+        -------
+        out : dict
+            Output data keyed by reV dataset names. Each dataset will have a
+            spatial dimension (for all the offshore wind farms) and maybe a
+            time dimension if the dataset is profiles.
+        """
+        return self._out
+
     def _init_out_arrays(self):
         """Get a dictionary of initialized output arrays for offshore outputs.
 
@@ -104,26 +129,26 @@ class Offshore:
             Dictionary of output arrays filled with zeros for offshore data.
             Has keys for all datasets present in cf_file.
         """
-        shape = (len(self.meta_out_offshore), 1)
-        out_arrays = {'cf_mean': np.zeros(shape, dtype=np.float32),
-                      'lcoe_fcr': np.zeros(shape, dtype=np.float32)}
+
+        out_arrays = {}
 
         with Outputs(self._cf_file, mode='r') as out:
             dsets = [d for d in out.dsets if d not in ('time_index', 'meta')]
-            for dset in dsets:
-                shape, _, _ = out.get_dset_properties(dset)
-                if len(shape) == 1:
-                    shape = (len(self.meta_out_offshore), )
-                else:
-                    shape = (shape[0], len(self.meta_out_offshore))
 
-                out_arrays[dset] = np.zeros(shape, dtype=np.float32)
+            for dset in dsets:
+                shape = out.get_dset_properties(dset)[0]
+                if len(shape) == 1:
+                    dset_shape = (len(self.meta_out_offshore), )
+                else:
+                    dset_shape = (shape[0], len(self.meta_out_offshore))
+
+                out_arrays[dset] = np.zeros(dset_shape, dtype=np.float32)
 
         return out_arrays
 
     @staticmethod
     def _parse_cf_meta(cf_file):
-        """Parse cf meta for offshore points.
+        """Parse cf meta dataframe and get masks for onshore/offshore points.
 
         Parameters
         ----------
@@ -155,7 +180,7 @@ class Offshore:
 
     @staticmethod
     def _parse_offshore_file(offshore_file):
-        """Parse the offshore data file.
+        """Parse the offshore data file for offshore farm site data and coords.
 
         Parameters
         ----------
@@ -207,7 +232,7 @@ class Offshore:
         d : np.ndarray
             Distance between offshore resource pixel and offshore wind farm.
         i : np.ndarray
-            Offshore row numbers corresponding to every offshore resource pixel
+            Offshore farm row numbers corresponding to resource pixels
             (length is number of offshore resource pixels in cf_file).
         """
 
@@ -216,7 +241,7 @@ class Offshore:
 
         if len(self._farm_coords) > 1:
             d_lim, _ = tree.query(self._farm_coords, k=2)
-            d_lim = 1.05 * np.max(d_lim[:, 1])
+            d_lim = np.max(d_lim[:, 1])
             i[(d > d_lim)] = -1
 
         return d, i
@@ -240,19 +265,33 @@ class Offshore:
 
         Returns
         -------
-        cf_data : np.ndarray
-            Array of cf data. 2D profiles array if cf_profile present in
-            cf_file, 1D array of cf_mean otherwise.
-        lcoe : float
-            Site LCOE value with units: $/MWh.
+        gen_data : dict
+            Dictionary of all available generation datasets. Keys are reV gen
+            output dataset names, values are spatial averages - scalar resource
+            data (cf_mean) gets averaged to one offshore farm value (float),
+            profiles (cf_profile) gets averaged to one offshore farm profile
+            (1D arrays). Added ORCA lcoe as "lcoe_fcr" with wind farm site
+            LCOE value with units: $/MWh.
         """
-        cf_data = Offshore._get_farm_cf(cf_file, meta)
-        lcoe = Offshore._run_orca(cf_data.mean(), system_inputs, site_data)
-        return cf_data, lcoe
+
+        gen_data = Offshore._get_farm_gen_data(cf_file, meta)
+        cf = gen_data['cf_mean'].mean()
+
+        if cf > 1:
+            m = ('Offshore wind aggregated mean capacity factor ({}) is '
+                 'greater than 1, maybe the data is still integer scaled.'
+                 .format(cf))
+            logger.warning(m)
+            warn(m, OffshoreWindInputWarning)
+
+        lcoe = Offshore._run_orca(cf, system_inputs, site_data)
+        gen_data['lcoe_fcr'] = lcoe
+        return gen_data
 
     @staticmethod
-    def _get_farm_cf(cf_file, meta):
-        """Get the aggregated cf profile for a single wind farm.
+    def _get_farm_gen_data(cf_file, meta, ignore=('meta', 'time_index',
+                                                  'lcoe_fcr')):
+        """Get the aggregated generation data for a single wind farm.
 
         Parameters
         ----------
@@ -262,20 +301,39 @@ class Offshore:
             Offshore resource meta data for resource pixels belonging to the
             single wind farm. The meta index should correspond to the gids in
             the cf_file.
+        ignore : list | tuple
+            List of datasets to ignore and not retrieve.
 
         Returns
         -------
-        cf_data : np.ndarray
-            Array of cf data. 2D profiles array if cf_profile present in
-            cf_file, 1D array of cf_mean otherwise.
+        gen_data : dict
+            Dictionary of all available generation datasets. Keys are reV gen
+            output dataset names, values are spatial averages - scalar resource
+            data (cf_mean) gets averaged to one offshore farm value (float),
+            profiles (cf_profile) gets averaged to one offshore farm profile
+            (1D arrays).
         """
 
-        with Outputs(cf_file, mode='r') as out:
-            if 'cf_profile' in out.dsets:
-                cf_data = out['cf_profile', :, meta.index.values]
-            else:
-                cf_data = out['cf_mean', meta.index.values]
-        return cf_data
+        gen_data = {}
+        with Outputs(cf_file, mode='r', unscale=True) as out:
+
+            dsets = [d for d in out.dsets if d not in ignore]
+
+            if 'cf_mean' not in dsets:
+                m = ('Offshore wind data aggregation needs cf_mean but reV '
+                     'gen output file only had: {}'.format(out.dsets))
+                logger.error(m)
+                raise KeyError(m)
+
+            for dset in dsets:
+                shape = out.get_dset_properties(dset)[0]
+                if len(shape) == 1:
+                    gen_data[dset] = out[dset, meta.index.values].mean()
+                else:
+                    arr = out[dset, :, meta.index.values]
+                    gen_data[dset] = arr.mean(axis=1)
+
+        return gen_data
 
     @staticmethod
     def _run_orca(cf_mean, system_inputs, site_data):
@@ -331,13 +389,26 @@ class Offshore:
 
         return res_gid, farm_gid
 
-    def _get_system_inputs():
-        pass
+    def _get_system_inputs(self, res_gid):
+        """Get the system inputs dict (SAM tech inputs) from project points.
+
+        Parameters
+        ----------
+        res_gid : int
+            WTK resource gid for wind farm (nearest neighbor).
+
+        Returns
+        -------
+        system_inputs : dict
+            Dictionary of SAM system inputs for wtk resource gid input.
+        """
+        system_inputs = self._project_points[res_gid][1]
+        return system_inputs
 
     def _run_serial(self):
         """Run offshore compute in serial.
         """
-        out = {}
+
         for ifarm, row in self._offshore_data.iterrows():
             farm_gid, res_gid = self._get_farm_gid(ifarm)
             if farm_gid is not None:
@@ -345,10 +416,47 @@ class Offshore:
                 meta = self.meta_source_offshore.iloc[cf_ilocs]
                 system_inputs = self._get_system_inputs(res_gid)
                 site_data = row.to_dict()
-                cf, lcoe = self._get_farm_data(self._cf_file, meta,
+
+                gen_data = self._get_farm_data(self._cf_file, meta,
                                                system_inputs, site_data)
-                out[farm_gid] = {'cf_mean': cf.mean(),
-                                 'lcoe_fcr': lcoe}
-                if len(cf.shape) > 1:
-                    out[farm_gid]['cf_profile'] = cf.mean(axis=1)
-                self._out[]
+
+                for k, v in gen_data.items():
+                    if isinstance(v, (float, int)):
+                        self._out[k][ifarm] = v
+                    else:
+                        self._out[k][:, ifarm] = v
+
+    @classmethod
+    def run(cls, cf_file, offshore_file, points, sam_files,
+            offshore_gid_adder=1e7):
+        """Run the offshore aggregation methods.
+
+        Parameters
+        ----------
+        cf_file : str
+            Full filepath to reV gen h5 output file.
+        offshore_file : str
+            Full filepath to offshore wind farm data file.
+        points : slice | list | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        sam_files : dict | str | list
+            Dict contains SAM input configuration ID(s) and file path(s).
+            Keys are the SAM config ID(s), top level value is the SAM path.
+            Can also be a single config file str. If it's a list, it is mapped
+            to the sorted list of unique configs requested by points csv.
+        offshore_gid_adder : int | float
+            The offshore Supply Curve gids will be set equal to the respective
+            resource gids plus this number.
+
+        Returns
+        -------
+        offshore : Offshore
+            Offshore aggregation object.
+        """
+        points_range = None
+        pc = Gen.get_pc(points, points_range, sam_files, 'wind',
+                        sites_per_worker=100)
+        offshore = cls(cf_file, offshore_file, pc.project_points,
+                       offshore_gid_adder)
+        return offshore
