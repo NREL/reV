@@ -1,4 +1,4 @@
 Installation and Usage
 ======================
 
-.. include:: ../../README.md
+.. include:: ../../README.rst
