@@ -12,12 +12,12 @@ If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled mo
 Launching a run
 ---------------
 Tips:
-- only use a screen session if running the pipeline module: `screen -S rev`
-- Running simply generation or lcoe can just be done from the console.
+-- only use a screen session if running the pipeline module: `screen -S rev`
+-- Running simply generation or lcoe can just be done from the console.
 ::
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
-- `Full pipeline example <https://github.com/NREL/reV2/tree/master/examples/pipeline_execution>`_
+-- `Full pipeline example <https://github.com/NREL/reV2/tree/master/examples/pipeline_execution>`_
 
 General Run times and Node configuration on Eagle
 -------------------------------------------------
