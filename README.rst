@@ -17,15 +17,17 @@ Tips:
 ::
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
-    - `Full pipeline example here<https://github.com/NREL/reV2/tree/master/examples/pipeline_execution>`_
+    - `Full pipeline example here`_
+
+    .. _Full pipeline example: https://github.com/NREL/reV2/tree/master/examples/pipeline_execution
 
 General Run times and Node configuration on Eagle
 =================================================
 - WTK Conus: 10-20 nodes per year walltime 1-4 hours
 - NSRDB Conus: 5 nodes walltime 2 hours
 
-`Execution examples.<https://github.com/NREL/reV/tree/master/examples>`_
-
+`Execution examples`_
+.. _Execution examples: https://github.com/NREL/reV/tree/master/examples
 Installing reV
 **************
 Option 1: PIP Install the most recent version of master (recommended for analysts):
