@@ -16,10 +16,9 @@ Launching a run
 Tips
 
 - only use a screen session if running the pipeline module: `screen -S rev`
-- Running simply generation or lcoe can just be done from the console.
-
-.. code:: bash
-    reV -c "/scratch/user/rev/config_pipeline.json" pipeline
+- Running simply generation or lcoe can just be done from the console:
+    ::
+        reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
 - `Full pipeline example here <https://github.com/NREL/reV/tree/master/examples/full_pipeline_execution>`_
 
