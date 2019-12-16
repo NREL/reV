@@ -14,11 +14,12 @@ reV enables the efficient and scalable computation of renewable energy
 generation, levelized cost of energy (LCOE), application of
 geospatial exclusion layers, and generation of renewable energy supply curves.
 
+.. include:: ../../README.rst
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   readme_link
    reV
 
 Indices and tables
