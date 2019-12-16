@@ -98,7 +98,8 @@ setup(
                       "scipy", "NREL-PySAM"],
     extras_require={
         "test": test_requires,
-        "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],
+        "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint",
+                                "recommonmark"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )

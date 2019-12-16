@@ -28,9 +28,9 @@ copyright = '2018, Galen MacLaurin, Michael Rossol'
 author = 'Galen MacLaurin, Michael Rossol'
 
 # The short X.Y version
-version = '2.0.0'
+version = '0.1.0'
 # The full version, including alpha/beta/rc tags
-release = '2.0.0'
+release = '0.1.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -43,6 +43,7 @@ release = '2.0.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'recommonmark'
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
@@ -57,7 +58,11 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst', '.md']
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.txt': 'markdown',
+    '.md': 'markdown',
+}
 # source_suffix = '.rst'
 
 # source_parsers = {'.md': MarkdownParser}
