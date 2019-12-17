@@ -38,8 +38,7 @@ class Economic(SAM):
             Site-agnostic SAM model input parameters.
         site_parameters : dict
             Optional set of site-specific parameters to complement the
-            site-agnostic 'parameters' input arg. Must have an 'offshore'
-            column with boolean dtype if running ORCA.
+            site-agnostic 'parameters' input arg.
         output_request : list | tuple | str
             Requested SAM output(s) (e.g., 'ppa_price', 'lcoe_fcr').
         """
@@ -58,31 +57,17 @@ class Economic(SAM):
                          output_request=output_request)
 
     def _parse_site_parameters(self, site_parameters):
-        """Parse site-specific parameters including offshore flags.
+        """Parse site-specific parameters and add to parameter dict.
 
         Parameters
         ----------
         site_parameters : dict
             Optional set of site-specific parameters to complement the
-            site-agnostic 'parameters' input arg. Must have an 'offshore'
-            column with boolean dtype if running ORCA.
+            site-agnostic 'parameters' input arg.
         """
-        # check if offshore wind
-        offshore = False
-        if site_parameters is not None:
-            if 'offshore' in site_parameters:
-                offshore = (bool(site_parameters['offshore'])
-                            and not np.isnan(site_parameters['offshore']))
-
-        # handle site-specific parameters
-        if offshore:
-            # offshore ORCA parameters will be handled seperately
-            self._site_parameters = site_parameters
-        # Non-offshore parameters can be added to ParametersManager class
-        else:
-            self._site_parameters = None
-            if site_parameters is not None:
-                self.parameters.update(site_parameters)
+        self._site_parameters = site_parameters
+        if self._site_parameters is not None:
+            self.parameters.update(self._site_parameters)
 
     @staticmethod
     def _parse_sys_cap(site, inputs, site_df):
@@ -100,7 +85,7 @@ class Economic(SAM):
         Returns
         -------
         sys_cap : int | float
-            System nameplate capacity in native units (SAM is kW, ORCA is MW).
+            System nameplate capacity in native units (SAM is kW).
         """
 
         if ('system_capacity' not in inputs
@@ -147,7 +132,7 @@ class Economic(SAM):
         inputs : dict
             Dictionary of SAM input parameters.
         calc_aey : bool
-            Flag to add annual_energy to df (should be false for ORCA).
+            Flag to add annual_energy to df.
 
         Returns
         -------
@@ -155,12 +140,6 @@ class Economic(SAM):
             Same as input but with added labels "capacity_factor" and
             "annual_energy" (latter is dependent on calc_aey flag).
         """
-
-        # check to see if this site is offshore
-        offshore = False
-        if 'offshore' in site_df:
-            offshore = (bool(site_df.loc[site, 'offshore'])
-                        and not np.isnan(site_df.loc[site, 'offshore']))
 
         # get the index location of the site in question
         isite = site_gids.index(site)
@@ -173,8 +152,7 @@ class Economic(SAM):
         site_df.loc[site, 'capacity_factor'] = cf
 
         # calculate the annual energy yield if not input;
-        # offshore requires that ORCA does the aey calc
-        if calc_aey and not offshore:
+        if calc_aey:
             # get the system capacity
             sys_cap = Economic._parse_sys_cap(site, inputs, site_df)
 
@@ -416,23 +394,6 @@ class LCOE(Economic):
                 raise KeyError('Could not find cf_mean values for LCOE. '
                                'Available datasets: {}'.format(cfh.dsets))
         return site_gids, calc_aey, cf_arr
-
-    def execute(self):
-        """Execute a SAM economic model calculation."""
-        # check to see if there is an offshore flag and set for this run
-        offshore = False
-        if self._site_parameters is not None:
-            if 'offshore' in self._site_parameters:
-                offshore = bool(self._site_parameters['offshore'])
-
-        if offshore:
-            # execute ORCA here for offshore wind LCOE
-            from reV.offshore.orca import ORCA_LCOE
-            orca = ORCA_LCOE(self.parameters, self._site_parameters)
-            self.outputs = {'lcoe_fcr': orca.lcoe}
-        else:
-            # run SAM LCOE normally for non-offshore technologies
-            super().execute()
 
     @property
     def default(self):
