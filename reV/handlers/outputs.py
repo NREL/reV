@@ -7,6 +7,7 @@ import json
 import logging
 import numpy as np
 import pandas as pd
+from pandas.api.types import CategoricalDtype
 import time
 
 from reV.handlers.resource import Resource
@@ -277,14 +278,18 @@ class Outputs(Resource):
 
         Returns
         -------
-        str
-            converted dtype for column
+        out : str
+            String representation of converted dtype for column:
             -  float = float32
             -  int = int16 or int32 depending on data range
             -  object/str = U* max length of strings in col
         """
         dtype = col.dtype
-        if np.issubdtype(dtype, np.floating):
+
+        if isinstance(dtype, CategoricalDtype):
+            col = col.astype(type(col.values[0]))
+            out = Outputs.get_dtype(col)
+        elif np.issubdtype(dtype, np.floating):
             out = 'float32'
         elif np.issubdtype(dtype, np.integer):
             if col.max() < 32767:
@@ -317,12 +322,8 @@ class Outputs(Resource):
         meta_arrays = []
         dtypes = []
         for c_name, c_data in df.iteritems():
-            try:
-                dtype = Outputs.get_dtype(c_data)
-            except TypeError as e:
-                logger.exception('Cannot recognize dtype for df data column '
-                                 '"{}". TypeError:\n{}'.format(c_name, e))
-                raise e
+            dtype = Outputs.get_dtype(c_data)
+
             if np.issubdtype(dtype, np.bytes_):
                 data = c_data.str.encode('utf-8').values
             else:
