@@ -7,12 +7,14 @@ and then calculates the ORCA econ data.
 Offshore resource / generation data refers to WTK 2km (fine resolution)
 Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)
 """
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 import logging
 from warnings import warn
 
+from reV.handlers.collection import DatasetCollector
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
 from reV.offshore.orca import ORCA_LCOE
@@ -25,8 +27,8 @@ logger = logging.getLogger(__name__)
 class Offshore:
     """Framework to handle offshore wind analysis."""
 
-    def __init__(self, cf_file, offshore_file, project_points,
-                 offshore_gid_adder=1e7):
+    def __init__(self, cf_file, offshore_file, project_points, fout=None,
+                 max_workers=None, offshore_gid_adder=1e7):
         """
         Parameters
         ----------
@@ -36,6 +38,10 @@ class Offshore:
             Full filepath to offshore wind farm data file.
         project_points : reV.config.project_points.ProjectPoints
             Instantiated project points instance.
+        fout : str | NoneType
+            Optional output filepath.
+        max_workers : int | None
+            Number of workers for process pool executor. 1 will run in serial.
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
@@ -44,8 +50,11 @@ class Offshore:
         self._cf_file = cf_file
         self._offshore_file = offshore_file
         self._project_points = project_points
+        self._fout = fout
         self._offshore_gid_adder = offshore_gid_adder
         self._meta_out_offshore = None
+        self._time_index = None
+        self._max_workers = max_workers
 
         self._meta_source, self._onshore_mask, self._offshore_mask = \
             self._parse_cf_meta(self._cf_file)
@@ -55,7 +64,7 @@ class Offshore:
 
         self._d, self._i = self._run_nn()
 
-        self._out = self._init_out_arrays()
+        self._out = self._init_offshore_out_arrays()
 
         logger.info('Initialized offshore wind farm aggregation module with '
                     '{} onshore resource points, {} offshore resource points, '
@@ -63,6 +72,14 @@ class Offshore:
                     .format(len(self.meta_source_onshore),
                             len(self.meta_source_offshore),
                             len(self.meta_out_offshore)))
+
+    @property
+    def time_index(self):
+        """Get the source time index."""
+        if self._time_index is None:
+            with Outputs(self._cf_file, mode='r') as out:
+                self._time_index = out.time_index
+        return self._time_index
 
     @property
     def meta_source_full(self):
@@ -80,6 +97,16 @@ class Offshore:
         return self._meta_source[self._offshore_mask]
 
     @property
+    def meta_out(self):
+        """Get the combined onshore and offshore meta data."""
+        return self.meta_out_onshore.append(self.meta_out_offshore, sort=False)
+
+    @property
+    def meta_out_onshore(self):
+        """Get the onshore only meta data."""
+        return self._meta_source[self._onshore_mask]
+
+    @property
     def meta_out_offshore(self):
         """Get the output offshore meta data.
 
@@ -92,38 +119,58 @@ class Offshore:
 
         if self._meta_out_offshore is None:
             self._meta_out_offshore = self._farm_coords.copy()
+
             new_offshore_gids = []
-            new_timezones = []
             new_agg_gids = []
+
+            misc_cols = ['country', 'state', 'county', 'timezone']
+            new_misc = {k: [] for k in misc_cols if k in self.meta_source_full}
 
             for i in self._offshore_data.index:
                 farm_gid, res_gid = self._get_farm_gid(i)
 
                 agg_gids = None
-                timezone = None
+                misc = {k: None for k in new_misc.keys()}
                 if (res_gid is not None
                         and 'timezone' in self.meta_source_offshore):
-                    mask = self.meta_source_offshore['gid'] == res_gid
-                    timezone = self.meta_source_offshore.loc[mask, 'timezone']\
-                        .values[0]
                     ilocs = np.where(self._i == i)
                     meta_sub = self.meta_source_offshore.iloc[ilocs]
                     agg_gids = str(meta_sub['gid'].values.tolist())
 
-                new_timezones.append(timezone)
+                    mask = self.meta_source_offshore['gid'] == res_gid
+                    for k in misc.keys():
+                        misc[k] = self.meta_source_offshore.loc[mask, k]\
+                            .values[0]
+
                 new_offshore_gids.append(farm_gid)
                 new_agg_gids.append(agg_gids)
 
+                for k, v in misc.items():
+                    new_misc[k].append(v)
+
+            for k, v in new_misc.items():
+                self._meta_out_offshore[k] = v
+
             self._meta_out_offshore['elevation'] = 0.0
-            self._meta_out_offshore['timezone'] = new_timezones
+            self._meta_out_offshore['offshore'] = 1
             self._meta_out_offshore['gid'] = new_offshore_gids
-            self._meta_out_offshore['aggregated_gids'] = new_agg_gids
+            self._meta_out_offshore['offshore_res_gids'] = new_agg_gids
             self._meta_out_offshore['reV_tech'] = 'offshore_wind'
 
             self._meta_out_offshore = self._meta_out_offshore.dropna(
                 subset=['gid'])
 
         return self._meta_out_offshore
+
+    @property
+    def onshore_gids(self):
+        """Get a list of gids for the onshore sites."""
+        return self.meta_out_onshore['gid'].values.tolist()
+
+    @property
+    def offshore_gids(self):
+        """Get a list of gids for the offshore sites."""
+        return self.meta_out_offshore['gid'].values.tolist()
 
     @property
     def out(self):
@@ -138,7 +185,37 @@ class Offshore:
         """
         return self._out
 
-    def _init_out_arrays(self):
+    def save_offshore_output(self):
+        """Save offshore aggregated data to offshore output file"""
+        if self._fout is not None:
+            logger.debug('Writing offshore output data to: {}'
+                         .format(self._fout))
+
+            offshore_bool = np.isin(self.meta_out['gid'].values,
+                                    self.offshore_gids)
+            offshore_locs = np.where(offshore_bool)[0]
+            offshore_slice = slice(offshore_locs.min(),
+                                   offshore_locs.max() + 1)
+
+            with Outputs(self._cf_file, mode='r') as source:
+                dsets = [d for d in source.dsets
+                         if d not in ('meta', 'time_index')]
+
+            with Outputs(self._fout, mode='a') as out:
+                shapes = {d: out.get_dset_properties(d)[0] for d in dsets}
+                for dset in dsets:
+                    if len(shapes[dset]) == 1:
+                        out[dset, offshore_slice] = self.out[dset]
+                    else:
+                        out[dset, :, offshore_slice] = self.out[dset]
+
+            for dset in dsets:
+                logger.debug('Writing aggregated offshore data for "{}"'
+                             .format(dset))
+                DatasetCollector.collect_dset(self._fout, [self._cf_file],
+                                              self.onshore_gids, dset)
+
+    def _init_offshore_out_arrays(self):
         """Get a dictionary of initialized output arrays for offshore outputs.
 
         Returns
@@ -165,6 +242,27 @@ class Offshore:
                 out_arrays[dset] = np.zeros(dset_shape, dtype=np.float32)
 
         return out_arrays
+
+    def _init_fout(self):
+        """Initialize the offshore aggregated output file and collect
+        non-aggregated onshore data."""
+        if self._fout is not None:
+            logger.debug('Initializing offshore output file: {}'
+                         .format(self._fout))
+            with Outputs(self._cf_file, mode='r') as source:
+                dsets = [d for d in source.dsets
+                         if d not in ('meta', 'time_index')]
+                meta_attrs = source.get_attrs(dset='meta')
+                ti_attrs = source.get_attrs(dset='time_index')
+            with Outputs(self._fout, mode='w') as out:
+                out._set_meta('meta', self.meta_out, attrs=meta_attrs)
+                out._set_time_index('time_index', self.time_index,
+                                    attrs=ti_attrs)
+
+            for dset in dsets:
+                logger.debug('Collecting onshore data for "{}"'.format(dset))
+                DatasetCollector.collect_dset(self._fout, [self._cf_file],
+                                              self.onshore_gids, dset)
 
     @staticmethod
     def _parse_cf_meta(cf_file):
@@ -463,9 +561,50 @@ class Offshore:
                     else:
                         self._out[k][i] = v
 
+    def _run_parallel(self):
+        """Run offshore gen aggregation and ORCA econ compute in parallel."""
+
+        futures = {}
+        with ProcessPoolExecutor(self._max_workers) as exe:
+
+            iterator = self.meta_out_offshore.iterrows()
+            for i, (ifarm, meta) in enumerate(iterator):
+
+                row = self._offshore_data.loc[ifarm, :]
+                farm_gid, res_gid = self._get_farm_gid(ifarm)
+
+                if farm_gid is not None:
+                    cf_ilocs = np.where(self._i == ifarm)[0]
+                    meta = self.meta_source_offshore.iloc[cf_ilocs]
+                    system_inputs = self._get_system_inputs(res_gid)
+                    site_data = row.to_dict()
+
+                    future = exe.submit(self._get_farm_data, self._cf_file,
+                                        meta, system_inputs, site_data)
+
+                    futures[future] = i
+
+            for fi, future in enumerate(as_completed(futures)):
+                logger.info('Completed {} out of {} offshore compute futures.'
+                            .format(fi + 1, len(futures)))
+                i = futures[future]
+                gen_data = future.result()
+                for k, v in gen_data.items():
+                    if isinstance(v, (np.ndarray, list, tuple)):
+                        self._out[k][:, i] = v
+                    else:
+                        self._out[k][i] = v
+
+    def _run(self):
+        """Run offshore gen aggregation and ORCA econ compute"""
+        if self._max_workers == 1:
+            self._run_serial()
+        else:
+            self._run_parallel()
+
     @classmethod
-    def run(cls, cf_file, offshore_file, points, sam_files,
-            offshore_gid_adder=1e7):
+    def run(cls, cf_file, offshore_file, points, sam_files, fout=None,
+            max_workers=None, offshore_gid_adder=1e7):
         """Run the offshore aggregation methods.
 
         Parameters
@@ -482,6 +621,10 @@ class Offshore:
             Keys are the SAM config ID(s), top level value is the SAM path.
             Can also be a single config file str. If it's a list, it is mapped
             to the sorted list of unique configs requested by points csv.
+        fout : str | NoneType
+            Optional output filepath.
+        max_workers : int | None
+            Number of workers for process pool executor. 1 will run in serial.
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
@@ -495,6 +638,9 @@ class Offshore:
         pc = Gen.get_pc(points, points_range, sam_files, 'wind',
                         sites_per_worker=100)
         offshore = cls(cf_file, offshore_file, pc.project_points,
-                       offshore_gid_adder)
-        offshore._run_serial()
+                       fout=fout, offshore_gid_adder=offshore_gid_adder,
+                       max_workers=max_workers)
+        offshore._init_fout()
+        offshore._run()
+        offshore.save_offshore_output()
         return offshore
