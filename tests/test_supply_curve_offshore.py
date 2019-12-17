@@ -4,6 +4,7 @@ Created on Wed Jun 19 15:37:05 2019
 
 @author: gbuster
 """
+import json
 import numpy as np
 import pytest
 import os
@@ -13,9 +14,11 @@ from reV import TESTDATADIR
 
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
-GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_wind_gen.h5')
+GEN = os.path.join(TESTDATADIR, 'offshore/ri_offshore_archive.h5')
 TM_DSET = 'techmap_wtk'
-RES_CLASS_DSET = 'ws_mean-means'
+RES_CLASS_DSET = 'ws_mean'
+CF_DSET = 'cf_mean'
+LCOE_DSET = 'lcoe_fcr'
 RES_CLASS_BINS = [0, 6, 7, 8, 9, 100]
 DATA_LAYERS = {'pct_slope': {'dset': 'ri_srtm_slope',
                              'method': 'mean'},
@@ -35,6 +38,7 @@ def test_sc_agg_offshore():
     s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
+                            cf_dset=CF_DSET, lcoe_dset=LCOE_DSET,
                             data_layers=DATA_LAYERS,
                             max_workers=1)
 
@@ -46,22 +50,26 @@ def test_sc_agg_offshore():
 
     for sc_gid in s.index:
         if s.at[sc_gid, 'offshore']:
-            assert len(s.at[sc_gid, 'res_gids']) == 1
-            assert s.at[sc_gid, 'res_gids'][0] in offshore_gids
-            assert int(s.at[sc_gid, 'sc_point_gid'] - 1e7) in offshore_gids
+            assert int(s.at[sc_gid, 'sc_point_gid']) > 1e7
+            assert int(s.at[sc_gid, 'sc_point_gid']) in offshore_gids
+            assert all(np.array(json.loads(s.at[sc_gid, 'res_gids'])) < 3e6)
+            assert s.at[sc_gid, 'elevation'] == 0.0
             assert s.at[sc_gid, 'capacity'] == 600
             assert np.isnan(s.at[sc_gid, 'pct_slope'])
         else:
             for res_gid in s.at[sc_gid, 'res_gids']:
                 assert res_gid not in offshore_gids
+    for gid in offshore_gids:
+        assert gid in s['sc_point_gid'].values
 
 
-def plot_sc_offshore(plot_var='mean_res'):
+def plot_sc_offshore(plot_var='mean_lcoe'):
     """Plot the supply curve map colored by plot_var."""
 
     s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
                             res_class_dset=RES_CLASS_DSET,
                             res_class_bins=RES_CLASS_BINS,
+                            cf_dset=CF_DSET, lcoe_dset=LCOE_DSET,
                             data_layers=DATA_LAYERS,
                             max_workers=1)
     import matplotlib.pyplot as plt

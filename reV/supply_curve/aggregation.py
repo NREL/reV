@@ -352,7 +352,7 @@ class Aggregation:
         gen_index['gen_gids'] = gen_index.index
         gen_index = gen_index[['res_gids', 'gen_gids']]
         gen_index = gen_index.set_index(keys='res_gids')
-        gen_index = gen_index.reindex(range(gen_index.index.max() + 1))
+        gen_index = gen_index.reindex(range(int(gen_index.index.max() + 1)))
         gen_index = gen_index['gen_gids'].values
         gen_index[np.isnan(gen_index)] = -1
         gen_index = gen_index.astype(np.int32)
@@ -406,17 +406,21 @@ class Aggregation:
             cf_data = gen[cf_dset]
         else:
             cf_data = None
-            warn('Could not find cf dataset "{}" in '
+            w = ('Could not find cf dataset "{}" in '
                  'generation file: {}'
-                 .format(cf_dset, gen_fpath), OutputWarning)
+                 .format(cf_dset, gen_fpath))
+            logger.warning(w)
+            warn(w, OutputWarning)
 
         if lcoe_dset in gen.dsets:
             lcoe_data = gen[lcoe_dset]
         else:
             lcoe_data = None
-            warn('Could not find lcoe dataset "{}" in '
+            w = ('Could not find lcoe dataset "{}" in '
                  'generation file: {}'
-                 .format(lcoe_dset, gen_fpath), OutputWarning)
+                 .format(lcoe_dset, gen_fpath))
+            logger.warning(w)
+            warn(w, OutputWarning)
 
         if 'offshore' in gen.meta:
             offshore_flag = gen.meta['offshore'].values
@@ -613,9 +617,8 @@ class Aggregation:
 
         return summary
 
-    def _offshore_summary(self, summary, offshore_gid_adder=1e7,
-                          offshore_capacity=600, offshore_gid_counts=494,
-                          offshore_pixel_area=4):
+    def _offshore_summary(self, summary, offshore_capacity=600,
+                          offshore_gid_counts=494, offshore_pixel_area=4):
         """Get the offshore supply curve point summary. Each offshore resource
         pixel will be summarized in its own supply curve point.
 
@@ -623,9 +626,6 @@ class Aggregation:
         ----------
         summary : list
             List of dictionaries, each being an onshore SC point summary.
-        offshore_gid_adder : int | float
-            The offshore Supply Curve gids will be set equal to the respective
-            resource gids plus this number.
         offshore_capacity : int | float
             Offshore resource pixel generation capacity in MW.
         offshore_gid_counts : int
@@ -661,11 +661,12 @@ class Aggregation:
                     if offshore:
 
                         # pylint: disable-msg=E1101
-                        res_gid = fhandler.gen.meta.loc[gen_gid, 'gid']
+                        farm_gid = fhandler.gen.meta.loc[gen_gid, 'gid']
                         latitude = fhandler.gen.meta.loc[gen_gid, 'latitude']
                         longitude = fhandler.gen.meta.loc[gen_gid, 'longitude']
-
-                        offshore_sc_gid = int(res_gid + offshore_gid_adder)
+                        timezone = fhandler.gen.meta.loc[gen_gid, 'timezone']
+                        res_gids = fhandler.gen.meta\
+                            .loc[gen_gid, 'offshore_res_gids']
 
                         res_class = -1
                         for ri, res_bin in enumerate(res_class_bins):
@@ -674,10 +675,10 @@ class Aggregation:
                                 res_class = ri
                                 break
 
-                        pointsum = {'sc_point_gid': offshore_sc_gid,
-                                    'sc_row_ind': offshore_sc_gid,
-                                    'sc_col_ind': offshore_sc_gid,
-                                    'res_gids': [res_gid],
+                        pointsum = {'sc_point_gid': farm_gid,
+                                    'sc_row_ind': farm_gid,
+                                    'sc_col_ind': farm_gid,
+                                    'res_gids': res_gids,
                                     'gen_gids': [gen_gid],
                                     'gid_counts': [int(offshore_gid_counts)],
                                     'mean_cf': cf_data[gen_gid],
@@ -688,6 +689,8 @@ class Aggregation:
                                     'latitude': latitude,
                                     'longitude': longitude,
                                     'res_class': res_class,
+                                    'timezone': timezone,
+                                    'elevation': 0,
                                     'offshore': 1,
                                     }
 
@@ -794,8 +797,8 @@ class Aggregation:
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
-                offshore_gid_adder=1e7, offshore_capacity=600,
-                gids=None, area_filter_kernel='queen', min_area=None,
+                offshore_capacity=600, gids=None,
+                area_filter_kernel='queen', min_area=None,
                 max_workers=None, args=None, ex_area=0.0081, close=False):
         """Get the supply curve points aggregation summary.
 
@@ -831,9 +834,6 @@ class Aggregation:
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
-        offshore_gid_adder : int | float
-            The offshore Supply Curve gids will be set equal to the respective
-            resource gids plus this number.
         offshore_capacity : int | float
             Offshore resource pixel generation capacity in MW.
         gids : list | None
@@ -895,7 +895,6 @@ class Aggregation:
                                             close=close)
 
         summary = agg._offshore_summary(summary,
-                                        offshore_gid_adder=offshore_gid_adder,
                                         offshore_capacity=offshore_capacity)
         summary = agg._summary_to_df(summary)
         summary = agg._offshore_data_layers(summary)
