@@ -16,7 +16,7 @@ from reV.utilities.execution import execute_single
 from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import OutputWarning, ExecutionError
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, TimeoutError
 from reV.utilities.utilities import check_res_file
 
 
@@ -838,7 +838,8 @@ class Gen:
                         raise Exception('Site results are non sequential!')
 
                 # unpack site output object
-                self.unpack_output(site_gid, site_output)
+                if site_output != 0:
+                    self.unpack_output(site_gid, site_output)
 
                 # add site gid to the finished list after outputs are unpacked
                 self._finished_sites.append(site_gid)
@@ -1080,7 +1081,8 @@ class Gen:
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
-    def _parallel_run(self, max_workers=None, pool_size=72, **kwargs):
+    def _parallel_run(self, max_workers=None, pool_size=72, timeout=1800,
+                      **kwargs):
         """Execute parallel compute.
 
         Parameters
@@ -1090,6 +1092,9 @@ class Gen:
         pool_size : int
             Number of futures to submit to a single process pool for
             parallel futures.
+        timeout : int | float
+            Number of seconds to wait for parallel run iteration to complete
+            before returning zeros.
         kwargs : dict
             Keyword arguments to self.run().
         """
@@ -1102,14 +1107,29 @@ class Gen:
             logger.debug('Starting process pool for points control '
                          'iteration {} out of {}'
                          .format(j + 1, len(pc_chunks)))
+            chunks = {}
             futures = []
             with ProcessPoolExecutor(max_workers=max_workers) as exe:
                 for pc in pc_chunk:
-                    futures.append(exe.submit(self.run, pc, **kwargs))
+                    future = exe.submit(self.run, pc, **kwargs)
+                    futures.append(future)
+                    chunks[future] = pc
 
                 for future in futures:
-                    self.out = future.result()
                     i += 1
+                    try:
+                        result = future.result(timeout=timeout)
+                    except TimeoutError:
+                        w = ('Iteration {} hit the timeout limit of '
+                             '{} seconds! Passing zeros.'
+                             .format(i, timeout))
+                        logger.warning(w)
+                        warn(w, OutputWarning)
+                        pc = chunks[future]
+                        result = {site: 0 for site in pc.project_points.sites}
+
+                    self.out = result
+
                     mem = psutil.virtual_memory()
                     m = ('Parallel run at iteration {0} out of {1}. '
                          'Memory utilization is {2:.3f} GB out of {3:.3f} GB '
@@ -1125,7 +1145,8 @@ class Gen:
                 output_request=('cf_mean',), curtailment=None,
                 downscale=None, max_workers=1, sites_per_worker=None,
                 pool_size=72, points_range=None, fout=None,
-                dirout='./gen_out', mem_util_lim=0.4, scale_outputs=True):
+                dirout='./gen_out', mem_util_lim=0.4, timeout=1800,
+                scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1177,6 +1198,9 @@ class Gen:
         mem_util_lim : float
             Memory utilization limit (fractional). This will determine how many
             site results are stored in memory at any given time.
+        timeout : int | float
+            Number of seconds to wait for parallel run iteration to complete
+            before returning zeros.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
 
@@ -1220,7 +1244,7 @@ class Gen:
             else:
                 logger.debug('Running parallel generation for: {}'.format(pc))
                 gen._parallel_run(max_workers=max_workers, pool_size=pool_size,
-                                  **kwargs)
+                                  timeout=timeout, **kwargs)
 
         except Exception as e:
             logger.exception('reV generation failed!')
