@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def from_config(ctx, config_file, verbose):
-    """Run reV SC aggregation from a config file."""
+    """Run reV supply curve compute from a config file."""
     name = ctx.obj['NAME']
 
     # Instantiate the config object

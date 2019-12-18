@@ -8,19 +8,86 @@ coarse wind farm sites and then calculates the ORCA econ data.
 Offshore resource / generation data refers to WTK 2km (fine resolution)
 Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)
 """
-
+import pprint
 import os
 import click
 import logging
 import time
 
+from reV.config.offshore_config import OffshoreConfig
 from reV.utilities.cli_dtypes import STR, INT, PROJECTPOINTS, SAMFILES
 from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
 from reV.offshore.offshore import Offshore
+from reV.utilities.execution import SLURM
 
 
 logger = logging.getLogger(__name__)
+
+
+@click.command()
+@click.option('--config_file', '-c', required=True,
+              type=click.Path(exists=True),
+              help='reV exclusions configuration json file.')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def from_config(ctx, config_file, verbose):
+    """Run reV offshore aggregation from a config file."""
+    name = ctx.obj['NAME']
+
+    # Instantiate the config object
+    config = OffshoreConfig(config_file)
+
+    # take name from config if not default
+    if config.name.lower() != 'rev':
+        name = config.name
+
+    # Enforce verbosity if logging level is specified in the config
+    if config.logging_level == logging.DEBUG:
+        verbose = True
+
+    # initialize loggers
+    init_mult(name, config.logdir, modules=[__name__, 'reV.config',
+                                            'reV.utilities'],
+              verbose=verbose)
+
+    # Initial log statements
+    logger.info('Running reV offshore aggregation from config '
+                'file: "{}"'.format(config_file))
+    logger.info('Target output directory: "{}"'.format(config.dirout))
+    logger.info('Target logging directory: "{}"'.format(config.logdir))
+    logger.debug('The full configuration input is as follows:\n{}'
+                 .format(pprint.pformat(config, indent=4)))
+
+    if config.execution_control.option == 'local':
+        status = Status.retrieve_job_status(config.dirout, 'offshore', name)
+        if status != 'successful':
+            Status.add_job(
+                config.dirout, 'offshore', name, replace=True,
+                job_attrs={'hardware': 'local',
+                           'fout': '{}_offshore.h5'.format(name),
+                           'dirout': config.dirout})
+            ctx.invoke(main, name, config.gen_fpath, config.offshore_fpath,
+                       config.project_points, config.sam_files,
+                       config.logdir, verbose)
+
+    elif config.execution_control.option == 'eagle':
+
+        ctx.obj['NAME'] = name
+        ctx.obj['GEN_FPATH'] = config.gen_fpath
+        ctx.obj['OFFSHORE_FPATH'] = config.offshore_fpath
+        ctx.obj['PROJECT_POINTS'] = config.project_points
+        ctx.obj['SAM_FILES'] = config.sam_files
+        ctx.obj['OUT_DIR'] = config.dirout
+        ctx.obj['LOG_DIR'] = config.logdir
+        ctx.obj['VERBOSE'] = verbose
+
+        ctx.invoke(eagle,
+                   alloc=config.execution_control.alloc,
+                   memory=config.execution_control.node_mem,
+                   walltime=config.execution_control.walltime,
+                   feature=config.execution_control.feature)
 
 
 @click.group(invoke_without_command=True)
@@ -30,14 +97,12 @@ logger = logging.getLogger(__name__)
               help='reV wind generation/econ output file.')
 @click.option('--offshore_fpath', '-of', type=STR, required=True,
               help='reV wind farm meta and ORCA cost data inputs.')
-@click.option('--points', '-p', default=slice(0, 100), type=PROJECTPOINTS,
+@click.option('--points', '-pp', default=slice(0, 100), type=PROJECTPOINTS,
               help=('reV project points to analyze '
                     '(slice, list, or file string). '
                     'Default is slice(0, 100)'))
 @click.option('--sam_files', '-sf', required=True, type=SAMFILES,
               help='SAM config files (required) (str, dict, or list).')
-@click.option('--max_workers', '-mw', type=INT, default=None,
-              help='Max workers to use. None is all workers, 1 is serial.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               help='Directory to save offshore logs.')
 @click.option('-v', '--verbose', is_flag=True,
@@ -52,6 +117,7 @@ def main(ctx, name, gen_fpath, offshore_fpath, points, sam_files,
     ctx.obj['OFFSHORE_FPATH'] = offshore_fpath
     ctx.obj['POINTS'] = points
     ctx.obj['SAM_FILES'] = sam_files
+    ctx.obj['OUT_DIR'] = os.path.dirname(gen_fpath)
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
 
@@ -64,7 +130,7 @@ def main(ctx, name, gen_fpath, offshore_fpath, points, sam_files,
 
         try:
             Offshore.run(gen_fpath, offshore_fpath, points, sam_files,
-                         fpath_out=fpath_out, max_workers=None)
+                         fpath_out=fpath_out)
         except Exception as e:
             logger.exception('Offshore module failed, received the '
                              'following exception:\n{}'.format(e))
@@ -78,6 +144,90 @@ def main(ctx, name, gen_fpath, offshore_fpath, points, sam_files,
                   'runtime': runtime, 'finput': gen_fpath}
         Status.make_job_file(os.path.dirname(fpath_out), 'offshore',
                              name, status)
+
+
+def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
+                 log_dir, verbose):
+    """Get a CLI call command for the offshore aggregation cli."""
+
+    args = ('-n {name} '
+            '-gf {gen_fpath} '
+            '-of {offshore_fpath} '
+            '-pp {points} '
+            '-sf {sam_files} '
+            '-ld {log_dir} '
+            )
+
+    args = args.format(name=SLURM.s(name),
+                       gen_fpath=SLURM.s(gen_fpath),
+                       offshore_fpath=SLURM.s(offshore_fpath),
+                       points=SLURM.s(points),
+                       sam_files=SLURM.s(sam_files),
+                       log_dir=SLURM.s(log_dir),
+                       )
+
+    if verbose:
+        args += '-v '
+
+    cmd = 'python -m reV.offshore.cli_offshore {}'.format(args)
+    return cmd
+
+
+@main.command()
+@click.option('--alloc', '-a', required=True, type=STR,
+              help='Eagle allocation account name.')
+@click.option('--memory', '-mem', default=None, type=INT, help='Eagle node '
+              'memory request in GB. Default is None')
+@click.option('--walltime', '-wt', default=1.0, type=float,
+              help='Eagle walltime request in hours. Default is 1.0')
+@click.option('--feature', '-l', default=None, type=STR,
+              help=('Additional flags for SLURM job. Format is "--qos=high" '
+                    'or "--depend=[state:job_id]". Default is None.'))
+@click.option('--stdout_path', '-sout', default=None, type=STR,
+              help='Subprocess standard output path. Default is in out_dir.')
+@click.pass_context
+def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
+    """Eagle submission tool for reV supply curve aggregation."""
+
+    name = ctx.obj['NAME']
+    gen_fpath = ctx.obj['GEN_FPATH']
+    offshore_fpath = ctx.obj['OFFSHORE_FPATH']
+    project_points = ctx.obj['PROJECT_POINTS']
+    sam_files = ctx.obj['SAM_FILES']
+    log_dir = ctx.obj['LOG_DIR']
+    out_dir = ctx.obj['OUT_DIR']
+    verbose = ctx.obj['VERBOSE']
+
+    if stdout_path is None:
+        stdout_path = os.path.join(log_dir, 'stdout/')
+
+    cmd = get_node_cmd(name, gen_fpath, offshore_fpath, project_points,
+                       sam_files, log_dir, verbose)
+
+    status = Status.retrieve_job_status(out_dir, 'offshore', name)
+    if status == 'successful':
+        msg = ('Job "{}" is successful in status json found in "{}", '
+               'not re-running.'
+               .format(name, out_dir))
+    else:
+        logger.info('Running reV offshore aggregation on Eagle with '
+                    'node name "{}"'.format(name))
+        slurm = SLURM(cmd, alloc=alloc, memory=memory,
+                      walltime=walltime, feature=feature,
+                      name=name, stdout_path=stdout_path)
+        if slurm.id:
+            msg = ('Kicked off reV offshore job "{}" '
+                   '(SLURM jobid #{}) on Eagle.'
+                   .format(name, slurm.id))
+            Status.add_job(
+                out_dir, 'offshore', name, replace=True,
+                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                           'fout': '{}.csv'.format(name), 'dirout': out_dir})
+        else:
+            msg = ('Was unable to kick off reV offshore job "{}". Please see '
+                   'the stdout error messages'.format(name))
+    click.echo(msg)
+    logger.info(msg)
 
 
 if __name__ == '__main__':

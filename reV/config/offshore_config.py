@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-reV supply curve configs
-
-Created on Mon Jan 28 11:43:27 2019
+reV offshore wind aggregation config.
 
 @author: gbuster
 """
@@ -16,8 +14,8 @@ from reV.pipeline.pipeline import Pipeline
 logger = logging.getLogger(__name__)
 
 
-class AggregationConfig(AnalysisConfig):
-    """SC Aggregation config."""
+class OffshoreConfig(AnalysisConfig):
+    """Offshore wind aggregation config."""
 
     NAME = 'offshore'
     REQUIREMENTS = ('gen_fpath', 'offshore_fpath', 'project_points',
@@ -61,6 +59,11 @@ class AggregationConfig(AnalysisConfig):
     def offshore_fpath(self):
         """Get the offshore data filepath"""
         return self['offshore_fpath']
+
+    @property
+    def project_points(self):
+        """Get the project points filepath"""
+        return self['project_points']
 
     @property
     def sam_files(self):
