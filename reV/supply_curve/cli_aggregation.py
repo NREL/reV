@@ -12,7 +12,7 @@ import h5py
 
 from reV.config.supply_curve_configs import AggregationConfig
 from reV.utilities.execution import SLURM
-from reV.utilities.cli_dtypes import STR, INT, FLOATLIST, STRFLOAT
+from reV.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST, STRFLOAT
 from reV.utilities.loggers import init_mult
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.aggregation import Aggregation
@@ -141,7 +141,7 @@ def from_config(ctx, config_file, verbose):
               'power density from the generation meta data technology.')
 @click.option('--area_filter_kernel', '-afk', type=STR, default='queen',
               help='Contiguous area filter kernel name ("queen", "rook").')
-@click.option('--min_area', '-ma', type=STR, default=None,
+@click.option('--min_area', '-ma', type=FLOAT, default=None,
               help='Contiguous area filter minimum area, default is None '
               '(No minimum area filter).')
 @click.option('--out_dir', '-o', type=STR, default='./',
