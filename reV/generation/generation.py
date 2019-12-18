@@ -15,7 +15,8 @@ from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import execute_single
 from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
-from reV.utilities.exceptions import OutputWarning, ExecutionError
+from reV.utilities.exceptions import (OutputWarning, ExecutionError,
+                                      ParallelExecutionWarning)
 from concurrent.futures import ProcessPoolExecutor, TimeoutError
 from reV.utilities.utilities import check_res_file
 
@@ -1103,6 +1104,8 @@ class Gen:
             logger.debug('Starting process pool for points control '
                          'iteration {} out of {}'
                          .format(j + 1, len(pc_chunks)))
+
+            failed_futures = False
             chunks = {}
             futures = []
             with ProcessPoolExecutor(max_workers=max_workers) as exe:
@@ -1116,15 +1119,10 @@ class Gen:
                     try:
                         result = future.result(timeout=timeout)
                     except TimeoutError:
-                        w = ('Iteration {} hit the timeout limit of '
-                             '{} seconds! Passing zeros.'
-                             .format(i, timeout))
-                        logger.warning(w)
-                        warn(w, OutputWarning)
-                        pc = chunks[future]
-                        site_out = {k: 0 for k in self.output_request}
-                        result = {site: site_out
-                                  for site in pc.project_points.sites}
+                        failed_futures = True
+                        sites = chunks[future].project_points.sites
+                        result = self._handle_failed_future(future, i, sites,
+                                                            timeout)
 
                     self.out = result
 
@@ -1136,7 +1134,51 @@ class Gen:
                                  100 * mem.used / mem.total,
                                  100 * self.mem_util_lim))
                     logger.info(m)
+
+                if failed_futures:
+                    logger.info('Forcing pool shutdown after failed futures.')
+                    exe.shutdown(wait=False)
+                    logger.info('Forced pool shutdown complete.')
+
         self.flush()
+
+    def _handle_failed_future(self, future, i, sites, timeout):
+        """Handle a failed future and return zeros.
+
+        Parameters
+        ----------
+        future : concurrent.futures.Future
+            Failed future to cancel.
+        i : int
+            Iteration number for logging
+        sites : list
+            List of site gids belonging to this failed future.
+        timeout : int
+            Number of seconds to wait for parallel run iteration to complete
+            before returning zeros.
+        """
+
+        w = ('Iteration {} hit the timeout limit of {} seconds! Passing zeros.'
+             .format(i, timeout))
+        logger.warning(w)
+        warn(w, OutputWarning)
+
+        site_out = {k: 0 for k in self.output_request}
+        result = {site: site_out for site in sites}
+
+        try:
+            cancelled = future.cancel()
+        except Exception as e:
+            w = 'Could not cancel future! Received exception: {}'.format(e)
+            logger.warning(w)
+            warn(w, ParallelExecutionWarning)
+
+        if not cancelled:
+            w = 'Could not cancel future!'
+            logger.warning(w)
+            warn(w, ParallelExecutionWarning)
+
+        return result
 
     @classmethod
     def reV_run(cls, tech, points, sam_files, res_file,

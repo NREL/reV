@@ -136,6 +136,12 @@ class SAMExecutionWarning(Warning):
     """
 
 
+class ParallelExecutionWarning(Warning):
+    """
+    Warning for parallel job execution.
+    """
+
+
 class SlurmWarning(Warning):
     """
     Warning for SLURM errors/warnings
