@@ -838,8 +838,7 @@ class Gen:
                         raise Exception('Site results are non sequential!')
 
                 # unpack site output object
-                if site_output != 0:
-                    self.unpack_output(site_gid, site_output)
+                self.unpack_output(site_gid, site_output)
 
                 # add site gid to the finished list after outputs are unpacked
                 self._finished_sites.append(site_gid)
@@ -901,15 +900,17 @@ class Gen:
                 self._init_out_arrays(index_0=global_site_index)
                 i = self.site_index(site_gid, out_index=True)
 
-            if isinstance(value, (list, tuple)):
-                value = np.array(value)
+            if value != 0:
 
-            if isinstance(value, np.ndarray):
-                # set the new timeseries to the 2D array
-                self._out[var][:, i] = value.T
-            else:
-                # set a scalar result to the list (1D array)
-                self._out[var][i] = value
+                if isinstance(value, (list, tuple)):
+                    value = np.array(value)
+
+                if isinstance(value, np.ndarray):
+                    # set the new timeseries to the 2D array
+                    self._out[var][:, i] = value.T
+                else:
+                    # set a scalar result to the list (1D array)
+                    self._out[var][i] = value
 
     def site_index(self, site_gid, out_index=False):
         """Get the index corresponding to the site gid.
@@ -1126,7 +1127,9 @@ class Gen:
                         logger.warning(w)
                         warn(w, OutputWarning)
                         pc = chunks[future]
-                        result = {site: 0 for site in pc.project_points.sites}
+                        site_out = {k: 0 for k in self.output_request}
+                        result = {site: site_out
+                                  for site in pc.project_points.sites}
 
                     self.out = result
 
