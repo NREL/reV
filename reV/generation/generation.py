@@ -15,8 +15,9 @@ from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import execute_single
 from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
-from reV.utilities.exceptions import OutputWarning, ExecutionError
-from concurrent.futures import ProcessPoolExecutor
+from reV.utilities.exceptions import (OutputWarning, ExecutionError,
+                                      ParallelExecutionWarning)
+from concurrent.futures import ProcessPoolExecutor, TimeoutError
 from reV.utilities.utilities import check_res_file
 
 
@@ -900,14 +901,11 @@ class Gen:
                 self._init_out_arrays(index_0=global_site_index)
                 i = self.site_index(site_gid, out_index=True)
 
-            if isinstance(value, (list, tuple)):
-                value = np.array(value)
-
-            if isinstance(value, np.ndarray):
-                # set the new timeseries to the 2D array
+            if isinstance(value, (list, tuple, np.ndarray)):
+                if not isinstance(value, np.ndarray):
+                    value = np.array(value)
                 self._out[var][:, i] = value.T
-            else:
-                # set a scalar result to the list (1D array)
+            elif value != 0:
                 self._out[var][i] = value
 
     def site_index(self, site_gid, out_index=False):
@@ -1080,7 +1078,8 @@ class Gen:
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
-    def _parallel_run(self, max_workers=None, pool_size=72, **kwargs):
+    def _parallel_run(self, max_workers=None, pool_size=72, timeout=1800,
+                      **kwargs):
         """Execute parallel compute.
 
         Parameters
@@ -1090,6 +1089,9 @@ class Gen:
         pool_size : int
             Number of futures to submit to a single process pool for
             parallel futures.
+        timeout : int | float
+            Number of seconds to wait for parallel run iteration to complete
+            before returning zeros.
         kwargs : dict
             Keyword arguments to self.run().
         """
@@ -1102,14 +1104,28 @@ class Gen:
             logger.debug('Starting process pool for points control '
                          'iteration {} out of {}'
                          .format(j + 1, len(pc_chunks)))
+
+            failed_futures = False
+            chunks = {}
             futures = []
             with ProcessPoolExecutor(max_workers=max_workers) as exe:
                 for pc in pc_chunk:
-                    futures.append(exe.submit(self.run, pc, **kwargs))
+                    future = exe.submit(self.run, pc, **kwargs)
+                    futures.append(future)
+                    chunks[future] = pc
 
                 for future in futures:
-                    self.out = future.result()
                     i += 1
+                    try:
+                        result = future.result(timeout=timeout)
+                    except TimeoutError:
+                        failed_futures = True
+                        sites = chunks[future].project_points.sites
+                        result = self._handle_failed_future(future, i, sites,
+                                                            timeout)
+
+                    self.out = result
+
                     mem = psutil.virtual_memory()
                     m = ('Parallel run at iteration {0} out of {1}. '
                          'Memory utilization is {2:.3f} GB out of {3:.3f} GB '
@@ -1118,13 +1134,57 @@ class Gen:
                                  100 * mem.used / mem.total,
                                  100 * self.mem_util_lim))
                     logger.info(m)
+
+                if failed_futures:
+                    logger.info('Forcing pool shutdown after failed futures.')
+                    exe.shutdown(wait=False)
+                    logger.info('Forced pool shutdown complete.')
+
         self.flush()
+
+    def _handle_failed_future(self, future, i, sites, timeout):
+        """Handle a failed future and return zeros.
+
+        Parameters
+        ----------
+        future : concurrent.futures.Future
+            Failed future to cancel.
+        i : int
+            Iteration number for logging
+        sites : list
+            List of site gids belonging to this failed future.
+        timeout : int
+            Number of seconds to wait for parallel run iteration to complete
+            before returning zeros.
+        """
+
+        w = ('Iteration {} hit the timeout limit of {} seconds! Passing zeros.'
+             .format(i, timeout))
+        logger.warning(w)
+        warn(w, OutputWarning)
+
+        site_out = {k: 0 for k in self.output_request}
+        result = {site: site_out for site in sites}
+
+        try:
+            cancelled = future.cancel()
+        except Exception as e:
+            w = 'Could not cancel future! Received exception: {}'.format(e)
+            logger.warning(w)
+            warn(w, ParallelExecutionWarning)
+
+        if not cancelled:
+            w = 'Could not cancel future!'
+            logger.warning(w)
+            warn(w, ParallelExecutionWarning)
+
+        return result
 
     @classmethod
     def reV_run(cls, tech, points, sam_files, res_file,
                 output_request=('cf_mean',), curtailment=None,
                 downscale=None, max_workers=1, sites_per_worker=None,
-                pool_size=72, points_range=None, fout=None,
+                pool_size=72, timeout=1800, points_range=None, fout=None,
                 dirout='./gen_out', mem_util_lim=0.4, scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
@@ -1164,6 +1224,9 @@ class Gen:
         pool_size : int
             Number of futures to submit to a single process pool for
             parallel futures.
+        timeout : int | float
+            Number of seconds to wait for parallel run iteration to complete
+            before returning zeros. Default is 1800 seconds.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -1220,7 +1283,7 @@ class Gen:
             else:
                 logger.debug('Running parallel generation for: {}'.format(pc))
                 gen._parallel_run(max_workers=max_workers, pool_size=pool_size,
-                                  **kwargs)
+                                  timeout=timeout, **kwargs)
 
         except Exception as e:
             logger.exception('reV generation failed!')

@@ -28,7 +28,7 @@ class CollectionConfig(AnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
-        self._keep = False
+        self._purge = False
         self._dsets = None
         self._file_prefixes = None
         self._ec = None
@@ -63,17 +63,17 @@ class CollectionConfig(AnalysisConfig):
         return self['project_points']
 
     @property
-    def keep_chunks(self):
-        """Get the flag to keep chunk files.
+    def purge_chunks(self):
+        """Get the flag to delete chunk files.
 
         Returns
         -------
-        _keep : bool
-            Flag to keep chunk files.
+        _purge : bool
+            Flag to delete chunk files.
         """
-        if 'keep_chunks' in self['project_control']:
-            self._keep = self['project_control']['keep_chunks']
-        return self._keep
+        if 'purge_chunks' in self['project_control']:
+            self._purge = self['project_control']['purge_chunks']
+        return self._purge
 
     @property
     def dsets(self):

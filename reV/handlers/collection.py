@@ -9,6 +9,7 @@ import sys
 import psutil
 import pandas as pd
 import time
+import shutil
 from warnings import warn
 
 from reV.handlers.outputs import Outputs
@@ -523,6 +524,23 @@ class Collector:
             for fpath in self.h5_files:
                 os.remove(fpath)
 
+    def _move_chunks(self, sub_dir):
+        """Move the chunked files to a sub dir (after collection).
+
+        Parameters
+        ----------
+        sub_dir : str
+            Sub directory name to move chunks to.
+        """
+
+        for fpath in self.h5_files:
+            base_dir, fn = os.path.split(fpath)
+            new_dir = os.path.join(base_dir, sub_dir)
+            if not os.path.exists(new_dir):
+                os.makedirs(new_dir)
+            new_fpath = os.path.join(new_dir, fn)
+            shutil.move(fpath, new_fpath)
+
     def combine_meta(self):
         """
         Load and combine meta data from .h5
@@ -675,3 +693,27 @@ class Collector:
         clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)
         clt._purge_chunks()
         logger.info('Purged chunk files from {}'.format(h5_dir))
+
+    @classmethod
+    def move_chunks(cls, h5_file, h5_dir, project_points, file_prefix=None,
+                    sub_dir='chunk_files'):
+        """
+        Move chunked files from h5_dir (after collection) to subdir.
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file into which data will be collected
+        h5_dir : str
+            Root directory containing .h5 files to combine
+        project_points : str | slice | list | pandas.DataFrame
+            Project points that correspond to the full collection of points
+            contained in the .h5 files to be collected
+        file_prefix : str
+            .h5 file prefix, if None collect all files on h5_dir
+        """
+
+        clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)
+        clt._move_chunks(sub_dir)
+        logger.info('Moved chunk files from {} to sub_dir: {}'
+                    .format(h5_dir, sub_dir))

@@ -92,6 +92,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
+    ctx.obj['TIMEOUT'] = config.timeout
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
@@ -161,7 +162,8 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                            'dirout': config.dirout})
             ctx.invoke(gen_local,
                        max_workers=config.execution_control.max_workers,
-                       points_range=None, verbose=verbose)
+                       timeout=config.timeout, points_range=None,
+                       verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
         if not parse_year(name, option='bool') and year:
@@ -284,12 +286,16 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_worker, fout,
 @direct.command()
 @click.option('--max_workers', '-mw', type=INT,
               help='Number of workers. Use 1 for serial, None for all cores.')
+@click.option('--timeout', '-to', type=INT, default=1800,
+              help='Number of seconds to wait for parallel generation run '
+              'iterations to complete before returning zeros. '
+              'Default is 1800 seconds.')
 @click.option('--points_range', '-pr', default=None, type=INTLIST,
               help='Optional range list to run a subset of sites.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def gen_local(ctx, max_workers, points_range, verbose):
+def gen_local(ctx, max_workers, timeout, points_range, verbose):
     """Run generation on local worker(s)."""
 
     name = ctx.obj['NAME']
@@ -334,7 +340,8 @@ def gen_local(ctx, max_workers, points_range, verbose):
                 points_range=points_range,
                 fout=fout,
                 dirout=dirout,
-                mem_util_lim=mem_util_lim)
+                mem_util_lim=mem_util_lim,
+                timeout=timeout)
 
     tmp_str = ' with points range {}'.format(points_range)
     runtime = (time.time() - t0) / 60
@@ -441,8 +448,8 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_worker=None, max_workers=None,
                  fout='reV.h5', dirout='./out/gen_out',
                  logdir='./out/log_gen', output_request=('cf_mean',),
-                 mem_util_lim=0.4, curtailment=None, downscale=None,
-                 verbose=False):
+                 mem_util_lim=0.4, timeout=1800, curtailment=None,
+                 downscale=None, verbose=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -478,6 +485,9 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
         Output variables requested from SAM.
     mem_util_lim : float
         Memory utilization limit (fractional).
+    timeout : int | float
+        Number of seconds to wait for parallel run iteration to complete
+        before returning zeros. Default is 1800 seconds.
     curtailment : NoneType | str
         Pointer to a file containing curtailment input parameters or None if
         no curtailment.
@@ -532,8 +542,10 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 
     # make a cli arg string for local() in this module
     arg_loc = ('-mw {max_workers} '
+               '-to {timeout} '
                '-pr {points_range} '
                '{v}'.format(max_workers=SubprocessManager.s(max_workers),
+                            timeout=SubprocessManager.s(timeout),
                             points_range=SubprocessManager.s(points_range),
                             v='-v' if verbose else ''))
 
@@ -663,6 +675,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     output_request = ctx.obj['OUTPUT_REQUEST']
     max_workers = ctx.obj['MAX_WORKERS']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
+    timeout = ctx.obj['TIMEOUT']
     curtailment = ctx.obj['CURTAILMENT']
     downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -684,7 +697,8 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
                            max_workers=max_workers, fout=fout_node,
                            dirout=dirout, logdir=logdir,
                            output_request=output_request,
-                           mem_util_lim=mem_util_lim, curtailment=curtailment,
+                           mem_util_lim=mem_util_lim, timeout=timeout,
+                           curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'generation', node_name)
