@@ -35,6 +35,7 @@ class SAMAnalysisConfig(AnalysisConfig):
         self._tech = None
         self._sam_config = None
         self._pc = None
+        self._default_timeout = 1800
         self._output_request = None
         super().__init__(config)
 
@@ -64,6 +65,18 @@ class SAMAnalysisConfig(AnalysisConfig):
         if self._sam_config is None:
             self._sam_config = SAMConfig(self['sam_files'])
         return self._sam_config
+
+    @property
+    def timeout(self):
+        """Get the parallel futures timeout value in seconds.
+
+        Returns
+        -------
+        timeout : int | float
+            Number of seconds to wait for parallel run iteration to complete
+            before returning zeros. Default is 1800 seconds.
+        """
+        self.get('timeout', self._default_timeout)
 
     @property
     def points_control(self):

@@ -82,6 +82,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
+    ctx.obj['TIMEOUT'] = config.timeout
 
     for i, year in enumerate(config.years):
         submit_from_config(ctx, name, year, config, verbose, i)
@@ -130,7 +131,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                            'dirout': config.dirout})
             ctx.invoke(econ_local,
                        max_workers=config.execution_control.max_workers,
-                       points_range=None, verbose=verbose)
+                       timeout=config.timeout, points_range=None,
+                       verbose=verbose)
 
     elif config.execution_control.option == 'peregrine':
         if not parse_year(name, option='bool') and year:
@@ -207,12 +209,16 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
 @direct.command()
 @click.option('--max_workers', '-mw', type=INT,
               help='Number of workers. Use 1 for serial, None for all cores.')
+@click.option('--timeout', '-to', type=INT, default=1800,
+              help='Number of seconds to wait for econ parallel run '
+              'iterations to complete before returning zeros. '
+              'Default is 1800 seconds.')
 @click.option('--points_range', '-pr', default=None, type=INTLIST,
               help='Optional range list to run a subset of sites.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def econ_local(ctx, max_workers, points_range, verbose):
+def econ_local(ctx, max_workers, timeout, points_range, verbose):
     """Run econ on local worker(s)."""
 
     name = ctx.obj['NAME']
@@ -250,6 +256,7 @@ def econ_local(ctx, max_workers, points_range, verbose):
                  site_data=site_data,
                  output_request=output_request,
                  max_workers=max_workers,
+                 timeout=timeout,
                  sites_per_worker=sites_per_worker,
                  points_range=points_range,
                  fout=fout,
@@ -303,9 +310,10 @@ def get_node_pc(points, sam_files, nodes):
 
 def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                  points=slice(0, 100), points_range=None,
-                 sites_per_worker=None, max_workers=None, fout='reV.h5',
-                 dirout='./out/econ_out', logdir='./out/log_econ',
-                 output_request='lcoe_fcr', verbose=False):
+                 sites_per_worker=None, max_workers=None, timeout=1800,
+                 fout='reV.h5', dirout='./out/econ_out',
+                 logdir='./out/log_econ', output_request='lcoe_fcr',
+                 verbose=False):
     """Made a reV econ direct-local command line interface call string.
 
     Parameters
@@ -333,6 +341,9 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
     max_workers : int | None
         Number of workers to use on a node. None defaults to all available
         workers.
+    timeout : int | float
+        Number of seconds to wait for parallel run iteration to complete
+        before returning zeros. Default is 1800 seconds.
     fout : str
         Target filename to dump econ outputs.
     dirout : str
@@ -382,8 +393,10 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
 
     # make a cli arg string for local() in this module
     arg_loc = ('-mw {max_workers} '
+               '-to {timeout} '
                '-pr {points_range} '
                '{v}'.format(max_workers=SubprocessManager.s(max_workers),
+                            timeout=SubprocessManager.s(timeout),
                             points_range=SubprocessManager.s(points_range),
                             v='-v' if verbose else ''))
 
@@ -505,6 +518,7 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
     site_data = ctx.obj['SITE_DATA']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     max_workers = ctx.obj['MAX_WORKERS']
+    timeout = ctx.obj['TIMEOUT']
     fout = ctx.obj['FOUT']
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
@@ -526,7 +540,8 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
                            site_data=site_data, points=points,
                            points_range=split.split_range,
                            sites_per_worker=sites_per_worker,
-                           max_workers=max_workers, fout=fout_node,
+                           max_workers=max_workers, timeout=timeout,
+                           fout=fout_node,
                            dirout=dirout, logdir=logdir,
                            output_request=output_request, verbose=verbose)
 

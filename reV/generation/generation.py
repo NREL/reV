@@ -1144,9 +1144,8 @@ class Gen:
     def reV_run(cls, tech, points, sam_files, res_file,
                 output_request=('cf_mean',), curtailment=None,
                 downscale=None, max_workers=1, sites_per_worker=None,
-                pool_size=72, points_range=None, fout=None,
-                dirout='./gen_out', mem_util_lim=0.4, timeout=1800,
-                scale_outputs=True):
+                pool_size=72, timeout=1800, points_range=None, fout=None,
+                dirout='./gen_out', mem_util_lim=0.4, scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
         Parameters
@@ -1185,6 +1184,9 @@ class Gen:
         pool_size : int
             Number of futures to submit to a single process pool for
             parallel futures.
+        timeout : int | float
+            Number of seconds to wait for parallel run iteration to complete
+            before returning zeros. Default is 1800 seconds.
         points_range : list | None
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
@@ -1198,9 +1200,6 @@ class Gen:
         mem_util_lim : float
             Memory utilization limit (fractional). This will determine how many
             site results are stored in memory at any given time.
-        timeout : int | float
-            Number of seconds to wait for parallel run iteration to complete
-            before returning zeros.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
 
