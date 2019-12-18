@@ -30,6 +30,14 @@ class SAMResource:
                       'wind_speed': (0, 120),
                       'air_temperature': (-200, 100)}
 
+    # valid data ranges for CSP solar resource:
+    CSP_DATA_RANGES = {'dni': (0.0, 1360.0),
+                       'dhi': (0.0, 1360.0),
+                       'wind_speed': (0, 120),
+                       'air_temperature': (-200, 100),
+                       'dew_point': (-200, 100),
+                       'surface_pressure': (300, 1100)}
+
     # valid data ranges for wind resource in SAM based on the cpp file:
     # https://github.com/NREL/ssc/blob/develop/shared/lib_windfile.cpp
     WIND_DATA_RANGES = {'windspeed': (0, 120),
@@ -358,6 +366,11 @@ class SAMResource:
         elif self._tech == 'pv':
             if var in self.PV_DATA_RANGES:
                 valid_range = self.PV_DATA_RANGES[var]
+                arr = self.enforce_arr_range(var, arr, valid_range, arr_sites)
+
+        elif self._tech == 'csp':
+            if var in self.CSP_DATA_RANGES:
+                valid_range = self.CSP_DATA_RANGES[var]
                 arr = self.enforce_arr_range(var, arr, valid_range, arr_sites)
 
         return arr
