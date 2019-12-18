@@ -76,7 +76,7 @@ class SAMAnalysisConfig(AnalysisConfig):
             Number of seconds to wait for parallel run iteration to complete
             before returning zeros. Default is 1800 seconds.
         """
-        self.get('timeout', self._default_timeout)
+        return self.get('timeout', self._default_timeout)
 
     @property
     def points_control(self):

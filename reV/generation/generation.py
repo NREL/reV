@@ -900,17 +900,12 @@ class Gen:
                 self._init_out_arrays(index_0=global_site_index)
                 i = self.site_index(site_gid, out_index=True)
 
-            if value != 0:
-
-                if isinstance(value, (list, tuple)):
+            if isinstance(value, (list, tuple, np.ndarray)):
+                if not isinstance(value, np.ndarray):
                     value = np.array(value)
-
-                if isinstance(value, np.ndarray):
-                    # set the new timeseries to the 2D array
-                    self._out[var][:, i] = value.T
-                else:
-                    # set a scalar result to the list (1D array)
-                    self._out[var][i] = value
+                self._out[var][:, i] = value.T
+            elif value != 0:
+                self._out[var][i] = value
 
     def site_index(self, site_gid, out_index=False):
         """Get the index corresponding to the site gid.
