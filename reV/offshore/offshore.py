@@ -27,18 +27,18 @@ logger = logging.getLogger(__name__)
 class Offshore:
     """Framework to handle offshore wind analysis."""
 
-    def __init__(self, cf_file, offshore_file, project_points, fout=None,
-                 max_workers=None, offshore_gid_adder=1e7):
+    def __init__(self, gen_fpath, offshore_fpath, project_points,
+                 fpath_out=None, max_workers=None, offshore_gid_adder=1e7):
         """
         Parameters
         ----------
-        cf_file : str
+        gen_fpath : str
             Full filepath to reV gen h5 output file.
-        offshore_file : str
+        offshore_fpath : str
             Full filepath to offshore wind farm data file.
         project_points : reV.config.project_points.ProjectPoints
             Instantiated project points instance.
-        fout : str | NoneType
+        fpath_out : str | NoneType
             Optional output filepath.
         max_workers : int | None
             Number of workers for process pool executor. 1 will run in serial.
@@ -47,20 +47,20 @@ class Offshore:
             resource gids plus this number.
         """
 
-        self._cf_file = cf_file
-        self._offshore_file = offshore_file
+        self._gen_fpath = gen_fpath
+        self._offshore_fpath = offshore_fpath
         self._project_points = project_points
-        self._fout = fout
+        self._fpath_out = fpath_out
         self._offshore_gid_adder = offshore_gid_adder
         self._meta_out_offshore = None
         self._time_index = None
         self._max_workers = max_workers
 
         self._meta_source, self._onshore_mask, self._offshore_mask = \
-            self._parse_cf_meta(self._cf_file)
+            self._parse_cf_meta(self._gen_fpath)
 
         self._offshore_data, self._farm_coords = \
-            self._parse_offshore_file(self._offshore_file)
+            self._parse_offshore_fpath(self._offshore_fpath)
 
         self._d, self._i = self._run_nn()
 
@@ -77,7 +77,7 @@ class Offshore:
     def time_index(self):
         """Get the source time index."""
         if self._time_index is None:
-            with Outputs(self._cf_file, mode='r') as out:
+            with Outputs(self._gen_fpath, mode='r') as out:
                 self._time_index = out.time_index
         return self._time_index
 
@@ -187,9 +187,9 @@ class Offshore:
 
     def save_offshore_output(self):
         """Save offshore aggregated data to offshore output file"""
-        if self._fout is not None:
+        if self._fpath_out is not None:
             logger.debug('Writing offshore output data to: {}'
-                         .format(self._fout))
+                         .format(self._fpath_out))
 
             offshore_bool = np.isin(self.meta_out['gid'].values,
                                     self.offshore_gids)
@@ -197,11 +197,11 @@ class Offshore:
             offshore_slice = slice(offshore_locs.min(),
                                    offshore_locs.max() + 1)
 
-            with Outputs(self._cf_file, mode='r') as source:
+            with Outputs(self._gen_fpath, mode='r') as source:
                 dsets = [d for d in source.dsets
                          if d not in ('meta', 'time_index')]
 
-            with Outputs(self._fout, mode='a') as out:
+            with Outputs(self._fpath_out, mode='a') as out:
                 shapes = {d: out.get_dset_properties(d)[0] for d in dsets}
                 for dset in dsets:
                     if len(shapes[dset]) == 1:
@@ -212,7 +212,8 @@ class Offshore:
             for dset in dsets:
                 logger.debug('Writing aggregated offshore data for "{}"'
                              .format(dset))
-                DatasetCollector.collect_dset(self._fout, [self._cf_file],
+                DatasetCollector.collect_dset(self._fpath_out,
+                                              [self._gen_fpath],
                                               self.onshore_gids, dset)
 
     def _init_offshore_out_arrays(self):
@@ -222,12 +223,12 @@ class Offshore:
         -------
         out_arrays : dict
             Dictionary of output arrays filled with zeros for offshore data.
-            Has keys for all datasets present in cf_file.
+            Has keys for all datasets present in gen_fpath.
         """
 
         out_arrays = {}
 
-        with Outputs(self._cf_file, mode='r') as out:
+        with Outputs(self._gen_fpath, mode='r') as out:
             dsets = [d for d in out.dsets if d not in ('time_index', 'meta')]
 
             for dset in dsets:
@@ -246,48 +247,49 @@ class Offshore:
     def _init_fout(self):
         """Initialize the offshore aggregated output file and collect
         non-aggregated onshore data."""
-        if self._fout is not None:
+        if self._fpath_out is not None:
             logger.debug('Initializing offshore output file: {}'
-                         .format(self._fout))
-            with Outputs(self._cf_file, mode='r') as source:
+                         .format(self._fpath_out))
+            with Outputs(self._gen_fpath, mode='r') as source:
                 dsets = [d for d in source.dsets
                          if d not in ('meta', 'time_index')]
                 meta_attrs = source.get_attrs(dset='meta')
                 ti_attrs = source.get_attrs(dset='time_index')
-            with Outputs(self._fout, mode='w') as out:
+            with Outputs(self._fpath_out, mode='w') as out:
                 out._set_meta('meta', self.meta_out, attrs=meta_attrs)
                 out._set_time_index('time_index', self.time_index,
                                     attrs=ti_attrs)
 
             for dset in dsets:
                 logger.debug('Collecting onshore data for "{}"'.format(dset))
-                DatasetCollector.collect_dset(self._fout, [self._cf_file],
+                DatasetCollector.collect_dset(self._fpath_out,
+                                              [self._gen_fpath],
                                               self.onshore_gids, dset)
 
     @staticmethod
-    def _parse_cf_meta(cf_file):
+    def _parse_cf_meta(gen_fpath):
         """Parse cf meta dataframe and get masks for onshore/offshore points.
 
         Parameters
         ----------
-        cf_file : str
+        gen_fpath : str
             Full filepath to reV gen h5 output file.
 
         Returns
         -------
         meta : pd.DataFrame
-            Full meta data from cf_file with "offshore" column.
+            Full meta data from gen_fpath with "offshore" column.
         onshore_mask : pd.Series
             Boolean series indicating where onshore sites are.
         offshore_mask : pd.Series
             Boolean series indicating where offshore sites are.
         """
 
-        with Outputs(cf_file, mode='r') as out:
+        with Outputs(gen_fpath, mode='r') as out:
             meta = out.meta
         if 'offshore' not in meta:
             e = ('Offshore module cannot run without "offshore" flag in meta '
-                 'data of cf_file: {}'.format(cf_file))
+                 'data of gen_fpath: {}'.format(gen_fpath))
             logger.error(e)
             raise KeyError(e)
 
@@ -297,12 +299,12 @@ class Offshore:
         return meta, onshore_mask, offshore_mask
 
     @staticmethod
-    def _parse_offshore_file(offshore_file):
+    def _parse_offshore_fpath(offshore_fpath):
         """Parse the offshore data file for offshore farm site data and coords.
 
         Parameters
         ----------
-        offshore_file : str
+        offshore_fpath : str
             Full filepath to offshore wind farm data file.
 
         Returns
@@ -314,7 +316,7 @@ class Offshore:
             Latitude/longitude coordinates for each offshore farm.
         """
 
-        offshore_data = pd.read_csv(offshore_file)
+        offshore_data = pd.read_csv(offshore_fpath)
 
         lat_label = [c for c in offshore_data.columns
                      if c.lower().startswith('latitude')]
@@ -351,7 +353,7 @@ class Offshore:
             Distance between offshore resource pixel and offshore wind farm.
         i : np.ndarray
             Offshore farm row numbers corresponding to resource pixels
-            (length is number of offshore resource pixels in cf_file).
+            (length is number of offshore resource pixels in gen_fpath).
         """
 
         tree = cKDTree(self._farm_coords)
@@ -365,17 +367,17 @@ class Offshore:
         return d, i
 
     @staticmethod
-    def _get_farm_data(cf_file, meta, system_inputs, site_data):
+    def _get_farm_data(gen_fpath, meta, system_inputs, site_data):
         """Get the offshore farm aggregated cf data and calculate LCOE.
 
         Parameters
         ----------
-        cf_file : str
+        gen_fpath : str
             Full filepath to reV gen h5 output file.
         meta : pd.DataFrame
             Offshore resource meta data for resource pixels belonging to the
             single wind farm. The meta index should correspond to the gids in
-            the cf_file.
+            the gen_fpath.
         system_inputs : dict
             Wind farm system inputs.
         site_data : dict
@@ -392,7 +394,7 @@ class Offshore:
             LCOE value with units: $/MWh.
         """
 
-        gen_data = Offshore._get_farm_gen_data(cf_file, meta)
+        gen_data = Offshore._get_farm_gen_data(gen_fpath, meta)
         cf = gen_data['cf_mean'].mean()
 
         if cf > 1:
@@ -407,18 +409,18 @@ class Offshore:
         return gen_data
 
     @staticmethod
-    def _get_farm_gen_data(cf_file, meta, ignore=('meta', 'time_index',
-                                                  'lcoe_fcr')):
+    def _get_farm_gen_data(gen_fpath, meta, ignore=('meta', 'time_index',
+                                                    'lcoe_fcr')):
         """Get the aggregated generation data for a single wind farm.
 
         Parameters
         ----------
-        cf_file : str
+        gen_fpath : str
             Full filepath to reV gen h5 output file.
         meta : pd.DataFrame
             Offshore resource meta data for resource pixels belonging to the
             single wind farm. The meta index should correspond to the gids in
-            the cf_file.
+            the gen_fpath.
         ignore : list | tuple
             List of datasets to ignore and not retrieve.
 
@@ -433,7 +435,7 @@ class Offshore:
         """
 
         gen_data = {}
-        with Outputs(cf_file, mode='r', unscale=True) as out:
+        with Outputs(gen_fpath, mode='r', unscale=True) as out:
 
             dsets = [d for d in out.dsets if d not in ignore]
 
@@ -488,10 +490,10 @@ class Offshore:
         farm_gid : int | None
             Unique resource GID for the offshore farm. This is the offshore
             gid adder plus the closest resource gid. None will be returned if
-            the farm is not close to any resource sites in cf_file.
+            the farm is not close to any resource sites in gen_fpath.
         res_gid : int | None
             Resource gid of the closest resource pixel to ifarm. None if farm
-            is not close to any resource sites in cf_file.
+            is not close to any resource sites in gen_fpath.
         """
         res_gid = None
         farm_gid = None
@@ -552,7 +554,7 @@ class Offshore:
                              'compute for ifarm {}, farm gid {}, res gid {}'
                              .format(ifarm, farm_gid, res_gid))
 
-                gen_data = self._get_farm_data(self._cf_file, meta,
+                gen_data = self._get_farm_data(self._gen_fpath, meta,
                                                system_inputs, site_data)
 
                 for k, v in gen_data.items():
@@ -579,7 +581,7 @@ class Offshore:
                     system_inputs = self._get_system_inputs(res_gid)
                     site_data = row.to_dict()
 
-                    future = exe.submit(self._get_farm_data, self._cf_file,
+                    future = exe.submit(self._get_farm_data, self._gen_fpath,
                                         meta, system_inputs, site_data)
 
                     futures[future] = i
@@ -603,15 +605,15 @@ class Offshore:
             self._run_parallel()
 
     @classmethod
-    def run(cls, cf_file, offshore_file, points, sam_files, fout=None,
+    def run(cls, gen_fpath, offshore_fpath, points, sam_files, fpath_out=None,
             max_workers=None, offshore_gid_adder=1e7):
         """Run the offshore aggregation methods.
 
         Parameters
         ----------
-        cf_file : str
+        gen_fpath : str
             Full filepath to reV gen h5 output file.
-        offshore_file : str
+        offshore_fpath : str
             Full filepath to offshore wind farm data file.
         points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
@@ -621,7 +623,7 @@ class Offshore:
             Keys are the SAM config ID(s), top level value is the SAM path.
             Can also be a single config file str. If it's a list, it is mapped
             to the sorted list of unique configs requested by points csv.
-        fout : str | NoneType
+        fpath_out : str | NoneType
             Optional output filepath.
         max_workers : int | None
             Number of workers for process pool executor. 1 will run in serial.
@@ -637,8 +639,9 @@ class Offshore:
         points_range = None
         pc = Gen.get_pc(points, points_range, sam_files, 'wind',
                         sites_per_worker=100)
-        offshore = cls(cf_file, offshore_file, pc.project_points,
-                       fout=fout, offshore_gid_adder=offshore_gid_adder,
+        offshore = cls(gen_fpath, offshore_fpath, pc.project_points,
+                       fpath_out=fpath_out,
+                       offshore_gid_adder=offshore_gid_adder,
                        max_workers=max_workers)
         offshore._init_fout()
         offshore._run()

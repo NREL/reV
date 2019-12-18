@@ -17,8 +17,8 @@ from reV import TESTDATADIR
 from reV.offshore.offshore import Offshore
 
 
-CF_FILE = os.path.join(TESTDATADIR, 'gen_out/ri_wind_gen_profiles_2010.h5')
-OFFSHORE_FILE = os.path.join(
+GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/ri_wind_gen_profiles_2010.h5')
+OFFSHORE_FPATH = os.path.join(
     TESTDATADIR, 'offshore/preliminary_orca_results_09042019_JN.csv')
 POINTS = os.path.join(TESTDATADIR, 'offshore/project_points.csv')
 SAM_FILES = {'default': os.path.join(TESTDATADIR,
@@ -31,8 +31,8 @@ PURGE_OUT = True
 @pytest.fixture
 def offshore():
     """Offshore aggregation object for tests and plotting."""
-    obj = Offshore.run(CF_FILE, OFFSHORE_FILE, POINTS, SAM_FILES,
-                       fout=OUTPUT_FILE)
+    obj = Offshore.run(GEN_FPATH, OFFSHORE_FPATH, POINTS, SAM_FILES,
+                       fpath_out=OUTPUT_FILE)
     return obj
 
 
@@ -41,7 +41,7 @@ def test_offshore_agg(offshore):
     the raw gen output."""
     assert len(offshore.out['cf_mean']) == len(offshore.meta_out_offshore)
 
-    with Outputs(CF_FILE, mode='r') as source:
+    with Outputs(GEN_FPATH, mode='r') as source:
         with Outputs(OUTPUT_FILE, mode='r') as out:
 
             source_meta = source.meta
@@ -154,7 +154,7 @@ def plot_timeseries(offshore, i=0):
     agg_gids = offshore.meta_out_offshore.iloc[i]['offshore_res_gids']
     agg_gids = json.loads(agg_gids)
 
-    with Outputs(CF_FILE) as out:
+    with Outputs(GEN_FPATH) as out:
         mask = np.isin(out.meta['gid'], agg_gids)
         gen_gids = np.where(mask)[0]
         cf_profile = out['cf_profile', :, gen_gids]
