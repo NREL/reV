@@ -20,7 +20,8 @@ from reV.handlers.collection import DatasetCollector
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
 from reV.offshore.orca import ORCA_LCOE
-from reV.utilities.exceptions import OffshoreWindInputWarning
+from reV.utilities.exceptions import (OffshoreWindInputWarning,
+                                      NearestNeighborError)
 
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ class Offshore:
         self._offshore_data, self._farm_coords = \
             self._parse_offshore_fpath(self._offshore_fpath)
 
-        self._d, self._i = self._run_nn()
+        self._d, self._i, self._d_lim = self._run_nn()
 
         self._out = self._init_offshore_out_arrays()
 
@@ -390,6 +391,8 @@ class Offshore:
         i : np.ndarray
             Offshore farm row numbers corresponding to resource pixels
             (length is number of offshore resource pixels in gen_fpath).
+        d_lim : float
+            Maximum distance limit between wind farm points and resouce pixels.
         """
 
         tree = cKDTree(self._farm_coords)
@@ -400,7 +403,7 @@ class Offshore:
             d_lim = 0.5 * np.median(d_lim[:, 1])
             i[(d > d_lim)] = -1
 
-        return d, i
+        return d, i, d_lim
 
     @staticmethod
     def _get_farm_data(gen_fpath, meta, system_inputs, site_data):
@@ -572,6 +575,31 @@ class Offshore:
 
         return system_inputs
 
+    @staticmethod
+    def _check_dist(meta_out_row, farm_data_row):
+        """Check that the offshore meta data and farm input data match.
+
+        Parameters
+        ----------
+        meta_out_row : pd.Series
+            Output meta data for farm.
+        farm_data_row : pd.Series
+            Farm input data
+        """
+
+        lat_label = [c for c in farm_data_row.index
+                     if c.lower().startswith('latitude')][0]
+        lon_label = [c for c in farm_data_row.index
+                     if c.lower().startswith('longitude')][0]
+
+        dist = (meta_out_row[['latitude', 'longitude']]
+                - farm_data_row[[lat_label, lon_label]]).sum()
+        if dist > 0:
+            m = ('Offshore farm NN failed, output meta:\n{}\nfarm data '
+                 'input:\n{}'.format(meta_out_row, farm_data_row))
+            logger.error(m)
+            raise NearestNeighborError(m)
+
     def _run_serial(self):
         """Run offshore gen aggregation and ORCA econ compute in serial."""
 
@@ -579,6 +607,8 @@ class Offshore:
 
             row = self._offshore_data.loc[ifarm, :]
             farm_gid, res_gid = self._get_farm_gid(ifarm)
+
+            self._check_dist(meta, row)
 
             if farm_gid is not None:
                 cf_ilocs = np.where(self._i == ifarm)[0]
@@ -610,6 +640,8 @@ class Offshore:
 
                 row = self._offshore_data.loc[ifarm, :]
                 farm_gid, res_gid = self._get_farm_gid(ifarm)
+
+                self._check_dist(meta, row)
 
                 if farm_gid is not None:
                     cf_ilocs = np.where(self._i == ifarm)[0]

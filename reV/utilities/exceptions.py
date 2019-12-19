@@ -94,6 +94,12 @@ class SupplyCurveInputError(SupplyCurveError):
     """
 
 
+class NearestNeighborError(Exception):
+    """
+    Execution error for bad nearest neighbor mapping results.
+    """
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data
