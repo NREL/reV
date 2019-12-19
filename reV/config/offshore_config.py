@@ -43,17 +43,18 @@ class OffshoreConfig(AnalysisConfig):
                               'keys: {}'.format(missing))
 
     @property
-    def gen_fpath(self):
-        """Get the generation data filepath(s)"""
+    def gen_fpaths(self):
+        """Get a list of generation data filepaths"""
 
-        fpath = self['gen_fpath']
+        fpaths = self['gen_fpath']
 
-        if fpath == 'PIPELINE':
-            fpath = Pipeline.parse_previous(
+        if fpaths == 'PIPELINE':
+            fpaths = Pipeline.parse_previous(
                 self.dirout, 'aggregation', target='fpath',
                 target_module='generation')
-
-        return fpath
+        if isinstance(fpaths, str):
+            fpaths = [fpaths]
+        return fpaths
 
     @property
     def offshore_fpath(self):

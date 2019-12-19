@@ -60,34 +60,38 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'offshore', name)
-        if status != 'successful':
-            Status.add_job(
-                config.dirout, 'offshore', name, replace=True,
-                job_attrs={'hardware': 'local',
-                           'fout': '{}_offshore.h5'.format(name),
-                           'dirout': config.dirout})
-            ctx.invoke(main, name, config.gen_fpath, config.offshore_fpath,
-                       config.project_points, config.sam_files,
-                       config.logdir, verbose)
+    for i, gen_fpath in enumerate(config.gen_fpaths):
+        job_name = '{}_{}'.format(name, str(i).zfill(2))
 
-    elif config.execution_control.option == 'eagle':
+        if config.execution_control.option == 'local':
+            status = Status.retrieve_job_status(config.dirout, 'offshore',
+                                                job_name)
+            if status != 'successful':
+                Status.add_job(
+                    config.dirout, 'offshore', job_name, replace=True,
+                    job_attrs={'hardware': 'local',
+                               'fout': '{}_offshore.h5'.format(job_name),
+                               'dirout': config.dirout})
+                ctx.invoke(main, job_name, gen_fpath, config.offshore_fpath,
+                           config.project_points, config.sam_files,
+                           config.logdir, verbose)
 
-        ctx.obj['NAME'] = name
-        ctx.obj['GEN_FPATH'] = config.gen_fpath
-        ctx.obj['OFFSHORE_FPATH'] = config.offshore_fpath
-        ctx.obj['PROJECT_POINTS'] = config.project_points
-        ctx.obj['SAM_FILES'] = config.sam_files
-        ctx.obj['OUT_DIR'] = config.dirout
-        ctx.obj['LOG_DIR'] = config.logdir
-        ctx.obj['VERBOSE'] = verbose
+        elif config.execution_control.option == 'eagle':
 
-        ctx.invoke(eagle,
-                   alloc=config.execution_control.alloc,
-                   memory=config.execution_control.node_mem,
-                   walltime=config.execution_control.walltime,
-                   feature=config.execution_control.feature)
+            ctx.obj['NAME'] = job_name
+            ctx.obj['GEN_FPATH'] = gen_fpath
+            ctx.obj['OFFSHORE_FPATH'] = config.offshore_fpath
+            ctx.obj['PROJECT_POINTS'] = config.project_points
+            ctx.obj['SAM_FILES'] = config.sam_files
+            ctx.obj['OUT_DIR'] = config.dirout
+            ctx.obj['LOG_DIR'] = config.logdir
+            ctx.obj['VERBOSE'] = verbose
+
+            ctx.invoke(eagle,
+                       alloc=config.execution_control.alloc,
+                       memory=config.execution_control.node_mem,
+                       walltime=config.execution_control.walltime,
+                       feature=config.execution_control.feature)
 
 
 @click.group(invoke_without_command=True)
