@@ -165,8 +165,8 @@ class DatasetCollector:
         -------
         site_slice : slice | np.ndarray
             Slice in the final output file to write data to from source gids.
-            If gids in destination file are non-sequential, an array of
-            indices is returned and a warning is printed.
+            If gids in destination file are non-sequential, a boolean array of
+            indexes is returned and a warning is printed.
         """
 
         locs = np.where(np.isin(gids_out, source_gids))[0]
@@ -177,7 +177,7 @@ class DatasetCollector:
                  'sequential in destination file!')
             logger.warning(w)
             warn(w, HandlerWarning)
-            site_slice = locs
+            site_slice = np.isin(gids_out, source_gids)
         else:
             site_slice = slice(locs.min(), locs.max() + 1)
 
@@ -276,13 +276,8 @@ class DatasetCollector:
 
                     x = self._get_source_gid_chunks(f_source)
                     all_source_gids, source_gid_chunks = x
+
                     for source_gids in source_gid_chunks:
-
-                        logger.debug('Collecting chunk from file {} with '
-                                     '{} source gids: {}'
-                                     .format(os.path.basename(fp),
-                                             len(source_gids), source_gids))
-
                         self._collect_chunk(all_source_gids, source_gids,
                                             f_out, f_source, fp)
 
