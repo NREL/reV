@@ -431,7 +431,7 @@ class Collector:
             m = 'Cannot parse project_points'
             logger.error(m)
             raise HandlerValueError(m)
-
+        gids = sorted([int(g) for g in gids])
         return gids
 
     @staticmethod
@@ -451,7 +451,9 @@ class Collector:
         """
 
         meta = [DatasetCollector.parse_meta(file) for file in h5_files]
-        gids = sorted(meta['gid'].values.tolist())
+        meta = pd.concat(meta, axis=0)
+        gids = meta['gid'].values.tolist()
+        gids = sorted([int(g) for g in gids])
         return gids
 
     def get_dset_shape(self, dset_name):
@@ -749,6 +751,8 @@ class Collector:
             contained in the .h5 files to be collected
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
+        sub_dir : str
+            Sub directory name to move chunks to.
         """
 
         clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)

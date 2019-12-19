@@ -297,7 +297,7 @@ class Outputs(Resource):
             else:
                 out = 'int32'
         elif np.issubdtype(dtype, np.object_):
-            size = int(col.str.len().max())
+            size = int(col.astype(str).str.len().max())
             out = 'S{:}'.format(size)
         else:
             out = dtype
