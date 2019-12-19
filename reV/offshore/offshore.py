@@ -113,7 +113,7 @@ class Offshore:
     @property
     def meta_out_onshore(self):
         """Get the onshore only meta data."""
-        meta_out_onshore = self._meta_source[self._onshore_mask]
+        meta_out_onshore = self._meta_source[self._onshore_mask].copy()
         meta_out_onshore['offshore_res_gids'] = '[-1]'
         return meta_out_onshore
 
@@ -171,6 +171,11 @@ class Offshore:
             self._meta_out_offshore = self._meta_out_offshore.dropna(
                 subset=['gid'])
 
+            # Index must not be re-ordered because it corresponds to index in
+            # self._offshore_data
+            self._meta_out_offshore = \
+                self._meta_out_offshore.sort_values('gid')
+
         return self._meta_out_offshore
 
     @property
@@ -227,16 +232,16 @@ class Offshore:
 
         Parameters
         ----------
-        sub_dir : str
-            Sub directory name to move input file to.
+        sub_dir : str | None
+            Sub directory name to move chunks to. None to not move files.
         """
-
-        base_dir, fn = os.path.split(self._gen_fpath)
-        new_dir = os.path.join(base_dir, sub_dir)
-        if not os.path.exists(new_dir):
-            os.makedirs(new_dir)
-        new_fpath = os.path.join(new_dir, fn)
-        shutil.move(self._gen_fpath, new_fpath)
+        if sub_dir is not None:
+            base_dir, fn = os.path.split(self._gen_fpath)
+            new_dir = os.path.join(base_dir, sub_dir)
+            if not os.path.exists(new_dir):
+                os.makedirs(new_dir)
+            new_fpath = os.path.join(new_dir, fn)
+            shutil.move(self._gen_fpath, new_fpath)
 
     def _init_offshore_out_arrays(self):
         """Get a dictionary of initialized output arrays for offshore outputs.
@@ -661,8 +666,8 @@ class Offshore:
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
-        sub_dir : str
-            Sub directory name to move chunks to.
+        sub_dir : str | None
+            Sub directory name to move chunks to. None to not move files.
 
         Returns
         -------

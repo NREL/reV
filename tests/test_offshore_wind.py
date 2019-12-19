@@ -32,7 +32,7 @@ PURGE_OUT = True
 def offshore():
     """Offshore aggregation object for tests and plotting."""
     obj = Offshore.run(GEN_FPATH, OFFSHORE_FPATH, POINTS, SAM_FILES,
-                       fpath_out=OUTPUT_FILE)
+                       fpath_out=OUTPUT_FILE, sub_dir=None)
     return obj
 
 
@@ -40,6 +40,7 @@ def test_offshore_agg(offshore):
     """Run an offshore aggregation test and validate a few outputs against
     the raw gen output."""
     assert len(offshore.out['cf_mean']) == len(offshore.meta_out_offshore)
+    assert all(offshore.meta_out['gid'] == sorted(offshore.meta_out['gid']))
 
     with Outputs(GEN_FPATH, mode='r') as source:
         with Outputs(OUTPUT_FILE, mode='r') as out:

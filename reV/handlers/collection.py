@@ -567,17 +567,18 @@ class Collector:
 
         Parameters
         ----------
-        sub_dir : str
-            Sub directory name to move chunks to.
+        sub_dir : str | None
+            Sub directory name to move chunks to. None to not move files.
         """
 
-        for fpath in self.h5_files:
-            base_dir, fn = os.path.split(fpath)
-            new_dir = os.path.join(base_dir, sub_dir)
-            if not os.path.exists(new_dir):
-                os.makedirs(new_dir)
-            new_fpath = os.path.join(new_dir, fn)
-            shutil.move(fpath, new_fpath)
+        if sub_dir is not None:
+            for fpath in self.h5_files:
+                base_dir, fn = os.path.split(fpath)
+                new_dir = os.path.join(base_dir, sub_dir)
+                if not os.path.exists(new_dir):
+                    os.makedirs(new_dir)
+                new_fpath = os.path.join(new_dir, fn)
+                shutil.move(fpath, new_fpath)
 
     def combine_meta(self):
         """
@@ -751,8 +752,8 @@ class Collector:
             contained in the .h5 files to be collected
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
-        sub_dir : str
-            Sub directory name to move chunks to.
+        sub_dir : str | None
+            Sub directory name to move chunks to. None to not move files.
         """
 
         clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)
