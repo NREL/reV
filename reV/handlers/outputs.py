@@ -73,9 +73,11 @@ class Outputs(Resource):
     def __setitem__(self, keys, arr):
         if self.writable:
             ds, ds_slice = parse_keys(keys)
+
             slice_test = False
-            if isinstance(ds_slice, slice):
-                slice_test = ds_slice == (slice(None, None, None),)
+            if isinstance(ds_slice, tuple):
+                slice_test = ds_slice[0] == slice(None, None, None)
+
             if ds.endswith('meta') and slice_test:
                 self._set_meta(ds, arr)
             elif ds.endswith('time_index') and slice_test:

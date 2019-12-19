@@ -151,7 +151,7 @@ class DatasetCollector:
         return attrs, axis, site_mem_req
 
     @staticmethod
-    def _get_gid_slice(gids_out, source_gids):
+    def _get_gid_slice(gids_out, source_gids, fn_source):
         """Find the site slice that the chunked set of source gids belongs to.
 
         Parameters
@@ -160,6 +160,8 @@ class DatasetCollector:
             List of resource GIDS in the final output meta data f_out
         source_gids : list
             List of resource GIDS in one chunk of source data.
+        fn_source : str
+            Source filename for warning printout.
 
         Returns
         -------
@@ -173,8 +175,8 @@ class DatasetCollector:
         sequential_locs = np.arange(locs.min(), locs.max() + 1)
 
         if not len(locs) == len(sequential_locs):
-            w = ('GID indices for source file are not '
-                 'sequential in destination file!')
+            w = ('GID indices for source file "{}" are not '
+                 'sequential in destination file!'.format(fn_source))
             logger.warning(w)
             warn(w, HandlerWarning)
             site_slice = np.isin(gids_out, source_gids)
@@ -238,7 +240,8 @@ class DatasetCollector:
         fp_source : str
             Source filepath
         """
-        out_slice = self._get_gid_slice(self._gids, source_gids)
+        out_slice = self._get_gid_slice(self._gids, source_gids,
+                                        os.path.basename(fp_source))
 
         source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
         source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
@@ -256,6 +259,7 @@ class DatasetCollector:
                 if not all(source_indexer):
                     data = data[source_indexer]
                 f_out[self._dset_out, out_slice] = data
+
             elif self._axis == 2:
                 data = f_source[self._dset_in, :, source_slice]
                 if not all(source_indexer):
