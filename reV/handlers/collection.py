@@ -163,20 +163,24 @@ class DatasetCollector:
 
         Returns
         -------
-        site_slice : slice
+        site_slice : slice | np.ndarray
             Slice in the final output file to write data to from source gids.
+            If gids in destination file are non-sequential, an array of
+            indices is returned and a warning is printed.
         """
 
         locs = np.where(np.isin(gids_out, source_gids))[0]
         sequential_locs = np.arange(locs.min(), locs.max() + 1)
 
         if not len(locs) == len(sequential_locs):
-            emsg = ('GID indices for source file are not '
-                    'sequential in destination file!')
-            logger.error(emsg)
-            raise HandlerRuntimeError(emsg)
+            w = ('GID indices for source file are not '
+                 'sequential in destination file!')
+            logger.warning(w)
+            warn(w, HandlerWarning)
+            site_slice = locs
+        else:
+            site_slice = slice(locs.min(), locs.max() + 1)
 
-        site_slice = slice(locs.min(), locs.max() + 1)
         return site_slice
 
     def _get_source_gid_chunks(self, f_source):
@@ -235,9 +239,12 @@ class DatasetCollector:
             Source filepath
         """
         out_slice = self._get_gid_slice(self._gids, source_gids)
+
         source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
         source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
         source_slice = slice(source_i0, source_i1 + 1)
+        source_indexer = np.isin(source_gids, self._gids)
+
         logger.debug('\t- Running low mem collection of "{}" for '
                      'output site {} from source site {} and file : {}'
                      .format(self._dset_in, out_slice, source_slice,
@@ -245,11 +252,15 @@ class DatasetCollector:
 
         try:
             if self._axis == 1:
-                f_out[self._dset_out, out_slice] = \
-                    f_source[self._dset_in, source_slice]
+                data = f_source[self._dset_in, source_slice]
+                if not all(source_indexer):
+                    data = data[source_indexer]
+                f_out[self._dset_out, out_slice] = data
             elif self._axis == 2:
-                f_out[self._dset_out, slice(None), out_slice] = \
-                    f_source[self._dset_in, slice(None), source_slice]
+                data = f_source[self._dset_in, :, source_slice]
+                if not all(source_indexer):
+                    data = data[:, source_indexer]
+                f_out[self._dset_out, :, out_slice] = data
 
         except Exception as e:
             logger.exception('Failed to collect source file {}. '
@@ -317,9 +328,10 @@ class Collector:
             Path to .h5 file into which data will be collected
         h5_dir : str
             Root directory containing .h5 files to combine
-        project_points : str | slice | list | pandas.DataFrame
+        project_points : str | slice | list | pandas.DataFrame | None
             Project points that correspond to the full collection of points
-            contained in the .h5 files to be collected
+            contained in the .h5 files to be collected. None if points list is
+            to be ignored (collect all data in h5_files)
         file_prefix : str
             .h5 file prefix, if None collect all files in h5_dir
         clobber : bool
@@ -335,7 +347,11 @@ class Collector:
         ignore = os.path.basename(self._h5_out)
         self._h5_files = self.find_h5_files(h5_dir, file_prefix=file_prefix,
                                             ignore=ignore)
-        self._gids = self.parse_project_points(project_points)
+        if project_points is not None:
+            self._gids = self.parse_project_points(project_points)
+        else:
+            self._gids = self.parse_gids_from_files(self._h5_files)
+
         self.combine_meta()
 
     @staticmethod
@@ -416,6 +432,26 @@ class Collector:
             logger.error(m)
             raise HandlerValueError(m)
 
+        return gids
+
+    @staticmethod
+    def parse_gids_from_files(h5_files):
+        """
+        Extract a sorted gid list from a list of h5_files.
+
+        Parameters
+        ----------
+        h5_files : list
+            List of h5 files to be collected.
+
+        Returns
+        -------
+        gids : list
+            List of sorted resource gids to be collected.
+        """
+
+        meta = [DatasetCollector.parse_meta(file) for file in h5_files]
+        gids = sorted(meta['gid'].values.tolist())
         return gids
 
     def get_dset_shape(self, dset_name):
@@ -560,6 +596,7 @@ class Collector:
                         for file in self.h5_files]
 
                 meta = pd.concat(meta, axis=0)
+                meta = meta.sort_values('gid').reset_index(drop=True)
                 self._check_meta(meta)
                 logger.info('Writing meta data with shape {}'
                             .format(meta.shape))
@@ -578,9 +615,10 @@ class Collector:
             Path to .h5 file into which data will be collected
         h5_dir : str
             Root directory containing .h5 files to combine
-        project_points : str | slice | list | pandas.DataFrame
+        project_points : str | slice | list | pandas.DataFrame | None
             Project points that correspond to the full collection of points
-            contained in the .h5 files to be collected
+            contained in the .h5 files to be collected. None if points list is
+            to be ignored (collect all data in h5_files)
         dset_name : str
             Dataset to be collected. If source shape is 2D, time index will be
             collected.

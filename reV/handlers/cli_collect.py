@@ -63,6 +63,7 @@ def from_config(ctx, config_file, verbose):
 
     # set config objects to be passed through invoke to direct methods
     ctx.obj['H5_DIR'] = config.coldir
+    ctx.obj['LOG_DIR'] = config.logdir
     ctx.obj['DSETS'] = config.dsets
     ctx.obj['PROJECT_POINTS'] = config.project_points
     ctx.obj['PURGE_CHUNKS'] = config.purge_chunks
@@ -101,21 +102,22 @@ def from_config(ctx, config_file, verbose):
               help='H5 file to be collected into.')
 @click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
               help='Directory containing h5 files to collect.')
-@click.option('--project_points', '-pp', required=True,
-              type=click.Path(exists=True),
+@click.option('--project_points', '-pp', type=STR,
               help='Project points file representing the full '
               'collection scope.')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
               help='Dataset names to be collected.')
 @click.option('--file_prefix', '-fp', type=STR, default=None,
               help='File prefix found in the h5 file names to be collected.')
+@click.option('--log_dir', '-ld', type=STR, default='./logs',
+              help='Directory to put log files.')
 @click.option('-p', '--purge_chunks', is_flag=True,
               help='Flag to delete chunked files after collection.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
 def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
-         purge_chunks, verbose):
+         log_dir, purge_chunks, verbose):
     """Main entry point for collection with context passing."""
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
@@ -124,6 +126,7 @@ def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
     ctx.obj['PROJECT_POINTS'] = project_points
     ctx.obj['DSETS'] = dsets
     ctx.obj['FILE_PREFIX'] = file_prefix
+    ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['PURGE_CHUNKS'] = purge_chunks
     ctx.obj['VERBOSE'] = verbose
 
@@ -141,11 +144,12 @@ def collect(ctx, verbose):
     project_points = ctx.obj['PROJECT_POINTS']
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
+    log_dir = ctx.obj['LOG_DIR']
     purge_chunks = ctx.obj['PURGE_CHUNKS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
-    init_mult(name, h5_dir, modules=[__name__, 'reV.handlers.collection'],
+    init_mult(name, log_dir, modules=[__name__, 'reV.handlers.collection'],
               verbose=verbose, node=True)
 
     for key, val in ctx.obj.items():
@@ -184,7 +188,8 @@ def collect(ctx, verbose):
 
 
 def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
-                 file_prefix=None, purge_chunks=False, verbose=False):
+                 file_prefix=None, log_dir='./logs/',
+                 purge_chunks=False, verbose=False):
     """Make a reV collection local CLI call string.
 
     Parameters
@@ -202,6 +207,8 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         List of datasets (strings) to be collected.
     file_prefix : str
         .h5 file prefix, if None collect all files on h5_dir
+    log_dir : str
+        Log directory.
     purge_chunks : bool
         Flag to delete the chunked files after collection.
     verbose : bool
@@ -222,6 +229,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                 '-pp {project_points} '
                 '-ds {dsets} '
                 '-fp {file_prefix} '
+                '-ld {log_dir} '
                 '{purge}'
                 '{v}'
                 .format(name=SubprocessManager.s(name),
@@ -230,6 +238,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                         project_points=SubprocessManager.s(project_points),
                         dsets=SubprocessManager.s(dsets),
                         file_prefix=SubprocessManager.s(file_prefix),
+                        log_dir=SubprocessManager.s(log_dir),
                         purge='-p ' if purge_chunks else '',
                         v='-v ' if verbose else '',
                         ))
@@ -263,6 +272,7 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     name = ctx.obj['NAME']
     h5_file = ctx.obj['H5_FILE']
     h5_dir = ctx.obj['H5_DIR']
+    log_dir = ctx.obj['LOG_DIR']
     project_points = ctx.obj['PROJECT_POINTS']
     dsets = ctx.obj['DSETS']
     file_prefix = ctx.obj['FILE_PREFIX']
@@ -270,8 +280,8 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
-                       file_prefix=file_prefix, purge_chunks=purge_chunks,
-                       verbose=verbose)
+                       file_prefix=file_prefix, log_dir=log_dir,
+                       purge_chunks=purge_chunks, verbose=verbose)
 
     status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
                                         name)
