@@ -9,6 +9,8 @@ Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)
 """
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import numpy as np
+import os
+import shutil
 import pandas as pd
 from scipy.spatial import cKDTree
 import logging
@@ -99,12 +101,21 @@ class Offshore:
     @property
     def meta_out(self):
         """Get the combined onshore and offshore meta data."""
-        return self.meta_out_onshore.append(self.meta_out_offshore, sort=False)
+        if any(self.offshore_gids) and any(self.onshore_gids):
+            meta = self.meta_out_onshore.append(self.meta_out_offshore,
+                                                sort=False)
+        elif any(self.offshore_gids):
+            meta = self.meta_out_offshore
+        elif any(self.onshore_gids):
+            meta = self.meta_out_onshore
+        return meta
 
     @property
     def meta_out_onshore(self):
         """Get the onshore only meta data."""
-        return self._meta_source[self._onshore_mask]
+        meta_out_onshore = self._meta_source[self._onshore_mask]
+        meta_out_onshore['offshore_res_gids'] = '[-1]'
+        return meta_out_onshore
 
     @property
     def meta_out_offshore(self):
@@ -188,8 +199,8 @@ class Offshore:
     def save_offshore_output(self):
         """Save offshore aggregated data to offshore output file"""
         if self._fpath_out is not None:
-            logger.debug('Writing offshore output data to: {}'
-                         .format(self._fpath_out))
+            logger.info('Writing offshore output data to: {}'
+                        .format(self._fpath_out))
 
             offshore_bool = np.isin(self.meta_out['gid'].values,
                                     self.offshore_gids)
@@ -204,17 +215,28 @@ class Offshore:
             with Outputs(self._fpath_out, mode='a') as out:
                 shapes = {d: out.get_dset_properties(d)[0] for d in dsets}
                 for dset in dsets:
+                    logger.info('Writing offshore output data for "{}".'
+                                .format(dset))
                     if len(shapes[dset]) == 1:
                         out[dset, offshore_slice] = self.out[dset]
                     else:
                         out[dset, :, offshore_slice] = self.out[dset]
 
-            for dset in dsets:
-                logger.debug('Writing aggregated offshore data for "{}"'
-                             .format(dset))
-                DatasetCollector.collect_dset(self._fpath_out,
-                                              [self._gen_fpath],
-                                              self.onshore_gids, dset)
+    def move_input_file(self, sub_dir):
+        """Move the generation input file to a sub dir (after offshore agg).
+
+        Parameters
+        ----------
+        sub_dir : str
+            Sub directory name to move input file to.
+        """
+
+        base_dir, fn = os.path.split(self._gen_fpath)
+        new_dir = os.path.join(base_dir, sub_dir)
+        if not os.path.exists(new_dir):
+            os.makedirs(new_dir)
+        new_fpath = os.path.join(new_dir, fn)
+        shutil.move(self._gen_fpath, new_fpath)
 
     def _init_offshore_out_arrays(self):
         """Get a dictionary of initialized output arrays for offshore outputs.
@@ -260,11 +282,20 @@ class Offshore:
                 out._set_time_index('time_index', self.time_index,
                                     attrs=ti_attrs)
 
-            for dset in dsets:
-                logger.debug('Collecting onshore data for "{}"'.format(dset))
-                DatasetCollector.collect_dset(self._fpath_out,
-                                              [self._gen_fpath],
-                                              self.onshore_gids, dset)
+            if any(self.onshore_gids):
+                for dset in dsets:
+                    logger.debug('Collecting onshore data for "{}"'
+                                 .format(dset))
+                    DatasetCollector.collect_dset(self._fpath_out,
+                                                  [self._gen_fpath],
+                                                  self.onshore_gids, dset)
+            else:
+                logger.debug('No offshore data in source file to collect.')
+                for dset in dsets:
+                    logger.debug('Initializing offshore dataset "{}".'
+                                 .format(dset))
+                    DatasetCollector(self._fpath_out, [self._gen_fpath],
+                                     self.offshore_gids, dset)
 
     @staticmethod
     def _parse_cf_meta(gen_fpath):
@@ -606,7 +637,7 @@ class Offshore:
 
     @classmethod
     def run(cls, gen_fpath, offshore_fpath, points, sam_files, fpath_out=None,
-            max_workers=None, offshore_gid_adder=1e7):
+            max_workers=None, offshore_gid_adder=1e7, sub_dir='chunk_files'):
         """Run the offshore aggregation methods.
 
         Parameters
@@ -630,6 +661,8 @@ class Offshore:
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
+        sub_dir : str
+            Sub directory name to move chunks to.
 
         Returns
         -------
@@ -644,6 +677,9 @@ class Offshore:
                        offshore_gid_adder=offshore_gid_adder,
                        max_workers=max_workers)
         offshore._init_fout()
-        offshore._run()
-        offshore.save_offshore_output()
+        if any(offshore.offshore_gids):
+            offshore._run()
+            offshore.save_offshore_output()
+        offshore.move_input_file(sub_dir)
+        logger.info('Offshore wind gen/econ module complete!')
         return offshore

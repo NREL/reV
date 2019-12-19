@@ -71,7 +71,8 @@ def from_config(ctx, config_file, verbose):
                     config.dirout, 'offshore', job_name, replace=True,
                     job_attrs={'hardware': 'local',
                                'fout': '{}_offshore.h5'.format(job_name),
-                               'dirout': config.dirout})
+                               'dirout': config.dirout,
+                               'finput': gen_fpath})
                 ctx.invoke(main, job_name, gen_fpath, config.offshore_fpath,
                            config.project_points, config.sam_files,
                            config.logdir, verbose)
@@ -127,7 +128,8 @@ def main(ctx, name, gen_fpath, offshore_fpath, points, sam_files,
 
     if ctx.invoked_subcommand is None:
         t0 = time.time()
-        init_mult(name, log_dir, modules=[__name__, 'reV.offshore'],
+        init_mult(name, log_dir, modules=[__name__, 'reV.offshore',
+                                          'reV.handlers'],
                   verbose=verbose, node=True)
 
         fpath_out = gen_fpath.replace('.h5', '_offshore.h5')

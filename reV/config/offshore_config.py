@@ -50,7 +50,7 @@ class OffshoreConfig(AnalysisConfig):
 
         if fpaths == 'PIPELINE':
             fpaths = Pipeline.parse_previous(
-                self.dirout, 'aggregation', target='fpath',
+                self.dirout, 'offshore', target='fpath',
                 target_module='generation')
         if isinstance(fpaths, str):
             fpaths = [fpaths]
