@@ -5,6 +5,7 @@ Created on Fri Dec 13 10:03:35 2019
 
 @author: gbuster
 """
+from copy import deepcopy
 import numpy as np
 import pandas as pd
 from warnings import warn
@@ -26,7 +27,7 @@ class ORCA_LCOE:
 
         Parameters
         ----------
-        system_inputs : dict | ParametersManager
+        system_inputs : dict
             System/technology configuration inputs (non-site-specific).
         site_data : dict | pd.DataFrame
             Site-specific inputs.
@@ -38,34 +39,52 @@ class ORCA_LCOE:
 
         self._gid = site_gid
 
+        self._system_inputs, self._site_data = \
+            self._parse_site_data(system_inputs, site_data, site_gid=site_gid)
+
         # make an ORCA tech system instance
-        self._system_inputs = system_inputs
         self.system = ORCASystem(self.system_inputs)
 
         # make a site-specific data structure
-        self._site_data = self._parse_site_data(site_data)
         self.orca_data_struct = ORCAData(self.site_data)
 
     @staticmethod
-    def _parse_site_data(inp):
+    def _parse_site_data(system_inputs, site_data, site_gid=0):
         """Parse the site-specific inputs for ORCA.
 
         Parameters
         ----------
-        inp : dict | pd.DataFrame
+        system_inputs : dict
+            System inputs (non site specific).
+        site_data : dict | pd.DataFrame
             Site-specific inputs.
+        site_gid : int
+            Optional site gid for logging and debugging.
 
         Returns
         -------
-        inp : pd.DataFrame
+        system_inputs : dict
+            System inputs (non site specific).
+        site_data : pd.DataFrame
             Site-specific inputs.
         """
+        # deep copy so not to modify global inputs
+        system_inputs = deepcopy(system_inputs)
+
         # convert site parameters to dataframe if necessary
-        if not isinstance(inp, pd.DataFrame):
-            inp = pd.DataFrame(inp, index=(0,))
+        if not isinstance(site_data, pd.DataFrame):
+            site_data = pd.DataFrame(site_data, index=(0,))
 
         # rename any SAM kwargs to match ORCA requirements
-        return inp.rename(index=str, columns=ORCA_LCOE.ARG_MAP)
+        site_data = site_data.rename(index=str, columns=ORCA_LCOE.ARG_MAP)
+
+        for c in site_data.columns:
+            if c in system_inputs:
+                system_inputs[c] = site_data[c].values[0]
+                logger.debug('Overwriting "{}" for site gid {} with input: {}'
+                             .format(c, site_gid, system_inputs[c]))
+
+        return system_inputs, site_data
 
     @property
     def system_inputs(self):

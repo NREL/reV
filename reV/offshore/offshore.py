@@ -57,6 +57,7 @@ class Offshore:
         self._offshore_gid_adder = offshore_gid_adder
         self._meta_out_offshore = None
         self._time_index = None
+        self._warned = False
         self._max_workers = max_workers
 
         self._meta_source, self._onshore_mask, self._offshore_mask = \
@@ -605,6 +606,23 @@ class Offshore:
             logger.error(m)
             raise NearestNeighborError(m)
 
+    def _check_sys_inputs(self, system_inputs, site_data):
+        """Check system inputs and site data for duplicates and print warning.
+
+        system_inputs : dict
+            System (non-site-specific) inputs.
+        site_data : dict
+            Site specific inputs (will overwrite system_inputs)
+        """
+        overlap = [k for k in site_data.keys() if k in system_inputs]
+        if any(overlap) and not self._warned:
+            w = ('Offshore site inputs (from {}) will overwrite system '
+                 'json inputs for the following columns: {}'
+                 .format(os.path.basename(self._offshore_fpath), overlap))
+            logger.warning(w)
+            warn(w, OffshoreWindInputWarning)
+            self._warned = True
+
     def _run_serial(self):
         """Run offshore gen aggregation and ORCA econ compute in serial."""
 
@@ -624,6 +642,8 @@ class Offshore:
                 logger.debug('Running offshore gen aggregation and ORCA econ '
                              'compute for ifarm {}, farm gid {}, res gid {}'
                              .format(ifarm, farm_gid, res_gid))
+
+                self._check_sys_inputs(system_inputs, site_data)
 
                 gen_data = self._get_farm_data(self._gen_fpath, meta,
                                                system_inputs, site_data,
@@ -654,6 +674,8 @@ class Offshore:
                     meta = self.meta_source_offshore.iloc[cf_ilocs]
                     system_inputs = self._get_system_inputs(res_gid)
                     site_data = row.to_dict()
+
+                    self._check_sys_inputs(system_inputs, site_data)
 
                     future = exe.submit(self._get_farm_data, self._gen_fpath,
                                         meta, system_inputs, site_data,
