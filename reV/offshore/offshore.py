@@ -406,7 +406,7 @@ class Offshore:
         return d, i, d_lim
 
     @staticmethod
-    def _get_farm_data(gen_fpath, meta, system_inputs, site_data):
+    def _get_farm_data(gen_fpath, meta, system_inputs, site_data, site_gid=0):
         """Get the offshore farm aggregated cf data and calculate LCOE.
 
         Parameters
@@ -421,6 +421,8 @@ class Offshore:
             Wind farm system inputs.
         site_data : dict
             Wind-farm site-specific data inputs.
+        site_gid : int
+            Optional site gid (farm index) for logging and debugging.
 
         Returns
         -------
@@ -437,13 +439,14 @@ class Offshore:
         cf = gen_data['cf_mean'].mean()
 
         if cf > 1:
-            m = ('Offshore wind aggregated mean capacity factor ({}) is '
-                 'greater than 1, maybe the data is still integer scaled.'
-                 .format(cf))
+            m = ('Offshore wind aggregated mean capacity factor ({}) for '
+                 'wind farm gid {} is greater than 1, maybe the data is '
+                 'still integer scaled.'.format(cf, site_gid))
             logger.warning(m)
             warn(m, OffshoreWindInputWarning)
 
-        lcoe = Offshore._run_orca(cf, system_inputs, site_data)
+        lcoe = Offshore._run_orca(cf, system_inputs, site_data,
+                                  site_gid=site_gid)
         gen_data['lcoe_fcr'] = lcoe
         return gen_data
 
@@ -495,7 +498,7 @@ class Offshore:
         return gen_data
 
     @staticmethod
-    def _run_orca(cf_mean, system_inputs, site_data):
+    def _run_orca(cf_mean, system_inputs, site_data, site_gid=0):
         """Run an ORCA LCOE compute for a wind farm.
 
         Parameters
@@ -506,6 +509,8 @@ class Offshore:
             Wind farm system inputs.
         site_data : dict
             Wind-farm site-specific data inputs.
+        site_gid : int
+            Optional site gid for logging and debugging.
 
         Results
         -------
@@ -513,7 +518,7 @@ class Offshore:
             Site LCOE value with units: $/MWh.
         """
         site_data['gcf'] = cf_mean
-        orca = ORCA_LCOE(system_inputs, site_data)
+        orca = ORCA_LCOE(system_inputs, site_data, site_gid=site_gid)
         return orca.lcoe
 
     def _get_farm_gid(self, ifarm):
@@ -621,7 +626,8 @@ class Offshore:
                              .format(ifarm, farm_gid, res_gid))
 
                 gen_data = self._get_farm_data(self._gen_fpath, meta,
-                                               system_inputs, site_data)
+                                               system_inputs, site_data,
+                                               site_gid=farm_gid)
 
                 for k, v in gen_data.items():
                     if isinstance(v, (np.ndarray, list, tuple)):
@@ -650,7 +656,8 @@ class Offshore:
                     site_data = row.to_dict()
 
                     future = exe.submit(self._get_farm_data, self._gen_fpath,
-                                        meta, system_inputs, site_data)
+                                        meta, system_inputs, site_data,
+                                        site_gid=farm_gid)
 
                     futures[future] = i
 
