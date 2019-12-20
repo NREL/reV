@@ -195,10 +195,14 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
         if isinstance(excl_dict, str):
             excl_dict = excl_dict.replace('\'', '\"')
             excl_dict = excl_dict.replace('None', 'null')
+            excl_dict = excl_dict.replace('True', 'true')
+            excl_dict = excl_dict.replace('False', 'false')
             excl_dict = json.loads(excl_dict)
         if isinstance(data_layers, str):
             data_layers = data_layers.replace('\'', '\"')
             data_layers = data_layers.replace('None', 'null')
+            data_layers = data_layers.replace('True', 'true')
+            data_layers = data_layers.replace('False', 'false')
             data_layers = json.loads(data_layers)
 
         try:
