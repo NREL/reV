@@ -31,7 +31,8 @@ class Offshore:
     """Framework to handle offshore wind analysis."""
 
     def __init__(self, gen_fpath, offshore_fpath, project_points,
-                 fpath_out=None, max_workers=None, offshore_gid_adder=1e7):
+                 fpath_out=None, max_workers=None, offshore_gid_adder=1e7,
+                 farm_gid_label='wfarm_id'):
         """
         Parameters
         ----------
@@ -48,6 +49,8 @@ class Offshore:
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
+        farm_gid_label : str
+            Label in offshore_fpath for the wind farm gid unique identifier.
         """
 
         self._gen_fpath = gen_fpath
@@ -59,6 +62,7 @@ class Offshore:
         self._time_index = None
         self._warned = False
         self._max_workers = max_workers
+        self._farm_gid_label = farm_gid_label
 
         self._meta_source, self._onshore_mask, self._offshore_mask = \
             self._parse_cf_meta(self._gen_fpath)
@@ -533,9 +537,10 @@ class Offshore:
         Returns
         -------
         farm_gid : int | None
-            Unique resource GID for the offshore farm. This is the offshore
-            gid adder plus the closest resource gid. None will be returned if
-            the farm is not close to any resource sites in gen_fpath.
+            Unique GID for the offshore farm. This is the offshore
+            gid adder plus the farm gid (from self._offshore_data).
+            None will be returned if the farm is not close to any
+            resource sites in gen_fpath.
         res_gid : int | None
             Resource gid of the closest resource pixel to ifarm. None if farm
             is not close to any resource sites in gen_fpath.
@@ -549,7 +554,9 @@ class Offshore:
             ind_min = inds[np.argmin(dists)]
             res_site = self.meta_source_offshore.iloc[ind_min]
             res_gid = res_site['gid']
-            farm_gid = int(self._offshore_gid_adder + res_gid)
+
+            farm_gid = self._offshore_data.iloc[ifarm][self._farm_gid_label]
+            farm_gid = int(self._offshore_gid_adder + farm_gid)
 
         return farm_gid, res_gid
 
@@ -703,7 +710,8 @@ class Offshore:
 
     @classmethod
     def run(cls, gen_fpath, offshore_fpath, points, sam_files, fpath_out=None,
-            max_workers=None, offshore_gid_adder=1e7, sub_dir='chunk_files'):
+            max_workers=None, offshore_gid_adder=1e7,
+            farm_gid_label='wfarm_id', sub_dir='chunk_files'):
         """Run the offshore aggregation methods.
 
         Parameters
@@ -727,6 +735,8 @@ class Offshore:
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
+        farm_gid_label : str
+            Label in offshore_fpath for the wind farm gid unique identifier.
         sub_dir : str | None
             Sub directory name to move chunks to. None to not move files.
 
@@ -741,6 +751,7 @@ class Offshore:
         offshore = cls(gen_fpath, offshore_fpath, pc.project_points,
                        fpath_out=fpath_out,
                        offshore_gid_adder=offshore_gid_adder,
+                       farm_gid_label=farm_gid_label,
                        max_workers=max_workers)
         offshore._init_fout()
         if any(offshore.offshore_gids):

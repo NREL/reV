@@ -41,6 +41,7 @@ def test_offshore_agg(offshore):
     the raw gen output."""
     assert len(offshore.out['cf_mean']) == len(offshore.meta_out_offshore)
     assert all(offshore.meta_out['gid'] == sorted(offshore.meta_out['gid']))
+    assert len(offshore.meta_out['gid'].unique()) == len(offshore.meta_out)
 
     with Outputs(GEN_FPATH, mode='r') as source:
         with Outputs(OUTPUT_FILE, mode='r') as out:
@@ -80,13 +81,7 @@ def test_offshore_agg(offshore):
 
         agg_gids = offshore.meta_out_offshore.iloc[i]['offshore_res_gids']
         agg_gids = json.loads(agg_gids)
-
         farm_gid = offshore.meta_out_offshore.iloc[i]['gid']
-        farm_res_gid = farm_gid - 1e7
-        m = ('Farm closest resource gid is not in aggregated gids! '
-             'Something went wrong with the NN and offshore farm meta '
-             'gid setting.')
-        assert farm_res_gid in agg_gids, m
 
         mask = np.isin(offshore.meta_source_full['gid'].values, agg_gids)
         gen_gids = np.where(mask)[0]
