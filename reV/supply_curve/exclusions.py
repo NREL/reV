@@ -479,6 +479,66 @@ class ExclusionMask:
 
         return mask
 
+    def _increase_mask_slice(self, ds_slice, n=1):
+        """Increase the mask slice, e.g. from 64x64 to 192x192, to help the
+        contiguous area filter be more accurate.
+
+        Parameters
+        ----------
+        ds_slice : tuple
+            Two entry tuple with x and y slices. Anything else will be passed
+            through unaffected.
+        n : int
+            Number of blocks to increase in each direction. For example,
+            a 64x64 slice with n=1 will increase to 192x192
+            (increases by 64xn in each direction).
+
+        Returns
+        -------
+        new_slice : tuple
+            Two entry tuple with x and y slices with increased dimensions.
+        sub_slice : tuple
+            Two entry tuple with x and y slices to retrieve the original
+            slice out of the bigger slice.
+        """
+        new_slice = ds_slice
+        sub_slice = (slice(None), slice(None))
+
+        if isinstance(ds_slice, tuple) and len(ds_slice) == 2:
+            y_slice = ds_slice[0]
+            x_slice = ds_slice[1]
+            if isinstance(x_slice, slice) and isinstance(y_slice, slice):
+                y_diff = n * np.abs(y_slice.stop - y_slice.start)
+                x_diff = n * np.abs(x_slice.stop - x_slice.start)
+
+                y_new_start = int(np.max((0, (y_slice.start - y_diff))))
+                x_new_start = int(np.max((0, (x_slice.start - x_diff))))
+
+                y_new_stop = int(np.min((self.shape[0],
+                                         (y_slice.stop + y_diff))))
+                x_new_stop = int(np.min((self.shape[1],
+                                         (x_slice.stop + x_diff))))
+
+                new_slice = (slice(y_new_start, y_new_stop),
+                             slice(x_new_start, x_new_stop))
+
+                if y_new_start == y_slice.start:
+                    y_sub_start = 0
+                else:
+                    y_sub_start = int(n * y_diff)
+                if x_new_start == x_slice.start:
+                    x_sub_start = 0
+                else:
+                    x_sub_start = int(n * x_diff)
+
+                y_sub_stop = y_sub_start + y_diff
+                x_sub_stop = x_sub_start + x_diff
+
+                sub_slice = (slice(y_sub_start, y_sub_stop),
+                             slice(x_sub_start, x_sub_stop))
+
+        return new_slice, sub_slice
+
     def _generate_mask(self, *ds_slice):
         """
         Generate inclusion mask from exclusion layers
@@ -497,6 +557,9 @@ class ExclusionMask:
         if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
             ds_slice = ds_slice[0]
 
+        if self._min_area is not None:
+            ds_slice, sub_slice = self._increase_mask_slice(ds_slice, n=1)
+
         for layer in self.layers:
             layer_slice = (layer.layer, ) + ds_slice
             layer_mask = layer[self.excl_h5[layer_slice]]
@@ -508,6 +571,7 @@ class ExclusionMask:
         if self._min_area is not None:
             mask = self._area_filter(mask, min_area=self._min_area,
                                      kernel=self._kernel)
+            mask = mask[sub_slice]
 
         return mask
 
