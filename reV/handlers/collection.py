@@ -451,7 +451,7 @@ class Collector:
 
         meta = [DatasetCollector.parse_meta(file) for file in h5_files]
         meta = pd.concat(meta, axis=0)
-        gids = meta['gid'].values.tolist()
+        gids = list(set(meta['gid'].values.tolist()))
         gids = sorted([int(g) for g in gids])
         return gids
 
@@ -523,6 +523,12 @@ class Collector:
         ----------
         meta : pandas.DataFrame
             DataFrame of combined meta from all files in self._h5_files
+
+        Parameters
+        ----------
+        meta : pandas.DataFrame
+            DataFrame of combined meta from all files in self._h5_files.
+            Duplicate GIDs are dropped and a warning is raised.
         """
         meta_gids = meta['gid'].values
         gids = np.array(self.gids)
@@ -538,8 +544,14 @@ class Collector:
             m = ('Meta of length {} has {} unique gids! '
                  'There are duplicate gids in the source file list: {}'
                  .format(len(meta), len(set(meta_gids)), self.h5_files))
-            logger.error(m)
-            raise HandlerRuntimeError(m)
+            logger.warning(m)
+            warn(m, HandlerWarning)
+            meta = meta.drop_duplicates(subset='gid')
+
+        meta = meta.sort_values('gid')
+        meta = meta.reset_index(drop=True)
+
+        return meta
 
     def _purge_chunks(self):
         """Remove the chunked files (after collection). Will not delete files
@@ -598,8 +610,7 @@ class Collector:
                         for file in self.h5_files]
 
                 meta = pd.concat(meta, axis=0)
-                meta = meta.sort_values('gid').reset_index(drop=True)
-                self._check_meta(meta)
+                meta = self._check_meta(meta)
                 logger.info('Writing meta data with shape {}'
                             .format(meta.shape))
 
