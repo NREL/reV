@@ -142,6 +142,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
         if isinstance(transmission_costs, str):
             transmission_costs = transmission_costs.replace('\'', '\"')
             transmission_costs = transmission_costs.replace('None', 'null')
+            transmission_costs = transmission_costs.replace('True', 'true')
+            transmission_costs = transmission_costs.replace('False', 'false')
             transmission_costs = json.loads(transmission_costs)
 
         if simple:
