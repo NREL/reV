@@ -19,7 +19,8 @@ class LayerMask:
     """
     def __init__(self, layer, inclusion_range=(None, None),
                  exclude_values=None, include_values=None,
-                 use_as_weights=False, weight=1.0):
+                 use_as_weights=False, weight=1.0,
+                 exclude_nodata=True):
         """
         Parameters
         ----------
@@ -37,12 +38,18 @@ class LayerMask:
             Use layer as final inclusion weights
         weight : float
             How much to weight the inclusion of each pixel, Default = 1
+        exclude_nodata : bool
+            Flag to exclude nodata values. The self.nodata attribute must be
+            set to the appropriate nodata value for this to work.
         """
         self._layer = layer
         self._inclusion_range = inclusion_range
         self._exclude_values = exclude_values
         self._include_values = include_values
         self._as_weights = use_as_weights
+        self._exclude_nodata = exclude_nodata
+        self.nodata = None
+
         if weight > 1 or weight < 0:
             msg = ('Invalide weight ({}) provided for layer {}:'
                    '\nWeight must fall between 0 and 1!'.format(weight, layer))
@@ -208,10 +215,12 @@ class LayerMask:
         if self.max_value is not None:
             mask *= data <= self.max_value
 
+        if self._exclude_nodata and self.nodata is not None:
+            mask = mask & (data != self.nodata)
+
         return mask
 
-    @staticmethod
-    def _value_mask(data, values, include=True):
+    def _value_mask(self, data, values, include=True):
         """
         Mask exclusion layer based on values to include or exclude
 
@@ -231,8 +240,16 @@ class LayerMask:
         """
         mask = np.isin(data, values)
 
+        # only include if not nodata
+        if include and self._exclude_nodata and self.nodata is not None:
+            mask = mask & (data != self.nodata)
+
         if not include:
             mask = ~mask
+
+            # additionally exclude nodata fields
+            if self._exclude_nodata and self.nodata is not None:
+                mask = mask | (data == self.nodata)
 
         return mask
 
@@ -248,7 +265,7 @@ class LayerMask:
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to include
+            Boolean mask of which values to exclude
         """
         mask = self._value_mask(data, self._exclude_values, include=False)
 
@@ -442,6 +459,8 @@ class ExclusionMask:
             else:
                 logger.error(msg)
                 raise RuntimeError(msg)
+
+        layer.nodata = self.excl_h5.get_nodata_value(layer_name)
 
         self._layers[layer_name] = layer
 
