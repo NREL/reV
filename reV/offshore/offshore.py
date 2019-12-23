@@ -32,7 +32,7 @@ class Offshore:
 
     def __init__(self, gen_fpath, offshore_fpath, project_points,
                  fpath_out=None, max_workers=None, offshore_gid_adder=1e7,
-                 farm_gid_label='wfarm_id'):
+                 farm_gid_label='wfarm_id', small_farm_limit=7):
         """
         Parameters
         ----------
@@ -51,6 +51,10 @@ class Offshore:
             resource gids plus this number.
         farm_gid_label : str
             Label in offshore_fpath for the wind farm gid unique identifier.
+        small_farm_limit : int
+            Wind farms with less than this number of neighboring resource
+            pixels will not be included in the output. Default is 7 based on
+            median number of farm resource neighbors in a small test case.
         """
 
         self._gen_fpath = gen_fpath
@@ -63,6 +67,7 @@ class Offshore:
         self._warned = False
         self._max_workers = max_workers
         self._farm_gid_label = farm_gid_label
+        self._small_farm_limit = small_farm_limit
 
         self._meta_source, self._onshore_mask, self._offshore_mask = \
             self._parse_cf_meta(self._gen_fpath)
@@ -148,16 +153,18 @@ class Offshore:
 
                 agg_gids = None
                 misc = {k: None for k in new_misc.keys()}
-                if (res_gid is not None
-                        and 'timezone' in self.meta_source_offshore):
-                    ilocs = np.where(self._i == i)
-                    meta_sub = self.meta_source_offshore.iloc[ilocs]
-                    agg_gids = str(meta_sub['gid'].values.tolist())
 
-                    mask = self.meta_source_offshore['gid'] == res_gid
-                    for k in misc.keys():
-                        misc[k] = self.meta_source_offshore.loc[mask, k]\
-                            .values[0]
+                if res_gid is not None:
+                    ilocs = np.where(self._i == i)[0]
+
+                    if len(ilocs) > self._small_farm_limit:
+                        meta_sub = self.meta_source_offshore.iloc[ilocs]
+                        agg_gids = str(meta_sub['gid'].values.tolist())
+
+                        mask = self.meta_source_offshore['gid'] == res_gid
+                        for k in misc.keys():
+                            misc[k] = self.meta_source_offshore.loc[mask, k]\
+                                .values[0]
 
                 new_offshore_gids.append(farm_gid)
                 new_agg_gids.append(agg_gids)
@@ -175,7 +182,7 @@ class Offshore:
             self._meta_out_offshore['reV_tech'] = 'offshore_wind'
 
             self._meta_out_offshore = self._meta_out_offshore.dropna(
-                subset=['gid'])
+                subset=['gid', 'offshore_res_gids'])
 
             # Index must not be re-ordered because it corresponds to index in
             # self._offshore_data
@@ -710,7 +717,7 @@ class Offshore:
 
     @classmethod
     def run(cls, gen_fpath, offshore_fpath, points, sam_files, fpath_out=None,
-            max_workers=None, offshore_gid_adder=1e7,
+            max_workers=None, offshore_gid_adder=1e7, small_farm_limit=7,
             farm_gid_label='wfarm_id', sub_dir='chunk_files'):
         """Run the offshore aggregation methods.
 
@@ -735,6 +742,10 @@ class Offshore:
         offshore_gid_adder : int | float
             The offshore Supply Curve gids will be set equal to the respective
             resource gids plus this number.
+        small_farm_limit : int
+            Wind farms with less than this number of neighboring resource
+            pixels will not be included in the output. Default is 7 based on
+            median number of farm resource neighbors in a small test case.
         farm_gid_label : str
             Label in offshore_fpath for the wind farm gid unique identifier.
         sub_dir : str | None
@@ -751,6 +762,7 @@ class Offshore:
         offshore = cls(gen_fpath, offshore_fpath, pc.project_points,
                        fpath_out=fpath_out,
                        offshore_gid_adder=offshore_gid_adder,
+                       small_farm_limit=small_farm_limit,
                        farm_gid_label=farm_gid_label,
                        max_workers=max_workers)
         offshore._init_fout()

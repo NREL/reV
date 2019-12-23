@@ -13,8 +13,9 @@ import shutil
 from warnings import warn
 
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
-                                      HandlerWarning)
+from reV.utilities.exceptions import (CollectionRuntimeError,
+                                      CollectionValueError,
+                                      CollectionWarning)
 from reV.utilities.loggers import log_mem
 
 logger = logging.getLogger(__name__)
@@ -135,12 +136,12 @@ class DatasetCollector:
                          "before profiles can be "
                          "combined.")
                     logger.error(m)
-                    raise HandlerRuntimeError(m)
+                    raise CollectionRuntimeError(m)
             else:
                 m = ('Cannot collect dset "{}" with '
                      'axis {}'.format(self._dset_in, axis))
                 logger.error(m)
-                raise HandlerRuntimeError(m)
+                raise CollectionRuntimeError(m)
 
             if self._dset_out not in f.dsets:
                 f._create_dset(self._dset_out, dset_shape, dtype,
@@ -178,7 +179,7 @@ class DatasetCollector:
             w = ('GID indices for source file "{}" are not '
                  'sequential in destination file!'.format(fn_source))
             logger.warning(w)
-            warn(w, HandlerWarning)
+            warn(w, CollectionWarning)
             site_slice = np.isin(gids_out, source_gids)
         else:
             site_slice = slice(locs.min(), locs.max() + 1)
@@ -339,7 +340,7 @@ class Collector:
         if clobber:
             if os.path.isfile(h5_file):
                 warn('{} already exists and is being replaced'.format(h5_file),
-                     HandlerWarning)
+                     CollectionWarning)
                 os.remove(h5_file)
 
         self._h5_out = h5_file
@@ -419,7 +420,7 @@ class Collector:
             if e is None:
                 m = "slice must be bounded!"
                 logger.error(m)
-                raise HandlerValueError(m)
+                raise CollectionValueError(m)
 
             step = project_points.step
             if step is None:
@@ -429,7 +430,7 @@ class Collector:
         else:
             m = 'Cannot parse project_points'
             logger.error(m)
-            raise HandlerValueError(m)
+            raise CollectionValueError(m)
         gids = sorted([int(g) for g in gids])
         return gids
 
@@ -508,7 +509,7 @@ class Collector:
                 time_index = None
                 warn("'time_index' was not processed as it is not "
                      "present in .h5 files to be combined.",
-                     HandlerWarning)
+                     CollectionWarning)
 
         if time_index is not None:
             with Outputs(self._h5_out, mode='a') as f:
@@ -534,18 +535,17 @@ class Collector:
         gids = np.array(self.gids)
         missing = gids[~np.in1d(gids, meta_gids)]
         if any(missing):
-            # TODO: Convert HandlerRuntimeError to a custom collection error
             # TODO: Write missing gids to disk to allow for automated re-run
             m = "gids: {} are missing".format(missing)
             logger.error(m)
-            raise HandlerRuntimeError(m)
+            raise CollectionRuntimeError(m)
 
         if len(set(meta_gids)) != len(meta):
             m = ('Meta of length {} has {} unique gids! '
                  'There are duplicate gids in the source file list: {}'
                  .format(len(meta), len(set(meta_gids)), self.h5_files))
             logger.warning(m)
-            warn(m, HandlerWarning)
+            warn(m, CollectionWarning)
             meta = meta.drop_duplicates(subset='gid', keep='last')
 
         meta = meta.sort_values('gid')
@@ -567,7 +567,7 @@ class Collector:
         if any(missing):
             w = ('Not purging chunked output files. These dsets '
                  'have not been collected: {}'.format(missing))
-            warn(w, HandlerWarning)
+            warn(w, CollectionWarning)
             logger.warning(w)
         else:
             for fpath in self.h5_files:

@@ -58,6 +58,18 @@ class HandlerValueError(Exception):
     """
 
 
+class CollectionValueError(HandlerValueError):
+    """
+    ValueError for collection handler.
+    """
+
+
+class CollectionRuntimeError(HandlerRuntimeError):
+    """
+    RuntimeError for collection handler.
+    """
+
+
 class ResourceError(Exception):
     """
     Error for poorly formatted resource.
@@ -163,6 +175,12 @@ class SlurmWarning(Warning):
 class HandlerWarning(Warning):
     """
     Warning during .h5 handling
+    """
+
+
+class CollectionWarning(Warning):
+    """
+    Warning during .h5 collection
     """
 
 
