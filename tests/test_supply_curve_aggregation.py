@@ -91,7 +91,7 @@ def test_aggregation_summary():
                     m = ('Aggregation summary column did not match baseline '
                          'file: "{}"'.format(c))
                     assert np.allclose(s[c].values, s_baseline[c].values,
-                                       rtol=RTOL), m
+                                       rtol=RTOL, equal_nan=True), m
 
 
 def test_aggregation_scalar_excl():
