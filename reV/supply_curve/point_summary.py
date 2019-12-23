@@ -468,18 +468,32 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 if 'fobj' not in attrs:
                     with ExclusionLayers(attrs['fpath']) as f:
                         data = f[attrs['dset'], self.rows, self.cols]
+                        nodata = f.get_nodata_value(attrs['dset'])
                 else:
                     data = attrs['fobj'][attrs['dset'], self.rows, self.cols]
+                    nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
 
                 data = data.flatten()[self.bool_mask]
-                if attrs['method'].lower() == 'mode':
-                    data = stats.mode(data).mode[0]
-                elif attrs['method'].lower() == 'mean':
-                    data = data.mean()
-                else:
-                    raise ValueError('Cannot recognize data layer agg method: '
-                                     '"{}". Can only do mean and mode.'
-                                     .format(attrs['method']))
+                if nodata is not None:
+                    data = data[(data != nodata)]
+                    if not data.size:
+                        data = None
+                        w = ('Data layer "{}" has no valid data for '
+                             'an SC point!'.format(name))
+                        logger.warning(w)
+                        warn(w, OutputWarning)
+
+                if data is not None:
+                    if attrs['method'].lower() == 'mode':
+                        data = stats.mode(data).mode[0]
+                    elif attrs['method'].lower() == 'mean':
+                        data = data.mean()
+                    else:
+                        e = ('Cannot recognize data layer agg method: '
+                             '"{}". Can only do mean and mode.'
+                             .format(attrs['method']))
+                        logger.error(e)
+                        raise ValueError(e)
 
                 summary[name] = data
 
