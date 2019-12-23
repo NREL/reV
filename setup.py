@@ -23,7 +23,7 @@ except ImportError:
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-with open("README.md", encoding="utf-8") as readme_file:
+with open("README.rst", encoding="utf-8") as readme_file:
     readme = convert_text(readme_file.read(), "rst", format="md")
 
 with open(os.path.join(here, "reV", "version.py"), encoding="utf-8") as f:
