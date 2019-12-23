@@ -290,7 +290,7 @@ class Econ(Gen):
 
             if 'offshore' in self._meta:
                 if self._meta['offshore'].sum() > 1:
-                    w = ('Found offshore sites in econ site data input. '
+                    w = ('Found offshore sites in econ meta data. '
                          'This functionality has been deprecated. '
                          'Please run the reV offshore module to '
                          'calculate offshore wind lcoe.')
