@@ -445,6 +445,21 @@ class ExclusionMask:
 
         self._layers[layer_name] = layer
 
+    @property
+    def nodata_lookup(self):
+        """Get a dictionary lookup of the nodata values for each layer name.
+
+        Returns
+        -------
+        nodata : dict
+            Lookup keyed by layer name and values are nodata values for the
+            respective layers.
+        """
+        nodata = {}
+        for layer_name in self.layer_names:
+            nodata[layer_name] = self.excl_h5.get_nodata_value(layer_name)
+        return nodata
+
     @staticmethod
     def _area_filter(mask, min_area=1, kernel='queen', ex_area=0.0081):
         """
