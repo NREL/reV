@@ -6,6 +6,7 @@ Created on Thu Oct 31 12:49:23 2019
 @author: gbuster
 """
 from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing as mpl
 from copy import deepcopy
 import json
 import pandas as pd
@@ -758,7 +759,8 @@ class RepProfiles:
         for iter_chunk in iter_chunks:
             logger.debug('Starting process pool...')
             futures = {}
-            with ProcessPoolExecutor() as exe:
+            mp_context = mpl.get_context('spawn')
+            with ProcessPoolExecutor(mp_context=mp_context) as exe:
                 for i in iter_chunk:
                     row = self.meta.loc[i, :]
                     region_dict = {k: v for (k, v) in row.to_dict().items()
