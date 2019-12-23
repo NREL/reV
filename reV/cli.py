@@ -9,6 +9,7 @@ from reV.handlers.cli_collect import from_config as run_collect_from_config
 from reV.handlers.cli_multi_year import from_config as run_my_from_config
 from reV.econ.cli_econ import from_config as run_econ_from_config
 from reV.generation.cli_gen import from_config as run_gen_from_config
+from reV.offshore.cli_offshore import from_config as run_offshore_from_config
 from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
 from reV.supply_curve.cli_aggregation import from_config as run_agg_from_config
 from reV.supply_curve.cli_supply_curve import from_config as run_sc_from_config
@@ -53,6 +54,18 @@ def econ(ctx, verbose):
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_econ_from_config, config_file=config_file, verbose=verbose)
+
+
+@main.command()
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def offshore(ctx, verbose):
+    """Offshore gen/econ aggregation with ORCA."""
+    config_file = ctx.obj['CONFIG_FILE']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.invoke(run_offshore_from_config, config_file=config_file,
+               verbose=verbose)
 
 
 @main.command()

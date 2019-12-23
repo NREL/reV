@@ -58,6 +58,18 @@ class HandlerValueError(Exception):
     """
 
 
+class CollectionValueError(HandlerValueError):
+    """
+    ValueError for collection handler.
+    """
+
+
+class CollectionRuntimeError(HandlerRuntimeError):
+    """
+    RuntimeError for collection handler.
+    """
+
+
 class ResourceError(Exception):
     """
     Error for poorly formatted resource.
@@ -94,6 +106,12 @@ class SupplyCurveInputError(SupplyCurveError):
     """
 
 
+class NearestNeighborError(Exception):
+    """
+    Execution error for bad nearest neighbor mapping results.
+    """
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data
@@ -115,6 +133,12 @@ class InputWarning(Warning):
 class OffshoreWindInputWarning(Warning):
     """
     Warning for potentially dangerous offshore wind inputs
+    """
+
+
+class OrcaOutputWarning(Warning):
+    """
+    Warning for bad ORCA outputs.
     """
 
 
@@ -151,6 +175,12 @@ class SlurmWarning(Warning):
 class HandlerWarning(Warning):
     """
     Warning during .h5 handling
+    """
+
+
+class CollectionWarning(Warning):
+    """
+    Warning during .h5 collection
     """
 
 

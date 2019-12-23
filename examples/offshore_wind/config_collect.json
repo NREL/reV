@@ -1,0 +1,25 @@
+{
+  "directories": {
+    "collect_directory": "PIPELINE",
+    "logging_directory": "./logs/",
+    "output_directory": "./conus_wind/"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "option": "eagle",
+    "walltime": 4
+  },
+  "project_control": {
+    "dsets": [
+      "cf_mean",
+      "cf_profile",
+      "lcoe_fcr",
+      "ws_mean"
+    ],
+    "file_prefixes": "PIPELINE",
+    "logging_level": "INFO",
+    "purge_chunks": false
+  },
+  "project_points": null
+}

@@ -25,6 +25,7 @@ class Pipeline:
 
     COMMANDS = ('generation',
                 'econ',
+                'offshore',
                 'collect',
                 'multi-year',
                 'aggregation',

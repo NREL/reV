@@ -1,0 +1,21 @@
+{
+  "directories": {
+    "logging_directory": "./logs/",
+    "output_directory": "./conus_wind/"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "option": "eagle",
+    "walltime": 1
+  },
+  "gen_fpath": "PIPELINE",
+  "offshore_fpath": "./inputs/preliminary_orca_results_09042019_JN_gcb.csv",
+  "project_control": {
+    "logging_level": "INFO"
+  },
+  "project_points": "./inputs/wtk_conus_project_points.csv",
+  "sam_files": {
+    "default": "./inputs/6MW_offshore.json"
+  }
+}

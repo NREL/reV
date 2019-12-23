@@ -1,0 +1,33 @@
+{
+  "directories": {
+    "logging_directory": "./logs/",
+    "output_directory": "./conus_wind/"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "nodes": 20,
+    "option": "eagle",
+    "sites_per_worker": 25,
+    "walltime": 4
+  },
+  "project_control": {
+    "analysis_years": [
+      2012,
+      2013
+    ],
+    "logging_level": "INFO",
+    "output_request": [
+      "cf_mean",
+      "cf_profile",
+      "lcoe_fcr",
+      "ws_mean"
+    ],
+    "technology": "wind"
+  },
+  "project_points": "./inputs/wtk_conus_project_points.csv",
+  "resource_file": "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
+  "sam_files": {
+    "default": "./inputs/t205.json"
+  }
+}

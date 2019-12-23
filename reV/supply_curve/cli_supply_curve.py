@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def from_config(ctx, config_file, verbose):
-    """Run reV SC aggregation from a config file."""
+    """Run reV supply curve compute from a config file."""
     name = ctx.obj['NAME']
 
     # Instantiate the config object
@@ -142,6 +142,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
         if isinstance(transmission_costs, str):
             transmission_costs = transmission_costs.replace('\'', '\"')
             transmission_costs = transmission_costs.replace('None', 'null')
+            transmission_costs = transmission_costs.replace('True', 'true')
+            transmission_costs = transmission_costs.replace('False', 'false')
             transmission_costs = json.loads(transmission_costs)
 
         if simple:

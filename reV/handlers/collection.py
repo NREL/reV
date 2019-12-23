@@ -13,8 +13,9 @@ import shutil
 from warnings import warn
 
 from reV.handlers.outputs import Outputs
-from reV.utilities.exceptions import (HandlerRuntimeError, HandlerValueError,
-                                      HandlerWarning)
+from reV.utilities.exceptions import (CollectionRuntimeError,
+                                      CollectionValueError,
+                                      CollectionWarning)
 from reV.utilities.loggers import log_mem
 
 logger = logging.getLogger(__name__)
@@ -135,12 +136,12 @@ class DatasetCollector:
                          "before profiles can be "
                          "combined.")
                     logger.error(m)
-                    raise HandlerRuntimeError(m)
+                    raise CollectionRuntimeError(m)
             else:
                 m = ('Cannot collect dset "{}" with '
                      'axis {}'.format(self._dset_in, axis))
                 logger.error(m)
-                raise HandlerRuntimeError(m)
+                raise CollectionRuntimeError(m)
 
             if self._dset_out not in f.dsets:
                 f._create_dset(self._dset_out, dset_shape, dtype,
@@ -151,7 +152,7 @@ class DatasetCollector:
         return attrs, axis, site_mem_req
 
     @staticmethod
-    def _get_gid_slice(gids_out, source_gids):
+    def _get_gid_slice(gids_out, source_gids, fn_source):
         """Find the site slice that the chunked set of source gids belongs to.
 
         Parameters
@@ -160,24 +161,26 @@ class DatasetCollector:
             List of resource GIDS in the final output meta data f_out
         source_gids : list
             List of resource GIDS in one chunk of source data.
+        fn_source : str
+            Source filename for warning printout.
 
         Returns
         -------
         site_slice : slice | np.ndarray
             Slice in the final output file to write data to from source gids.
-            If gids in destination file are non-sequential, an array of
-            indices is returned and a warning is printed.
+            If gids in destination file are non-sequential, a boolean array of
+            indexes is returned and a warning is printed.
         """
 
         locs = np.where(np.isin(gids_out, source_gids))[0]
         sequential_locs = np.arange(locs.min(), locs.max() + 1)
 
         if not len(locs) == len(sequential_locs):
-            w = ('GID indices for source file are not '
-                 'sequential in destination file!')
+            w = ('GID indices for source file "{}" are not '
+                 'sequential in destination file!'.format(fn_source))
             logger.warning(w)
-            warn(w, HandlerWarning)
-            site_slice = locs
+            warn(w, CollectionWarning)
+            site_slice = np.isin(gids_out, source_gids)
         else:
             site_slice = slice(locs.min(), locs.max() + 1)
 
@@ -238,7 +241,8 @@ class DatasetCollector:
         fp_source : str
             Source filepath
         """
-        out_slice = self._get_gid_slice(self._gids, source_gids)
+        out_slice = self._get_gid_slice(self._gids, source_gids,
+                                        os.path.basename(fp_source))
 
         source_i0 = np.where(all_source_gids == np.min(source_gids))[0][0]
         source_i1 = np.where(all_source_gids == np.max(source_gids))[0][0]
@@ -256,6 +260,7 @@ class DatasetCollector:
                 if not all(source_indexer):
                     data = data[source_indexer]
                 f_out[self._dset_out, out_slice] = data
+
             elif self._axis == 2:
                 data = f_source[self._dset_in, :, source_slice]
                 if not all(source_indexer):
@@ -276,13 +281,8 @@ class DatasetCollector:
 
                     x = self._get_source_gid_chunks(f_source)
                     all_source_gids, source_gid_chunks = x
+
                     for source_gids in source_gid_chunks:
-
-                        logger.debug('Collecting chunk from file {} with '
-                                     '{} source gids: {}'
-                                     .format(os.path.basename(fp),
-                                             len(source_gids), source_gids))
-
                         self._collect_chunk(all_source_gids, source_gids,
                                             f_out, f_source, fp)
 
@@ -340,7 +340,7 @@ class Collector:
         if clobber:
             if os.path.isfile(h5_file):
                 warn('{} already exists and is being replaced'.format(h5_file),
-                     HandlerWarning)
+                     CollectionWarning)
                 os.remove(h5_file)
 
         self._h5_out = h5_file
@@ -420,7 +420,7 @@ class Collector:
             if e is None:
                 m = "slice must be bounded!"
                 logger.error(m)
-                raise HandlerValueError(m)
+                raise CollectionValueError(m)
 
             step = project_points.step
             if step is None:
@@ -430,8 +430,8 @@ class Collector:
         else:
             m = 'Cannot parse project_points'
             logger.error(m)
-            raise HandlerValueError(m)
-
+            raise CollectionValueError(m)
+        gids = sorted([int(g) for g in gids])
         return gids
 
     @staticmethod
@@ -451,7 +451,9 @@ class Collector:
         """
 
         meta = [DatasetCollector.parse_meta(file) for file in h5_files]
-        gids = sorted(meta['gid'].values.tolist())
+        meta = pd.concat(meta, axis=0)
+        gids = list(set(meta['gid'].values.tolist()))
+        gids = sorted([int(g) for g in gids])
         return gids
 
     def get_dset_shape(self, dset_name):
@@ -507,7 +509,7 @@ class Collector:
                 time_index = None
                 warn("'time_index' was not processed as it is not "
                      "present in .h5 files to be combined.",
-                     HandlerWarning)
+                     CollectionWarning)
 
         if time_index is not None:
             with Outputs(self._h5_out, mode='a') as f:
@@ -522,23 +524,34 @@ class Collector:
         ----------
         meta : pandas.DataFrame
             DataFrame of combined meta from all files in self._h5_files
+
+        Parameters
+        ----------
+        meta : pandas.DataFrame
+            DataFrame of combined meta from all files in self._h5_files.
+            Duplicate GIDs are dropped and a warning is raised.
         """
         meta_gids = meta['gid'].values
         gids = np.array(self.gids)
         missing = gids[~np.in1d(gids, meta_gids)]
         if any(missing):
-            # TODO: Convert HandlerRuntimeError to a custom collection error
             # TODO: Write missing gids to disk to allow for automated re-run
             m = "gids: {} are missing".format(missing)
             logger.error(m)
-            raise HandlerRuntimeError(m)
+            raise CollectionRuntimeError(m)
 
         if len(set(meta_gids)) != len(meta):
             m = ('Meta of length {} has {} unique gids! '
                  'There are duplicate gids in the source file list: {}'
                  .format(len(meta), len(set(meta_gids)), self.h5_files))
-            logger.error(m)
-            raise HandlerRuntimeError(m)
+            logger.warning(m)
+            warn(m, CollectionWarning)
+            meta = meta.drop_duplicates(subset='gid', keep='last')
+
+        meta = meta.sort_values('gid')
+        meta = meta.reset_index(drop=True)
+
+        return meta
 
     def _purge_chunks(self):
         """Remove the chunked files (after collection). Will not delete files
@@ -554,7 +567,7 @@ class Collector:
         if any(missing):
             w = ('Not purging chunked output files. These dsets '
                  'have not been collected: {}'.format(missing))
-            warn(w, HandlerWarning)
+            warn(w, CollectionWarning)
             logger.warning(w)
         else:
             for fpath in self.h5_files:
@@ -565,17 +578,18 @@ class Collector:
 
         Parameters
         ----------
-        sub_dir : str
-            Sub directory name to move chunks to.
+        sub_dir : str | None
+            Sub directory name to move chunks to. None to not move files.
         """
 
-        for fpath in self.h5_files:
-            base_dir, fn = os.path.split(fpath)
-            new_dir = os.path.join(base_dir, sub_dir)
-            if not os.path.exists(new_dir):
-                os.makedirs(new_dir)
-            new_fpath = os.path.join(new_dir, fn)
-            shutil.move(fpath, new_fpath)
+        if sub_dir is not None:
+            for fpath in self.h5_files:
+                base_dir, fn = os.path.split(fpath)
+                new_dir = os.path.join(base_dir, sub_dir)
+                if not os.path.exists(new_dir):
+                    os.makedirs(new_dir)
+                new_fpath = os.path.join(new_dir, fn)
+                shutil.move(fpath, new_fpath)
 
     def combine_meta(self):
         """
@@ -596,8 +610,7 @@ class Collector:
                         for file in self.h5_files]
 
                 meta = pd.concat(meta, axis=0)
-                meta = meta.sort_values('gid').reset_index(drop=True)
-                self._check_meta(meta)
+                meta = self._check_meta(meta)
                 logger.info('Writing meta data with shape {}'
                             .format(meta.shape))
 
@@ -749,6 +762,8 @@ class Collector:
             contained in the .h5 files to be collected
         file_prefix : str
             .h5 file prefix, if None collect all files on h5_dir
+        sub_dir : str | None
+            Sub directory name to move chunks to. None to not move files.
         """
 
         clt = cls(h5_file, h5_dir, project_points, file_prefix=file_prefix)

@@ -313,9 +313,9 @@ class ExclusionMask:
         if kernel in ["queen", "rook"]:
             self._min_area = min_area
             self._kernel = kernel
-            logger.info('Initializing Exclusions mask with min area of {} '
-                        'km2 and filter kernel "{}".'
-                        .format(self._min_area, self._kernel))
+            logger.debug('Initializing Exclusions mask with min area of {} '
+                         'km2 and filter kernel "{}".'
+                         .format(self._min_area, self._kernel))
         else:
             raise ValueError('kernel must be "queen" or "rook"')
 

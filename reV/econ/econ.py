@@ -124,7 +124,6 @@ class Econ(Gen):
         self.mem_util_lim = mem_util_lim
         self._output_request = self._parse_output_request(output_request)
         self._site_data = self._parse_site_data(site_data)
-        self._offshore_preflight()
 
         # pre-initialize output arrays to store results when available.
         self._out = {}
@@ -232,38 +231,16 @@ class Econ(Gen):
                 # make gid the dataframe index if not already
                 site_data = site_data.set_index('gid', drop=True)
 
+        if 'offshore' in site_data:
+            if site_data['offshore'].sum() > 1:
+                w = ('Found offshore sites in econ site data input. '
+                     'This functionality has been deprecated. '
+                     'Please run the reV offshore module to '
+                     'calculate offshore wind lcoe.')
+                warn(w, OffshoreWindInputWarning)
+                logger.warning(w)
+
         return site_data
-
-    def _offshore_preflight(self):
-        """Preflight checks for offshore site data input."""
-
-        if self._site_data is not None:
-
-            if 'offshore' in self._site_data:
-                # offshore is already in site data df, just make sure it's bool
-                self._site_data['offshore'] = self._site_data['offshore']\
-                    .astype(bool)
-
-            else:
-                # offshore not yet in site data df, check to see if in meta
-                if 'offshore' in self.meta:
-                    logger.debug('Found "offshore" data in meta. Interpreting '
-                                 'as wind sites that may be analyzed using '
-                                 'ORCA.')
-                    # save offshore flags as boolean array
-                    self._site_data['offshore'] = self.meta['offshore']\
-                        .astype(bool)
-
-            if ('offshore' in self._site_data
-                    and 'dist_l_to_ts' in self._site_data):
-                if self._site_data['dist_l_to_ts'].sum() > 0:
-                    w = ('Possible incorrect ORCA input! "dist_l_to_ts" '
-                         '(distance land to transmission) input is non-zero. '
-                         'Most reV runs set this to zero and input the cost '
-                         'of transmission from landfall tie-in to '
-                         'transmission feature in the supply curve module.')
-                    logger.warning(w)
-                    warn(w, OffshoreWindInputWarning)
 
     @property
     def cf_file(self):
@@ -310,6 +287,15 @@ class Econ(Gen):
                 # only take meta that belongs to this project's site list
                 self._meta = cfh.meta[
                     cfh.meta['gid'].isin(self.points_control.sites)]
+
+            if 'offshore' in self._meta:
+                if self._meta['offshore'].sum() > 1:
+                    w = ('Found offshore sites in econ meta data. '
+                         'This functionality has been deprecated. '
+                         'Please run the reV offshore module to '
+                         'calculate offshore wind lcoe.')
+                    warn(w, OffshoreWindInputWarning)
+                    logger.warning(w)
 
         elif self._meta is None and self.cf_file is None:
             self._meta = pd.DataFrame({'gid': self.points_control.sites})
