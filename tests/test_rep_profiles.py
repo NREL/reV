@@ -175,6 +175,36 @@ def test_write_to_file():
         os.remove(fout)
 
 
+def test_file_options():
+    """Test rep profiles with file write."""
+
+    sites = np.arange(100)
+    zeros = np.zeros((100,))
+    regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+    rev_summary = pd.DataFrame({'gen_gids': sites,
+                                'res_gids': sites,
+                                'res_class': zeros,
+                                'region': regions})
+    fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
+    p1, _, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                               parallel=True, fout=fout, n_profiles=3,
+                               save_rev_summary=False,
+                               scaled_precision=True)
+    with Resource(fout) as res:
+        dtype = res.get_dset_properties('rep_profiles_0')[1]
+        attrs = res.get_attrs('rep_profiles_0')
+        disk_profiles = res['rep_profiles_0']
+        disk_dsets = res.dsets
+
+    assert np.issubdtype(dtype, np.integer)
+    assert attrs['scale_factor'] == 1000
+    assert np.allclose(p1[0], disk_profiles)
+    assert 'rev_summary' not in disk_dsets
+
+    if PURGE_OUT:
+        os.remove(fout)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

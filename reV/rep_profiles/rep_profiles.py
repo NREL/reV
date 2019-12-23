@@ -622,26 +622,36 @@ class RepProfiles:
                 mask = (mask & temp)
         return mask
 
-    def _init_fout(self, fout):
+    def _init_fout(self, fout, save_rev_summary=True, scaled_precision=False):
         """Initialize an output h5 file for n_profiles
 
         Parameters
         ----------
         fout : str
             None or filepath to output h5 file.
+        save_rev_summary : bool
+            Flag to save full reV SC table to rep profile output.
+        scaled_precision : bool
+            Flag to scale cf_profiles by 1000 and save as uint16.
         """
         dsets = []
         shapes = {}
         attrs = {}
         chunks = {}
         dtypes = {}
+
         for i in range(self._n_profiles):
             dset = 'rep_profiles_{}'.format(i)
             dsets.append(dset)
             shapes[dset] = self.profiles[0].shape
-            attrs[dset] = None
             chunks[dset] = None
-            dtypes[dset] = self.profiles[0].dtype
+
+            if scaled_precision:
+                attrs[dset] = {'scale_factor': 1000}
+                dtypes[dset] = np.uint16
+            else:
+                attrs[dset] = None
+                dtypes[dset] = self.profiles[0].dtype
 
         meta = self.meta.copy()
         for c in ['rep_gen_gid', 'rep_res_gid']:
@@ -653,36 +663,51 @@ class RepProfiles:
         Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
                         meta, time_index=self.time_index)
 
-        with Outputs(fout, mode='a') as out:
-            rev_sum = Outputs.to_records_array(self._rev_summary)
-            out._create_dset('rev_summary', rev_sum.shape,
-                             rev_sum.dtype, data=rev_sum)
+        if save_rev_summary:
+            with Outputs(fout, mode='a') as out:
+                rev_sum = Outputs.to_records_array(self._rev_summary)
+                out._create_dset('rev_summary', rev_sum.shape,
+                                 rev_sum.dtype, data=rev_sum)
 
-    def _write_fout(self, fout):
+    def _write_fout(self, fout, save_rev_summary=True):
         """Write profiles and meta to an output file.
 
         Parameters
         ----------
         fout : str
             None or filepath to output h5 file.
+        save_rev_summary : bool
+            Flag to save full reV SC table to rep profile output.
+        scaled_precision : bool
+            Flag to scale cf_profiles by 1000 and save as uint16.
         """
         with Outputs(fout, mode='a') as out:
-            rev_sum = Outputs.to_records_array(self._rev_summary)
-            out['rev_summary'] = rev_sum
+
+            if 'rev_summary' in out.dsets and save_rev_summary:
+                rev_sum = Outputs.to_records_array(self._rev_summary)
+                out['rev_summary'] = rev_sum
+
             for i in range(self._n_profiles):
                 dset = 'rep_profiles_{}'.format(i)
                 out[dset] = self.profiles[i]
 
-    def save_profiles(self, fout):
+    def save_profiles(self, fout, save_rev_summary=True,
+                      scaled_precision=False):
         """Initialize fout and save profiles.
 
         Parameters
         ----------
         fout : str
             None or filepath to output h5 file.
+        save_rev_summary : bool
+            Flag to save full reV SC table to rep profile output.
+        scaled_precision : bool
+            Flag to scale cf_profiles by 1000 and save as uint16.
         """
-        self._init_fout(fout)
-        self._write_fout(fout)
+
+        self._init_fout(fout, save_rev_summary=save_rev_summary,
+                        scaled_precision=scaled_precision)
+        self._write_fout(fout, save_rev_summary=save_rev_summary)
 
     def _run_serial(self):
         """Compute all representative profiles in serial."""
@@ -774,7 +799,7 @@ class RepProfiles:
     @classmethod
     def run(cls, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
             rep_method='meanoid', err_method='rmse', parallel=True, fout=None,
-            n_profiles=1):
+            n_profiles=1, save_rev_summary=True, scaled_precision=False):
         """Run representative profiles.
 
         Parameters
@@ -800,6 +825,10 @@ class RepProfiles:
             None or filepath to output h5 file.
         n_profiles : int
             Number of representative profiles to save to fout.
+        save_rev_summary : bool
+            Flag to save full reV SC table to rep profile output.
+        scaled_precision : bool
+            Flag to scale cf_profiles by 1000 and save as uint16.
 
         Returns
         -------
@@ -822,7 +851,8 @@ class RepProfiles:
             rp._run_serial()
 
         if fout is not None:
-            rp.save_profiles(fout)
+            rp.save_profiles(fout, save_rev_summary=save_rev_summary,
+                             scaled_precision=scaled_precision)
 
         logger.info('Representative profiles complete!')
         return rp._profiles, rp._meta, rp._time_index
