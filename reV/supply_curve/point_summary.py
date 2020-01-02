@@ -444,7 +444,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         return capacity
 
     def agg_data_layers(self, summary, data_layers):
-        """Perform additional data layer aggregation.
+        """Perform additional data layer aggregation. If there is no valid data
+        in the included area, the data layer will be taken from the full SC
+        point extent (ignoring exclusions). If there is still no valid data,
+        a warning will be raised and the data layer will have a NaN/None value.
 
         Parameters
         ----------
@@ -467,19 +470,28 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
                 if 'fobj' not in attrs:
                     with ExclusionLayers(attrs['fpath']) as f:
-                        data = f[attrs['dset'], self.rows, self.cols]
+                        raw = f[attrs['dset'], self.rows, self.cols]
                         nodata = f.get_nodata_value(attrs['dset'])
                 else:
-                    data = attrs['fobj'][attrs['dset'], self.rows, self.cols]
+                    raw = attrs['fobj'][attrs['dset'], self.rows, self.cols]
                     nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
 
-                data = data.flatten()[self.bool_mask]
+                data = raw.flatten()[self.bool_mask]
                 if nodata is not None:
-                    data = data[(data != nodata)]
+                    nodata_mask = (data == nodata)
+
+                    if all(nodata_mask):
+                        data = raw.flatten()
+                        nodata_mask = (data == nodata)
+
+                    data = data[~nodata_mask]
+
                     if not data.size:
                         data = None
                         w = ('Data layer "{}" has no valid data for '
-                             'an SC point!'.format(name))
+                             'SC point gid {} at ({}, {})!'
+                             .format(name, self._gid, self.latitude,
+                                     self.longitude))
                         logger.warning(w)
                         warn(w, OutputWarning)
 

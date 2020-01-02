@@ -65,6 +65,14 @@ class LayerMask:
         return msg
 
     def __getitem__(self, data):
+        """Get the multiplicative inclusion mask.
+
+        Returns
+        -------
+        mask : ndarray
+            Multiplicative inclusion mask such that 1 is included,
+            0 is excluded, 0.5 is half.
+        """
         return self._apply_mask(data)
 
     @property
@@ -145,8 +153,10 @@ class LayerMask:
         Returns
         -------
         data : ndarray
-            Masked exclusion data with weights applied
+            Masked exclusion data with weights applied such that 1 is included,
+            0 is excluded, 0.5 is half.
         """
+
         if not self._as_weights:
             if self.mask_type == 'range':
                 func = self._range_mask
@@ -163,7 +173,9 @@ class LayerMask:
 
             data = func(data)
 
-        return data.astype('float16') * self._weight
+        data = data.astype('float16') * self._weight
+
+        return data
 
     def _check_mask_type(self):
         """
@@ -238,18 +250,15 @@ class LayerMask:
         mask : ndarray
             Boolean mask of which values to include
         """
-        mask = np.isin(data, values)
 
-        # only include if not nodata
-        if include and self._exclude_nodata and self.nodata is not None:
-            mask = mask & (data != self.nodata)
+        mask = np.isin(data, values)
 
         if not include:
             mask = ~mask
 
-            # additionally exclude nodata fields
-            if self._exclude_nodata and self.nodata is not None:
-                mask = mask | (data == self.nodata)
+        # only include if not nodata
+        if self._exclude_nodata and self.nodata is not None:
+            mask = mask & (data != self.nodata)
 
         return mask
 
@@ -355,6 +364,14 @@ class ExclusionMask:
         return len(self.layers)
 
     def __getitem__(self, *ds_slice):
+        """Get the multiplicative inclusion mask.
+
+        Returns
+        -------
+        mask : ndarray
+            Multiplicative inclusion mask such that 1 is included,
+            0 is excluded, 0.5 is half.
+        """
         return self._generate_mask(*ds_slice)
 
     def close(self):
@@ -575,7 +592,7 @@ class ExclusionMask:
 
     def _generate_mask(self, *ds_slice):
         """
-        Generate inclusion mask from exclusion layers
+        Generate multiplicative inclusion mask from exclusion layers.
 
         Parameters
         ----------
@@ -585,7 +602,8 @@ class ExclusionMask:
         Returns
         -------
         mask : ndarray
-            Inclusion mask
+            Multiplicative inclusion mask such that 1 is included,
+            0 is excluded, 0.5 is half.
         """
         mask = None
         if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
@@ -597,6 +615,7 @@ class ExclusionMask:
         for layer in self.layers:
             layer_slice = (layer.layer, ) + ds_slice
             layer_mask = layer[self.excl_h5[layer_slice]]
+
             if mask is None:
                 mask = layer_mask
             else:
