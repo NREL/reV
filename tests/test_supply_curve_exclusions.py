@@ -27,7 +27,7 @@ AREA = {'urban_pv': 0.018, 'rural_pv': 1}
 
 
 def mask_data(data, inclusion_range, exclude_values, include_values,
-              weight):
+              weight, exclude_nodata, nodata_value):
     """
     Apply proper mask to data
 
@@ -45,11 +45,16 @@ def mask_data(data, inclusion_range, exclude_values, include_values,
         Note: Only supply inclusions OR exclusions
     weight : float
         Weight of pixel to include
+    exclude_nodata : bool
+        Flag to exclude the nodata parameter
+    nodata_value : int | float
+        Value signifying nodata (nan) field in data input.
 
     Returns
     -------
     mask : ndarray
-        Boolean mask of data
+        Numeric scalar float mask of inclusion values (1 is include, 0.5 is
+        half include, 0 is exclude).
     """
     if any(i is not None for i in inclusion_range):
         min, max = inclusion_range
@@ -66,20 +71,30 @@ def mask_data(data, inclusion_range, exclude_values, include_values,
     elif include_values is not None:
         mask = np.isin(data, include_values)
 
-    return mask.astype('float16') * weight
+    mask = mask.astype('float16') * weight
+
+    if exclude_nodata:
+        mask[(data == nodata_value)] = 0.0
+
+    return mask
 
 
 @pytest.mark.parametrize(('layer_name', 'inclusion_range', 'exclude_values',
-                          'include_values', 'weight'), [
-    ('ri_padus', (None, None), [1, ], None, 1),
-    ('ri_padus', (None, None), [1, ], None, 0.5),
-    ('ri_smod', (None, None), None, [1, ], 1),
-    ('ri_smod', (None, None), None, [1, ], 0.5),
-    ('ri_srtm_slope', (None, 5), None, None, 1),
-    ('ri_srtm_slope', (0, 5), None, None, 1),
-    ('ri_srtm_slope', (None, 5), None, None, 0.5)])
+                          'include_values', 'weight', 'exclude_nodata'), [
+    ('ri_padus', (None, None), [1, ], None, 1, False),
+    ('ri_padus', (None, None), [1, ], None, 1, True),
+    ('ri_padus', (None, None), [1, ], None, 0.5, False),
+    ('ri_padus', (None, None), [1, ], None, 0.5, True),
+    ('ri_smod', (None, None), None, [1, ], 1, False),
+    ('ri_smod', (None, None), None, [1, ], 1, True),
+    ('ri_smod', (None, None), None, [1, ], 0.5, False),
+    ('ri_srtm_slope', (None, 5), None, None, 1, False),
+    ('ri_srtm_slope', (0, 5), None, None, 1, False),
+    ('ri_srtm_slope', (0, 5), None, None, 1, True),
+    ('ri_srtm_slope', (None, 5), None, None, 0.5, False),
+    ('ri_srtm_slope', (None, 5), None, None, 0.5, True)])
 def test_layer_mask(layer_name, inclusion_range, exclude_values,
-                    include_values, weight):
+                    include_values, weight, exclude_nodata):
     """
     Test creation of layer masks
 
@@ -99,13 +114,16 @@ def test_layer_mask(layer_name, inclusion_range, exclude_values,
     excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
     with ExclusionLayers(excl_h5) as f:
         data = f[layer_name]
+        nodata_value = f.get_nodata_value(layer_name)
 
     truth = mask_data(data, inclusion_range, exclude_values,
-                      include_values, weight)
+                      include_values, weight, exclude_nodata, nodata_value)
 
     layer = LayerMask(layer_name, inclusion_range=inclusion_range,
                       exclude_values=exclude_values,
-                      include_values=include_values, weight=weight)
+                      include_values=include_values, weight=weight,
+                      exclude_nodata=exclude_nodata,
+                      nodata_value=nodata_value)
     layer_test = layer._apply_mask(data)
     assert np.allclose(truth, layer_test)
 
@@ -115,7 +133,8 @@ def test_layer_mask(layer_name, inclusion_range, exclude_values,
     layer_dict = {layer_name: {"inclusion_range": inclusion_range,
                                "exclude_values": exclude_values,
                                "include_values": include_values,
-                               "weight": weight}}
+                               "weight": weight,
+                               "exclude_nodata": exclude_nodata}}
     dict_test = ExclusionMaskFromDict.run(excl_h5, layer_dict)
     assert np.allclose(truth, dict_test)
 
@@ -140,8 +159,11 @@ def test_inclusion_mask(scenario):
     min_area = AREA.get(scenario, None)
 
     layers = []
-    for layer, kwargs in layers_dict.items():
-        layers.append(LayerMask(layer, **kwargs))
+    with ExclusionLayers(excl_h5) as f:
+        for layer, kwargs in layers_dict.items():
+            nodata_value = f.get_nodata_value(layer)
+            kwargs['nodata_value'] = nodata_value
+            layers.append(LayerMask(layer, **kwargs))
 
     mask_test = ExclusionMask.run(excl_h5, *layers,
                                   min_area=min_area)
