@@ -172,7 +172,7 @@ class LayerMask:
                        '"range", "exclude", or "include"'
                        .format(self.mask_type))
                 logger.error(msg)
-                raise ValueError(msg)
+                raise KeyError(msg)
 
             data = func(data)
 
@@ -345,7 +345,7 @@ class ExclusionMask:
                          'km2 and filter kernel "{}".'
                          .format(self._min_area, self._kernel))
         else:
-            raise ValueError('kernel must be "queen" or "rook"')
+            raise KeyError('kernel must be "queen" or "rook"')
 
     def __enter__(self):
         return self
@@ -467,7 +467,7 @@ class ExclusionMask:
         if layer_name not in self.excl_layers:
             msg = "{} does not existin in {}".format(layer_name, self._excl_h5)
             logger.error(msg)
-            raise ValueError(layer_name)
+            raise KeyError(layer_name)
 
         if layer_name in self.layer_names:
             msg = "{} is already in {}".format(layer_name, self)
