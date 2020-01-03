@@ -21,10 +21,14 @@ RES_CLASS_BINS = [0, 4, 100]
 DATA_LAYERS = {'pct_slope': {'dset': 'ri_srtm_slope',
                              'method': 'mean'},
                'reeds_region': {'dset': 'ri_reeds_regions',
-                                'method': 'mode'}}
+                                'method': 'mode'},
+               'padus': {'dset': 'ri_padus',
+                         'method': 'mode'}}
 
-EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5)},
-             'ri_padus': {'exclude_values': [1]}}
+EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
+                               'exclude_nodata': True},
+             'ri_padus': {'exclude_values': [1],
+                          'exclude_nodata': True}}
 
 RTOL = 0.001
 
@@ -46,7 +50,7 @@ def test_aggregation_extent(resolution=64):
     assert 'sc_col_ind' in summary
     assert 'sc_row_ind' in summary
     assert 'gen_gids' in summary
-    assert len(set(all_res_gids)) == 188
+    assert len(set(all_res_gids)) == 177
 
 
 def test_parallel_agg(resolution=64):
