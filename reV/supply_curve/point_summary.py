@@ -480,6 +480,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 if nodata is not None:
                     nodata_mask = (data == nodata)
 
+                    # All included extent is nodata.
+                    # Reset data from raw without exclusions.
                     if all(nodata_mask):
                         data = raw.flatten()
                         nodata_mask = (data == nodata)

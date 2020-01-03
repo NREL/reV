@@ -73,8 +73,8 @@ class LayerMask:
         Returns
         -------
         mask : ndarray
-            Multiplicative inclusion mask such that 1 is included,
-            0 is excluded, 0.5 is half.
+            Masked exclusion data with weights applied such that 1 is included,
+            0 is excluded, 0.5 is half included.
         """
         return self._apply_mask(data)
 
@@ -157,7 +157,7 @@ class LayerMask:
         -------
         data : ndarray
             Masked exclusion data with weights applied such that 1 is included,
-            0 is excluded, 0.5 is half.
+            0 is excluded, 0.5 is half included.
         """
 
         if not self._as_weights:
@@ -221,7 +221,7 @@ class LayerMask:
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to include
+            Boolean mask of which values to include (True is include).
         """
         mask = True
         if self.min_value is not None:
@@ -244,14 +244,16 @@ class LayerMask:
         data : ndarray
             Exclusions data to create mask from
         values : list
-            Values to include or exclude
+            Values to include or exclude.
         include : boolean
-            Flag as to whether values should be included or excluded
+            Flag as to whether values should be included or excluded.
+            If True, output mask will be True where data == values.
+            If False, output mask will be True where data != values.
 
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to include
+            Boolean mask of which values to include (True is include)
         """
         mask = np.isin(data, values)
 
@@ -276,7 +278,7 @@ class LayerMask:
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to exclude
+            Boolean mask of which values to include (True is include)
         """
         mask = self._value_mask(data, self._exclude_values, include=False)
 
@@ -294,7 +296,7 @@ class LayerMask:
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to include
+            Boolean mask of which values to include (True is include)
         """
         mask = self._value_mask(data, self._include_values, include=True)
 
@@ -368,11 +370,19 @@ class ExclusionMask:
     def __getitem__(self, *ds_slice):
         """Get the multiplicative inclusion mask.
 
+        Parameters
+        ----------
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis.
+            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
+            exclusions mask.
+
         Returns
         -------
         mask : ndarray
-            Multiplicative inclusion mask such that 1 is included,
-            0 is excluded, 0.5 is half.
+            Multiplicative inclusion mask with all layers multiplied together
+            ("and" operation) such that 1 is included, 0 is excluded,
+            0.5 is half.
         """
         return self._generate_mask(*ds_slice)
 
@@ -599,13 +609,16 @@ class ExclusionMask:
         Parameters
         ----------
         ds_slice : int | slice | list | ndarray
-            What to extract from ds, each arg is for a sequential axis
+            What to extract from ds, each arg is for a sequential axis.
+            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
+            exclusions mask.
 
         Returns
         -------
         mask : ndarray
-            Multiplicative inclusion mask such that 1 is included,
-            0 is excluded, 0.5 is half.
+            Multiplicative inclusion mask with all layers multiplied together
+            ("and" operation) such that 1 is included, 0 is excluded,
+            0.5 is half.
         """
         mask = None
         if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
