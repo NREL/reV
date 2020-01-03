@@ -23,10 +23,16 @@ RES_CLASS_BINS = [0, 6, 7, 8, 9, 100]
 DATA_LAYERS = {'pct_slope': {'dset': 'ri_srtm_slope',
                              'method': 'mean'},
                'reeds_region': {'dset': 'ri_reeds_regions',
-                                'method': 'mode'}}
+                                'method': 'mode'},
+               'padus': {'dset': 'ri_padus',
+                         'method': 'mode'}}
 
-EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5)},
-             'ri_padus': {'exclude_values': [1]}}
+EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
+                               'exclude_nodata': True},
+             'ri_padus': {'exclude_values': [1],
+                          'exclude_nodata': True},
+             'ri_reeds_regions': {'inclusion_range': (None, 400),
+                                  'exclude_nodata': True}}
 
 RTOL = 0.001
 

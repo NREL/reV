@@ -211,6 +211,24 @@ class ExclusionLayers:
         description = self.h5[layer].attrs['description']
         return description
 
+    def get_nodata_value(self, layer):
+        """
+        Get the nodata value for a given layer
+
+        Parameters
+        ----------
+        layer : str
+            Layer to get nodata value for
+
+        Returns
+        -------
+        nodata : int | float | None
+            nodata value for layer or None if not found
+        """
+        profile = self.get_layer_profile(layer)
+        nodata = profile.get('nodata', None)
+        return nodata
+
     def _get_latitude(self, *ds_slice):
         """
         Extract latitude coordinates

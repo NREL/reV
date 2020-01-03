@@ -118,7 +118,7 @@ def from_config(ctx, config_file, verbose):
               'LayerMask arguments {layer: {kwarg: value}} where layer is a '
               'dataset in excl_fpath and kwarg can be "inclusion_range", '
               '"exclude_values", "include_values", "use_as_weights", '
-              'or "weight".')
+              '"exclude_nodata", and/or "weight".')
 @click.option('--res_class_dset', '-cd', type=STR, default=None,
               help='Dataset to determine the resource class '
               '(must be in gen_fpath).')

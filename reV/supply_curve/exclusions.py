@@ -19,7 +19,8 @@ class LayerMask:
     """
     def __init__(self, layer, inclusion_range=(None, None),
                  exclude_values=None, include_values=None,
-                 use_as_weights=False, weight=1.0):
+                 use_as_weights=False, weight=1.0,
+                 exclude_nodata=True, nodata_value=None):
         """
         Parameters
         ----------
@@ -37,12 +38,21 @@ class LayerMask:
             Use layer as final inclusion weights
         weight : float
             How much to weight the inclusion of each pixel, Default = 1
+        exclude_nodata : bool
+            Flag to exclude nodata values. The self.nodata_value attribute
+            must be set to the appropriate nodata value for this to work.
+        nodata_value : int | float | None
+            Nodata value for the layer. Can be None and set later as the
+            nodata_value attribute.
         """
         self._layer = layer
         self._inclusion_range = inclusion_range
         self._exclude_values = exclude_values
         self._include_values = include_values
         self._as_weights = use_as_weights
+        self._exclude_nodata = exclude_nodata
+        self.nodata_value = nodata_value
+
         if weight > 1 or weight < 0:
             msg = ('Invalide weight ({}) provided for layer {}:'
                    '\nWeight must fall between 0 and 1!'.format(weight, layer))
@@ -58,6 +68,14 @@ class LayerMask:
         return msg
 
     def __getitem__(self, data):
+        """Get the multiplicative inclusion mask.
+
+        Returns
+        -------
+        mask : ndarray
+            Masked exclusion data with weights applied such that 1 is included,
+            0 is excluded, 0.5 is half included.
+        """
         return self._apply_mask(data)
 
     @property
@@ -138,8 +156,10 @@ class LayerMask:
         Returns
         -------
         data : ndarray
-            Masked exclusion data with weights applied
+            Masked exclusion data with weights applied such that 1 is included,
+            0 is excluded, 0.5 is half included.
         """
+
         if not self._as_weights:
             if self.mask_type == 'range':
                 func = self._range_mask
@@ -152,11 +172,13 @@ class LayerMask:
                        '"range", "exclude", or "include"'
                        .format(self.mask_type))
                 logger.error(msg)
-                raise ValueError(msg)
+                raise KeyError(msg)
 
             data = func(data)
 
-        return data.astype('float16') * self._weight
+        data = data.astype('float16') * self._weight
+
+        return data
 
     def _check_mask_type(self):
         """
@@ -199,7 +221,7 @@ class LayerMask:
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to include
+            Boolean mask of which values to include (True is include).
         """
         mask = True
         if self.min_value is not None:
@@ -208,10 +230,12 @@ class LayerMask:
         if self.max_value is not None:
             mask *= data <= self.max_value
 
+        if self._exclude_nodata and self.nodata_value is not None:
+            mask = mask & (data != self.nodata_value)
+
         return mask
 
-    @staticmethod
-    def _value_mask(data, values, include=True):
+    def _value_mask(self, data, values, include=True):
         """
         Mask exclusion layer based on values to include or exclude
 
@@ -220,19 +244,25 @@ class LayerMask:
         data : ndarray
             Exclusions data to create mask from
         values : list
-            Values to include or exclude
+            Values to include or exclude.
         include : boolean
-            Flag as to whether values should be included or excluded
+            Flag as to whether values should be included or excluded.
+            If True, output mask will be True where data == values.
+            If False, output mask will be True where data != values.
 
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to include
+            Boolean mask of which values to include (True is include)
         """
         mask = np.isin(data, values)
 
         if not include:
             mask = ~mask
+
+        # only include if not nodata
+        if self._exclude_nodata and self.nodata_value is not None:
+            mask = mask & (data != self.nodata_value)
 
         return mask
 
@@ -248,7 +278,7 @@ class LayerMask:
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to include
+            Boolean mask of which values to include (True is include)
         """
         mask = self._value_mask(data, self._exclude_values, include=False)
 
@@ -266,7 +296,7 @@ class LayerMask:
         Returns
         -------
         mask : ndarray
-            Boolean mask of which values to include
+            Boolean mask of which values to include (True is include)
         """
         mask = self._value_mask(data, self._include_values, include=True)
 
@@ -317,7 +347,7 @@ class ExclusionMask:
                          'km2 and filter kernel "{}".'
                          .format(self._min_area, self._kernel))
         else:
-            raise ValueError('kernel must be "queen" or "rook"')
+            raise KeyError('kernel must be "queen" or "rook"')
 
     def __enter__(self):
         return self
@@ -338,6 +368,22 @@ class ExclusionMask:
         return len(self.layers)
 
     def __getitem__(self, *ds_slice):
+        """Get the multiplicative inclusion mask.
+
+        Parameters
+        ----------
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis.
+            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
+            exclusions mask.
+
+        Returns
+        -------
+        mask : ndarray
+            Multiplicative inclusion mask with all layers multiplied together
+            ("and" operation) such that 1 is included, 0 is excluded,
+            0.5 is half.
+        """
         return self._generate_mask(*ds_slice)
 
     def close(self):
@@ -431,7 +477,7 @@ class ExclusionMask:
         if layer_name not in self.excl_layers:
             msg = "{} does not existin in {}".format(layer_name, self._excl_h5)
             logger.error(msg)
-            raise ValueError(layer_name)
+            raise KeyError(layer_name)
 
         if layer_name in self.layer_names:
             msg = "{} is already in {}".format(layer_name, self)
@@ -443,7 +489,24 @@ class ExclusionMask:
                 logger.error(msg)
                 raise RuntimeError(msg)
 
+        layer.nodata_value = self.excl_h5.get_nodata_value(layer_name)
+
         self._layers[layer_name] = layer
+
+    @property
+    def nodata_lookup(self):
+        """Get a dictionary lookup of the nodata values for each layer name.
+
+        Returns
+        -------
+        nodata : dict
+            Lookup keyed by layer name and values are nodata values for the
+            respective layers.
+        """
+        nodata = {}
+        for layer_name in self.layer_names:
+            nodata[layer_name] = self.excl_h5.get_nodata_value(layer_name)
+        return nodata
 
     @staticmethod
     def _area_filter(mask, min_area=1, kernel='queen', ex_area=0.0081):
@@ -541,17 +604,21 @@ class ExclusionMask:
 
     def _generate_mask(self, *ds_slice):
         """
-        Generate inclusion mask from exclusion layers
+        Generate multiplicative inclusion mask from exclusion layers.
 
         Parameters
         ----------
         ds_slice : int | slice | list | ndarray
-            What to extract from ds, each arg is for a sequential axis
+            What to extract from ds, each arg is for a sequential axis.
+            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
+            exclusions mask.
 
         Returns
         -------
         mask : ndarray
-            Inclusion mask
+            Multiplicative inclusion mask with all layers multiplied together
+            ("and" operation) such that 1 is included, 0 is excluded,
+            0.5 is half.
         """
         mask = None
         if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
@@ -563,6 +630,7 @@ class ExclusionMask:
         for layer in self.layers:
             layer_slice = (layer.layer, ) + ds_slice
             layer_mask = layer[self.excl_h5[layer_slice]]
+
             if mask is None:
                 mask = layer_mask
             else:
