@@ -17,7 +17,7 @@ Tips
 
 - only use a screen session if running the pipeline module: `screen -S rev`
 - Running simply generation or lcoe can just be done from the console:
-::
+
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
 - `Full pipeline example here <https://github.com/NREL/reV/tree/master/examples/full_pipeline_execution>`_
@@ -60,4 +60,4 @@ Option 2: Clone repo (recommended for developers)
 3. Check that rev was installed successfully
     1) From any directory, run the following commands. This should return the help pages for the CLI's.
         - ``reV``
-        - ``reV_gen``
+        - ``reV-gen``
