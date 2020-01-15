@@ -103,8 +103,10 @@ class DatasetCollector:
             Memory requirement in bytes for one site from a dataset with
             shape and dtype.
         """
-
-        site_mem = sys.getsizeof(np.ones((shape[0], n), dtype=dtype)) / n
+        m = 1
+        if len(shape) > 1:
+            m = shape[0]
+        site_mem = sys.getsizeof(np.ones((m, n), dtype=dtype)) / n
         return site_mem
 
     def _pre_collect(self):
@@ -173,6 +175,12 @@ class DatasetCollector:
         """
 
         locs = np.where(np.isin(gids_out, source_gids))[0]
+        if not any(locs):
+            e = ('DatasetCollector could not locate source gids in '
+                 'output gids. \n\t Source gids: {} \n\t Output gids: {}'
+                 .format(source_gids, gids_out))
+            logger.error(e)
+            raise CollectionRuntimeError(e)
         sequential_locs = np.arange(locs.min(), locs.max() + 1)
 
         if not len(locs) == len(sequential_locs):
