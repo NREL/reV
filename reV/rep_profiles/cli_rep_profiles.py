@@ -82,6 +82,7 @@ def from_config(ctx, config_file, verbose):
                 ctx.invoke(main, name, gen_fpath, config.rev_summary,
                            config.reg_cols, dset, config.rep_method,
                            config.err_method, config.dirout, config.logdir,
+                           config.execution_control.max_workers,
                            verbose)
 
         elif config.execution_control.option == 'eagle':
@@ -95,6 +96,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['N_PROFILES'] = config.n_profiles
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
+            ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
             ctx.obj['VERBOSE'] = verbose
 
             ctx.invoke(eagle,
@@ -128,11 +130,14 @@ def from_config(ctx, config_file, verbose):
               help='Directory to save rep profile output h5.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
               help='Directory to save rep profile logs.')
+@click.option('--max_workers', '-mw', type=INT, default=None,
+              help='Number of parallel workers. 1 will run in serial. '
+              'None will use all available.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
-         err_method, n_profiles, out_dir, log_dir, verbose):
+         err_method, n_profiles, out_dir, log_dir, max_workers, verbose):
     """reV representative profiles CLI."""
 
     ctx.ensure_object(dict)
@@ -146,6 +151,7 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
     ctx.obj['N_PROFILES'] = n_profiles
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
+    ctx.obj['MAX_WORKERS'] = max_workers
     ctx.obj['VERBOSE'] = verbose
 
     if ctx.invoked_subcommand is None:
@@ -157,7 +163,8 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
         fout = os.path.join(out_dir, fn_out)
         RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
                         rep_method=rep_method, err_method=err_method,
-                        fout=fout, n_profiles=n_profiles)
+                        fout=fout, n_profiles=n_profiles,
+                        max_workers=max_workers)
 
         runtime = (time.time() - t0) / 60
         logger.info('reV representative profiles complete. '
@@ -172,7 +179,8 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 
 
 def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
-                 err_method, n_profiles, out_dir, log_dir, verbose):
+                 err_method, n_profiles, out_dir, log_dir, max_workers,
+                 verbose):
     """Get a CLI call command for the rep profiles cli."""
 
     args = ('-n {name} '
@@ -185,6 +193,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
             '-np {n_profiles} '
             '-od {out_dir} '
             '-ld {log_dir} '
+            '-mw {max_workers} '
             )
 
     args = args.format(name=SLURM.s(name),
@@ -197,6 +206,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                        n_profiles=SLURM.s(n_profiles),
                        out_dir=SLURM.s(out_dir),
                        log_dir=SLURM.s(log_dir),
+                       max_workers=SLURM.s(max_workers),
                        )
 
     if verbose:
@@ -232,6 +242,7 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
     n_profiles = ctx.obj['N_PROFILES']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
+    max_workers = ctx.obj['MAX_WORKERS']
     verbose = ctx.obj['VERBOSE']
 
     if stdout_path is None:
@@ -239,7 +250,7 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
 
     cmd = get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset,
                        rep_method, err_method, n_profiles, out_dir, log_dir,
-                       verbose)
+                       max_workers, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'rep-profiles', name)
     if status == 'successful':

@@ -740,11 +740,14 @@ class RepProfiles:
                     self._meta.at[i, 'rep_gen_gid'] = str(ggids)
                     self._meta.at[i, 'rep_res_gid'] = str(rgids)
 
-    def _run_parallel(self, pool_size=72):
+    def _run_parallel(self, max_workers=None, pool_size=72):
         """Compute all representative profiles in parallel.
 
         Parameters
         ----------
+        max_workers : int | None
+            Number of parallel workers. 1 will run serial, None will use all
+            available.
         pool_size : int
             Number of futures to submit to a single process pool for
             parallel futures.
@@ -760,7 +763,8 @@ class RepProfiles:
             logger.debug('Starting process pool...')
             futures = {}
             mp_context = mpl.get_context('spawn')
-            with ProcessPoolExecutor(mp_context=mp_context) as exe:
+            with ProcessPoolExecutor(mp_context=mp_context,
+                                     max_workers=max_workers) as exe:
                 for i in iter_chunk:
                     row = self.meta.loc[i, :]
                     region_dict = {k: v for (k, v) in row.to_dict().items()
@@ -800,8 +804,9 @@ class RepProfiles:
 
     @classmethod
     def run(cls, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
-            rep_method='meanoid', err_method='rmse', parallel=True, fout=None,
-            n_profiles=1, save_rev_summary=True, scaled_precision=False):
+            rep_method='meanoid', err_method='rmse', fout=None,
+            n_profiles=1, save_rev_summary=True, scaled_precision=False,
+            max_workers=None):
         """Run representative profiles.
 
         Parameters
@@ -821,8 +826,6 @@ class RepProfiles:
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        parallel : bool
-            Flag to run in parallel.
         fout : None | str
             None or filepath to output h5 file.
         n_profiles : int
@@ -831,6 +834,9 @@ class RepProfiles:
             Flag to save full reV SC table to rep profile output.
         scaled_precision : bool
             Flag to scale cf_profiles by 1000 and save as uint16.
+        max_workers : int | None
+            Number of parallel workers. 1 will run serial, None will use all
+            available.
 
         Returns
         -------
@@ -847,10 +853,10 @@ class RepProfiles:
         rp = cls(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
                  rep_method=rep_method, err_method=err_method,
                  n_profiles=n_profiles)
-        if parallel:
-            rp._run_parallel()
-        else:
+        if max_workers == 1:
             rp._run_serial()
+        else:
+            rp._run_parallel(max_workers=max_workers)
 
         if fout is not None:
             rp.save_profiles(fout, save_rev_summary=save_rev_summary,
