@@ -289,8 +289,8 @@ class SAMResource:
 
         elif 'temperature' in var_name:
             # Check if tempearture is in K, if so convert to C
-            if np.min(var_array) > 273.15:
-                var_array += -273.15
+            if np.max(var_array) > 200.00:
+                var_array -= 273.15
 
         return var_array
 
