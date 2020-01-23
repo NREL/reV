@@ -155,6 +155,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.node_mem,
                    feature=config.execution_control.feature,
+                   module=config.execution_control.module,
+                   conda_env=config.execution_control.conda_env,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
                    verbose=verbose)
 
@@ -501,13 +503,17 @@ def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
+@click.option('--module', '-mod', default=None, type=STR,
+              help='Module to load')
+@click.option('--conda_env', '-env', default=None, type=STR,
+              help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
-               verbose):
+def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
+               stdout_path, verbose):
     """Run econ on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -558,7 +564,8 @@ def econ_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
             # create and submit the SLURM job
             slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
                           feature=feature, name=node_name,
-                          stdout_path=stdout_path)
+                          stdout_path=stdout_path, conda_env=conda_env,
+                          module=module)
             if slurm.id:
                 msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}) on '
                        'Eagle.'.format(node_name, slurm.id))

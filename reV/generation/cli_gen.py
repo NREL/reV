@@ -186,6 +186,8 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.node_mem,
                    feature=config.execution_control.feature,
+                   conda_env=config.execution_control.conda_env,
+                   module=config.execution_control.module,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
                    verbose=verbose)
 
@@ -654,13 +656,17 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
+@click.option('--conda_env', '-env', default=None, type=STR,
+              help='Conda env to activate')
+@click.option('--module', '-mod', default=None, type=STR,
+              help='Module to load')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
-              verbose):
+def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
+              stdout_path, verbose):
     """Run generation on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -713,7 +719,8 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, stdout_path,
             # create and submit the SLURM job
             slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
                           feature=feature, name=node_name,
-                          stdout_path=stdout_path)
+                          stdout_path=stdout_path, conda_env=conda_env,
+                          module=module)
             if slurm.id:
                 msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) '
                        'on Eagle.'.format(node_name, slurm.id))
