@@ -91,6 +91,8 @@ def from_config(ctx, config_file, verbose):
                        memory=config.execution_control.node_mem,
                        walltime=config.execution_control.walltime,
                        feature=config.execution_control.feature,
+                       conda_env=config.execution_control.conda_env,
+                       module=config.execution_control.module,
                        stdout_path=os.path.join(config.logdir, 'stdout'),
                        verbose=verbose)
 
@@ -261,12 +263,17 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
+@click.option('--conda_env', '-env', default=None, type=STR,
+              help='Conda env to activate')
+@click.option('--module', '-mod', default=None, type=STR,
+              help='Module to load')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
+def collect_eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
+                  stdout_path, verbose):
     """Run collection on Eagle HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -295,7 +302,8 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, stdout_path, verbose):
                     .format(name, h5_file, h5_dir, file_prefix))
         # create and submit the SLURM job
         slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      feature=feature, name=name, stdout_path=stdout_path)
+                      feature=feature, name=name, conda_env=conda_env,
+                      module=module, stdout_path=stdout_path)
         if slurm.id:
             msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
                    'Eagle.'.format(name, slurm.id))

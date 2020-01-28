@@ -322,7 +322,7 @@ class SLURM(SubprocessManager):
 
     def __init__(self, cmd, alloc, memory, walltime, feature=None,
                  name='reV', stdout_path='./stdout', conda_env=None,
-                 module='reV'):
+                 module=None, module_root='/shared-projects/rev/modulefiles'):
         """Initialize and submit a PBS job.
 
         Parameters
@@ -347,6 +347,8 @@ class SLURM(SubprocessManager):
             Conda environment to activate
         module : str
             Module to load
+        module_root : str
+            Path to module root to load
         """
 
         self.make_path(stdout_path)
@@ -358,7 +360,8 @@ class SLURM(SubprocessManager):
                                          name=name,
                                          stdout_path=stdout_path,
                                          conda_env=conda_env,
-                                         module=module)
+                                         module=module,
+                                         module_root=module_root)
         if self.out:
             self.id = self.out.split(' ')[-1]
         else:
@@ -454,7 +457,8 @@ class SLURM(SubprocessManager):
 
     def sbatch(self, cmd, alloc, walltime, memory=None, feature=None,
                name='reV', stdout_path='./stdout', keep_sh=False,
-               conda_env=None, module='reV'):
+               conda_env=None, module=None,
+               module_root='/shared-projects/rev/modulefiles'):
         """Submit a SLURM job via sbatch command and SLURM shell script
 
         Parameters
@@ -482,6 +486,8 @@ class SLURM(SubprocessManager):
             Conda environment to activate
         module : bool
             Module to load
+        module_root : str
+            Path to module root to load
 
         Returns
         -------
@@ -513,8 +519,8 @@ class SLURM(SubprocessManager):
 
             env_str = ''
             if module is not None:
-                env_str = ("module use /shared-projects/rev/modulefiles"
-                           "\nmodule load {}".format(module))
+                env_str = ("module use {}"
+                           "\nmodule load {}".format(module_root, module))
                 env_str = "{env_str}\necho {env_str}".format(env_str=env_str)
             elif conda_env is not None:
                 env_str = "source activate {}".format(conda_env)
