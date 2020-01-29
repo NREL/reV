@@ -106,10 +106,8 @@ def test_integrated():
                                 'res_gids': sites,
                                 'res_class': zeros,
                                 'region': regions})
-    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                parallel=True)
-    p2, m2, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                parallel=False)
+    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region')
+    p2, m2, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region')
 
     assert np.allclose(m1['rep_res_gid'].values.astype(int),
                        m2['rep_res_gid'].values.astype(int))
@@ -131,8 +129,7 @@ def test_many_regions():
                                 'region1': region1,
                                 'region2': region2})
     reg_cols = ['region1', 'region2']
-    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols,
-                                parallel=False)
+    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols)
 
     assert p1[0].shape == (17520, 6)
     assert len(m1) == 6
@@ -156,7 +153,7 @@ def test_write_to_file():
                                 'region': regions})
     fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
     p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                parallel=True, fout=fout, n_profiles=3)
+                                fout=fout, n_profiles=3)
     with Resource(fout) as res:
         disk_profiles = res['rep_profiles_0']
         disk_meta = res.meta
@@ -187,7 +184,7 @@ def test_file_options():
                                 'region': regions})
     fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
     p1, _, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                               parallel=True, fout=fout, n_profiles=3,
+                               fout=fout, n_profiles=3,
                                save_rev_summary=False,
                                scaled_precision=True)
     with Resource(fout) as res:
