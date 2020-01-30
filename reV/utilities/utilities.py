@@ -44,6 +44,29 @@ def safe_json_load(fpath):
     return j
 
 
+def dict_str_load(dict_str):
+    """
+    Load jsonified string entries into dictionaries using JSON
+
+    Paramaters
+    ----------
+    dict_str : str
+        JSON style string provided to CLI or in config
+
+    Returns
+    -------
+    out_dict : dict
+        Dictionary loaded by JSON
+    """
+    dict_str = dict_str.replace('\'', '\"')
+    dict_str = dict_str.replace('None', 'null')
+    dict_str = dict_str.replace('True', 'true')
+    dict_str = dict_str.replace('False', 'false')
+    out_dict = json.loads(dict_str)
+
+    return out_dict
+
+
 def parse_year(inp, option='raise'):
     """
     Attempt to parse a year out of a string.

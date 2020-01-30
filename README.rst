@@ -7,7 +7,7 @@ Using Eagle Module
 
 If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled module:
 ::
-    module use /projects/rev/modulefiles
+    module use /shared-projects/rev/modulefiles
     module load reV
 
 Launching a run
