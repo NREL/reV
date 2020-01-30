@@ -539,7 +539,7 @@ class PV(Solar):
                 DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
             self._default = pysam_pv.default('PVWattsNone')
-            self._default.LocationAndResource.solar_resource_file = res_file
+            self._default.SolarResource.solar_resource_file = res_file
             self._default.execute()
         return self._default
 
@@ -603,7 +603,7 @@ class CSP(Solar):
                 DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
             self._default = pysam_csp.default('MSPTSingleOwner')
-            self._default.LocationAndResource.solar_resource_file = res_file
+            self._default.SolarResource.solar_resource_file = res_file
             self._default.execute()
         return self._default
 
@@ -1022,7 +1022,7 @@ class Wind(Generation):
             res_file = os.path.join(
                 DEFAULTSDIR, 'SAM/WY Southern-Flat Lands.csv')
             self._default = pysam_wind.default('WindPowerNone')
-            self._default.WindResourceFile.wind_resource_filename = res_file
+            self._default.Resource .wind_resource_filename = res_file
             self._default.execute()
         return self._default
 
