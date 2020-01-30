@@ -7,12 +7,12 @@ import click
 import logging
 import pprint
 import time
-import json
 
 from reV.config.supply_curve_configs import SupplyCurveConfig
 from reV.utilities.execution import SLURM
 from reV.utilities.cli_dtypes import STR, INT
 from reV.utilities.loggers import init_mult
+from reV.utilities.utilities import dict_str_load
 from reV.supply_curve.supply_curve import SupplyCurve
 from reV.pipeline.status import Status
 
@@ -140,11 +140,7 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
                   verbose=verbose)
 
         if isinstance(transmission_costs, str):
-            transmission_costs = transmission_costs.replace('\'', '\"')
-            transmission_costs = transmission_costs.replace('None', 'null')
-            transmission_costs = transmission_costs.replace('True', 'true')
-            transmission_costs = transmission_costs.replace('False', 'false')
-            transmission_costs = json.loads(transmission_costs)
+            transmission_costs = dict_str_load(transmission_costs)
 
         if simple:
             sc_fun = SupplyCurve.simple

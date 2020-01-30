@@ -5,7 +5,6 @@ reV Supply Curve Aggregation command line interface (cli).
 import os
 import click
 import logging
-import json
 import pprint
 import time
 import h5py
@@ -14,6 +13,7 @@ from reV.config.supply_curve_configs import AggregationConfig
 from reV.utilities.execution import SLURM
 from reV.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST, STRFLOAT
 from reV.utilities.loggers import init_mult
+from reV.utilities.utilities import dict_str_load
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.aggregation import Aggregation
 from reV.pipeline.status import Status
@@ -193,17 +193,10 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                 raise e
 
         if isinstance(excl_dict, str):
-            excl_dict = excl_dict.replace('\'', '\"')
-            excl_dict = excl_dict.replace('None', 'null')
-            excl_dict = excl_dict.replace('True', 'true')
-            excl_dict = excl_dict.replace('False', 'false')
-            excl_dict = json.loads(excl_dict)
+            excl_dict = dict_str_load(excl_dict)
+
         if isinstance(data_layers, str):
-            data_layers = data_layers.replace('\'', '\"')
-            data_layers = data_layers.replace('None', 'null')
-            data_layers = data_layers.replace('True', 'true')
-            data_layers = data_layers.replace('False', 'false')
-            data_layers = json.loads(data_layers)
+            data_layers = dict_str_load(data_layers)
 
         try:
             summary = Aggregation.summary(
