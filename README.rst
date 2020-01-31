@@ -5,17 +5,17 @@ The Renewable Energy Potential (reV) Model
 reV command line tools
 ***********************
 
-`reV <https://github.com/NREL/reVX/tree/master/examples/single_module_execution/README.rst>`_
-``reV-gen``
-`reV-econ <https://github.com/NREL/reVX/tree/master/examples/advanced_econ_modeling/README.rst>`_
-`reV-offshore <https://github.com/NREL/reVX/tree/master/examples/offshore_wind/README.rst>`_
-``reV-collect``
-``reV-multiyear``
-``reV-aggregation``
-``reV-supply-curve``
-``reV-rep-profiles``
-`reV-pipeline <https://github.com/NREL/reVX/tree/master/examples/full_pipeline_execution/README.rst>`_
-`reV-batch <https://github.com/NREL/reVX/tree/master/examples/batched_execution/README.rst>`_
+- `reV <https://github.com/NREL/reV/tree/master/examples/single_module_execution/README.rst>`_
+- ``reV-gen``
+- `reV-econ <https://github.com/NREL/reV/tree/master/examples/advanced_econ_modeling/README.rst>`_
+- `reV-offshore <https://github.com/NREL/reV/tree/master/examples/offshore_wind/README.rst>`_
+- ``reV-collect``
+- ``reV-multiyear``
+- ``reV-aggregation``
+- ``reV-supply-curve``
+- ``reV-rep-profiles``
+- `reV-pipeline <https://github.com/NREL/reV/tree/master/examples/full_pipeline_execution/README.rst>`_
+- `reV-batch <https://github.com/NREL/reV/tree/master/examples/batched_execution/README.rst>`_
 
 Using Eagle Module
 ******************

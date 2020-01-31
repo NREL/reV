@@ -188,8 +188,8 @@ class PointsControl:
 class ProjectPoints:
     """Class to manage site and SAM input configuration requests.
 
-    Use Cases
-    ---------
+    Notes
+    -----
     config_id@site0, SAM_config_dict@site0 = ProjectPoints[0]
     site_list_or_slice = ProjectPoints.sites
     site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)

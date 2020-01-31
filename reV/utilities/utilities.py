@@ -48,7 +48,7 @@ def dict_str_load(dict_str):
     """
     Load jsonified string entries into dictionaries using JSON
 
-    Paramaters
+    Parameters
     ----------
     dict_str : str
         JSON style string provided to CLI or in config
