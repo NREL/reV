@@ -20,7 +20,7 @@ geospatial exclusion layers, and generation of renewable energy supply curves.
    :maxdepth: 2
    :caption: Contents:
 
-   reV
+   reV/modules
 
 Indices and tables
 ==================

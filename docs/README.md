@@ -7,14 +7,18 @@ The documentation is built with [Sphinx](http://sphinx-doc.org/index.html). See 
 To generate the docs yourself, you'll need the appropriate package:
 
 ```
-pip install sphinx
+conda sphinx
+conda install sphinx_rtd_theme
+
+pip install ghp-import
+pip install sphinx-click
 ```
 
 ## Refreshing the API Documentation
 
 - Make sure reV is in your PYTHONPATH
 - Run `sphinx-apidoc -eM -o source/reV ../reV` from the `docs` folder.
-- Add the following to any CLI modules:
+- Add the following to the top of any CLI module's .rst file:
 ```
 .. click:: module_path:main
    :prog: CLI-Alias # e.g. reV-gen
