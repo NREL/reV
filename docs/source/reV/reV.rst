@@ -1,6 +1,11 @@
 reV package
 ===========
 
+.. automodule:: reV
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -12,6 +17,7 @@ Subpackages
    reV.econ
    reV.generation
    reV.handlers
+   reV.offshore
    reV.pipeline
    reV.rep_profiles
    reV.supply_curve
@@ -20,27 +26,7 @@ Subpackages
 Submodules
 ----------
 
-reV.cli module
---------------
+.. toctree::
 
-.. automodule:: reV.cli
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-reV.version module
-------------------
-
-.. automodule:: reV.version
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: reV
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   reV.cli
+   reV.version
