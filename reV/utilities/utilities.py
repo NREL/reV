@@ -21,6 +21,13 @@ def safe_json_load(fpath):
     -------
     j : dict
         Loaded json dictionary.
+
+    Examples
+    --------
+    >>> json_path = "./path_to_json.json"
+    >>> safe_json_load(json_path)
+    {key1: value1,
+     key2: value2}
     """
 
     if not isinstance(fpath, str):
@@ -57,6 +64,13 @@ def dict_str_load(dict_str):
     -------
     out_dict : dict
         Dictionary loaded by JSON
+
+    Examples
+    --------
+    >>> json_str = "{bool_key: 'True', value_key: 'None'}"
+    >>> dict_str_load(json_str)
+    {bool_key: True,
+     value_key: None}
     """
     dict_str = dict_str.replace('\'', '\"')
     dict_str = dict_str.replace('None', 'null')
@@ -85,8 +99,25 @@ def parse_year(inp, option='raise'):
     out : int | bool
         Year int parsed from inp,
         or boolean T/F (if found and option is bool).
-    """
 
+    Examples
+    --------
+    >>> year_str = "NSRDB_2018.h5"
+    >>> parse_year(year_str)
+    2018
+
+    >>> year_str = "NSRDB_2018.h5"
+    >>> parse_year(year_str, option='bool')
+    True
+
+    >>> year_str = "NSRDB_TMY.h5"
+    >>> parse_year(year_str)
+    RuntimeError: Cannot parse year from NSRDB_TMY.h5
+
+    >>> year_str = "NSRDB_TMY.h5"
+    >>> parse_year(year_str, option='bool')
+    False
+    """
     # char leading year cannot be 0-9
     # char trailing year can be end of str or not 0-9
     regex = r".*[^0-9]([1-2][0-9]{3})($|[^0-9])"
