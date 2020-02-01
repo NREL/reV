@@ -5,17 +5,17 @@ The Renewable Energy Potential (reV) Model
 reV command line tools
 ***********************
 
-- `reV <https://github.com/NREL/reV/tree/master/examples/single_module_execution/README.rst>`_
-- ``reV-gen``
-- `reV-econ <https://github.com/NREL/reV/tree/master/examples/advanced_econ_modeling/README.rst>`_
-- `reV-offshore <https://github.com/NREL/reV/tree/master/examples/offshore_wind/README.rst>`_
-- ``reV-collect``
-- ``reV-multiyear``
-- ``reV-aggregation``
-- ``reV-supply-curve``
-- ``reV-rep-profiles``
-- `reV-pipeline <https://github.com/NREL/reV/tree/master/examples/full_pipeline_execution/README.rst>`_
-- `reV-batch <https://github.com/NREL/reV/tree/master/examples/batched_execution/README.rst>`_
+- `reV <https://nrel.github.io/reV/reV/reV.cli.html#rev>`_
+- `reV-gen <https://nrel.github.io/reV/reV/reV.generation.cli_gen.html#rev-gen>`_
+- `reV-econ <https://nrel.github.io/reV/reV/reV.econ.cli_econ.html#rev-econ>`_
+- `reV-offshore <https://nrel.github.io/reV/reV/reV.offshore.cli_offshore.html#rev-offshore>`_
+- `reV-collect <https://nrel.github.io/reV/reV/reV.handlers.cli_collect.html#rev-collect>`_
+- `reV-multiyear <https://nrel.github.io/reV/reV/reV.handlers.cli_multi_year.html#rev-multiyear>`_
+- `reV-aggregation <https://nrel.github.io/reV/reV/reV.supply_curve.cli_aggregation.html#rev-aggregation>`_
+- `reV-supply-curve <https://nrel.github.io/reV/reV/reV.supply_curve.cli_supply_curve.html#rev-supply-curve>`_
+- `reV-rep-profiles <https://nrel.github.io/reV/reV/reV.rep_profiles.cli_rep_profiles.html#rev-rep-profiles>`_
+- `reV-pipeline <https://nrel.github.io/reV/reV/reV.pipeline.cli_pipeline.html#rev-pipeline>`_
+- `reV-batch <https://nrel.github.io/reV/reV/reV.batch.cli_batch.html#rev-batch>`_
 
 Using Eagle Module
 ******************
@@ -35,7 +35,7 @@ Tips
 
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
-- `Full pipeline example here <https://github.com/NREL/reV/tree/master/examples/full_pipeline_execution>`_
+- `Full pipeline example <https://github.com/NREL/reV/tree/master/examples/full_pipeline_execution>`_
 
 General Run times and Node configuration on Eagle
 =================================================
@@ -43,7 +43,7 @@ General Run times and Node configuration on Eagle
 - WTK Conus: 10-20 nodes per year walltime 1-4 hours
 - NSRDB Conus: 5 nodes walltime 2 hours
 
-`Execution examples. <https://github.com/NREL/reV/tree/master/examples>`_
+Execution examples: :ref:`examples`
 
 Installing reV
 **************
