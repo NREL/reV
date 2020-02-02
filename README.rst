@@ -33,7 +33,7 @@ Tips
 
 - only use a screen session if running the pipeline module: `screen -S rev`
 - Running simply generation or lcoe can just be done from the console:
-
+::
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
 :ref:`full_pipeline_execution`
