@@ -7,12 +7,14 @@ Setting up HSDS
 ***************
 
 To get started install the h5pyd library:
-::
+.. code-block::
+
     pip install h5pyd
     conda install h5pyd
 
 Next, configure h5pyd by running ``hsconfigure`` from the command line, or by creating a configuration file at ``~/.hscfg``:
-::
+.. code-block::
+
     hsconfigure
     hs_endpoint = https://developer.nrel.gov/api/hsds
     hs_username = None
@@ -27,7 +29,8 @@ Using HSDS with reV
 *******************
 
 Once h5pyd has been installed and configured, reV can pull data directly from AWS using HSDS. To access the resource data used by reV (NSRDB or WTK) you have to turn on the ``hsds`` flag in the `resource handlers <https://github.com/NREL/reV/blob/master/reV/handlers/resource.py>`_:
-::
+.. code-block:: python
+
     nsrdb_dir = '/nrel/nsrdb/'
     nsrdb_file = os.path.join(nsrdb_dir, 'nsrdb_2013.h5')
     with reV.Resource(nsrdb_file, hsds=True) as f:
@@ -35,7 +38,8 @@ Once h5pyd has been installed and configured, reV can pull data directly from AW
         time_index = f.time_index
 
 reV generation (``reV.Gen``) will automatically infer if a file path is locally on disk or from HSDS:
-::
+.. code-block:: python
+
     gen = reV.Gen.reV_run(tech='pv', points=points, sam_files=config_path,
                           res_file=nsrdb_file, max_workers=1, fout=None,
                           output_request=('cf_mean', 'cf_profile'))

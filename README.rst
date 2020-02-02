@@ -34,13 +34,11 @@ Tips
 
 - Only use a screen session if running the pipeline module: `screen -S rev`
 - :ref:`full_pipeline_execution`
-
 .. code-block::
 
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
 - Running simply generation or econ can just be done from the console:
-
 .. code-block::
 
     reV -c "/scratch/user/rev/config_pipeline.json" generation

@@ -16,7 +16,8 @@ How to Run
 ----------
 
 All batch jobs will be kicked off using the following CLI call:
-::
+.. code-block::
+
     rev -c "../config_batch.json" batch
 
 New sub directories will be created in the folder with the batch config file for each sub job.
@@ -29,5 +30,6 @@ All of the batch jobs can be collected into a single file using the multi-year c
 This utility is not part of the batch pipeline and needs to be executed and configured separately.
 See the ``config_multi-year.json`` file for details on how to setup this collection step.
 To execute, use the following command:
-::
+.. code-block::
+
     rev -c "../config_multi-year.json" multi-year

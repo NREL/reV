@@ -9,7 +9,8 @@ Workflow Description
 --------------------
 
 The batching config in this example represents the high-level executed module. The user executes the following command:
-::
+.. code-block::
+
     rev -c "../config_batch.json" batch
 
 This creates and executes three batch job pipelines. You should be able to see in ``config_batch.json`` how the actual input generation files are parameterized.
