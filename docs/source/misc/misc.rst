@@ -1,8 +1,11 @@
-.. _examples:
+Installation and Usage
+======================
+.. toctree::
 
-reV examples
+    installation
+
+Examples
 ============
-
 .. toctree::
 
    examples.single_module_execution

@@ -1,12 +1,12 @@
 reV Spatial Economics with SAM Single Owner Model
-#################################################
+=================================================
 
 This example set shows how several of the reV features (batching, pipeline, site-data) can be used in concert to create complex spatially-variant economic analyses.
 This example modifies the tax rate and PPA price inputs for each state.
 More complex input sets on a site-by-site basis can be easily generated using a similar site_data input method.
 
 Workflow Description
-********************
+--------------------
 
 The batching config in this example represents the high-level executed module. The user executes the following command:
 ::

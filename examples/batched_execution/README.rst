@@ -1,10 +1,10 @@
 reV Parameter Batching
-######################
+======================
 
 This example set shows how reV inputs can be parameterized and the execution can be batched.
 
 Batching Config Description
-***************************
+---------------------------
 
  - "sets" in the batch config is a list of batches.
  - Each "batch" is a dictionary containing "args" and "files".
@@ -13,7 +13,7 @@ Batching Config Description
  - Batch jobs will be assigned names based on the args. Accordingly, the name field specification should be omitted in all configs.
 
 How to Run
-**********
+----------
 
 All batch jobs will be kicked off using the following CLI call:
 ::

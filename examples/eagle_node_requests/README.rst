@@ -1,5 +1,5 @@
 reV Eagle Node Requests
-#######################
+=======================
 
 When running reV on Eagle, it's only necessary to specify the allocation and the walltime.
 The partition will be chosen automatically and you will be given access to the node's full memory.

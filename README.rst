@@ -1,9 +1,10 @@
 reV
-###
+***
 The Renewable Energy Potential (reV) Model
 
+.. inclusion-intro
 reV command line tools
-***********************
+======================
 
 - `reV <https://nrel.github.io/reV/reV/reV.cli.html#rev>`_
 - `reV-gen <https://nrel.github.io/reV/reV/reV.generation.cli_gen.html#rev-gen>`_
@@ -18,7 +19,7 @@ reV command line tools
 - `reV-batch <https://nrel.github.io/reV/reV/reV.batch.cli_batch.html#rev-batch>`_
 
 Using Eagle Module
-******************
+==================
 
 If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled module:
 ::
@@ -26,7 +27,7 @@ If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled mo
     module load reV
 
 Launching a run
-===============
+---------------
 
 Tips
 
@@ -35,28 +36,28 @@ Tips
 
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
-- `Full pipeline example <https://github.com/NREL/reV/tree/master/examples/full_pipeline_execution>`_
+:ref:`full_pipeline_execution`
 
 General Run times and Node configuration on Eagle
-=================================================
+-------------------------------------------------
 
 - WTK Conus: 10-20 nodes per year walltime 1-4 hours
 - NSRDB Conus: 5 nodes walltime 2 hours
 
-Execution examples: :ref:`examples`
+:ref:`eagle_node_requests`
 
 Installing reV
-**************
+==============
 
 Option 1: PIP Install the most recent version of master (recommended for analysts):
-===================================================================================
+-----------------------------------------------------------------------------------
 
 1. Create a new environment: ``conda create --name rev python=3.7``
 2. Activate directory: ``conda activate rev``
 3. Install reV: ``pip install git+ssh://git@github.com/NREL/reV.git`` or ``pip install git+https://github.com/NREL/reV.git``
 
 Option 2: Clone repo (recommended for developers)
-=================================================
+-------------------------------------------------
 
 1. from home dir, ``git clone https://github.com/NREL/reV2.git``
     1) enter github username

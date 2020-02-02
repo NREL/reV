@@ -15,13 +15,14 @@ generation, levelized cost of energy (LCOE), application of
 geospatial exclusion layers, and generation of renewable energy supply curves.
 
 .. include:: ../../README.rst
+   :start-after: inclusion-intro
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
+   misc/misc
    reV/modules
-   examples/examples
 
 Indices and tables
 ==================
