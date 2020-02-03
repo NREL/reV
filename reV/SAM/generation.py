@@ -14,7 +14,6 @@ import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Windpower as pysam_wind
 import PySAM.TcsmoltenSalt as pysam_csp
 
-from reV.handlers.resource import Resource
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
 from reV.utilities.utilities import mean_irrad
@@ -65,13 +64,11 @@ class Generation(SAM):
         return res_out, out_req_cleaned
 
     @staticmethod
-    def _get_res_mean(res_file, res_df, output_request):
+    def _get_res_mean(res_df, output_request):
         """Get the resource annual means (single site).
 
         Parameters
         ----------
-        res_file : str
-            Resource file with full path.
         res_df : pd.DataFrame
             2D table with resource data.
         output_request : list
@@ -103,13 +100,7 @@ class Generation(SAM):
                 out_req_nomeans.remove('ghi_mean')
                 if res_mean is None:
                     res_mean = {}
-
-                if 'ghi' in res_df:
-                    res_mean['ghi_mean'] = mean_irrad(res_df['ghi'])
-                else:
-                    with Resource(res_file) as res:
-                        res_mean['ghi_mean'] = mean_irrad(
-                            res['ghi', :, res_df.name])
+                res_mean['ghi_mean'] = mean_irrad(res_df['ghi'])
 
         return res_mean, out_req_nomeans
 
@@ -320,7 +311,7 @@ class Generation(SAM):
             _, inputs = points_control.project_points[site]
 
             res_outs, out_req_cleaned = cls._get_res(res_df, output_request)
-            res_mean, out_req_cleaned = cls._get_res_mean(res_file, res_df,
+            res_mean, out_req_cleaned = cls._get_res_mean(res_df,
                                                           out_req_cleaned)
 
             # iterate through requested sites.

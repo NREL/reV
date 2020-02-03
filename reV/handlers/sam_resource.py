@@ -18,7 +18,7 @@ class SAMResource:
     """
 
     # Resource variables to load for each res type
-    RES_VARS = {'pv': ('dni', 'dhi', 'wind_speed', 'air_temperature'),
+    RES_VARS = {'pv': ('dni', 'dhi', 'ghi', 'wind_speed', 'air_temperature'),
                 'csp': ('dni', 'dhi', 'wind_speed', 'air_temperature',
                         'dew_point', 'surface_pressure'),
                 'wind': ('pressure', 'temperature', 'winddirection',
@@ -27,12 +27,14 @@ class SAMResource:
     # valid data ranges for PV solar resource:
     PV_DATA_RANGES = {'dni': (0.0, 1360.0),
                       'dhi': (0.0, 1360.0),
+                      'ghi': (0.0, 1360.0),
                       'wind_speed': (0, 120),
                       'air_temperature': (-200, 100)}
 
     # valid data ranges for CSP solar resource:
     CSP_DATA_RANGES = {'dni': (0.0, 1360.0),
                        'dhi': (0.0, 1360.0),
+                       'ghi': (0.0, 1360.0),
                        'wind_speed': (0, 120),
                        'air_temperature': (-200, 100),
                        'dew_point': (-200, 100),
