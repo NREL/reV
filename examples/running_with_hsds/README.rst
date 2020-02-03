@@ -1,19 +1,22 @@
+.. _hsds
 Using HSDS
-##########
+==========
 
-The Highly Scalable Distributed Service (HSDS) is a cloud optimized API to enable access to .h5 files hosted on AWS. The HSDS software was developed by the `HDF Group <https://www.hdfgroup.org/>`_` and is hosted on Amazon Web Services (AWS) using a combination of EC2 (Elastic Compute) and S3 (Scalable Storage Service). You can read more about the HSDS service `in this slide deck <https://www.slideshare.net/HDFEOS/hdf-cloud-services>`_.
+The Highly Scalable Distributed Service (HSDS) is a cloud optimized API to enable access to .h5 files hosted on AWS. The HSDS software was developed by the `HDF Group <https://www.hdfgroup.org/>`_ and is hosted on Amazon Web Services (AWS) using a combination of EC2 (Elastic Compute) and S3 (Scalable Storage Service). You can read more about the HSDS service `in this slide deck <https://www.slideshare.net/HDFEOS/hdf-cloud-services>`_.
 
 Setting up HSDS
-***************
+---------------
 
 To get started install the h5pyd library:
-.. code-block::
+
+.. code-block:: bash
 
     pip install h5pyd
     conda install h5pyd
 
 Next, configure h5pyd by running ``hsconfigure`` from the command line, or by creating a configuration file at ``~/.hscfg``:
-.. code-block::
+
+.. code-block:: bash
 
     hsconfigure
     hs_endpoint = https://developer.nrel.gov/api/hsds
@@ -26,9 +29,10 @@ Next, configure h5pyd by running ``hsconfigure`` from the command line, or by cr
 *Please note that our HSDS service is for demonstration purposes only, if you would like to use HSDS for production runs of reV please setup your own service: https://github.com/HDFGroup/hsds and point it to our public HSDS bucket: s3://nrel-pds-hsds*
 
 Using HSDS with reV
-*******************
+-------------------
 
 Once h5pyd has been installed and configured, reV can pull data directly from AWS using HSDS. To access the resource data used by reV (NSRDB or WTK) you have to turn on the ``hsds`` flag in the `resource handlers <https://github.com/NREL/reV/blob/master/reV/handlers/resource.py>`_:
+
 .. code-block:: python
 
     nsrdb_dir = '/nrel/nsrdb/'
@@ -38,6 +42,7 @@ Once h5pyd has been installed and configured, reV can pull data directly from AW
         time_index = f.time_index
 
 reV generation (``reV.Gen``) will automatically infer if a file path is locally on disk or from HSDS:
+
 .. code-block:: python
 
     gen = reV.Gen.reV_run(tech='pv', points=points, sam_files=config_path,

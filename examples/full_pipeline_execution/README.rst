@@ -1,10 +1,12 @@
+.. _pipeline_execution
 Full reV Pipeline Execution
 ===========================
 
 This set of example files demonstrates how to run the full reV pipeline using the pipeline manager.
 
 The full pipeline can be executed using the following CLI call:
-.. code-block::
+
+.. code-block:: bash
 
     rev -c ./config_pipeline.json pipeline
 

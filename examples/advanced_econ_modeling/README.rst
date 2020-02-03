@@ -1,3 +1,4 @@
+.. _single_owner
 reV Spatial Economics with SAM Single Owner Model
 =================================================
 
@@ -9,7 +10,8 @@ Workflow Description
 --------------------
 
 The batching config in this example represents the high-level executed module. The user executes the following command:
-.. code-block::
+
+.. code-block:: bash
 
     rev -c "../config_batch.json" batch
 
@@ -18,5 +20,6 @@ This is the power of the batch module - it's sufficiently generic to modify ANY 
 
 The first module executed in each job pipeline is the econ module.
 This example shows how the site-specific input ``.csv`` can be used (see the "site_data" key in the ``config_econ.json`` file).
+
 The ``site_data.csv`` file sets site-specific input data corresponding to the gids in the project points file.
 Data inputs keyed by each column header in the ``site_data.csv`` file will be added to or replace an input in the "tech_configs" ``.json`` files (sam_files).
