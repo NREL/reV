@@ -12,7 +12,7 @@ import os
 import pytest
 
 from rex.utilities.exceptions import ResourceKeyError
-from reV.SAM.SAM import SAM
+from reV.SAM.SAM import RevPySam
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV import TESTDATADIR
 
@@ -24,7 +24,7 @@ def test_clearsky():
     pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pv', res_file=res_file)
     try:
         # Get the SAM resource object
-        SAM.get_sam_res(res_file, pp, pp.tech)
+        RevPySam.get_sam_res(res_file, pp, pp.tech)
         assert False
     except ResourceKeyError:
         # Should look for clearsky_dni and not find it in RI data

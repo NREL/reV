@@ -17,7 +17,10 @@ import PySAM.Swh as pysam_swh
 import PySAM.TroughPhysicalProcessHeat as pysam_tpph
 import PySAM.LinearFresnelDsgIph as pysam_lfdi
 
-from reV.SAM.SAM import SAM
+from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
+from reV.utilities.curtailment import curtail
+from reV.utilities.utilities import mean_irrad
+from reV.SAM.SAM import RevPySam
 from reV.SAM.econ import LCOE, SingleOwner
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
@@ -27,7 +30,7 @@ DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
 
 
-class Generation(SAM):
+class Generation(RevPySam):
     """Base class for SAM generation simulations."""
 
     @staticmethod
@@ -297,12 +300,20 @@ class Generation(SAM):
         # initialize output dictionary
         out = {}
 
+<<<<<<< HEAD
         # Get the SAM resource object
         resources = SAM.get_sam_res(res_file,
                                     points_control.project_points,
                                     points_control.project_points.tech,
                                     output_request=output_request,
                                     downscale=downscale)
+=======
+        # Get the RevPySam resource object
+        resources = RevPySam.get_sam_res(res_file,
+                                         points_control.project_points,
+                                         points_control.project_points.tech,
+                                         downscale=downscale)
+>>>>>>> Added SAM version checker with input modifications.
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment

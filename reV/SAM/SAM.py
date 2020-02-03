@@ -18,10 +18,11 @@ from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
                                     MultiFileWTK, MultiFileNSRDB)
 from rex.utilities.utilities import check_res_file
 
+
 logger = logging.getLogger(__name__)
 
 
-class SAMResourceRetriever:
+class SamResourceRetriever:
     """Factory utility to get the SAM resource handler."""
 
     @staticmethod
@@ -46,13 +47,13 @@ class SAMResourceRetriever:
         """
 
         try:
-            res_handler = SAM.RESOURCE_TYPES[module.lower()]
+            res_handler = RevPySam.RESOURCE_TYPES[module.lower()]
 
         except KeyError:
             msg = ('Cannot interpret what kind of resource handler the SAM '
                    'module or reV technology "{}" requires. Expecting one of '
                    'the following SAM modules or reV technologies: {}'
-                   .format(module, list(SAM.RESOURCE_TYPES.keys())))
+                   .format(module, list(RevPySam.RESOURCE_TYPES.keys())))
             logger.exception(msg)
             raise SAMExecutionError(msg)
 
@@ -242,7 +243,7 @@ class SAMResourceRetriever:
         return res
 
 
-class RevPySAM:
+class Sam:
     """reV wrapper on the PySAM framework."""
 
     # PySAM object wrapped by this class
@@ -459,8 +460,8 @@ class RevPySAM:
                 logger.warning(wmsg)
 
 
-class SAM(RevPySAM):
-    """Base class for SAM simulations (generation and econ)."""
+class RevPySam(Sam):
+    """Base class for reV-SAM simulations (generation and econ)."""
 
     DIR = os.path.dirname(os.path.realpath(__file__))
     MODULE = None
@@ -518,7 +519,7 @@ class SAM(RevPySAM):
     @staticmethod
     def get_sam_res(*args, **kwargs):
         """Get the SAM resource iterator object (single year, single file)."""
-        return SAMResourceRetriever.get(*args, **kwargs)
+        return SamResourceRetriever.get(*args, **kwargs)
 
     @staticmethod
     def drop_leap(resource):
@@ -600,7 +601,7 @@ class SAM(RevPySAM):
             So if the timestep is 0.5 hours, time_interval is 2.
         """
 
-        time_index = SAM.make_datetime(time_index)
+        time_index = RevPySam.make_datetime(time_index)
         x = time_index.dt.hour.diff()
         time_interval = 0
 

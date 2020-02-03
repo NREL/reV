@@ -10,7 +10,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-from reV.SAM.SAM import SAM
+from reV.SAM.SAM import RevPySam
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 from reV.utilities.curtailment import curtail
@@ -30,7 +30,7 @@ def get_curtailment(year):
     pp = ProjectPoints(slice(0, 100), sam_files, 'windpower',
                        curtailment=curtailment)
 
-    resource = SAM.get_sam_res(res_file, pp, 'windpower')
+    resource = RevPySam.get_sam_res(res_file, pp, 'wind')
     non_curtailed_res = deepcopy(resource)
 
     out = curtail(resource, pp.curtailment, random_seed=0)
