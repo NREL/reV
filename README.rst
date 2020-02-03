@@ -57,9 +57,13 @@ Installing reV
 Option 1: PIP Install the most recent version of master (recommended for analysts):
 -----------------------------------------------------------------------------------
 
-1. Create a new environment: ``conda create --name rev python=3.7``
-2. Activate directory: ``conda activate rev``
-3. Install reV: ``pip install git+ssh://git@github.com/NREL/reV.git`` or ``pip install git+https://github.com/NREL/reV.git``
+1. Create a new environment:
+    ``conda create --name rev python=3.7``
+2. Activate directory:
+    ``conda activate rev``
+3. Install reV:
+    ``pip install git+ssh://git@github.com/NREL/reV.git``
+    or ``pip install git+https://github.com/NREL/reV.git``
 
 Option 2: Clone repo (recommended for developers)
 -------------------------------------------------
