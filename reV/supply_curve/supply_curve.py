@@ -6,7 +6,6 @@ reV supply curve module
 """
 from copy import deepcopy
 import os
-import concurrent.futures as cf
 import logging
 import numpy as np
 import pandas as pd
@@ -14,6 +13,7 @@ from warnings import warn
 
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
+from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import SupplyCurveInputError
 
 logger = logging.getLogger(__name__)
@@ -243,7 +243,7 @@ class SupplyCurve:
         logger.info('Computing LCOT costs for all possible connections...')
         if max_workers > 1:
             groups = trans_table.groupby('sc_gid')
-            with cf.ProcessPoolExecutor(max_workers=max_workers) as exe:
+            with SpawnProcessPool(max_workers=max_workers) as exe:
                 futures = []
                 for sc_gid, sc_table in groups:
                     if connectable:

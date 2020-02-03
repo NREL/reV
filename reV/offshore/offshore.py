@@ -7,7 +7,7 @@ and then calculates the ORCA econ data.
 Offshore resource / generation data refers to WTK 2km (fine resolution)
 Offshore farms refer to ORCA data on 600MW wind farms (coarse resolution)
 """
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import as_completed
 import numpy as np
 import os
 import shutil
@@ -20,6 +20,7 @@ from reV.handlers.collection import DatasetCollector
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
 from reV.offshore.orca import ORCA_LCOE
+from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import (OffshoreWindInputWarning,
                                       NearestNeighborError)
 
@@ -673,7 +674,7 @@ class Offshore:
         """Run offshore gen aggregation and ORCA econ compute in parallel."""
 
         futures = {}
-        with ProcessPoolExecutor(self._max_workers) as exe:
+        with SpawnProcessPool(self._max_workers) as exe:
 
             iterator = self.meta_out_offshore.iterrows()
             for i, (ifarm, meta) in enumerate(iterator):
