@@ -22,7 +22,8 @@ Using Eagle Module
 ==================
 
 If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled module:
-.. code-block::
+
+.. code-block:: bash
 
     module use /shared-projects/rev/modulefiles
     module load reV
@@ -34,12 +35,14 @@ Tips
 
 - Only use a screen session if running the pipeline module: `screen -S rev`
 - :ref:`full_pipeline_execution`
-.. code-block::
+
+.. code-block:: bash
 
     reV -c "/scratch/user/rev/config_pipeline.json" pipeline
 
 - Running simply generation or econ can just be done from the console:
-.. code-block::
+
+.. code-block:: bash
 
     reV -c "/scratch/user/rev/config_pipeline.json" generation
 
