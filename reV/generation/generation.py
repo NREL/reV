@@ -13,7 +13,7 @@ from warnings import warn
 from reV.SAM.generation import (
     PV, CSP, LandBasedWind, OffshoreWind, SolarWaterHeat, TroughPhysicalHeat,
     LinearDirectSteam
-)
+from reV.SAM.version_checker import PySamVersionChecker
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import SpawnProcessPool
 from reV.handlers.outputs import Outputs
@@ -279,6 +279,7 @@ class Gen:
         self._out_n_sites = 0
         self._out_chunk = ()
         self._init_out_arrays()
+        self._check_sam_version_inputs()
 
         # initialize output file
         self._init_fpath()
@@ -540,6 +541,12 @@ class Gen:
 
             # initialize the output request as an array of zeros
             self._out[request] = np.zeros(shape, dtype=dtype)
+
+    def _check_sam_version_inputs(self):
+        """Check the PySAM version and input keys. Fix where necessary."""
+        for key, parameters in self.project_points.sam_configs.items():
+            updated = PySamVersionChecker.run(self.tech, parameters)
+            self._points_control.project_points.sam_configs[key] = updated
 
     @property
     def output_request(self):
