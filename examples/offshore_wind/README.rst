@@ -1,4 +1,3 @@
-.. _offshore_wind
 reV Offshore Wind Execution
 ===========================
 

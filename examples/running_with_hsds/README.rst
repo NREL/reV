@@ -1,4 +1,3 @@
-.. _hsds
 Using HSDS
 ==========
 

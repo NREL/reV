@@ -1,4 +1,3 @@
-.. _pipeline_execution
 Full reV Pipeline Execution
 ===========================
 

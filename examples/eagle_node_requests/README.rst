@@ -1,4 +1,3 @@
-.. _eagle_module
 reV Eagle Node Requests
 =======================
 

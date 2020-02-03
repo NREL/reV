@@ -1,4 +1,3 @@
-.. _batched_execution
 reV Parameter Batching
 ======================
 

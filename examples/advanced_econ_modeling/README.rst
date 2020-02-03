@@ -1,4 +1,3 @@
-.. _single_owner
 reV Spatial Economics with SAM Single Owner Model
 =================================================
 

@@ -1,4 +1,3 @@
-.. _rev_modules
 reV Single-Module Execution
 ===========================
 
