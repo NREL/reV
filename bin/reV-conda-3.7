@@ -44,7 +44,7 @@ prepend-path PATH       $PKG_ROOT
 prepend-path PYTHONPATH $PKG_ROOT
 
 if { [module-info mode load] || [module-info mode switch2] } {
-    system "source activate /shared-projects/rev/modulefiles/conda_env;"
+    system "conda activate /shared-projects/rev/modulefiles/conda_env;"
 } elseif { [module-info mode remove] && ![module-info mode switch3] } {
-    system "source deactivate;"
+    system "conda deactivate;"
 }
