@@ -21,7 +21,9 @@ class Resource:
 
     Examples
     --------
+
     Extracting the resource's Datetime Index
+
     >>> file = '$TESTDATADIR/nsrdb/ri_100_nsrdb_2012.h5'
     >>> with Resource(file) as res:
     >>>     ti = res.time_index
@@ -41,6 +43,7 @@ class Resource:
                   dtype='datetime64[ns]', length=17568, freq=None)
 
     Efficient slicing of the Datetime Index
+
     >>> with Resource(file) as res:
     >>>     ti = res['time_index', 1]
     >>>
@@ -68,6 +71,7 @@ class Resource:
                   dtype='datetime64[ns]', freq=None)
 
     Extracting resource's site metadata
+
     >>> with Resource(file) as res:
     >>>     meta = res.meta
     >>>
@@ -87,6 +91,7 @@ class Resource:
     [100 rows x 10 columns]
 
     Efficient slicing of the metadata
+
     >>> with Resource(file) as res:
     >>>     meta = res['meta', 1]
     >>>
@@ -141,6 +146,7 @@ class Resource:
     [100 rows x 2 columns]
 
     Extracting resource variables (datasets)
+
     >>> with Resource(file) as res:
     >>>     wspd = res['wind_speed']
     >>>
@@ -154,6 +160,7 @@ class Resource:
      [15. 15. 15. ... 15. 15. 15.]]
 
     Efficient slicing of variables
+
     >>> with Resource(file) as res:
     >>>     wspd = res['wind_speed', :2]
     >>>
