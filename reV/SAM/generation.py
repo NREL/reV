@@ -4,6 +4,7 @@
 Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
+import json
 import copy
 import os
 import logging
@@ -554,7 +555,15 @@ class PV(Solar):
             res_file = os.path.join(
                 DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            self._default = pysam_pv.default('PVWattsNone')
+            config_file = os.path.join(DEFAULTSDIR, 'SAM/i_pvwatts.json')
+            with open(config_file, 'r') as f:
+                config = json.load(f)
+            self._default = pysam_pv.new()
+            for k, v in config.items():
+                group = self._get_group(k, outputs=False)
+                if group:
+                    setattr(getattr(self._default, group), k, v)
+            self._default.AdjustmentFactors.constant = 0.0
             self._default.SolarResource.solar_resource_file = res_file
             self._default.execute()
 
