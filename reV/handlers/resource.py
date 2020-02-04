@@ -18,6 +18,170 @@ from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
 class Resource:
     """
     Base class to handle resource .h5 files
+
+    Examples
+    --------
+    Extracting the resource's Datetime Index
+    >>> file = '$TESTDATADIR/nsrdb/ri_100_nsrdb_2012.h5'
+    >>> with Resource(file) as res:
+    >>>     ti = res.time_index
+    >>>
+    >>> ti
+    DatetimeIndex(['2012-01-01 00:00:00', '2012-01-01 00:30:00',
+                   '2012-01-01 01:00:00', '2012-01-01 01:30:00',
+                   '2012-01-01 02:00:00', '2012-01-01 02:30:00',
+                   '2012-01-01 03:00:00', '2012-01-01 03:30:00',
+                   '2012-01-01 04:00:00', '2012-01-01 04:30:00',
+                   ...
+                   '2012-12-31 19:00:00', '2012-12-31 19:30:00',
+                   '2012-12-31 20:00:00', '2012-12-31 20:30:00',
+                   '2012-12-31 21:00:00', '2012-12-31 21:30:00',
+                   '2012-12-31 22:00:00', '2012-12-31 22:30:00',
+                   '2012-12-31 23:00:00', '2012-12-31 23:30:00'],
+                  dtype='datetime64[ns]', length=17568, freq=None)
+
+    Efficient slicing of the Datetime Index
+    >>> with Resource(file) as res:
+    >>>     ti = res['time_index', 1]
+    >>>
+    >>> ti
+    2012-01-01 00:30:00
+
+    >>> with Resource(file) as res:
+    >>>     ti = res['time_index', :10]
+    >>>
+    >>> ti
+    DatetimeIndex(['2012-01-01 00:00:00', '2012-01-01 00:30:00',
+                   '2012-01-01 01:00:00', '2012-01-01 01:30:00',
+                   '2012-01-01 02:00:00', '2012-01-01 02:30:00',
+                   '2012-01-01 03:00:00', '2012-01-01 03:30:00',
+                   '2012-01-01 04:00:00', '2012-01-01 04:30:00'],
+                  dtype='datetime64[ns]', freq=None)
+
+    >>> with Resource(file) as res:
+    >>>     ti = res['time_index', [1, 2, 4, 8, 9]
+    >>>
+    >>> ti
+    DatetimeIndex(['2012-01-01 00:30:00', '2012-01-01 01:00:00',
+                   '2012-01-01 02:00:00', '2012-01-01 04:00:00',
+                   '2012-01-01 04:30:00'],
+                  dtype='datetime64[ns]', freq=None)
+
+    Extracting resource's site metadata
+    >>> with Resource(file) as res:
+    >>>     meta = res.meta
+    >>>
+    >>> meta
+            latitude  longitude   elevation  timezone    country ...
+    0      41.29     -71.86    0.000000        -5           None ...
+    1      41.29     -71.82    0.000000        -5           None ...
+    2      41.25     -71.82    0.000000        -5           None ...
+    3      41.33     -71.82   15.263158        -5  United States ...
+    4      41.37     -71.82   25.360000        -5  United States ...
+    ..       ...        ...         ...       ...            ... ...
+    95     41.25     -71.66    0.000000        -5           None ...
+    96     41.89     -71.66  153.720000        -5  United States ...
+    97     41.45     -71.66   35.440000        -5  United States ...
+    98     41.61     -71.66  140.200000        -5  United States ...
+    99     41.41     -71.66   35.160000        -5  United States ...
+    [100 rows x 10 columns]
+
+    Efficient slicing of the metadata
+    >>> with Resource(file) as res:
+    >>>     meta = res['meta', 1]
+    >>>
+    >>> meta
+       latitude  longitude  elevation  timezone country state county urban ...
+    1     41.29     -71.82        0.0        -5    None  None   None  None ...
+
+    >>> with Resource(file) as res:
+    >>>     meta = res['meta', :5]
+    >>>
+    >>> meta
+       latitude  longitude  elevation  timezone        country ...
+    0     41.29     -71.86   0.000000        -5           None ...
+    1     41.29     -71.82   0.000000        -5           None ...
+    2     41.25     -71.82   0.000000        -5           None ...
+    3     41.33     -71.82  15.263158        -5  United States ...
+    4     41.37     -71.82  25.360000        -5  United States ...
+
+    >>> with Resource(file) as res:
+    >>>     tz = res['meta', :, 'timezone']
+    >>>
+    >>> tz
+    0    -5
+    1    -5
+    2    -5
+    3    -5
+    4    -5
+         ..
+    95   -5
+    96   -5
+    97   -5
+    98   -5
+    99   -5
+    Name: timezone, Length: 100, dtype: int64
+
+    >>> with Resource(file) as res:
+    >>>     lat_lon = res['meta', :, ['latitude', 'longitude']]
+    >>>
+    >>> lat_lon
+        latitude  longitude
+    0      41.29     -71.86
+    1      41.29     -71.82
+    2      41.25     -71.82
+    3      41.33     -71.82
+    4      41.37     -71.82
+    ..       ...        ...
+    95     41.25     -71.66
+    96     41.89     -71.66
+    97     41.45     -71.66
+    98     41.61     -71.66
+    99     41.41     -71.66
+    [100 rows x 2 columns]
+
+    Extracting resource variables (datasets)
+    >>> with Resource(file) as res:
+    >>>     wspd = res['wind_speed']
+    >>>
+    >>> wspd
+    [[12. 12. 12. ... 12. 12. 12.]
+     [12. 12. 12. ... 12. 12. 12.]
+     [12. 12. 12. ... 12. 12. 12.]
+     ...
+     [14. 14. 14. ... 14. 14. 14.]
+     [15. 15. 15. ... 15. 15. 15.]
+     [15. 15. 15. ... 15. 15. 15.]]
+
+    Efficient slicing of variables
+    >>> with Resource(file) as res:
+    >>>     wspd = res['wind_speed', :2]
+    >>>
+    >>> wspd
+    [[12. 12. 12. 12. 12. 12. 53. 53. 53. 53. 53. 12. 53.  1.  1. 12. 12. 12.
+       1.  1. 12. 53. 53. 53. 12. 12. 12. 12. 12.  1. 12. 12.  1. 12. 12. 53.
+      12. 53.  1. 12.  1. 53. 53. 12. 12. 12. 12.  1.  1.  1. 12. 12.  1.  1.
+      12. 12. 53. 53. 53. 12. 12. 53. 53. 12. 12. 12. 12. 12. 12.  1. 53.  1.
+      53. 12. 12. 53. 53.  1.  1.  1. 53. 12.  1.  1. 53. 53. 53. 12. 12. 12.
+      12. 12. 12. 12.  1. 12.  1. 12. 12. 12.]
+     [12. 12. 12. 12. 12. 12. 53. 53. 53. 53. 53. 12. 53.  1.  1. 12. 12. 12.
+       1.  1. 12. 53. 53. 53. 12. 12. 12. 12. 12.  1. 12. 12.  1. 12. 12. 53.
+      12. 53.  1. 12.  1. 53. 53. 12. 12. 12. 12.  1.  1.  1. 12. 12.  1.  1.
+      12. 12. 53. 53. 53. 12. 12. 53. 53. 12. 12. 12. 12. 12. 12.  1. 53.  1.
+      53. 12. 12. 53. 53.  1.  1.  1. 53. 12.  1.  1. 53. 53. 53. 12. 12. 12.
+      12. 12. 12. 12.  1. 12.  1. 12. 12. 12.]]
+
+    >>> with Resource(file) as res:
+    >>>     wspd = res['wind_speed', :, [2, 3]]
+    >>>
+    >>> wspd
+    [[12. 12.]
+     [12. 12.]
+     [12. 12.]
+     ...
+     [14. 14.]
+     [15. 15.]
+     [15. 15.]]
     """
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
@@ -341,15 +505,6 @@ class Resource:
         """
         Extract and convert time_index to pandas Datetime Index
 
-        Examples
-        --------
-        self['time_index', 1]
-            - Get a single timestep This returns a Timestamp
-        self['time_index', :10]
-            - Get the first 10 timesteps
-        self['time_index', [1, 3, 5, 7, 9]]
-            - Get a list of timesteps
-
         Parameters
         ----------
         ds : str
@@ -369,19 +524,6 @@ class Resource:
     def _get_meta(self, ds, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
-
-        Examples
-        --------
-        self['meta', 1]
-            - Get site 1
-        self['meta', :10]
-            - Get the first 10 sites
-        self['meta', [1, 3, 5, 7, 9]]
-            - Get the first 5 odd numbered sites
-        self['meta', :, 'timezone']
-            - Get timezone for all sites
-        self['meta', :, ['latitude', 'longitdue']]
-            - Get ('latitude', 'longitude') for all sites
 
         Parameters
         ----------
@@ -408,11 +550,11 @@ class Resource:
                 sites = list(range(len(meta)))
 
         meta = pd.DataFrame(meta, index=sites)
-        if len(ds_slice) == 2:
-            meta = meta[ds_slice[1]]
-
         if self._str_decode:
             meta = self.df_str_decode(meta)
+
+        if len(ds_slice) == 2:
+            meta = meta[ds_slice[1]]
 
         return meta
 
@@ -492,16 +634,6 @@ class Resource:
     def _get_ds(self, ds_name, *ds_slice):
         """
         Extract data from given dataset
-
-        Examples
-        --------
-        self['dni', :, 1]
-            - Get 'dni'timeseries for site 1
-        self['dni', ::2, :]
-            - Get hourly 'dni' timeseries for all sites (NSRDB)
-        self['windspeed_100m', :, [1, 3, 5, 7, 9]]
-            - Get 'windspeed_100m' timeseries for select sites
-
 
         Parameters
         ----------
