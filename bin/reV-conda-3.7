@@ -21,7 +21,7 @@ set PKG_VERSION   0.1.0
 
 # Path to the top-level package install location.
 # Other enviro/path variable values constructed from this
-set PKG_ROOT     /projects/rev/modulefiles/gitrepos/reV
+set PKG_ROOT     /shared-projects/rev/modulefiles/gitrepos/reV
 ######################################################################
 
 
@@ -42,7 +42,7 @@ module-whatis "$PKG_NAME: NSRDB handler using reVX $PKG_VERSION"
 
 
 if { [module-info mode load] || [module-info mode switch2] } {
-    system "source activate /projects/rev/modulefiles/conda_env;"
+    system "source activate /shared-projects/rev/modulefiles/conda_env;"
 } elseif { [module-info mode remove] && ![module-info mode switch3] } {
     system "source deactivate;"
 }
