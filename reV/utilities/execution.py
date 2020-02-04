@@ -519,12 +519,17 @@ class SLURM(SubprocessManager):
 
             env_str = ''
             if module is not None:
-                env_str = ("module use {}"
-                           "\nmodule load {}".format(module_root, module))
-                env_str = "{env_str}\necho {env_str}".format(env_str=env_str)
+                env_str = ("echo module use {module_root}\n"
+                           "module use {module_root}\n"
+                           "echo module load {module}\n"
+                           "module load {module}\n"
+                           "echo module load complete!\n"
+                           .format(module_root=module_root, module=module))
             elif conda_env is not None:
-                env_str = "source activate {}".format(conda_env)
-                env_str = "{env_str}\necho {env_str}".format(env_str=env_str)
+                env_str = ("echo source activate {conda_env}\n"
+                           "source activate {conda_env}\n"
+                           "echo conda env activate complete!\n"
+                           .format(conda_env=conda_env))
 
             fname = '{}.sh'.format(name)
             script = ('#!/bin/bash\n'
