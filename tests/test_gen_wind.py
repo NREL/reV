@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: skip-file
 """
-PyTest file for PV generation in Rhode Island.
+PyTest file for Wind generation in Rhode Island.
 
 Created on Thu Nov 29 09:54:51 2018
 
