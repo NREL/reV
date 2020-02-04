@@ -548,7 +548,8 @@ class Gen:
         """Check the PySAM version and input keys. Fix where necessary."""
         for key, parameters in self.project_points.sam_configs.items():
             updated = PySamVersionChecker.run(self.tech, parameters)
-            self._points_control.project_points.sam_configs[key] = updated
+            sam_obj = self._points_control._project_points._sam_config_obj
+            sam_obj._inputs[key] = updated
 
     @property
     def output_request(self):
@@ -838,11 +839,12 @@ class Gen:
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
-        sam_files : dict | str | list
-            Dict contains SAM input configuration ID(s) and file path(s).
-            Keys are the SAM config ID(s), top level value is the SAM path.
-            Can also be a single config file str. If it's a list, it is mapped
-            to the sorted list of unique configs requested by points csv.
+        sam_files : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
         tech : str
             Technology to analyze (pv, csp, landbasedwind, offshorewind,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
@@ -1369,11 +1371,12 @@ class Gen:
         points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.
-        sam_files : dict | str | list
-            Dict contains SAM input configuration ID(s) and file path(s).
-            Keys are the SAM config ID(s), top level value is the SAM path.
-            Can also be a single config file str. If it's a list, it is mapped
-            to the sorted list of unique configs requested by points csv.
+        sam_files : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
             or /h5_dir/prefix*suffix
