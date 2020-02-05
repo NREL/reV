@@ -40,7 +40,6 @@ proc ModulesHelp { } {
 
 module-whatis "$PKG_NAME: NSRDB handler using reVX $PKG_VERSION"
 
-prepend-path PATH       $PKG_ROOT
 prepend-path PYTHONPATH $PKG_ROOT
 
 if { [module-info mode load] || [module-info mode switch2] } {
