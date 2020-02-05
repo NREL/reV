@@ -12,12 +12,12 @@ from warnings import warn
 
 from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.utilities.execution import execute_single
+from reV.utilities.execution import execute_single, SpawnProcessPool
 from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       ParallelExecutionWarning)
-from concurrent.futures import ProcessPoolExecutor, TimeoutError
+from concurrent.futures import TimeoutError
 from reV.utilities.utilities import check_res_file
 
 
@@ -1108,7 +1108,7 @@ class Gen:
             failed_futures = False
             chunks = {}
             futures = []
-            with ProcessPoolExecutor(max_workers=max_workers) as exe:
+            with SpawnProcessPool(max_workers=max_workers) as exe:
                 for pc in pc_chunk:
                     future = exe.submit(self.run, pc, **kwargs)
                     futures.append(future)

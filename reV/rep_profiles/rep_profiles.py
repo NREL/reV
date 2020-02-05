@@ -5,8 +5,7 @@ Created on Thu Oct 31 12:49:23 2019
 
 @author: gbuster
 """
-from concurrent.futures import ProcessPoolExecutor, as_completed
-import multiprocessing as mpl
+from concurrent.futures import as_completed
 from copy import deepcopy
 import json
 import pandas as pd
@@ -16,6 +15,7 @@ import logging
 
 from reV.handlers.resource import Resource
 from reV.handlers.outputs import Outputs
+from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import FileInputError
 from reV.utilities.utilities import parse_year
 from reV.utilities.loggers import log_mem
@@ -762,9 +762,7 @@ class RepProfiles:
         for iter_chunk in iter_chunks:
             logger.debug('Starting process pool...')
             futures = {}
-            mp_context = mpl.get_context('spawn')
-            with ProcessPoolExecutor(mp_context=mp_context,
-                                     max_workers=max_workers) as exe:
+            with SpawnProcessPool(max_workers=max_workers) as exe:
                 for i in iter_chunk:
                     row = self.meta.loc[i, :]
                     region_dict = {k: v for (k, v) in row.to_dict().items()

@@ -5,7 +5,7 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
-import concurrent.futures as cf
+from concurrent.futures import as_completed
 import os
 import h5py
 import numpy as np
@@ -19,6 +19,7 @@ from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
+from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       InputWarning)
@@ -588,7 +589,7 @@ class Aggregation:
         futures = []
         summary = []
 
-        with cf.ProcessPoolExecutor(max_workers=self._max_workers) as executor:
+        with SpawnProcessPool(max_workers=self._max_workers) as executor:
 
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
@@ -608,7 +609,7 @@ class Aggregation:
                     gids=gid_set, args=args, ex_area=ex_area, close=close))
 
             # gather results
-            for future in cf.as_completed(futures):
+            for future in as_completed(futures):
                 n_finished += 1
                 logger.info('Parallel aggregation futures collected: '
                             '{} out of {}'

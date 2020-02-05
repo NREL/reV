@@ -9,7 +9,7 @@ Created on Fri Jun 21 16:05:47 2019
 @author: gbuster
 """
 import h5py
-import concurrent.futures as cf
+from concurrent.futures import as_completed
 import numpy as np
 import os
 from scipy.spatial import cKDTree
@@ -18,6 +18,7 @@ from warnings import warn
 
 from reV.handlers.resource import Resource
 from reV.supply_curve.points import SupplyCurveExtent
+from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import FileInputWarning, FileInputError
 
 
@@ -227,7 +228,7 @@ class TechMapping:
 
         n_finished = 0
         futures = {}
-        with cf.ProcessPoolExecutor(max_workers=self._max_workers) as executor:
+        with SpawnProcessPool(max_workers=self._max_workers) as executor:
 
             # iterate through split executions, submitting each to worker
             for i, gid_set in enumerate(gid_chunks):
@@ -239,7 +240,7 @@ class TechMapping:
                                         self.distance_upper_bound,
                                         self._map_chunk)] = i
 
-            for future in cf.as_completed(futures):
+            for future in as_completed(futures):
                 n_finished += 1
                 logger.info('Parallel TechMapping futures collected: '
                             '{} out of {}'

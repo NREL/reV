@@ -2,6 +2,7 @@
 """
 Execution utilities.
 """
+import multiprocessing
 import concurrent.futures as cf
 from subprocess import call, Popen, PIPE
 import logging
@@ -13,7 +14,8 @@ import getpass
 import shlex
 from warnings import warn
 
-from reV.utilities.exceptions import ExecutionError, SlurmWarning
+from reV.utilities.exceptions import (ExecutionError, SlurmWarning,
+                                      ParallelExecutionWarning)
 
 
 logger = logging.getLogger(__name__)
@@ -528,6 +530,22 @@ class SLURM(SubprocessManager):
         return out, err
 
 
+class SpawnProcessPool(cf.ProcessPoolExecutor):
+    """An adaptation of concurrent futures ProcessPoolExecutor with
+    spawn processes instead of fork or forkserver."""
+
+    def __init__(self, *args, **kwargs):
+        if 'mp_context' in kwargs:
+            w = ('SpawnProcessPool being initialized with mp_context: "{}". '
+                 'This will override default SpawnProcessPool behavior.'
+                 .format(kwargs['mp_context']))
+            logger.warning(w)
+            warn(w, ParallelExecutionWarning)
+        else:
+            kwargs['mp_context'] = multiprocessing.get_context('spawn')
+        super().__init__(*args, **kwargs)
+
+
 def execute_parallel(fun, execution_iter, n_workers=None, **kwargs):
     """Execute concurrent futures with an established cluster.
 
@@ -550,7 +568,7 @@ def execute_parallel(fun, execution_iter, n_workers=None, **kwargs):
     """
     futures = []
     # initialize a client based on the input cluster.
-    with cf.ProcessPoolExecutor(max_workers=n_workers) as executor:
+    with SpawnProcessPool(max_workers=n_workers) as executor:
 
         # iterate through split executions, submitting each to worker
         for i, exec_slice in enumerate(execution_iter):
@@ -755,7 +773,7 @@ class SmartParallelJob:
         log_mem()
 
         # initialize a client based on the input cluster.
-        with cf.ProcessPoolExecutor(max_workers=self.n_workers) as executor:
+        with SpawnProcessPool(max_workers=self.n_workers) as executor:
             futures = []
 
             # iterate through split executions, submitting each to worker
