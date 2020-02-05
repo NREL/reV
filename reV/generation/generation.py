@@ -10,7 +10,10 @@ import sys
 import psutil
 from warnings import warn
 
-from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
+from reV.SAM.generation import (
+    PV, CSP, LandBasedWind, OffshoreWind, SolarWaterHeat, TroughPhysicalHeat,
+    LinearDirectSteam
+)
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import SpawnProcessPool
 from reV.handlers.outputs import Outputs
@@ -30,6 +33,9 @@ class Gen:
     # Mapping of reV technology strings to SAM generation objects
     OPTIONS = {'pv': PV,
                'csp': CSP,
+               'solarwaterheat': SolarWaterHeat,
+               'troughphysicalheat': TroughPhysicalHeat,
+               'lineardirectsteam': LinearDirectSteam,
                'wind': LandBasedWind,
                'windpower': LandBasedWind,
                'landbasedwind': LandBasedWind,
@@ -97,9 +103,79 @@ class Gen:
                  'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
-                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
+                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/mwh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
+                 # TODO - are these scaling factors and dtypes correct?
+                 # Solar water heater
+                 'T_amb': {'scale_factor': 1, 'units': 'C',
+                           'dtype': 'float32', 'chunks': None,
+                           'type': 'array'},
+                 'T_cold': {'scale_factor': 1, 'units': 'C',
+                            'dtype': 'float32', 'chunks': None,
+                            'type': 'array'},
+                 'T_deliv': {'scale_factor': 1, 'units': 'C',
+                             'dtype': 'float32', 'chunks': None,
+                             'type': 'array'},
+                 'T_hot': {'scale_factor': 1, 'units': 'C',
+                           'dtype': 'float32', 'chunks': None,
+                           'type': 'array'},
+                 'T_tank': {'scale_factor': 1, 'units': 'C',
+                            'dtype': 'float32', 'chunks': None,
+                            'type': 'array'},
+                 'draw': {'scale_factor': 1, 'units': 'kg/hr',
+                          'dtype': 'float32', 'chunks': None,
+                          'type': 'array'},
+                 'beam': {'scale_factor': 1, 'units': 'W/m2',
+                          'dtype': 'float32', 'chunks': None,
+                          'type': 'array'},
+                 'Q_deliv': {'scale_factor': 1, 'units': 'kW',
+                             'dtype': 'float32', 'chunks': None,
+                             'type': 'array'},
+                 # Linear Fresnel
+                 'q_dot_to_heat_sink': {'scale_factor': 1, 'units': 'MWt',
+                                        'dtype': 'float32', 'chunks': None,
+                                        'type': 'array'},
+                 'gen': {'scale_factor': 1, 'units': 'kW',
+                         'dtype': 'float32', 'chunks': None,
+                         'type': 'array'},
+                 'm_dot_field': {'scale_factor': 1, 'units': 'kg/s',
+                                 'dtype': 'float32', 'chunks': None,
+                                 'type': 'array'},
+                 'q_dot_sf_out': {'scale_factor': 1, 'units': 'MWt',
+                                  'dtype': 'float32', 'chunks': None,
+                                  'type': 'array'},
+                 'W_dot_heat_sink_pump': {'scale_factor': 1, 'units': 'MWe',
+                                          'dtype': 'float32', 'chunks': None,
+                                          'type': 'array'},
+                 'm_dot_loop': {'scale_factor': 1, 'units': 'kg/s',
+                                'dtype': 'float32', 'chunks': None,
+                                'type': 'array'},
+                 'q_dot_rec_inc': {'scale_factor': 1, 'units': 'MWt',
+                                   'dtype': 'float32', 'chunks': None,
+                                   'type': 'array'},
+                 # Trough physical process heat
+                 'T_field_cold_in': {'scale_factor': 1, 'units': 'C',
+                                     'dtype': 'float32', 'chunks': None,
+                                     'type': 'array'},
+                 'T_field_hot_out': {'scale_factor': 1, 'units': 'C',
+                                     'dtype': 'float32', 'chunks': None,
+                                     'type': 'array'},
+                 'm_dot_field_delivered': {'scale_factor': 1, 'units': 'kg/s',
+                                           'dtype': 'float32', 'chunks': None,
+                                           'type': 'array'},
+                 'm_dot_field_recirc': {'scale_factor': 1, 'units': 'kg/s',
+                                        'dtype': 'float32', 'chunks': None,
+                                        'type': 'array'},
+                 'q_dot_htf_sf_out': {'scale_factor': 1, 'units': 'MWt',
+                                      'dtype': 'float32', 'chunks': None,
+                                      'type': 'array'},
+                 'qinc_costh': {'scale_factor': 1, 'units': 'MWt',
+                                'dtype': 'float32', 'chunks': None,
+                                'type': 'array'},
+                 'dni_costh': {'scale_factor': 1, 'units': 'W/m2',
+                               'dtype': 'float32', 'chunks': None,
+                               'type': 'array'},
                  }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
@@ -1016,6 +1092,7 @@ class Gen:
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
             scale_outputs=True, downscale=None):
+        # TODO - more tech options are available now, update
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters

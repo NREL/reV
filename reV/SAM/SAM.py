@@ -231,6 +231,8 @@ class RevPySAM:
 
     def __init__(self):
         self._pysam = self.PYSAM.new()
+        # self._pysam = self.PYSAM.default('PhysicalTroughIPHNone')
+        # self._pysam = self.PYSAM.default('DSGLIPHNone')
         self._attr_dict = None
         self._default = None
         self._inputs = []
@@ -447,6 +449,9 @@ class SAM(RevPySAM):
     # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
     RESOURCE_TYPES = {'pv': SolarResource, 'pvwattsv5': SolarResource,
                       'csp': SolarResource, 'tcsmolten_salt': SolarResource,
+                      'solarwaterheat': SolarResource,
+                      'troughphysicalheat': SolarResource,
+                      'lineardirectsteam': SolarResource,
                       'wind': WindResource, 'landbasedwind': WindResource,
                       'offshorewind': WindResource, 'windpower': WindResource,
                       }

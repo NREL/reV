@@ -13,6 +13,9 @@ from warnings import warn
 import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Windpower as pysam_wind
 import PySAM.TcsmoltenSalt as pysam_csp
+import PySAM.Swh as pysam_swh
+import PySAM.TroughPhysicalProcessHeat as pysam_tpph
+import PySAM.LinearFresnelDsgIph as pysam_lfdi
 
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
@@ -284,7 +287,6 @@ class Generation(SAM):
             the second level key is the variable name, second level value is
             the output variable value.
         """
-
         # initialize output dictionary
         out = {}
 
@@ -618,10 +620,210 @@ class CSP(Solar):
             res_file = os.path.join(
                 DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            # TODO - should pysam_csp be self.PYSAM? (general)
             self._default = pysam_csp.default('MSPTSingleOwner')
             self._default.LocationAndResource.solar_resource_file = res_file
             self._default.execute()
         return self._default
+
+
+class SolarThermal(Solar):
+    """ Base class for solar thermal """
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None):
+        """Initialize a SAM solar water heating object.
+
+        """
+        self.timezone = None
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request)
+
+    def set_nsrdb(self, resource):
+        """
+        Set NSRDB resource file. Overloads Solar.set_nsrdb(). Solar thermal
+        PySAM models require a data file, not raw data.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have var_list.
+        """
+        self.time_interval = self.get_time_interval(resource.index.values)
+        # Create solar resource file
+        self._pysam_w_fname = self._create_pysam_wfile(self._meta, resource)
+        # pylint: disable=E1101
+        self[self._pysam_weather_tag] = self._pysam_w_fname
+
+    def _create_pysam_wfile(self, meta, resource, drop_leap=True):
+        """
+        Create PySAM weather input file.
+
+        Parameters
+        ----------
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have var_list.
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
+        """
+        fname = f'{self._site}_weather.csv'
+        logger.debug(f'Creating PySAM weather data file: {fname}')
+
+        # Process metadata
+        m = pd.DataFrame(meta).T
+        self.timezone = m.timezone
+        m['Source'] = 'NSRDB'
+        m['Location ID'] = meta.name
+        m['City'] = '-'
+        m['State'] = m.state.apply(lambda x: '-' if x == 'None' else x)
+        m['Country'] = m.country.apply(lambda x: '-' if x == 'None' else x)
+        m['Latitude'] = m.latitude
+        m['Longitude'] = m.longitude
+        m['Time Zone'] = m.timezone
+        m['Elevation'] = m.elevation
+        m['Local Time Zone'] = m.timezone
+        m['Local Time Zone'] = m.timezone
+        m['Dew Point Units'] = 'c'
+        m['DHI Units'] = 'w/m2'
+        m['DNI Units'] = 'w/m2'
+        # m['GHI Units'] = 'w/m2'
+        m['Temperature Units'] = 'c'
+        m['Pressure Units'] = 'mbar'
+        # m['Wind Direction Units'] = 'Degrees'
+        m['Wind Speed'] = 'm/s'
+        # m['Surface Albedo Units'] = 'N/A'
+        # m['Version'] = 'v3.0.1'
+        m = m.drop(['elevation', 'timezone', 'country', 'state', 'county',
+                    'urban', 'population', 'landcover', 'latitude',
+                    'longitude'], axis=1)
+        m.to_csv(fname, index=False, mode='w')
+
+        # Process data
+        df = resource.copy()
+        df['dt'] = df.index
+
+        # Drop days for leap year before adjusting timezone
+        if df.dt.dt.is_leap_year.all():
+            if drop_leap:
+                df = df[~((df.dt.dt.month == 2) & (df.dt.dt.day == 29))]
+            else:
+                df = df[~((df.dt.dt.month == 12) & (df.dt.dt.day == 31))]
+
+        # Adjust from UTC to local time
+        rolled = np.roll(df.to_numpy(), self.timezone * self.time_interval,
+                         axis=0)
+        df = pd.DataFrame(rolled, columns=df.columns, index=df.index)
+
+        df['DT_UTC'] = df.dt
+        df['dt'] = df.index
+        df['Year'] = df.dt.dt.year
+        df['Month'] = df.dt.dt.month
+        df['Day'] = df.dt.dt.day
+        df['Hour'] = df.dt.dt.hour
+        df['Minute'] = df.dt.dt.minute
+        df['DNI'] = df.dni
+        df['DHI'] = df.dhi
+        df['Dew Point'] = df.dew_point
+        df['Temperature'] = df.air_temperature
+        df['Pressure'] = df.surface_pressure
+        df['Wind Speed'] = df.wind_speed
+        df = df.drop(['dt', 'dni', 'dhi', 'wind_speed', 'air_temperature',
+                      'dew_point', 'surface_pressure'], axis=1)
+        df.to_csv(fname, index=False, mode='a')
+        assert df.shape[0] == 8760 * 2
+
+        return fname
+
+    def _gen_exec(self, delete_wfile=True):
+        """
+        Run SAM generation with possibility for follow on econ analysis.
+
+        Parameters
+        ----------
+        delete_wfile : bool
+            Delete PySAM weather file after processing is complete
+        """
+        super()._gen_exec()
+
+        if delete_wfile:
+            logger.debug('Removing PySAM weather file')
+            os.remove(self._pysam_w_fname)
+
+
+class SolarWaterHeat(SolarThermal):
+    """
+    Solar Water Heating generation
+    """
+    MODULE = 'solarwaterheat'
+    PYSAM = pysam_swh
+
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None):
+        """Initialize a SAM solar water heating object.
+        """
+        self._pysam_weather_tag = 'solar_resource_file'
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request)
+
+
+class TroughPhysicalHeat(SolarThermal):
+    """
+    Trough Physical Process Heat generation
+    """
+    MODULE = 'troughphysicalheat'
+    PYSAM = pysam_tpph
+
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None):
+        """Initialize a SAM trough physical process heat object.
+        """
+        self._pysam_weather_tag = 'file_name'
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request)
+
+    def cf_mean(self):
+        """Get mean capacity factor (fractional) from SAM.
+
+        Returns
+        -------
+        output : float
+            Mean capacity factor (fractional).
+        """
+        # TODO - fix this!
+        logger.warning(f'cf_main was requested for {self.__class__.__name__},'
+                       ' ignoring.')
+        return -1
+
+
+class LinearDirectSteam(SolarThermal):
+    """
+    Process heat linear direct steam generation
+    """
+    MODULE = 'lineardirectsteam'
+    PYSAM = pysam_lfdi
+
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None):
+        """Initialize a SAM process heat liner direct steam object.
+        """
+        self._pysam_weather_tag = 'file_name'
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request)
+
+    def cf_mean(self):
+        """Get mean capacity factor (fractional) from SAM.
+
+        Returns
+        -------
+        output : float
+            Mean capacity factor (fractional).
+        """
+        # TODO - fix this!
+        logger.warning(f'cf_main was requested for {self.__class__.__name__},'
+                       ' ignoring.')
+        return -1
 
 
 class Wind(Generation):
@@ -728,6 +930,7 @@ class Wind(Generation):
                 DEFAULTSDIR, 'SAM/WY Southern-Flat Lands.csv')
             self._default = pysam_wind.default('WindPowerNone')
             self._default.WindResourceFile.wind_resource_filename = res_file
+            # self._default.wind_resource_filename = res_file
             self._default.execute()
         return self._default
 

@@ -73,7 +73,19 @@ class SAMResource:
             self._tech = 'pv'
         elif project_points.tech.lower() == 'csp':
             self._tech = 'csp'
-        else:
+        elif project_points.tech.lower() == 'solarwaterheat':
+            # raise NotImplementedError('This is not implemented yet')
+            # TODO - update below line!
+            self._tech = 'csp'
+        elif project_points.tech.lower() == 'troughphysicalheat':
+            # raise NotImplementedError('This is not implemented yet')
+            # TODO - update below line!
+            self._tech = 'csp'
+        elif project_points.tech.lower() == 'lineardirectsteam':
+            # raise NotImplementedError('This is not implemented yet')
+            # TODO - update below line!
+            self._tech = 'csp'
+        elif 'wind' in project_points.tech.lower():
             # hub height specified, get WTK wind data.
             self._tech = 'wind'
             if isinstance(h, (list, np.ndarray)):
@@ -83,6 +95,9 @@ class SAMResource:
             if not require_wind_dir:
                 self._res_arrays['winddirection'] = np.zeros(self._shape,
                                                              dtype='float32')
+        else:
+            raise HandlerValueError(f'Selected tech {project_points.tech} is' +
+                                    ' not valid.')
 
         self._h = h
 
