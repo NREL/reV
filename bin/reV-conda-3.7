@@ -49,7 +49,7 @@ set ENV_ROOT    /shared-projects/rev/modulefiles/conda_env
 prepend-path PATH $ENV_ROOT
 
 if { [module-info mode load] || [module-info mode switch2] } {
-    system "source activate $ENV_ROOT || conda activate $ENV_ROOT;"
+    system "conda activate $ENV_ROOT || source activate $ENV_ROOT;"
 } elseif { [module-info mode remove] && ![module-info mode switch3] } {
-    system "source deactivate || conda deactivate;"
+    system "conda deactivate || source deactivate;"
 }
