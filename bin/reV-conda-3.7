@@ -47,6 +47,7 @@ prepend-path PYTHONPATH $PKG_ROOT
 set ENV_ROOT    /shared-projects/rev/modulefiles/conda_env
 
 prepend-path PATH $ENV_ROOT
+prepend-path PYTHONPATH $ENV_ROOT
 
 if { [module-info mode load] || [module-info mode switch2] } {
     system "source activate $ENV_ROOT || conda activate $ENV_ROOT;"
