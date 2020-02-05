@@ -6,6 +6,7 @@
 module purge
 module load conda
 
+
 # NOTE:
 #    the tags 'pkg_name', 'pkg_version', 'pkg_prefix',
 #    'pkg_root' and 'pkg_libname' would be replaced by the
@@ -40,10 +41,15 @@ proc ModulesHelp { } {
 
 module-whatis "$PKG_NAME: NSRDB handler using reVX $PKG_VERSION"
 
+prepend-path PATH $PKG_ROOT
 prepend-path PYTHONPATH $PKG_ROOT
 
+set ENV_ROOT    /shared-projects/rev/modulefiles/conda_env
+
+prepend-path PATH $ENV_ROOT
+
 if { [module-info mode load] || [module-info mode switch2] } {
-    system "source activate /shared-projects/rev/modulefiles/conda_env || conda activate /shared-projects/rev/modulefiles/conda_env;"
+    system "source activate $ENV_ROOT || conda activate $ENV_ROOT;"
 } elseif { [module-info mode remove] && ![module-info mode switch3] } {
     system "source deactivate || conda deactivate;"
 }
