@@ -49,8 +49,8 @@ Option 2: Clone repo (recommended for developers)
 
 2. Install reV environment and modules (using conda)
     1) cd into reV repo cloned above
-    2) cd into ``bin/``
-    3) run the command: ``conda env create -f rev.yml``
+    2) cd into ``bin/$OS/``
+    3) run the command: ``conda env create -f rev.yml``. If conda can't find any packages, try removing them from the yml file.
     4) run the command: ``conda activate rev``
     5) prior to running ``pip`` below, make sure branch is correct (install from master!)
     6) cd back to the reV repo (where setup.py is located)
