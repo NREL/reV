@@ -321,7 +321,8 @@ class SLURM(SubprocessManager):
     """Subclass for SLURM subprocess jobs."""
 
     def __init__(self, cmd, alloc, memory, walltime, feature=None,
-                 name='reV', stdout_path='./stdout'):
+                 name='reV', stdout_path='./stdout', conda_env=None,
+                 module=None, module_root='/shared-projects/rev/modulefiles'):
         """Initialize and submit a PBS job.
 
         Parameters
@@ -342,6 +343,12 @@ class SLURM(SubprocessManager):
             SLURM job name.
         stdout_path : str
             Path to print .stdout and .stderr files.
+        conda_env : str
+            Conda environment to activate
+        module : str
+            Module to load
+        module_root : str
+            Path to module root to load
         """
 
         self.make_path(stdout_path)
@@ -351,7 +358,10 @@ class SLURM(SubprocessManager):
                                          walltime=walltime,
                                          feature=feature,
                                          name=name,
-                                         stdout_path=stdout_path)
+                                         stdout_path=stdout_path,
+                                         conda_env=conda_env,
+                                         module=module,
+                                         module_root=module_root)
         if self.out:
             self.id = self.out.split(' ')[-1]
         else:
@@ -446,7 +456,9 @@ class SLURM(SubprocessManager):
         call(cmd)
 
     def sbatch(self, cmd, alloc, walltime, memory=None, feature=None,
-               name='reV', stdout_path='./stdout', keep_sh=False):
+               name='reV', stdout_path='./stdout', keep_sh=False,
+               conda_env=None, module=None,
+               module_root='/shared-projects/rev/modulefiles'):
         """Submit a SLURM job via sbatch command and SLURM shell script
 
         Parameters
@@ -470,6 +482,12 @@ class SLURM(SubprocessManager):
         keep_sh : bool
             Boolean to keep the .sh files. Default is to remove these files
             after job submission.
+        conda_env : str
+            Conda environment to activate
+        module : bool
+            Module to load
+        module_root : str
+            Path to module root to load
 
         Returns
         -------
@@ -499,6 +517,20 @@ class SLURM(SubprocessManager):
                 mem_str = ('#SBATCH --mem={}  # node RAM in MB\n'
                            .format(int(memory * 1000)))
 
+            env_str = ''
+            if module is not None:
+                env_str = ("echo module use {module_root}\n"
+                           "module use {module_root}\n"
+                           "echo module load {module}\n"
+                           "module load {module}\n"
+                           "echo module load complete!\n"
+                           .format(module_root=module_root, module=module))
+            elif conda_env is not None:
+                env_str = ("echo source activate {conda_env}\n"
+                           "source activate {conda_env}\n"
+                           "echo conda env activate complete!\n"
+                           .format(conda_env=conda_env))
+
             fname = '{}.sh'.format(name)
             script = ('#!/bin/bash\n'
                       '#SBATCH --account={a}  # allocation account\n'
@@ -508,10 +540,10 @@ class SLURM(SubprocessManager):
                       '#SBATCH --output={p}/{n}_%j.o\n'
                       '#SBATCH --error={p}/{n}_%j.e\n{m}{f}'
                       'echo Running on: $HOSTNAME, Machine Type: $MACHTYPE\n'
-                      '{cmd}'
+                      '{e}\n{cmd}'
                       .format(a=alloc, t=self.walltime(walltime), n=name,
                               p=stdout_path, m=mem_str,
-                              f=feature_str, cmd=cmd))
+                              f=feature_str, e=env_str, cmd=cmd))
 
             # write the shell script file and submit as qsub job
             self.make_sh(fname, script)

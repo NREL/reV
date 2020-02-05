@@ -68,15 +68,17 @@ def from_config(ctx, config_file, verbose):
                            'fout': ctx.obj['MY_FILE'],
                            'dirout': config.dirout})
             group_params = json.dumps(config.group_params)
-            ctx.invoke(my_groups, group_params=group_params)
+            ctx.invoke(multi_year_groups, group_params=group_params)
 
     elif config.execution_control.option == 'eagle':
         ctx.obj['NAME'] = name
-        ctx.invoke(collect_eagle,
+        ctx.invoke(multi_year_eagle,
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
                    feature=config.execution_control.feature,
                    memory=config.execution_control.node_mem,
+                   conda_env=config.execution_control.conda_env,
+                   module=config.execution_control.module,
                    stdout_path=os.path.join(config.logdir, 'stdout'),
                    group_params=json.dumps(config.group_params),
                    verbose=verbose)
@@ -110,8 +112,8 @@ def main(ctx, name, my_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def collect(ctx, group, source_files, dsets, verbose):
-    """Run collection on local worker."""
+def multi_year(ctx, group, source_files, dsets, verbose):
+    """Run multi year collection and means on local worker."""
 
     name = ctx.obj['NAME']
     my_file = ctx.obj['MY_FILE']
@@ -160,8 +162,8 @@ def collect(ctx, group, source_files, dsets, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def my_groups(ctx, group_params, verbose):
-    """Run collection for multiple groups."""
+def multi_year_groups(ctx, group_params, verbose):
+    """Run multi year collection and means for multiple groups."""
     name = ctx.obj['NAME']
     my_file = ctx.obj['MY_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -242,7 +244,7 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
-    cmd = ('python -m reV.handlers.cli_multi_year {} my-groups {}'
+    cmd = ('python -m reV.handlers.cli_multi_year {} multi-year-groups {}'
            .format(main_args, collect_args))
     logger.debug('Creating the following command line call:\n\t{}'
                  .format(cmd))
@@ -259,6 +261,10 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--memory', '-mem', default=None, type=INT,
               help='Eagle node memory request in GB. Default is None')
+@click.option('--conda_env', '-env', default=None, type=STR,
+              help='Conda env to activate')
+@click.option('--module', '-mod', default=None, type=STR,
+              help='Module to load')
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('--group_params', '-gp', required=True, type=str,
@@ -267,9 +273,11 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def collect_eagle(ctx, alloc, walltime, feature, memory, stdout_path,
-                  group_params, verbose):
-    """Run collection on Eagle HPC via SLURM job submission."""
+def multi_year_eagle(ctx, alloc, walltime, feature, memory, conda_env,
+                     module, stdout_path, group_params, verbose):
+    """
+    Run multi year collection and means on Eagle HPC via SLURM job submission.
+    """
 
     name = ctx.obj['NAME']
     my_file = ctx.obj['MY_FILE']
@@ -288,7 +296,8 @@ def collect_eagle(ctx, alloc, walltime, feature, memory, stdout_path,
         # create and submit the SLURM job
         slurm_cmd = get_slurm_cmd(name, my_file, group_params, verbose=verbose)
         slurm = SLURM(slurm_cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      feature=feature, name=name, stdout_path=stdout_path)
+                      feature=feature, name=name, stdout_path=stdout_path,
+                      conda_env=conda_env, module=module)
         if slurm.id:
             msg = ('Kicked off reV multi-year collection job "{}" '
                    '(SLURM jobid #{}) on Eagle.'.format(name, slurm.id))

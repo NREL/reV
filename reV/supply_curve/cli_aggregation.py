@@ -97,8 +97,10 @@ def from_config(ctx, config_file, verbose):
         ctx.invoke(eagle,
                    alloc=config.execution_control.alloc,
                    memory=config.execution_control.node_mem,
+                   feature=config.execution_control.feature,
                    walltime=config.execution_control.walltime,
-                   feature=config.execution_control.feature)
+                   conda_env=config.execution_control.conda_env,
+                   module=config.execution_control.module)
 
 
 @click.group(invoke_without_command=True)
@@ -298,10 +300,15 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--memory', '-mem', default=None, type=INT,
               help='Eagle node memory request in GB. Default is None')
+@click.option('--module', '-mod', default=None, type=STR,
+              help='Module to load')
+@click.option('--conda_env', '-env', default=None, type=STR,
+              help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def eagle(ctx, alloc, walltime, feature, memory, stdout_path):
+def eagle(ctx, alloc, walltime, feature, memory, module, conda_env,
+          stdout_path):
     """Eagle submission tool for reV supply curve aggregation."""
 
     name = ctx.obj['NAME']
@@ -342,7 +349,8 @@ def eagle(ctx, alloc, walltime, feature, memory, stdout_path):
                     'node name "{}"'.format(name))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
-                      name=name, stdout_path=stdout_path)
+                      name=name, stdout_path=stdout_path,
+                      conda_env=conda_env, module=module)
         if slurm.id:
             msg = ('Kicked off reV SC aggregation job "{}" '
                    '(SLURM jobid #{}) on Eagle.'

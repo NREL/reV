@@ -92,7 +92,9 @@ def from_config(ctx, config_file, verbose):
                        alloc=config.execution_control.alloc,
                        memory=config.execution_control.node_mem,
                        walltime=config.execution_control.walltime,
-                       feature=config.execution_control.feature)
+                       feature=config.execution_control.feature,
+                       module=config.execution_control.module,
+                       conda_env=config.execution_control.conda_env)
 
 
 @click.group(invoke_without_command=True)
@@ -182,17 +184,22 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
 @main.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='Eagle allocation account name.')
+@click.option('--feature', '-l', default=None, type=STR,
+              help=('Additional flags for SLURM job. Format is "--qos=high" '
+                    'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--memory', '-mem', default=None, type=INT, help='Eagle node '
               'memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
               help='Eagle walltime request in hours. Default is 1.0')
-@click.option('--feature', '-l', default=None, type=STR,
-              help=('Additional flags for SLURM job. Format is "--qos=high" '
-                    'or "--depend=[state:job_id]". Default is None.'))
+@click.option('--module', '-mod', default=None, type=STR,
+              help='Module to load')
+@click.option('--conda_env', '-env', default=None, type=STR,
+              help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
+def eagle(ctx, alloc, feature, memory, walltime, module, conda_env,
+          stdout_path):
     """Eagle submission tool for reV supply curve aggregation."""
 
     name = ctx.obj['NAME']
@@ -220,7 +227,8 @@ def eagle(ctx, alloc, memory, walltime, feature, stdout_path):
                     'node name "{}"'.format(name))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
-                      name=name, stdout_path=stdout_path)
+                      name=name, stdout_path=stdout_path, conda_env=conda_env,
+                      module=module)
         if slurm.id:
             msg = ('Kicked off reV offshore job "{}" '
                    '(SLURM jobid #{}) on Eagle.'

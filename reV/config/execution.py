@@ -116,6 +116,8 @@ class HPCConfig(BaseExecutionConfig):
     def __init__(self, config_dict):
         self._hpc_alloc = None
         self._feature = None
+        self._module = None
+        self._conda_env = None
         super().__init__(config_dict)
 
     @property
@@ -163,6 +165,36 @@ class HPCConfig(BaseExecutionConfig):
                     self._feature = self['feature']
         return self._feature
 
+    @property
+    def module(self):
+        """
+        Get module to load if given
+
+        Returns
+        -------
+        _module : str
+            Module to load on node
+        """
+        if self._module is None:
+            self._module = self.get('module', None)
+
+        return self._module
+
+    @property
+    def conda_env(self):
+        """
+        Get conda environment to activate
+
+        Returns
+        -------
+        _conda_env : str
+            Conda environment to activate
+        """
+        if self._conda_env is None:
+            self._conda_env = self.get('conda_env', None)
+
+        return self._conda_env
+
 
 class PeregrineConfig(HPCConfig):
     """Class to handle Peregrine configuration inputs."""
@@ -197,6 +229,7 @@ class PeregrineConfig(HPCConfig):
                 if self['memory']:
                     # config-specified, set to attribute
                     self._hpc_node_mem = self['memory']
+
         return self._hpc_node_mem
 
     @property
