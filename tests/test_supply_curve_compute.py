@@ -7,6 +7,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 import pytest
 import warnings
+import numpy as np
 
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import SupplyCurve
@@ -26,6 +27,15 @@ TRANS_COSTS_2 = {'line_tie_in_cost': 3000, 'line_cost': 2000,
 def sc_points():
     """Get the supply curve aggregation summary table"""
     path = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
+    sc_points = pd.read_csv(path)
+    return sc_points
+
+
+@pytest.fixture
+def sc_points_friction():
+    """Get the supply curve aggregation summary table with friction surface"""
+    path = os.path.join(TESTDATADIR,
+                        'sc_out/baseline_agg_summary_friction.csv')
     sc_points = pd.read_csv(path)
     return sc_points
 
@@ -81,6 +91,44 @@ def test_integrated_sc_simple(i, tcosts, sc_points, trans_table, multipliers):
 
     fpath_baseline = os.path.join(TESTDATADIR,
                                   'sc_out/sc_simple_out_{}.csv'.format(i))
+    baseline_verify(sc_simple, fpath_baseline)
+
+
+def test_integrated_sc_full_friction(sc_points_friction, trans_table,
+                                     multipliers):
+    """Run the full SC algorithm with friction"""
+
+    sc_full = SupplyCurve.full(sc_points_friction, trans_table, fcr=0.1,
+                               sc_features=multipliers,
+                               transmission_costs=TRANS_COSTS_1,
+                               sort_on='total_lcoe_friction')
+
+    assert 'mean_lcoe_friction' in sc_full
+    assert 'total_lcoe_friction' in sc_full
+    test = sc_full['mean_lcoe_friction'] + sc_full['lcot']
+    assert np.allclose(test, sc_full['total_lcoe_friction'])
+
+    fpath_baseline = os.path.join(TESTDATADIR,
+                                  'sc_out/sc_full_out_friction.csv')
+    baseline_verify(sc_full, fpath_baseline)
+
+
+def test_integrated_sc_simple_friction(sc_points_friction, trans_table,
+                                       multipliers):
+    """Run the simple SC algorithm with friction"""
+
+    sc_simple = SupplyCurve.simple(sc_points_friction, trans_table, fcr=0.1,
+                                   sc_features=multipliers,
+                                   transmission_costs=TRANS_COSTS_1,
+                                   sort_on='total_lcoe_friction')
+
+    assert 'mean_lcoe_friction' in sc_simple
+    assert 'total_lcoe_friction' in sc_simple
+    test = sc_simple['mean_lcoe_friction'] + sc_simple['lcot']
+    assert np.allclose(test, sc_simple['total_lcoe_friction'])
+
+    fpath_baseline = os.path.join(TESTDATADIR,
+                                  'sc_out/sc_simple_out_friction.csv')
     baseline_verify(sc_simple, fpath_baseline)
 
 

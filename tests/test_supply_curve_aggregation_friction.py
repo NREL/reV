@@ -72,8 +72,9 @@ def test_agg_friction(gid):
 
     for gid in [100, 114, 130, 181]:
         s = Aggregation.summary(EXCL_FPATH, GEN, TM_DSET, EXCL_DICT,
-                                res_class_dset=None,
-                                res_class_bins=None,
+                                res_class_dset=RES_CLASS_DSET,
+                                res_class_bins=RES_CLASS_BINS,
+                                data_layers=DATA_LAYERS,
                                 resolution=RESOLUTION,
                                 gids=[gid], max_workers=1,
                                 friction_fpath=FRICTION_FPATH,
