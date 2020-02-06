@@ -4,13 +4,17 @@ reV supply curve extent and points base frameworks.
 """
 import pandas as pd
 import numpy as np
+import logging
 from warnings import warn
 
 from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.exclusions import ExclusionMask
+from reV.supply_curve.exclusions import ExclusionMask, ExclusionMaskFromDict
 from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
                                       EmptySupplyCurvePointError, InputWarning)
+
+
+logger = logging.getLogger(__name__)
 
 
 class SupplyCurvePoint:
@@ -359,8 +363,8 @@ class SupplyCurvePoint:
             ExclusionMask h5 handler object.
         """
         if self._exclusions is None:
-            self._exclusions = ExclusionMask.from_dict(self._excl_fpath,
-                                                       self._excl_dict)
+            self._exclusions = ExclusionMaskFromDict(self._excl_fpath,
+                                                     self._excl_dict)
         return self._exclusions
 
     @property
@@ -370,7 +374,8 @@ class SupplyCurvePoint:
         Returns
         -------
         _excl_data : np.ndarray
-            Exclusions data mask.
+            2D exclusions data mask corresponding to the exclusions grid in
+            the SC domain.
         """
 
         if self._excl_data is None:
@@ -381,8 +386,10 @@ class SupplyCurvePoint:
             self._excl_data[out_of_extent] = 0.0
 
             if self._excl_data.max() > 1:
-                warn('Exclusions data max value is > 1: {}'
+                w = ('Exclusions data max value is > 1: {}'
                      .format(self._excl_data.max()), InputWarning)
+                logger.warning(w)
+                warn(w)
 
         return self._excl_data
 

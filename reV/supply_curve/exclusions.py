@@ -733,3 +733,76 @@ class ExclusionMaskFromDict(ExclusionMask):
             mask = f.mask
 
         return mask
+
+
+class FrictionMask(ExclusionMask):
+    """Class to handle exclusion-style friction layer."""
+
+    def __init__(self, fric_h5, fric_dset, hsds=False):
+        """
+        Parameters
+        ----------
+        fric_h5 : str
+            Path to friction layer .h5 file (same format as exclusions file)
+        fric_dset : str
+            Friction layer dataset in fric_h5
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        """
+        self._fric_dset = fric_dset
+        L = [LayerMask(fric_dset, use_as_weights=True, exclude_nodata=False)]
+        super().__init__(fric_h5, *L, min_area=None, hsds=hsds)
+
+    def _generate_mask(self, *ds_slice):
+        """
+        Generate multiplicative friction layer mask.
+
+        Parameters
+        ----------
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis.
+            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
+            exclusions mask.
+
+        Returns
+        -------
+        mask : ndarray
+            Multiplicative friction layer mask with nodata values set to 1.
+        """
+
+        mask = None
+        if len(ds_slice) == 1 & isinstance(ds_slice[0], tuple):
+            ds_slice = ds_slice[0]
+
+        layer_slice = (self._layers[self._fric_dset].layer, ) + ds_slice
+        mask = self._layers[self._fric_dset][self.excl_h5[layer_slice]]
+        mask[(mask == self._layers[self._fric_dset].nodata_value)] = 1
+
+        return mask
+
+    @classmethod
+    def run(cls, excl_h5, fric_dset, hsds=False):
+        """
+        Create inclusion mask from given layers dictionary
+
+        Parameters
+        ----------
+        fric_h5 : str
+            Path to friction layer .h5 file (same format as exclusions file)
+        fric_dset : str
+            Friction layer dataset in fric_h5
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+
+        Returns
+        -------
+        mask : ndarray
+            Full inclusion mask
+        """
+        L = [LayerMask(fric_dset, use_as_weights=True, exclude_nodata=False)]
+        with cls(excl_h5, *L, min_area=None, hsds=hsds) as f:
+            mask = f.mask
+
+        return mask
