@@ -16,7 +16,7 @@ import logging
 
 from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.exclusions import ExclusionMaskFromDict
+from reV.supply_curve.exclusions import ExclusionMaskFromDict, FrictionMask
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
 from reV.utilities.execution import SpawnProcessPool
@@ -32,7 +32,8 @@ class AggFileHandler:
     """Simple framework to handle aggregation file context managers."""
 
     def __init__(self, excl_fpath, gen_fpath, data_layers, excl_dict,
-                 power_density, area_filter_kernel='queen', min_area=None):
+                 power_density, friction_fpath=None, friction_dset=None,
+                 area_filter_kernel='queen', min_area=None):
         """
         Parameters
         ----------
@@ -50,6 +51,13 @@ class AggFileHandler:
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
+        friction_fpath : str | None
+            Filepath to friction surface data (cost based exclusions).
+            Must be paired with friction_dset.
+        friction_dset : str | None
+            Dataset name in friction_fpath for the friction surface data.
+            Must be paired with friction_fpath. Must be same shape as
+            exclusions.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
         min_area : float | NoneType
@@ -64,6 +72,15 @@ class AggFileHandler:
         self._data_layers = self._open_data_layers(data_layers)
         self._power_density = power_density
         self._parse_power_density()
+
+        self._friction_layer = None
+        if friction_fpath is not None and friction_dset is not None:
+            self._friction_layer = FrictionMask(friction_fpath, friction_dset)
+            if not all(self._friction_layer.shape == self._excl.shape):
+                e = ('Friction layer shape {} must match exclusions shape {}!'
+                     .format(self._friction_layer.shape, self._excl.shape))
+                logger.error(e)
+                raise FileInputError(e)
 
         # pre-initialize any import attributes
         _ = self._gen.meta
@@ -145,6 +162,8 @@ class AggFileHandler:
         self._excl.close()
         self._gen.close()
         self._close_data_layers(self._data_layers)
+        if self._friction_layer is not None:
+            self._friction_layer.close()
 
     @property
     def exclusions(self):
@@ -191,6 +210,18 @@ class AggFileHandler:
         """
         return self._power_density
 
+    @property
+    def friction_layer(self):
+        """Get the friction layer (cost based exclusions).
+
+        Returns
+        -------
+        friction_layer : None | FrictionMask
+            Friction layer with scalar friction values if valid friction inputs
+            were entered. Otherwise, None to not apply friction layer.
+        """
+        return self._friction_layer
+
 
 class Aggregation:
     """Supply points aggregation framework."""
@@ -199,6 +230,7 @@ class Aggregation:
                  res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                  data_layers=None, resolution=64, power_density=None,
+                 friction_fpath=None, friction_dset=None,
                  gids=None, area_filter_kernel='queen', min_area=None,
                  max_workers=None):
         """
@@ -234,6 +266,13 @@ class Aggregation:
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
+        friction_fpath : str | None
+            Filepath to friction surface data (cost based exclusions).
+            Must be paired with friction_dset.
+        friction_dset : str | None
+            Dataset name in friction_fpath for the friction surface data.
+            Must be paired with friction_fpath. Must be same shape as
+            exclusions.
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -256,6 +295,8 @@ class Aggregation:
         self._lcoe_dset = lcoe_dset
         self._resolution = resolution
         self._power_density = power_density
+        self._friction_fpath = friction_fpath
+        self._friction_dset = friction_dset
         self._data_layers = data_layers
         self._area_filter_kernel = area_filter_kernel
         self._min_area = min_area
@@ -435,6 +476,7 @@ class Aggregation:
                         gen_index, res_class_dset=None, res_class_bins=None,
                         cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                         data_layers=None, resolution=64, power_density=None,
+                        friction_fpath=None, friction_dset=None,
                         gids=None, area_filter_kernel='queen', min_area=None,
                         args=None, ex_area=0.0081, close=False):
         """Standalone method to create agg summary - can be parallelized.
@@ -475,6 +517,13 @@ class Aggregation:
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
+        friction_fpath : str | None
+            Filepath to friction surface data (cost based exclusions).
+            Must be paired with friction_dset.
+        friction_dset : str | None
+            Dataset name in friction_fpath for the friction surface data.
+            Must be paired with friction_fpath. Must be same shape as
+            exclusions.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
         min_area : float | NoneType
@@ -512,7 +561,9 @@ class Aggregation:
         file_args = [excl_fpath, gen_fpath, data_layers, excl_dict,
                      power_density]
         file_kwargs = {'area_filter_kernel': area_filter_kernel,
-                       'min_area': min_area}
+                       'min_area': min_area,
+                       'friction_fpath': friction_fpath,
+                       'friction_dset': friction_dset}
         with AggFileHandler(*file_args, **file_kwargs) as fhandler:
 
             inputs = Aggregation._get_input_data(fhandler.gen, gen_fpath,
@@ -538,11 +589,12 @@ class Aggregation:
                             resolution=resolution,
                             exclusion_shape=exclusion_shape,
                             power_density=fhandler.power_density,
-                            offshore_flags=inputs[4],
                             args=args,
                             excl_dict=excl_dict,
                             ex_area=ex_area,
-                            close=close)
+                            close=close,
+                            offshore_flags=inputs[4],
+                            friction_layer=fhandler.friction_layer)
 
                     except EmptySupplyCurvePointError:
                         pass
@@ -604,6 +656,8 @@ class Aggregation:
                     data_layers=self._data_layers,
                     resolution=self._resolution,
                     power_density=self._power_density,
+                    friction_fpath=self._friction_fpath,
+                    friction_dset=self._friction_dset,
                     area_filter_kernel=self._area_filter_kernel,
                     min_area=self._min_area,
                     gids=gid_set, args=args, ex_area=ex_area, close=close))
@@ -798,6 +852,7 @@ class Aggregation:
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
+                friction_fpath=None, friction_dset=None,
                 offshore_capacity=600, gids=None,
                 area_filter_kernel='queen', min_area=None,
                 max_workers=None, args=None, ex_area=0.0081, close=False):
@@ -835,6 +890,13 @@ class Aggregation:
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
+        friction_fpath : str | None
+            Filepath to friction surface data (cost based exclusions).
+            Must be paired with friction_dset.
+        friction_dset : str | None
+            Dataset name in friction_fpath for the friction surface data.
+            Must be paired with friction_fpath. Must be same shape as
+            exclusions.
         offshore_capacity : int | float
             Offshore resource pixel generation capacity in MW.
         gids : list | None
@@ -872,6 +934,7 @@ class Aggregation:
                   cf_dset=cf_dset, lcoe_dset=lcoe_dset,
                   data_layers=data_layers, resolution=resolution,
                   power_density=power_density, gids=gids,
+                  friction_fpath=friction_fpath, friction_dset=friction_dset,
                   area_filter_kernel=area_filter_kernel, min_area=min_area,
                   max_workers=max_workers)
 
@@ -887,6 +950,8 @@ class Aggregation:
                                           data_layers=agg._data_layers,
                                           resolution=agg._resolution,
                                           power_density=agg._power_density,
+                                          friction_fpath=agg._friction_fpath,
+                                          friction_dset=agg._friction_dset,
                                           area_filter_kernel=afk,
                                           min_area=agg._min_area,
                                           gids=gids, args=args,
@@ -897,6 +962,13 @@ class Aggregation:
 
         summary = agg._offshore_summary(summary,
                                         offshore_capacity=offshore_capacity)
+
+        if not any(summary):
+            e = ('Supply curve aggregation found no non-excluded SC points. '
+                 'Please check your exclusions or subset SC GID selection.')
+            logger.error(e)
+            raise EmptySupplyCurvePointError(e)
+
         summary = agg._summary_to_df(summary)
         summary = agg._offshore_data_layers(summary)
 

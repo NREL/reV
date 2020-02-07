@@ -172,6 +172,17 @@ class AggregationConfig(AnalysisConfig):
         """Get the minimum area filter minimum area in km2."""
         return self.get('min_area', self._default_min_area)
 
+    @property
+    def friction_fpath(self):
+        """Get the filepath to a friction surface h5 file
+        (must be paired with friction_dset)."""
+        return self.get('friction_fpath', None)
+
+    @property
+    def friction_dset(self):
+        """Get the friction dataset name in friction_fpath."""
+        return self.get('friction_dset', None)
+
 
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
@@ -190,6 +201,7 @@ class SupplyCurveConfig(AnalysisConfig):
 
         self._default_sc_features = None
         self._default_transmission_costs = None
+        self._default_sort_on = 'total_lcoe'
 
     @property
     def sc_points(self):
@@ -235,3 +247,9 @@ class SupplyCurveConfig(AnalysisConfig):
     def line_limited(self):
         """Get the line-limited flag."""
         return bool(self.get('line_limited', False))
+
+    @property
+    def sort_on(self):
+        """Get the SC table column label to sort on.
+        This determines the ordering of the buildout algorithm."""
+        return self.get('sort_on', self._default_sort_on)

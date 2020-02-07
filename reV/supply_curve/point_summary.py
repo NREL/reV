@@ -30,7 +30,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                  res_class_dset=None, res_class_bin=None, ex_area=0.0081,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', resolution=64,
-                 exclusion_shape=None, close=False, offshore_flags=None):
+                 exclusion_shape=None, close=False, offshore_flags=None,
+                 friction_layer=None):
         """
         Parameters
         ----------
@@ -79,6 +80,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         offshore_flags : np.ndarray | None
             Array of offshore boolean flags if available from wind generation
             data. None if offshore flag is not available.
+        friction_layer : None | FrictionMask
+            Friction layer with scalar friction values if valid friction inputs
+            were entered. Otherwise, None to not apply friction layer.
         """
 
         self._res_class_dset = res_class_dset
@@ -94,6 +98,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         self._ex_area = ex_area
         self._pd_obj = None
         self._power_density = power_density
+        self._friction_layer = friction_layer
 
         super().__init__(gid, excl, gen, tm_dset, gen_index,
                          excl_dict=excl_dict, resolution=resolution,
@@ -261,6 +266,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if 'country' in self.gen.meta:
             country = self.gen.meta.loc[self.gen_gid_set, 'country'].values
             country = stats.mode(country).mode[0]
+
         return country
 
     @property
@@ -270,6 +276,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if 'state' in self.gen.meta:
             state = self.gen.meta.loc[self.gen_gid_set, 'state'].values
             state = stats.mode(state).mode[0]
+
         return state
 
     @property
@@ -279,6 +286,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if 'county' in self.gen.meta:
             county = self.gen.meta.loc[self.gen_gid_set, 'county'].values
             county = stats.mode(county).mode[0]
+
         return county
 
     @property
@@ -287,6 +295,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         elevation = None
         if 'elevation' in self.gen.meta:
             elevation = self.gen.meta.loc[self.gen_gid_set, 'elevation'].mean()
+
         return elevation
 
     @property
@@ -296,6 +305,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if 'timezone' in self.gen.meta:
             timezone = self.gen.meta.loc[self.gen_gid_set, 'timezone'].values
             timezone = stats.mode(timezone).mode[0]
+
         return timezone
 
     @property
@@ -311,6 +321,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             self._res_gid_set = self.ordered_unique(self._res_gids)
             if -1 in self._res_gid_set:
                 self._res_gid_set.remove(-1)
+
         return self._res_gid_set
 
     @property
@@ -326,6 +337,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             self._gen_gid_set = self.ordered_unique(self._gen_gids)
             if -1 in self._gen_gid_set:
                 self._gen_gid_set.remove(-1)
+
         return self._gen_gid_set
 
     @property
@@ -356,6 +368,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         mean_cf = None
         if self.gen_data is not None:
             mean_cf = self.exclusion_weighted_mean(self.gen_data)
+
         return mean_cf
 
     @property
@@ -370,6 +383,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         mean_lcoe = None
         if self.lcoe_data is not None:
             mean_lcoe = self.exclusion_weighted_mean(self.lcoe_data)
+
         return mean_lcoe
 
     @property
@@ -385,7 +399,58 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if (self._res_class_dset is not None
                 and self._res_class_bin is not None):
             mean_res = self.exclusion_weighted_mean(self.res_data)
+
         return mean_res
+
+    @property
+    def mean_lcoe_friction(self):
+        """Get the mean LCOE for the non-excluded data, multiplied by the
+        mean_friction scalar value.
+
+        Returns
+        -------
+        mean_lcoe_friction : float | None
+            Mean LCOE value for the non-excluded data multiplied by the
+            mean friction scalar value.
+        """
+        mean_lcoe_friction = None
+        if self.mean_lcoe is not None and self.mean_friction is not None:
+            mean_lcoe_friction = self.mean_lcoe * self.mean_friction
+
+        return mean_lcoe_friction
+
+    @property
+    def mean_friction(self):
+        """Get the mean friction scalar for the non-excluded data.
+
+        Returns
+        -------
+        friction : None | float
+            Mean value of the friction data layer for the non-excluded data.
+            If friction layer is not input to this class, None is returned.
+        """
+        friction = None
+        if self._friction_layer is not None:
+            friction = self.friction_data.flatten()[self.bool_mask].mean()
+
+        return friction
+
+    @property
+    def friction_data(self):
+        """Get the friction data for the full SC point (no exclusions)
+
+        Returns
+        -------
+        friction_data : None | np.ndarray
+            2D friction data layer corresponding to the exclusions grid in
+            the SC domain. If friction layer is not input to this class,
+            None is returned.
+        """
+        friction_data = None
+        if self._friction_layer is not None:
+            friction_data = self._friction_layer[self.rows, self.cols]
+
+        return friction_data
 
     @property
     def power_density(self):
@@ -441,6 +506,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         capacity = None
         if self.power_density is not None:
             capacity = self.area * self.power_density
+
         return capacity
 
     def agg_data_layers(self, summary, data_layers):
@@ -520,7 +586,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 ex_area=0.0081, power_density=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 resolution=64, exclusion_shape=None, close=False,
-                offshore_flags=None):
+                offshore_flags=None, friction_layer=None):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -576,6 +642,9 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         offshore_flags : np.ndarray | None
             Array of offshore boolean flags if available from wind generation
             data. None if offshore flag is not available.
+        friction_layer : None | ExclusionMask
+            Friction layer with scalar friction values if valid friction inputs
+            were entered. Otherwise, None to not apply friction layer.
 
         Returns
         -------
@@ -587,7 +656,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                   "power_density": power_density, "cf_dset": cf_dset,
                   "lcoe_dset": lcoe_dset, "resolution": resolution,
                   "exclusion_shape": exclusion_shape, "close": close,
-                  "offshore_flags": offshore_flags}
+                  "offshore_flags": offshore_flags,
+                  'friction_layer': friction_layer}
         with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                  **kwargs) as point:
 
@@ -607,6 +677,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                     'elevation': point.elevation,
                     'timezone': point.timezone,
                     }
+
+            if friction_layer is not None:
+                ARGS['mean_friction'] = point.mean_friction
+                ARGS['mean_lcoe_friction'] = point.mean_lcoe_friction
 
             if args is None:
                 args = list(ARGS.keys())

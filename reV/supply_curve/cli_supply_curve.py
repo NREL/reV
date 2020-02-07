@@ -65,8 +65,10 @@ def from_config(ctx, config_file, verbose):
                            'dirout': config.dirout})
             ctx.invoke(main, name, config.sc_points, config.trans_table,
                        config.fixed_charge_rate, config.sc_features,
-                       config.transmission_costs, config.dirout, config.logdir,
-                       config.simple, config.line_limited, verbose)
+                       config.transmission_costs, config.sort_on,
+                       config.dirout, config.logdir,
+                       config.simple, config.line_limited,
+                       verbose)
 
     elif config.execution_control.option == 'eagle':
 
@@ -76,6 +78,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['FIXED_CHARGE_RATE'] = config.fixed_charge_rate
         ctx.obj['SC_FEATURES'] = config.sc_features
         ctx.obj['TRANSMISSION_COSTS'] = config.transmission_costs
+        ctx.obj['SORT_ON'] = config.sort_on
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['SIMPLE'] = config.simple
@@ -105,6 +108,9 @@ def from_config(ctx, config_file, verbose):
               '(.csv or .json)')
 @click.option('--transmission_costs', '-tc', type=STR, default=None,
               help='Table or serialized dict of transmission cost inputs.')
+@click.option('--sort_on', '-so', type=str, default='total_lcoe',
+              help='The supply curve table column label to sort on. '
+              'This determines the ordering of the SC buildout algorithm.')
 @click.option('--out_dir', '-o', type=STR, default='./',
               help='Directory to save aggregation summary output.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
@@ -119,7 +125,8 @@ def from_config(ctx, config_file, verbose):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
-         transmission_costs, out_dir, log_dir, simple, line_limited, verbose):
+         transmission_costs, sort_on, out_dir, log_dir, simple, line_limited,
+         verbose):
     """reV Supply Curve CLI."""
 
     ctx.ensure_object(dict)
@@ -129,6 +136,7 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
     ctx.obj['FIXED_CHARGE_RATE'] = fixed_charge_rate
     ctx.obj['SC_FEATURES'] = sc_features
     ctx.obj['TRANSMISSION_COSTS'] = transmission_costs
+    ctx.obj['SORT_ON'] = sort_on
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['SIMPLE'] = simple
@@ -153,7 +161,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
             out = sc_fun(sc_points, trans_table, fixed_charge_rate,
                          sc_features=sc_features,
                          transmission_costs=transmission_costs,
-                         line_limited=line_limited)
+                         line_limited=line_limited,
+                         sort_on=sort_on)
         except Exception as e:
             logger.exception('Supply curve compute failed. Received the '
                              'following error:\n{}'.format(e))
@@ -182,8 +191,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
-                 transmission_costs, out_dir, log_dir, simple, line_limited,
-                 verbose):
+                 transmission_costs, sort_on, out_dir, log_dir, simple,
+                 line_limited, verbose):
     """Get a CLI call command for the Supply Curve cli."""
 
     args = ('-n {name} '
@@ -192,6 +201,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-fcr {fixed_charge_rate} '
             '-scf {sc_features} '
             '-tc {transmission_costs} '
+            '-so {sort_on} '
             '-o {out_dir} '
             '-ld {log_dir} '
             )
@@ -202,6 +212,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
                        fixed_charge_rate=SLURM.s(fixed_charge_rate),
                        sc_features=SLURM.s(sc_features),
                        transmission_costs=SLURM.s(transmission_costs),
+                       sort_on=SLURM.s(sort_on),
                        out_dir=SLURM.s(out_dir),
                        log_dir=SLURM.s(log_dir),
                        )
@@ -246,6 +257,7 @@ def eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
     transmission_costs = ctx.obj['TRANSMISSION_COSTS']
     simple = ctx.obj['SIMPLE']
     line_limited = ctx.obj['LINE_LIMITED']
+    sort_on = ctx.obj['SORT_ON']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -254,8 +266,8 @@ def eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
         stdout_path = os.path.join(log_dir, 'stdout/')
 
     cmd = get_node_cmd(name, sc_points, trans_table, fixed_charge_rate,
-                       sc_features, transmission_costs, out_dir, log_dir,
-                       simple, line_limited, verbose)
+                       sc_features, transmission_costs, sort_on,
+                       out_dir, log_dir, simple, line_limited, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'supply-curve', name)
     if status == 'successful':

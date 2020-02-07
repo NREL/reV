@@ -25,7 +25,7 @@ class SupplyCurve:
     """
     def __init__(self, sc_points, trans_table, fcr, sc_features=None,
                  transmission_costs=None, line_limited=False,
-                 connectable=True, max_workers=None):
+                 connectable=True, max_workers=None, consider_friction=True):
         """
         Parameters
         ----------
@@ -52,6 +52,8 @@ class SupplyCurve:
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
+        consider_friction : bool
+            Flag to consider friction layer on LCOE.
         """
         trans_costs = transmission_costs
         self._sc_points = self._parse_sc_points(sc_points,
@@ -64,6 +66,9 @@ class SupplyCurve:
                                                     max_workers=max_workers)
         self._trans_features = self._create_handler(self._trans_table,
                                                     trans_costs=trans_costs)
+
+        self._consider_friction = consider_friction
+        self._calculate_total_lcoe_friction()
 
         self._sc_gids = list(np.sort(self._trans_table['sc_gid'].unique()))
         self._mask = np.ones((int(1 + max(self._sc_gids)), ), dtype=bool)
@@ -108,6 +113,7 @@ class SupplyCurve:
                 table = pd.read_json(table)
             else:
                 raise ValueError('Cannot parse {}'.format(table))
+
         elif not isinstance(table, pd.DataFrame):
             raise ValueError("Table must be a .csv, .json, or "
                              "a pandas DataFrame")
@@ -134,11 +140,19 @@ class SupplyCurve:
             added if supplied
         """
         sc_points = SupplyCurve._load_table(sc_points)
+        logger.debug('Supply curve points table imported with columns: {}'
+                     .format(sc_points.columns.values.tolist()))
+
         if sc_features is not None:
             sc_features = SupplyCurve._load_table(sc_features)
             merge_cols = [c for c in sc_features
                           if c in sc_points]
             sc_points = sc_points.merge(sc_features, on=merge_cols, how='left')
+            logger.debug('Adding Supply Curve Features table with columns: {}'
+                         .format(sc_features.columns.values.tolist()))
+
+        logger.debug('Final supply curve points table has columns: {}'
+                     .format(sc_points.columns.values.tolist()))
 
         return sc_points
 
@@ -325,7 +339,9 @@ class SupplyCurve:
     @staticmethod
     def _parse_trans_table(sc_points, trans_table, fcr, trans_costs=None,
                            line_limited=False, connectable=True,
-                           max_workers=None):
+                           max_workers=None,
+                           merge_cols=('capacity', 'sc_gid', 'mean_cf',
+                                       'mean_lcoe')):
         """
         Import supply curve table, add in supply curve point capacity
 
@@ -349,12 +365,20 @@ class SupplyCurve:
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
+        merge_cols : tuple | list
+            List of column from sc_points to merge into the trans table.
 
         Returns
         -------
         trans_table : pd.DataFrame
             Updated table mapping supply curve points to transmission features
         """
+        if isinstance(merge_cols, tuple):
+            merge_cols = list(merge_cols)
+
+        if 'mean_lcoe_friction' in sc_points:
+            merge_cols.append('mean_lcoe_friction')
+
         trans_table = SupplyCurve._load_table(trans_table)
 
         drop_cols = ['sc_point_gid', 'sc_gid', 'cap_left']
@@ -365,8 +389,7 @@ class SupplyCurve:
         point_merge_cols = SupplyCurve._get_merge_cols(sc_points.columns)
         table_merge_cols = SupplyCurve._get_merge_cols(trans_table.columns)
 
-        merge_cols = (point_merge_cols
-                      + ['capacity', 'sc_gid', 'mean_cf', 'mean_lcoe'])
+        merge_cols = (point_merge_cols + merge_cols)
         if 'transmission_multiplier' in sc_points:
             merge_cols.append('transmission_multiplier')
             col = 'transmission_multiplier'
@@ -404,9 +427,26 @@ class SupplyCurve:
         trans_table['total_lcoe'] = (trans_table['lcot']
                                      + trans_table['mean_lcoe'])
 
+        logger.debug('Transmission Table created with columns: {}'
+                     .format(trans_table.columns.values.tolist()))
+
         return trans_table
 
-    def full_sort(self, trans_table=None):
+    def _calculate_total_lcoe_friction(self):
+        """Look for site mean LCOE with friction in the trans table and if
+        found make a total LCOE column with friction."""
+
+        if ('mean_lcoe_friction' in self._trans_table
+                and self._consider_friction):
+            lcoe_friction = (self._trans_table['lcot']
+                             + self._trans_table['mean_lcoe_friction'])
+            self._trans_table['total_lcoe_friction'] = lcoe_friction
+            logger.info('Found mean LCOE with friction. Adding key '
+                        '"total_lcoe_friction" to trans table.')
+
+    def full_sort(self, trans_table=None, sort_on='total_lcoe',
+                  columns=('trans_gid', 'trans_capacity', 'trans_type',
+                           'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe')):
         """
         run supply curve sorting in serial
 
@@ -415,8 +455,12 @@ class SupplyCurve:
         trans_table : pandas.DataFrame | NoneType
             Supply Curve Tranmission table to sort on
             If none use self._trans_table
-        kwargs : dict
-            Kwargs to compute lcot
+        sort_on : str
+            Column label to sort the Supply Curve table on. This affects the
+            build priority - connections with the lowest value in this column
+            will be built first.
+        columns : list | tuple
+            Columns to preserve in output connections dataframe.
 
         Returns
         -------
@@ -426,19 +470,19 @@ class SupplyCurve:
         if trans_table is None:
             trans_table = self._trans_table
 
-        columns = ['trans_gid',
-                   'trans_capacity',
-                   'trans_type',
-                   'trans_cap_cost',
-                   'dist_mi',
-                   'lcot',
-                   'total_lcoe']
+        if isinstance(columns, tuple):
+            columns = list(columns)
+
+        pos = trans_table['lcot'].isnull()
+        trans_table = trans_table.loc[~pos].sort_values(sort_on)
+
+        total_lcoe_fric = None
+        if self._consider_friction and 'mean_lcoe_friction' in trans_table:
+            columns.append('total_lcoe_friction')
+            total_lcoe_fric = trans_table['total_lcoe_friction'].values
 
         init_list = [np.nan] * int(1 + np.max(self._sc_gids))
         conn_lists = {k: deepcopy(init_list) for k in columns}
-
-        pos = trans_table['lcot'].isnull()
-        trans_table = trans_table.loc[~pos].sort_values('total_lcoe')
 
         trans_sc_gids = trans_table['sc_gid'].values
         trans_gids = trans_table['trans_line_gid'].values
@@ -470,6 +514,10 @@ class SupplyCurve:
                     conn_lists['lcot'][sc_gid] = lcots[i]
                     conn_lists['total_lcoe'][sc_gid] = total_lcoes[i]
 
+                    if total_lcoe_fric is not None:
+                        conn_lists['total_lcoe_friction'][sc_gid] = \
+                            total_lcoe_fric[i]
+
                     current_prog = connected // (len(self) / 100)
                     if current_prog > progress:
                         progress = current_prog
@@ -479,7 +527,7 @@ class SupplyCurve:
         index = range(0, int(1 + np.max(self._sc_gids)))
         connections = pd.DataFrame(conn_lists, index=index)
         connections.index.name = 'sc_gid'
-        connections = connections.dropna(subset=['total_lcoe'])
+        connections = connections.dropna(subset=[sort_on])
         connections = connections[columns]
         connections = connections.reset_index()
 
@@ -493,7 +541,9 @@ class SupplyCurve:
 
         return connections
 
-    def simple_sort(self, trans_table=None):
+    def simple_sort(self, trans_table=None, sort_on='total_lcoe',
+                    columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
+                             'trans_cap_cost')):
         """
         Run simple supply curve sorting that does not take into account
         available capacity
@@ -503,8 +553,12 @@ class SupplyCurve:
         trans_table : pandas.DataFrame | NoneType
             Supply Curve Tranmission table to sort on
             If none use self._trans_table
-        kwargs : dict
-            Kwargs to compute lcot
+        sort_on : str
+            Column label to sort the Supply Curve table on. This affects the
+            build priority - connections with the lowest value in this column
+            will be built first.
+        columns : list | tuple
+            Columns to preserve in output connections dataframe.
 
         Returns
         -------
@@ -514,19 +568,27 @@ class SupplyCurve:
         if trans_table is None:
             trans_table = self._trans_table
 
-        connections = trans_table.sort_values('total_lcoe').groupby('sc_gid')
-        columns = ['trans_line_gid', 'category', 'lcot', 'total_lcoe',
-                   'trans_cap_cost']
-        connections = connections.first()[columns]
+        if isinstance(columns, tuple):
+            columns = list(columns)
+
+        if self._consider_friction and 'total_lcoe_friction' in trans_table:
+            columns.append('total_lcoe_friction')
+
+        connections = trans_table.sort_values(sort_on).groupby('sc_gid')
+        connections = connections.first()
         rename = {'trans_line_gid': 'trans_gid',
                   'category': 'trans_type'}
         connections = connections.rename(columns=rename)
+        connections = connections[columns].reset_index()
 
-        return connections.reset_index()
+        return connections
 
     @classmethod
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
-             transmission_costs=None, line_limited=False, max_workers=None):
+             transmission_costs=None, line_limited=False, sort_on='total_lcoe',
+             columns=('trans_gid', 'trans_capacity', 'trans_type',
+                      'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+             max_workers=None):
         """
         Run full supply curve taking into account available capacity of
         tranmission features when making connections.
@@ -551,6 +613,12 @@ class SupplyCurve:
         line_limited : bool
             Substation connection is limited by maximum capacity of the
             attached lines, legacy method
+        sort_on : str
+            Column label to sort the Supply Curve table on. This affects the
+            build priority - connections with the lowest value in this column
+            will be built first.
+        columns : list | tuple
+            Columns to preserve in output supply curve dataframe.
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
@@ -564,13 +632,16 @@ class SupplyCurve:
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
                  transmission_costs=transmission_costs,
                  line_limited=line_limited, max_workers=max_workers)
-        connections = sc.full_sort()
+        connections = sc.full_sort(sort_on=sort_on, columns=columns)
         supply_curve = sc._sc_points.merge(connections, on='sc_gid')
         return supply_curve
 
     @classmethod
     def simple(cls, sc_points, trans_table, fcr, sc_features=None,
-               transmission_costs=None, max_workers=None):
+               transmission_costs=None, sort_on='total_lcoe',
+               columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
+                        'trans_cap_cost'),
+               max_workers=None):
         """
         Run simple supply curve by connecting to the cheapest tranmission
         feature.
@@ -592,6 +663,12 @@ class SupplyCurve:
             Transmission feature costs to use with TransmissionFeatures
             handler: line_tie_in_cost, line_cost, station_tie_in_cost,
             center_tie_in_cost, sink_tie_in_cost
+        sort_on : str
+            Column label to sort the Supply Curve table on. This affects the
+            build priority - connections with the lowest value in this column
+            will be built first.
+        columns : list | tuple
+            Columns to preserve in output supply curve dataframe.
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
@@ -605,6 +682,6 @@ class SupplyCurve:
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
                  transmission_costs=transmission_costs, connectable=False,
                  max_workers=max_workers)
-        connections = sc.simple_sort()
+        connections = sc.simple_sort(sort_on=sort_on, columns=columns)
         supply_curve = sc._sc_points.merge(connections, on='sc_gid')
         return supply_curve
