@@ -420,9 +420,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         """
         friction = None
         if self._friction_layer is not None:
-            friction = self.friction_data * self.excl_data
-            friction = friction.flatten()[self.bool_mask]
-            friction = friction.mean()
+            friction = self.friction_data.flatten()[self.bool_mask].mean()
         return friction
 
     @property
