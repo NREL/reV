@@ -71,6 +71,7 @@ def from_config(ctx, config_file, verbose):
                        config.cf_dset, config.lcoe_dset, config.data_layers,
                        config.resolution, config.power_density,
                        config.area_filter_kernel, config.min_area,
+                       config.friction_fpath, config.friction_dset,
                        config.dirout, config.logdir, verbose)
 
     elif config.execution_control.option == 'eagle':
@@ -90,6 +91,8 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['POWER_DENSITY'] = config.power_density
         ctx.obj['AREA_FILTER_KERNEL'] = config.area_filter_kernel
         ctx.obj['MIN_AREA'] = config.min_area
+        ctx.obj['FRICTION_FPATH'] = config.friction_fpath
+        ctx.obj['FRICTION_DSET'] = config.friction_dset
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
@@ -146,6 +149,12 @@ def from_config(ctx, config_file, verbose):
 @click.option('--min_area', '-ma', type=FLOAT, default=None,
               help='Contiguous area filter minimum area, default is None '
               '(No minimum area filter).')
+@click.option('--friction_fpath', '-ff', type=STR, default=None,
+              help='Optional h5 filepath to friction surface data. '
+              'Must match the exclusion shape/resolution and be '
+              'paired with the --friction_dset input arg.')
+@click.option('--friction_dset', '-fd', type=STR, default=None,
+              help='Optional friction surface dataset in friction_fpath.')
 @click.option('--out_dir', '-o', type=STR, default='./',
               help='Directory to save aggregation summary output.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
@@ -156,7 +165,7 @@ def from_config(ctx, config_file, verbose):
 def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
          res_class_dset, res_class_bins, cf_dset, lcoe_dset, data_layers,
          resolution, power_density, area_filter_kernel, min_area,
-         out_dir, log_dir, verbose):
+         friction_fpath, friction_dset, out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
 
     ctx.ensure_object(dict)
@@ -175,6 +184,8 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
     ctx.obj['POWER_DENSITY'] = power_density
     ctx.obj['AREA_FILTER_KERNEL'] = area_filter_kernel
     ctx.obj['MIN_AREA'] = min_area
+    ctx.obj['FRICTION_FPATH'] = friction_fpath
+    ctx.obj['FRICTION_DSET'] = friction_dset
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -211,7 +222,9 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                 resolution=resolution,
                 power_density=power_density,
                 area_filter_kernel=area_filter_kernel,
-                min_area=min_area)
+                min_area=min_area,
+                friction_fpath=friction_fpath,
+                friction_dset=friction_dset)
 
         except Exception as e:
             logger.exception('Supply curve Aggregation failed. Received the '
@@ -242,7 +255,8 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                  res_class_dset, res_class_bins, cf_dset, lcoe_dset,
                  data_layers, resolution, power_density, area_filter_kernel,
-                 min_area, out_dir, log_dir, verbose):
+                 min_area, friction_fpath, friction_dset,
+                 out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ('-n {name} '
@@ -260,6 +274,8 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
             '-pd {power_density} '
             '-afk {area_filter_kernel} '
             '-ma {min_area} '
+            '-ff {friction_fpath} '
+            '-fd {friction_dset} '
             '-o {out_dir} '
             '-ld {log_dir} '
             )
@@ -279,6 +295,8 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                        power_density=SLURM.s(power_density),
                        area_filter_kernel=SLURM.s(area_filter_kernel),
                        min_area=SLURM.s(min_area),
+                       friction_fpath=SLURM.s(friction_fpath),
+                       friction_dset=SLURM.s(friction_dset),
                        out_dir=SLURM.s(out_dir),
                        log_dir=SLURM.s(log_dir),
                        )
@@ -326,6 +344,8 @@ def eagle(ctx, alloc, walltime, feature, memory, module, conda_env,
     power_density = ctx.obj['POWER_DENSITY']
     area_filter_kernel = ctx.obj['AREA_FILTER_KERNEL']
     min_area = ctx.obj['MIN_AREA']
+    friction_fpath = ctx.obj['FRICTION_FPATH']
+    friction_dset = ctx.obj['FRICTION_DSET']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -337,6 +357,7 @@ def eagle(ctx, alloc, walltime, feature, memory, module, conda_env,
                        tm_dset, excl_dict, res_class_dset, res_class_bins,
                        cf_dset, lcoe_dset, data_layers, resolution,
                        power_density, area_filter_kernel, min_area,
+                       friction_fpath, friction_dset,
                        out_dir, log_dir, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'aggregation', name)
