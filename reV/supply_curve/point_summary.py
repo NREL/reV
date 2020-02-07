@@ -266,6 +266,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if 'country' in self.gen.meta:
             country = self.gen.meta.loc[self.gen_gid_set, 'country'].values
             country = stats.mode(country).mode[0]
+
         return country
 
     @property
@@ -275,6 +276,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if 'state' in self.gen.meta:
             state = self.gen.meta.loc[self.gen_gid_set, 'state'].values
             state = stats.mode(state).mode[0]
+
         return state
 
     @property
@@ -284,6 +286,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if 'county' in self.gen.meta:
             county = self.gen.meta.loc[self.gen_gid_set, 'county'].values
             county = stats.mode(county).mode[0]
+
         return county
 
     @property
@@ -292,6 +295,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         elevation = None
         if 'elevation' in self.gen.meta:
             elevation = self.gen.meta.loc[self.gen_gid_set, 'elevation'].mean()
+
         return elevation
 
     @property
@@ -301,6 +305,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if 'timezone' in self.gen.meta:
             timezone = self.gen.meta.loc[self.gen_gid_set, 'timezone'].values
             timezone = stats.mode(timezone).mode[0]
+
         return timezone
 
     @property
@@ -316,6 +321,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             self._res_gid_set = self.ordered_unique(self._res_gids)
             if -1 in self._res_gid_set:
                 self._res_gid_set.remove(-1)
+
         return self._res_gid_set
 
     @property
@@ -331,6 +337,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             self._gen_gid_set = self.ordered_unique(self._gen_gids)
             if -1 in self._gen_gid_set:
                 self._gen_gid_set.remove(-1)
+
         return self._gen_gid_set
 
     @property
@@ -361,6 +368,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         mean_cf = None
         if self.gen_data is not None:
             mean_cf = self.exclusion_weighted_mean(self.gen_data)
+
         return mean_cf
 
     @property
@@ -375,6 +383,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         mean_lcoe = None
         if self.lcoe_data is not None:
             mean_lcoe = self.exclusion_weighted_mean(self.lcoe_data)
+
         return mean_lcoe
 
     @property
@@ -390,6 +399,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         if (self._res_class_dset is not None
                 and self._res_class_bin is not None):
             mean_res = self.exclusion_weighted_mean(self.res_data)
+
         return mean_res
 
     @property
@@ -406,6 +416,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         mean_lcoe_friction = None
         if self.mean_lcoe is not None and self.mean_friction is not None:
             mean_lcoe_friction = self.mean_lcoe * self.mean_friction
+
         return mean_lcoe_friction
 
     @property
@@ -421,6 +432,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         friction = None
         if self._friction_layer is not None:
             friction = self.friction_data.flatten()[self.bool_mask].mean()
+
         return friction
 
     @property
@@ -437,6 +449,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         friction_data = None
         if self._friction_layer is not None:
             friction_data = self._friction_layer[self.rows, self.cols]
+
         return friction_data
 
     @property
@@ -493,6 +506,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         capacity = None
         if self.power_density is not None:
             capacity = self.area * self.power_density
+
         return capacity
 
     def agg_data_layers(self, summary, data_layers):

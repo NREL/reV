@@ -962,11 +962,13 @@ class Aggregation:
 
         summary = agg._offshore_summary(summary,
                                         offshore_capacity=offshore_capacity)
+
         if not any(summary):
             e = ('Supply curve aggregation found no non-excluded SC points. '
                  'Please check your exclusions or subset SC GID selection.')
             logger.error(e)
             raise EmptySupplyCurvePointError(e)
+
         summary = agg._summary_to_df(summary)
         summary = agg._offshore_data_layers(summary)
 

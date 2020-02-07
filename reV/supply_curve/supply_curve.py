@@ -113,6 +113,7 @@ class SupplyCurve:
                 table = pd.read_json(table)
             else:
                 raise ValueError('Cannot parse {}'.format(table))
+
         elif not isinstance(table, pd.DataFrame):
             raise ValueError("Table must be a .csv, .json, or "
                              "a pandas DataFrame")
@@ -374,6 +375,7 @@ class SupplyCurve:
         """
         if isinstance(merge_cols, tuple):
             merge_cols = list(merge_cols)
+
         if 'mean_lcoe_friction' in sc_points:
             merge_cols.append('mean_lcoe_friction')
 
