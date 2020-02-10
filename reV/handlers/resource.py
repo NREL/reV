@@ -1898,6 +1898,7 @@ class MultiFileWTK(MultiFileResource, WindResource):
      'windspeed_200m']
 
     MultiFileWTK, like WindResource can interpolate / extrapolate hub-heights
+
     >>> with MultiFileWTK(file) as res:
     >>>     wspd = res['windspeed_150m']
     >>>
