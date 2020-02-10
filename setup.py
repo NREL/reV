@@ -56,6 +56,7 @@ numpy_dependency = "numpy>=1.15.0"
 pandas_dependency = "pandas>=0.23.0"
 click_dependency = "click>=7.0"
 scipy_dependency = "scipy>=1.2.1"
+pysam_dependency = "NREL-PySAM=1.2.1"
 
 setup(
     name="reV",
@@ -79,6 +80,9 @@ setup(
                              "cli_aggregation:main"),
                             ("reV-supply-curve=reV.supply_curve."
                              "cli_supply_curve:main"),
+                            "reV-offshore=reV.offshore.cli_offshore:main",
+                            ("reV-rep-profiles=reV.rep_profiles."
+                             "cli_rep_profiles:main"),
                             ],
     },
     include_package_data=True,
@@ -99,7 +103,7 @@ setup(
                       "scipy", "NREL-PySAM"],
     extras_require={
         "test": test_requires,
-        "dev": test_requires + ["pypandoc", "flake8", "pre-commit", "pylint"],
+        "dev": test_requires + ["flake8", "pre-commit", "pylint"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )

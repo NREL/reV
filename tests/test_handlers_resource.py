@@ -28,8 +28,8 @@ def NSRDB_2018():
     """
     Init NSRDB resource handler
     """
-    path = os.path.join(TESTDATADIR, 'nsrdb')
-    return MultiFileNSRDB(path, prefix='nsrdb', suffix='2018.h5')
+    path = os.path.join(TESTDATADIR, 'nsrdb', 'nsrdb*2018.h5')
+    return MultiFileNSRDB(path)
 
 
 @pytest.fixture
@@ -46,8 +46,8 @@ def FiveMinWind_res():
     """
     Init NSRDB resource handler
     """
-    path = os.path.join(TESTDATADIR, 'wtk')
-    return MultiFileWTK(path, prefix='wtk', suffix='m.h5')
+    path = os.path.join(TESTDATADIR, 'wtk', 'wtk*m.h5')
+    return MultiFileWTK(path)
 
 
 @pytest.fixture

@@ -137,7 +137,8 @@ class SAMResourceRetriever:
 
     @staticmethod
     def _multi_file_mods(res_handler, kwargs, res_file):
-        """Check if res_file is a multi-file resource dir and add kwargs.
+        """
+        Check if res_file is a multi-file resource dir and update handler
 
         Parameters
         ----------
@@ -159,11 +160,6 @@ class SAMResourceRetriever:
         res_file : str
             Single resource file (with full path) or multi h5 dir.
         """
-        h5_dir, prefix, suffix = MultiFileResource.multi_args(res_file)
-        res_file = h5_dir
-        kwargs['prefix'] = prefix
-        kwargs['suffix'] = suffix
-
         if res_handler == WindResource:
             res_handler = MultiFileWTK
         elif res_handler == NSRDB:

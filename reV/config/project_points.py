@@ -188,8 +188,8 @@ class PointsControl:
 class ProjectPoints:
     """Class to manage site and SAM input configuration requests.
 
-    Use Cases
-    ---------
+    Notes
+    -----
     config_id@site0, SAM_config_dict@site0 = ProjectPoints[0]
     site_list_or_slice = ProjectPoints.sites
     site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
@@ -358,12 +358,7 @@ class ProjectPoints:
 
                 multi_h5_res, _ = check_res_file(res_file)
                 if multi_h5_res:
-                    if '*' in res_file:
-                        h5_dir, p, s = MultiFileResource.multi_args(res_file)
-                        stop = MultiFileResource(h5_dir, prefix=p,
-                                                 suffix=s).shape[1]
-                    else:
-                        stop = MultiFileResource(res_file).shape[1]
+                    stop = MultiFileResource(res_file).shape[1]
                 else:
                     stop = Resource(res_file).shape[1]
 

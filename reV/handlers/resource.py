@@ -18,6 +18,177 @@ from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
 class Resource:
     """
     Base class to handle resource .h5 files
+
+    Examples
+    --------
+
+    Extracting the resource's Datetime Index
+
+    >>> file = '$TESTDATADIR/nsrdb/ri_100_nsrdb_2012.h5'
+    >>> with Resource(file) as res:
+    >>>     ti = res.time_index
+    >>>
+    >>> ti
+    DatetimeIndex(['2012-01-01 00:00:00', '2012-01-01 00:30:00',
+                   '2012-01-01 01:00:00', '2012-01-01 01:30:00',
+                   '2012-01-01 02:00:00', '2012-01-01 02:30:00',
+                   '2012-01-01 03:00:00', '2012-01-01 03:30:00',
+                   '2012-01-01 04:00:00', '2012-01-01 04:30:00',
+                   ...
+                   '2012-12-31 19:00:00', '2012-12-31 19:30:00',
+                   '2012-12-31 20:00:00', '2012-12-31 20:30:00',
+                   '2012-12-31 21:00:00', '2012-12-31 21:30:00',
+                   '2012-12-31 22:00:00', '2012-12-31 22:30:00',
+                   '2012-12-31 23:00:00', '2012-12-31 23:30:00'],
+                  dtype='datetime64[ns]', length=17568, freq=None)
+
+    Efficient slicing of the Datetime Index
+
+    >>> with Resource(file) as res:
+    >>>     ti = res['time_index', 1]
+    >>>
+    >>> ti
+    2012-01-01 00:30:00
+
+    >>> with Resource(file) as res:
+    >>>     ti = res['time_index', :10]
+    >>>
+    >>> ti
+    DatetimeIndex(['2012-01-01 00:00:00', '2012-01-01 00:30:00',
+                   '2012-01-01 01:00:00', '2012-01-01 01:30:00',
+                   '2012-01-01 02:00:00', '2012-01-01 02:30:00',
+                   '2012-01-01 03:00:00', '2012-01-01 03:30:00',
+                   '2012-01-01 04:00:00', '2012-01-01 04:30:00'],
+                  dtype='datetime64[ns]', freq=None)
+
+    >>> with Resource(file) as res:
+    >>>     ti = res['time_index', [1, 2, 4, 8, 9]
+    >>>
+    >>> ti
+    DatetimeIndex(['2012-01-01 00:30:00', '2012-01-01 01:00:00',
+                   '2012-01-01 02:00:00', '2012-01-01 04:00:00',
+                   '2012-01-01 04:30:00'],
+                  dtype='datetime64[ns]', freq=None)
+
+    Extracting resource's site metadata
+
+    >>> with Resource(file) as res:
+    >>>     meta = res.meta
+    >>>
+    >>> meta
+            latitude  longitude   elevation  timezone    country ...
+    0      41.29     -71.86    0.000000        -5           None ...
+    1      41.29     -71.82    0.000000        -5           None ...
+    2      41.25     -71.82    0.000000        -5           None ...
+    3      41.33     -71.82   15.263158        -5  United States ...
+    4      41.37     -71.82   25.360000        -5  United States ...
+    ..       ...        ...         ...       ...            ... ...
+    95     41.25     -71.66    0.000000        -5           None ...
+    96     41.89     -71.66  153.720000        -5  United States ...
+    97     41.45     -71.66   35.440000        -5  United States ...
+    98     41.61     -71.66  140.200000        -5  United States ...
+    99     41.41     -71.66   35.160000        -5  United States ...
+    [100 rows x 10 columns]
+
+    Efficient slicing of the metadata
+
+    >>> with Resource(file) as res:
+    >>>     meta = res['meta', 1]
+    >>>
+    >>> meta
+       latitude  longitude  elevation  timezone country state county urban ...
+    1     41.29     -71.82        0.0        -5    None  None   None  None ...
+
+    >>> with Resource(file) as res:
+    >>>     meta = res['meta', :5]
+    >>>
+    >>> meta
+       latitude  longitude  elevation  timezone        country ...
+    0     41.29     -71.86   0.000000        -5           None ...
+    1     41.29     -71.82   0.000000        -5           None ...
+    2     41.25     -71.82   0.000000        -5           None ...
+    3     41.33     -71.82  15.263158        -5  United States ...
+    4     41.37     -71.82  25.360000        -5  United States ...
+
+    >>> with Resource(file) as res:
+    >>>     tz = res['meta', :, 'timezone']
+    >>>
+    >>> tz
+    0    -5
+    1    -5
+    2    -5
+    3    -5
+    4    -5
+         ..
+    95   -5
+    96   -5
+    97   -5
+    98   -5
+    99   -5
+    Name: timezone, Length: 100, dtype: int64
+
+    >>> with Resource(file) as res:
+    >>>     lat_lon = res['meta', :, ['latitude', 'longitude']]
+    >>>
+    >>> lat_lon
+        latitude  longitude
+    0      41.29     -71.86
+    1      41.29     -71.82
+    2      41.25     -71.82
+    3      41.33     -71.82
+    4      41.37     -71.82
+    ..       ...        ...
+    95     41.25     -71.66
+    96     41.89     -71.66
+    97     41.45     -71.66
+    98     41.61     -71.66
+    99     41.41     -71.66
+    [100 rows x 2 columns]
+
+    Extracting resource variables (datasets)
+
+    >>> with Resource(file) as res:
+    >>>     wspd = res['wind_speed']
+    >>>
+    >>> wspd
+    [[12. 12. 12. ... 12. 12. 12.]
+     [12. 12. 12. ... 12. 12. 12.]
+     [12. 12. 12. ... 12. 12. 12.]
+     ...
+     [14. 14. 14. ... 14. 14. 14.]
+     [15. 15. 15. ... 15. 15. 15.]
+     [15. 15. 15. ... 15. 15. 15.]]
+
+    Efficient slicing of variables
+
+    >>> with Resource(file) as res:
+    >>>     wspd = res['wind_speed', :2]
+    >>>
+    >>> wspd
+    [[12. 12. 12. 12. 12. 12. 53. 53. 53. 53. 53. 12. 53.  1.  1. 12. 12. 12.
+       1.  1. 12. 53. 53. 53. 12. 12. 12. 12. 12.  1. 12. 12.  1. 12. 12. 53.
+      12. 53.  1. 12.  1. 53. 53. 12. 12. 12. 12.  1.  1.  1. 12. 12.  1.  1.
+      12. 12. 53. 53. 53. 12. 12. 53. 53. 12. 12. 12. 12. 12. 12.  1. 53.  1.
+      53. 12. 12. 53. 53.  1.  1.  1. 53. 12.  1.  1. 53. 53. 53. 12. 12. 12.
+      12. 12. 12. 12.  1. 12.  1. 12. 12. 12.]
+     [12. 12. 12. 12. 12. 12. 53. 53. 53. 53. 53. 12. 53.  1.  1. 12. 12. 12.
+       1.  1. 12. 53. 53. 53. 12. 12. 12. 12. 12.  1. 12. 12.  1. 12. 12. 53.
+      12. 53.  1. 12.  1. 53. 53. 12. 12. 12. 12.  1.  1.  1. 12. 12.  1.  1.
+      12. 12. 53. 53. 53. 12. 12. 53. 53. 12. 12. 12. 12. 12. 12.  1. 53.  1.
+      53. 12. 12. 53. 53.  1.  1.  1. 53. 12.  1.  1. 53. 53. 53. 12. 12. 12.
+      12. 12. 12. 12.  1. 12.  1. 12. 12. 12.]]
+
+    >>> with Resource(file) as res:
+    >>>     wspd = res['wind_speed', :, [2, 3]]
+    >>>
+    >>> wspd
+    [[12. 12.]
+     [12. 12.]
+     [12. 12.]
+     ...
+     [14. 14.]
+     [15. 15.]
+     [15. 15.]]
     """
     SCALE_ATTR = 'scale_factor'
     UNIT_ATTR = 'units'
@@ -341,15 +512,6 @@ class Resource:
         """
         Extract and convert time_index to pandas Datetime Index
 
-        Examples
-        --------
-        self['time_index', 1]
-            - Get a single timestep This returns a Timestamp
-        self['time_index', :10]
-            - Get the first 10 timesteps
-        self['time_index', [1, 3, 5, 7, 9]]
-            - Get a list of timesteps
-
         Parameters
         ----------
         ds : str
@@ -369,19 +531,6 @@ class Resource:
     def _get_meta(self, ds, *ds_slice):
         """
         Extract and convert meta to a pandas DataFrame
-
-        Examples
-        --------
-        self['meta', 1]
-            - Get site 1
-        self['meta', :10]
-            - Get the first 10 sites
-        self['meta', [1, 3, 5, 7, 9]]
-            - Get the first 5 odd numbered sites
-        self['meta', :, 'timezone']
-            - Get timezone for all sites
-        self['meta', :, ['latitude', 'longitdue']]
-            - Get ('latitude', 'longitude') for all sites
 
         Parameters
         ----------
@@ -408,11 +557,11 @@ class Resource:
                 sites = list(range(len(meta)))
 
         meta = pd.DataFrame(meta, index=sites)
-        if len(ds_slice) == 2:
-            meta = meta[ds_slice[1]]
-
         if self._str_decode:
             meta = self.df_str_decode(meta)
+
+        if len(ds_slice) == 2:
+            meta = meta[ds_slice[1]]
 
         return meta
 
@@ -493,16 +642,6 @@ class Resource:
         """
         Extract data from given dataset
 
-        Examples
-        --------
-        self['dni', :, 1]
-            - Get 'dni'timeseries for site 1
-        self['dni', ::2, :]
-            - Get hourly 'dni' timeseries for all sites (NSRDB)
-        self['windspeed_100m', :, [1, 3, 5, 7, 9]]
-            - Get 'windspeed_100m' timeseries for select sites
-
-
         Parameters
         ----------
         ds_name : str
@@ -567,6 +706,10 @@ class Resource:
 class SolarResource(Resource):
     """
     Class to handle Solar Resource .h5 files
+
+    See Also
+    --------
+    resource.Resource : Parent class
     """
     def _get_SAM_df(self, ds_name, site):
         """
@@ -667,6 +810,10 @@ class SolarResource(Resource):
 class NSRDB(SolarResource):
     """
     Class to handle NSRDB .h5 files
+
+    See Also
+    --------
+    resource.Resource : Parent class
     """
     ADD_ATTR = 'psm_add_offset'
     SCALE_ATTR = 'psm_scale_factor'
@@ -804,6 +951,49 @@ class NSRDB(SolarResource):
 class WindResource(Resource):
     """
     Class to handle Wind Resource .h5 files
+
+    See Also
+    --------
+    resource.Resource : Parent class
+
+    Examples
+    --------
+    >>> file = '$TESTDATADIR/wtk/ri_100_wtk_2012.h5'
+    >>> with WindResource(file) as res:
+    >>>     print(res.dsets)
+    ['meta', 'pressure_0m', 'pressure_100m', 'pressure_200m',
+    'temperature_100m', 'temperature_80m', 'time_index', 'winddirection_100m',
+    'winddirection_80m', 'windspeed_100m', 'windspeed_80m']
+
+    WindResource can interpolate between available hub-heights (80 & 100)
+
+    >>> with WindResource(file) as res:
+    >>>     wspd_90m = res['windspeed_90m']
+    >>>
+    >>> wspd_90m
+    [[ 6.865      6.77       6.565     ...  8.65       8.62       8.415    ]
+     [ 7.56       7.245      7.685     ...  5.9649997  5.8        6.2      ]
+     [ 9.775      9.21       9.225     ...  7.12       7.495      7.675    ]
+      ...
+     [ 8.38       8.440001   8.85      ... 11.934999  12.139999  12.4      ]
+     [ 9.900001   9.895      9.93      ... 12.825     12.86      12.965    ]
+     [ 9.895     10.01      10.305     ... 14.71      14.79      14.764999 ]]
+
+    WindResource can also extrapolate beyond available hub-heights
+
+    >>> with WindResource(file) as res:
+    >>>     wspd_150m = res['windspeed_150m']
+    >>>
+    >>> wspd_150m
+    ExtrapolationWarning: 150 is outside the height range (80, 100).
+    Extrapolation to be used.
+    [[ 7.336291   7.2570405  7.0532546 ...  9.736436   9.713792   9.487364 ]
+     [ 8.038219   7.687255   8.208041  ...  6.6909685  6.362647   6.668326 ]
+     [10.5515785  9.804363   9.770399  ...  8.026898   8.468434   8.67222  ]
+     ...
+     [ 9.079792   9.170363   9.634542  ... 13.472508  13.7102585 14.004617 ]
+     [10.710078  10.710078  10.698757  ... 14.468795  14.514081  14.6386175]
+     [10.698757  10.857258  11.174257  ... 16.585903  16.676476  16.653833 ]]
     """
     def __init__(self, h5_file, unscale=True, hsds=False, str_decode=True,
                  group=None):
@@ -1505,46 +1695,106 @@ class MultiFileResource(Resource):
     """
     Class to handle fine spatial resolution resource data stored in
     multiple .h5 files
+
+    See Also
+    --------
+    resource.Resource : Parent class
+
+    Examples
+    --------
+    Due to the size of the 2018 NSRDB and 5min WTK, datasets are stored in
+    multiple files. MultiFileResource and it's sub-classes allow for
+    interaction with all datasets as if they are in a single file.
+
+    MultiFileResource can take a directory containing all files to source
+    data from, or a filepath with a wildcard (*) indicating the filename
+    format.
+
+    >>> file = '$TESTDATADIR/wtk/wtk_2010_*m.h5'
+    >>> with MultiFileResource(file) as res:
+    >>>     print(self._h5_files)
+    ['$TESTDATADIR/wtk_2010_200m.h5',
+     '$TESTDATADIR/wtk_2010_100m.h5']
+
+    >>> file_100m = '$TESTDATADIR/wtk_2010_100m.h5'
+    >>> with Resource(file_100m) as res:
+    >>>     print(res.dsets)
+    ['coordinates', 'meta', 'pressure_100m', 'temperature_100m', 'time_index',
+     'winddirection_100m', 'windspeed_100m']
+
+    >>> file_200m = '$TESTDATADIR/wtk_2010_200m.h5'
+    >>> with Resource(file_200m) as res:
+    >>>     print(res.dsets)
+    ['coordinates', 'meta', 'pressure_200m', 'temperature_200m', 'time_index',
+     'winddirection_200m', 'windspeed_200m']
+
+    >>> with MultiFileResource(file) as res:
+    >>>     print(res.dsets)
+    ['coordinates', 'meta', 'pressure_100m', 'pressure_200m',
+     'temperature_100m', 'temperature_200m', 'time_index',
+     'winddirection_100m', 'winddirection_200m', 'windspeed_100m',
+     'windspeed_200m']
+
+    >>> with MultiFileResource(file) as res:
+    >>>     wspd = res['windspeed_100m']
+    >>>
+    >>> wspd
+    [[15.13 15.17 15.21 ... 15.3  15.32 15.31]
+     [15.09 15.13 15.16 ... 15.26 15.29 15.31]
+     [15.09 15.12 15.15 ... 15.24 15.23 15.26]
+     ...
+     [10.29 11.08 11.51 ... 14.43 14.41 14.19]
+     [11.   11.19 11.79 ... 13.27 11.93 11.8 ]
+     [12.16 12.44 13.09 ... 11.94 10.88 11.12]]
     """
-    def __init__(self, h5_dir, prefix='', suffix='.h5', unscale=True,
-                 str_decode=True):
+    PREFIX = ''
+    SUFFIX = '.h5'
+
+    def __init__(self, h5_path, unscale=True, str_decode=True):
         """
         Parameters
         ----------
-        h5_dir : str
-            Path to directory containing 5min .h5 files
-        prefix : str
-            Prefix for resource .h5 files
-        suffix : str
-            Suffix for resource .h5 files
+        h5_path : str
+            Path to directory containing multi-file resource file sets.
+            Available formats:
+                /h5_dir/
+                /h5_dir/prefix*suffix
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
         str_decode : bool
             Boolean flag to decode the bytestring meta data into normal
             strings. Setting this to False will speed up the meta data read.
         """
-        self.h5_dir = h5_dir
+        self.h5_dir, prefix, suffix = self.multi_args(h5_path)
+        if prefix is None:
+            prefix = self.PREFIX
+
+        if suffix is None:
+            suffix = self.SUFFIX
+
         self._unscale = unscale
         self._meta = None
         self._time_index = None
         self._str_decode = str_decode
         self._group = None
         # Map variables to their .h5 files
-        self._h5 = MultiH5(h5_dir, prefix=prefix, suffix=suffix)
-        self.h5_file = list(self._h5._h5_map.keys())[0]
+        self._h5 = MultiH5(self.h5_dir, prefix=prefix, suffix=suffix)
+        self._h5_files = sorted(list(self._h5._h5_map.keys()))
+        self.h5_file = self._h5_files[0]
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_dir)
         return msg
 
     @staticmethod
-    def multi_args(path):
-        """Get multi-h5 directory arguments for multi file resource paths.
+    def multi_args(h5_path):
+        """
+        Get multi-h5 directory arguments for multi file resource paths.
 
         Parameters
         ----------
-        path : str
-            Path to directory containing multi file resource file sets.
+        h5_path : str
+            Path to directory containing multi-file resource file sets.
             Available formats:
                 /h5_dir/
                 /h5_dir/prefix*suffix
@@ -1558,17 +1808,16 @@ class MultiFileResource(Resource):
         suffix : str
             File suffix for files in h5_dir.
         """
-        h5_dir = path
-        prefix = ''
-        suffix = '.h5'
+        h5_dir = h5_path
+        prefix = None
+        suffix = None
 
-        if '*' in path:
-            h5_dir, fn = os.path.split(path)
+        if '*' in h5_path:
+            h5_dir, fn = os.path.split(h5_path)
             prefix, suffix = fn.split('*')
-        elif os.path.isfile(path):
-            h5_dir = path
-            prefix = None
-            suffix = None
+        elif os.path.isfile(h5_path):
+            raise RuntimeError("MultiFileResource cannot handle a single file"
+                               " use Resource instead.")
 
         return h5_dir, prefix, suffix
 
@@ -1577,18 +1826,25 @@ class MultiFileNSRDB(MultiFileResource, NSRDB):
     """
     Class to handle 2018 and beyond NSRDB data that is at 2km and
     sub 30 min resolution
+
+    See Also
+    --------
+    resource.MultiFileResource : Parent class
+    resource.NSRDB : Parent class
     """
     @classmethod
-    def preload_SAM(cls, h5_file, project_points, clearsky=False,
-                    downscale=None, prefix='', suffix='.h5',
-                    unscale=True, str_decode=True):
+    def preload_SAM(cls, h5_path, project_points, clearsky=False,
+                    downscale=None, unscale=True, str_decode=True):
         """
         Pre-load project_points for SAM
 
         Parameters
         ----------
-        h5_file : str
-            h5_file to extract resource from
+        h5_path : str
+            Path to directory containing multi-file resource file sets.
+            Available formats:
+                /h5_dir/
+                /h5_dir/prefix*suffix
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
         clearsky : bool
@@ -1597,10 +1853,6 @@ class MultiFileNSRDB(MultiFileResource, NSRDB):
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
             e.g. '5min'.
-        prefix : str
-            Prefix for resource .h5 files
-        suffix : str
-            Suffix for resource .h5 files
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
         str_decode : bool
@@ -1613,9 +1865,7 @@ class MultiFileNSRDB(MultiFileResource, NSRDB):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        kwargs = {"prefix": prefix, "suffix": suffix,
-                  "unscale": unscale, "str_decode": str_decode}
-        with cls(h5_file, **kwargs) as res:
+        with cls(h5_path, unscale=unscale, str_decode=str_decode) as res:
             SAM_res = res._preload_SAM(project_points, clearsky=clearsky,
                                        downscale=downscale)
 
@@ -1625,39 +1875,75 @@ class MultiFileNSRDB(MultiFileResource, NSRDB):
 class MultiFileWTK(MultiFileResource, WindResource):
     """
     Class to handle 5min WIND Toolkit data
+
+    See Also
+    --------
+    resource.MultiFileResource : Parent class
+    resource.WindResource : Parent class
+
+    Examples
+    --------
+    MultiFileWTK automatically searches for files of the form *m.h5
+
+    >>> file = '$TESTDATADIR/wtk'
+    >>> with MultiFileWTK(file) as res:
+    >>>     print(list(res._h5_files)
+    >>>     print(res.dsets)
+    ['$TESTDATADIR/wtk_2010_200m.h5',
+     '$TESTDATADIR/wtk_2010_100m.h5']
+    ['coordinates', 'meta', 'pressure_100m', 'pressure_200m',
+     'temperature_100m', 'temperature_200m', 'time_index',
+     'winddirection_100m', 'winddirection_200m', 'windspeed_100m',
+     'windspeed_200m']
+
+    MultiFileWTK, like WindResource can interpolate / extrapolate hub-heights
+
+    >>> with MultiFileWTK(file) as res:
+    >>>     wspd = res['windspeed_150m']
+    >>>
+    >>> wspd
+    [[16.19     16.25     16.305    ... 16.375    16.39     16.39    ]
+     [16.15     16.205    16.255001 ... 16.35     16.365    16.39    ]
+     [16.154999 16.195    16.23     ... 16.335    16.32     16.34    ]
+     ...
+     [10.965    11.675    12.08     ... 15.18     14.805    14.42    ]
+     [11.66     11.91     12.535    ... 13.31     12.23     12.335   ]
+     [12.785    13.295    14.014999 ... 12.205    11.360001 11.64    ]]
     """
-    def __init__(self, h5_dir, prefix='', suffix='m.h5', unscale=True,
-                 str_decode=True):
+    SUFFIX = 'm.h5'
+
+    def __init__(self, h5_path, unscale=True, str_decode=True):
         """
         Parameters
         ----------
-        h5_dir : str
-            Path to directory containing 5min .h5 files
-        prefix : str
-            Prefix for resource .h5 files
-        suffix : str
-            Suffix for resource .h5 files
+        h5_path : str
+            Path to directory containing multi-file resource file sets.
+            Available formats:
+                /h5_dir/
+                /h5_dir/prefix*suffix
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
         str_decode : bool
             Boolean flag to decode the bytestring meta data into normal
             strings. Setting this to False will speed up the meta data read.
         """
-        super().__init__(h5_dir, prefix=prefix, suffix=suffix, unscale=unscale,
-                         str_decode=str_decode)
+        super().__init__(h5_path, unscale=unscale, str_decode=str_decode)
         self._heights = None
 
     @classmethod
-    def preload_SAM(cls, h5_file, project_points, require_wind_dir=False,
-                    precip_rate=False, icing=False, prefix='', suffix='m.h5',
-                    unscale=True, str_decode=True):
+    def preload_SAM(cls, h5_path, project_points, require_wind_dir=False,
+                    precip_rate=False, icing=False, unscale=True,
+                    str_decode=True):
         """
         Placeholder for classmethod that will pre-load project_points for SAM
 
         Parameters
         ----------
-        h5_file : str
-            h5_file to extract resource from
+        h5_path : str
+            Path to directory containing multi-file resource file sets.
+            Available formats:
+                /h5_dir/
+                /h5_dir/prefix*suffix
         project_points : reV.config.ProjectPoints
             Projects points to be pre-loaded from Resource for SAM
         require_wind_dir : bool
@@ -1667,10 +1953,6 @@ class MultiFileWTK(MultiFileResource, WindResource):
         icing : bool
             Boolean flag as to whether icing is analyzed.
             This will preload relative humidity.
-        prefix : str
-            Prefix for resource .h5 files
-        suffix : str
-            Suffix for resource .h5 files
         unscale : bool
             Boolean flag to automatically unscale variables on extraction
         str_decode : bool
@@ -1683,9 +1965,7 @@ class MultiFileWTK(MultiFileResource, WindResource):
             Instance of SAMResource pre-loaded with Solar resource for sites
             in project_points
         """
-        kwargs = {"prefix": prefix, "suffix": suffix,
-                  "unscale": unscale, "str_decode": str_decode}
-        with cls(h5_file, **kwargs) as res:
+        with cls(h5_path, unscale=unscale, str_decode=str_decode) as res:
             SAM_res = res._preload_SAM(project_points,
                                        require_wind_dir=require_wind_dir,
                                        precip_rate=precip_rate, icing=icing)

@@ -17,14 +17,14 @@ Documentation config file
 #
 # import os
 # import sys
-# sys.path.insert(0, os.path.abspath('.'))
+# sys.path.append(os.path.abspath('../../examples'))
 import sphinx_rtd_theme
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'reV'
-copyright = '2018, Galen MacLaurin, Michael Rossol'
+copyright = '2020, Alliance for Sustainable Energy, LLC'
 author = 'Galen MacLaurin, Michael Rossol'
 
 # The short X.Y version
@@ -48,7 +48,8 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon'  # had numpydoc, but got lots of extraneous warnings
+    'sphinx.ext.napoleon',
+    'sphinx_click.ext'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
