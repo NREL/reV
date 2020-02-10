@@ -1912,8 +1912,7 @@ class MultiFileWTK(MultiFileResource, WindResource):
     """
     SUFFIX = 'm.h5'
 
-    def __init__(self, h5_path, unscale=True,
-                 str_decode=True):
+    def __init__(self, h5_path, unscale=True, str_decode=True):
         """
         Parameters
         ----------
