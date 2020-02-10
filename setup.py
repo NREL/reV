@@ -56,6 +56,7 @@ numpy_dependency = "numpy>=1.15.0"
 pandas_dependency = "pandas>=0.23.0"
 click_dependency = "click>=7.0"
 scipy_dependency = "scipy>=1.2.1"
+pysam_dependency = "NREL-PySAM=1.2.1"
 
 setup(
     name="reV",
