@@ -1712,9 +1712,7 @@ class MultiFileResource(Resource):
 
     >>> file = '$TESTDATADIR/wtk/wtk_2010_*m.h5'
     >>> with MultiFileResource(file) as res:
-    >>>     h5_files = list(res._h5._h5_map.keys())
-    >>>
-    >>> h5_files
+    >>>     print(self._h5_files)
     ['$TESTDATADIR/wtk_2010_200m.h5',
      '$TESTDATADIR/wtk_2010_100m.h5']
 
@@ -1781,7 +1779,8 @@ class MultiFileResource(Resource):
         self._group = None
         # Map variables to their .h5 files
         self._h5 = MultiH5(self.h5_dir, prefix=prefix, suffix=suffix)
-        self.h5_file = list(self._h5._h5_map.keys())[0]
+        self._h5_files = sorted(list(self._h5._h5_map.keys()))
+        self.h5_file = self._h5_files[0]
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_dir)
@@ -1888,7 +1887,7 @@ class MultiFileWTK(MultiFileResource, WindResource):
 
     >>> file = '$TESTDATADIR/wtk'
     >>> with MultiFileWTK(file) as res:
-    >>>     print(list(res._h5._h5_map.keys()))
+    >>>     print(list(res._h5_files)
     >>>     print(res.dsets)
     ['$TESTDATADIR/wtk_2010_200m.h5',
      '$TESTDATADIR/wtk_2010_100m.h5']
