@@ -358,12 +358,7 @@ class ProjectPoints:
 
                 multi_h5_res, _ = check_res_file(res_file)
                 if multi_h5_res:
-                    if '*' in res_file:
-                        h5_dir, p, s = MultiFileResource.multi_args(res_file)
-                        stop = MultiFileResource(h5_dir, prefix=p,
-                                                 suffix=s).shape[1]
-                    else:
-                        stop = MultiFileResource(res_file).shape[1]
+                    stop = MultiFileResource(res_file).shape[1]
                 else:
                     stop = Resource(res_file).shape[1]
 

@@ -104,3 +104,6 @@ ENV/
 # OS Files
 .DS_Store
 */.DS_Store
+
+# VSCode
+.vscode

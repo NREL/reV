@@ -247,8 +247,7 @@ class Gen:
 
     def _set_high_res_ti(self):
         """Set the 5-minute time index if res_file is a multi-file directory"""
-        h5_dir, pre, suf = MultiFileResource.multi_args(self._res_file)
-        with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
+        with MultiFileResource(self._res_file) as mres:
             ti = mres.time_index
         self._time_index = self.handle_leap_ti(
             ti, drop_leap=self._drop_leap)
@@ -592,8 +591,7 @@ class Gen:
                 meta.loc[:, 'gid'] = self.project_points.sites
                 meta.loc[:, 'reV_tech'] = self.project_points.tech
         else:
-            h5_dir, pre, suf = MultiFileResource.multi_args(self.res_file)
-            with MultiFileResource(h5_dir, prefix=pre, suffix=suf) as mres:
+            with MultiFileResource(self.res_file) as mres:
                 meta = mres.meta.iloc[self.project_points.sites, :]
                 meta.loc[:, 'gid'] = self.project_points.sites
                 meta.loc[:, 'reV_tech'] = self.project_points.tech
