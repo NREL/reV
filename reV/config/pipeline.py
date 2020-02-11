@@ -24,7 +24,7 @@ class PipelineConfig(AnalysisConfig):
             or dictionary with pre-extracted config.
         """
 
-        super().__init__(config)
+        super().__init__(config, run_preflight=False)
         self._check_pipeline()
         self._parse_dirout()
         self._check_dirout_status()

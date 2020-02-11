@@ -1,6 +1,7 @@
 {
+  "analysis_years": 2012,
   "directories": {
-    "logging_directory": "TESTDATADIR/ri_wind_reV2",
+    "log_directory": "TESTDATADIR/ri_wind_reV2",
     "output_directory": "TESTDATADIR/ri_wind_reV2"
   },
   "execution_control": {
@@ -10,20 +11,17 @@
     "option": "local",
     "sites_per_worker": 10
   },
-  "project_control": {
-    "analysis_years": 2012,
-    "logging_level": "DEBUG",
-    "name": "rev",
-    "output_request": [
-      "cf_mean",
-      "cf_profile",
-      "monthly_energy"
-    ],
-    "technology": "wind"
-  },
+  "log_level": "DEBUG",
+  "name": "rev",
+  "output_request": [
+    "cf_mean",
+    "cf_profile",
+    "monthly_energy"
+  ],
   "project_points": "./wtk_pp_2012_10.csv",
   "resource_file": "TESTDATADIR/wtk/ri_100_wtk_{}.h5",
   "sam_files": {
     "wind0": "TESTDATADIR/SAM/wind_gen_standard_losses_0.json"
-  }
+  },
+  "technology": "wind"
 }

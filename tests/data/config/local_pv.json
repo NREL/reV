@@ -1,6 +1,7 @@
 {
+  "analysis_years": 2012,
   "directories": {
-    "logging_directory": "TESTDATADIR/ri_pv_reV2",
+    "log_directory": "TESTDATADIR/ri_pv_reV2",
     "output_directory": "TESTDATADIR/ri_pv_reV2"
   },
   "execution_control": {
@@ -10,22 +11,19 @@
     "option": "local",
     "sites_per_worker": 10
   },
-  "project_control": {
-    "analysis_years": 2012,
-    "logging_level": "DEBUG",
-    "name": "rev",
-    "output_request": [
-      "cf_mean",
-      "cf_profile",
-      "monthly_energy",
-      "poa",
-      "lcoe"
-    ],
-    "technology": "pv"
-  },
+  "log_level": "DEBUG",
+  "name": "rev",
+  "output_request": [
+    "cf_mean",
+    "cf_profile",
+    "monthly_energy",
+    "poa",
+    "lcoe"
+  ],
   "project_points": "./project_points_10.csv",
   "resource_file": "TESTDATADIR/nsrdb/ri_100_nsrdb_{}.h5",
   "sam_files": {
     "sam_gen_pv_1": "TESTDATADIR/SAM/naris_pv_1axis_inv13.json"
-  }
+  },
+  "technology": "pv"
 }

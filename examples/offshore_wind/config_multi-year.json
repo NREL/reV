@@ -1,6 +1,6 @@
 {
   "directories": {
-    "logging_directory": "./logs/",
+    "log_directory": "./logs/",
     "output_directory": "./conus_wind/"
   },
   "execution_control": {
@@ -23,7 +23,5 @@
       "source_prefix": ""
     }
   },
-  "project_control": {
-    "logging_level": "INFO"
-  }
+  "log_level": "INFO"
 }

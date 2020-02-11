@@ -1,6 +1,11 @@
 {
+  "analysis_years": [
+    2011,
+    2012,
+    2013
+  ],
   "directories": {
-    "logging_directory": "./logs/",
+    "log_directory": "./logs/",
     "output_directory": "./"
   },
   "execution_control": {
@@ -12,24 +17,17 @@
     "sites_per_worker": 100,
     "walltime": 4.0
   },
-  "project_control": {
-    "analysis_years": [
-      2011,
-      2012,
-      2013
-    ],
-    "logging_level": "INFO",
-    "output_request": [
-      "cf_mean",
-      "cf_profile",
-      "lcoe_fcr",
-      "ghi_mean"
-    ],
-    "technology": "pv"
-  },
+  "log_level": "INFO",
+  "output_request": [
+    "cf_mean",
+    "cf_profile",
+    "lcoe_fcr",
+    "ghi_mean"
+  ],
   "project_points": "./nsrdb_conus_project_points.csv",
   "resource_file": "/datasets/NSRDB/v3.0.1/nsrdb_{}.h5",
   "sam_files": {
     "default": "./pv.json"
-  }
+  },
+  "technology": "pv"
 }

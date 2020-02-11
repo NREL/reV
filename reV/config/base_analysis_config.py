@@ -19,13 +19,15 @@ class AnalysisConfig(BaseConfig):
 
     NAME = None
 
-    def __init__(self, config):
+    def __init__(self, config, run_preflight=True):
         """
         Parameters
         ----------
         config : str | dict
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
+        run_preflight : bool
+            Flag to run or disable preflight checks.
         """
         super().__init__(config)
 
@@ -34,7 +36,8 @@ class AnalysisConfig(BaseConfig):
         self._dirout = self.config_dir
         self._logdir = './logs/'
 
-        self._analysis_config_preflight()
+        if run_preflight:
+            self._analysis_config_preflight()
 
     def _analysis_config_preflight(self):
         """Check for required config blocks"""

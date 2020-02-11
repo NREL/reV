@@ -188,3 +188,9 @@ class FileInputWarning(Warning):
     """
     Warning during input file checks.
     """
+
+
+class reVDeprecationWarning(Warning):
+    """
+    Warning of deprecated feature.
+    """

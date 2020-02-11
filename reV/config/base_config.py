@@ -5,9 +5,10 @@ reV Base Configuration Framework
 import json
 import logging
 import os
+from warnings import warn
 
 from reV.utilities import safe_json_load
-from reV.utilities.exceptions import ConfigError
+from reV.utilities.exceptions import ConfigError, reVDeprecationWarning
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,17 @@ class BaseConfig(dict):
         self._log_level = None
         self._name = None
         self._parse_config(config)
+
+        self._base_preflight()
+
+    def _base_preflight(self):
+        """Run a base preflight check on the config."""
+        if 'project_control' in self:
+            w = ('Deprecation warning: config "project_control" block is no '
+                 'longer used. All project control keys are moved to the top '
+                 'config level.')
+            logger.warning(w)
+            warn(w, reVDeprecationWarning)
 
     @property
     def config_dir(self):

@@ -1,6 +1,6 @@
 {
   "directories": {
-    "logging_directory": "./logs/",
+    "log_directory": "./logs/",
     "output_directory": "./conus_wind/"
   },
   "execution_control": {

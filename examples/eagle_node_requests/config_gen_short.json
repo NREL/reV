@@ -1,6 +1,10 @@
 {
+  "analysis_years": [
+    2010,
+    2011
+  ],
   "directories": {
-    "logging_directory": "/scratch/gbuster/rev/test_pipeline",
+    "log_directory": "/scratch/gbuster/rev/test_pipeline",
     "output_directory": "/scratch/gbuster/rev/test_pipeline"
   },
   "execution_control": {
@@ -9,22 +13,16 @@
     "option": "eagle",
     "walltime": 4.0
   },
-  "project_control": {
-    "analysis_years": [
-      2010,
-      2011
-    ],
-    "logging_level": "INFO",
-    "name": "gen",
-    "output_request": [
-      "cf_mean",
-      "cf_profile"
-    ],
-    "technology": "pv"
-  },
+  "log_level": "INFO",
+  "name": "gen",
+  "output_request": [
+    "cf_mean",
+    "cf_profile"
+  ],
   "project_points": "./project_points/project_points.csv",
   "resource_file": "/datasets/NSRDB/v3.0.1/nsrdb_{}.h5",
   "sam_files": {
     "i_pvwatts": "./sam_configs/i_pvwatts_gen.json"
-  }
+  },
+  "technology": "pv"
 }

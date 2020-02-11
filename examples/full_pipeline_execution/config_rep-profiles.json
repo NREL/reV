@@ -1,7 +1,12 @@
 {
+  "analysis_years": [
+    2011,
+    2012,
+    2013
+  ],
   "cf_dset": "cf_profile-{}",
   "directories": {
-    "logging_directory": "./logs/",
+    "log_directory": "./logs/",
     "output_directory": "./"
   },
   "err_method": "rmse",
@@ -16,15 +21,8 @@
     "walltime": 4.0
   },
   "gen_fpath": "PIPELINE",
+  "log_level": "INFO",
   "n_profiles": 5,
-  "project_control": {
-    "analysis_years": [
-      2011,
-      2012,
-      2013
-    ],
-    "logging_level": "INFO"
-  },
   "reg_cols": [
     "reeds_region",
     "res_class"

@@ -1,6 +1,6 @@
 {
   "directories": {
-    "logging_directory": "TESTDATADIR/ri_excl_reV2",
+    "log_directory": "TESTDATADIR/ri_excl_reV2",
     "output_directory": "TESTDATADIR/ri_excl_reV2"
   },
   "exclusions": [
@@ -26,9 +26,7 @@
   },
   "filter": "queen",
   "fout": "exclusions.tif",
-  "project_control": {
-    "logging_level": "DEBUG",
-    "name": "rev_exclusions"
-  },
+  "log_level": "DEBUG",
+  "name": "rev_exclusions",
   "use_blocks": true
 }
