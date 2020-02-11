@@ -24,7 +24,7 @@ class PipelineConfig(AnalysisConfig):
             or dictionary with pre-extracted config.
         """
 
-        super().__init__(config)
+        super().__init__(config, run_preflight=False)
         self._check_pipeline()
         self._parse_dirout()
         self._check_dirout_status()
@@ -57,9 +57,8 @@ class PipelineConfig(AnalysisConfig):
                 config = AnalysisConfig(f_config)
                 dirouts.append(config.dirout)
 
-                if 'project_control' in config:
-                    if 'name' in config['project_control']:
-                        names.append(config.name)
+                if 'name' in config:
+                    names.append(config.name)
 
         if len(set(dirouts)) != 1:
             raise ConfigError('Pipeline steps must have a common output '

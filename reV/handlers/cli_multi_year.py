@@ -38,7 +38,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['NAME'] = name
 
     # Enforce verbosity if logging level is specified in the config
-    if config.logging_level == logging.DEBUG:
+    if config.log_level == logging.DEBUG:
         verbose = True
 
     # make output directory if does not exist
@@ -70,9 +70,9 @@ def from_config(ctx, config_file, verbose):
             group_params = json.dumps(config.group_params)
             ctx.invoke(multi_year_groups, group_params=group_params)
 
-    elif config.execution_control.option == 'eagle':
+    elif config.execution_control.option in ('eagle', 'slurm'):
         ctx.obj['NAME'] = name
-        ctx.invoke(multi_year_eagle,
+        ctx.invoke(multi_year_slurm,
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
                    feature=config.execution_control.feature,
@@ -253,14 +253,14 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 
 @main.command()
 @click.option('--alloc', '-a', default='rev', type=str,
-              help='Eagle allocation account name. Default is "rev".')
+              help='SLURM allocation account name. Default is "rev".')
 @click.option('--walltime', '-wt', default=4.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--memory', '-mem', default=None, type=INT,
-              help='Eagle node memory request in GB. Default is None')
+              help='SLURM node memory request in GB. Default is None')
 @click.option('--conda_env', '-env', default=None, type=STR,
               help='Conda env to activate')
 @click.option('--module', '-mod', default=None, type=STR,
@@ -273,10 +273,10 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def multi_year_eagle(ctx, alloc, walltime, feature, memory, conda_env,
+def multi_year_slurm(ctx, alloc, walltime, feature, memory, conda_env,
                      module, stdout_path, group_params, verbose):
     """
-    Run multi year collection and means on Eagle HPC via SLURM job submission.
+    Run multi year collection and means on HPC via SLURM job submission.
     """
 
     name = ctx.obj['NAME']
@@ -290,7 +290,7 @@ def multi_year_eagle(ctx, alloc, walltime, feature, memory, conda_env,
                'not re-running.'
                .format(name, os.path.dirname(my_file)))
     else:
-        logger.info('Running reV multi-year collection on Eagle with node '
+        logger.info('Running reV multi-year collection on SLURM with node '
                     ' name "{}", collecting into "{}".'
                     .format(name, my_file))
         # create and submit the SLURM job
@@ -300,7 +300,7 @@ def multi_year_eagle(ctx, alloc, walltime, feature, memory, conda_env,
                       conda_env=conda_env, module=module)
         if slurm.id:
             msg = ('Kicked off reV multi-year collection job "{}" '
-                   '(SLURM jobid #{}) on Eagle.'.format(name, slurm.id))
+                   '(SLURM jobid #{}).'.format(name, slurm.id))
             # add job to reV status file.
             Status.add_job(
                 os.path.dirname(my_file), 'multi-year', name, replace=True,

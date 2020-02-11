@@ -26,8 +26,8 @@ class MultiYearConfig(AnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
-        self._groups = None
         super().__init__(config)
+        self._groups = None
 
     @property
     def my_file(self):

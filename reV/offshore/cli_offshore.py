@@ -44,7 +44,7 @@ def from_config(ctx, config_file, verbose):
         name = config.name
 
     # Enforce verbosity if logging level is specified in the config
-    if config.logging_level == logging.DEBUG:
+    if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
@@ -77,7 +77,7 @@ def from_config(ctx, config_file, verbose):
                            config.project_points, config.sam_files,
                            config.logdir, verbose)
 
-        elif config.execution_control.option == 'eagle':
+        elif config.execution_control.option in ('eagle', 'slurm'):
 
             ctx.obj['NAME'] = job_name
             ctx.obj['GEN_FPATH'] = gen_fpath
@@ -88,7 +88,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['VERBOSE'] = verbose
 
-            ctx.invoke(eagle,
+            ctx.invoke(slurm,
                        alloc=config.execution_control.alloc,
                        memory=config.execution_control.node_mem,
                        walltime=config.execution_control.walltime,
@@ -183,14 +183,14 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
 
 @main.command()
 @click.option('--alloc', '-a', required=True, type=STR,
-              help='Eagle allocation account name.')
+              help='SLURM allocation account name.')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
-@click.option('--memory', '-mem', default=None, type=INT, help='Eagle node '
+@click.option('--memory', '-mem', default=None, type=INT, help='SLURM node '
               'memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--module', '-mod', default=None, type=STR,
               help='Module to load')
 @click.option('--conda_env', '-env', default=None, type=STR,
@@ -198,9 +198,9 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def eagle(ctx, alloc, feature, memory, walltime, module, conda_env,
+def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
           stdout_path):
-    """Eagle submission tool for reV supply curve aggregation."""
+    """slurm (Eagle) submission tool for reV supply curve aggregation."""
 
     name = ctx.obj['NAME']
     gen_fpath = ctx.obj['GEN_FPATH']
@@ -223,7 +223,7 @@ def eagle(ctx, alloc, feature, memory, walltime, module, conda_env,
                'not re-running.'
                .format(name, out_dir))
     else:
-        logger.info('Running reV offshore aggregation on Eagle with '
+        logger.info('Running reV offshore aggregation on SLURM with '
                     'node name "{}"'.format(name))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
@@ -231,7 +231,7 @@ def eagle(ctx, alloc, feature, memory, walltime, module, conda_env,
                       module=module)
         if slurm.id:
             msg = ('Kicked off reV offshore job "{}" '
-                   '(SLURM jobid #{}) on Eagle.'
+                   '(SLURM jobid #{}).'
                    .format(name, slurm.id))
             Status.add_job(
                 out_dir, 'offshore', name, replace=True,

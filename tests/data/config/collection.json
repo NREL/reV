@@ -1,27 +1,25 @@
 {
   "directories": {
     "collect_directory": "TESTDATADIR/ri_pv_reV2",
-    "logging_directory": "TESTDATADIR/ri_pv_reV2",
+    "log_directory": "TESTDATADIR/ri_pv_reV2",
     "output_directory": "TESTDATADIR/ri_pv_reV2"
   },
+  "dsets": [
+    "cf_mean",
+    "cf_profile"
+  ],
   "execution_control": {
     "allocation": "rev",
     "memory": 90,
     "option": "eagle",
     "walltime": 0.5
   },
-  "project_control": {
-    "dsets": [
-      "cf_mean",
-      "cf_profile"
-    ],
-    "file_prefixes": [
-      "gen_1",
-      "gen_2"
-    ],
-    "logging_level": "DEBUG",
-    "name": "rev",
-    "parallel": false
-  },
+  "file_prefixes": [
+    "gen_1",
+    "gen_2"
+  ],
+  "log_level": "DEBUG",
+  "name": "rev",
+  "parallel": false,
   "project_points": "./project_points_100.csv"
 }

@@ -131,7 +131,9 @@ class Status(dict):
             Options are found in the options dictionary below.
         """
         options = {'eagle': SLURM.check_status,
+                   'slurm': SLURM.check_status,
                    'peregrine': PBS.check_status,
+                   'pbs': PBS.check_status,
                    'local': None}
         try:
             method = options[hardware]
@@ -149,7 +151,7 @@ class Status(dict):
         job_id : str | int
             SLURM or PBS job submission id.
         hardware : str
-            Hardware option, either eagle or peregrine.
+            Hardware option: eagle | peregrine | slurm | pbs
 
         Returns
         -------
@@ -220,7 +222,7 @@ class Status(dict):
         job_name : str
             Unique job name identification.
         hardware : str
-            Hardware option, either eagle or peregrine.
+            Hardware option: eagle | peregrine | slurm | pbs
         """
 
         # look for completion file.
@@ -400,10 +402,10 @@ class Status(dict):
             job_attrs = {}
 
         if 'hardware' in job_attrs:
-            if job_attrs['hardware'] in ('eagle', 'peregrine'):
+            if job_attrs['hardware'] in ('eagle', 'peregrine', 'slurm', 'pbs'):
                 if 'job_id' not in job_attrs:
                     warn('Key "job_id" should be in kwargs for "{}" if '
-                         'adding job from an eagle or peregrine node.'
+                         'adding job from an HPC node.'
                          .format(job_name))
 
         # check to see if job exists yet

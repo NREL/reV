@@ -1,9 +1,15 @@
 {
   "directories": {
     "collect_directory": "PIPELINE",
-    "logging_directory": "./logs/",
+    "log_directory": "./logs/",
     "output_directory": "./"
   },
+  "dsets": [
+    "cf_mean",
+    "cf_profile",
+    "lcoe_fcr",
+    "ghi_mean"
+  ],
   "execution_control": {
     "allocation": "rev",
     "feature": "--qos=high",
@@ -11,16 +17,8 @@
     "option": "eagle",
     "walltime": 2
   },
-  "project_control": {
-    "dsets": [
-      "cf_mean",
-      "cf_profile",
-      "lcoe_fcr",
-      "ghi_mean"
-    ],
-    "file_prefixes": "PIPELINE",
-    "logging_level": "INFO",
-    "parallel": false
-  },
+  "file_prefixes": "PIPELINE",
+  "log_level": "INFO",
+  "parallel": false,
   "project_points": "./nsrdb_conus_project_points.csv"
 }

@@ -1,7 +1,11 @@
 {
+  "analysis_years": [
+    2012,
+    2013
+  ],
   "cf_file": "PIPELINE",
   "directories": {
-    "logging_directory": "./logs/",
+    "log_directory": "./logs/",
     "output_directory": "./"
   },
   "execution_control": {
@@ -10,19 +14,13 @@
     "option": "local",
     "sites_per_worker": 10
   },
-  "project_control": {
-    "analysis_years": [
-      2012,
-      2013
-    ],
-    "logging_level": "INFO",
-    "output_request": [
-      "lcoe_fcr"
-    ],
-    "technology": "pv"
-  },
+  "log_level": "INFO",
+  "output_request": [
+    "lcoe_fcr"
+  ],
   "project_points": "./project_points_10.csv",
   "sam_files": {
     "sam_gen_pv_1": "TESTDATADIR/SAM/naris_pv_1axis_inv13.json"
-  }
+  },
+  "technology": "pv"
 }

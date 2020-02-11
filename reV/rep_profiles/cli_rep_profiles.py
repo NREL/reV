@@ -37,7 +37,7 @@ def from_config(ctx, config_file, verbose):
         name = config.name
 
     # Enforce verbosity if logging level is specified in the config
-    if config.logging_level == logging.DEBUG:
+    if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
@@ -85,7 +85,7 @@ def from_config(ctx, config_file, verbose):
                            config.execution_control.max_workers,
                            verbose)
 
-        elif config.execution_control.option == 'eagle':
+        elif config.execution_control.option in ('eagle', 'slurm'):
             ctx.obj['NAME'] = name
             ctx.obj['GEN_FPATH'] = gen_fpath
             ctx.obj['REV_SUMMARY'] = config.rev_summary
@@ -99,7 +99,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
             ctx.obj['VERBOSE'] = verbose
 
-            ctx.invoke(eagle,
+            ctx.invoke(slurm,
                        alloc=config.execution_control.alloc,
                        memory=config.execution_control.node_mem,
                        walltime=config.execution_control.walltime,
@@ -220,11 +220,12 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 
 @main.command()
 @click.option('--alloc', '-a', required=True, type=STR,
-              help='Eagle allocation account name.')
+              help='SLURM allocation account name.')
 @click.option('--memory', '-mem', default=None, type=INT,
-              help='Eagle node memory request in GB. Default is None')
+              help='SLURM node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='SLURM walltime request in hours for single year '
+              'rep_profiles run. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
@@ -235,9 +236,9 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
+def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
           stdout_path):
-    """Eagle submission tool for reV representative profiles."""
+    """slurm (Eagle) submission tool for reV representative profiles."""
 
     name = ctx.obj['NAME']
     gen_fpath = ctx.obj['GEN_FPATH']
@@ -265,7 +266,7 @@ def eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
                'not re-running.'
                .format(name, out_dir))
     else:
-        logger.info('Running reV SC rep profiles on Eagle with '
+        logger.info('Running reV SC rep profiles on SLURM with '
                     'node name "{}"'.format(name))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
@@ -273,7 +274,7 @@ def eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
                       conda_env=conda_env, module=module)
         if slurm.id:
             msg = ('Kicked off reV rep profiles job "{}" '
-                   '(SLURM jobid #{}) on Eagle.'
+                   '(SLURM jobid #{}).'
                    .format(name, slurm.id))
             Status.add_job(
                 out_dir, 'rep-profiles', name, replace=True,

@@ -15,7 +15,7 @@ from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
 from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
-from reV.utilities.execution import PBS, SLURM, SubprocessManager
+from reV.utilities.execution import SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
 from reV.utilities.exceptions import ConfigError
 from reV.pipeline.status import Status
@@ -59,7 +59,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
-    if config.logging_level == logging.DEBUG:
+    if config.log_level == logging.DEBUG:
         verbose = True
 
     # make output directory if does not exist
@@ -165,23 +165,11 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                        timeout=config.timeout, points_range=None,
                        verbose=verbose)
 
-    elif config.execution_control.option == 'peregrine':
-        if not parse_year(name, option='bool') and year:
-            # Add year to name before submitting
-            # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
-            ctx.obj['NAME'] = '{}_{}'.format(name[:8], str(year))
-        ctx.invoke(gen_peregrine, nodes=config.execution_control.nodes,
-                   alloc=config.execution_control.alloc,
-                   queue=config.execution_control.queue,
-                   feature=config.execution_control.feature,
-                   stdout_path=os.path.join(config.logdir, 'stdout'),
-                   verbose=verbose)
-
-    elif config.execution_control.option == 'eagle':
+    elif config.execution_control.option in ('eagle', 'slurm'):
         if not parse_year(name, option='bool') and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
-        ctx.invoke(gen_eagle, nodes=config.execution_control.nodes,
+        ctx.invoke(gen_slurm, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.node_mem,
@@ -564,95 +552,13 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 
 @direct.command()
 @click.option('--nodes', '-no', default=1, type=INT,
-              help='Number of Peregrine nodes for gen job. Default is 1.')
+              help='Number of SLURM nodes for gen job. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
-              help='Peregrine allocation account name. Default is "rev".')
-@click.option('--queue', '-q', default='batch-h', type=STR,
-              help='Peregrine target job queue. Default is "batch-h".')
-@click.option('--feature', '-l', default=None, type=STR,
-              help=('Feature request. Format is "feature=64GB" or "qos=high". '
-                    'Default is None.'))
-@click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
-              help='Subprocess standard output path. Default is ./out/stdout')
-@click.option('-v', '--verbose', is_flag=True,
-              help='Flag to turn on debug logging. Default is not verbose.')
-@click.pass_context
-def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
-    """Run generation on Peregrine HPC via PBS job submission."""
-
-    name = ctx.obj['NAME']
-    tech = ctx.obj['TECH']
-    points = ctx.obj['POINTS']
-    sam_files = ctx.obj['SAM_FILES']
-    res_file = ctx.obj['RES_FILE']
-    sites_per_worker = ctx.obj['SITES_PER_WORKER']
-    fout = ctx.obj['FOUT']
-    dirout = ctx.obj['DIROUT']
-    logdir = ctx.obj['LOGDIR']
-    output_request = ctx.obj['OUTPUT_REQUEST']
-    mem_util_lim = ctx.obj['MEM_UTIL_LIM']
-    curtailment = ctx.obj['CURTAILMENT']
-    downscale = ctx.obj['DOWNSCALE']
-    verbose = any([verbose, ctx.obj['VERBOSE']])
-
-    # initialize an info logger on the year level
-    init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
-                                     'reV.config', 'reV.utilities', 'reV.SAM'],
-              verbose=False)
-
-    pc = get_node_pc(points, sam_files, tech, res_file, nodes)
-
-    jobs = {}
-
-    for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
-                                                  hpc='pbs')
-
-        cmd = get_node_cmd(node_name, tech, sam_files, res_file,
-                           points=points, points_range=split.split_range,
-                           sites_per_worker=sites_per_worker, max_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
-                           output_request=output_request,
-                           mem_util_lim=mem_util_lim, curtailment=curtailment,
-                           downscale=downscale, verbose=verbose)
-
-        logger.info('Running reV generation on Peregrine with node name "{}" '
-                    'for {} (points range: {}).'
-                    .format(node_name, pc, split.split_range))
-
-        # create and submit the PBS job
-        pbs = PBS(cmd, alloc=alloc, queue=queue, name=node_name,
-                  feature=feature, stdout_path=stdout_path)
-        if pbs.id:
-            msg = ('Kicked off reV generation job "{}" (PBS jobid #{}) on '
-                   'Peregrine.'.format(node_name, pbs.id))
-
-            # add job to reV status file.
-            Status.add_job(dirout, 'generation', node_name, replace=True,
-                           job_attrs={'job_id': pbs.id,
-                                      'hardware': 'peregrine',
-                                      'fout': fout_node,
-                                      'dirout': dirout})
-        else:
-            msg = ('Was unable to kick off reV generation job "{}". '
-                   'Please see the stdout error messages'
-                   .format(node_name))
-        click.echo(msg)
-        logger.info(msg)
-        jobs[i] = pbs
-
-    return jobs
-
-
-@direct.command()
-@click.option('--nodes', '-no', default=1, type=INT,
-              help='Number of Eagle nodes for gen job. Default is 1.')
-@click.option('--alloc', '-a', default='rev', type=STR,
-              help='Eagle allocation account name. Default is "rev".')
+              help='SLURM allocation account name. Default is "rev".')
 @click.option('--memory', '-mem', default=None, type=INT,
-              help='Eagle node memory request in GB. Default is None')
+              help='Single node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
@@ -665,9 +571,9 @@ def gen_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
+def gen_slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
               stdout_path, verbose):
-    """Run generation on Eagle HPC via SLURM job submission."""
+    """Run generation on HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
     tech = ctx.obj['TECH']
@@ -713,7 +619,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                    'not re-running.'
                    .format(node_name, dirout))
         else:
-            logger.info('Running reV generation on Eagle with node name "{}" '
+            logger.info('Running reV generation on SLURM with node name "{}" '
                         'for {} (points range: {}).'
                         .format(node_name, pc, split.split_range))
             # create and submit the SLURM job
@@ -722,8 +628,8 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                           stdout_path=stdout_path, conda_env=conda_env,
                           module=module)
             if slurm.id:
-                msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) '
-                       'on Eagle.'.format(node_name, slurm.id))
+                msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}).'
+                       .format(node_name, slurm.id))
                 # add job to reV status file.
                 Status.add_job(
                     dirout, 'generation', node_name, replace=True,

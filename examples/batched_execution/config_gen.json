@@ -1,6 +1,10 @@
 {
+  "analysis_years": [
+    2010,
+    2011
+  ],
   "directories": {
-    "logging_directory": "./",
+    "log_directory": "./",
     "output_directory": "./"
   },
   "execution_control": {
@@ -11,20 +15,14 @@
     "sites_per_worker": 25,
     "walltime": 0.5
   },
-  "project_control": {
-    "analysis_years": [
-      2010,
-      2011
-    ],
-    "logging_level": "INFO",
-    "output_request": [
-      "cf_mean"
-    ],
-    "technology": "windpower"
-  },
+  "log_level": "INFO",
+  "output_request": [
+    "cf_mean"
+  ],
   "project_points": "./project_points/project_points.csv",
   "resource_file": "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
   "sam_files": {
     "turbine": "./sam_configs/turbine.json"
-  }
+  },
+  "technology": "windpower"
 }

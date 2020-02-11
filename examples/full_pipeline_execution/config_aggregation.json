@@ -11,7 +11,7 @@
     }
   },
   "directories": {
-    "logging_directory": "./logs/",
+    "log_directory": "./logs/",
     "output_directory": "./"
   },
   "excl_dict": {

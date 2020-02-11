@@ -7,8 +7,7 @@ import logging
 from warnings import warn
 
 from reV.config.base_config import BaseConfig
-from reV.config.execution import (BaseExecutionConfig, PeregrineConfig,
-                                  EagleConfig)
+from reV.config.execution import (BaseExecutionConfig, SlurmConfig)
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 
 
@@ -20,19 +19,39 @@ class AnalysisConfig(BaseConfig):
 
     NAME = None
 
-    def __init__(self, config):
+    def __init__(self, config, run_preflight=True):
         """
         Parameters
         ----------
         config : str | dict
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
+        run_preflight : bool
+            Flag to run or disable preflight checks.
         """
-        self._years = None
-        self._dirout = None
-        self._logdir = None
-        self._ec = None
         super().__init__(config)
+
+        self._years = None
+        self._ec = None
+        self._dirout = self.config_dir
+        self._logdir = './logs/'
+
+        if run_preflight:
+            self._analysis_config_preflight()
+
+    def _analysis_config_preflight(self):
+        """Check for required config blocks"""
+
+        if 'directories' not in self:
+            w = ('reV config does not have "directories" block, '
+                 'default directories being used.')
+            logger.warning(w)
+            warn(w, ConfigWarning)
+
+        if 'execution_control' not in self:
+            e = 'reV config must have "execution_control" block!'
+            logger.error(e)
+            raise ConfigError(e)
 
     @property
     def years(self):
@@ -47,11 +66,9 @@ class AnalysisConfig(BaseConfig):
         """
 
         if self._years is None:
-            self._years = [None]
-            if 'analysis_years' in self['project_control']:
-                self._years = self['project_control']['analysis_years']
-                if isinstance(self._years, list) is False:
-                    self._years = [self._years]
+            self._years = self.get('analysis_years', [None])
+            if not isinstance(self._years, list):
+                self._years = [self._years]
             else:
                 warn('Analysis years may not have been specified, may default '
                      'to available years in inputs files.', ConfigWarning)
@@ -59,34 +76,32 @@ class AnalysisConfig(BaseConfig):
 
     @property
     def dirout(self):
-        """Get the output directory.
+        """Get the output directory, look for key "output_directory" in the
+        "directories" config group.
 
         Returns
         -------
-        _dirout : str
+        dirout : str
             Target path for reV output files.
         """
-        if self._dirout is None:
-            # set default value
-            self._dirout = './out'
-            if 'output_directory' in self['directories']:
-                self._dirout = self['directories']['output_directory']
+        if 'directories' in self:
+            self._dirout = self['directories'].get('output_directory',
+                                                   self._dirout)
         return self._dirout
 
     @property
     def logdir(self):
-        """Get the logging directory.
+        """Get the logging directory, look for key "log_directory" in the
+        "directories" config group.
 
         Returns
         -------
-        _logdir : str
+        logdir : str
             Target path for reV log files.
         """
-        if self._logdir is None:
-            # set default value
-            self._logdir = './logs'
-            if 'logging_directory' in self['directories']:
-                self._logdir = self['directories']['logging_directory']
+        if 'directories' in self:
+            self._logdir = self['directories'].get('log_directory',
+                                                   self._logdir)
         return self._logdir
 
     @property
@@ -95,7 +110,7 @@ class AnalysisConfig(BaseConfig):
 
         Returns
         -------
-        _ec : BaseExecutionConfig | PeregrineConfig | EagleConfig
+        _ec : BaseExecutionConfig | EagleConfig
             reV execution config object specific to the execution_control
             option.
         """
@@ -103,8 +118,9 @@ class AnalysisConfig(BaseConfig):
             ec = self['execution_control']
             # static map of avail execution options with corresponding classes
             ec_config_types = {'local': BaseExecutionConfig,
-                               'peregrine': PeregrineConfig,
-                               'eagle': EagleConfig}
+                               'slurm': SlurmConfig,
+                               'eagle': SlurmConfig,
+                               }
             if 'option' in ec:
                 try:
                     # Try setting the attribute to the appropriate exec option
@@ -147,9 +163,6 @@ class AnalysisConfig(BaseConfig):
                 self._name += '_{}'.format(self.NAME)
 
             # name specified by user config
-            if 'project_control' in self:
-                if 'name' in self['project_control']:
-                    if self['project_control']['name']:
-                        self._name = self['project_control']['name']
+            self._name = str(self.get('name', self._name))
 
         return self._name

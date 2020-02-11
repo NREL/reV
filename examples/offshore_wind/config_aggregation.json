@@ -11,7 +11,7 @@
     }
   },
   "directories": {
-    "logging_directory": "./logs/",
+    "log_directory": "./logs/",
     "output_directory": "./conus_wind/"
   },
   "excl_dict": {
@@ -30,10 +30,8 @@
   },
   "gen_fpath": "PIPELINE",
   "lcoe_dset": "lcoe_fcr-means",
+  "log_level": "INFO",
   "power_density": 3,
-  "project_control": {
-    "logging_level": "INFO"
-  },
   "res_class_bins": [
     0,
     8.0,
