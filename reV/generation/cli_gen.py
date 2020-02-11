@@ -165,11 +165,11 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                        timeout=config.timeout, points_range=None,
                        verbose=verbose)
 
-    elif config.execution_control.option == 'eagle':
+    elif config.execution_control.option in ('eagle', 'slurm'):
         if not parse_year(name, option='bool') and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
-        ctx.invoke(gen_eagle, nodes=config.execution_control.nodes,
+        ctx.invoke(gen_slurm, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.alloc,
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.node_mem,
@@ -552,13 +552,13 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 
 @direct.command()
 @click.option('--nodes', '-no', default=1, type=INT,
-              help='Number of Eagle nodes for gen job. Default is 1.')
+              help='Number of SLURM nodes for gen job. Default is 1.')
 @click.option('--alloc', '-a', default='rev', type=STR,
-              help='Eagle allocation account name. Default is "rev".')
+              help='SLURM allocation account name. Default is "rev".')
 @click.option('--memory', '-mem', default=None, type=INT,
-              help='Eagle node memory request in GB. Default is None')
+              help='Single node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
@@ -571,9 +571,9 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
+def gen_slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
               stdout_path, verbose):
-    """Run generation on Eagle HPC via SLURM job submission."""
+    """Run generation on HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
     tech = ctx.obj['TECH']
@@ -619,7 +619,7 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                    'not re-running.'
                    .format(node_name, dirout))
         else:
-            logger.info('Running reV generation on Eagle with node name "{}" '
+            logger.info('Running reV generation on SLURM with node name "{}" '
                         'for {} (points range: {}).'
                         .format(node_name, pc, split.split_range))
             # create and submit the SLURM job
@@ -628,8 +628,8 @@ def gen_eagle(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                           stdout_path=stdout_path, conda_env=conda_env,
                           module=module)
             if slurm.id:
-                msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}) '
-                       'on Eagle.'.format(node_name, slurm.id))
+                msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}).'
+                       .format(node_name, slurm.id))
                 # add job to reV status file.
                 Status.add_job(
                     dirout, 'generation', node_name, replace=True,

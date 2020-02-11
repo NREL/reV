@@ -169,8 +169,8 @@ class HPCConfig(BaseExecutionConfig):
         return self._conda_env
 
 
-class EagleConfig(HPCConfig):
-    """Class to handle Eagle configuration inputs."""
+class SlurmConfig(HPCConfig):
+    """Class to handle SLURM (Eagle) configuration inputs."""
 
     def __init__(self, config_dict):
         """

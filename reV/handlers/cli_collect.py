@@ -85,8 +85,8 @@ def from_config(ctx, config_file, verbose):
                                'dirout': config.dirout})
                 ctx.invoke(collect)
 
-        elif config.execution_control.option == 'eagle':
-            ctx.invoke(collect_eagle,
+        elif config.execution_control.option in ('eagle', 'slurm'):
+            ctx.invoke(collect_slurm,
                        alloc=config.execution_control.alloc,
                        memory=config.execution_control.node_mem,
                        walltime=config.execution_control.walltime,
@@ -255,11 +255,11 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
 
 @main.command()
 @click.option('--alloc', '-a', default='rev', type=str,
-              help='Eagle allocation account name. Default is "rev".')
+              help='SLURM allocation account name. Default is "rev".')
 @click.option('--memory', '-mem', default=None, type=INT,
-              help='Eagle node memory request in GB. Default is None')
+              help='SLURM node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
@@ -272,9 +272,9 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def collect_eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
+def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                   stdout_path, verbose):
-    """Run collection on Eagle HPC via SLURM job submission."""
+    """Run collection on HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
     h5_file = ctx.obj['H5_FILE']
@@ -297,7 +297,7 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
                'not re-running.'
                .format(name, os.path.dirname(h5_file)))
     else:
-        logger.info('Running reV collection on Eagle with node name "{}", '
+        logger.info('Running reV collection on SLURM with node name "{}", '
                     'collecting data to "{}" from "{}" with file prefix "{}".'
                     .format(name, h5_file, h5_dir, file_prefix))
         # create and submit the SLURM job
@@ -305,8 +305,8 @@ def collect_eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
                       feature=feature, name=name, conda_env=conda_env,
                       module=module, stdout_path=stdout_path)
         if slurm.id:
-            msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}) on '
-                   'Eagle.'.format(name, slurm.id))
+            msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}).'
+                   .format(name, slurm.id))
             # add job to reV status file.
             Status.add_job(
                 os.path.dirname(h5_file), 'collect', name, replace=True,

@@ -74,7 +74,7 @@ def from_config(ctx, config_file, verbose):
                        config.friction_fpath, config.friction_dset,
                        config.dirout, config.logdir, verbose)
 
-    elif config.execution_control.option == 'eagle':
+    elif config.execution_control.option in ('eagle', 'slurm'):
 
         ctx.obj['NAME'] = name
         ctx.obj['EXCL_FPATH'] = config.excl_fpath
@@ -97,7 +97,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
 
-        ctx.invoke(eagle,
+        ctx.invoke(slurm,
                    alloc=config.execution_control.alloc,
                    memory=config.execution_control.node_mem,
                    feature=config.execution_control.feature,
@@ -310,14 +310,14 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 
 @main.command()
 @click.option('--alloc', '-a', required=True, type=STR,
-              help='Eagle allocation account name.')
+              help='SLURM allocation account name.')
 @click.option('--walltime', '-wt', default=1.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
 @click.option('--memory', '-mem', default=None, type=INT,
-              help='Eagle node memory request in GB. Default is None')
+              help='SLURM node memory request in GB. Default is None')
 @click.option('--module', '-mod', default=None, type=STR,
               help='Module to load')
 @click.option('--conda_env', '-env', default=None, type=STR,
@@ -325,9 +325,9 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def eagle(ctx, alloc, walltime, feature, memory, module, conda_env,
+def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
           stdout_path):
-    """Eagle submission tool for reV supply curve aggregation."""
+    """slurm (Eagle) submission tool for reV supply curve aggregation."""
 
     name = ctx.obj['NAME']
     excl_fpath = ctx.obj['EXCL_FPATH']
@@ -366,7 +366,7 @@ def eagle(ctx, alloc, walltime, feature, memory, module, conda_env,
                'not re-running.'
                .format(name, out_dir))
     else:
-        logger.info('Running reV SC aggregation on Eagle with '
+        logger.info('Running reV SC aggregation on SLURM with '
                     'node name "{}"'.format(name))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
@@ -374,7 +374,7 @@ def eagle(ctx, alloc, walltime, feature, memory, module, conda_env,
                       conda_env=conda_env, module=module)
         if slurm.id:
             msg = ('Kicked off reV SC aggregation job "{}" '
-                   '(SLURM jobid #{}) on Eagle.'
+                   '(SLURM jobid #{}).'
                    .format(name, slurm.id))
             Status.add_job(
                 out_dir, 'aggregation', name, replace=True,

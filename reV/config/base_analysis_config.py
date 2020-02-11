@@ -7,7 +7,7 @@ import logging
 from warnings import warn
 
 from reV.config.base_config import BaseConfig
-from reV.config.execution import (BaseExecutionConfig, EagleConfig)
+from reV.config.execution import (BaseExecutionConfig, SlurmConfig)
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 
 
@@ -118,7 +118,9 @@ class AnalysisConfig(BaseConfig):
             ec = self['execution_control']
             # static map of avail execution options with corresponding classes
             ec_config_types = {'local': BaseExecutionConfig,
-                               'eagle': EagleConfig}
+                               'slurm': SlurmConfig,
+                               'eagle': SlurmConfig,
+                               }
             if 'option' in ec:
                 try:
                     # Try setting the attribute to the appropriate exec option

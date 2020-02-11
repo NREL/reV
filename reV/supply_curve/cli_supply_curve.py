@@ -70,7 +70,7 @@ def from_config(ctx, config_file, verbose):
                        config.simple, config.line_limited,
                        verbose)
 
-    elif config.execution_control.option == 'eagle':
+    elif config.execution_control.option in ('eagle', 'slurm'):
 
         ctx.obj['NAME'] = name
         ctx.obj['SC_POINTS'] = config.sc_points
@@ -85,7 +85,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['LINE_LIMITED'] = config.line_limited
         ctx.obj['VERBOSE'] = verbose
 
-        ctx.invoke(eagle,
+        ctx.invoke(slurm,
                    alloc=config.execution_control.alloc,
                    memory=config.execution_control.node_mem,
                    walltime=config.execution_control.walltime,
@@ -230,11 +230,11 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
 @main.command()
 @click.option('--alloc', '-a', required=True, type=STR,
-              help='Eagle allocation account name.')
-@click.option('--memory', '-mem', default=None, type=INT, help='Eagle node '
+              help='SLURM allocation account name.')
+@click.option('--memory', '-mem', default=None, type=INT, help='SLURM node '
               'memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
@@ -245,9 +245,9 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
+def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
           stdout_path):
-    """Eagle submission tool for reV supply curve aggregation."""
+    """slurm (eagle) submission tool for reV supply curve aggregation."""
 
     name = ctx.obj['NAME']
     sc_points = ctx.obj['SC_POINTS']
@@ -275,14 +275,14 @@ def eagle(ctx, alloc, memory, walltime, feature, conda_env, module,
                'not re-running.'
                .format(name, out_dir))
     else:
-        logger.info('Running reV Supply Curve on Eagle with '
+        logger.info('Running reV Supply Curve on SLURM with '
                     'node name "{}"'.format(name))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
                       name=name, stdout_path=stdout_path,
                       conda_env=conda_env, module=module)
         if slurm.id:
-            msg = ('Kicked off reV SC job "{}" (SLURM jobid #{}) on Eagle.'
+            msg = ('Kicked off reV SC job "{}" (SLURM jobid #{}).'
                    .format(name, slurm.id))
             Status.add_job(
                 out_dir, 'supply-curve', name, replace=True,
