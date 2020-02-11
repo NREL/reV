@@ -44,9 +44,9 @@ class AggregationConfig(AnalysisConfig):
         self._default_area_filter_kernel = 'queen'
         self._default_min_area = None
 
-        self._preflight()
+        self._sc_agg_preflight()
 
-    def _preflight(self):
+    def _sc_agg_preflight(self):
         """Perform pre-flight checks on the SC agg config inputs"""
         missing = []
         for req in self.REQUIREMENTS:
@@ -188,6 +188,7 @@ class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
 
     NAME = 'sc'
+    REQUIREMENTS = ('sc_points', 'trans_table', 'fixed_charge_rate')
 
     def __init__(self, config):
         """
@@ -202,6 +203,18 @@ class SupplyCurveConfig(AnalysisConfig):
         self._default_sc_features = None
         self._default_transmission_costs = None
         self._default_sort_on = 'total_lcoe'
+
+        self._sc_preflight()
+
+    def _sc_preflight(self):
+        """Perform pre-flight checks on the SC config inputs"""
+        missing = []
+        for req in self.REQUIREMENTS:
+            if self.get(req, None) is None:
+                missing.append(req)
+        if any(missing):
+            raise ConfigError('Supply Curve config missing the following '
+                              'keys: {}'.format(missing))
 
     @property
     def sc_points(self):

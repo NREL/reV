@@ -16,7 +16,7 @@ from reV.config.sam_analysis_configs import EconConfig
 from reV.econ.econ import Econ
 from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
                                       INTLIST, STRLIST)
-from reV.utilities.execution import PBS, SLURM, SubprocessManager
+from reV.utilities.execution import SLURM, SubprocessManager
 from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
 from reV.generation.cli_gen import main
@@ -47,7 +47,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['NAME'] = config.name
 
     # Enforce verbosity if logging level is specified in the config
-    if config.logging_level == logging.DEBUG:
+    if config.log_level == logging.DEBUG:
         verbose = True
 
     # make output directory if does not exist
@@ -133,18 +133,6 @@ def submit_from_config(ctx, name, year, config, verbose, i):
                        max_workers=config.execution_control.max_workers,
                        timeout=config.timeout, points_range=None,
                        verbose=verbose)
-
-    elif config.execution_control.option == 'peregrine':
-        if not parse_year(name, option='bool') and year:
-            # Add year to name before submitting
-            # 8 chars for pbs job name (lim is 16, -8 for "_year_ID")
-            ctx.obj['NAME'] = '{}_{}'.format(name[:8], str(year))
-        ctx.invoke(econ_peregrine, nodes=config.execution_control.nodes,
-                   alloc=config.execution_control.alloc,
-                   queue=config.execution_control.queue,
-                   feature=config.execution_control.feature,
-                   stdout_path=os.path.join(config.logdir, 'stdout'),
-                   verbose=verbose)
 
     elif config.execution_control.option == 'eagle':
         if not parse_year(name, option='bool') and year:
@@ -411,84 +399,6 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                    arg_loc=arg_loc))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
     return cmd
-
-
-@direct.command()
-@click.option('--nodes', '-no', default=1, type=INT,
-              help='Number of Peregrine nodes for econ job. Default is 1.')
-@click.option('--alloc', '-a', default='rev', type=STR,
-              help='Peregrine allocation account name. Default is "rev".')
-@click.option('--queue', '-q', default='short', type=STR,
-              help='Peregrine target job queue. Default is "short".')
-@click.option('--feature', '-l', default=None, type=STR,
-              help=('Feature request. Format is "feature=64GB" or "qos=high". '
-                    'Default is None.'))
-@click.option('--stdout_path', '-sout', default='./out/stdout', type=STR,
-              help='Subprocess standard output path. Default is ./out/stdout')
-@click.option('-v', '--verbose', is_flag=True,
-              help='Flag to turn on debug logging. Default is not verbose.')
-@click.pass_context
-def econ_peregrine(ctx, nodes, alloc, queue, feature, stdout_path, verbose):
-    """Run econ on Peregrine HPC via PBS job submission."""
-
-    name = ctx.obj['NAME']
-    points = ctx.obj['POINTS']
-    sam_files = ctx.obj['SAM_FILES']
-    cf_file = ctx.obj['CF_FILE']
-    cf_year = ctx.obj['CF_YEAR']
-    site_data = ctx.obj['SITE_DATA']
-    sites_per_worker = ctx.obj['SITES_PER_WORKER']
-    fout = ctx.obj['FOUT']
-    dirout = ctx.obj['DIROUT']
-    logdir = ctx.obj['LOGDIR']
-    output_request = ctx.obj['OUTPUT_REQUEST']
-    verbose = any([verbose, ctx.obj['VERBOSE']])
-
-    # initialize an info logger on the year level
-    init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
-                                     'reV.utilities', 'reV.SAM'],
-              verbose=False)
-
-    pc = get_node_pc(points, sam_files, nodes)
-
-    jobs = {}
-
-    for i, split in enumerate(pc):
-        node_name, fout_node = get_node_name_fout(name, fout, i, pc,
-                                                  hpc='pbs')
-
-        cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
-                           site_data=site_data, points=points,
-                           points_range=split.split_range,
-                           sites_per_worker=sites_per_worker, max_workers=None,
-                           fout=fout_node, dirout=dirout, logdir=logdir,
-                           output_request=output_request, verbose=verbose)
-
-        logger.info('Running reV econ on Peregrine with node name "{}" '
-                    'for {} (points range: {}).'
-                    .format(node_name, pc, split.split_range))
-
-        # create and submit the PBS job
-        pbs = PBS(cmd, alloc=alloc, queue=queue, name=node_name,
-                  feature=feature, stdout_path=stdout_path)
-        if pbs.id:
-            msg = ('Kicked off reV econ job "{}" (PBS jobid #{}) on '
-                   'Peregrine.'.format(node_name, pbs.id))
-            # add job to reV status file.
-            Status.add_job(dirout, 'econ', node_name, replace=True,
-                           job_attrs={'job_id': pbs.id,
-                                      'hardware': 'peregrine',
-                                      'fout': fout_node,
-                                      'dirout': dirout})
-        else:
-            msg = ('Was unable to kick off reV econ job "{}". '
-                   'Please see the stdout error messages'
-                   .format(node_name))
-        click.echo(msg)
-        logger.info(msg)
-        jobs[i] = pbs
-
-    return jobs
 
 
 @direct.command()

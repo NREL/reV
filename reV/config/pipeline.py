@@ -57,9 +57,8 @@ class PipelineConfig(AnalysisConfig):
                 config = AnalysisConfig(f_config)
                 dirouts.append(config.dirout)
 
-                if 'project_control' in config:
-                    if 'name' in config['project_control']:
-                        names.append(config.name)
+                if 'name' in config:
+                    names.append(config.name)
 
         if len(set(dirouts)) != 1:
             raise ConfigError('Pipeline steps must have a common output '

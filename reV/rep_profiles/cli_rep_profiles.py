@@ -37,7 +37,7 @@ def from_config(ctx, config_file, verbose):
         name = config.name
 
     # Enforce verbosity if logging level is specified in the config
-    if config.logging_level == logging.DEBUG:
+    if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
@@ -224,7 +224,8 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 @click.option('--memory', '-mem', default=None, type=INT,
               help='Eagle node memory request in GB. Default is None')
 @click.option('--walltime', '-wt', default=1.0, type=float,
-              help='Eagle walltime request in hours. Default is 1.0')
+              help='Eagle walltime request in hours for single year '
+              'rep_profiles run. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))

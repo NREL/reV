@@ -37,9 +37,9 @@ class RepProfilesConfig(AnalysisConfig):
         self._default_err_method = 'rmse'
         self._default_n_profiles = 1
 
-        self._preflight()
+        self._rep_profiles_preflight()
 
-    def _preflight(self):
+    def _rep_profiles_preflight(self):
         """Perform pre-flight checks on the rep profiles config inputs"""
         missing = []
         for req in self.REQUIREMENTS:

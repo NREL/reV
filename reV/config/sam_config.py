@@ -24,10 +24,10 @@ class SAMConfig(BaseConfig):
         SAM_configs : dict
             Keys are config ID's, values are filepaths to the SAM configs.
         """
+        super().__init__(SAM_configs)
         self._clearsky = None
         self._icing = None
         self._inputs = None
-        super().__init__(SAM_configs)
 
     @property
     def clearsky(self):
@@ -35,7 +35,7 @@ class SAMConfig(BaseConfig):
 
         Returns
         -------
-        _clearsky : bool
+        clearsky : bool
             Flag set in the SAM config input with key "clearsky" for solar
             analysis to process generation for clearsky irradiance.
             Defaults to False (normal all-sky irradiance).

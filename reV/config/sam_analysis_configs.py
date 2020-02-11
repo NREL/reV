@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 class SAMAnalysisConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
 
+    REQUIREMENTS = ('project_points', 'sam_files', 'technology')
+
     def __init__(self, config):
         """
         Parameters
@@ -32,12 +34,25 @@ class SAMAnalysisConfig(AnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
+        super().__init__(config)
         self._tech = None
         self._sam_config = None
         self._pc = None
         self._default_timeout = 1800
         self._output_request = None
-        super().__init__(config)
+        self._sam_preflight()
+
+    def _sam_preflight(self):
+        """Check config for SAM input keys"""
+        missing = []
+        for req in self.REQUIREMENTS:
+            if self.get(req, None) is None:
+                missing.append(req)
+        if any(missing):
+            e = ('SAM analysis config missing the following '
+                 'keys: {}'.format(missing))
+            logger.error(e)
+            raise ConfigError(e)
 
     @property
     def tech(self):
@@ -45,12 +60,11 @@ class SAMAnalysisConfig(AnalysisConfig):
 
         Returns
         -------
-        _tech : str
+        tech : str
             reV technology string to analyze (e.g. pv, csp, wind, etc...).
         """
         if self._tech is None:
-            self._tech = self['project_control']['technology']
-            self._tech = self._tech.lower().replace(' ', '')
+            self._tech = self['technology'].lower().replace(' ', '')
         return self._tech
 
     @property
@@ -59,7 +73,7 @@ class SAMAnalysisConfig(AnalysisConfig):
 
         Returns
         -------
-        _sam_gen : reV.config.sam.SAMConfig
+        sam_gen : reV.config.sam.SAMConfig
             SAM config object. This object emulates a dictionary.
         """
         if self._sam_config is None:
@@ -84,7 +98,7 @@ class SAMAnalysisConfig(AnalysisConfig):
 
         Returns
         -------
-        _pc : reV.config.project_points.PointsControl
+        points_control : reV.config.project_points.PointsControl
             PointsControl object based on specified project points and
             execution control option.
         """
@@ -117,17 +131,14 @@ class SAMAnalysisConfig(AnalysisConfig):
 
         Returns
         -------
-        _output_request : list
+        output_request : list
             List of requested reV output variables corresponding to SAM
             variable names.
         """
 
         if self._output_request is None:
-            self._output_request = SAMOutputRequest('cf_mean')
-            # default output request if not specified
-            if 'output_request' in self['project_control']:
-                self._output_request = SAMOutputRequest(
-                    self['project_control']['output_request'])
+            self._output_request = self.get('output_request', 'cf_mean')
+            self._output_request = SAMOutputRequest(self._output_request)
 
         return self._output_request
 
@@ -145,11 +156,11 @@ class GenConfig(SAMAnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
+        super().__init__(config)
         self._curtailment = None
         self._downscale = None
         self._res_files = None
         self._resource_5min = None
-        super().__init__(config)
 
     @property
     def curtailment(self):
@@ -157,15 +168,14 @@ class GenConfig(SAMAnalysisConfig):
 
         Returns
         -------
-        _curtailment : NoneType | reV.config.curtailment.Curtailment
+        curtailment : NoneType | reV.config.curtailment.Curtailment
             Returns None if no curtailment config is specified. If one is
             specified, this returns the reV curtailment config object.
         """
         if self._curtailment is None:
-            if 'curtailment' in self:
-                if self['curtailment']:
-                    # curtailment was specified and is not None or False
-                    self._curtailment = Curtailment(self['curtailment'])
+            self._curtailment = self.get('curtailment', self._curtailment)
+            if self._curtailment:
+                self._curtailment = Curtailment(self['curtailment'])
 
         return self._curtailment
 
@@ -175,17 +185,13 @@ class GenConfig(SAMAnalysisConfig):
 
         Returns
         -------
-        _downscale : NoneType | str
+        downscale : NoneType | str
             Returns None if no downscaling is requested. Otherwise, expects a
-            downscale variable in the project_control section in the Pandas
-            frequency format, e.g. '5min'.
+            downscale variable in the Pandas frequency format, e.g. '5min'.
         """
 
         if self._downscale is None:
-            if 'downscale' in self['project_control']:
-                if self['project_control']['downscale']:
-                    # downscaling was requested and is not None or False
-                    self._downscale = str(self['project_control']['downscale'])
+            self._downscale = self.get('downscale', self._downscale)
         return self._downscale
 
     @property
@@ -194,7 +200,7 @@ class GenConfig(SAMAnalysisConfig):
 
         Returns
         -------
-        _res_files : list
+        res_files : list
             List of config-specified resource files. Resource files with {}
             formatting will be filled with the specified year(s). This return
             value is a list with len=1 for a single year run.
@@ -215,6 +221,7 @@ class GenConfig(SAMAnalysisConfig):
                               '\n\tResource files: \n\t\t{}'
                               '\n\tYears: \n\t\t{}'
                               .format(self._res_files, self.years))
+
         return self._res_files
 
 
@@ -231,9 +238,9 @@ class EconConfig(SAMAnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
+        super().__init__(config)
         self._cf_files = None
         self._site_data = None
-        super().__init__(config)
 
     @property
     def cf_files(self):
@@ -241,7 +248,7 @@ class EconConfig(SAMAnalysisConfig):
 
         Returns
         -------
-        _cf_files : list
+        cf_files : list
             Target paths for capacity factor files (reV generation output
             data) for input to reV LCOE calculation.
         """
@@ -284,11 +291,8 @@ class EconConfig(SAMAnalysisConfig):
 
         Returns
         -------
-        _site_data : str | NoneType
+        site_data : str | NoneType
             Target path for site-specific data file.
         """
-        if self._site_data is None:
-            self._site_data = None
-            if 'site_data' in self:
-                self._site_data = self['site_data']
+        self._site_data = self.get('site_data', self._site_data)
         return self._site_data

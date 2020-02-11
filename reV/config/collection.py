@@ -11,6 +11,7 @@ import logging
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.output_request import SAMOutputRequest
 from reV.pipeline.pipeline import Pipeline
+from reV.utilities.exceptions import ConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -28,23 +29,35 @@ class CollectionConfig(AnalysisConfig):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         """
+        super().__init__(config)
+
         self._purge = False
         self._dsets = None
         self._file_prefixes = None
         self._ec = None
-        self._coldir = None
-        super().__init__(config)
+        self._coldir = self.dirout
+
+        self._collection_preflight()
+
+    def _collection_preflight(self):
+        """Run preflight checks for required input keys."""
+        for key in ('dsets', 'file_prefixes'):
+            if key not in self:
+                e = 'Collection config needs "{}" key!'.format(key)
+                logger.error(e)
+                raise ConfigError(e)
 
     @property
     def coldir(self):
         """Get the directory to collect files from.
+
         Returns
         -------
-        _coldir : str
+        coldir : str
             Target path to collect h5 files from.
         """
-        if self._coldir is None:
-            self._coldir = self['directories']['collect_directory']
+        self._coldir = self['directories'].get('collect_directory',
+                                               self._coldir)
 
         if self._coldir == 'PIPELINE':
             self._coldir = Pipeline.parse_previous(self.dirout, 'collect',
@@ -64,15 +77,16 @@ class CollectionConfig(AnalysisConfig):
 
     @property
     def purge_chunks(self):
-        """Get the flag to delete chunk files.
+        """Get the flag to delete chunk files. Default is False which just
+        moves chunk files to a sub dir.
 
         Returns
         -------
-        _purge : bool
-            Flag to delete chunk files.
+        purge : bool
+            Flag to delete chunk files. Default is False which just
+            moves chunk files to a sub dir.
         """
-        if 'purge_chunks' in self['project_control']:
-            self._purge = self['project_control']['purge_chunks']
+        self._purge = self.get('purge_chunks', self._purge)
         return self._purge
 
     @property
@@ -81,12 +95,12 @@ class CollectionConfig(AnalysisConfig):
 
         Returns
         -------
-        _dsets : list
+        dsets : list
             list of dset names to collect.
         """
 
         if self._dsets is None:
-            self._dsets = SAMOutputRequest(self['project_control']['dsets'])
+            self._dsets = SAMOutputRequest(self['dsets'])
         return self._dsets
 
     def _parse_pipeline_prefixes(self):
@@ -105,12 +119,12 @@ class CollectionConfig(AnalysisConfig):
 
         Returns
         -------
-        _file_prefixes : list
+        file_prefixes : list
             list of file prefixes to collect.
         """
 
         if self._file_prefixes is None:
-            self._file_prefixes = self['project_control']['file_prefixes']
+            self._file_prefixes = self['file_prefixes']
 
             if 'PIPELINE' in self._file_prefixes:
                 self._file_prefixes = self._parse_pipeline_prefixes()

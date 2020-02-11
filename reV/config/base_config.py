@@ -32,10 +32,21 @@ class BaseConfig(dict):
                         'TESTDATADIR': TESTDATADIR,
                         }
 
-        self.dir = None
-        self._logging_level = None
+        self._config_dir = None
+        self._log_level = None
         self._name = None
         self._parse_config(config)
+
+    @property
+    def config_dir(self):
+        """Get the directory that the config file is in.
+
+        Returns
+        -------
+        config_dir : str
+            Directory path that the config file is in.
+        """
+        return self._config_dir
 
     def _parse_config(self, config):
         """Parse a config input and set appropriate instance attributes.
@@ -50,10 +61,10 @@ class BaseConfig(dict):
         # str is either json file path or serialized json object
         if isinstance(config, str):
             if config.endswith('.json'):
-                # get the directory of the config file
-                self.dir = os.path.dirname(os.path.realpath(config)) + '/'
-                self.dir = self.dir.replace('\\', '/')
-                self.str_rep['./'] = self.dir
+                self._config_dir = os.path.dirname(os.path.realpath(config))
+                self._config_dir += '/'
+                self._config_dir = self._config_dir.replace('\\', '/')
+                self.str_rep['./'] = self.config_dir
                 config = self.get_file(config)
             else:
                 # attempt to deserialize non-json string
@@ -153,46 +164,39 @@ class BaseConfig(dict):
         return config
 
     @property
-    def logging_level(self):
-        """Get user-specified logging level in "project_control" namespace.
+    def log_level(self):
+        """Get user-specified "log_level" (DEBUG, INFO, WARNING, etc...).
 
         Returns
         -------
-        _logging_level : int
+        log_level : int
             Python logging module level (integer format) corresponding to the
-            config-specified logging level string.
+            config-specified log level string.
         """
 
-        if self._logging_level is None:
+        if self._log_level is None:
             levels = {'DEBUG': logging.DEBUG,
                       'INFO': logging.INFO,
                       'WARNING': logging.WARNING,
                       'ERROR': logging.ERROR,
                       'CRITICAL': logging.CRITICAL,
                       }
-            # set default value
-            self._logging_level = logging.INFO
-            if 'project_control' in self:
-                if 'logging_level' in self['project_control']:
-                    x = self['project_control']['logging_level']
-                    self._logging_level = levels[x.upper()]
-        return self._logging_level
+
+            x = str(self.get('log_level', 'INFO'))
+            self._log_level = levels[x.upper()]
+
+        return self._log_level
 
     @property
     def name(self):
-        """Get the project name in "project_control" namespace.
+        """Get the project name from the "name" key.
 
         Returns
         -------
-        _name : str
+        name : str
             Config-specified project control name.
         """
 
         if self._name is None:
-            # set default value
-            self._name = 'rev'
-            if 'project_control' in self:
-                if 'name' in self['project_control']:
-                    if self['project_control']['name']:
-                        self._name = self['project_control']['name']
+            self._name = self.get('name', 'rev')
         return self._name

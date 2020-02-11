@@ -38,7 +38,7 @@ def from_config(ctx, config_file, verbose):
         name = config.name
 
     # Enforce verbosity if logging level is specified in the config
-    if config.logging_level == logging.DEBUG:
+    if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
