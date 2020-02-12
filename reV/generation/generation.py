@@ -145,6 +145,14 @@ class Gen:
         self._sam_module = self.OPTIONS[self.tech]
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
+        self._run_attrs = {'points_control': str(points_control),
+                           'res_file': res_file,
+                           'output_request': output_request,
+                           'fout': fout,
+                           'dirout': dirout,
+                           'drop_leap': drop_leap,
+                           'mem_util_lim': mem_util_lim,
+                           'downscale': downscale}
 
         self._output_request = self._parse_output_request(output_request)
 
