@@ -106,8 +106,10 @@ def test_integrated():
                                 'res_gids': sites,
                                 'res_class': zeros,
                                 'region': regions})
-    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region')
-    p2, m2, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region')
+    p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                                max_workers=1)
+    p2, m2, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
+                                max_workers=None)
 
     assert np.allclose(m1['rep_res_gid'].values.astype(int),
                        m2['rep_res_gid'].values.astype(int))
