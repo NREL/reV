@@ -384,6 +384,17 @@ class Resource:
 
         return self._time_index
 
+    @property
+    def global_attrs(self):
+        """
+        Global (file) attributes
+
+        Returns
+        -------
+        global_attrs : dict
+        """
+        return dict(self.h5.attrs)
+
     @staticmethod
     def df_str_decode(df):
         """Decode a dataframe with byte string columns into ordinary str cols.
