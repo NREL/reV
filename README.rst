@@ -71,7 +71,7 @@ Option 1: PIP Install the most recent version of master (recommended for analyst
 Option 2: Clone repo (recommended for developers)
 -------------------------------------------------
 
-1. from home dir, ``git clone https://github.com/NREL/reV2.git``
+1. from home dir, ``git clone https://github.com/NREL/reV.git``
     1) enter github username
     2) enter github password
 
