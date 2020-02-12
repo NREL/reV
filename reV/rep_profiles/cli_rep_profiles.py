@@ -81,7 +81,8 @@ def from_config(ctx, config_file, verbose):
                                'dirout': config.dirout})
                 ctx.invoke(main, name, gen_fpath, config.rev_summary,
                            config.reg_cols, dset, config.rep_method,
-                           config.err_method, config.dirout, config.logdir,
+                           config.err_method, config.weight,
+                           config.dirout, config.logdir,
                            config.execution_control.max_workers,
                            verbose)
 
@@ -93,6 +94,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['CF_DSET'] = dset
             ctx.obj['REP_METHOD'] = config.rep_method
             ctx.obj['ERR_METHOD'] = config.err_method
+            ctx.obj['WEIGHT'] = config.weight
             ctx.obj['N_PROFILES'] = config.n_profiles
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
@@ -126,6 +128,10 @@ def from_config(ctx, config_file, verbose):
 @click.option('--err_method', '-em', type=STR, default='rmse',
               help='String identifier for error method '
               '(e.g. rmse, mae, mbe).')
+@click.option('--weight', '-w', type=STR, default='gid_counts',
+              help='The supply curve column to use for a weighted average in '
+              'the representative profile meanoid algorithm. '
+              'Default weighting factor is "gid_counts".')
 @click.option('--n_profiles', '-np', type=INT, default=1,
               help='Number of representative profiles to save.')
 @click.option('--out_dir', '-od', type=STR, default='./',
@@ -139,7 +145,8 @@ def from_config(ctx, config_file, verbose):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
-         err_method, n_profiles, out_dir, log_dir, max_workers, verbose):
+         err_method, weight, n_profiles, out_dir, log_dir, max_workers,
+         verbose):
     """reV representative profiles CLI."""
 
     ctx.ensure_object(dict)
@@ -150,6 +157,7 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
     ctx.obj['CF_DSET'] = cf_dset
     ctx.obj['REP_METHOD'] = rep_method
     ctx.obj['ERR_METHOD'] = err_method
+    ctx.obj['WEIGHT'] = weight
     ctx.obj['N_PROFILES'] = n_profiles
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
@@ -165,7 +173,7 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
         fout = os.path.join(out_dir, fn_out)
         RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
                         rep_method=rep_method, err_method=err_method,
-                        fout=fout, n_profiles=n_profiles,
+                        weight=weight, fout=fout, n_profiles=n_profiles,
                         max_workers=max_workers)
 
         runtime = (time.time() - t0) / 60
@@ -181,7 +189,7 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 
 
 def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
-                 err_method, n_profiles, out_dir, log_dir, max_workers,
+                 err_method, weight, n_profiles, out_dir, log_dir, max_workers,
                  verbose):
     """Get a CLI call command for the rep profiles cli."""
 
@@ -192,6 +200,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
             '-cf {cf_dset} '
             '-rm {rep_method} '
             '-em {err_method} '
+            '-w {weight} '
             '-np {n_profiles} '
             '-od {out_dir} '
             '-ld {log_dir} '
@@ -205,6 +214,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                        cf_dset=SLURM.s(cf_dset),
                        rep_method=SLURM.s(rep_method),
                        err_method=SLURM.s(err_method),
+                       weight=SLURM.s(weight),
                        n_profiles=SLURM.s(n_profiles),
                        out_dir=SLURM.s(out_dir),
                        log_dir=SLURM.s(log_dir),
@@ -247,6 +257,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     cf_dset = ctx.obj['CF_DSET']
     rep_method = ctx.obj['REP_METHOD']
     err_method = ctx.obj['ERR_METHOD']
+    weight = ctx.obj['WEIGHT']
     n_profiles = ctx.obj['N_PROFILES']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
@@ -257,8 +268,8 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         stdout_path = os.path.join(log_dir, 'stdout/')
 
     cmd = get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset,
-                       rep_method, err_method, n_profiles, out_dir, log_dir,
-                       max_workers, verbose)
+                       rep_method, err_method, weight, n_profiles,
+                       out_dir, log_dir, max_workers, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'rep-profiles', name)
     if status == 'successful':
