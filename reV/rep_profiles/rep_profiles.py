@@ -430,7 +430,9 @@ class RegionRepProfile:
 
 
 class RepProfiles:
-    """Framework for calculating the representative profiles."""
+    """Framework for calculating the representative profiles based on an
+    error metric vs. a mean or median profile.
+    """
 
     def __init__(self, gen_fpath, rev_summary, reg_cols, cf_dset='cf_profile',
                  rep_method='meanoid', err_method='rmse', n_profiles=1):

@@ -396,8 +396,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Mean resource for the non-excluded data.
         """
         mean_res = None
-        if (self._res_class_dset is not None
-                and self._res_class_bin is not None):
+        if self._res_class_dset is not None:
             mean_res = self.exclusion_weighted_mean(self.res_data)
 
         return mean_res
