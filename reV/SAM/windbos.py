@@ -11,6 +11,8 @@ from reV.utilities.exceptions import SAMInputError
 class WindBos:
     """Wind Balance of System Cost Model."""
 
+    MODULE = 'windbos'
+
     # keys for the windbos input data dictionary.
     # Some keys may not be found explicitly in the SAM input.
     KEYS = ('tech_model',

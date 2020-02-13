@@ -145,6 +145,7 @@ class Gen:
         self._sam_module = self.OPTIONS[self.tech]
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
+
         self._run_attrs = {'points_control': str(points_control),
                            'res_file': res_file,
                            'output_request': output_request,
@@ -152,7 +153,8 @@ class Gen:
                            'dirout': dirout,
                            'drop_leap': drop_leap,
                            'mem_util_lim': mem_util_lim,
-                           'downscale': downscale}
+                           'downscale': str(downscale),
+                           'sam_module': self._sam_module.MODULE}
 
         self._output_request = self._parse_output_request(output_request)
 
@@ -547,7 +549,7 @@ class Gen:
         """
         sam_metas = self.sam_configs.copy()
         for v in sam_metas.values():
-            v.update({'module': self._sam_module.module})
+            v.update({'module': self._sam_module.MODULE})
 
         return sam_metas
 
