@@ -313,31 +313,31 @@ class RegionRepProfile:
         self._gid_col = gid_col
         self._cf_dset = cf_dset
         self._profiles = None
+        self._source_profiles = None
+        self._weights = None
         self._i_reps = None
         self._rep_method = rep_method
         self._err_method = err_method
         self._weight = weight
         self._n_profiles = n_profiles
 
-    def _get_profiles(self, gen_gids):
-        """Retrieve the cf profile array from the generation h5 file.
-
-        Parameters
-        ----------
-        gen_gids : list | np.ndarray
-            GIDs corresponding to the column indexes in the generation file.
+    @property
+    def source_profiles(self):
+        """Retrieve the cf profile array from the source generation h5 file.
 
         Returns
         -------
         profiles : np.ndarray
             Timeseries array of cf profile data.
         """
+        if self._source_profiles is None:
+            gen_gids = self._get_region_attr(self._rev_summary, self._gid_col)
+            with Resource(self._gen_fpath) as res:
+                self._source_profiles = res[self._cf_dset, :, gen_gids]
+        return self._source_profiles
 
-        with Resource(self._gen_fpath) as res:
-            profiles = res[self._cf_dset, :, gen_gids]
-        return profiles
-
-    def _get_weights(self):
+    @property
+    def weights(self):
         """Get the weights array
 
         Returns
@@ -347,12 +347,16 @@ class RegionRepProfile:
             curve table data in the weight column should have a list of weight
             values corresponding to the gen_gids list in the same row.
         """
-        if self._weight is None:
-            weights = None
-        else:
-            weights = self._get_region_attr(self._rev_summary, self._weight)
-            weights = np.array(weights)
-        return weights
+
+        if self._weights is None:
+            if self._weight is None:
+                self._weights = None
+            else:
+                self._weights = self._get_region_attr(self._rev_summary,
+                                                      self._weight)
+                self._weights = np.array(self._weights)
+
+        return self._weights
 
     @staticmethod
     def _get_region_attr(rev_summary, attr_name):
@@ -389,23 +393,20 @@ class RegionRepProfile:
         """Run the representative profile methods to find the meanoid/medianoid
         profile and find the profiles most similar."""
 
-        gids = self._get_region_attr(self._rev_summary, self._gid_col)
-        all_profiles = self._get_profiles(gids)
-        weights = self._get_weights()
-
-        if weights is not None:
-            if len(weights) != all_profiles.shape[1]:
+        if self.weights is not None:
+            if len(self.weights) != self.source_profiles.shape[1]:
                 e = ('Weights column "{}" resulted in {} weight scalars '
                      'which doesnt match gid column "{}" which yields '
                      'profiles with shape {}.'
-                     .format(self._weight, len(weights),
-                             self._gid_col, all_profiles.shape))
+                     .format(self._weight, len(self.weights),
+                             self._gid_col, self.source_profiles.shape))
                 logger.error(e)
                 raise DataShapeError(e)
 
         self._profiles, self._i_reps = RepresentativeMethods.run(
-            all_profiles, weights=weights, rep_method=self._rep_method,
-            err_method=self._err_method, n_profiles=self._n_profiles)
+            self.source_profiles, weights=self.weights,
+            rep_method=self._rep_method, err_method=self._err_method,
+            n_profiles=self._n_profiles)
 
     @property
     def rep_profiles(self):
@@ -422,17 +423,17 @@ class RegionRepProfile:
         return self._i_reps
 
     @property
-    def gen_gid_reps(self):
+    def rep_gen_gids(self):
         """Get the representative profile gen gids of this region."""
         gids = self._get_region_attr(self._rev_summary, self._gid_col)
         if self.i_reps[0] is None:
-            gen_gid_reps = None
+            rep_gids = None
         else:
-            gen_gid_reps = [gids[i] for i in self.i_reps]
-        return gen_gid_reps
+            rep_gids = [gids[i] for i in self.i_reps]
+        return rep_gids
 
     @property
-    def res_gid_reps(self):
+    def rep_res_gids(self):
         """Get the representative profile resource gids of this region."""
         if self._gid_col == 'gen_gids':
             gids = self._get_region_attr(self._rev_summary, 'res_gids')
@@ -440,10 +441,10 @@ class RegionRepProfile:
             gids = None
 
         if self.i_reps[0] is None or gids is None:
-            res_gid_reps = [None]
+            rep_gids = [None]
         else:
-            res_gid_reps = [gids[i] for i in self.i_reps]
-        return res_gid_reps
+            rep_gids = [gids[i] for i in self.i_reps]
+        return rep_gids
 
     @classmethod
     def get_region_rep_profile(cls, gen_fpath, rev_summary, gid_col='gen_gids',
@@ -490,7 +491,7 @@ class RegionRepProfile:
         r = cls(gen_fpath, rev_summary, gid_col=gid_col, cf_dset=cf_dset,
                 rep_method=rep_method, err_method=err_method, weight=weight,
                 n_profiles=n_profiles)
-        return r.rep_profiles, r.i_reps, r.gen_gid_reps, r.res_gid_reps
+        return r.rep_profiles, r.i_reps, r.rep_gen_gids, r.rep_res_gids
 
 
 class RepProfilesBase:
@@ -554,9 +555,9 @@ class RepProfilesBase:
 
         self._rev_summary = self._parse_rev_summary(rev_summary)
 
-        self._check_col_reqs(self._rev_summary, self._reg_cols)
-        self._check_col_reqs(self._rev_summary, self._weight)
-        self._check_col_reqs(self._rev_summary, self._gid_col)
+        self._check_req_cols(self._rev_summary, self._reg_cols)
+        self._check_req_cols(self._rev_summary, self._weight)
+        self._check_req_cols(self._rev_summary, self._gid_col)
 
         self._check_rev_gen(gen_fpath, cf_dset, self._rev_summary)
 
@@ -602,7 +603,7 @@ class RepProfilesBase:
         return rev_summary
 
     @staticmethod
-    def _check_col_reqs(df, cols):
+    def _check_req_cols(df, cols):
         """Check a dataframe for required columns.
 
         Parameters
@@ -706,7 +707,8 @@ class RepProfilesBase:
         """
         return self._profiles
 
-    def _init_fout(self, fout, save_rev_summary=True, scaled_precision=False):
+    def _init_h5_out(self, fout, save_rev_summary=True,
+                     scaled_precision=False):
         """Initialize an output h5 file for n_profiles
 
         Parameters
@@ -753,7 +755,7 @@ class RepProfilesBase:
                 out._create_dset('rev_summary', rev_sum.shape,
                                  rev_sum.dtype, data=rev_sum)
 
-    def _write_fout(self, fout, save_rev_summary=True):
+    def _write_h5_out(self, fout, save_rev_summary=True):
         """Write profiles and meta to an output file.
 
         Parameters
@@ -789,9 +791,9 @@ class RepProfilesBase:
             Flag to scale cf_profiles by 1000 and save as uint16.
         """
 
-        self._init_fout(fout, save_rev_summary=save_rev_summary,
-                        scaled_precision=scaled_precision)
-        self._write_fout(fout, save_rev_summary=save_rev_summary)
+        self._init_h5_out(fout, save_rev_summary=save_rev_summary,
+                          scaled_precision=scaled_precision)
+        self._write_h5_out(fout, save_rev_summary=save_rev_summary)
 
 
 class RepProfiles(RepProfilesBase):
