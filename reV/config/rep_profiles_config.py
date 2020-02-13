@@ -137,3 +137,10 @@ class RepProfilesConfig(AnalysisConfig):
         """Get the reV supply curve column to use for a weighted average in
         the representative profile meanoid algorithm."""
         return self.get('weight', self._default_weight)
+
+    @property
+    def aggregate_profiles(self):
+        """Flag to calculate the aggregate (weighted meanoid) profile for each
+        supply curve point. This behavior is instead of finding the single
+        profile per region closest to the meanoid."""
+        return bool(self.get('aggregate_profiles', False))

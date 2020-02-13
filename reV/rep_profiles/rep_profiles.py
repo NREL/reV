@@ -297,7 +297,7 @@ class RegionRepProfile:
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        weight : str
+        weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have a
             list of weight values corresponding to the gen_gids list in the
@@ -338,13 +338,16 @@ class RegionRepProfile:
 
         Returns
         -------
-        weights : np.ndarray
+        weights : np.ndarray | None
             Flat array of weight values from the weight column. The supply
             curve table data in the weight column should have a list of weight
             values corresponding to the gen_gids list in the same row.
         """
-        weights = self._get_region_attr(self._rev_summary, self._weight)
-        weights = np.array(weights)
+        if self._weight is None:
+            weights = None
+        else:
+            weights = self._get_region_attr(self._rev_summary, self._weight)
+            weights = np.array(weights)
         return weights
 
     @staticmethod
@@ -445,7 +448,7 @@ class RegionRepProfile:
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        weight : str
+        weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have a
             list of weight values corresponding to the gen_gids list in the
@@ -493,7 +496,7 @@ class RepProfilesBase:
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        weight : str
+        weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have a
             list of weight values corresponding to the gen_gids list in the
@@ -544,7 +547,7 @@ class RepProfilesBase:
             Aggregated rev supply curve summary file. Str filepath or full df.
         reg_cols : list | None
             Column label(s) for a region column to extract profiles for.
-        weight : str
+        weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have a
             list of weight values corresponding to the gen_gids list in the
@@ -774,7 +777,7 @@ class RepProfiles(RepProfilesBase):
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        weight : str
+        weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have a
             list of weight values corresponding to the gen_gids list in the
@@ -783,8 +786,15 @@ class RepProfiles(RepProfilesBase):
             Number of representative profiles to save to fout.
         """
 
+        logger.info('Finding representative profiles that are most similar '
+                    'to the weighted meanoid for each supply curve region.')
+
         if reg_cols is None:
-            reg_cols = []
+            e = ('Need to define "reg_cols"! If you want a profile for each '
+                 'supply curve point, try setting "reg_cols" to a primary '
+                 'key such as "sc_gid".')
+            logger.error(e)
+            raise ValueError(e)
         elif isinstance(reg_cols, str):
             reg_cols = [reg_cols]
         elif not isinstance(reg_cols, list):
@@ -792,7 +802,9 @@ class RepProfiles(RepProfilesBase):
 
         super().__init__(gen_fpath, rev_summary, reg_cols=reg_cols,
                          cf_dset=cf_dset, rep_method=rep_method,
-                         err_method=err_method, n_profiles=n_profiles)
+                         err_method=err_method, weight=weight,
+                         n_profiles=n_profiles)
+
         self._set_meta()
         self._init_profiles()
 
@@ -936,7 +948,8 @@ class RepProfiles(RepProfilesBase):
             rep_method='meanoid', err_method='rmse', weight='gid_counts',
             fout=None, n_profiles=1, save_rev_summary=True,
             scaled_precision=False, max_workers=None):
-        """Run representative profiles.
+        """Run representative profiles by finding the closest single profile
+        to the weighted meanoid for each SC region.
 
         Parameters
         ----------
@@ -955,7 +968,7 @@ class RepProfiles(RepProfilesBase):
         err_method : str
             Method identifier for calculation of error from the representative
             profile.
-        weight : str
+        weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have a
             list of weight values corresponding to the gen_gids list in the
@@ -1017,16 +1030,19 @@ class AggregatedRepProfiles(RepProfilesBase):
             Aggregated rev supply curve summary file. Str filepath or full df.
         cf_dset : str
             Dataset name to pull generation profiles from.
-        weight : str
+        weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have a
             list of weight values corresponding to the gen_gids list in the
             same row.
         """
 
+        logger.info('Calculating the weighted aggregate (meanoid) '
+                    'representative profiles for each supply curve point.')
+
         super().__init__(gen_fpath, rev_summary, reg_cols=None,
                          cf_dset=cf_dset, rep_method='meanoid',
-                         err_method=None, n_profiles=1)
+                         err_method=None, weight=weight, n_profiles=1)
 
         self._meta = self._rev_summary
         self._init_profiles()
@@ -1100,7 +1116,8 @@ class AggregatedRepProfiles(RepProfilesBase):
     def run(cls, gen_fpath, rev_summary, cf_dset='cf_profile',
             weight='gid_counts', fout=None, scaled_precision=False,
             max_workers=None):
-        """Run representative profiles.
+        """Run representative profiles by calculating the weighted aggregate
+        (meanoid) profile for each SC point.
 
         Parameters
         ----------
@@ -1110,7 +1127,7 @@ class AggregatedRepProfiles(RepProfilesBase):
             Aggregated rev supply curve summary file. Str filepath or full df.
         cf_dset : str
             Dataset name to pull generation profiles from.
-        weight : str
+        weight : str | None
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have a
             list of weight values corresponding to the gen_gids list in the

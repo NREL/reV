@@ -12,7 +12,7 @@ from reV.utilities.execution import SLURM
 from reV.utilities.cli_dtypes import STR, INT, STRLIST
 from reV.utilities.loggers import init_mult
 from reV.config.rep_profiles_config import RepProfilesConfig
-from reV.rep_profiles.rep_profiles import RepProfiles
+from reV.rep_profiles.rep_profiles import RepProfiles, AggregatedRepProfiles
 from reV.pipeline.status import Status
 
 logger = logging.getLogger(__name__)
@@ -84,6 +84,7 @@ def from_config(ctx, config_file, verbose):
                            config.err_method, config.weight,
                            config.dirout, config.logdir,
                            config.execution_control.max_workers,
+                           config.aggregate_profiles,
                            verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
@@ -99,6 +100,7 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['OUT_DIR'] = config.dirout
             ctx.obj['LOG_DIR'] = config.logdir
             ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
+            ctx.obj['AGGREGATE_PROFILES'] = config.aggregate_profiles
             ctx.obj['VERBOSE'] = verbose
 
             ctx.invoke(slurm,
@@ -141,12 +143,17 @@ def from_config(ctx, config_file, verbose):
 @click.option('--max_workers', '-mw', type=INT, default=None,
               help='Number of parallel workers. 1 will run in serial. '
               'None will use all available.')
+@click.option('-agg', '--aggregate_profiles', is_flag=True,
+              help='Flag to calculate the aggregate (weighted meanoid) '
+              'profile for each supply curve point. This behavior is instead '
+              'of finding the single profile per region closest to the '
+              'meanoid.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
          err_method, weight, n_profiles, out_dir, log_dir, max_workers,
-         verbose):
+         aggregate_profiles, verbose):
     """reV representative profiles CLI."""
 
     ctx.ensure_object(dict)
@@ -162,6 +169,7 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['MAX_WORKERS'] = max_workers
+    ctx.obj['AGGREGATE_PROFILES'] = aggregate_profiles
     ctx.obj['VERBOSE'] = verbose
 
     if ctx.invoked_subcommand is None:
@@ -171,10 +179,16 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 
         fn_out = '{}.h5'.format(name)
         fout = os.path.join(out_dir, fn_out)
-        RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
-                        rep_method=rep_method, err_method=err_method,
-                        weight=weight, fout=fout, n_profiles=n_profiles,
-                        max_workers=max_workers)
+
+        if aggregate_profiles:
+            AggregatedRepProfiles.run(gen_fpath, rev_summary, cf_dset=cf_dset,
+                                      weight=weight, fout=fout,
+                                      max_workers=max_workers)
+        else:
+            RepProfiles.run(gen_fpath, rev_summary, reg_cols, cf_dset=cf_dset,
+                            rep_method=rep_method, err_method=err_method,
+                            weight=weight, fout=fout, n_profiles=n_profiles,
+                            max_workers=max_workers)
 
         runtime = (time.time() - t0) / 60
         logger.info('reV representative profiles complete. '
@@ -190,7 +204,7 @@ def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 
 def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                  err_method, weight, n_profiles, out_dir, log_dir, max_workers,
-                 verbose):
+                 aggregate_profiles, verbose):
     """Get a CLI call command for the rep profiles cli."""
 
     args = ('-n {name} '
@@ -220,6 +234,9 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                        log_dir=SLURM.s(log_dir),
                        max_workers=SLURM.s(max_workers),
                        )
+
+    if aggregate_profiles:
+        args += '-agg '
 
     if verbose:
         args += '-v '
@@ -262,6 +279,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     max_workers = ctx.obj['MAX_WORKERS']
+    aggregate_profiles = ctx.obj['AGGREGATE_PROFILES']
     verbose = ctx.obj['VERBOSE']
 
     if stdout_path is None:
@@ -269,7 +287,8 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
 
     cmd = get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset,
                        rep_method, err_method, weight, n_profiles,
-                       out_dir, log_dir, max_workers, verbose)
+                       out_dir, log_dir, max_workers, aggregate_profiles,
+                       verbose)
 
     status = Status.retrieve_job_status(out_dir, 'rep-profiles', name)
     if status == 'successful':
