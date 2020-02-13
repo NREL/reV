@@ -424,7 +424,7 @@ class RegionRepProfile:
     @property
     def gen_gid_reps(self):
         """Get the representative profile gen gids of this region."""
-        gids = self._get_region_attr(self._rev_summary, 'gen_gids')
+        gids = self._get_region_attr(self._rev_summary, self._gid_col)
         if self.i_reps[0] is None:
             gen_gid_reps = None
         else:
@@ -434,9 +434,13 @@ class RegionRepProfile:
     @property
     def res_gid_reps(self):
         """Get the representative profile resource gids of this region."""
-        gids = self._get_region_attr(self._rev_summary, 'res_gids')
-        if self.i_reps[0] is None:
-            res_gid_reps = None
+        if self._gid_col == 'gen_gids':
+            gids = self._get_region_attr(self._rev_summary, 'res_gids')
+        else:
+            gids = None
+
+        if self.i_reps[0] is None or gids is None:
+            res_gid_reps = [None]
         else:
             res_gid_reps = [gids[i] for i in self.i_reps]
         return res_gid_reps
@@ -734,12 +738,11 @@ class RepProfilesBase:
                 dtypes[dset] = self.profiles[0].dtype
 
         meta = self.meta.copy()
-        for c in ['rep_gen_gid', 'rep_res_gid']:
-            if c in meta:
-                try:
-                    meta[c] = pd.to_numeric(meta[c])
-                except ValueError:
-                    pass
+        for c in meta.columns:
+            try:
+                meta[c] = pd.to_numeric(meta[c])
+            except ValueError:
+                pass
 
         Outputs.init_h5(fout, dsets, shapes, attrs, chunks, dtypes,
                         meta, time_index=self.time_index)

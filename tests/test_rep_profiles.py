@@ -110,7 +110,6 @@ def test_integrated():
                                 'weight': ones,
                                 'region': regions})
     p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
-                                gid_col='res_gids',
                                 max_workers=1, weight='weight')
     p2, m2, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
                                 max_workers=None, weight='weight')
