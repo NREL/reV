@@ -112,6 +112,12 @@ class NearestNeighborError(Exception):
     """
 
 
+class DataShapeError(Exception):
+    """
+    Error with mismatched data shapes.
+    """
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data

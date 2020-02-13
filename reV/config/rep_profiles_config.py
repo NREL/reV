@@ -35,6 +35,7 @@ class RepProfilesConfig(AnalysisConfig):
         self._default_cf_dset = 'cf_profile'
         self._default_rep_method = 'meanoid'
         self._default_err_method = 'rmse'
+        self._default_weight = 'gid_counts'
         self._default_n_profiles = 1
 
         self._rep_profiles_preflight()
@@ -130,3 +131,16 @@ class RepProfilesConfig(AnalysisConfig):
     def n_profiles(self):
         """Get the number of representative profiles to save."""
         return self.get('n_profiles', self._default_n_profiles)
+
+    @property
+    def weight(self):
+        """Get the reV supply curve column to use for a weighted average in
+        the representative profile meanoid algorithm."""
+        return self.get('weight', self._default_weight)
+
+    @property
+    def aggregate_profiles(self):
+        """Flag to calculate the aggregate (weighted meanoid) profile for each
+        supply curve point. This behavior is instead of finding the single
+        profile per region closest to the meanoid."""
+        return bool(self.get('aggregate_profiles', False))

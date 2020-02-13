@@ -22,7 +22,7 @@ from reV.supply_curve.point_summary import SupplyCurvePointSummary
 from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
-                                      InputWarning)
+                                      InputWarning, SupplyCurveInputError)
 
 
 logger = logging.getLogger(__name__)
@@ -444,6 +444,9 @@ class Aggregation:
         else:
             res_data = gen[res_class_dset]
 
+        if res_class_bins is None:
+            res_class_bins = [None]
+
         if cf_dset in gen.dsets:
             cf_data = gen[cf_dset]
         else:
@@ -715,6 +718,14 @@ class Aggregation:
                 for gen_gid, offshore in enumerate(offshore_flag):
                     if offshore:
 
+                        if 'offshore_res_gids' not in fhandler.gen.meta:
+                            e = ('Offshore sites found in wind data, but '
+                                 '"offshore_res_gids" not found in the '
+                                 'meta data. You must run the offshore wind '
+                                 'farm module before offshore supply curve.')
+                            logger.error(e)
+                            raise SupplyCurveInputError(e)
+
                         # pylint: disable-msg=E1101
                         farm_gid = fhandler.gen.meta.loc[gen_gid, 'gid']
                         latitude = fhandler.gen.meta.loc[gen_gid, 'latitude']
@@ -723,12 +734,21 @@ class Aggregation:
                         res_gids = fhandler.gen.meta\
                             .loc[gen_gid, 'offshore_res_gids']
 
-                        res_class = -1
-                        for ri, res_bin in enumerate(res_class_bins):
-                            if (res_data[gen_gid] > np.min(res_bin)
-                                    and res_data[gen_gid] < np.max(res_bin)):
-                                res_class = ri
-                                break
+                        res_class = 0
+                        if (res_class_bins[0] is not None
+                                and res_data is not None):
+                            for ri, res_bin in enumerate(res_class_bins):
+
+                                c1 = res_data[gen_gid] > np.min(res_bin)
+                                c2 = res_data[gen_gid] < np.max(res_bin)
+
+                                if c1 and c2:
+                                    res_class = ri
+                                    break
+
+                        cf = self._offshore_get_means(cf_data, gen_gid)
+                        lcoe = self._offshore_get_means(lcoe_data, gen_gid)
+                        res = self._offshore_get_means(res_data, gen_gid)
 
                         pointsum = {'sc_point_gid': farm_gid,
                                     'sc_row_ind': farm_gid,
@@ -736,9 +756,9 @@ class Aggregation:
                                     'res_gids': res_gids,
                                     'gen_gids': [gen_gid],
                                     'gid_counts': [int(offshore_gid_counts)],
-                                    'mean_cf': cf_data[gen_gid],
-                                    'mean_lcoe': lcoe_data[gen_gid],
-                                    'mean_res': res_data[gen_gid],
+                                    'mean_cf': cf,
+                                    'mean_lcoe': lcoe,
+                                    'mean_res': res,
                                     'capacity': offshore_capacity,
                                     'area_sq_km': offshore_pixel_area,
                                     'latitude': latitude,
@@ -752,6 +772,29 @@ class Aggregation:
                         summary.append(pointsum)
 
         return summary
+
+    @staticmethod
+    def _offshore_get_means(data, gen_gid):
+        """Get the mean point data from the data array for gen_gid.
+
+        Parameters
+        ----------
+        data : np.ndarray | None
+            Array of mean data values or None if no data is available.
+        gen_gid : int
+            location to get mean data for
+
+        Returns
+        -------
+        mean_data : float | None
+            Mean data value or None if no data available.
+        """
+
+        mean_data = None
+        if data is not None:
+            mean_data = data[gen_gid]
+
+        return mean_data
 
     def _offshore_data_layers(self, summary):
         """Agg categorical offshore data layers using NN to onshore points.
