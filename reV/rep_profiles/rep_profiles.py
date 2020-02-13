@@ -5,6 +5,7 @@ Created on Thu Oct 31 12:49:23 2019
 
 @author: gbuster
 """
+from abc import ABC, abstractmethod
 from concurrent.futures import as_completed
 from copy import deepcopy
 import json
@@ -494,8 +495,8 @@ class RegionRepProfile:
         return r.rep_profiles, r.i_reps, r.rep_gen_gids, r.rep_res_gids
 
 
-class RepProfilesBase:
-    """Basic utility framework for representative profile run classes."""
+class RepProfilesBase(ABC):
+    """Abstract utility framework for representative profile run classes."""
 
     def __init__(self, gen_fpath, rev_summary, reg_cols=None,
                  gid_col='gen_gids', cf_dset='cf_profile',
@@ -794,6 +795,21 @@ class RepProfilesBase:
         self._init_h5_out(fout, save_rev_summary=save_rev_summary,
                           scaled_precision=scaled_precision)
         self._write_h5_out(fout, save_rev_summary=save_rev_summary)
+
+    @abstractmethod
+    def _run_serial(self):
+        """Abstract method for serial run method."""
+        pass
+
+    @abstractmethod
+    def _run_parallel(self):
+        """Abstract method for parallel run method."""
+        pass
+
+    @abstractmethod
+    def run(self):
+        """Abstract method for generic run method."""
+        pass
 
 
 class RepProfiles(RepProfilesBase):
