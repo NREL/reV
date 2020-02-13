@@ -50,7 +50,7 @@ class PostDevelopCommand(develop):
         develop.run(self)
 
 
-test_requires = ["pytest", ]
+test_requires = ["pytest>=5.2", ]
 
 setup(
     name="reV",
@@ -102,8 +102,7 @@ setup(
                       "NREL-PySAM=1.2.1"],
     extras_require={
         "test": test_requires,
-        "dev": test_requires + ["flake8", "pre-commit", "pylint",
-                                "pytest>=5.2"],
+        "dev": test_requires + ["flake8", "pre-commit", "pylint"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )
