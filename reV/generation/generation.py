@@ -388,7 +388,7 @@ class Gen:
 
             Outputs.init_h5(self._fpath, self.output_request, shapes, attrs,
                             chunks, dtypes, self.meta, time_index=ti,
-                            configs=self.sam_configs)
+                            configs=self.sam_metas, run_attrs=self.run_attrs)
 
     def _init_out_arrays(self, index_0=0):
         """Initialize output arrays based on the number of sites that can be
@@ -535,6 +535,23 @@ class Gen:
         return self.project_points.sam_configs
 
     @property
+    def sam_metas(self):
+        """
+        SAM configurations including runtime module
+
+        Returns
+        -------
+        sam_metas : dict
+            Nested dictionary of SAM configuration files with module used
+            at runtime
+        """
+        sam_metas = self.sam_configs.copy()
+        for v in sam_metas.values():
+            v.update({'module': self._sam_module.module})
+
+        return sam_metas
+
+    @property
     def tech(self):
         """Get the reV technology string.
 
@@ -605,6 +622,18 @@ class Gen:
                 meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
+
+    @property
+    def run_attrs(self):
+        """
+        Run time attributes (__init__ args and kwargs)
+
+        Returns
+        -------
+        run_attrs : dict
+            Dictionary of runtime args and kwargs
+        """
+        return self._run_attrs
 
     @staticmethod
     def handle_leap_ti(ti, drop_leap=False):

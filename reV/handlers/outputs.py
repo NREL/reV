@@ -184,8 +184,9 @@ class Outputs(Resource):
         run_attrs : dict
             Dictionary of runtime attributes (args, kwargs)
         """
-        for k, v in run_attrs.items():
-            self.h5.attrs[k] = v
+        if self.writable:
+            for k, v in run_attrs.items():
+                self.h5.attrs[k] = v
 
     def _check_group(self, group):
         """
