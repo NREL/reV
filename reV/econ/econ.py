@@ -122,8 +122,18 @@ class Econ(Gen):
         self._sam_module = None
         self._sam_obj_default = None
         self.mem_util_lim = mem_util_lim
+
         self._output_request = self._parse_output_request(output_request)
         self._site_data = self._parse_site_data(site_data)
+
+        self._run_attrs = {'points_control': str(points_control),
+                           'cf_file': cf_file,
+                           'site_data': str(site_data),
+                           'output_request': output_request,
+                           'fout': fout,
+                           'dirout': dirout,
+                           'mem_util_lim': mem_util_lim,
+                           'sam_module': self._sam_module.MODULE}
 
         # pre-initialize output arrays to store results when available.
         self._out = {}

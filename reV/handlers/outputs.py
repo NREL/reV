@@ -163,6 +163,31 @@ class Outputs(Resource):
 
         return configs
 
+    @property
+    def run_attrs(self):
+        """
+        Runtime attributes stored at the global (file) level
+
+        Returns
+        -------
+        global_attrs : dict
+        """
+        return self.global_attrs
+
+    @run_attrs.setter
+    def run_attrs(self, run_attrs):
+        """
+        Set runtime attributes as global (file) attributes
+
+        Parameters
+        ----------
+        run_attrs : dict
+            Dictionary of runtime attributes (args, kwargs)
+        """
+        if self.writable:
+            for k, v in run_attrs.items():
+                self.h5.attrs[k] = v
+
     def _check_group(self, group):
         """
         Ensure group is in .h5 file
@@ -742,7 +767,7 @@ class Outputs(Resource):
     @classmethod
     def init_h5(cls, h5_file, dsets, shapes, attrs, chunks, dtypes,
                 meta, time_index=None, configs=None, unscale=True, mode='w',
-                str_decode=True, group=None):
+                str_decode=True, group=None, run_attrs=None):
         """Init a full output file with the final intended shape without data.
 
         Parameters
@@ -776,12 +801,18 @@ class Outputs(Resource):
             strings. Setting this to False will speed up the meta data read.
         group : str
             Group within .h5 resource file to open
+        run_attrs : dict | NoneType
+            Runtime attributes (args, kwargs) to add as global (file)
+            attributes
         """
 
         logger.debug("Initializing output file: {}".format(h5_file))
         kwargs = {"unscale": unscale, "mode": mode, "str_decode": str_decode,
                   "group": group}
         with cls(h5_file, **kwargs) as f:
+            if run_attrs is not None:
+                f.run_attrs = run_attrs
+
             f['meta'] = meta
 
             if time_index is not None:
