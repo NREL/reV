@@ -52,12 +52,6 @@ class PostDevelopCommand(develop):
 
 test_requires = ["pytest", ]
 
-numpy_dependency = "numpy>=1.15.0"
-pandas_dependency = "pandas>=0.23.0"
-click_dependency = "click>=7.0"
-scipy_dependency = "scipy>=1.2.1"
-pysam_dependency = "NREL-PySAM=1.2.1"
-
 setup(
     name="reV",
     version=version,
@@ -99,11 +93,17 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     test_suite="tests",
-    install_requires=["click", "h5py", "numpy", "pandas", "psutil",
-                      "scipy", "NREL-PySAM"],
+    install_requires=["click>=7.0",
+                      "h5py>=2.9",
+                      "numpy>=1.16.0",
+                      "pandas>=0.25,<1",
+                      "psutil>=5.6",
+                      "scipy>=1.3",
+                      "NREL-PySAM=1.2.1"],
     extras_require={
         "test": test_requires,
-        "dev": test_requires + ["flake8", "pre-commit", "pylint"],
+        "dev": test_requires + ["flake8", "pre-commit", "pylint",
+                                "pytest>=5.2"],
     },
     cmdclass={"develop": PostDevelopCommand},
 )
