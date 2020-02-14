@@ -17,6 +17,7 @@ Documentation config file
 #
 import os
 import sphinx_rtd_theme
+import sys
 
 
 # -- Project information -----------------------------------------------------
@@ -27,6 +28,7 @@ author = 'Galen MacLaurin, Michael Rossol'
 
 pkg = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 pkg = os.path.dirname(pkg)
+sys.path.append(pkg)
 
 with open(os.path.join(pkg, "reV", "version.py"), encoding="utf-8") as f:
     v = f.read()
