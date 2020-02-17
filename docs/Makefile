@@ -23,7 +23,7 @@ help:
 github: html
 	-git branch -D gh-pages
 	-git push origin --delete gh-pages
-	ghp-import -n -b gh-pages -m "Update documentation" ./build/html
+	ghp-import -n -b gh-pages -m "Update documentation" ./_build/html
 	git checkout gh-pages
 	git push --set-upstream origin gh-pages
 	git checkout ${BRANCH}
