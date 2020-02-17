@@ -39,7 +39,7 @@ class BatchJob:
         self._job_tags = None
 
         self._config = BatchConfig(config)
-        self._base_dir = self._config.dir
+        self._base_dir = self._config.config_dir
 
         x = self._parse_config(self._config)
         self._arg_combs, self._file_sets, self._set_tags = x
