@@ -83,7 +83,7 @@ def from_config(ctx, config_file, verbose):
                        min_area=config.min_area,
                        friction_fpath=config.friction_fpath,
                        friction_dset=config.friction_dset,
-                       dirout=config.dirout,
+                       out_dir=config.dirout,
                        log_dir=config.logdir,
                        verbose=verbose)
 
