@@ -190,7 +190,7 @@ class Offshore:
             self._meta_out_offshore = \
                 self._meta_out_offshore.sort_values('gid')
 
-            col = ['region', 'min_sub_tech', 'sub_type']
+            col = ['min_sub_tech', 'sub_type']
             meta = self._offshore_data[col]
             self._meta_out_offshore = self._meta_out_offshore.join(meta,
                                                                    how='left')
