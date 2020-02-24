@@ -72,7 +72,7 @@ def from_config(ctx, config_file, verbose):
                        res_fpath=config.res_fpath,
                        tm_dset=config.tm_dset,
                        excl_dict=config.excl_dict,
-                       res_class_dict=config.res_class_dset,
+                       res_class_dset=config.res_class_dset,
                        res_class_bins=config.res_class_bins,
                        cf_dset=config.cf_dset,
                        lcoe_dset=config.lcoe_dset,
