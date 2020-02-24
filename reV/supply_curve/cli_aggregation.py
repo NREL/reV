@@ -65,14 +65,27 @@ def from_config(ctx, config_file, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
-            ctx.invoke(main, name, config.excl_fpath, config.gen_fpath,
-                       config.res_fpath, config.tm_dset, config.excl_dict,
-                       config.res_class_dset, config.res_class_bins,
-                       config.cf_dset, config.lcoe_dset, config.data_layers,
-                       config.resolution, config.power_density,
-                       config.area_filter_kernel, config.min_area,
-                       config.friction_fpath, config.friction_dset,
-                       config.dirout, config.logdir, verbose)
+            ctx.invoke(main,
+                       name=name,
+                       excl_fpath=config.excl_fpath,
+                       gen_fpath=config.gen_fpath,
+                       res_fpath=config.res_fpath,
+                       tm_dset=config.tm_dset,
+                       excl_dict=config.excl_dict,
+                       res_class_dict=config.res_class_dset,
+                       res_class_bins=config.res_class_bins,
+                       cf_dset=config.cf_dset,
+                       lcoe_dset=config.lcoe_dset,
+                       data_layers=config.data_layers,
+                       resolution=config.resolution,
+                       power_density=config.power_density,
+                       area_filter_kernel=config.area_filter_kernel,
+                       min_area=config.min_area,
+                       friction_fpath=config.friction_fpath,
+                       friction_dset=config.friction_dset,
+                       dirout=config.dirout,
+                       log_dir=config.logdir,
+                       verbose=verbose)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
 
