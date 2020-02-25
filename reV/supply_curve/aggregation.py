@@ -33,7 +33,8 @@ class AggFileHandler:
 
     def __init__(self, excl_fpath, gen_fpath, data_layers, excl_dict,
                  power_density, friction_fpath=None, friction_dset=None,
-                 area_filter_kernel='queen', min_area=None):
+                 area_filter_kernel='queen', min_area=None,
+                 check_layers=False):
         """
         Parameters
         ----------
@@ -62,12 +63,16 @@ class AggFileHandler:
             Contiguous area filter method to use on final exclusions mask
         min_area : float | NoneType
             Minimum required contiguous area filter in sq-km
+        check_layers : bool
+            Run a pre-flight check on each exclusion layer to ensure they
+            contain un-excluded values
         """
 
         self._excl_fpath = excl_fpath
         self._excl = ExclusionMaskFromDict(excl_fpath, excl_dict,
                                            min_area=min_area,
-                                           kernel=area_filter_kernel)
+                                           kernel=area_filter_kernel,
+                                           check_layers=check_layers)
         self._gen = Outputs(gen_fpath, mode='r')
         self._data_layers = self._open_data_layers(data_layers)
         self._power_density = power_density
@@ -232,7 +237,7 @@ class Aggregation:
                  data_layers=None, resolution=64, power_density=None,
                  friction_fpath=None, friction_dset=None,
                  gids=None, area_filter_kernel='queen', min_area=None,
-                 max_workers=None):
+                 max_workers=None, check_layers=False):
         """
         Parameters
         ----------
@@ -283,6 +288,9 @@ class Aggregation:
         max_workers : int | None
             Number of cores to run summary on. 1 is serial, None is all
             available cpus.
+        check_layers : bool
+            Run a pre-flight check on each exclusion layer to ensure they
+            contain un-excluded values
         """
 
         self._excl_fpath = excl_fpath
@@ -300,6 +308,10 @@ class Aggregation:
         self._data_layers = data_layers
         self._area_filter_kernel = area_filter_kernel
         self._min_area = min_area
+        self._check_layers = check_layers
+        if check_layers:
+            logger.debug('Exclusions layers will be checked for un-excluded '
+                         'values!')
 
         logger.debug('Resource class bins: {}'.format(self._res_class_bins))
 
@@ -312,6 +324,7 @@ class Aggregation:
 
         if max_workers is None:
             max_workers = os.cpu_count()
+
         self._max_workers = max_workers
 
         if gids is None:
@@ -319,6 +332,7 @@ class Aggregation:
                 gids = np.array(range(len(sc)), dtype=np.uint32)
         elif not isinstance(gids, np.ndarray):
             gids = np.array(gids)
+
         self._gids = gids
 
         self._check_files()
@@ -481,7 +495,8 @@ class Aggregation:
                         data_layers=None, resolution=64, power_density=None,
                         friction_fpath=None, friction_dset=None,
                         gids=None, area_filter_kernel='queen', min_area=None,
-                        args=None, ex_area=0.0081, close=False):
+                        args=None, ex_area=0.0081, close=False,
+                        check_layers=False):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -545,6 +560,9 @@ class Aggregation:
             Area of an exclusion cell (square km).
         close : bool
             Flag to close object file handlers on exit.
+        check_layers : bool
+            Run a pre-flight check on each exclusion layer to ensure they
+            contain un-excluded values
 
         Returns
         -------
@@ -566,7 +584,8 @@ class Aggregation:
         file_kwargs = {'area_filter_kernel': area_filter_kernel,
                        'min_area': min_area,
                        'friction_fpath': friction_fpath,
-                       'friction_dset': friction_dset}
+                       'friction_dset': friction_dset,
+                       'check_layers': check_layers}
         with AggFileHandler(*file_args, **file_kwargs) as fhandler:
 
             inputs = Aggregation._get_input_data(fhandler.gen, gen_fpath,
@@ -663,7 +682,8 @@ class Aggregation:
                     friction_dset=self._friction_dset,
                     area_filter_kernel=self._area_filter_kernel,
                     min_area=self._min_area,
-                    gids=gid_set, args=args, ex_area=ex_area, close=close))
+                    gids=gid_set, args=args, ex_area=ex_area, close=close,
+                    check_layers=self._check_layers))
 
             # gather results
             for future in as_completed(futures):
@@ -900,7 +920,8 @@ class Aggregation:
                 friction_fpath=None, friction_dset=None,
                 offshore_capacity=600, gids=None,
                 area_filter_kernel='queen', min_area=None,
-                max_workers=None, args=None, ex_area=0.0081, close=False):
+                max_workers=None, args=None, ex_area=0.0081, close=False,
+                check_layers=False):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -967,6 +988,9 @@ class Aggregation:
             Area of an exclusion cell (square km).
         close : bool
             Flag to close object file handlers on exit.
+        check_layers : bool
+            Run a pre-flight check on each exclusion layer to ensure they
+            contain un-excluded values
 
         Returns
         -------
@@ -981,7 +1005,7 @@ class Aggregation:
                   power_density=power_density, gids=gids,
                   friction_fpath=friction_fpath, friction_dset=friction_dset,
                   area_filter_kernel=area_filter_kernel, min_area=min_area,
-                  max_workers=max_workers)
+                  max_workers=max_workers, check_layers=check_layers)
 
         if max_workers == 1:
             afk = agg._area_filter_kernel
@@ -1000,7 +1024,8 @@ class Aggregation:
                                           area_filter_kernel=afk,
                                           min_area=agg._min_area,
                                           gids=gids, args=args,
-                                          ex_area=ex_area, close=close)
+                                          ex_area=ex_area, close=close,
+                                          check_layers=check_layers)
         else:
             summary = agg._parallel_summary(args=args, ex_area=ex_area,
                                             close=close)

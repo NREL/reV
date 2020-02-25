@@ -72,6 +72,7 @@ def from_config(ctx, config_file, verbose):
                        res_fpath=config.res_fpath,
                        tm_dset=config.tm_dset,
                        excl_dict=config.excl_dict,
+                       check_layers=config.check_layers,
                        res_class_dset=config.res_class_dset,
                        res_class_bins=config.res_class_bins,
                        cf_dset=config.cf_dset,
@@ -137,6 +138,9 @@ def from_config(ctx, config_file, verbose):
               'dataset in excl_fpath and kwarg can be "inclusion_range", '
               '"exclude_values", "include_values", "use_as_weights", '
               '"exclude_nodata", and/or "weight".')
+@click.option('--check_layers', '-cl', is_flag=True,
+              help=('run a pre-flight check on each exclusion layer to '
+                    'ensure they contain un-excluded values'))
 @click.option('--res_class_dset', '-cd', type=STR, default=None,
               help='Dataset to determine the resource class '
               '(must be in gen_fpath).')
@@ -176,8 +180,8 @@ def from_config(ctx, config_file, verbose):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
-         res_class_dset, res_class_bins, cf_dset, lcoe_dset, data_layers,
-         resolution, power_density, area_filter_kernel, min_area,
+         check_layers, res_class_dset, res_class_bins, cf_dset, lcoe_dset,
+         data_layers, resolution, power_density, area_filter_kernel, min_area,
          friction_fpath, friction_dset, out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
 
@@ -188,6 +192,7 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
     ctx.obj['RES_FPATH'] = res_fpath
     ctx.obj['TM_DSET'] = tm_dset
     ctx.obj['EXCL_DICT'] = excl_dict
+    ctx.obj['CHECK_LAYER'] = check_layers
     ctx.obj['RES_CLASS_DSET'] = res_class_dset
     ctx.obj['RES_CLASS_BINS'] = res_class_bins
     ctx.obj['CF_DSET'] = cf_dset
@@ -237,7 +242,8 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                 area_filter_kernel=area_filter_kernel,
                 min_area=min_area,
                 friction_fpath=friction_fpath,
-                friction_dset=friction_dset)
+                friction_dset=friction_dset,
+                check_layers=check_layers)
 
         except Exception as e:
             logger.exception('Supply curve Aggregation failed. Received the '
@@ -266,9 +272,9 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 
 
 def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
-                 res_class_dset, res_class_bins, cf_dset, lcoe_dset,
-                 data_layers, resolution, power_density, area_filter_kernel,
-                 min_area, friction_fpath, friction_dset,
+                 check_layers, res_class_dset, res_class_bins, cf_dset,
+                 lcoe_dset, data_layers, resolution, power_density,
+                 area_filter_kernel, min_area, friction_fpath, friction_dset,
                  out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
@@ -314,6 +320,9 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                        log_dir=SLURM.s(log_dir),
                        )
 
+    if check_layers:
+        args += '-cl '
+
     if verbose:
         args += '-v '
 
@@ -348,6 +357,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     res_fpath = ctx.obj['RES_FPATH']
     tm_dset = ctx.obj['TM_DSET']
     excl_dict = ctx.obj['EXCL_DICT']
+    check_layers = ctx.obj['CHECK_LAYERS']
     res_class_dset = ctx.obj['RES_CLASS_DSET']
     res_class_bins = ctx.obj['RES_CLASS_BINS']
     cf_dset = ctx.obj['CF_DSET']
@@ -367,7 +377,8 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
         stdout_path = os.path.join(log_dir, 'stdout/')
 
     cmd = get_node_cmd(name, excl_fpath, gen_fpath, res_fpath,
-                       tm_dset, excl_dict, res_class_dset, res_class_bins,
+                       tm_dset, excl_dict, check_layers,
+                       res_class_dset, res_class_bins,
                        cf_dset, lcoe_dset, data_layers, resolution,
                        power_density, area_filter_kernel, min_area,
                        friction_fpath, friction_dset,

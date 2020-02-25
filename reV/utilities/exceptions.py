@@ -118,6 +118,12 @@ class DataShapeError(Exception):
     """
 
 
+class ExclusionLayerError(Exception):
+    """
+    Error with bad exclusion data
+    """
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data

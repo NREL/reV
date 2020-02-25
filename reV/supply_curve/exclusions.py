@@ -9,6 +9,7 @@ from scipy import ndimage
 from warnings import warn
 
 from reV.handlers.exclusions import ExclusionLayers
+from reV.utilities.exceptions import ExclusionLayerError
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class LayerMask:
     def __init__(self, layer, inclusion_range=(None, None),
                  exclude_values=None, include_values=None,
                  use_as_weights=False, weight=1.0,
-                 exclude_nodata=True, nodata_value=None):
+                 exclude_nodata=False, nodata_value=None):
         """
         Parameters
         ----------
@@ -39,11 +40,11 @@ class LayerMask:
         weight : float
             How much to weight the inclusion of each pixel, Default = 1
         exclude_nodata : bool
-            Flag to exclude nodata values. The self.nodata_value attribute
-            must be set to the appropriate nodata value for this to work.
+            Flag to exclude nodata values (nodata_value). If nodata_value=None
+            the nodata_value is infered by ExclusionMask
         nodata_value : int | float | None
-            Nodata value for the layer. Can be None and set later as the
-            nodata_value attribute.
+            Nodata value for the layer. If None, it will be infered when
+            LayerMask is added to ExclusionMask
         """
         self._layer = layer
         self._inclusion_range = inclusion_range
@@ -205,7 +206,7 @@ class LayerMask:
                                'inclusion mask, but you supplied {} and {}'
                                .format(mask, k))
                         logger.error(msg)
-                        raise RuntimeError(msg)
+                        raise ExclusionLayerError(msg)
 
         return mask
 
@@ -317,7 +318,7 @@ class ExclusionMask:
                           [0, 1, 0]])}
 
     def __init__(self, excl_h5, *layers, min_area=None,
-                 kernel='queen', hsds=False):
+                 kernel='queen', hsds=False, check_layers=False):
         """
         Parameters
         ----------
@@ -332,10 +333,14 @@ class ExclusionMask:
         hsds : bool
             Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
             behind HSDS
+        check_layers : bool
+            Run a pre-flight check on each layer to ensure they contain
+            un-excluded values
         """
         self._layers = OrderedDict()
         self._excl_h5 = ExclusionLayers(excl_h5, hsds=hsds)
         self._excl_layers = None
+        self._check_layers = check_layers
 
         for layer in layers:
             self.add_layer(layer)
@@ -487,9 +492,15 @@ class ExclusionMask:
                 warn(msg)
             else:
                 logger.error(msg)
-                raise RuntimeError(msg)
+                raise ExclusionLayerError(msg)
 
         layer.nodata_value = self.excl_h5.get_nodata_value(layer_name)
+        if self._check_layers:
+            if not layer[self.excl_h5[layer_name]].any():
+                msg = ("Layer {} does not have any un-excluded pixels!"
+                       .format(layer_name))
+                logger.error(msg)
+                raise ExclusionLayerError(msg)
 
         self._layers[layer_name] = layer
 
@@ -506,6 +517,7 @@ class ExclusionMask:
         nodata = {}
         for layer_name in self.layer_names:
             nodata[layer_name] = self.excl_h5.get_nodata_value(layer_name)
+
         return nodata
 
     @staticmethod
@@ -680,7 +692,7 @@ class ExclusionMaskFromDict(ExclusionMask):
     Class to initialize ExclusionMask from a dictionary defining layers
     """
     def __init__(self, excl_h5, layers_dict, min_area=None,
-                 kernel='queen', hsds=False):
+                 kernel='queen', hsds=False, check_layers=False):
         """
         Parameters
         ----------
@@ -695,13 +707,16 @@ class ExclusionMaskFromDict(ExclusionMask):
         hsds : bool
             Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
             behind HSDS
+        check_layers : bool
+            Run a pre-flight check on each layer to ensure they contain
+            un-excluded values
         """
         layers = []
         for layer, kwargs in layers_dict.items():
             layers.append(LayerMask(layer, **kwargs))
 
         super().__init__(excl_h5, *layers, min_area=min_area,
-                         kernel=kernel, hsds=hsds)
+                         kernel=kernel, hsds=hsds, check_layers=check_layers)
 
     @classmethod
     def run(cls, excl_h5, layers_dict, min_area=None,
@@ -738,7 +753,7 @@ class ExclusionMaskFromDict(ExclusionMask):
 class FrictionMask(ExclusionMask):
     """Class to handle exclusion-style friction layer."""
 
-    def __init__(self, fric_h5, fric_dset, hsds=False):
+    def __init__(self, fric_h5, fric_dset, hsds=False, check_layers=False):
         """
         Parameters
         ----------
@@ -749,10 +764,14 @@ class FrictionMask(ExclusionMask):
         hsds : bool
             Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
             behind HSDS
+        check_layers : bool
+            Run a pre-flight check on each layer to ensure they contain
+            un-excluded values
         """
         self._fric_dset = fric_dset
         L = [LayerMask(fric_dset, use_as_weights=True, exclude_nodata=False)]
-        super().__init__(fric_h5, *L, min_area=None, hsds=hsds)
+        super().__init__(fric_h5, *L, min_area=None, hsds=hsds,
+                         check_layers=check_layers)
 
     def _generate_mask(self, *ds_slice):
         """
