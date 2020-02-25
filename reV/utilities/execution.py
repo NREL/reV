@@ -320,7 +320,7 @@ class PBS(SubprocessManager):
 class SLURM(SubprocessManager):
     """Subclass for SLURM subprocess jobs."""
 
-    def __init__(self, cmd, alloc, memory, walltime, feature=None,
+    def __init__(self, cmd, alloc, walltime, memory=None, feature=None,
                  name='reV', stdout_path='./stdout', conda_env=None,
                  module=None, module_root='/shared-projects/rev/modulefiles'):
         """Initialize and submit a PBS job.
@@ -332,10 +332,10 @@ class SLURM(SubprocessManager):
                 'python -m reV.generation.cli_gen'
         alloc : str
             HPC project (allocation) handle. Example: 'rev'.
-        memory : int
-            Node memory request in GB.
         walltime : float
             Node walltime request in hours.
+        memory : int, Optional
+            Node memory request in GB.
         feature : str
             Additional flags for SLURM job. Format is "--qos=high"
             or "--depend=[state:job_id]". Default is None.
