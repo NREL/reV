@@ -733,6 +733,7 @@ class Aggregation:
                         timezone = fhandler.gen.meta.loc[gen_gid, 'timezone']
                         res_gids = fhandler.gen.meta\
                             .loc[gen_gid, 'offshore_res_gids']
+                        sub_type = fhandler.gen.meta.loc[gen_gid, 'sub_type']
 
                         res_class = 0
                         if (res_class_bins[0] is not None
@@ -767,6 +768,7 @@ class Aggregation:
                                     'timezone': timezone,
                                     'elevation': 0,
                                     'offshore': 1,
+                                    'sub_type': sub_type
                                     }
 
                         summary.append(pointsum)
