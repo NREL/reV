@@ -20,7 +20,7 @@ class LayerMask:
     def __init__(self, layer, inclusion_range=(None, None),
                  exclude_values=None, include_values=None,
                  use_as_weights=False, weight=1.0,
-                 exclude_nodata=True, nodata_value=None):
+                 exclude_nodata=False, nodata_value=None):
         """
         Parameters
         ----------
@@ -39,11 +39,11 @@ class LayerMask:
         weight : float
             How much to weight the inclusion of each pixel, Default = 1
         exclude_nodata : bool
-            Flag to exclude nodata values. The self.nodata_value attribute
-            must be set to the appropriate nodata value for this to work.
+            Flag to exclude nodata values (nodata_value). If nodata_value=None
+            the nodata_value is infered by ExclusionMask
         nodata_value : int | float | None
-            Nodata value for the layer. Can be None and set later as the
-            nodata_value attribute.
+            Nodata value for the layer. If None, it will be infered when
+            LayerMask is added to ExclusionMask
         """
         self._layer = layer
         self._inclusion_range = inclusion_range
