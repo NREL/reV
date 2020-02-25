@@ -17,7 +17,8 @@ pip install sphinx-click
 ## Refreshing the API Documentation
 
 - Make sure reV is in your PYTHONPATH
-- Run `sphinx-apidoc -eM -o source/reV ../reV` from the `docs` folder.
+- Remove source/reV/reV.rst
+- Run `sphinx-apidoc -eMT -o source/reV ../reV` from the `docs` folder.
 - Add the following to the top of any CLI module's .rst file:
 ```
 .. click:: module_path:main
