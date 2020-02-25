@@ -12,6 +12,8 @@ import pytest
 import numpy as np
 import json
 
+pytest.importorskip("ORCA")
+
 from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
 from reV.offshore.offshore import Offshore

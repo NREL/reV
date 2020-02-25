@@ -481,10 +481,10 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 logger.error(msg)
                 raise FileInputError(msg)
 
-            pds = self._pd_obj.loc[self._res_gids, 'power_density'].values
+            pds = self._pd_obj.loc[self._res_gids[self.bool_mask],
+                                   'power_density'].values
             pds = pds.astype(np.float32)
-            pds[(self._res_gids == -1)] = 0.0
-            pds *= self.excl_data_flat
+            pds *= self.excl_data_flat[self.bool_mask]
             denom = self.excl_data_flat[self.bool_mask].sum()
             self._power_density = pds.sum() / denom
 
