@@ -33,7 +33,8 @@ class Offshore:
 
     def __init__(self, gen_fpath, offshore_fpath, project_points,
                  max_workers=None, offshore_gid_adder=1e7,
-                 farm_gid_label='wfarm_id', small_farm_limit=7):
+                 farm_gid_label='wfarm_id', small_farm_limit=7,
+                 offshore_meta_cols=('min_sub_tech', 'sub_type')):
         """
         Parameters
         ----------
@@ -54,6 +55,9 @@ class Offshore:
             Wind farms with less than this number of neighboring resource
             pixels will not be included in the output. Default is 7 based on
             median number of farm resource neighbors in a small test case.
+        offshore_meta_cols : list | tuple
+            Column labels from offshore_fpath to preserve in the output
+            meta data.
         """
 
         self._gen_fpath = gen_fpath
@@ -66,6 +70,10 @@ class Offshore:
         self._max_workers = max_workers
         self._farm_gid_label = farm_gid_label
         self._small_farm_limit = small_farm_limit
+
+        if isinstance(offshore_meta_cols, tuple):
+            offshore_meta_cols = list(offshore_meta_cols)
+        self._offshore_meta_cols = offshore_meta_cols
 
         self._meta_source, self._onshore_mask, self._offshore_mask = \
             self._parse_cf_meta(self._gen_fpath)
@@ -190,10 +198,20 @@ class Offshore:
             self._meta_out_offshore = \
                 self._meta_out_offshore.sort_values('gid')
 
-            col = ['min_sub_tech', 'sub_type']
-            meta = self._offshore_data[col]
-            self._meta_out_offshore = self._meta_out_offshore.join(meta,
-                                                                   how='left')
+            # add additional columns from the offshore input data to the meta
+            if self._offshore_meta_cols is not None:
+                missing = [c not in self._offshore_data
+                           for c in self._offshore_meta_cols]
+                if any(missing):
+                    e = ('Could not find the requested columns {} in the '
+                         'offshore data input. The following are available: '
+                         '{}'.format(self._offshore_meta_cols,
+                                     self._offshore_data.columns.values))
+                    logger.error(e)
+                    raise KeyError(e)
+                meta = self._offshore_data[self._offshore_meta_cols]
+                self._meta_out_offshore = self._meta_out_offshore.join(
+                    meta, how='left')
 
         return self._meta_out_offshore
 

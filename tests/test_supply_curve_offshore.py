@@ -48,6 +48,8 @@ def test_sc_agg_offshore():
                             data_layers=DATA_LAYERS,
                             max_workers=1)
 
+    assert 'sub_type' in s, 'sub_type was not passed through to offshore agg!'
+
     with Outputs(GEN, mode='r') as out:
         meta = out.meta
 

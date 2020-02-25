@@ -58,6 +58,8 @@ def test_offshore_agg(offshore):
             out_ws_data = out['ws_mean']
             out_profile_data = out['cf_profile']
 
+    assert 'sub_type' in out_meta, 'sub_type was not passed through to meta'
+
     for gid in offshore.onshore_gids:
         source_loc = np.where(source_meta['gid'] == gid)[0][0]
         out_loc = np.where(out_meta['gid'] == gid)[0][0]
