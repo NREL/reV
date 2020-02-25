@@ -10,18 +10,30 @@ from reV import TESTDATADIR
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.exclusions import (LayerMask, ExclusionMask,
                                          ExclusionMaskFromDict)
+from reV.utilities.exceptions import ExclusionLayerError
 
 
-CONFIGS = {'urban_pv': {'ri_smod': {'exclude_values': [1, ]},
-                        'ri_srtm_slope': {'inclusion_range': (0, 5)}},
-           'rural_pv': {'ri_smod': {'include_values': [1, ]},
-                        'ri_srtm_slope': {'inclusion_range': (0, 5)}},
-           'wind': {'ri_smod': {'include_values': [1, ]},
-                    'ri_padus': {'exclude_values': [1, ]},
-                    'ri_srtm_slope': {'inclusion_range': (0, 20)}},
-           'weighted': {'ri_smod': {'include_values': [1, ]},
-                        'ri_padus': {'exclude_values': [1, ], 'weight': 0.5},
-                        'ri_srtm_slope': {'inclusion_range': (0, 20)}}}
+CONFIGS = {'urban_pv': {'ri_smod': {'exclude_values': [1, ],
+                                    'exclude_nodata': True},
+                        'ri_srtm_slope': {'inclusion_range': (0, 5),
+                                          'exclude_nodata': True}},
+           'rural_pv': {'ri_smod': {'include_values': [1, ],
+                                    'exclude_nodata': True},
+                        'ri_srtm_slope': {'inclusion_range': (0, 5),
+                                          'exclude_nodata': True}},
+           'wind': {'ri_smod': {'include_values': [1, ],
+                                'exclude_nodata': True},
+                    'ri_padus': {'exclude_values': [1, ],
+                                 'exclude_nodata': True},
+                    'ri_srtm_slope': {'inclusion_range': (0, 20),
+                                      'exclude_nodata': True}},
+           'weighted': {'ri_smod': {'include_values': [1, ],
+                                    'exclude_nodata': True},
+                        'ri_padus': {'exclude_values': [1, ], 'weight': 0.5,
+                                     'exclude_nodata': True},
+                        'ri_srtm_slope': {'inclusion_range': (0, 20),
+                                          'exclude_nodata': True}},
+           'bad': {'ri_smod': {'exclude_values': [1, 2, 3]}}}
 
 AREA = {'urban_pv': 0.018, 'rural_pv': 1}
 
@@ -172,6 +184,25 @@ def test_inclusion_mask(scenario):
     dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict,
                                           min_area=min_area)
     assert np.allclose(truth, dict_test)
+
+
+def test_bad_layer():
+    """
+    Test creation of inclusion mask
+
+    Parameters
+    ----------
+    scenario : str
+        Standard reV exclusion scenario
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    excl_dict = CONFIGS['bad']
+    with pytest.raises(ExclusionLayerError):
+        with ExclusionMaskFromDict(excl_h5, excl_dict, check_layers=True) as f:
+            f.mask
+
+    with ExclusionMaskFromDict(excl_h5, excl_dict, check_layers=False) as f:
+        assert not f.mask.any()
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -318,7 +318,7 @@ class ExclusionMask:
                           [0, 1, 0]])}
 
     def __init__(self, excl_h5, *layers, min_area=None,
-                 kernel='queen', hsds=False, check_layers=True):
+                 kernel='queen', hsds=False, check_layers=False):
         """
         Parameters
         ----------
@@ -492,7 +492,7 @@ class ExclusionMask:
                 warn(msg)
             else:
                 logger.error(msg)
-                raise RuntimeError(msg)
+                raise ExclusionLayerError(msg)
 
         layer.nodata_value = self.excl_h5.get_nodata_value(layer_name)
         if self._check_layers:
@@ -517,6 +517,7 @@ class ExclusionMask:
         nodata = {}
         for layer_name in self.layer_names:
             nodata[layer_name] = self.excl_h5.get_nodata_value(layer_name)
+
         return nodata
 
     @staticmethod
@@ -691,7 +692,7 @@ class ExclusionMaskFromDict(ExclusionMask):
     Class to initialize ExclusionMask from a dictionary defining layers
     """
     def __init__(self, excl_h5, layers_dict, min_area=None,
-                 kernel='queen', hsds=False, check_layers=True):
+                 kernel='queen', hsds=False, check_layers=False):
         """
         Parameters
         ----------
@@ -752,7 +753,7 @@ class ExclusionMaskFromDict(ExclusionMask):
 class FrictionMask(ExclusionMask):
     """Class to handle exclusion-style friction layer."""
 
-    def __init__(self, fric_h5, fric_dset, hsds=False, check_layers=True):
+    def __init__(self, fric_h5, fric_dset, hsds=False, check_layers=False):
         """
         Parameters
         ----------
