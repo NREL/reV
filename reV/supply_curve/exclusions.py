@@ -9,6 +9,7 @@ from scipy import ndimage
 from warnings import warn
 
 from reV.handlers.exclusions import ExclusionLayers
+from reV.utilities.exceptions import ExclusionLayerError
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +206,7 @@ class LayerMask:
                                'inclusion mask, but you supplied {} and {}'
                                .format(mask, k))
                         logger.error(msg)
-                        raise RuntimeError(msg)
+                        raise ExclusionLayerError(msg)
 
         return mask
 
@@ -490,6 +491,11 @@ class ExclusionMask:
                 raise RuntimeError(msg)
 
         layer.nodata_value = self.excl_h5.get_nodata_value(layer_name)
+        if not layer[self.excl_h5[layer_name]].any():
+            msg = ("Layer {} does not have any un-excluded pixels!"
+                   .format(layer_name))
+            logger.error(msg)
+            raise ExclusionLayerError(msg)
 
         self._layers[layer_name] = layer
 
