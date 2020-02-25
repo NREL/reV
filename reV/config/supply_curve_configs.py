@@ -183,6 +183,11 @@ class AggregationConfig(AnalysisConfig):
         """Get the friction dataset name in friction_fpath."""
         return self.get('friction_dset', None)
 
+    @property
+    def check_layers(self):
+        """Get the check_layers flag."""
+        return self.get('check_layers', False)
+
 
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
