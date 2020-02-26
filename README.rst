@@ -22,7 +22,8 @@ reV command line tools
 Using Eagle Module
 ==================
 
-If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled module:
+If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled
+module:
 
 .. code-block:: bash
 
@@ -58,8 +59,8 @@ General Run times and Node configuration on Eagle
 Installing reV
 ==============
 
-Option 1: PIP Install the most recent version of master (recommended for analysts):
------------------------------------------------------------------------------------
+Option 1: PIP Install (recommended for analysts):
+-------------------------------------------------
 
 1. Create a new environment:
     ``conda create --name rev python=3.7``
@@ -79,13 +80,17 @@ Option 2: Clone repo (recommended for developers)
 2. Install reV environment and modules (using conda)
     1) cd into reV repo cloned above
     2) cd into ``bin/$OS/``
-    3) run the command: ``conda env create -f rev.yml``. If conda can't find any packages, try removing them from the yml file.
+    3) run the command: ``conda env create -f rev.yml``. If conda can't find
+        any packages, try removing them from the yml file.
     4) run the command: ``conda activate rev``
-    5) prior to running ``pip`` below, make sure branch is correct (install from master!)
+    5) prior to running ``pip`` below, make sure branch is correct (install
+        from master!)
     6) cd back to the reV repo (where setup.py is located)
     7) install pre-commit: ``pre-commit install``
-    8) run ``pip install .`` (or ``pip install -e .`` if running a dev branch or working on the source code)
+    8) run ``pip install .`` (or ``pip install -e .`` if running a dev branch
+        or working on the source code)
 
 3. Check that rev was installed successfully
-    1) From any directory, run the following commands. This should return the help pages for the CLI's.
+    1) From any directory, run the following commands. This should return the
+        help pages for the CLI's.
         - ``reV``
