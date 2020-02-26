@@ -184,9 +184,9 @@ class AggregationConfig(AnalysisConfig):
         return self.get('friction_dset', None)
 
     @property
-    def check_layers(self):
-        """Get the check_layers flag."""
-        return self.get('check_layers', False)
+    def check_excl_layers(self):
+        """Get the check_excl_layers flag."""
+        return self.get('check_excl_layers', False)
 
 
 class SupplyCurveConfig(AnalysisConfig):
