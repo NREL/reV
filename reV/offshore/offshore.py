@@ -92,6 +92,136 @@ class Offshore:
                             len(self.meta_source_offshore),
                             len(self.meta_out_offshore)))
 
+    def _init_offshore_out_arrays(self):
+        """Get a dictionary of initialized output arrays for offshore outputs.
+
+        Returns
+        -------
+        out_arrays : dict
+            Dictionary of output arrays filled with zeros for offshore data.
+            Has keys for all datasets present in gen_fpath.
+        """
+
+        out_arrays = {}
+
+        with Outputs(self._gen_fpath, mode='r') as out:
+            dsets = [d for d in out.dsets if d not in ('time_index', 'meta')]
+
+            for dset in dsets:
+                shape = out.get_dset_properties(dset)[0]
+                if len(shape) == 1:
+                    dset_shape = (len(self.meta_out_offshore), )
+                else:
+                    dset_shape = (shape[0], len(self.meta_out_offshore))
+
+                logger.debug('Initializing offshore output data array for '
+                             '"{}" with shape {}.'.format(dset, dset_shape))
+                out_arrays[dset] = np.zeros(dset_shape, dtype=np.float32)
+
+        return out_arrays
+
+    @staticmethod
+    def _parse_cf_meta(gen_fpath):
+        """Parse cf meta dataframe and get masks for onshore/offshore points.
+
+        Parameters
+        ----------
+        gen_fpath : str
+            Full filepath to reV gen h5 output file.
+
+        Returns
+        -------
+        meta : pd.DataFrame
+            Full meta data from gen_fpath with "offshore" column.
+        onshore_mask : pd.Series
+            Boolean series indicating where onshore sites are.
+        offshore_mask : pd.Series
+            Boolean series indicating where offshore sites are.
+        """
+
+        with Outputs(gen_fpath, mode='r') as out:
+            meta = out.meta
+        if 'offshore' not in meta:
+            e = ('Offshore module cannot run without "offshore" flag in meta '
+                 'data of gen_fpath: {}'.format(gen_fpath))
+            logger.error(e)
+            raise KeyError(e)
+
+        onshore_mask = (meta['offshore'] == 0)
+        offshore_mask = (meta['offshore'] == 1)
+
+        return meta, onshore_mask, offshore_mask
+
+    @staticmethod
+    def _parse_offshore_fpath(offshore_fpath):
+        """Parse the offshore data file for offshore farm site data and coords.
+
+        Parameters
+        ----------
+        offshore_fpath : str
+            Full filepath to offshore wind farm data file.
+
+        Returns
+        -------
+        offshore_data : pd.DataFrame
+            Dataframe of extracted offshore farm data. Each row is a farm and
+            columns are farm data attributes.
+        farm_coords : pd.DataFrame
+            Latitude/longitude coordinates for each offshore farm.
+        """
+
+        offshore_data = pd.read_csv(offshore_fpath)
+
+        lat_label = [c for c in offshore_data.columns
+                     if c.lower().startswith('latitude')]
+        lon_label = [c for c in offshore_data.columns
+                     if c.lower().startswith('longitude')]
+
+        if len(lat_label) > 1 or len(lon_label) > 1:
+            e = ('Found multiple lat/lon columns: {} {}'
+                 .format(lat_label, lon_label))
+            logger.error(e)
+            raise KeyError(e)
+        else:
+            c_labels = [lat_label[0], lon_label[0]]
+
+        if 'dist_l_to_ts' in offshore_data:
+            if offshore_data['dist_l_to_ts'].sum() > 0:
+                w = ('Possible incorrect ORCA input! "dist_l_to_ts" '
+                     '(distance land to transmission) input is non-zero. '
+                     'Most reV runs set this to zero and input the cost '
+                     'of transmission from landfall tie-in to '
+                     'transmission feature in the supply curve module.')
+                logger.warning(w)
+                warn(w, OffshoreWindInputWarning)
+
+        return offshore_data, offshore_data[c_labels]
+
+    def _run_nn(self):
+        """Run a spatial NN on the offshore resource points and the offshore
+        wind farm data.
+
+        Returns
+        -------
+        d : np.ndarray
+            Distance between offshore resource pixel and offshore wind farm.
+        i : np.ndarray
+            Offshore farm row numbers corresponding to resource pixels
+            (length is number of offshore resource pixels in gen_fpath).
+        d_lim : float
+            Maximum distance limit between wind farm points and resouce pixels.
+        """
+
+        tree = cKDTree(self._farm_coords)
+        d, i = tree.query(self.meta_source_offshore[['latitude', 'longitude']])
+
+        if len(self._farm_coords) > 1:
+            d_lim, _ = tree.query(self._farm_coords, k=2)
+            d_lim = 0.5 * np.median(d_lim[:, 1])
+            i[(d > d_lim)] = -1
+
+        return d, i, d_lim
+
     @property
     def time_index(self):
         """Get the source time index."""
@@ -238,39 +368,100 @@ class Offshore:
         """
         return self._out
 
-    def save_offshore_output(self, fpath_out):
+    def save_output(self, fpath_out):
         """
-        Save offshore aggregated data to offshore output file
+        Save all onshore and offshore data to offshore output file
 
         Parameters
         ----------
-        fpath_out : str | NoneType
-            Optional output filepath.
+        fpath_out : str
+            Output filepath.
         """
         logger.info('Writing offshore output data to: {}'
                     .format(fpath_out))
 
         self._init_fout(fpath_out)
+        self._collect_onshore(fpath_out)
+        self._collect_offshore(fpath_out)
 
-        offshore_bool = np.isin(self.meta_out['gid'].values,
-                                self.offshore_gids)
-        offshore_locs = np.where(offshore_bool)[0]
-        offshore_slice = slice(offshore_locs.min(),
-                               offshore_locs.max() + 1)
+    def _init_fout(self, fpath_out):
+        """
+        Initialize the offshore aggregated output file and collect
+        non-aggregated onshore data.
+
+        Parameters
+        ----------
+        fpath_out : str
+            Output filepath.
+        """
+
+        logger.debug('Initializing offshore output file: {}'
+                     .format(fpath_out))
+        with Outputs(self._gen_fpath, mode='r') as source:
+            meta_attrs = source.get_attrs(dset='meta')
+            ti_attrs = source.get_attrs(dset='time_index')
+
+        with Outputs(fpath_out, mode='w') as out:
+            out._set_meta('meta', self.meta_out, attrs=meta_attrs)
+            out._set_time_index('time_index', self.time_index,
+                                attrs=ti_attrs)
+
+    def _collect_onshore(self, fpath_out):
+        """Collect non-aggregated onshore data to initialized file.
+
+        Parameters
+        ----------
+        fpath_out : str
+            Output filepath.
+        """
 
         with Outputs(self._gen_fpath, mode='r') as source:
             dsets = [d for d in source.dsets
                      if d not in ('meta', 'time_index')]
 
-        with Outputs(fpath_out, mode='a') as out:
-            shapes = {d: out.get_dset_properties(d)[0] for d in dsets}
+        if any(self.onshore_gids):
             for dset in dsets:
-                logger.info('Writing offshore output data for "{}".'
-                            .format(dset))
-                if len(shapes[dset]) == 1:
-                    out[dset, offshore_slice] = self.out[dset]
-                else:
-                    out[dset, :, offshore_slice] = self.out[dset]
+                logger.debug('Collecting onshore data for "{}"'
+                             .format(dset))
+                DatasetCollector.collect_dset(fpath_out, [self._gen_fpath],
+                                              self.onshore_gids, dset)
+        else:
+            logger.debug('No onshore data in source file to collect.')
+            for dset in dsets:
+                logger.debug('Initializing offshore dataset "{}".'
+                             .format(dset))
+                DatasetCollector(fpath_out, [self._gen_fpath],
+                                 self.offshore_gids, dset)
+
+    def _collect_offshore(self, fpath_out):
+        """Collect aggregated offshore data to initialized file.
+
+        Parameters
+        ----------
+        fpath_out : str
+            Output filepath.
+        """
+
+        if any(self.offshore_gids):
+            offshore_bool = np.isin(self.meta_out['gid'].values,
+                                    self.offshore_gids)
+            offshore_locs = np.where(offshore_bool)[0]
+            offshore_slice = slice(offshore_locs.min(),
+                                   offshore_locs.max() + 1)
+
+            with Outputs(self._gen_fpath, mode='r') as source:
+                dsets = [d for d in source.dsets
+                         if d not in ('meta', 'time_index')]
+
+            with Outputs(fpath_out, mode='a') as out:
+                shapes = {d: out.get_dset_properties(d)[0] for d in dsets}
+                for dset in dsets:
+                    logger.info('Writing offshore output data for "{}".'
+                                .format(dset))
+                    if len(shapes[dset]) == 1:
+                        out[dset, offshore_slice] = self.out[dset]
+                    else:
+                        out[dset, :, offshore_slice] = self.out[dset]
 
     def move_input_file(self, sub_dir):
         """
@@ -288,173 +479,6 @@ class Offshore:
                 os.makedirs(new_dir)
             new_fpath = os.path.join(new_dir, fn)
             shutil.move(self._gen_fpath, new_fpath)
-
-    def _init_offshore_out_arrays(self):
-        """Get a dictionary of initialized output arrays for offshore outputs.
-
-        Returns
-        -------
-        out_arrays : dict
-            Dictionary of output arrays filled with zeros for offshore data.
-            Has keys for all datasets present in gen_fpath.
-        """
-
-        out_arrays = {}
-
-        with Outputs(self._gen_fpath, mode='r') as out:
-            dsets = [d for d in out.dsets if d not in ('time_index', 'meta')]
-
-            for dset in dsets:
-                shape = out.get_dset_properties(dset)[0]
-                if len(shape) == 1:
-                    dset_shape = (len(self.meta_out_offshore), )
-                else:
-                    dset_shape = (shape[0], len(self.meta_out_offshore))
-
-                logger.debug('Initializing offshore output data array for '
-                             '"{}" with shape {}.'.format(dset, dset_shape))
-                out_arrays[dset] = np.zeros(dset_shape, dtype=np.float32)
-
-        return out_arrays
-
-    def _init_fout(self, fpath_out):
-        """
-        Initialize the offshore aggregated output file and collect
-        non-aggregated onshore data.
-
-        Parameters
-        ----------
-        fpath_out : str | NoneType
-            Optional output filepath.
-        """
-        logger.debug('Initializing offshore output file: {}'
-                     .format(fpath_out))
-        with Outputs(self._gen_fpath, mode='r') as source:
-            dsets = [d for d in source.dsets
-                     if d not in ('meta', 'time_index')]
-            meta_attrs = source.get_attrs(dset='meta')
-            ti_attrs = source.get_attrs(dset='time_index')
-
-        with Outputs(fpath_out, mode='w') as out:
-            out._set_meta('meta', self.meta_out, attrs=meta_attrs)
-            out._set_time_index('time_index', self.time_index,
-                                attrs=ti_attrs)
-
-        if any(self.onshore_gids):
-            for dset in dsets:
-                logger.debug('Collecting onshore data for "{}"'
-                             .format(dset))
-                DatasetCollector.collect_dset(fpath_out, [self._gen_fpath],
-                                              self.onshore_gids, dset)
-        else:
-            logger.debug('No offshore data in source file to collect.')
-            for dset in dsets:
-                logger.debug('Initializing offshore dataset "{}".'
-                             .format(dset))
-                DatasetCollector(fpath_out, [self._gen_fpath],
-                                 self.offshore_gids, dset)
-
-    @staticmethod
-    def _parse_cf_meta(gen_fpath):
-        """Parse cf meta dataframe and get masks for onshore/offshore points.
-
-        Parameters
-        ----------
-        gen_fpath : str
-            Full filepath to reV gen h5 output file.
-
-        Returns
-        -------
-        meta : pd.DataFrame
-            Full meta data from gen_fpath with "offshore" column.
-        onshore_mask : pd.Series
-            Boolean series indicating where onshore sites are.
-        offshore_mask : pd.Series
-            Boolean series indicating where offshore sites are.
-        """
-
-        with Outputs(gen_fpath, mode='r') as out:
-            meta = out.meta
-        if 'offshore' not in meta:
-            e = ('Offshore module cannot run without "offshore" flag in meta '
-                 'data of gen_fpath: {}'.format(gen_fpath))
-            logger.error(e)
-            raise KeyError(e)
-
-        onshore_mask = (meta['offshore'] == 0)
-        offshore_mask = (meta['offshore'] == 1)
-
-        return meta, onshore_mask, offshore_mask
-
-    @staticmethod
-    def _parse_offshore_fpath(offshore_fpath):
-        """Parse the offshore data file for offshore farm site data and coords.
-
-        Parameters
-        ----------
-        offshore_fpath : str
-            Full filepath to offshore wind farm data file.
-
-        Returns
-        -------
-        offshore_data : pd.DataFrame
-            Dataframe of extracted offshore farm data. Each row is a farm and
-            columns are farm data attributes.
-        farm_coords : pd.DataFrame
-            Latitude/longitude coordinates for each offshore farm.
-        """
-
-        offshore_data = pd.read_csv(offshore_fpath)
-
-        lat_label = [c for c in offshore_data.columns
-                     if c.lower().startswith('latitude')]
-        lon_label = [c for c in offshore_data.columns
-                     if c.lower().startswith('longitude')]
-
-        if len(lat_label) > 1 or len(lon_label) > 1:
-            e = ('Found multiple lat/lon columns: {} {}'
-                 .format(lat_label, lon_label))
-            logger.error(e)
-            raise KeyError(e)
-        else:
-            c_labels = [lat_label[0], lon_label[0]]
-
-        if 'dist_l_to_ts' in offshore_data:
-            if offshore_data['dist_l_to_ts'].sum() > 0:
-                w = ('Possible incorrect ORCA input! "dist_l_to_ts" '
-                     '(distance land to transmission) input is non-zero. '
-                     'Most reV runs set this to zero and input the cost '
-                     'of transmission from landfall tie-in to '
-                     'transmission feature in the supply curve module.')
-                logger.warning(w)
-                warn(w, OffshoreWindInputWarning)
-
-        return offshore_data, offshore_data[c_labels]
-
-    def _run_nn(self):
-        """Run a spatial NN on the offshore resource points and the offshore
-        wind farm data.
-
-        Returns
-        -------
-        d : np.ndarray
-            Distance between offshore resource pixel and offshore wind farm.
-        i : np.ndarray
-            Offshore farm row numbers corresponding to resource pixels
-            (length is number of offshore resource pixels in gen_fpath).
-        d_lim : float
-            Maximum distance limit between wind farm points and resouce pixels.
-        """
-
-        tree = cKDTree(self._farm_coords)
-        d, i = tree.query(self.meta_source_offshore[['latitude', 'longitude']])
-
-        if len(self._farm_coords) > 1:
-            d_lim, _ = tree.query(self._farm_coords, k=2)
-            d_lim = 0.5 * np.median(d_lim[:, 1])
-            i[(d > d_lim)] = -1
-
-        return d, i, d_lim
 
     @staticmethod
     def _get_farm_data(gen_fpath, meta, system_inputs, site_data, site_gid=0):
@@ -805,9 +829,12 @@ class Offshore:
                        small_farm_limit=small_farm_limit,
                        farm_gid_label=farm_gid_label,
                        max_workers=max_workers)
+
         if any(offshore.offshore_gids):
             offshore._run()
-            offshore.save_offshore_output(fpath_out)
+
+        if fpath_out is not None:
+            offshore.save_output(fpath_out)
 
         offshore.move_input_file(sub_dir)
         logger.info('Offshore wind gen/econ module complete!')
