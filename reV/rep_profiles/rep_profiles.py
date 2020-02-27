@@ -9,10 +9,11 @@ from abc import ABC, abstractmethod
 from concurrent.futures import as_completed
 from copy import deepcopy
 import json
-import pandas as pd
+import logging
 import numpy as np
 import os
-import logging
+import pandas as pd
+from scipy import stats
 
 from reV.handlers.resource import Resource
 from reV.handlers.outputs import Outputs
@@ -897,8 +898,11 @@ class RepProfiles(RepProfilesBase):
     def _set_meta(self):
         """Set the rep profile meta data with each row being a unique
         combination of the region columns."""
-        self._meta = self._rev_summary[self._reg_cols].drop_duplicates()
-        self._meta = self._meta.reset_index(drop=True)
+        self._meta = self._rev_summary.groupby(self._reg_cols)
+        self._meta = \
+            self._meta['timezone'].apply(lambda x: stats.mode(x).mode[0])
+        self._meta = self._meta.reset_index()
+
         self._meta['rep_gen_gid'] = None
         self._meta['rep_res_gid'] = None
 
@@ -1030,10 +1034,40 @@ class RepProfiles(RepProfilesBase):
                         self._meta.at[i, 'rep_gen_gid'] = str(ggids)
                         self._meta.at[i, 'rep_res_gid'] = str(rgids)
 
+    def _run(self, fout=None, save_rev_summary=True, scaled_precision=False,
+             max_workers=None):
+        """
+        Run representative profiles in serial or parallel and save to disc
+
+        Parameters
+        ----------
+        fout : str, optional
+            filepath to output h5 file, by default None
+        save_rev_summary : bool, optional
+            Flag to save full reV SC table to rep profile output.,
+            by default True
+        scaled_precision : bool, optional
+            Flag to scale cf_profiles by 1000 and save as uint16.,
+            by default False
+        max_workers : int, optional
+            Number of parallel workers. 1 will run serial, None will use all
+            available., by default None
+        """
+        if max_workers == 1:
+            self._run_serial()
+        else:
+            self._run_parallel(max_workers=max_workers)
+
+        if fout is not None:
+            self.save_profiles(fout, save_rev_summary=save_rev_summary,
+                               scaled_precision=scaled_precision)
+
+        logger.info('Representative profiles complete!')
+
     @classmethod
     def run(cls, gen_fpath, rev_summary, reg_cols, gid_col='gen_gids',
             cf_dset='cf_profile', rep_method='meanoid', err_method='rmse',
-            weight='gid_counts', fout=None, n_profiles=1,
+            weight='gid_counts', n_profiles=1, fout=None,
             save_rev_summary=True, scaled_precision=False, max_workers=None):
         """Run representative profiles by finding the closest single profile
         to the weighted meanoid for each SC region.
@@ -1062,17 +1096,19 @@ class RepProfiles(RepProfilesBase):
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
             weight values corresponding to the gid_col in the same row.
-        fout : None | str
-            None or filepath to output h5 file.
         n_profiles : int
             Number of representative profiles to save to fout.
-        save_rev_summary : bool
-            Flag to save full reV SC table to rep profile output.
-        scaled_precision : bool
-            Flag to scale cf_profiles by 1000 and save as uint16.
-        max_workers : int | None
+        fout : str, optional
+            filepath to output h5 file, by default None
+        save_rev_summary : bool, optional
+            Flag to save full reV SC table to rep profile output.,
+            by default True
+        scaled_precision : bool, optional
+            Flag to scale cf_profiles by 1000 and save as uint16.,
+            by default False
+        max_workers : int, optional
             Number of parallel workers. 1 will run serial, None will use all
-            available.
+            available., by default None
 
         Returns
         -------
@@ -1090,16 +1126,8 @@ class RepProfiles(RepProfilesBase):
                  cf_dset=cf_dset, rep_method=rep_method, err_method=err_method,
                  n_profiles=n_profiles, weight=weight)
 
-        if max_workers == 1:
-            rp._run_serial()
-        else:
-            rp._run_parallel(max_workers=max_workers)
-
-        if fout is not None:
-            rp.save_profiles(fout, save_rev_summary=save_rev_summary,
-                             scaled_precision=scaled_precision)
-
-        logger.info('Representative profiles complete!')
+        rp._run(fout=fout, save_rev_summary=save_rev_summary,
+                scaled_precision=scaled_precision, max_workers=max_workers)
 
         return rp._profiles, rp._meta, rp._time_index
 
@@ -1207,6 +1235,33 @@ class AggregatedRepProfiles(RepProfilesBase):
 
                     self._profiles[0][:, i] = profile.flatten()
 
+    def _run(self, fout=None, scaled_precision=False,
+             max_workers=None):
+        """
+        Run representative profiles in serial or parallel and save to disc
+
+        Parameters
+        ----------
+        fout : str, optional
+            filepath to output h5 file, by default None
+        scaled_precision : bool, optional
+            Flag to scale cf_profiles by 1000 and save as uint16.,
+            by default False
+        max_workers : int, optional
+            Number of parallel workers. 1 will run serial, None will use all
+            available., by default None
+        """
+        if max_workers == 1:
+            self._run_serial()
+        else:
+            self._run_parallel(max_workers=max_workers)
+
+        if fout is not None:
+            self.save_profiles(fout, scaled_precision=scaled_precision,
+                               save_rev_summary=False)
+
+        logger.info('Representative aggregate profiles complete!')
+
     @classmethod
     def run(cls, gen_fpath, rev_summary, gid_col='gen_gids',
             cf_dset='cf_profile', weight='gid_counts', fout=None,
@@ -1229,13 +1284,14 @@ class AggregatedRepProfiles(RepProfilesBase):
             Column in rev_summary used to apply weighted mean to profiles.
             The supply curve table data in the weight column should have
             weight values corresponding to the gid_col in the same row.
-        fout : None | str
-            None or filepath to output h5 file.
-        scaled_precision : bool
-            Flag to scale cf_profiles by 1000 and save as uint16.
-        max_workers : int | None
+        fout : str, optional
+            filepath to output h5 file, by default None
+        scaled_precision : bool, optional
+            Flag to scale cf_profiles by 1000 and save as uint16.,
+            by default False
+        max_workers : int, optional
             Number of parallel workers. 1 will run serial, None will use all
-            available.
+            available., by default None
 
         Returns
         -------
@@ -1252,15 +1308,7 @@ class AggregatedRepProfiles(RepProfilesBase):
         arp = cls(gen_fpath, rev_summary, gid_col=gid_col, cf_dset=cf_dset,
                   weight=weight)
 
-        if max_workers == 1:
-            arp._run_serial()
-        else:
-            arp._run_parallel(max_workers=max_workers)
-
-        if fout is not None:
-            arp.save_profiles(fout, scaled_precision=scaled_precision,
-                              save_rev_summary=False)
-
-        logger.info('Representative aggregate profiles complete!')
+        arp._run(fout=fout, scaled_precision=scaled_precision,
+                 max_workers=max_workers)
 
         return arp._profiles, arp._meta, arp._time_index

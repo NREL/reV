@@ -99,11 +99,13 @@ def test_integrated():
     ones = np.ones((100,))
     zeros = np.zeros((100,))
     regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+    timezone = np.random.choice([-4, -5, -6, -7], 100)
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites,
                                 'res_class': zeros,
                                 'weight': ones,
-                                'region': regions})
+                                'region': regions,
+                                'timezone': timezone})
     p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
                                 max_workers=1, weight='weight')
     p2, m2, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
@@ -120,9 +122,12 @@ def test_integrated():
 def test_sc_points():
     """Test rep profiles for each SC point."""
     sites = np.arange(10)
+    timezone = np.random.choice([-4, -5, -6, -7], 10)
     rev_summary = pd.DataFrame({'sc_gid': sites,
                                 'gen_gids': sites,
-                                'res_gids': sites})
+                                'res_gids': sites,
+                                'timezone': timezone})
+
     p1 = RepProfiles.run(GEN_FPATH, rev_summary, 'sc_gid',
                          weight=None, max_workers=1)[0]
 
@@ -171,11 +176,13 @@ def test_many_regions():
     zeros = np.zeros((100,))
     region1 = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
     region2 = (['a0'] * 20) + (['b1'] * 10) + (['c2'] * 20) + (['d3'] * 50)
+    timezone = np.random.choice([-4, -5, -6, -7], 100)
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites,
                                 'res_class': zeros,
                                 'region1': region1,
-                                'region2': region2})
+                                'region2': region2,
+                                'timezone': timezone})
     reg_cols = ['region1', 'region2']
     p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, reg_cols,
                                 weight=None)
@@ -196,10 +203,12 @@ def test_write_to_file():
     sites = np.arange(100)
     zeros = np.zeros((100,))
     regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+    timezone = np.random.choice([-4, -5, -6, -7], 100)
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites,
                                 'res_class': zeros,
-                                'region': regions})
+                                'region': regions,
+                                'timezone': timezone})
     fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
     p1, m1, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
                                 fout=fout, n_profiles=3, weight=None)
@@ -227,10 +236,12 @@ def test_file_options():
     sites = np.arange(100)
     zeros = np.zeros((100,))
     regions = (['r0'] * 7) + (['r1'] * 33) + (['r2'] * 60)
+    timezone = np.random.choice([-4, -5, -6, -7], 100)
     rev_summary = pd.DataFrame({'gen_gids': sites,
                                 'res_gids': sites,
                                 'res_class': zeros,
-                                'region': regions})
+                                'region': regions,
+                                'timezone': timezone})
     fout = os.path.join(TESTDATADIR, 'sc_out/temp_rep_profiles.h5')
     p1, _, _ = RepProfiles.run(GEN_FPATH, rev_summary, 'region',
                                fout=fout, n_profiles=3,
