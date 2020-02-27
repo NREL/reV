@@ -12,7 +12,6 @@ from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
-from reV.utilities.execution import execute_single
 from reV.generation.generation import Gen
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       OffshoreWindInputWarning)
@@ -464,8 +463,8 @@ class Econ(Gen):
             kwargs['econ_fun'] = econ._fun
             if max_workers == 1:
                 logger.debug('Running serial econ for: {}'.format(pc))
-                out = execute_single(econ.run, pc, **kwargs)
-                econ.out = out
+                for pc_sub in pc:
+                    econ.out = econ.run(pc_sub, **kwargs)
                 econ.flush()
             else:
                 logger.debug('Running parallel econ for: {}'.format(pc))

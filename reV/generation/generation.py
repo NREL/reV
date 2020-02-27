@@ -12,7 +12,7 @@ from warnings import warn
 
 from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
 from reV.config.project_points import ProjectPoints, PointsControl
-from reV.utilities.execution import execute_single, SpawnProcessPool
+from reV.utilities.execution import SpawnProcessPool
 from reV.handlers.outputs import Outputs
 from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
@@ -1314,8 +1314,8 @@ class Gen:
         try:
             if max_workers == 1:
                 logger.debug('Running serial generation for: {}'.format(pc))
-                out = execute_single(gen.run, pc, **kwargs)
-                gen.out = out
+                for pc_sub in pc:
+                    gen.out = gen.run(pc_sub, **kwargs)
                 gen.flush()
             else:
                 logger.debug('Running parallel generation for: {}'.format(pc))
