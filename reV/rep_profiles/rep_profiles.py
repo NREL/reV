@@ -53,6 +53,7 @@ class RepresentativeMethods:
         """Parse the weights attribute. Check shape and make np.array."""
         if isinstance(self._weights, (list, tuple)):
             self._weights = np.array(self._weights)
+
         if self._weights is not None:
             emsg = ('Weighting factors array of length {} does not match '
                     'profiles of shape {}'
@@ -67,6 +68,7 @@ class RepresentativeMethods:
                    'median': self.medianoid,
                    'medianoid': self.medianoid,
                    }
+
         return methods
 
     @property
@@ -77,6 +79,7 @@ class RepresentativeMethods:
                    'rmse': self.rmse,
                    None: None,
                    }
+
         return methods
 
     @staticmethod
@@ -119,9 +122,11 @@ class RepresentativeMethods:
         else:
             if not isinstance(weights, np.ndarray):
                 weights = np.array(weights)
+
             arr = (profiles * weights).sum(axis=1) / weights.sum()
             if len(arr.shape) == 1:
                 arr = np.expand_dims(arr, axis=1)
+
         return arr
 
     @staticmethod
@@ -141,6 +146,7 @@ class RepresentativeMethods:
         """
         arr = np.median(profiles, axis=1)
         arr = arr.reshape((len(profiles), 1))
+
         return arr
 
     @staticmethod
@@ -168,6 +174,7 @@ class RepresentativeMethods:
         diff = profiles - baseline.reshape((len(baseline), 1))
         mbe = diff.mean(axis=0)
         i_rep = RepresentativeMethods.nargmin(mbe, i_profile)
+
         return profiles[:, i_rep], i_rep
 
     @staticmethod
@@ -195,6 +202,7 @@ class RepresentativeMethods:
         diff = profiles - baseline.reshape((len(baseline), 1))
         mae = np.abs(diff).mean(axis=0)
         i_rep = RepresentativeMethods.nargmin(mae, i_profile)
+
         return profiles[:, i_rep], i_rep
 
     @staticmethod
@@ -223,6 +231,7 @@ class RepresentativeMethods:
         rmse **= 2
         rmse = np.sqrt(np.mean(rmse, axis=0))
         i_rep = RepresentativeMethods.nargmin(rmse, i_profile)
+
         return profiles[:, i_rep], i_rep
 
     @classmethod
@@ -271,6 +280,7 @@ class RepresentativeMethods:
                 p, ir = inst._err_method(inst._profiles, baseline, i_profile=i)
                 if profiles is None:
                     profiles = np.zeros((len(p), n_profiles), dtype=p.dtype)
+
                 profiles[:, i] = p
                 i_reps.append(ir)
 
@@ -335,6 +345,7 @@ class RegionRepProfile:
             gen_gids = self._get_region_attr(self._rev_summary, self._gid_col)
             with Resource(self._gen_fpath) as res:
                 self._source_profiles = res[self._cf_dset, :, gen_gids]
+
         return self._source_profiles
 
     @property
@@ -385,6 +396,7 @@ class RegionRepProfile:
             if isinstance(data[0], str):
                 if ('[' and ']' in data[0]) or ('(' and ')' in data[0]):
                     data = [json.loads(s) for s in data]
+
             if isinstance(data[0], (list, tuple)):
                 data = [a for b in data for a in b]
 
@@ -414,6 +426,7 @@ class RegionRepProfile:
         """Get the representative profiles of this region."""
         if self._profiles is None:
             self._run_rep_methods()
+
         return self._profiles
 
     @property
@@ -421,6 +434,7 @@ class RegionRepProfile:
         """Get the representative profile index(es) of this region."""
         if self._i_reps is None:
             self._run_rep_methods()
+
         return self._i_reps
 
     @property
@@ -431,6 +445,7 @@ class RegionRepProfile:
             rep_gids = None
         else:
             rep_gids = [gids[i] for i in self.i_reps]
+
         return rep_gids
 
     @property
@@ -445,6 +460,7 @@ class RegionRepProfile:
             rep_gids = [None]
         else:
             rep_gids = [gids[i] for i in self.i_reps]
+
         return rep_gids
 
     @classmethod
@@ -492,6 +508,7 @@ class RegionRepProfile:
         r = cls(gen_fpath, rev_summary, gid_col=gid_col, cf_dset=cf_dset,
                 rep_method=rep_method, err_method=err_method, weight=weight,
                 n_profiles=n_profiles)
+
         return r.rep_profiles, r.i_reps, r.rep_gen_gids, r.rep_res_gids
 
 
@@ -622,6 +639,7 @@ class RepProfilesBase(ABC):
             for c in cols:
                 if c not in df:
                     missing.append(c)
+
             if any(missing):
                 e = ('Column labels not found in rev_summary table: {}'
                      .format(missing))
@@ -647,9 +665,11 @@ class RepProfilesBase(ABC):
                 raise KeyError('reV gen file needs to have "{}" '
                                'dataset to calculate representative profiles!'
                                .format(cf_dset))
+
             if 'time_index' not in str(dsets):
                 raise KeyError('reV gen file needs to have "time_index" '
                                'dataset to calculate representative profiles!')
+
             shape = res.get_dset_properties(cf_dset)[0]
 
         if len(rev_summary) > shape[1]:
@@ -681,7 +701,9 @@ class RepProfilesBase(ABC):
                 if parse_year(self._cf_dset, option='bool'):
                     year = parse_year(self._cf_dset, option='raise')
                     ds += '-{}'.format(year)
+
                 self._time_index = res._get_time_index(ds, slice(None))
+
         return self._time_index
 
     @property
@@ -901,6 +923,7 @@ class RepProfiles(RepProfilesBase):
                 mask = temp
             else:
                 mask = (mask & temp)
+
         return mask
 
     def _run_serial(self):
@@ -912,7 +935,6 @@ class RepProfiles(RepProfilesBase):
         for i, row in meta_static.iterrows():
             region_dict = {k: v for (k, v) in row.to_dict().items()
                            if k in self._reg_cols}
-
             mask = self._get_mask(region_dict)
 
             if not any(mask):
@@ -1078,6 +1100,7 @@ class RepProfiles(RepProfilesBase):
                              scaled_precision=scaled_precision)
 
         logger.info('Representative profiles complete!')
+
         return rp._profiles, rp._meta, rp._time_index
 
 
@@ -1239,4 +1262,5 @@ class AggregatedRepProfiles(RepProfilesBase):
                               save_rev_summary=False)
 
         logger.info('Representative aggregate profiles complete!')
+
         return arp._profiles, arp._meta, arp._time_index
