@@ -942,9 +942,9 @@ class RepProfiles(RepProfilesBase):
             mask = self._get_mask(region_dict)
 
             if not any(mask):
-                logger.info('Skipping profile {} out of {} '
-                            'for region: {} with no valid mask.'
-                            .format(i + 1, len(meta_static), region_dict))
+                logger.warning('Skipping profile {} out of {} '
+                               'for region: {} with no valid mask.'
+                               .format(i + 1, len(meta_static), region_dict))
             else:
                 out = RegionRepProfile.get_region_rep_profile(
                     self._gen_fpath, self._rev_summary[mask],
