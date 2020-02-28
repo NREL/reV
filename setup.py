@@ -49,15 +49,17 @@ with open("requirements.txt") as f:
     install_requires = f.readlines()
 
 test_requires = ["pytest>=5.2", ]
+description = ("National Renewable Energy Laboratory's (NREL's) Renewable "
+               "Energy Potential(V) Model: reV")
 
 setup(
-    name="reV",
+    name="NREL-reV",
     version=version,
-    description="Renewable Energy Potential",
+    description=description,
     long_description=readme,
     author="Galen Maclaurin",
     author_email="galen.maclaurin@nrel.gov",
-    url="https://github.com/NREL/reV",
+    url="https://nrel.github.io/reV/",
     packages=find_packages(),
     package_dir={"rev": "rev"},
     entry_points={
@@ -78,7 +80,7 @@ setup(
                             ],
     },
     include_package_data=True,
-    license="BSD license",
+    license="BSD 3-Clause",
     zip_safe=False,
     keywords="rev",
     classifiers=[
