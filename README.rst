@@ -36,7 +36,7 @@ Launching a run
 Tips
 
 - Only use a screen session if running the pipeline module: `screen -S rev`
-- :ref:`full_pipeline_execution`
+- `Full pipeline execution <https://nrel.github.io/reV/misc/examples.full_pipeline_execution.html>`_
 
 .. code-block:: bash
 
@@ -54,7 +54,7 @@ General Run times and Node configuration on Eagle
 - WTK Conus: 10-20 nodes per year walltime 1-4 hours
 - NSRDB Conus: 5 nodes walltime 2 hours
 
-:ref:`eagle_node_requests`
+`Eagle node requests <https://nrel.github.io/reV/misc/examples.eagle_node_requests.html>`_
 
 Installing reV
 ==============

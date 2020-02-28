@@ -19,7 +19,7 @@ elif py_version.minor < 6:
 here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
-    readme = f.read().strip()
+    readme = f.read()
 
 with open(os.path.join(here, "reV", "version.py"), encoding="utf-8") as f:
     version = f.read()
