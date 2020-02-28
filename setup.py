@@ -18,6 +18,9 @@ elif py_version.minor < 6:
 
 here = os.path.abspath(os.path.dirname(__file__))
 
+with open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
+    readme = f.read()
+
 with open(os.path.join(here, "reV", "version.py"), encoding="utf-8") as f:
     version = f.read()
 
@@ -53,7 +56,7 @@ setup(
     name="NREL-reV",
     version=version,
     description=description,
-    long_description="README.rst",
+    long_description=readme,
     author="Galen Maclaurin",
     author_email="galen.maclaurin@nrel.gov",
     url="https://nrel.github.io/reV/",
