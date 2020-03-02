@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-reV version number
-"""
+"""reV Version number"""
+
 __version__ = "0.1.1"

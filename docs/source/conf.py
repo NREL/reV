@@ -19,7 +19,6 @@ import os
 import sphinx_rtd_theme
 import sys
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'reV'
@@ -38,7 +37,6 @@ v = v.split('=')[-1].strip().strip('"').strip("'")
 version = v
 # The full version, including alpha/beta/rc tags
 release = v
-
 
 # -- General configuration ---------------------------------------------------
 
