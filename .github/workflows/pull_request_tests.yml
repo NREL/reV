@@ -2,7 +2,7 @@ name: PR Merge
 
 on:
   pull_request:
-    types: [closed]
+    types: [opened, edited, synchronize, closed]
 
 jobs:
   build:
@@ -30,5 +30,3 @@ jobs:
       run: |
         python -m pip install pytest
         python -m pytest
-    - name: Closes issues related to a merged pull request.
-      uses: ldez/gha-mjolnir@v1.0.0
