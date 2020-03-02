@@ -67,8 +67,7 @@ Option 1: PIP Install (recommended for analysts):
 2. Activate directory:
     ``conda activate rev``
 3. Install reV:
-    ``pip install git+ssh://git@github.com/NREL/reV.git``
-    or ``pip install git+https://github.com/NREL/reV.git``
+    ``pip install NREL-reV``
 
 Option 2: Clone repo (recommended for developers)
 -------------------------------------------------
