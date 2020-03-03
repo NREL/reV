@@ -106,4 +106,4 @@ ENV/
 */.DS_Store
 
 # VSCode
-.vscode
+*.vscode
