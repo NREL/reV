@@ -7,7 +7,7 @@ The documentation is built with [Sphinx](http://sphinx-doc.org/index.html). See 
 To generate the docs yourself, you'll need the appropriate package:
 
 ```
-conda sphinx
+conda install sphinx
 conda install sphinx_rtd_theme
 
 pip install ghp-import
@@ -77,7 +77,7 @@ Then run the github-related commands by hand:
 ```
 git branch -D gh-pages
 git push origin --delete gh-pages
-ghp-import -n -b gh-pages -m "Update documentation" ./build/html
+ghp-import -n -b gh-pages -m "Update documentation" ./_build/html
 git checkout gh-pages
 git push origin gh-pages
 git checkout master # or whatever branch you were on
