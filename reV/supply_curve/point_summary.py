@@ -562,21 +562,47 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                         logger.warning(w)
                         warn(w, OutputWarning)
 
-                if data is not None:
-                    if attrs['method'].lower() == 'mode':
-                        data = stats.mode(data).mode[0]
-                    elif attrs['method'].lower() == 'mean':
-                        data = data.mean()
-                    else:
-                        e = ('Cannot recognize data layer agg method: '
-                             '"{}". Can only do mean and mode.'
-                             .format(attrs['method']))
-                        logger.error(e)
-                        raise ValueError(e)
-
+                data = self._agg_data_layer_method(data, attrs['method'])
                 summary[name] = data
 
         return summary
+
+    @staticmethod
+    def _agg_data_layer_method(data, method):
+        """Aggregate the data array using specified method.
+
+        Parameters
+        ----------
+        data : np.ndarray | None
+            Data array that will be flattened and operated on using method.
+            This must be the included data. Exclusions should be applied
+            before this method.
+        method : str
+            Aggregation method (mode, mean, sum)
+
+        Returns
+        -------
+        data : float | int | None
+            Result of applying method to data.
+        """
+        if data is not None:
+
+            if len(data.shape) > 1:
+                data = data.flatten()
+
+            if method.lower() == 'mode':
+                data = stats.mode(data).mode[0]
+            elif method.lower() == 'mean':
+                data = data.mean()
+            elif method.lower() == 'sum':
+                data = data.sum()
+            else:
+                e = ('Cannot recognize data layer agg method: '
+                     '"{}". Can only do mean, mode, and sum.'
+                     .format(method))
+                logger.error(e)
+                raise ValueError(e)
+        return data
 
     @classmethod
     def summary(cls, gid, excl_fpath, gen_fpath, tm_dset,

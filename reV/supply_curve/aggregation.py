@@ -369,10 +369,9 @@ class Aggregation:
                 if 'method' not in v:
                     raise KeyError('Data aggregation "method" data layer "{}" '
                                    'must be specified.'.format(k))
-                elif (v['method'].lower() != 'mean'
-                      and v['method'].lower() != 'mode'):
+                elif v['method'].lower() not in ('mean', 'mode', 'sum'):
                     raise ValueError('Cannot recognize data layer agg method: '
-                                     '"{}". Can only do mean and mode.'
+                                     '"{}". Can only do mean, mode, and sum.'
                                      .format(v['method']))
                 if 'fpath' in v:
                     with ExclusionLayers(v['fpath']) as f:
