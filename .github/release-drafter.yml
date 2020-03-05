@@ -1,0 +1,13 @@
+categories:
+  - title: 'Features'
+    label: 'feature'
+    label: 'enhancement'
+  - title: 'Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+template: |
+  ## What’s Changed
+
+  $CHANGES
