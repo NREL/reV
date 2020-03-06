@@ -1,9 +1,8 @@
 name: Release Drafter
 
 on:
-  push:
-    branches:
-      - master
+  pull_request:
+    types: closed
 
 jobs:
   update_release_draft:
