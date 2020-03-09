@@ -10,6 +10,7 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype
 import time
 
+from reV.version import __version__
 from reV.handlers.resource import Resource
 from reV.handlers.parse_keys import parse_keys
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
@@ -48,6 +49,9 @@ class Outputs(Resource):
         self._str_decode = str_decode
         self._group = self._check_group(group)
 
+        if self.writable:
+            self.set_version_attr()
+
     def __len__(self):
         _len = 0
         if 'meta' in self.dsets:
@@ -85,6 +89,10 @@ class Outputs(Resource):
             else:
                 self._set_ds_array(ds, arr, *ds_slice)
 
+    def set_version_attr(self):
+        """Set the version attribute to the h5 file."""
+        self._h5.attrs['version'] = __version__
+
     @property
     def shape(self):
         """
@@ -111,15 +119,15 @@ class Outputs(Resource):
 
         Returns
         -------
-        bool
+        is_writable : bool
             Flag if mode is writable
         """
+        is_writable = True
         mode = ['a', 'w', 'w-', 'x']
         if self._mode not in mode:
-            raise HandlerRuntimeError('mode must be writable: {}'
-                                      .format(mode))
+            is_writable = False
 
-        return True
+        return is_writable
 
     @Resource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
