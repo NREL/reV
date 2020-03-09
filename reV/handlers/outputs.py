@@ -119,15 +119,15 @@ class Outputs(Resource):
 
         Returns
         -------
-        bool
+        is_writable : bool
             Flag if mode is writable
         """
+        is_writable = True
         mode = ['a', 'w', 'w-', 'x']
         if self._mode not in mode:
-            raise HandlerRuntimeError('mode must be writable: {}'
-                                      .format(mode))
+            is_writable = False
 
-        return True
+        return is_writable
 
     @Resource.meta.setter  # pylint: disable-msg=E1101
     def meta(self, meta):
