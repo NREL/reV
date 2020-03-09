@@ -10,6 +10,7 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype
 import time
 
+from reV.version import __version__
 from reV.handlers.resource import Resource
 from reV.handlers.parse_keys import parse_keys
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
@@ -48,6 +49,9 @@ class Outputs(Resource):
         self._str_decode = str_decode
         self._group = self._check_group(group)
 
+        if self.writable:
+            self.set_version_attr()
+
     def __len__(self):
         _len = 0
         if 'meta' in self.dsets:
@@ -84,6 +88,10 @@ class Outputs(Resource):
                 self._set_time_index(ds, arr)
             else:
                 self._set_ds_array(ds, arr, *ds_slice)
+
+    def set_version_attr(self):
+        """Set the version attribute to the h5 file."""
+        self._h5.attrs['version'] = __version__
 
     @property
     def shape(self):
