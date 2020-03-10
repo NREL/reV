@@ -91,7 +91,43 @@ class Outputs(Resource):
 
     def set_version_attr(self):
         """Set the version attribute to the h5 file."""
-        self._h5.attrs['version'] = __version__
+        self.h5.attrs['version'] = __version__
+        self.h5.attrs['package'] = 'reV'
+
+    @property
+    def version(self):
+        """
+        Version of package used to create file
+
+        Returns
+        -------
+        str
+        """
+        return self.h5.attrs['version']
+
+    @property
+    def package(self):
+        """
+        Package used to create file
+
+        Returns
+        -------
+        str
+        """
+        return self.h5.attrs['package']
+
+    @property
+    def source(self):
+        """
+        Package and version used to create file
+
+        Returns
+        -------
+        str
+        """
+        out = ("{}_{}"
+               .format(self.h5.attrs['package'], self.h5.attrs['version']))
+        return out
 
     @property
     def shape(self):
