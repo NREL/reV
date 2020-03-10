@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 class Gen:
     """Base class for reV generation."""
 
+    # TODO - should these options be defined in SAM/generation.py?
     # Mapping of reV technology strings to SAM generation objects
     OPTIONS = {'pv': PV,
                'csp': CSP,
@@ -109,7 +110,7 @@ class Gen:
                  # TODO - are these scaling factors and dtypes correct?
                  # Solar water heater
                  'T_amb': {'scale_factor': 1, 'units': 'C',
-                           'dtype': 'float32', 'chunks': None,
+                           'dtype': 'int16', 'chunks': None,
                            'type': 'array'},
                  'T_cold': {'scale_factor': 1, 'units': 'C',
                             'dtype': 'float32', 'chunks': None,
@@ -127,11 +128,26 @@ class Gen:
                           'dtype': 'float32', 'chunks': None,
                           'type': 'array'},
                  'beam': {'scale_factor': 1, 'units': 'W/m2',
-                          'dtype': 'float32', 'chunks': None,
+                          'dtype': 'uint16', 'chunks': None,
                           'type': 'array'},
+                 'diffuse': {'scale_factor': 1, 'units': 'W/m2',
+                             'dtype': 'uint16', 'chunks': None,
+                             'type': 'array'},
+                 'I_incident': {'scale_factor': 1, 'units': 'W/m2',
+                                'dtype': 'float32', 'chunks': None,
+                                'type': 'array'},
+                 'I_transmitted': {'scale_factor': 1, 'units': 'W/m2',
+                                   'dtype': 'float32', 'chunks': None,
+                                   'type': 'array'},
                  'Q_deliv': {'scale_factor': 1, 'units': 'kW',
                              'dtype': 'float32', 'chunks': None,
                              'type': 'array'},
+                 'annual_Q_deliv': {'scale_factor': 1, 'units': 'kWh',
+                                    'dtype': 'float32', 'chunks': None,
+                                    'type': 'scalar'},
+                 'solar_fraction': {'scale_factor': 1, 'units': 'None',
+                                    'dtype': 'float32', 'chunks': None,
+                                    'type': 'scalar'},
                  # Linear Fresnel
                  'q_dot_to_heat_sink': {'scale_factor': 1, 'units': 'MWt',
                                         'dtype': 'float32', 'chunks': None,
@@ -154,6 +170,15 @@ class Gen:
                  'q_dot_rec_inc': {'scale_factor': 1, 'units': 'MWt',
                                    'dtype': 'float32', 'chunks': None,
                                    'type': 'array'},
+                 'annual_field_energy': {'scale_factor': 1, 'units': 'kWh',
+                                         'dtype': 'float32', 'chunks': None,
+                                         'type': 'scalar'},
+                 'annual_thermal_consumption': {'scale_factor': 1,
+                                                'units': 'kWh',
+                                                'dtype': 'float32',
+                                                'chunks': None,
+                                                'type': 'scalar'},
+
                  # Trough physical process heat
                  'T_field_cold_in': {'scale_factor': 1, 'units': 'C',
                                      'dtype': 'float32', 'chunks': None,
@@ -176,6 +201,9 @@ class Gen:
                  'dni_costh': {'scale_factor': 1, 'units': 'W/m2',
                                'dtype': 'float32', 'chunks': None,
                                'type': 'array'},
+                 'annual_gross_energy': {'scale_factor': 1, 'units': 'kWh',
+                                         'dtype': 'float32', 'chunks': None,
+                                         'type': 'scalar'},
                  }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
@@ -934,7 +962,6 @@ class Gen:
              - Dictionary input is interpreted as an already unpacked result.
              - None is interpreted as a signal to clear the output dictionary.
         """
-
         if isinstance(result, list):
             # unpack futures list to dictionary first
             result = self.unpack_futures(result)
@@ -1092,7 +1119,7 @@ class Gen:
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
             scale_outputs=True, downscale=None):
-        # TODO - more tech options are available now, update
+        # TODO - more tech options are available now, update 'tech' options
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters

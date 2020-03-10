@@ -5,7 +5,7 @@ Created on 2/6/2020
 
 @author: Mike Bannister
 """
-
+import numpy as np
 import os
 import pytest
 import logging
@@ -19,32 +19,45 @@ def test_gen_swh(caplog):
 
     caplog.set_level(logging.DEBUG)
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/swh.json'
+    sam_files = TESTDATADIR + '/SAM/swh2.json'
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
     # res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2013)
 
-    output_request = ('T_amb', 'T_cold', 'T_deliv', 'T_hot', 'draw', 'beam',
-                      'Q_deliv', 'cf_mean')
+    output_request = ('T_amb', 'T_cold', 'T_deliv', 'T_hot', 'draw',
+                      'beam', 'diffuse', 'I_incident', 'I_transmitted',
+                      'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction')
 
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='solarwaterheat', points=points,
                       sam_files=sam_files, res_file=res_file, max_workers=1,
                       output_request=output_request,
-                      sites_per_worker=1, fout=None, scale_outputs=False)
+                      sites_per_worker=1, fout=None, scale_outputs=True)
 
     for var in output_request:
-        print(var, gen.out[var])
-#    cf_mean = gen.out['cf_mean']
-#    cf_profile = gen.out['cf_profile']
-#    gen_profile = gen.out['gen_profile']
+        if isinstance(gen.out[var], np.ndarray):
+            print(var, gen.out[var].sum())
+        else:
+            print(var, gen.out[var])
+
+    def my_assert(x, y, digits):
+        if isinstance(x, np.ndarray):
+            x = float(x.sum())
+        assert round(x, digits) == round(y, digits)
+
+    my_assert(gen.out['T_amb'], 204374, 0)
+    my_assert(gen.out['T_deliv'], 837587.6528, 0)
+    my_assert(gen.out['T_hot'], 837785.36, 0)
+    my_assert(gen.out['draw'], 145999.90, 0)
+    my_assert(gen.out['beam'], 3052417, 0)
+    my_assert(gen.out['diffuse'], 1221626, 0)
+    my_assert(gen.out['I_incident'], 3284008.791, 0)
+    my_assert(gen.out['I_transmitted'], 2773431.416, 0)
+    my_assert(gen.out['annual_Q_deliv'], 2701.62, 1)
+    my_assert(gen.out['Q_deliv'], 5403.240911, 0)
+    my_assert(gen.out['solar_fraction'], 0.678397, 4)
 
 
-#    assert cf_mean == 0.0
-#    assert cf_profile.max() == 1.0
-#    assert gen_profile.max() > 1e5
-
-
-def execute_pytest(capture='all', flags='-rapP'):
+def execute_pytest(capture='all', flags='-rapPs'):
     """Execute module as pytest with detailed summary report.
 
     Parameters
@@ -55,7 +68,6 @@ def execute_pytest(capture='all', flags='-rapP'):
     flags : str
         Which tests to show logs and results for.
     """
-
     fname = os.path.basename(__file__)
     pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
 

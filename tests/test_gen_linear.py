@@ -7,8 +7,9 @@ Created on 2/6/2020
 """
 
 import os
-import pytest
 import logging
+import pytest
+import numpy as np
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
@@ -19,28 +20,44 @@ def test_gen_linear(caplog):
 
     caplog.set_level(logging.DEBUG)
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/linear_direct_steam.json'
-    sam_files = TESTDATADIR + '/SAM/linear_default.json'
+    sam_files = TESTDATADIR + '/SAM/linear_default_v3.json'
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
+
+    # q_dot_to_heat_sink
+    #     sequence: Heat sink thermal power [MWt]
+    # gen
+    #     sequence: System power generated [kW]
+    # m_dot_field
+    #     sequence: Field total mass flow rate [kg/s]
+    # q_dot_sf_out
+    #     sequence: Field thermal power leaving in steam [MWt]
+    # W_dot_heat_sink_pump
+    #     sequence: Heat sink pumping power [MWe]
+    # m_dot_loop
+    #     sequence: Receiver mass flow rate [kg/s]
     output_request = ('q_dot_to_heat_sink', 'gen', 'm_dot_field',
                       'q_dot_sf_out', 'W_dot_heat_sink_pump', 'm_dot_loop',
-                      'q_dot_rec_inc', 'cf_mean')
+                      'q_dot_rec_inc', 'cf_mean', 'annual_field_energy',
+                      'annual_thermal_consumption')
 
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='lineardirectsteam', points=points,
                       sam_files=sam_files, res_file=res_file, max_workers=1,
                       output_request=output_request,
-                      sites_per_worker=1, fout=None, scale_outputs=False)
+                      sites_per_worker=1, fout=None, scale_outputs=True)
 
-    for var in output_request:
-        print(var, gen.out[var])
-#    cf_mean = gen.out['cf_mean']
-#    cf_profile = gen.out['cf_profile']gen_profile
-#    gen_profile = gen.out['gen_profile']
-#
-#    assert cf_mean == 0.0
-#    assert cf_profile.max() == 1.0
-#    assert gen_profile.max() > 1e5
+    def my_assert(x, y, digits):
+        if isinstance(x, np.ndarray):
+            x = float(x.sum())
+        assert round(x, digits) == round(y, digits)
+
+    my_assert(gen.out['q_dot_to_heat_sink'], 10898.58, 0)
+    my_assert(gen.out['gen'], 10462639.51, -2)
+    my_assert(gen.out['m_dot_field'], 15153.68676, 1)
+    my_assert(gen.out['q_dot_sf_out'], 10970, 0)
+    my_assert(gen.out['W_dot_heat_sink_pump'], 0.17348091, 6)
+    my_assert(gen.out['annual_field_energy'], 5231320, 0)
+    my_assert(gen.out['annual_thermal_consumption'], 3195, 0)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

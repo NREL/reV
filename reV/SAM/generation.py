@@ -23,7 +23,6 @@ from reV.utilities.utilities import mean_irrad
 from reV.SAM.SAM import SAM
 from reV.SAM.econ import LCOE, SingleOwner
 
-
 logger = logging.getLogger(__name__)
 DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
@@ -736,7 +735,7 @@ class SolarThermal(Solar):
 
         return fname
 
-    def _gen_exec(self, delete_wfile=True):
+    def _gen_exec(self, delete_wfile=False):
         """
         Run SAM generation with possibility for follow on econ analysis.
 
@@ -768,35 +767,6 @@ class SolarWaterHeat(SolarThermal):
                          output_request=output_request)
 
 
-class TroughPhysicalHeat(SolarThermal):
-    """
-    Trough Physical Process Heat generation
-    """
-    MODULE = 'troughphysicalheat'
-    PYSAM = pysam_tpph
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
-        """Initialize a SAM trough physical process heat object.
-        """
-        self._pysam_weather_tag = 'file_name'
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
-
-    def cf_mean(self):
-        """Get mean capacity factor (fractional) from SAM.
-
-        Returns
-        -------
-        output : float
-            Mean capacity factor (fractional).
-        """
-        # TODO - fix this!
-        logger.warning(f'cf_main was requested for {self.__class__.__name__},'
-                       ' ignoring.')
-        return -1
-
-
 class LinearDirectSteam(SolarThermal):
     """
     Process heat linear direct steam generation
@@ -813,17 +783,46 @@ class LinearDirectSteam(SolarThermal):
                          output_request=output_request)
 
     def cf_mean(self):
-        """Get mean capacity factor (fractional) from SAM.
+        """Calculate mean capacity factor (fractional) from SAM.
 
         Returns
         -------
         output : float
             Mean capacity factor (fractional).
         """
-        # TODO - fix this!
-        logger.warning(f'cf_main was requested for {self.__class__.__name__},'
-                       ' ignoring.')
-        return -1
+        net_power = self['annual_field_energy'] \
+            - self['annual_thermal_consumption']  # kW-hr
+        name_plate = self['q_pb_des'] * 8760 * 1000  # q_pb_des is in MW
+        return net_power / name_plate
+
+
+class TroughPhysicalHeat(SolarThermal):
+    """
+    Trough Physical Process Heat generation
+    """
+    MODULE = 'troughphysicalheat'
+    PYSAM = pysam_tpph
+
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None):
+        """Initialize a SAM trough physical process heat object.
+        """
+        self._pysam_weather_tag = 'file_name'
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request)
+
+    def cf_mean(self):
+        """Calculate mean capacity factor (fractional) from SAM.
+
+        Returns
+        -------
+        output : float
+            Mean capacity factor (fractional).
+        """
+        net_power = self['annual_gross_energy'] \
+            - self['annual_thermal_consumption']  # kW-hr
+        name_plate = self['q_pb_design'] * 8760 * 1000  # q_pb_design is in MW
+        return net_power / name_plate
 
 
 class Wind(Generation):

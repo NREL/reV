@@ -18,6 +18,8 @@ class SAMResource:
     """
 
     # Resource variables to load for each res type
+    # TODO - Add keys for swh, trough, & linear?
+    # TODO - should the below data be stored in SAM/generation.py?
     RES_VARS = {'pv': ('dni', 'dhi', 'ghi', 'wind_speed', 'air_temperature'),
                 'csp': ('dni', 'dhi', 'wind_speed', 'air_temperature',
                         'dew_point', 'surface_pressure'),
@@ -69,20 +71,18 @@ class SAMResource:
         self._res_arrays = {}
         h = project_points.h
 
+        # TODO - should the below data be stored in SAM/generation.py?
         if project_points.tech.lower() == 'pv':
             self._tech = 'pv'
         elif project_points.tech.lower() == 'csp':
             self._tech = 'csp'
         elif project_points.tech.lower() == 'solarwaterheat':
-            # raise NotImplementedError('This is not implemented yet')
             # TODO - update below line!
             self._tech = 'csp'
         elif project_points.tech.lower() == 'troughphysicalheat':
-            # raise NotImplementedError('This is not implemented yet')
             # TODO - update below line!
             self._tech = 'csp'
         elif project_points.tech.lower() == 'lineardirectsteam':
-            # raise NotImplementedError('This is not implemented yet')
             # TODO - update below line!
             self._tech = 'csp'
         elif 'wind' in project_points.tech.lower():
@@ -96,7 +96,7 @@ class SAMResource:
                 self._res_arrays['winddirection'] = np.zeros(self._shape,
                                                              dtype='float32')
         else:
-            raise HandlerValueError(f'Selected tech {project_points.tech} is' +
+            raise HandlerValueError(f'Selected tech {project_points.tech} is'
                                     ' not valid.')
 
         self._h = h
