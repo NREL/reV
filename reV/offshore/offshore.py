@@ -105,7 +105,8 @@ class Offshore:
         out_arrays = {}
 
         with Outputs(self._gen_fpath, mode='r') as out:
-            dsets = [d for d in out.dsets if d not in ('time_index', 'meta')]
+            dsets = [d for d in out.datasets
+                     if d not in ('time_index', 'meta')]
 
             for dset in dsets:
                 shape = out.get_dset_properties(dset)[0]
@@ -416,7 +417,7 @@ class Offshore:
         """
 
         with Outputs(self._gen_fpath, mode='r') as source:
-            dsets = [d for d in source.dsets
+            dsets = [d for d in source.datasets
                      if d not in ('meta', 'time_index')]
 
         if any(self.onshore_gids):
@@ -450,7 +451,7 @@ class Offshore:
                                    offshore_locs.max() + 1)
 
             with Outputs(self._gen_fpath, mode='r') as source:
-                dsets = [d for d in source.dsets
+                dsets = [d for d in source.datasets
                          if d not in ('meta', 'time_index')]
 
             with Outputs(fpath_out, mode='a') as out:
@@ -555,11 +556,11 @@ class Offshore:
         gen_data = {}
         with Outputs(gen_fpath, mode='r', unscale=True) as out:
 
-            dsets = [d for d in out.dsets if d not in ignore]
+            dsets = [d for d in out.datasets if d not in ignore]
 
             if 'cf_mean' not in dsets:
                 m = ('Offshore wind data aggregation needs cf_mean but reV '
-                     'gen output file only had: {}'.format(out.dsets))
+                     'gen output file only had: {}'.format(out.datasets))
                 logger.error(m)
                 raise KeyError(m)
 

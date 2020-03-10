@@ -121,7 +121,7 @@ def test_my_collection(dset, group):
         my_dsets = ['{}/{}'.format(group, ds) for ds in my_dsets]
 
     with Outputs(my_out, mode='r') as f:
-        out_dsets = f.dsets
+        out_dsets = f.datasets
 
     msg = "Missing datasets after collection"
     assert np.in1d(my_dsets, out_dsets).all(), msg
@@ -185,7 +185,7 @@ def test_update(dset, group):
     with MultiYear(my_out, mode='r', group=group) as my:
         dset_means = my.means(dset)
         dset_std = my.stdev(dset)
-        print(group, my.dsets)
+        print(group, my.datasets)
 
     compare_arrays(my_means, dset_means, "2012 Means")
     compare_arrays(my_std, dset_std, "2012 STDEV")

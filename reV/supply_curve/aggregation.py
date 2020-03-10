@@ -460,7 +460,7 @@ class Aggregation:
         if res_class_bins is None:
             res_class_bins = [None]
 
-        if cf_dset in gen.dsets:
+        if cf_dset in gen.datasets:
             cf_data = gen[cf_dset]
         else:
             cf_data = None
@@ -470,7 +470,7 @@ class Aggregation:
             logger.warning(w)
             warn(w, OutputWarning)
 
-        if lcoe_dset in gen.dsets:
+        if lcoe_dset in gen.datasets:
             lcoe_data = gen[lcoe_dset]
         else:
             lcoe_data = None

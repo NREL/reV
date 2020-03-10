@@ -202,7 +202,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         else:
             if self._res_data is None:
-                if self._res_class_dset in self.gen.dsets:
+                if self._res_class_dset in self.gen.datasets:
                     self._res_data = self.gen[self._res_class_dset]
 
         return self._res_data
@@ -223,7 +223,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         else:
             if self._gen_data is None:
-                if self._cf_dset in self.gen.dsets:
+                if self._cf_dset in self.gen.datasets:
                     self._gen_data = self.gen[self._cf_dset]
 
         return self._gen_data
@@ -244,7 +244,7 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
 
         else:
             if self._lcoe_data is None:
-                if self._lcoe_dset in self.gen.dsets:
+                if self._lcoe_dset in self.gen.datasets:
                     self._lcoe_data = self.gen[self._lcoe_dset]
 
         return self._lcoe_data

@@ -76,7 +76,7 @@ class MultiYear(Outputs):
             Path to source .h5 file to copy data from
         """
         dset_out = self._create_dset_name(source_h5, 'time_index')
-        if dset_out not in self.dsets:
+        if dset_out not in self.datasets:
             logger.debug("- Collecting time_index from {}"
                          .format(os.path.basename(source_h5)))
             with Outputs(source_h5, mode='r') as f_in:
@@ -99,7 +99,7 @@ class MultiYear(Outputs):
             If provided confirm that source meta matches given meta
         """
         dset_out = self._create_dset_name(source_h5, dset)
-        if dset_out not in self.dsets:
+        if dset_out not in self.datasets:
             logger.debug("- Collecting {} from {}"
                          .format(dset, os.path.basename(source_h5)))
             with Outputs(source_h5, unscale=False, mode='r') as f_in:
@@ -134,7 +134,7 @@ class MultiYear(Outputs):
         with Outputs(source_files[0], mode='r') as f_in:
             meta = f_in.h5['meta'][...]
 
-        if 'meta' not in self.dsets:
+        if 'meta' not in self.datasets:
             logger.debug("Copying meta")
             self._create_dset('meta', meta.shape, meta.dtype,
                               data=meta)
@@ -163,7 +163,7 @@ class MultiYear(Outputs):
         dset = os.path.basename(dset_out).split("-")[0]
         logger.debug('-- source_dset root = {}'.format(dset))
         my_dset = ["{}-{}".format(dset, val) for val in ['means', 'stdev']]
-        source_dsets = [ds for ds in self.dsets if dset in ds
+        source_dsets = [ds for ds in self.datasets if dset in ds
                         and ds not in my_dset]
         if dset_out in source_dsets:
             source_dsets.remove(dset_out)
@@ -181,7 +181,7 @@ class MultiYear(Outputs):
         dset_data : ndarray
             Dataset data to write to disc
         """
-        if dset_out in self.dsets:
+        if dset_out in self.datasets:
             logger.debug("- Updating {}".format(dset_out))
             self[dset_out] = dset_data
         else:
@@ -237,7 +237,7 @@ class MultiYear(Outputs):
             Array of multi-year means for dataset of interest
         """
         my_dset = "{}-means".format(dset)
-        if my_dset in self.dsets:
+        if my_dset in self.datasets:
             my_means = self[my_dset]
         else:
             my_means = self._compute_means(my_dset)
@@ -294,7 +294,7 @@ class MultiYear(Outputs):
             Array of multi-year standard deviation for dataset of interest
         """
         my_dset = "{}-stdev".format(dset)
-        if my_dset in self.dsets:
+        if my_dset in self.datasets:
             my_stdev = self[my_dset]
         else:
             my_means = self.means(dset)
@@ -339,7 +339,7 @@ class MultiYear(Outputs):
             True if profile, False if not.
         """
         with Outputs(source_files[0]) as f:
-            if dset not in f.dsets:
+            if dset not in f.datasets:
                 raise KeyError('Dataset "{}" not found in source file: "{}"'
                                .format(dset, source_files[0]))
 

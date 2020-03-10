@@ -131,7 +131,7 @@ class DatasetCollector:
             if axis == 1:
                 dset_shape = (len(f),)
             elif axis == 2:
-                if 'time_index' in f.dsets:
+                if 'time_index' in f.datasets:
                     dset_shape = f.shape
                 else:
                     m = ("'time_index' must be combined "
@@ -145,7 +145,7 @@ class DatasetCollector:
                 logger.error(m)
                 raise CollectionRuntimeError(m)
 
-            if self._dset_out not in f.dsets:
+            if self._dset_out not in f.datasets:
                 f._create_dset(self._dset_out, dset_shape, dtype,
                                chunks=chunks, attrs=attrs)
 
@@ -510,7 +510,7 @@ class Collector:
         Extract time_index, None if not present in .h5 files
         """
         with Outputs(self.h5_files[0], mode='r') as f:
-            if 'time_index' in f.dsets:
+            if 'time_index' in f.datasets:
                 time_index = f.time_index
                 attrs = f.get_attrs('time_index')
             else:
@@ -566,9 +566,9 @@ class Collector:
         if any datasets were not collected."""
 
         with Outputs(self._h5_out, mode='r') as out:
-            dsets_collected = out.dsets
+            dsets_collected = out.datasets
         with Outputs(self.h5_files[0], mode='r') as out:
-            dsets_source = out.dsets
+            dsets_source = out.datasets
 
         missing = [d for d in dsets_source if d not in dsets_collected]
 
@@ -604,7 +604,7 @@ class Collector:
         Load and combine meta data from .h5
         """
         with Outputs(self._h5_out, mode='a') as f:
-            if 'meta' in f.dsets:
+            if 'meta' in f.datasets:
                 self._check_meta(f.meta)
             else:
                 with Outputs(self.h5_files[0], mode='r') as f_in:

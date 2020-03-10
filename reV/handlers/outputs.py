@@ -54,14 +54,14 @@ class Outputs(Resource):
 
     def __len__(self):
         _len = 0
-        if 'meta' in self.dsets:
+        if 'meta' in self.datasets:
             _len = super().__len__()
 
         return _len
 
     def __getitem__(self, keys):
         ds, ds_slice = parse_keys(keys)
-        if ds in self.dsets:
+        if ds in self.datasets:
             if ds.endswith('time_index'):
                 out = self._get_time_index(ds, *ds_slice)
             elif ds.endswith('meta'):
@@ -140,7 +140,7 @@ class Outputs(Resource):
             shape of variables arrays == (time, locations)
         """
         _shape = None
-        dsets = self.dsets
+        dsets = self.datasets
         if 'meta' in dsets:
             _shape = self.h5['meta'].shape
             if 'time_index' in dsets:
@@ -199,7 +199,7 @@ class Outputs(Resource):
         configs : dict
             Dictionary of SAM configuration JSONs
         """
-        if 'meta' in self.dsets:
+        if 'meta' in self.datasets:
             configs = {k: json.loads(v)
                        for k, v in self.h5['meta'].attrs.items()}
         else:
@@ -270,7 +270,7 @@ class Outputs(Resource):
         if isinstance(meta, pd.DataFrame):
             meta = self.to_records_array(meta)
 
-        if ds in self.dsets:
+        if ds in self.datasets:
             self.update_dset(ds, meta)
         else:
             self._create_dset(ds, meta.shape, meta.dtype, data=meta,
@@ -293,7 +293,7 @@ class Outputs(Resource):
         if isinstance(time_index, pd.DatetimeIndex):
             time_index = np.array(time_index.astype(str), dtype='S20')
 
-        if ds in self.dsets:
+        if ds in self.datasets:
             self.update_dset(ds, time_index)
         else:
             self._create_dset(ds, time_index.shape, time_index.dtype,
@@ -313,7 +313,7 @@ class Outputs(Resource):
         config : dict
             SAM config JSON as a dictionary
         """
-        if 'meta' in self.dsets:
+        if 'meta' in self.datasets:
             config = json.loads(self.h5['meta'].attrs[config_name])
         else:
             config = None
@@ -455,7 +455,7 @@ class Outputs(Resource):
         ds_slice : tuple
             Dataset slicing that corresponds to arr
         """
-        if ds_name not in self.dsets:
+        if ds_name not in self.datasets:
             msg = '{} must be initialized!'.format(ds_name)
             raise HandlerRuntimeError(msg)
 

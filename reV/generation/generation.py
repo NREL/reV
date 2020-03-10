@@ -809,7 +809,7 @@ class Gen:
 
         with Resource(res_file) as res:
             if 'wtk' in res_file.lower():
-                for dset in res.dsets:
+                for dset in res.datasets:
                     if 'speed' in dset:
                         # take nominal WTK chunks from windspeed
                         _, _, chunks = res.get_dset_properties(dset)
