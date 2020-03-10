@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 class Gen:
     """Base class for reV generation."""
 
-    # TODO - should these options be defined in SAM/generation.py?
     # Mapping of reV technology strings to SAM generation objects
     OPTIONS = {'pv': PV,
                'csp': CSP,
@@ -107,7 +106,6 @@ class Gen:
                  'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/mwh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
-                 # TODO - are these scaling factors and dtypes correct?
                  # Solar water heater
                  'T_amb': {'scale_factor': 1, 'units': 'C',
                            'dtype': 'int16', 'chunks': None,
@@ -826,7 +824,8 @@ class Gen:
             Can also be a single config file str. If it's a list, it is mapped
             to the sorted list of unique configs requested by points csv.
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
             resource file chunk size.
@@ -1119,7 +1118,6 @@ class Gen:
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
             scale_outputs=True, downscale=None):
-        # TODO - more tech options are available now, update 'tech' options
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -1127,7 +1125,8 @@ class Gen:
         points_control : reV.config.PointsControl
             A PointsControl instance dictating what sites and configs are run.
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
         res_file : str
             Filepath to single resource file, multi-h5 directory,
             or /h5_dir/prefix*suffix
@@ -1332,7 +1331,8 @@ class Gen:
         Parameters
         ----------
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
         points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.

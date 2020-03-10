@@ -619,7 +619,6 @@ class CSP(Solar):
             res_file = os.path.join(
                 DEFAULTSDIR,
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            # TODO - should pysam_csp be self.PYSAM? (general)
             self._default = pysam_csp.default('MSPTSingleOwner')
             self._default.LocationAndResource.solar_resource_file = res_file
             self._default.execute()

@@ -18,11 +18,18 @@ class SAMResource:
     """
 
     # Resource variables to load for each res type
-    # TODO - Add keys for swh, trough, & linear?
-    # TODO - should the below data be stored in SAM/generation.py?
     RES_VARS = {'pv': ('dni', 'dhi', 'ghi', 'wind_speed', 'air_temperature'),
                 'csp': ('dni', 'dhi', 'wind_speed', 'air_temperature',
                         'dew_point', 'surface_pressure'),
+                'solarwaterheat': ('dni', 'dhi', 'wind_speed',
+                                   'air_temperature', 'dew_point',
+                                   'surface_pressure'),
+                'troughphysicalheat': ('dni', 'dhi', 'wind_speed',
+                                       'air_temperature', 'dew_point',
+                                       'surface_pressure'),
+                'lineardirectsteam': ('dni', 'dhi', 'wind_speed',
+                                      'air_temperature', 'dew_point',
+                                      'surface_pressure'),
                 'wind': ('pressure', 'temperature', 'winddirection',
                          'windspeed')}
 
@@ -49,6 +56,23 @@ class SAMResource:
                         'temperature': (-200, 100),
                         'rh': (0.1, 99.9)}
 
+    # valid data ranges for trough physical process heat
+    TPPH_DATA_RANGES = CSP_DATA_RANGES
+
+    # valid data ranges for linear Fresnel
+    LF_DATA_RANGES = CSP_DATA_RANGES
+
+    # valid data ranges for solar water heater
+    SWH_DATA_RANGES = CSP_DATA_RANGES
+
+    # Data range mapping by tech
+    DATA_RANGES = {'wind': WIND_DATA_RANGES,
+                   'pv': PV_DATA_RANGES,
+                   'csp': CSP_DATA_RANGES,
+                   'troughphysicalheat': TPPH_DATA_RANGES,
+                   'lineardirectsteam': LF_DATA_RANGES,
+                   'solarwaterheat': SWH_DATA_RANGES}
+
     def __init__(self, project_points, time_index, require_wind_dir=False):
         """
         Parameters
@@ -71,20 +95,16 @@ class SAMResource:
         self._res_arrays = {}
         h = project_points.h
 
-        # TODO - should the below data be stored in SAM/generation.py?
         if project_points.tech.lower() == 'pv':
             self._tech = 'pv'
         elif project_points.tech.lower() == 'csp':
             self._tech = 'csp'
         elif project_points.tech.lower() == 'solarwaterheat':
-            # TODO - update below line!
-            self._tech = 'csp'
+            self._tech = 'solarwaterheat'
         elif project_points.tech.lower() == 'troughphysicalheat':
-            # TODO - update below line!
-            self._tech = 'csp'
+            self._tech = 'troughphysicalheat'
         elif project_points.tech.lower() == 'lineardirectsteam':
-            # TODO - update below line!
-            self._tech = 'csp'
+            self._tech = 'lineardirectsteam'
         elif 'wind' in project_points.tech.lower():
             # hub height specified, get WTK wind data.
             self._tech = 'wind'
@@ -282,7 +302,8 @@ class SAMResource:
         var_array : ndarray
             Variable data
         tech : str
-            Technology (wind, csp, pv).
+            Technology (wind, csp, pv, solarwaterheat, lineardirectsteam,
+            troughphysicalheat).
 
         Returns
         -------
@@ -296,13 +317,14 @@ class SAMResource:
                 # convert pressure from Pa to ATM
                 var_array *= 9.86923e-6
 
-        elif 'pressure' in var_name and tech.lower() == 'csp':
-            if np.min(var_array) < 200:
-                # convert pressure from 100 to 1000 hPa
-                var_array *= 10
-            if np.min(var_array) > 80000:
-                # convert pressure from Pa to hPa
-                var_array /= 100
+        elif 'pressure' in var_name:
+            if tech.lower() == 'csp' or tech.lower() == 'troughphysicalheat':
+                if np.min(var_array) < 200:
+                    # convert pressure from 100 to 1000 hPa
+                    var_array *= 10
+                if np.min(var_array) > 80000:
+                    # convert pressure from Pa to hPa
+                    var_array /= 100
 
         elif 'temperature' in var_name:
             # Check if tempearture is in K, if so convert to C
@@ -375,20 +397,9 @@ class SAMResource:
                     and not isinstance(var_slice[1], slice)):
                 arr_sites = list(np.array(self.sites)[np.array(var_slice[1])])
 
-        if self._tech == 'wind':
-            if var in self.WIND_DATA_RANGES:
-                valid_range = self.WIND_DATA_RANGES[var]
-                arr = self.enforce_arr_range(var, arr, valid_range, arr_sites)
-
-        elif self._tech == 'pv':
-            if var in self.PV_DATA_RANGES:
-                valid_range = self.PV_DATA_RANGES[var]
-                arr = self.enforce_arr_range(var, arr, valid_range, arr_sites)
-
-        elif self._tech == 'csp':
-            if var in self.CSP_DATA_RANGES:
-                valid_range = self.CSP_DATA_RANGES[var]
-                arr = self.enforce_arr_range(var, arr, valid_range, arr_sites)
+        if var in self.DATA_RANGES[self._tech]:
+            valid_range = self.DATA_RANGES[self._tech][var]
+            arr = self.enforce_arr_range(var, arr, valid_range, arr_sites)
 
         return arr
 
