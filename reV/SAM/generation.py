@@ -735,7 +735,7 @@ class SolarThermal(Solar):
 
         return fname
 
-    def _gen_exec(self, delete_wfile=False):
+    def _gen_exec(self, delete_wfile=True):
         """
         Run SAM generation with possibility for follow on econ analysis.
 
@@ -766,6 +766,23 @@ class SolarWaterHeat(SolarThermal):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
+    @property
+    def default(self):
+        """Get the executed default pysam swh object.
+        Returns
+        -------
+        _default : PySAM.
+            Executed  pysam object.
+        """
+        if self._default is None:
+            res_file = os.path.join(
+                DEFAULTSDIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            self._default = pysam_swh.default('SolarWaterHeatingNone')
+            self._default.Weather.solar_resource_file = res_file
+            self._default.execute()
+        return self._default
+
 
 class LinearDirectSteam(SolarThermal):
     """
@@ -795,6 +812,23 @@ class LinearDirectSteam(SolarThermal):
         name_plate = self['q_pb_des'] * 8760 * 1000  # q_pb_des is in MW
         return net_power / name_plate
 
+    @property
+    def default(self):
+        """Get the executed default pysam linear Fresnel object.
+        Returns
+        -------
+        _default : PySAM.
+            Executed  pysam object.
+        """
+        if self._default is None:
+            res_file = os.path.join(
+                DEFAULTSDIR,
+                'SAM/USA CA Daggett (TMY2).csv')
+            self._default = pysam_lfdi.default('DSGLIPHNone')
+            self._default.Weather.file_name = res_file
+            self._default.execute()
+        return self._default
+
 
 class TroughPhysicalHeat(SolarThermal):
     """
@@ -823,6 +857,23 @@ class TroughPhysicalHeat(SolarThermal):
             - self['annual_thermal_consumption']  # kW-hr
         name_plate = self['q_pb_design'] * 8760 * 1000  # q_pb_design is in MW
         return net_power / name_plate
+
+    @property
+    def default(self):
+        """Get the executed default pysam trough object.
+        Returns
+        -------
+        _default : PySAM.
+            Executed  pysam object.
+        """
+        if self._default is None:
+            res_file = os.path.join(
+                DEFAULTSDIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            self._default = pysam_tpph.default('PhysicalTroughIPHNone')
+            self._default.Weather.file_name = res_file
+            self._default.execute()
+        return self._default
 
 
 class Wind(Generation):

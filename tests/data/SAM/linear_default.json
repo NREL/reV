@@ -640,7 +640,6 @@
   "fP_hdr_c": 0.009999999776482582,
   "fP_hdr_h": 0.02500000037252903,
   "fP_sf_boil": 0.07500000298023224,
-  "file_name": "/Users/mbannist/SAM Downloaded Weather Files/0_weather.csv",
   "heat_sink_dP_frac": 0.009999999776482582,
   "metric_0": "annual_energy",
   "metric_0_label": "Annual energy (year 1)",

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 PyTest file for linear Fresnel
-Created on 2/6/2020
+This is intended to be run with PySAM 1.2.1
 
+Created on 2/6/2020
 @author: Mike Bannister
 """
 
@@ -20,7 +21,7 @@ def test_gen_linear(caplog):
 
     caplog.set_level(logging.DEBUG)
     points = slice(0, 1)
-    sam_files = TESTDATADIR + '/SAM/linear_default_v3.json'
+    sam_files = TESTDATADIR + '/SAM/linear_default.json'
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
 
     # q_dot_to_heat_sink
@@ -51,6 +52,7 @@ def test_gen_linear(caplog):
             x = float(x.sum())
         assert round(x, digits) == round(y, digits)
 
+    # Some results may be different with PySAM 2 vs 1.2.1
     my_assert(gen.out['q_dot_to_heat_sink'], 10898.58, 0)
     my_assert(gen.out['gen'], 10462639.51, -2)
     my_assert(gen.out['m_dot_field'], 15153.68676, 1)
