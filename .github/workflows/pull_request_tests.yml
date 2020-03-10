@@ -1,8 +1,8 @@
-name: PR Merge
+name: Pull Request Pytests
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, closed]
+    types: [opened, edited, synchronize]
 
 jobs:
   build:
