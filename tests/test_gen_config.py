@@ -61,11 +61,11 @@ def test_gen_from_config(tech):
             with Outputs(os.path.join(config_obj.dirout, fname), 'r') as cf:
 
                 msg = 'cf_profile not written to disk'
-                assert 'cf_profile' in cf.dsets, msg
+                assert 'cf_profile' in cf.datasets, msg
                 rev2_profiles = cf['cf_profile']
 
                 msg = 'monthly_energy not written to disk'
-                assert 'monthly_energy' in cf.dsets, msg
+                assert 'monthly_energy' in cf.datasets, msg
                 monthly = cf['monthly_energy']
                 assert monthly.shape == (12, 10)
 
