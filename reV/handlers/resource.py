@@ -274,12 +274,7 @@ class Resource:
         return dset
 
     def __contains__(self, dset):
-        test = dset in self.datasets
-        if not test:
-            msg = "{} does not exist in {}".format(dset, self)
-            raise HandlerKeyError(msg)
-
-        return test
+        return dset in self.datasets
 
     @staticmethod
     def _get_datasets(h5_obj, group=None):
@@ -337,6 +332,18 @@ class Resource:
             List of datasets
         """
         return self._get_datasets(self.h5)
+
+    @property
+    def dsets(self):
+        """
+        Datasets available
+
+        Returns
+        -------
+        list
+            List of datasets
+        """
+        return self.datasets
 
     @property
     def groups(self):
@@ -1588,12 +1595,7 @@ class MultiH5:
         return dset
 
     def __contains__(self, dset):
-        test = dset in self.datasets
-        if not test:
-            msg = "{} does not exist in {}".format(dset, self)
-            raise HandlerKeyError(msg)
-
-        return test
+        return dset in self.datasets
 
     @property
     def attrs(self):
