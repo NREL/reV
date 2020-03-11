@@ -303,6 +303,7 @@ class ExclusionLayers:
             slices = (0, ) + ds_slice
         else:
             slices = ds_slice
+
         layer_data = Resource._extract_ds_slice(self.h5[layer_name],
                                                 *slices)
 

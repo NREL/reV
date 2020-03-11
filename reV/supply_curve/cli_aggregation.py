@@ -133,7 +133,7 @@ def from_config(ctx, config_file, verbose):
 @click.option('--tm_dset', '-tm', type=STR, required=True,
               help='Dataset in the exclusions file that maps the exclusions '
               'to the resource being analyzed.')
-@click.option('--excl_dict', '-exd', type=STR, required=True,
+@click.option('--excl_dict', '-exd', type=STR, default=None,
               help='String representation of a dictionary of exclusion '
               'LayerMask arguments {layer: {kwarg: value}} where layer is a '
               'dataset in excl_fpath and kwarg can be "inclusion_range", '
@@ -232,7 +232,8 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 
         try:
             summary = Aggregation.summary(
-                excl_fpath, gen_fpath, tm_dset, excl_dict,
+                excl_fpath, gen_fpath, tm_dset,
+                excl_dict=excl_dict,
                 res_class_dset=res_class_dset,
                 res_class_bins=res_class_bins,
                 cf_dset=cf_dset,

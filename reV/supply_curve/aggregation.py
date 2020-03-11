@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 class AggFileHandler:
     """Simple framework to handle aggregation file context managers."""
 
-    def __init__(self, excl_fpath, gen_fpath, data_layers, excl_dict,
-                 power_density, friction_fpath=None, friction_dset=None,
+    def __init__(self, excl_fpath, gen_fpath, data_layers, power_density,
+                 excl_dict=None, friction_fpath=None, friction_dset=None,
                  area_filter_kernel='queen', min_area=None,
                  check_excl_layers=False):
         """
@@ -46,12 +46,12 @@ class AggFileHandler:
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
             and "fpath".
-        excl_dict : dict
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         power_density : float | str | None
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
             power density from the generation meta data technology
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
             Must be paired with friction_dset.
@@ -61,7 +61,7 @@ class AggFileHandler:
             exclusions.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
-        min_area : float | NoneType
+        min_area : float | None
             Minimum required contiguous area filter in sq-km
         check_excl_layers : bool
             Run a pre-flight check on each exclusion layer to ensure they
@@ -69,7 +69,7 @@ class AggFileHandler:
         """
 
         self._excl_fpath = excl_fpath
-        self._excl = ExclusionMaskFromDict(excl_fpath, excl_dict,
+        self._excl = ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
                                            min_area=min_area,
                                            kernel=area_filter_kernel,
                                            check_layers=check_excl_layers)
@@ -231,7 +231,7 @@ class AggFileHandler:
 class Aggregation:
     """Supply points aggregation framework."""
 
-    def __init__(self, excl_fpath, gen_fpath, tm_dset, excl_dict,
+    def __init__(self, excl_fpath, gen_fpath, tm_dset, excl_dict=None,
                  res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                  data_layers=None, resolution=64, power_density=None,
@@ -248,7 +248,7 @@ class Aggregation:
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        excl_dict : dict
+        excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
@@ -283,7 +283,7 @@ class Aggregation:
             parallel), or None for all gids in the SC extent.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
-        min_area : float | NoneType
+        min_area : float | None
             Minimum required contiguous area filter in sq-km
         max_workers : int | None
             Number of cores to run summary on. 1 is serial, None is all
@@ -488,14 +488,14 @@ class Aggregation:
         return res_data, res_class_bins, cf_data, lcoe_data, offshore_flag
 
     @staticmethod
-    def _serial_summary(excl_fpath, gen_fpath, tm_dset, excl_dict,
-                        gen_index, res_class_dset=None, res_class_bins=None,
-                        cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                        data_layers=None, resolution=64, power_density=None,
-                        friction_fpath=None, friction_dset=None,
-                        gids=None, area_filter_kernel='queen', min_area=None,
-                        args=None, ex_area=0.0081, close=False,
-                        check_excl_layers=False):
+    def _serial_summary(excl_fpath, gen_fpath, tm_dset, gen_index,
+                        excl_dict=None, res_class_dset=None,
+                        res_class_bins=None, cf_dset='cf_mean-means',
+                        lcoe_dset='lcoe_fcr-means', data_layers=None,
+                        resolution=64, power_density=None, friction_fpath=None,
+                        friction_dset=None, gids=None,
+                        area_filter_kernel='queen', min_area=None, args=None,
+                        ex_area=0.0081, close=False, check_excl_layers=False):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -507,12 +507,12 @@ class Aggregation:
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
-        excl_dict : dict
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         gen_index : np.ndarray
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
             generation run.
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -543,14 +543,14 @@ class Aggregation:
             exclusions.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
-        min_area : float | NoneType
+        min_area : float | None
             Minimum required contiguous area filter in sq-km
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
-        min_area : float | NoneType
+        min_area : float | None
             Minimum required contiguous area filter in sq-km
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
@@ -578,9 +578,9 @@ class Aggregation:
                 gids = range(len(sc))
 
         # pre-extract handlers so they are not repeatedly initialized
-        file_args = [excl_fpath, gen_fpath, data_layers, excl_dict,
-                     power_density]
-        file_kwargs = {'area_filter_kernel': area_filter_kernel,
+        file_args = [excl_fpath, gen_fpath, data_layers, power_density]
+        file_kwargs = {'excl_dict': excl_dict,
+                       'area_filter_kernel': area_filter_kernel,
                        'min_area': min_area,
                        'friction_fpath': friction_fpath,
                        'friction_dset': friction_dset,
@@ -670,7 +670,8 @@ class Aggregation:
                 futures.append(executor.submit(
                     self._serial_summary,
                     self._excl_fpath, self._gen_fpath,
-                    self._tm_dset, self._excl_dict, self._gen_index,
+                    self._tm_dset, self._gen_index,
+                    excl_dict=self._excl_dict,
                     res_class_dset=self._res_class_dset,
                     res_class_bins=self._res_class_bins,
                     cf_dset=self._cf_dset, lcoe_dset=self._lcoe_dset,
@@ -719,8 +720,8 @@ class Aggregation:
         """
 
         file_args = [self._excl_fpath, self._gen_fpath, self._data_layers,
-                     self._excl_dict, self._power_density]
-        with AggFileHandler(*file_args) as fhandler:
+                     self._power_density]
+        with AggFileHandler(*file_args, excl_dict=self._excl_dict) as fhandler:
 
             inp = Aggregation._get_input_data(fhandler.gen, self._gen_fpath,
                                               self._res_class_dset,
@@ -912,7 +913,7 @@ class Aggregation:
         return summary
 
     @classmethod
-    def summary(cls, excl_fpath, gen_fpath, tm_dset, excl_dict,
+    def summary(cls, excl_fpath, gen_fpath, tm_dset, excl_dict=None,
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, resolution=64, power_density=None,
@@ -932,7 +933,7 @@ class Aggregation:
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
-        excl_dict : dict
+        excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
@@ -969,11 +970,11 @@ class Aggregation:
             parallel), or None for all gids in the SC extent.
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
-        min_area : float | NoneType
+        min_area : float | None
             Minimum required contiguous area filter in sq-km
         area_filter_kernel : str
             Contiguous area filter method to use on final exclusions mask
-        min_area : float | NoneType
+        min_area : float | None
             Minimum required contiguous area filter in sq-km
         max_workers : int | None
             Number of cores to run summary on. 1 is serial, None is all
@@ -1009,8 +1010,8 @@ class Aggregation:
         if max_workers == 1:
             afk = agg._area_filter_kernel
             summary = agg._serial_summary(agg._excl_fpath, agg._gen_fpath,
-                                          agg._tm_dset, agg._excl_dict,
-                                          agg._gen_index,
+                                          agg._tm_dset, agg._gen_index,
+                                          excl_dict=agg._excl_dict,
                                           res_class_dset=agg._res_class_dset,
                                           res_class_bins=agg._res_class_bins,
                                           cf_dset=agg._cf_dset,
