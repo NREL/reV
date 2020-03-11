@@ -1,5 +1,14 @@
 reV
 ***
+.. image:: https://badge.fury.io/py/NREL-reV.svg
+    :target: https://badge.fury.io/py/NREL-reV
+
+.. image:: https://github.com/NREL/reV/workflows/Documentation/badge.svg
+    :target: https://nrel.github.io/reV/
+
+.. image:: https://github.com/NREL/reV/workflows/Pytests/badge.svg
+    :target: https://github.com/NREL/reV/actions?query=workflow%3A%22Pytests%22
+
 The Renewable Energy Potential (reV) Model
 
 .. inclusion-intro
