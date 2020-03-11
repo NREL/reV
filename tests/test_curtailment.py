@@ -119,7 +119,7 @@ def test_random(year, site):
     msg = ('Curtailment with 50% probability did not result in 50% less '
            'curtailment! No curtailment, curtailment, and 50% curtailment '
            'have the following cf_means: {}'.format(results))
-    assert diff < 2, msg
+    assert diff <= 2, msg
 
 
 @pytest.mark.parametrize(('year', 'site'),
