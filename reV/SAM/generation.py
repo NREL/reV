@@ -259,7 +259,7 @@ class Generation(SAM):
 
     @classmethod
     def reV_run(cls, points_control, res_file, output_request=('cf_mean',),
-                downscale=None, drop_leap=False):
+                downscale=None, drop_leap=True):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -629,10 +629,25 @@ class SolarThermal(Solar):
     """ Base class for solar thermal """
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
-        """Initialize a SAM solar water heating object.
+        """Initialize a SAM solar thermal object
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict or ParametersManager()
+            SAM model input parameters.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
 
         """
-        self.timezone = None
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
@@ -652,7 +667,7 @@ class SolarThermal(Solar):
         # pylint: disable=E1101
         self[self._pysam_weather_tag] = self._pysam_w_fname
 
-    def _create_pysam_wfile(self, meta, resource, drop_leap=True):
+    def _create_pysam_wfile(self, meta, resource, drop_leap=False):
         """
         Create PySAM weather input file.
 
@@ -671,7 +686,7 @@ class SolarThermal(Solar):
 
         # Process metadata
         m = pd.DataFrame(meta).T
-        self.timezone = m.timezone
+        timezone = m.timezone
         m['Source'] = 'NSRDB'
         m['Location ID'] = meta.name
         m['City'] = '-'
@@ -681,7 +696,6 @@ class SolarThermal(Solar):
         m['Longitude'] = m.longitude
         m['Time Zone'] = m.timezone
         m['Elevation'] = m.elevation
-        m['Local Time Zone'] = m.timezone
         m['Local Time Zone'] = m.timezone
         m['Dew Point Units'] = 'c'
         m['DHI Units'] = 'w/m2'
@@ -710,7 +724,7 @@ class SolarThermal(Solar):
                 df = df[~((df.dt.dt.month == 12) & (df.dt.dt.day == 31))]
 
         # Adjust from UTC to local time
-        rolled = np.roll(df.to_numpy(), self.timezone * self.time_interval,
+        rolled = np.roll(df.to_numpy(), timezone * self.time_interval,
                          axis=0)
         df = pd.DataFrame(rolled, columns=df.columns, index=df.index)
 
@@ -752,14 +766,30 @@ class SolarThermal(Solar):
 
 class SolarWaterHeat(SolarThermal):
     """
-    Solar Water Heating generation
+    Solar Water Heater generation
     """
     MODULE = 'solarwaterheat'
     PYSAM = pysam_swh
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
-        """Initialize a SAM solar water heating object.
+        """Initialize a SAM solar water heater object.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict or ParametersManager()
+            SAM model input parameters.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
         """
         self._pysam_weather_tag = 'solar_resource_file'
         super().__init__(resource=resource, meta=meta, parameters=parameters,
@@ -785,14 +815,30 @@ class SolarWaterHeat(SolarThermal):
 
 class LinearDirectSteam(SolarThermal):
     """
-    Process heat linear direct steam generation
+    Process heat linear Fresnel direct steam generation
     """
     MODULE = 'lineardirectsteam'
     PYSAM = pysam_lfdi
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
-        """Initialize a SAM process heat liner direct steam object.
+        """Initialize a SAM process heat linear Fresnel direct steam object.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict or ParametersManager()
+            SAM model input parameters.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
         """
         self._pysam_weather_tag = 'file_name'
         super().__init__(resource=resource, meta=meta, parameters=parameters,
@@ -839,6 +885,22 @@ class TroughPhysicalHeat(SolarThermal):
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
         """Initialize a SAM trough physical process heat object.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict or ParametersManager()
+            SAM model input parameters.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years.
         """
         self._pysam_weather_tag = 'file_name'
         super().__init__(resource=resource, meta=meta, parameters=parameters,

@@ -231,8 +231,6 @@ class RevPySAM:
 
     def __init__(self):
         self._pysam = self.PYSAM.new()
-        # self._pysam = self.PYSAM.default('PhysicalTroughIPHNone')
-        # self._pysam = self.PYSAM.default('DSGLIPHNone')
         self._attr_dict = None
         self._default = None
         self._inputs = []
