@@ -202,18 +202,18 @@ class Economic(SAM):
             isite = site_gids.index(site)
 
             # look for the cf_profile dataset
-            if 'cf_profile' in cfh.dsets:
+            if 'cf_profile' in cfh.datasets:
                 gen = cfh['cf_profile', :, isite] * sys_cap
-            elif 'cf_profile-{}'.format(cf_year) in cfh.dsets:
+            elif 'cf_profile-{}'.format(cf_year) in cfh.datasets:
                 gen = (cfh['cf_profile-{}'.format(cf_year), :, isite]
                        * sys_cap)
-            elif 'cf_profile_{}'.format(cf_year) in cfh.dsets:
+            elif 'cf_profile_{}'.format(cf_year) in cfh.datasets:
                 gen = (cfh['cf_profile_{}'.format(cf_year), :, isite]
                        * sys_cap)
             else:
                 raise KeyError('Could not find cf_profile values for '
                                'SingleOwner. Available datasets: {}'
-                               .format(cfh.dsets))
+                               .format(cfh.datasets))
         # add to input dict
         inputs['gen'] = gen
 
@@ -382,17 +382,17 @@ class LCOE(Economic):
 
         # pull all cf mean values for LCOE calc
         with Outputs(cf_file) as cfh:
-            if 'cf_mean' in cfh.dsets:
+            if 'cf_mean' in cfh.datasets:
                 cf_arr = cfh['cf_mean']
-            elif 'cf_mean-{}'.format(cf_year) in cfh.dsets:
+            elif 'cf_mean-{}'.format(cf_year) in cfh.datasets:
                 cf_arr = cfh['cf_mean-{}'.format(cf_year)]
-            elif 'cf_mean_{}'.format(cf_year) in cfh.dsets:
+            elif 'cf_mean_{}'.format(cf_year) in cfh.datasets:
                 cf_arr = cfh['cf_mean_{}'.format(cf_year)]
-            elif 'cf' in cfh.dsets:
+            elif 'cf' in cfh.datasets:
                 cf_arr = cfh['cf']
             else:
                 raise KeyError('Could not find cf_mean values for LCOE. '
-                               'Available datasets: {}'.format(cfh.dsets))
+                               'Available datasets: {}'.format(cfh.datasets))
         return site_gids, calc_aey, cf_arr
 
     @property

@@ -223,6 +223,7 @@ class Resource:
         self._meta = None
         self._time_index = None
         self._str_decode = str_decode
+        self._i = 0
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_file)
@@ -258,6 +259,22 @@ class Resource:
             out = self._get_ds(ds, *ds_slice)
 
         return out
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._i >= len(self.datasets):
+            self._i = 0
+            raise StopIteration
+
+        dset = self.datasets[self._i]
+        self._i += 1
+
+        return dset
+
+    def __contains__(self, dset):
+        return dset in self.datasets
 
     @staticmethod
     def _get_datasets(h5_obj, group=None):
@@ -305,7 +322,7 @@ class Resource:
         return h5
 
     @property
-    def dsets(self):
+    def datasets(self):
         """
         Datasets available
 
@@ -315,6 +332,18 @@ class Resource:
             List of datasets
         """
         return self._get_datasets(self.h5)
+
+    @property
+    def dsets(self):
+        """
+        Datasets available
+
+        Returns
+        -------
+        list
+            List of datasets
+        """
+        return self.datasets
 
     @property
     def groups(self):
@@ -666,9 +695,9 @@ class Resource:
             ndarray of variable timeseries data
             If unscale, returned in native units else in scaled units
         """
-        if ds_name not in self.dsets:
+        if ds_name not in self.datasets:
             raise HandlerKeyError('{} not in {}'
-                                  .format(ds_name, self.dsets))
+                                  .format(ds_name, self.datasets))
 
         ds = self.h5[ds_name]
         out = self._extract_ds_slice(ds, *ds_slice)
@@ -855,9 +884,9 @@ class NSRDB(SolarResource):
             If unscale, returned in native units else in scaled units
         """
 
-        if ds_name not in self.dsets:
+        if ds_name not in self.datasets:
             raise HandlerKeyError('{} not in {}'
-                                  .format(ds_name, self.dsets))
+                                  .format(ds_name, self.datasets))
 
         ds = self.h5[ds_name]
         out = self._extract_ds_slice(ds, *ds_slice)
@@ -971,7 +1000,7 @@ class WindResource(Resource):
     --------
     >>> file = '$TESTDATADIR/wtk/ri_100_wtk_2012.h5'
     >>> with WindResource(file) as res:
-    >>>     print(res.dsets)
+    >>>     print(res.datasets)
     ['meta', 'pressure_0m', 'pressure_100m', 'pressure_200m',
     'temperature_100m', 'temperature_80m', 'time_index', 'winddirection_100m',
     'winddirection_80m', 'windspeed_100m', 'windspeed_80m']
@@ -1101,7 +1130,7 @@ class WindResource(Resource):
                        'relativehumidity': []}
 
             ignore = ['meta', 'time_index', 'coordinates']
-            for ds in self.dsets:
+            for ds in self.datasets:
                 if ds not in ignore:
                     ds_name, h = self._parse_name(ds)
                     if ds_name in heights.keys():
@@ -1556,22 +1585,17 @@ class MultiH5:
         return self
 
     def __next__(self):
-        if self._i >= len(self.dsets):
+        if self._i >= len(self.datasets):
             self._i = 0
             raise StopIteration
 
-        dset = self.dsets[self._i]
+        dset = self.datasets[self._i]
         self._i += 1
 
         return dset
 
     def __contains__(self, dset):
-        test = dset in self.dsets
-        if not test:
-            msg = "{} does not exist in {}".format(dset, self)
-            raise HandlerKeyError(msg)
-
-        return test
+        return dset in self.datasets
 
     @property
     def attrs(self):
@@ -1588,7 +1612,7 @@ class MultiH5:
         return attrs
 
     @property
-    def dsets(self):
+    def datasets(self):
         """
         Available datasets
 
@@ -1729,18 +1753,18 @@ class MultiFileResource(Resource):
 
     >>> file_100m = '$TESTDATADIR/wtk_2010_100m.h5'
     >>> with Resource(file_100m) as res:
-    >>>     print(res.dsets)
+    >>>     print(res.datasets)
     ['coordinates', 'meta', 'pressure_100m', 'temperature_100m', 'time_index',
      'winddirection_100m', 'windspeed_100m']
 
     >>> file_200m = '$TESTDATADIR/wtk_2010_200m.h5'
     >>> with Resource(file_200m) as res:
-    >>>     print(res.dsets)
+    >>>     print(res.datasets)
     ['coordinates', 'meta', 'pressure_200m', 'temperature_200m', 'time_index',
      'winddirection_200m', 'windspeed_200m']
 
     >>> with MultiFileResource(file) as res:
-    >>>     print(res.dsets)
+    >>>     print(res.datasets)
     ['coordinates', 'meta', 'pressure_100m', 'pressure_200m',
      'temperature_100m', 'temperature_200m', 'time_index',
      'winddirection_100m', 'winddirection_200m', 'windspeed_100m',
@@ -1899,7 +1923,7 @@ class MultiFileWTK(MultiFileResource, WindResource):
     >>> file = '$TESTDATADIR/wtk'
     >>> with MultiFileWTK(file) as res:
     >>>     print(list(res._h5_files)
-    >>>     print(res.dsets)
+    >>>     print(res.datasets)
     ['$TESTDATADIR/wtk_2010_200m.h5',
      '$TESTDATADIR/wtk_2010_100m.h5']
     ['coordinates', 'meta', 'pressure_100m', 'pressure_200m',

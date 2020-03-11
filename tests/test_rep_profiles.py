@@ -215,7 +215,7 @@ def test_write_to_file():
     with Resource(fout) as res:
         disk_profiles = res['rep_profiles_0']
         disk_meta = res.meta
-        assert 'rep_profiles_2' in res.dsets
+        assert 'rep_profiles_2' in res.datasets
         assert not np.array_equal(res['rep_profiles_0'], res['rep_profiles_1'])
 
     assert np.allclose(p1[0], disk_profiles)
@@ -252,7 +252,7 @@ def test_file_options():
         dtype = res.get_dset_properties('rep_profiles_0')[1]
         attrs = res.get_attrs('rep_profiles_0')
         disk_profiles = res['rep_profiles_0']
-        disk_dsets = res.dsets
+        disk_dsets = res.datasets
 
     assert np.issubdtype(dtype, np.integer)
     assert attrs['scale_factor'] == 1000

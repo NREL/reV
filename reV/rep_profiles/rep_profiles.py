@@ -661,7 +661,7 @@ class RepProfilesBase(ABC):
             Aggregated rev supply curve summary file.
         """
         with Resource(gen_fpath) as res:
-            dsets = res.dsets
+            dsets = res.datasets
             if cf_dset not in dsets:
                 raise KeyError('reV gen file needs to have "{}" '
                                'dataset to calculate representative profiles!'
@@ -793,7 +793,7 @@ class RepProfilesBase(ABC):
         """
         with Outputs(fout, mode='a') as out:
 
-            if 'rev_summary' in out.dsets and save_rev_summary:
+            if 'rev_summary' in out.datasets and save_rev_summary:
                 rev_sum = Outputs.to_records_array(self._rev_summary)
                 out['rev_summary'] = rev_sum
 

@@ -316,7 +316,7 @@ class Econ(Gen):
         """Get the generation resource time index data."""
         if self._time_index is None:
             with Outputs(self.cf_file) as cfh:
-                if 'time_index' in cfh.dsets:
+                if 'time_index' in cfh.datasets:
                     self._time_index = cfh.time_index
 
         return self._time_index
