@@ -1,4 +1,4 @@
-name: Pull Request Pytests
+name: Pytests
 
 on:
   pull_request:
