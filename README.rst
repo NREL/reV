@@ -1,5 +1,6 @@
 reV
 ***
+
 .. image:: https://badge.fury.io/py/NREL-reV.svg
     :target: https://badge.fury.io/py/NREL-reV
 
