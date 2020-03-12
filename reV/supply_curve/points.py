@@ -2,6 +2,7 @@
 """
 reV supply curve extent and points base frameworks.
 """
+from abc import ABC
 import pandas as pd
 import numpy as np
 import logging
@@ -17,90 +18,29 @@ from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
 logger = logging.getLogger(__name__)
 
 
-class SupplyCurvePoint:
-    """Generic single SC point based on exclusions, resolution, and techmap"""
+class AbstractSupplyCurvePoint(ABC):
+    """Abstract SC point based on only the point gid, SC shape, and resolution.
+    """
 
-    def __init__(self, gid, excl, tm_dset, excl_dict=None,
-                 resolution=64, exclusion_shape=None,
-                 close=True, parse_tm=True):
+    def __init__(self, gid, exclusion_shape, resolution=64):
         """
         Parameters
         ----------
         gid : int
             gid for supply curve point to analyze.
-        excl : str | ExclusionMask
-            Filepath to exclusions h5 or ExclusionMask file handler.
-        tm_dset : str
-            Dataset name in the exclusions file containing the
-            exclusions-to-resource mapping data.
-        excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-            None if excl input is pre-initialized.
+        exclusion_shape : tuple
+            Shape of the full exclusions extent (rows, cols).
         resolution : int
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
-        exclusion_shape : tuple
-            Shape of the exclusions extent (rows, cols). Inputing this will
-            speed things up considerably.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
-        close : bool
-            Flag to close object file handlers on exit.
-        parse_tm : bool
-            Flag to parse techmap for valid resource gids. Can be set to false
-            if this behavior is superseded by a subclass.
         """
 
         self._gid = gid
-        self._close = close
-        self._centroid = None
-        self._excl_data = None
-        self._excl_data_flat = None
-        self._excl_dict = excl_dict
-
-        # filepaths
-        self._excl_fpath = None
-
-        # handler objects
-        self._exclusions = None
-
-        # Parse inputs
-        self._parse_excl_file(excl)
-
         self._rows, self._cols = self._parse_slices(
-            gid, resolution, exclusion_shape=exclusion_shape)
+            gid, resolution, exclusion_shape)
 
-        if parse_tm:
-            self._res_gids = self._parse_techmap(tm_dset)
-
-    def _parse_excl_file(self, excl):
-        """Parse excl filepath input or handler object and set to attrs.
-
-        Parameters
-        ----------
-        excl : str | ExclusionMask
-            Filepath to exclusions geotiff or ExclusionMask handler
-        """
-
-        if isinstance(excl, str):
-            self._excl_fpath = excl
-            if self._excl_dict is None:
-                raise SupplyCurveInputError('Exclusion fpath cannot be used '
-                                            'without an exclusions dictionary '
-                                            'input.')
-        elif isinstance(excl, ExclusionMask):
-            self._excl_fpath = excl.excl_h5.h5_file
-            self._exclusions = excl
-        else:
-            raise SupplyCurveInputError('SupplyCurvePoints needs an '
-                                        'exclusions file path, or '
-                                        'ExclusionMask handler but '
-                                        'received: {}'
-                                        .format(type(excl)))
-
-    def _parse_slices(self, gid, resolution, exclusion_shape=None):
+    def _parse_slices(self, gid, resolution, exclusion_shape):
         """Parse inputs for the definition of this SC point.
 
         Parameters
@@ -123,57 +63,33 @@ class SupplyCurvePoint:
             the agg layer (supply curve).
         """
 
-        if exclusion_shape is None:
-            rows, cols = self.exclusions.shape
-        else:
-            rows, cols = self.get_agg_slices(gid, exclusion_shape, resolution)
+        rows, cols = self.get_agg_slices(gid, exclusion_shape, resolution)
 
         return rows, cols
 
-    def _parse_techmap(self, tm_dset):
-        """Parse data from the tech map file (exclusions to resource mapping).
-        Raise EmptySupplyCurvePointError if there are no valid resource points
-        in this SC point.
-
-        Parameters
-        ----------
-        tm_dset : str
-            Dataset name in the exclusions file containing the
-            exclusions-to-resource mapping data.
+    @property
+    def rows(self):
+        """Get the rows of the exclusions layer associated with this SC point.
 
         Returns
         -------
-        res_gids : np.ndarray
-            1D array with length == number of exclusion points. reV resource
-            gids (native resource index) from the original resource data
-            corresponding to the tech exclusions.
+        rows : slice
+            Row slice to index the high-res layer (exclusions layer) for the
+            gid in the agg layer (supply curve layer).
         """
+        return self._rows
 
-        emsg = ('Supply curve point gid {} has no viable exclusion points '
-                'based on exclusions file: "{}"'
-                .format(self._gid, self._excl_fpath))
+    @property
+    def cols(self):
+        """Get the cols of the exclusions layer associated with this SC point.
 
-        res_gids = self.exclusions.excl_h5[tm_dset, self.rows, self.cols]
-        res_gids = res_gids.astype(np.int32).flatten()
-
-        if (res_gids != -1).sum() == 0:
-            raise EmptySupplyCurvePointError(emsg)
-
-        return res_gids
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-        if type is not None:
-            raise
-
-    def close(self):
-        """Close all file handlers."""
-        if self._close:
-            if self._exclusions is not None:
-                self._exclusions.close()
+        Returns
+        -------
+        cols : slice
+            Column slice to index the high-res layer (exclusions layer) for the
+            gid in the agg layer (supply curve layer).
+        """
+        return self._cols
 
     @staticmethod
     def get_agg_slices(gid, shape, resolution):
@@ -221,29 +137,138 @@ class SupplyCurvePoint:
 
         return row_slice, col_slice
 
-    @property
-    def rows(self):
-        """Get the rows of the exclusions layer associated with this SC point.
+
+class SupplyCurvePoint(AbstractSupplyCurvePoint):
+    """Generic single SC point based on exclusions, resolution, and techmap"""
+
+    def __init__(self, gid, excl, tm_dset, excl_dict=None,
+                 resolution=64, exclusion_shape=None,
+                 close=True, parse_tm=True):
+        """
+        Parameters
+        ----------
+        gid : int
+            gid for supply curve point to analyze.
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        resolution : int
+            Number of exclusion points per SC point along an axis.
+            This number**2 is the total number of exclusion points per
+            SC point.
+        exclusion_shape : tuple
+            Shape of the full exclusions extent (rows, cols). Inputing this
+            will speed things up considerably.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
+        close : bool
+            Flag to close object file handlers on exit.
+        parse_tm : bool
+            Flag to parse techmap for valid resource gids. Can be set to false
+            if this behavior is superseded by a subclass.
+        """
+
+        self._excl_dict = excl_dict
+        self._close = close
+        self._excl_fpath, self._exclusions = self._parse_excl_file(excl)
+
+        if exclusion_shape is None:
+            exclusion_shape = self.exclusions.shape
+
+        super().__init__(gid, exclusion_shape, resolution=resolution)
+
+        self._centroid = None
+        self._excl_data = None
+        self._excl_data_flat = None
+
+        if parse_tm:
+            self._res_gids = self._parse_techmap(tm_dset)
+
+    def _parse_excl_file(self, excl):
+        """Parse excl filepath input or handler object and set to attrs.
+
+        Parameters
+        ----------
+        excl : str | ExclusionMask
+            Filepath to exclusions geotiff or ExclusionMask handler
 
         Returns
         -------
-        rows : slice
-            Row slice to index the high-res layer (exclusions layer) for the
-            gid in the agg layer (supply curve layer).
+        excl_fpath : str
+            Filepath for exclusions file
+        exclusions : ExclusionMask | None
+            Exclusions mask if input is already an open handler or None if it
+            is to be lazy instantiated.
         """
-        return self._rows
 
-    @property
-    def cols(self):
-        """Get the cols of the exclusions layer associated with this SC point.
+        if isinstance(excl, str):
+            excl_fpath = excl
+            exclusions = None
+            if self._excl_dict is None:
+                raise SupplyCurveInputError('Exclusion fpath cannot be used '
+                                            'without an exclusions dictionary '
+                                            'input.')
+        elif isinstance(excl, ExclusionMask):
+            excl_fpath = excl.excl_h5.h5_file
+            exclusions = excl
+        else:
+            raise SupplyCurveInputError('SupplyCurvePoints needs an '
+                                        'exclusions file path, or '
+                                        'ExclusionMask handler but '
+                                        'received: {}'
+                                        .format(type(excl)))
+        return excl_fpath, exclusions
+
+    def _parse_techmap(self, tm_dset):
+        """Parse data from the tech map file (exclusions to resource mapping).
+        Raise EmptySupplyCurvePointError if there are no valid resource points
+        in this SC point.
+
+        Parameters
+        ----------
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
 
         Returns
         -------
-        cols : slice
-            Column slice to index the high-res layer (exclusions layer) for the
-            gid in the agg layer (supply curve layer).
+        res_gids : np.ndarray
+            1D array with length == number of exclusion points. reV resource
+            gids (native resource index) from the original resource data
+            corresponding to the tech exclusions.
         """
-        return self._cols
+
+        emsg = ('Supply curve point gid {} has no viable exclusion points '
+                'based on exclusions file: "{}"'
+                .format(self._gid, self._excl_fpath))
+
+        res_gids = self.exclusions.excl_h5[tm_dset, self.rows, self.cols]
+        res_gids = res_gids.astype(np.int32).flatten()
+
+        if (res_gids != -1).sum() == 0:
+            raise EmptySupplyCurvePointError(emsg)
+
+        return res_gids
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+        if type is not None:
+            raise
+
+    def close(self):
+        """Close all file handlers."""
+        if self._close:
+            if self._exclusions is not None:
+                self._exclusions.close()
 
     @property
     def exclusions(self):
@@ -386,8 +411,8 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
             This number**2 is the total number of exclusion points per
             SC point.
         exclusion_shape : tuple
-            Shape of the exclusions extent (rows, cols). Inputing this will
-            speed things up considerably.
+            Shape of the full exclusions extent (rows, cols). Inputing this
+            will speed things up considerably.
         offshore_flags : np.ndarray | None
             Array of offshore boolean flags if available from wind generation
             data. None if offshore flag is not available.
@@ -402,17 +427,14 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
                          close=close,
                          parse_tm=False)
 
-        self._gen_fpath = None
-        self._gen = None
-
-        self._parse_gen_file(gen)
-
+        self._gen_fpath, self._gen = self._parse_gen_file(gen)
         self._gen_gids, self._res_gids = self._parse_techmap(tm_dset,
                                                              gen_index)
         self._remove_offshore(self._gen_gids, self._res_gids,
                               offshore_flags=offshore_flags)
 
-    def _parse_gen_file(self, gen):
+    @staticmethod
+    def _parse_gen_file(gen):
         """Parse gen filepath input or handler object and set to attrs.
 
         Parameters
@@ -420,18 +442,28 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
         gen : str | reV.handlers.Outputs
             Filepath to .h5 reV generation output results or reV Outputs file
             handler.
+
+        Returns
+        -------
+        gen_fpath : str
+            Filepath for generation outputs file
+        gen : Outputs | None
+            Generation Outputs handler object if input is already an open
+            handler or None if it is to be lazy instantiated.
         """
 
         if isinstance(gen, str):
-            self._gen_fpath = gen
+            gen_fpath = gen
+            gen = None
         elif isinstance(gen, Outputs):
-            self._gen_fpath = gen._h5_file
-            self._gen = gen
+            gen_fpath = gen._h5_file
+            gen = gen
         else:
             raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
                                         'generation output file path or '
                                         'output handler, but received: {}'
                                         .format(type(gen)))
+        return gen_fpath, gen
 
     def _parse_techmap(self, tm_dset, gen_index):
         """Parse data from the tech map file (exclusions to resource mapping).
