@@ -355,6 +355,20 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
         return gid_counts
 
     @property
+    def n_gids(self):
+        """
+        Get the total number of resource/generation gids that were at
+        not excluded.
+
+        Returns
+        -------
+        n_gids : list
+            List of exclusion pixels in each resource/generation gid.
+        """
+        n_gids = np.sum(self.excl_data_flat > 0)
+        return n_gids
+
+    @property
     def mean_cf(self):
         """Get the mean capacity factor for the non-excluded data. Capacity
         factor is weighted by the exclusions (usually 0 or 1, but 0.5
@@ -604,6 +618,57 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 raise ValueError(e)
         return data
 
+    def summarize(self, args=None, data_layers=None):
+        """
+        [summary]
+
+        Parameters
+        ----------
+        args : tuple | list | None
+            List of summary arguments to include. None defaults to all
+            available args defined in the class attr.
+        data_layers : None | dict
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "dset", "method",
+            and "fpath".
+        """
+        ARGS = {'res_gids': self.res_gid_set,
+                'gen_gids': self.gen_gid_set,
+                'gid_counts': self.gid_counts,
+                'n_gids': self.n_gids,
+                'mean_cf': self.mean_cf,
+                'mean_lcoe': self.mean_lcoe,
+                'mean_res': self.mean_res,
+                'capacity': self.capacity,
+                'area_sq_km': self.area,
+                'latitude': self.latitude,
+                'longitude': self.longitude,
+                'country': self.country,
+                'state': self.state,
+                'county': self.county,
+                'elevation': self.elevation,
+                'timezone': self.timezone,
+                }
+
+        if self._friction_layer is not None:
+            ARGS['mean_friction'] = self.mean_friction
+            ARGS['mean_lcoe_friction'] = self.mean_lcoe_friction
+
+        if args is None:
+            args = list(ARGS.keys())
+
+        summary = {}
+        for arg in args:
+            if arg in ARGS:
+                summary[arg] = ARGS[arg]
+            else:
+                warn('Cannot find "{}" as an available SC self summary '
+                     'output', OutputWarning)
+
+        summary = self.agg_data_layers(summary, data_layers)
+
+        return summary
+
     @classmethod
     def summary(cls, gid, excl_fpath, gen_fpath, tm_dset,
                 gen_index, args=None, data_layers=None,
@@ -685,39 +750,6 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                   'friction_layer': friction_layer}
         with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                  **kwargs) as point:
-
-            ARGS = {'res_gids': point.res_gid_set,
-                    'gen_gids': point.gen_gid_set,
-                    'gid_counts': point.gid_counts,
-                    'mean_cf': point.mean_cf,
-                    'mean_lcoe': point.mean_lcoe,
-                    'mean_res': point.mean_res,
-                    'capacity': point.capacity,
-                    'area_sq_km': point.area,
-                    'latitude': point.latitude,
-                    'longitude': point.longitude,
-                    'country': point.country,
-                    'state': point.state,
-                    'county': point.county,
-                    'elevation': point.elevation,
-                    'timezone': point.timezone,
-                    }
-
-            if friction_layer is not None:
-                ARGS['mean_friction'] = point.mean_friction
-                ARGS['mean_lcoe_friction'] = point.mean_lcoe_friction
-
-            if args is None:
-                args = list(ARGS.keys())
-
-            summary = {}
-            for arg in args:
-                if arg in ARGS:
-                    summary[arg] = ARGS[arg]
-                else:
-                    warn('Cannot find "{}" as an available SC point summary '
-                         'output', OutputWarning)
-
-            summary = point.agg_data_layers(summary, data_layers)
+            summary = point.summarize(args=args, data_layers=data_layers)
 
         return summary
