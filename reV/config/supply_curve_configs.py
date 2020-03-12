@@ -22,7 +22,7 @@ class AggregationConfig(AnalysisConfig):
     """SC Aggregation config."""
 
     NAME = 'agg'
-    REQUIREMENTS = ('excl_fpath', 'gen_fpath', 'tm_dset', 'excl_dict')
+    REQUIREMENTS = ('excl_fpath', 'gen_fpath', 'tm_dset')
 
     def __init__(self, config):
         """
@@ -43,6 +43,7 @@ class AggregationConfig(AnalysisConfig):
         self._default_resolution = 64
         self._default_area_filter_kernel = 'queen'
         self._default_min_area = None
+        self._default_excl_dict = None
 
         self._sc_agg_preflight()
 
@@ -124,7 +125,7 @@ class AggregationConfig(AnalysisConfig):
     @property
     def excl_dict(self):
         """Get the exclusions dictionary"""
-        return self['excl_dict']
+        return self.get('excl_dict', self._default_excl_dict)
 
     @property
     def res_class_dset(self):

@@ -575,6 +575,7 @@ class SpawnProcessPool(cf.ProcessPoolExecutor):
             warn(w, ParallelExecutionWarning)
         else:
             kwargs['mp_context'] = multiprocessing.get_context('spawn')
+
         super().__init__(*args, **kwargs)
 
 

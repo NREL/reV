@@ -317,15 +317,15 @@ class ExclusionMask:
                           [1, 1, 1],
                           [0, 1, 0]])}
 
-    def __init__(self, excl_h5, *layers, min_area=None,
+    def __init__(self, excl_h5, layers=None, min_area=None,
                  kernel='queen', hsds=False, check_layers=False):
         """
         Parameters
         ----------
         excl_h5 : str
             Path to exclusions .h5 file
-        layers : LayerMask
-            Instance of LayerMask for each exclusion layer to combine
+        layers : list | NoneType
+            list of LayerMask instances for each exclusion layer to combine
         min_area : float | NoneType
             Minimum required contiguous area in sq-km
         kernel : str
@@ -342,8 +342,12 @@ class ExclusionMask:
         self._excl_layers = None
         self._check_layers = check_layers
 
-        for layer in layers:
-            self.add_layer(layer)
+        if layers is not None:
+            if not isinstance(layers, list):
+                layers = [layers]
+
+            for layer in layers:
+                self.add_layer(layer)
 
         if kernel in ["queen", "rook"]:
             self._min_area = min_area
@@ -614,6 +618,24 @@ class ExclusionMask:
 
         return new_slice, sub_slice
 
+    def _generate_ones_mask(self, ds_slice):
+        """
+        Generate mask of all ones
+
+        Parameters
+        ----------
+        ds_slice : tuple
+            dataset slice of interest along axis 0 and 1
+
+        Returns
+        -------
+        mask : ndarray
+            Array of ones slices down by ds_slice
+        """
+        mask = np.ones(self.shape)[ds_slice]
+
+        return mask
+
     def _generate_mask(self, *ds_slice):
         """
         Generate multiplicative inclusion mask from exclusion layers.
@@ -639,24 +661,30 @@ class ExclusionMask:
         if self._min_area is not None:
             ds_slice, sub_slice = self._increase_mask_slice(ds_slice, n=1)
 
-        for layer in self.layers:
-            layer_slice = (layer.layer, ) + ds_slice
-            layer_mask = layer[self.excl_h5[layer_slice]]
+        if self.layers:
+            for layer in self.layers:
+                layer_slice = (layer.layer, ) + ds_slice
+                layer_mask = layer[self.excl_h5[layer_slice]]
 
-            if mask is None:
-                mask = layer_mask
-            else:
-                mask *= layer_mask
+                if mask is None:
+                    mask = layer_mask
+                else:
+                    mask *= layer_mask
 
-        if self._min_area is not None:
-            mask = self._area_filter(mask, min_area=self._min_area,
-                                     kernel=self._kernel)
-            mask = mask[sub_slice]
+            if self._min_area is not None:
+                mask = self._area_filter(mask, min_area=self._min_area,
+                                         kernel=self._kernel)
+                mask = mask[sub_slice]
+        else:
+            if self._min_area is not None:
+                ds_slice = sub_slice
+
+            mask = self._generate_ones_mask(ds_slice)
 
         return mask
 
     @classmethod
-    def run(cls, excl_h5, *layers, min_area=None,
+    def run(cls, excl_h5, layers=None, min_area=None,
             kernel='queen', hsds=False):
         """
         Create inclusion mask from given layers
@@ -665,8 +693,8 @@ class ExclusionMask:
         ----------
         excl_h5 : str
             Path to exclusions .h5 file
-        layers : LayerMask
-            Instance of LayerMask for each exclusion layer to combine
+        layers : list | NoneType
+            list of LayerMask instances for each exclusion layer to combine
         min_area : float | NoneType
             Minimum required contiguous area in sq-km
         kernel : str
@@ -680,7 +708,7 @@ class ExclusionMask:
         mask : ndarray
             Full inclusion mask
         """
-        with cls(excl_h5, *layers, min_area=min_area,
+        with cls(excl_h5, layers=layers, min_area=min_area,
                  kernel=kernel, hsds=hsds) as f:
             mask = f.mask
 
@@ -691,14 +719,14 @@ class ExclusionMaskFromDict(ExclusionMask):
     """
     Class to initialize ExclusionMask from a dictionary defining layers
     """
-    def __init__(self, excl_h5, layers_dict, min_area=None,
+    def __init__(self, excl_h5, layers_dict=None, min_area=None,
                  kernel='queen', hsds=False, check_layers=False):
         """
         Parameters
         ----------
         excl_h5 : str
             Path to exclusions .h5 file
-        layers_dict : dcit
+        layers_dict : dict | NoneType
             Dictionary of LayerMask arugments {layer: {kwarg: value}}
         min_area : float | NoneType
             Minimum required contiguous area in sq-km
@@ -711,15 +739,18 @@ class ExclusionMaskFromDict(ExclusionMask):
             Run a pre-flight check on each layer to ensure they contain
             un-excluded values
         """
-        layers = []
-        for layer, kwargs in layers_dict.items():
-            layers.append(LayerMask(layer, **kwargs))
+        if layers_dict is not None:
+            layers = []
+            for layer, kwargs in layers_dict.items():
+                layers.append(LayerMask(layer, **kwargs))
+        else:
+            layers = None
 
-        super().__init__(excl_h5, *layers, min_area=min_area,
+        super().__init__(excl_h5, layers=layers, min_area=min_area,
                          kernel=kernel, hsds=hsds, check_layers=check_layers)
 
     @classmethod
-    def run(cls, excl_h5, layers_dict, min_area=None,
+    def run(cls, excl_h5, layers_dict=None, min_area=None,
             kernel='queen', hsds=False):
         """
         Create inclusion mask from given layers dictionary
@@ -728,7 +759,7 @@ class ExclusionMaskFromDict(ExclusionMask):
         ----------
         excl_h5 : str
             Path to exclusions .h5 file
-        layers_dict : dcit
+        layers_dict : dict | NoneType
             Dictionary of LayerMask arugments {layer: {kwarg: value}}
         min_area : float | NoneType
             Minimum required contiguous area in sq-km
@@ -743,7 +774,7 @@ class ExclusionMaskFromDict(ExclusionMask):
         mask : ndarray
             Full inclusion mask
         """
-        with cls(excl_h5, layers_dict, min_area=min_area,
+        with cls(excl_h5, layers_dict=layers_dict, min_area=min_area,
                  kernel=kernel, hsds=hsds) as f:
             mask = f.mask
 
@@ -770,7 +801,7 @@ class FrictionMask(ExclusionMask):
         """
         self._fric_dset = fric_dset
         L = [LayerMask(fric_dset, use_as_weights=True, exclude_nodata=False)]
-        super().__init__(fric_h5, *L, min_area=None, hsds=hsds,
+        super().__init__(fric_h5, layers=L, min_area=None, hsds=hsds,
                          check_layers=check_layers)
 
     def _generate_mask(self, *ds_slice):

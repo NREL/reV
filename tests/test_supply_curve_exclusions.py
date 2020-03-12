@@ -139,7 +139,7 @@ def test_layer_mask(layer_name, inclusion_range, exclude_values,
     layer_test = layer._apply_mask(data)
     assert np.allclose(truth, layer_test)
 
-    mask_test = ExclusionMask.run(excl_h5, layer)
+    mask_test = ExclusionMask.run(excl_h5, layers=layer)
     assert np.allclose(truth, mask_test)
 
     layer_dict = {layer_name: {"inclusion_range": inclusion_range,
@@ -147,7 +147,7 @@ def test_layer_mask(layer_name, inclusion_range, exclude_values,
                                "include_values": include_values,
                                "weight": weight,
                                "exclude_nodata": exclude_nodata}}
-    dict_test = ExclusionMaskFromDict.run(excl_h5, layer_dict)
+    dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict=layer_dict)
     assert np.allclose(truth, dict_test)
 
 
@@ -177,11 +177,11 @@ def test_inclusion_mask(scenario):
             kwargs['nodata_value'] = nodata_value
             layers.append(LayerMask(layer, **kwargs))
 
-    mask_test = ExclusionMask.run(excl_h5, *layers,
+    mask_test = ExclusionMask.run(excl_h5, layers=layers,
                                   min_area=min_area)
     assert np.allclose(truth, mask_test)
 
-    dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict,
+    dict_test = ExclusionMaskFromDict.run(excl_h5, layers_dict=layers_dict,
                                           min_area=min_area)
     assert np.allclose(truth, dict_test)
 
@@ -189,20 +189,63 @@ def test_inclusion_mask(scenario):
 def test_bad_layer():
     """
     Test creation of inclusion mask
-
-    Parameters
-    ----------
-    scenario : str
-        Standard reV exclusion scenario
     """
     excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
     excl_dict = CONFIGS['bad']
     with pytest.raises(ExclusionLayerError):
-        with ExclusionMaskFromDict(excl_h5, excl_dict, check_layers=True) as f:
+        with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict,
+                                   check_layers=True) as f:
             f.mask
 
-    with ExclusionMaskFromDict(excl_h5, excl_dict, check_layers=False) as f:
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict,
+                               check_layers=False) as f:
         assert not f.mask.any()
+
+
+@pytest.mark.parametrize(('ds_slice'),
+                         [None,
+                          (1, ),
+                          (slice(None), ),
+                          (slice(0, 10), ),
+                          (slice(0, 100, 2), ),
+                          ([5, 10, 2, 30, 50, 7], ),
+                          (slice(None), 1),
+                          (slice(None), slice(None)),
+                          (slice(None), slice(0, 10)),
+                          (slice(None), slice(0, 100, 2)),
+                          (slice(None), [5, 10, 2, 30, 50, 7], ),
+                          (10, 10),
+                          (slice(0, 10), slice(0, 10)),
+                          (slice(0, 100, 2), slice(0, 100, 2)),
+                          ([5, 10, 2, 30, 50, 7], [5, 10, 2, 30, 50, 7])
+                          ])
+def test_no_excl(ds_slice):
+    """
+    Test ExclusionMask with no exclusions provided
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with ExclusionLayers(excl_h5) as f:
+        shape = f.shape
+
+    truth = np.ones(shape)
+    with ExclusionMask(excl_h5) as f:
+        if ds_slice is None:
+            test = f.mask
+        else:
+            test = f[ds_slice]
+            truth = truth[ds_slice]
+
+        assert np.allclose(truth, test)
+
+    truth = np.ones(shape)
+    with ExclusionMaskFromDict(excl_h5) as f:
+        if ds_slice is None:
+            test = f.mask
+        else:
+            test = f[ds_slice]
+            truth = truth[ds_slice]
+
+        assert np.allclose(truth, test)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
