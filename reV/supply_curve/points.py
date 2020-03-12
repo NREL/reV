@@ -18,11 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 class SupplyCurvePoint:
-    """Single supply curve point framework"""
+    """Generic single SC point based on exclusions, resolution, and techmap"""
 
-    def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
-                 resolution=64, exclusion_shape=None, offshore_flags=None,
-                 close=True):
+    def __init__(self, gid, excl, tm_dset, excl_dict=None,
+                 resolution=64, exclusion_shape=None,
+                 close=True, parse_tm=True):
         """
         Parameters
         ----------
@@ -30,21 +30,16 @@ class SupplyCurvePoint:
             gid for supply curve point to analyze.
         excl : str | ExclusionMask
             Filepath to exclusions h5 or ExclusionMask file handler.
-        gen : str | reV.handlers.Outputs
-            Filepath to .h5 reV generation output results or reV Outputs file
-            handler.
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
-        gen_index : np.ndarray
-            Array of generation gids with array index equal to resource gid.
-            Array value is -1 if the resource index was not used in the
-            generation run.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
-        resolution : int | None
-            SC resolution, must be input in combination with gid.
+        resolution : int
+            Number of exclusion points per SC point along an axis.
+            This number**2 is the total number of exclusion points per
+            SC point.
         exclusion_shape : tuple
             Shape of the exclusions extent (rows, cols). Inputing this will
             speed things up considerably.
@@ -53,6 +48,9 @@ class SupplyCurvePoint:
             data. None if offshore flag is not available.
         close : bool
             Flag to close object file handlers on exit.
+        parse_tm : bool
+            Flag to parse techmap for valid resource gids. Can be set to false
+            if this behavior is superseded by a subclass.
         """
 
         self._gid = gid
@@ -64,31 +62,26 @@ class SupplyCurvePoint:
 
         # filepaths
         self._excl_fpath = None
-        self._gen_fpath = None
 
         # handler objects
         self._exclusions = None
-        self._gen = None
 
         # Parse inputs
-        self._parse_files(excl, gen)
+        self._parse_excl_file(excl)
+
         self._rows, self._cols = self._parse_slices(
             gid, resolution, exclusion_shape=exclusion_shape)
-        self._gen_gids, self._res_gids = self._parse_techmap(tm_dset,
-                                                             gen_index)
-        self._remove_offshore(self._gen_gids, self._res_gids,
-                              offshore_flags=offshore_flags)
 
-    def _parse_files(self, excl, gen):
-        """Parse gen + excl filepath input or handler object and set to attrs.
+        if parse_tm:
+            self._res_gids = self._parse_techmap(tm_dset)
+
+    def _parse_excl_file(self, excl):
+        """Parse excl filepath input or handler object and set to attrs.
 
         Parameters
         ----------
         excl : str | ExclusionMask
             Filepath to exclusions geotiff or ExclusionMask handler
-        gen : str | reV.handlers.Outputs
-            Filepath to .h5 reV generation output results or reV Outputs file
-            handler.
         """
 
         if isinstance(excl, str):
@@ -106,16 +99,6 @@ class SupplyCurvePoint:
                                         'ExclusionMask handler but '
                                         'received: {}'
                                         .format(type(excl)))
-        if isinstance(gen, str):
-            self._gen_fpath = gen
-        elif isinstance(gen, Outputs):
-            self._gen_fpath = gen._h5_file
-            self._gen = gen
-        else:
-            raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
-                                        'generation output file path or '
-                                        'output handler, but received: {}'
-                                        .format(type(gen)))
 
     def _parse_slices(self, gid, resolution, exclusion_shape=None):
         """Parse inputs for the definition of this SC point.
@@ -147,7 +130,7 @@ class SupplyCurvePoint:
 
         return rows, cols
 
-    def _parse_techmap(self, tm_dset, gen_index):
+    def _parse_techmap(self, tm_dset):
         """Parse data from the tech map file (exclusions to resource mapping).
         Raise EmptySupplyCurvePointError if there are no valid resource points
         in this SC point.
@@ -157,17 +140,9 @@ class SupplyCurvePoint:
         tm_dset : str
             Dataset name in the exclusions file containing the
             exclusions-to-resource mapping data.
-        gen_index : np.ndarray
-            Array of generation gids with array index equal to resource gid.
-            Array value is -1 if the resource index was not used in the
-            generation run.
 
         Returns
         -------
-        gen_gids : np.ndarray
-            1D array with length == number of exclusion points. reV generation
-            gids (gen results index) from the gen_fpath file corresponding to
-            the tech exclusions.
         res_gids : np.ndarray
             1D array with length == number of exclusion points. reV resource
             gids (native resource index) from the original resource data
@@ -184,49 +159,7 @@ class SupplyCurvePoint:
         if (res_gids != -1).sum() == 0:
             raise EmptySupplyCurvePointError(emsg)
 
-        mask = (res_gids >= len(gen_index)) | (res_gids == -1)
-        res_gids[mask] = -1
-        gen_gids = gen_index[res_gids]
-        gen_gids[mask] = -1
-        res_gids[(gen_gids == -1)] = -1
-
-        if (gen_gids != -1).sum() == 0:
-            raise EmptySupplyCurvePointError(emsg)
-
-        return gen_gids, res_gids
-
-    def _remove_offshore(self, gen_gids, res_gids, offshore_flags=None):
-        """If offshore flags are available, remove offshore gids from analysis,
-        raise EmptySupplyCurvePointError if there are no valid onshore points
-        in this SC point.
-
-        Parameters
-        ----------
-        gen_gids : np.ndarray
-            1D array with length == number of exclusion points. reV generation
-            gids (gen results index) from the gen_fpath file corresponding to
-            the tech exclusions.
-        res_gids : np.ndarray
-            1D array with length == number of exclusion points. reV resource
-            gids (native resource index) from the original resource data
-            corresponding to the tech exclusions.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
-        """
-
-        if offshore_flags is not None:
-            gen_offshore_flags = offshore_flags[gen_gids]
-            gen_offshore_flags[(gen_gids == -1)] = 0
-            offshore_mask = (gen_offshore_flags == 1)
-            gen_gids[offshore_mask] = -1
-            res_gids[offshore_mask] = -1
-
-            emsg = ('Supply curve point gid {} has no viable onshore '
-                    'exclusion points based on exclusions file: "{}"'
-                    .format(self._gid, self._excl_fpath))
-            if (gen_gids != -1).sum() == 0:
-                raise EmptySupplyCurvePointError(emsg)
+        return res_gids
 
     def __enter__(self):
         return self
@@ -241,28 +174,6 @@ class SupplyCurvePoint:
         if self._close:
             if self._exclusions is not None:
                 self._exclusions.close()
-            if self._gen is not None:
-                self._gen.close()
-
-    def exclusion_weighted_mean(self, flat_arr):
-        """Calc the exclusions-weighted mean value of a flat array of gen data.
-
-        Parameters
-        ----------
-        flat_arr : np.ndarray
-            Flattened array of resource/generation/econ data. Must be
-            index-able with the self._gen_gids array.
-
-        Returns
-        -------
-        mean : float
-            Mean of flat_arr masked by the binary exclusions then weighted by
-            the non-zero exclusions.
-        """
-        x = flat_arr[self._gen_gids[self.bool_mask]]
-        x *= self.excl_data_flat[self.bool_mask]
-        mean = x.sum() / self.excl_data_flat[self.bool_mask].sum()
-        return mean
 
     @staticmethod
     def get_agg_slices(gid, shape, resolution):
@@ -335,6 +246,20 @@ class SupplyCurvePoint:
         return self._cols
 
     @property
+    def exclusions(self):
+        """Get the exclusions object.
+
+        Returns
+        -------
+        _exclusions : ExclusionMask
+            ExclusionMask h5 handler object.
+        """
+        if self._exclusions is None:
+            self._exclusions = ExclusionMaskFromDict(self._excl_fpath,
+                                                     self._excl_dict)
+        return self._exclusions
+
+    @property
     def centroid(self):
         """Get the supply curve point centroid coordinate.
 
@@ -353,19 +278,265 @@ class SupplyCurvePoint:
 
         return self._centroid
 
-    @property
-    def exclusions(self):
-        """Get the exclusions object.
+    def exclusion_weighted_mean(self, flat_arr):
+        """Calc the exclusions-weighted mean value of a flat array of
+        resource data.
+
+        Parameters
+        ----------
+        flat_arr : np.ndarray
+            Flattened array of resource data. Must be index-able with the
+            self._res_gids array (must be a 1D array with an entry for every
+            site in the resource extent).
 
         Returns
         -------
-        _exclusions : ExclusionMask
-            ExclusionMask h5 handler object.
+        mean : float
+            Mean of flat_arr masked by the binary exclusions then weighted by
+            the non-zero exclusions.
         """
-        if self._exclusions is None:
-            self._exclusions = ExclusionMaskFromDict(self._excl_fpath,
-                                                     self._excl_dict)
-        return self._exclusions
+        x = flat_arr[self._res_gids[self.bool_mask]]
+        x *= self.excl_data_flat[self.bool_mask]
+        mean = x.sum() / self.excl_data_flat[self.bool_mask].sum()
+        return mean
+
+    @property
+    def excl_data(self):
+        """Get the exclusions mask (normalized with expected range: [0, 1]).
+
+        Returns
+        -------
+        _excl_data : np.ndarray
+            2D exclusions data mask corresponding to the exclusions grid in
+            the SC domain.
+        """
+
+        if self._excl_data is None:
+            self._excl_data = self.exclusions[self.rows, self.cols]
+
+            # make sure exclusion pixels outside resource extent are excluded
+            out_of_extent = self._res_gids.reshape(self._excl_data.shape) == -1
+            self._excl_data[out_of_extent] = 0.0
+
+            if self._excl_data.max() > 1:
+                w = ('Exclusions data max value is > 1: {}'
+                     .format(self._excl_data.max()), InputWarning)
+                logger.warning(w)
+                warn(w)
+
+        return self._excl_data
+
+    @property
+    def excl_data_flat(self):
+        """Get the flattened exclusions mask (normalized with expected
+        range: [0, 1]).
+
+        Returns
+        -------
+        _excl_data_flat : np.ndarray
+            1D flattened exclusions data mask.
+        """
+
+        if self._excl_data_flat is None:
+            self._excl_data_flat = self.excl_data.flatten()
+
+        return self._excl_data_flat
+
+    @property
+    def bool_mask(self):
+        """Get a boolean inclusion mask (True if excl point is not excluded).
+
+        Returns
+        -------
+        mask : np.ndarray
+            Mask with length equal to the flattened exclusion shape
+        """
+
+        return (self._res_gids != -1)
+
+
+class GenerationSupplyCurvePoint(SupplyCurvePoint):
+    """Single supply curve point with associated reV generation"""
+
+    def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
+                 resolution=64, exclusion_shape=None, offshore_flags=None,
+                 close=True):
+        """
+        Parameters
+        ----------
+        gid : int
+            gid for supply curve point to analyze.
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        gen : str | reV.handlers.Outputs
+            Filepath to .h5 reV generation output results or reV Outputs file
+            handler.
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        resolution : int
+            Number of exclusion points per SC point along an axis.
+            This number**2 is the total number of exclusion points per
+            SC point.
+        exclusion_shape : tuple
+            Shape of the exclusions extent (rows, cols). Inputing this will
+            speed things up considerably.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
+        close : bool
+            Flag to close object file handlers on exit.
+        """
+
+        super().__init__(gid, excl, tm_dset,
+                         excl_dict=excl_dict,
+                         resolution=resolution,
+                         exclusion_shape=exclusion_shape,
+                         close=close,
+                         parse_tm=False)
+
+        self._gen_fpath = None
+        self._gen = None
+
+        self._parse_gen_file(gen)
+
+        self._gen_gids, self._res_gids = self._parse_techmap(tm_dset,
+                                                             gen_index)
+        self._remove_offshore(self._gen_gids, self._res_gids,
+                              offshore_flags=offshore_flags)
+
+    def _parse_gen_file(self, gen):
+        """Parse gen filepath input or handler object and set to attrs.
+
+        Parameters
+        ----------
+        gen : str | reV.handlers.Outputs
+            Filepath to .h5 reV generation output results or reV Outputs file
+            handler.
+        """
+
+        if isinstance(gen, str):
+            self._gen_fpath = gen
+        elif isinstance(gen, Outputs):
+            self._gen_fpath = gen._h5_file
+            self._gen = gen
+        else:
+            raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
+                                        'generation output file path or '
+                                        'output handler, but received: {}'
+                                        .format(type(gen)))
+
+    def _parse_techmap(self, tm_dset, gen_index):
+        """Parse data from the tech map file (exclusions to resource mapping).
+        Raise EmptySupplyCurvePointError if there are no valid resource points
+        in this SC point.
+
+        Parameters
+        ----------
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
+
+        Returns
+        -------
+        gen_gids : np.ndarray
+            1D array with length == number of exclusion points. reV generation
+            gids (gen results index) from the gen_fpath file corresponding to
+            the tech exclusions.
+        res_gids : np.ndarray
+            1D array with length == number of exclusion points. reV resource
+            gids (native resource index) from the original resource data
+            corresponding to the tech exclusions.
+        """
+
+        emsg = ('Supply curve point gid {} has no viable exclusion points '
+                'based on exclusions file: "{}"'
+                .format(self._gid, self._excl_fpath))
+
+        res_gids = super()._parse_techmap(tm_dset)
+
+        mask = (res_gids >= len(gen_index)) | (res_gids == -1)
+        res_gids[mask] = -1
+        gen_gids = gen_index[res_gids]
+        gen_gids[mask] = -1
+        res_gids[(gen_gids == -1)] = -1
+
+        if (gen_gids != -1).sum() == 0:
+            raise EmptySupplyCurvePointError(emsg)
+
+        return gen_gids, res_gids
+
+    def _remove_offshore(self, gen_gids, res_gids, offshore_flags=None):
+        """If offshore flags are available, remove offshore gids from analysis,
+        raise EmptySupplyCurvePointError if there are no valid onshore points
+        in this SC point.
+
+        Parameters
+        ----------
+        gen_gids : np.ndarray
+            1D array with length == number of exclusion points. reV generation
+            gids (gen results index) from the gen_fpath file corresponding to
+            the tech exclusions.
+        res_gids : np.ndarray
+            1D array with length == number of exclusion points. reV resource
+            gids (native resource index) from the original resource data
+            corresponding to the tech exclusions.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
+        """
+
+        if offshore_flags is not None:
+            gen_offshore_flags = offshore_flags[gen_gids]
+            gen_offshore_flags[(gen_gids == -1)] = 0
+            offshore_mask = (gen_offshore_flags == 1)
+            gen_gids[offshore_mask] = -1
+            res_gids[offshore_mask] = -1
+
+            emsg = ('Supply curve point gid {} has no viable onshore '
+                    'exclusion points based on exclusions file: "{}"'
+                    .format(self._gid, self._excl_fpath))
+            if (gen_gids != -1).sum() == 0:
+                raise EmptySupplyCurvePointError(emsg)
+
+    def close(self):
+        """Close all file handlers."""
+        if self._close:
+            super().close()
+            if self._gen is not None:
+                self._gen.close()
+
+    def exclusion_weighted_mean(self, flat_arr):
+        """Calc the exclusions-weighted mean value of a flat array of gen data.
+
+        Parameters
+        ----------
+        flat_arr : np.ndarray
+            Flattened array of resource/generation/econ data. Must be
+            index-able with the self._gen_gids array (must be a 1D array with
+            an entry for every site in the generation extent).
+
+        Returns
+        -------
+        mean : float
+            Mean of flat_arr masked by the binary exclusions then weighted by
+            the non-zero exclusions.
+        """
+        x = flat_arr[self._gen_gids[self.bool_mask]]
+        x *= self.excl_data_flat[self.bool_mask]
+        mean = x.sum() / self.excl_data_flat[self.bool_mask].sum()
+        return mean
 
     @property
     def excl_data(self):
@@ -392,22 +563,6 @@ class SupplyCurvePoint:
                 warn(w)
 
         return self._excl_data
-
-    @property
-    def excl_data_flat(self):
-        """Get the flattened exclusions mask (normalized with expected
-        range: [0, 1]).
-
-        Returns
-        -------
-        _excl_data_flat : np.ndarray
-            1D flattened exclusions data mask.
-        """
-
-        if self._excl_data_flat is None:
-            self._excl_data_flat = self.excl_data.flatten()
-
-        return self._excl_data_flat
 
     @property
     def bool_mask(self):

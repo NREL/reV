@@ -12,7 +12,7 @@ import logging
 from scipy import stats
 
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.points import SupplyCurvePoint
+from reV.supply_curve.points import GenerationSupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       DataShapeError)
@@ -21,7 +21,7 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
 logger = logging.getLogger(__name__)
 
 
-class SupplyCurvePointSummary(SupplyCurvePoint):
+class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
     """Supply curve summary framework with extra methods for summary calc."""
 
     # technology-dependent power density estimates in MW/km2
