@@ -9,13 +9,13 @@ import pprint
 import time
 import h5py
 
-from reV.config.supply_curve_configs import AggregationConfig
+from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
 from reV.utilities.execution import SLURM
 from reV.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST, STRFLOAT
 from reV.utilities.loggers import init_mult
 from reV.utilities.utilities import dict_str_load
 from reV.supply_curve.tech_mapping import TechMapping
-from reV.supply_curve.aggregation import Aggregation
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV.pipeline.status import Status
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def from_config(ctx, config_file, verbose):
     name = ctx.obj['NAME']
 
     # Instantiate the config object
-    config = AggregationConfig(config_file)
+    config = SupplyCurveAggregationConfig(config_file)
 
     # take name from config if not default
     if config.name.lower() != 'rev':
@@ -231,7 +231,7 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
             data_layers = dict_str_load(data_layers)
 
         try:
-            summary = Aggregation.summary(
+            summary = SupplyCurveAggregation.summary(
                 excl_fpath, gen_fpath, tm_dset,
                 excl_dict=excl_dict,
                 res_class_dset=res_class_dset,

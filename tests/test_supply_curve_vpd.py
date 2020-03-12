@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import pytest
 import os
-from reV.supply_curve.aggregation import Aggregation
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 from reV.utilities.exceptions import FileInputError
 
@@ -34,11 +34,12 @@ RTOL = 0.001
 def test_vpd():
     """Test variable power density"""
 
-    s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                            res_class_dset=RES_CLASS_DSET,
-                            res_class_bins=RES_CLASS_BINS,
-                            data_layers=DATA_LAYERS,
-                            max_workers=1, power_density=FVPD)
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1, power_density=FVPD)
 
     vpd = pd.read_csv(FVPD, index_col=0)
     for i in s.index:
@@ -61,21 +62,23 @@ def test_vpd_fractional_excl():
 
     gids_subset = list(range(0, 20))
     excl_dict_1 = {'ri_padus': {'exclude_values': [1]}}
-    s1 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_1,
-                             res_class_dset=RES_CLASS_DSET,
-                             res_class_bins=RES_CLASS_BINS,
-                             data_layers=DATA_LAYERS,
-                             power_density=FVPD,
-                             max_workers=1, gids=gids_subset)
+    s1 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                        excl_dict=excl_dict_1,
+                                        res_class_dset=RES_CLASS_DSET,
+                                        res_class_bins=RES_CLASS_BINS,
+                                        data_layers=DATA_LAYERS,
+                                        power_density=FVPD,
+                                        max_workers=1, gids=gids_subset)
 
     excl_dict_2 = {'ri_padus': {'exclude_values': [1],
                                 'weight': 0.5}}
-    s2 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_2,
-                             res_class_dset=RES_CLASS_DSET,
-                             res_class_bins=RES_CLASS_BINS,
-                             data_layers=DATA_LAYERS,
-                             power_density=FVPD,
-                             max_workers=1, gids=gids_subset)
+    s2 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                        excl_dict=excl_dict_2,
+                                        res_class_dset=RES_CLASS_DSET,
+                                        res_class_bins=RES_CLASS_BINS,
+                                        data_layers=DATA_LAYERS,
+                                        power_density=FVPD,
+                                        max_workers=1, gids=gids_subset)
 
     for i in s1.index:
         cap_full = s1.loc[i, 'capacity']
@@ -90,11 +93,12 @@ def test_vpd_fractional_excl():
 def test_vpd_incomplete():
     """Test an incomplete VPD input and make sure an exception is raised"""
     try:
-        Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                            res_class_dset=RES_CLASS_DSET,
-                            res_class_bins=RES_CLASS_BINS,
-                            data_layers=DATA_LAYERS,
-                            max_workers=1, power_density=FVPDI)
+        SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1, power_density=FVPDI)
     except FileInputError as e:
         if '1314958' in str(e):
             pass

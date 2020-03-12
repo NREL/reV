@@ -228,7 +228,7 @@ class AggFileHandler:
         return self._friction_layer
 
 
-class Aggregation:
+class SupplyCurveAggregation:
     """Supply points aggregation framework."""
 
     def __init__(self, excl_fpath, gen_fpath, tm_dset, excl_dict=None,
@@ -593,11 +593,12 @@ class Aggregation:
                        'check_excl_layers': check_excl_layers}
         with AggFileHandler(*file_args, **file_kwargs) as fhandler:
 
-            inputs = Aggregation._get_input_data(fhandler.gen, gen_fpath,
-                                                 res_class_dset,
-                                                 res_class_bins,
-                                                 cf_dset,
-                                                 lcoe_dset)
+            inputs = SupplyCurveAggregation._get_input_data(fhandler.gen,
+                                                            gen_fpath,
+                                                            res_class_dset,
+                                                            res_class_bins,
+                                                            cf_dset,
+                                                            lcoe_dset)
 
             for gid in gids:
                 for ri, res_bin in enumerate(inputs[1]):
@@ -729,11 +730,12 @@ class Aggregation:
                      self._power_density]
         with AggFileHandler(*file_args, excl_dict=self._excl_dict) as fhandler:
 
-            inp = Aggregation._get_input_data(fhandler.gen, self._gen_fpath,
-                                              self._res_class_dset,
-                                              self._res_class_bins,
-                                              self._cf_dset,
-                                              self._lcoe_dset)
+            inp = SupplyCurveAggregation._get_input_data(fhandler.gen,
+                                                         self._gen_fpath,
+                                                         self._res_class_dset,
+                                                         self._res_class_bins,
+                                                         self._cf_dset,
+                                                         self._lcoe_dset)
 
             res_data, res_class_bins, cf_data, lcoe_data, offshore_flag = inp
 

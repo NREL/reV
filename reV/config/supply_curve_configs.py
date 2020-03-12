@@ -18,7 +18,7 @@ from reV.pipeline.pipeline import Pipeline
 logger = logging.getLogger(__name__)
 
 
-class AggregationConfig(AnalysisConfig):
+class SupplyCurveAggregationConfig(AnalysisConfig):
     """SC Aggregation config."""
 
     NAME = 'agg'
