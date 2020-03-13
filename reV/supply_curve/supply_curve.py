@@ -14,7 +14,7 @@ from warnings import warn
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.utilities.execution import SpawnProcessPool
-from reV.utilities.exceptions import SupplyCurveInputError
+from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,10 @@ class SupplyCurve:
         consider_friction : bool
             Flag to consider friction layer on LCOE.
         """
+
+        logger.info('Supply curve points input: {}'.format(sc_points))
+        logger.info('Transmission table input: {}'.format(trans_table))
+
         trans_costs = transmission_costs
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
@@ -70,7 +74,10 @@ class SupplyCurve:
         self._consider_friction = consider_friction
         self._calculate_total_lcoe_friction()
 
+        mask = ~pd.isna(self._trans_table['sc_gid'])
+        self._trans_table = self._trans_table[mask]
         self._sc_gids = list(np.sort(self._trans_table['sc_gid'].unique()))
+        self._sc_gids = [int(gid) for gid in self._sc_gids]
         self._mask = np.ones((int(1 + max(self._sc_gids)), ), dtype=bool)
 
     def __repr__(self):
@@ -284,7 +291,8 @@ class SupplyCurve:
             feature = TC(trans_table, line_limited=line_limited,
                          **trans_costs)
             cost = []
-            for _, row in trans_table.iterrows():
+            iterrows = trans_table[~pd.isna(trans_table['sc_gid'])].iterrows()
+            for _, row in iterrows:
                 if connectable:
                     capacity = row['capacity']
                 else:
@@ -297,7 +305,9 @@ class SupplyCurve:
 
             cost = np.array(cost, dtype='float32')
 
-        lcot = (cost * fcr) / (trans_table['mean_cf'].values * 8760)
+        mask = ~pd.isna(trans_table['sc_gid'])
+        cf_mean_arr = trans_table.loc[mask, 'mean_cf'].values
+        lcot = (cost * fcr) / (cf_mean_arr * 8760)
 
         logger.info('LCOT cost calculation is complete.')
 
@@ -399,8 +409,10 @@ class SupplyCurve:
         rename = {p: t for p, t in zip(point_merge_cols, table_merge_cols)}
         sc_cap = sc_cap.rename(columns=rename)
 
+        logger.debug('Merging SC table and Trans Table on columns: {}'
+                     .format(table_merge_cols))
         trans_table = trans_table.merge(sc_cap, on=table_merge_cols,
-                                        how='inner')
+                                        how='left')
 
         sc_gids = set(sc_cap['sc_gid'].unique())
         trans_sc_gids = set(trans_table['sc_gid'].unique())
@@ -413,6 +425,17 @@ class SupplyCurve:
                    .format(len(missing), missing))
             logger.warning(msg)
             warn(msg)
+        if not any(trans_sc_gids) or not any(sc_gids):
+            msg = ('Merging of sc points table and transmission features '
+                   'table failed with {} original sc gids and {} transmission '
+                   'sc gids after table merge.'
+                   .format(len(sc_gids), len(trans_sc_gids)))
+            logger.error(msg)
+            raise SupplyCurveError(msg)
+
+        logger.debug('There are {} original SC gids and {} sc gids in the '
+                     'merged transmission table.'
+                     .format(len(sc_gids), len(trans_sc_gids)))
 
         trans_table = SupplyCurve._feature_capacity(trans_table,
                                                     trans_costs=trans_costs)
@@ -422,8 +445,10 @@ class SupplyCurve:
                                                line_limited=line_limited,
                                                connectable=connectable,
                                                max_workers=max_workers)
-        trans_table['trans_cap_cost'] = cost
-        trans_table['lcot'] = lcot
+
+        mask = ~pd.isna(trans_table['sc_gid'])
+        trans_table.loc[mask, 'trans_cap_cost'] = cost
+        trans_table.loc[mask, 'lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
                                      + trans_table['mean_lcoe'])
 
@@ -484,7 +509,7 @@ class SupplyCurve:
         init_list = [np.nan] * int(1 + np.max(self._sc_gids))
         conn_lists = {k: deepcopy(init_list) for k in columns}
 
-        trans_sc_gids = trans_table['sc_gid'].values
+        trans_sc_gids = trans_table['sc_gid'].values.astype(int)
         trans_gids = trans_table['trans_line_gid'].values
         trans_cap = trans_table['avail_cap'].values
         capacities = trans_table['capacity'].values
