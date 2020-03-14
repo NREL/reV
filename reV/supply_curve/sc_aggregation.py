@@ -5,19 +5,18 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
-from abc import ABC, abstractmethod
 from concurrent.futures import as_completed
-import os
-import h5py
+import logging
 import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 from warnings import warn
-import logging
 
 from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
-from reV.supply_curve.exclusions import ExclusionMaskFromDict, FrictionMask
+from reV.supply_curve.aggregation import (AbstractAggFileHandler,
+                                          AbstractAggregation)
+from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
 from reV.utilities.execution import SpawnProcessPool
@@ -25,11 +24,10 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       InputWarning, SupplyCurveInputError)
 
-
 logger = logging.getLogger(__name__)
 
 
-class AggFileHandler:
+class SupplyCurveAggFileHandler(AbstractAggFileHandler):
     """Simple framework to handle aggregation file context managers."""
 
     def __init__(self, excl_fpath, gen_fpath=None, data_layers=None,
@@ -68,12 +66,10 @@ class AggFileHandler:
             Run a pre-flight check on each exclusion layer to ensure they
             contain un-excluded values
         """
-
-        self._excl_fpath = excl_fpath
-        self._excl = ExclusionMaskFromDict(excl_fpath, layers_dict=excl_dict,
-                                           min_area=min_area,
-                                           kernel=area_filter_kernel,
-                                           check_layers=check_excl_layers)
+        super().__init__(excl_fpath, excl_dict=excl_dict,
+                         area_filter_kernel=area_filter_kernel,
+                         min_area=min_area,
+                         check_excl_layers=check_excl_layers)
 
         self._gen = None
         if gen_fpath is not None:
@@ -93,14 +89,6 @@ class AggFileHandler:
                      .format(self._friction_layer.shape, self._excl.shape))
                 logger.error(e)
                 raise FileInputError(e)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-        if type is not None:
-            raise
 
     def _open_data_layers(self, data_layers):
         """Open data layer Exclusion h5 handlers.
@@ -233,230 +221,16 @@ class AggFileHandler:
         return self._friction_layer
 
 
-class AbstractAggregation(ABC):
-    """Abstract supply points aggregation framework."""
-
-    def __init__(self, excl_fpath, tm_dset, excl_dict=None,
-                 resolution=64, gids=None, max_workers=None,
-                 check_excl_layers=False):
-        """
-        Parameters
-        ----------
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
-        tm_dset : str
-            Dataset name in the techmap file containing the
-            exclusions-to-resource mapping data.
-        excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
-        max_workers : int | None
-            Number of cores to run summary on. 1 is serial, None is all
-            available cpus.
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
-        """
-
-        self._excl_fpath = excl_fpath
-        self._tm_dset = tm_dset
-        self._excl_dict = excl_dict
-        self._resolution = resolution
-        self._check_excl_layers = check_excl_layers
-        if check_excl_layers:
-            logger.debug('Exclusions layers will be checked for un-excluded '
-                         'values!')
-
-        if max_workers is None:
-            max_workers = os.cpu_count()
-
-        self._max_workers = max_workers
-
-        if gids is None:
-            with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
-                gids = np.array(range(len(sc)), dtype=np.uint32)
-        elif not isinstance(gids, np.ndarray):
-            gids = np.array(gids)
-
-        self._gids = gids
-
-        self._check_files()
-
-    def _check_files(self):
-        """Do a preflight check on input files"""
-
-        if not os.path.exists(self._excl_fpath):
-            raise FileNotFoundError('Could not find required input file: '
-                                    '{}'.format(self._excl_fpath))
-
-        with h5py.File(self._excl_fpath, 'r') as f:
-            if self._tm_dset not in f:
-                raise FileInputError('Could not find techmap dataset "{}" '
-                                     'in exclusions file: {}'
-                                     .format(self._tm_dset,
-                                             self._excl_fpath))
-
-    @staticmethod
-    @abstractmethod
-    def run_serial(sc_point_method, excl_fpath, tm_dset,
-                   excl_dict=None, resolution=64, gids=None, ex_area=0.0081,
-                   close=False, check_excl_layers=False,
-                   args=None, kwargs=None):
-        """Standalone method to create agg summary - can be parallelized.
-
-        Parameters
-        ----------
-        sc_point_method : method
-            Supply Curve Point Method to operate on a single SC point.
-        excl_fpath : str
-            Filepath to exclusions h5 with techmap dataset.
-        tm_dset : str
-            Dataset name in the exclusions file containing the
-            exclusions-to-resource mapping data.
-        excl_dict : dict | None
-            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
-        resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
-        gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
-        ex_area : float
-            Area of an exclusion cell (square km).
-        close : bool
-            Flag to close object file handlers on exit.
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
-
-        Returns
-        -------
-        output : list
-            List of output objects from sc_point_method.
-        """
-
-        if args is None:
-            args = []
-        if kwargs is None:
-            kwargs = {}
-
-        output = []
-
-        with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
-            points = sc.points
-            exclusion_shape = sc.exclusions.shape
-            if gids is None:
-                gids = range(len(sc))
-
-        # pre-extract handlers so they are not repeatedly initialized
-        file_kwargs = {'excl_dict': excl_dict,
-                       'check_excl_layers': check_excl_layers}
-        with AggFileHandler(excl_fpath, **file_kwargs) as fhandler:
-
-            for gid in gids:
-                try:
-                    gid_out = sc_point_method(
-                        gid,
-                        fhandler.exclusions,
-                        tm_dset,
-                        *args,
-                        excl_dict=excl_dict,
-                        resolution=resolution,
-                        exclusion_shape=exclusion_shape,
-                        close=close,
-                        **kwargs)
-
-                except EmptySupplyCurvePointError:
-                    pass
-
-                else:
-                    output.append(gid_out)
-
-        return output
-
-    @abstractmethod
-    def run_parallel(self, sc_point_method, chunk_point_len=1000,
-                     args=None, kwargs=None, close=False):
-        """Get the supply curve points aggregation summary using futures.
-
-        Parameters
-        ----------
-        sc_point_method : method
-            Supply Curve Point Method to operate on a single SC point.
-        chunk_point_len : int
-            Number of SC points to process on a single parallel worker.
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
-        close : bool
-            Flag to close object file handlers on exit.
-
-        Returns
-        -------
-        summary : list
-            List of outputs from sc_point_method.
-        """
-
-        chunks = np.array_split(
-            self._gids, int(np.ceil(len(self._gids) / chunk_point_len)))
-
-        logger.info('Running supply curve point aggregation for '
-                    'points {} through {} at a resolution of {} '
-                    'on {} cores in {} chunks.'
-                    .format(self._gids[0], self._gids[-1], self._resolution,
-                            self._max_workers, len(chunks)))
-
-        n_finished = 0
-        futures = []
-        output = []
-
-        with SpawnProcessPool(max_workers=self._max_workers) as executor:
-
-            # iterate through split executions, submitting each to worker
-            for gid_set in chunks:
-                # submit executions and append to futures list
-                futures.append(executor.submit(
-                    self.run_serial,
-                    sc_point_method, self._excl_fpath, self._tm_dset,
-                    excl_dict=self._excl_dict,
-                    resolution=self._resolution,
-                    gids=gid_set,
-                    close=close,
-                    check_excl_layers=self._check_excl_layers,
-                    args=args,
-                    kwargs=kwargs))
-
-            # gather results
-            for future in as_completed(futures):
-                n_finished += 1
-                logger.info('Parallel aggregation futures collected: '
-                            '{} out of {}'
-                            .format(n_finished, len(chunks)))
-                output += future.result()
-
-        return output
-
-
 class SupplyCurveAggregation(AbstractAggregation):
     """Supply points aggregation framework."""
 
     def __init__(self, excl_fpath, gen_fpath, tm_dset, excl_dict=None,
+                 area_filter_kernel='queen', min_area=None,
+                 check_excl_layers=False, resolution=64, gids=None,
                  res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                 data_layers=None, resolution=64, power_density=None,
-                 friction_fpath=None, friction_dset=None,
-                 gids=None, area_filter_kernel='queen', min_area=None,
-                 max_workers=None, check_excl_layers=False):
+                 data_layers=None, power_density=None,
+                 friction_fpath=None, friction_dset=None):
         """
         Parameters
         ----------
@@ -469,6 +243,19 @@ class SupplyCurveAggregation(AbstractAggregation):
             exclusions-to-resource mapping data.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | None
+            Minimum required contiguous area filter in sq-km
+        check_excl_layers : bool
+            Run a pre-flight check on each exclusion layer to ensure they
+            contain un-excluded values
+        resolution : int | None
+            SC resolution, must be input in combination with gid. Prefered
+            option is to use the row/col slices to define the SC point instead.
+        gids : list | None
+            List of gids to get summary for (can use to subset if running in
+            parallel), or None for all gids in the SC extent.
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -483,9 +270,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
             and "fpath".
-        resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
         power_density : float | str | None
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
@@ -497,25 +281,13 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
             exclusions.
-        gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        max_workers : int | None
-            Number of cores to run summary on. 1 is serial, None is all
-            available cpus.
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
         """
 
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
-                         resolution=resolution, gids=gids,
-                         max_workers=max_workers,
-                         check_excl_layers=check_excl_layers)
+                         area_filter_kernel=area_filter_kernel,
+                         min_area=min_area,
+                         check_excl_layers=check_excl_layers,
+                         resolution=resolution, gids=gids)
 
         self._gen_fpath = gen_fpath
         self._res_class_dset = res_class_dset
@@ -526,8 +298,6 @@ class SupplyCurveAggregation(AbstractAggregation):
         self._friction_fpath = friction_fpath
         self._friction_dset = friction_dset
         self._data_layers = data_layers
-        self._area_filter_kernel = area_filter_kernel
-        self._min_area = min_area
 
         logger.debug('Resource class bins: {}'.format(self._res_class_bins))
 
@@ -697,13 +467,13 @@ class SupplyCurveAggregation(AbstractAggregation):
 
     @staticmethod
     def run_serial(excl_fpath, gen_fpath, tm_dset, gen_index,
-                   excl_dict=None, res_class_dset=None,
+                   excl_dict=None, area_filter_kernel='queen', min_area=None,
+                   check_excl_layers=False, resolution=64, gids=None,
+                   close=False, args=None, res_class_dset=None,
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', data_layers=None,
-                   resolution=64, power_density=None, friction_fpath=None,
-                   friction_dset=None, gids=None,
-                   area_filter_kernel='queen', min_area=None, args=None,
-                   ex_area=0.0081, close=False, check_excl_layers=False):
+                   power_density=None, friction_fpath=None, friction_dset=None,
+                   ex_area=0.0081, ):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -721,6 +491,23 @@ class SupplyCurveAggregation(AbstractAggregation):
             generation run.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | None
+            Minimum required contiguous area filter in sq-km
+        check_excl_layers : bool
+            Run a pre-flight check on each exclusion layer to ensure they
+            contain un-excluded values
+        resolution : int | None
+            SC resolution, must be input in combination with gid. Prefered
+            option is to use the row/col slices to define the SC point instead.
+        gids : list | None
+            List of gids to get summary for (can use to subset if running in
+            parallel), or None for all gids in the SC extent.
+        close : bool
+            Flag to close object file handlers on exit.
+        args : list | None
+            List of positional args for sc_point_method
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -735,9 +522,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
             and "fpath".
-        resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
         power_density : float | str | None
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
@@ -749,27 +533,8 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
             exclusions.
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        args : tuple | list | None
-            List of summary arguments to include. None defaults to all
-            available args defined in the class attr.
         ex_area : float
             Area of an exclusion cell (square km).
-        close : bool
-            Flag to close object file handlers on exit.
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
 
         Returns
         -------
@@ -795,9 +560,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                        'friction_fpath': friction_fpath,
                        'friction_dset': friction_dset,
                        'check_excl_layers': check_excl_layers}
-        with AggFileHandler(excl_fpath, **file_kwargs) as fhandler:
+        with SupplyCurveAggFileHandler(excl_fpath, **file_kwargs) as fh:
 
-            inputs = SupplyCurveAggregation._get_input_data(fhandler.gen,
+            inputs = SupplyCurveAggregation._get_input_data(fh.gen,
                                                             gen_fpath,
                                                             res_class_dset,
                                                             res_class_bins,
@@ -809,24 +574,24 @@ class SupplyCurveAggregation(AbstractAggregation):
                     try:
                         pointsum = SupplyCurvePointSummary.summary(
                             gid,
-                            fhandler.exclusions,
-                            fhandler.gen,
+                            fh.exclusions,
+                            fh.gen,
                             tm_dset,
                             gen_index,
                             res_class_dset=inputs[0],
                             res_class_bin=res_bin,
                             cf_dset=inputs[2],
                             lcoe_dset=inputs[3],
-                            data_layers=fhandler.data_layers,
+                            data_layers=fh.data_layers,
                             resolution=resolution,
                             exclusion_shape=exclusion_shape,
-                            power_density=fhandler.power_density,
+                            power_density=fh.power_density,
                             args=args,
                             excl_dict=excl_dict,
                             ex_area=ex_area,
                             close=close,
                             offshore_flags=inputs[4],
-                            friction_layer=fhandler.friction_layer)
+                            friction_layer=fh.friction_layer)
 
                     except EmptySupplyCurvePointError:
                         pass
@@ -841,7 +606,8 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def run_parallel(self, args=None, ex_area=0.0081, close=False):
+    def run_parallel(self, args=None, ex_area=0.0081, close=False,
+                     max_workers=None):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
@@ -853,6 +619,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             Area of an exclusion cell (square km).
         close : bool
             Flag to close object file handlers on exit.
+        max_workers : int | None
+            Number of cores to run summary on. None is all
+            available cpus.
 
         Returns
         -------
@@ -867,13 +636,13 @@ class SupplyCurveAggregation(AbstractAggregation):
                     'points {} through {} at a resolution of {} '
                     'on {} cores in {} chunks.'
                     .format(self._gids[0], self._gids[-1], self._resolution,
-                            self._max_workers, len(chunks)))
+                            max_workers, len(chunks)))
 
         n_finished = 0
         futures = []
         summary = []
 
-        with SpawnProcessPool(max_workers=self._max_workers) as executor:
+        with SpawnProcessPool(max_workers=max_workers) as executor:
 
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
@@ -934,9 +703,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                        'data_layers': self._data_layers,
                        'power_density': self._power_density,
                        'excl_dict': self._excl_dict}
-        with AggFileHandler(self._excl_fpath, **file_kwargs) as fhandler:
+        with SupplyCurveAggFileHandler(self._excl_fpath, **file_kwargs) as fh:
 
-            inp = SupplyCurveAggregation._get_input_data(fhandler.gen,
+            inp = SupplyCurveAggregation._get_input_data(fh.gen,
                                                          self._gen_fpath,
                                                          self._res_class_dset,
                                                          self._res_class_bins,
@@ -952,7 +721,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 for gen_gid, offshore in enumerate(offshore_flag):
                     if offshore:
 
-                        if 'offshore_res_gids' not in fhandler.gen.meta:
+                        if 'offshore_res_gids' not in fh.gen.meta:
                             e = ('Offshore sites found in wind data, but '
                                  '"offshore_res_gids" not found in the '
                                  'meta data. You must run the offshore wind '
@@ -961,13 +730,13 @@ class SupplyCurveAggregation(AbstractAggregation):
                             raise SupplyCurveInputError(e)
 
                         # pylint: disable-msg=E1101
-                        farm_gid = fhandler.gen.meta.loc[gen_gid, 'gid']
-                        latitude = fhandler.gen.meta.loc[gen_gid, 'latitude']
-                        longitude = fhandler.gen.meta.loc[gen_gid, 'longitude']
-                        timezone = fhandler.gen.meta.loc[gen_gid, 'timezone']
-                        res_gids = fhandler.gen.meta\
+                        farm_gid = fh.gen.meta.loc[gen_gid, 'gid']
+                        latitude = fh.gen.meta.loc[gen_gid, 'latitude']
+                        longitude = fh.gen.meta.loc[gen_gid, 'longitude']
+                        timezone = fh.gen.meta.loc[gen_gid, 'timezone']
+                        res_gids = fh.gen.meta\
                             .loc[gen_gid, 'offshore_res_gids']
-                        sub_type = fhandler.gen.meta.loc[gen_gid, 'sub_type']
+                        sub_type = fh.gen.meta.loc[gen_gid, 'sub_type']
 
                         res_class = 0
                         if (res_class_bins[0] is not None
@@ -1219,7 +988,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                   power_density=power_density, gids=gids,
                   friction_fpath=friction_fpath, friction_dset=friction_dset,
                   area_filter_kernel=area_filter_kernel, min_area=min_area,
-                  max_workers=max_workers, check_excl_layers=check_excl_layers)
+                  check_excl_layers=check_excl_layers)
 
         if max_workers == 1:
             afk = agg._area_filter_kernel
@@ -1242,7 +1011,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                      check_excl_layers=check_excl_layers)
         else:
             summary = agg.run_parallel(args=args, ex_area=ex_area,
-                                       close=close)
+                                       close=close, max_workers=max_workers)
 
         summary = agg.run_offshore(summary,
                                    offshore_capacity=offshore_capacity)
