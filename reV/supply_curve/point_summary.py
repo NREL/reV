@@ -689,13 +689,12 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         return summary
 
     @classmethod
-    def summary(cls, gid, excl_fpath, gen_fpath, tm_dset,
-                gen_index, args=None, data_layers=None,
+    def summary(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                 excl_dict=None, res_class_dset=None, res_class_bin=None,
-                ex_area=0.0081, power_density=None,
-                cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                resolution=64, exclusion_shape=None, close=False,
-                offshore_flags=None, friction_layer=None):
+                ex_area=0.0081, power_density=None, cf_dset='cf_mean-means',
+                lcoe_dset='lcoe_fcr-means', resolution=64,
+                exclusion_shape=None, close=False, offshore_flags=None,
+                friction_layer=None, args=None, data_layers=None):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -703,23 +702,16 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         gid : int
             gid for supply curve point to analyze.
         excl_fpath : str
-            Filepath to exclusions geotiff.
+            Filepath to exclusions h5.
         gen_fpath : str
             Filepath to .h5 reV generation output results.
         tm_dset : str
             Dataset name in the techmap file containing the
-            exclusions-to-generation mapping data.
+            exclusions-to-resource mapping data.
         gen_index : np.ndarray
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
             generation run.
-        args : tuple | list | None
-            List of summary arguments to include. None defaults to all
-            available args defined in the class attr.
-        data_layers : None | dict
-            Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "dset", "method",
-            and "fpath".
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
             None if excl input is pre-initialized.
@@ -751,9 +743,16 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         offshore_flags : np.ndarray | None
             Array of offshore boolean flags if available from wind generation
             data. None if offshore flag is not available.
-        friction_layer : None | ExclusionMask
+        friction_layer : None | FrictionMask
             Friction layer with scalar friction values if valid friction inputs
             were entered. Otherwise, None to not apply friction layer.
+        args : tuple | list, optional
+            List of summary arguments to include. None defaults to all
+            available args defined in the class attr, by default None
+        data_layers : dict, optional
+            Aggregation data layers. Must be a dictionary keyed by data label
+            name. Each value must be another dictionary with "dset", "method",
+            and "fpath", by default None
 
         Returns
         -------
