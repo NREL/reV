@@ -895,16 +895,88 @@ class SupplyCurveAggregation(AbstractAggregation):
         summary.index.name = 'sc_gid'
         return summary
 
+    def summarize(self, args=None, ex_area=0.0081, close=False,
+                  max_workers=None, offshore_capacity=600,
+                  offshore_gid_counts=494, offshore_pixel_area=4):
+        """
+        Get the supply curve points aggregation summary
+
+        Parameters
+        ----------
+        args : tuple | list | None
+            List of summary arguments to include. None defaults to all
+            available args defined in the class attr.
+        ex_area : float
+            Area of an exclusion cell (square km).
+        close : bool
+            Flag to close object file handlers on exit.
+        max_workers : int | None
+            Number of cores to run summary on. None is all
+            available cpus.
+        offshore_capacity : int | float
+            Offshore resource pixel generation capacity in MW.
+        offshore_gid_counts : int
+            Approximate number of exclusion pixels that would fall into an
+            offshore pixel area.
+        offshore_pixel_area : int | float
+            Approximate area of offshore resource pixels in km2.
+
+        Returns
+        -------
+        summary : list
+            List of dictionaries, each being an SC point summary.
+        """
+        if max_workers == 1:
+            afk = self._area_filter_kernel
+            chk = self._check_excl_layers
+            summary = self.run_serial(self._excl_fpath, self._gen_fpath,
+                                      self._tm_dset, self._gen_index,
+                                      excl_dict=self._excl_dict,
+                                      res_class_dset=self._res_class_dset,
+                                      res_class_bins=self._res_class_bins,
+                                      cf_dset=self._cf_dset,
+                                      lcoe_dset=self._lcoe_dset,
+                                      data_layers=self._data_layers,
+                                      resolution=self._resolution,
+                                      power_density=self._power_density,
+                                      friction_fpath=self._friction_fpath,
+                                      friction_dset=self._friction_dset,
+                                      area_filter_kernel=afk,
+                                      min_area=self._min_area,
+                                      gids=self._gids, args=args,
+                                      ex_area=ex_area, close=close,
+                                      check_excl_layers=chk)
+        else:
+            summary = self.run_parallel(args=args, ex_area=ex_area,
+                                        close=close, max_workers=max_workers)
+
+        summary = self.run_offshore(summary,
+                                    offshore_capacity=offshore_capacity,
+                                    offshore_gid_counts=offshore_gid_counts,
+                                    offshore_pixel_area=offshore_pixel_area)
+
+        if not any(summary):
+            e = ('Supply curve selfregation found no non-excluded SC points. '
+                 'Please check your exclusions or subset SC GID selection.')
+            logger.error(e)
+            raise EmptySupplyCurvePointError(e)
+
+        summary = self._summary_to_df(summary)
+        summary = self._offshore_data_layers(summary)
+
+        return summary
+
     @classmethod
     def summary(cls, excl_fpath, gen_fpath, tm_dset, excl_dict=None,
+                area_filter_kernel='queen', min_area=None,
+                check_excl_layers=False, resolution=64, gids=None,
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                data_layers=None, resolution=64, power_density=None,
+                data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
-                offshore_capacity=600, gids=None,
-                area_filter_kernel='queen', min_area=None,
-                max_workers=None, args=None, ex_area=0.0081, close=False,
-                check_excl_layers=False):
+                args=None, ex_area=0.0081, close=False,
+                max_workers=None, offshore_capacity=600,
+                offshore_gid_counts=494, offshore_pixel_area=4):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -914,10 +986,23 @@ class SupplyCurveAggregation(AbstractAggregation):
         gen_fpath : str
             Filepath to .h5 reV generation output results.
         tm_dset : str
-            Dataset name in the exclusions file containing the
+            Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | None
+            Minimum required contiguous area filter in sq-km
+        check_excl_layers : bool
+            Run a pre-flight check on each exclusion layer to ensure they
+            contain un-excluded values
+        resolution : int | None
+            SC resolution, must be input in combination with gid. Prefered
+            option is to use the row/col slices to define the SC point instead.
+        gids : list | None
+            List of gids to get summary for (can use to subset if running in
+            parallel), or None for all gids in the SC extent.
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -932,9 +1017,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
             and "fpath".
-        resolution : int | None
-            SC resolution, must be input in combination with gid. Prefered
-            option is to use the row/col slices to define the SC point instead.
         power_density : float | str | None
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
@@ -946,24 +1028,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
             exclusions.
-        offshore_capacity : int | float
-            Offshore resource pixel generation capacity in MW.
-        gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        area_filter_kernel : str
-            Contiguous area filter method to use on final exclusions mask
-        min_area : float | None
-            Minimum required contiguous area filter in sq-km
-        max_workers : int | None
-            Number of cores to run summary on. 1 is serial, None is all
-            available cpus.
-        option : str
-            Output dtype option (dict, dataframe).
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
@@ -971,9 +1035,16 @@ class SupplyCurveAggregation(AbstractAggregation):
             Area of an exclusion cell (square km).
         close : bool
             Flag to close object file handlers on exit.
-        check_excl_layers : bool
-            Run a pre-flight check on each exclusion layer to ensure they
-            contain un-excluded values
+        max_workers : int | None
+            Number of cores to run summary on. None is all
+            available cpus.
+        offshore_capacity : int | float
+            Offshore resource pixel generation capacity in MW.
+        offshore_gid_counts : int
+            Approximate number of exclusion pixels that would fall into an
+            offshore pixel area.
+        offshore_pixel_area : int | float
+            Approximate area of offshore resource pixels in km2.
 
         Returns
         -------
@@ -990,39 +1061,10 @@ class SupplyCurveAggregation(AbstractAggregation):
                   area_filter_kernel=area_filter_kernel, min_area=min_area,
                   check_excl_layers=check_excl_layers)
 
-        if max_workers == 1:
-            afk = agg._area_filter_kernel
-            summary = agg.run_serial(agg._excl_fpath, agg._gen_fpath,
-                                     agg._tm_dset, agg._gen_index,
-                                     excl_dict=agg._excl_dict,
-                                     res_class_dset=agg._res_class_dset,
-                                     res_class_bins=agg._res_class_bins,
-                                     cf_dset=agg._cf_dset,
-                                     lcoe_dset=agg._lcoe_dset,
-                                     data_layers=agg._data_layers,
-                                     resolution=agg._resolution,
-                                     power_density=agg._power_density,
-                                     friction_fpath=agg._friction_fpath,
-                                     friction_dset=agg._friction_dset,
-                                     area_filter_kernel=afk,
-                                     min_area=agg._min_area,
-                                     gids=gids, args=args,
-                                     ex_area=ex_area, close=close,
-                                     check_excl_layers=check_excl_layers)
-        else:
-            summary = agg.run_parallel(args=args, ex_area=ex_area,
-                                       close=close, max_workers=max_workers)
-
-        summary = agg.run_offshore(summary,
-                                   offshore_capacity=offshore_capacity)
-
-        if not any(summary):
-            e = ('Supply curve aggregation found no non-excluded SC points. '
-                 'Please check your exclusions or subset SC GID selection.')
-            logger.error(e)
-            raise EmptySupplyCurvePointError(e)
-
-        summary = agg._summary_to_df(summary)
-        summary = agg._offshore_data_layers(summary)
+        summary = agg.summarize(args=args, ex_area=ex_area, close=close,
+                                max_workers=max_workers,
+                                offshore_capacity=offshore_capacity,
+                                offshore_gid_counts=offshore_gid_counts,
+                                offshore_pixel_area=offshore_pixel_area)
 
         return summary

@@ -225,9 +225,11 @@ class AbstractAggregation(ABC):
 
         return output
 
+    @abstractmethod
     def run_parallel(self, sc_point_method, args=None, kwargs=None,
                      close=False, max_workers=None, chunk_point_len=1000):
-        """Get the supply curve points aggregation summary using futures.
+        """
+        Aggregate with sc_point_method in parallel
 
         Parameters
         ----------
@@ -290,12 +292,64 @@ class AbstractAggregation(ABC):
 
         return output
 
+    def aggregate(self, sc_point_method, args=None, kwargs=None,
+                  close=False, max_workers=None, chunk_point_len=1000):
+        """
+        Aggregate with sc_point_method
+
+        Parameters
+        ----------
+        args : list | None
+            List of positional args for sc_point_method
+        kwargs : dict | None
+            Dict of kwargs for sc_point_method
+        close : bool
+            Flag to close object file handlers on exit.
+        max_workers : int | None
+            Number of cores to run summary on. None is all
+            available cpus.
+        chunk_point_len : int
+            Number of SC points to process on a single parallel worker.
+
+        Returns
+        -------
+        summary : list
+            List of outputs from sc_point_method.
+        """
+        if max_workers is None:
+            max_workers = os.cpu_count()
+
+        if max_workers == 1:
+            agg = self.run_serial(sc_point_method, self._excl_fpath,
+                                  self._tm_dset,
+                                  excl_dict=self._excl_dict,
+                                  area_filter_kernel=self._area_filter_kernel,
+                                  min_area=self._min_area,
+                                  check_excl_layers=self._check_excl_layers,
+                                  resolution=self._resolution,
+                                  gids=self._gids,
+                                  close=close, args=args,
+                                  kwargs=kwargs)
+        else:
+            agg = self.run_parallel(sc_point_method, args=args,
+                                    kwargs=kwargs, close=close,
+                                    max_workers=max_workers,
+                                    chunk_point_len=chunk_point_len)
+
+        if not any(agg):
+            e = ('Supply curve aggregation found no non-excluded SC points. '
+                 'Please check your exclusions or subset SC GID selection.')
+            logger.error(e)
+            raise EmptySupplyCurvePointError(e)
+
+        return agg
+
     @classmethod
-    def summary(cls, excl_fpath, tm_dset, sc_point_method, excl_dict=None,
-                area_filter_kernel='queen', min_area=None,
-                check_excl_layers=False, resolution=64, gids=None,
-                args=None, kwargs=None, close=False, max_workers=None,
-                chunk_point_len=1000):
+    def run(cls, excl_fpath, tm_dset, sc_point_method, excl_dict=None,
+            area_filter_kernel='queen', min_area=None,
+            check_excl_layers=False, resolution=64, gids=None,
+            args=None, kwargs=None, close=False, max_workers=None,
+            chunk_point_len=1000):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -347,32 +401,8 @@ class AbstractAggregation(ABC):
                   check_excl_layers=check_excl_layers, resolution=resolution,
                   gids=gids)
 
-        if max_workers is None:
-            max_workers = os.cpu_count()
+        aggregation = agg.aggregate(sc_point_method, args=args, kwargs=kwargs,
+                                    close=close, max_workers=max_workers,
+                                    chunk_point_len=chunk_point_len)
 
-        if max_workers == 1:
-            afk = agg._area_filter_kernel
-
-            summary = agg.run_serial(sc_point_method, agg._excl_fpath,
-                                     agg._tm_dset,
-                                     excl_dict=agg._excl_dict,
-                                     area_filter_kernel=afk,
-                                     min_area=agg._min_area,
-                                     check_excl_layers=agg._check_excl_layers,
-                                     resolution=agg._resolution,
-                                     gids=agg._gids,
-                                     close=close, args=args,
-                                     kwargs=kwargs)
-        else:
-            summary = agg.run_parallel(sc_point_method, args=args,
-                                       kwargs=kwargs, close=close,
-                                       max_workers=max_workers,
-                                       chunk_point_len=chunk_point_len)
-
-        if not any(summary):
-            e = ('Supply curve aggregation found no non-excluded SC points. '
-                 'Please check your exclusions or subset SC GID selection.')
-            logger.error(e)
-            raise EmptySupplyCurvePointError(e)
-
-        return summary
+        return aggregation
