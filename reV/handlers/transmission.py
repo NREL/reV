@@ -48,6 +48,7 @@ class TransmissionFeatures:
             attached lines, legacy method
         """
 
+        logger.debug('Trans table input: {}'.format(trans_table))
         logger.debug('Line tie in cost: {} $/MW'.format(line_tie_in_cost))
         logger.debug('Line cost: {} $/MW-mile'.format(line_cost))
         logger.debug('Station tie in cost: {} $/MW'
@@ -68,6 +69,7 @@ class TransmissionFeatures:
         self._available_capacity_frac = available_capacity
 
         self._features = self._get_features(trans_table)
+        self._check_feature_dependencies()
 
         self._feature_gid_list = list(self._features.keys())
         self._available_mask = np.ones(
@@ -227,6 +229,23 @@ class TransmissionFeatures:
         features = self._features_from_table(trans_table)
 
         return features
+
+    def _check_feature_dependencies(self):
+        """Check features for dependencies that are missing and raise error."""
+        missing = {}
+        for gid, feature_dict in self._features.items():
+            for line_gid in feature_dict.get('lines', []):
+                if line_gid not in self._features:
+                    if gid not in missing:
+                        missing[gid] = []
+                    missing[gid].append(line_gid)
+
+        if any(missing):
+            emsg = ('Transmission feature table has {} parent features that '
+                    'depend on missing lines. Missing dependencies: {}'
+                    .format(len(missing), missing))
+            logger.error(emsg)
+            raise RuntimeError(emsg)
 
     @staticmethod
     def _calc_cost(distance, line_cost=3667, tie_in_cost=0,

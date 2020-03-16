@@ -14,7 +14,7 @@ from warnings import warn
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.utilities.execution import SpawnProcessPool
-from reV.utilities.exceptions import SupplyCurveInputError
+from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 
 logger = logging.getLogger(__name__)
 
@@ -55,23 +55,30 @@ class SupplyCurve:
         consider_friction : bool
             Flag to consider friction layer on LCOE.
         """
+
+        logger.info('Supply curve points input: {}'.format(sc_points))
+        logger.info('Transmission table input: {}'.format(trans_table))
+
         trans_costs = transmission_costs
         self._sc_points = self._parse_sc_points(sc_points,
                                                 sc_features=sc_features)
-        self._trans_table = self._parse_trans_table(self._sc_points,
-                                                    trans_table, fcr,
-                                                    trans_costs=trans_costs,
-                                                    line_limited=line_limited,
-                                                    connectable=connectable,
-                                                    max_workers=max_workers)
+        self._trans_table = self._parse_trans_table(trans_table)
+        self._trans_table = self._merge_sc_trans_tables(self._sc_points,
+                                                        self._trans_table)
+        self._check_sc_trans_table(self._sc_points, self._trans_table)
+        self._trans_table = self._add_trans_lcot(self._trans_table, fcr,
+                                                 trans_costs=trans_costs,
+                                                 line_limited=line_limited,
+                                                 connectable=connectable,
+                                                 max_workers=max_workers)
         self._trans_features = self._create_handler(self._trans_table,
                                                     trans_costs=trans_costs)
 
         self._consider_friction = consider_friction
         self._calculate_total_lcoe_friction()
 
-        self._sc_gids = list(np.sort(self._trans_table['sc_gid'].unique()))
-        self._mask = np.ones((int(1 + max(self._sc_gids)), ), dtype=bool)
+        out = self._parse_sc_gids(self._trans_table)
+        self._trans_table, self._sc_gids, self._mask = out
 
     def __repr__(self):
         msg = "{} with {} points".format(self.__class__.__name__, len(self))
@@ -98,7 +105,7 @@ class SupplyCurve:
 
         Parameters
         ----------
-        table : str
+        table : str | pd.DataFrame
             Path to .csv or .json or DataFrame to parse
 
         Returns
@@ -155,6 +162,38 @@ class SupplyCurve:
                      .format(sc_points.columns.values.tolist()))
 
         return sc_points
+
+    @staticmethod
+    def _parse_sc_gids(trans_table, gid_key='sc_gid'):
+        """Filter the trans table, extract unique sc gids, make bool mask.
+
+        Parameters
+        ----------
+        trans_table : pd.DataFrame
+            reV Supply Curve table joined with transmission features table.
+        gid_key : str
+            Column label in trans_table containing the supply curve points
+            primary key.
+
+        Returns
+        -------
+        trans_table : pd.DataFrame
+            Same as input but filtered to only include non-nan
+            supply curve gids.
+        sc_gids : list
+            List of unique integer supply curve gids (non-nan)
+        mask : np.ndarray
+            Boolean array initialized as true. Length is equal to the maximum
+            SC gid so that the SC gids can be used to index the mask directly.
+        """
+
+        filter_mask = ~pd.isna(trans_table[gid_key])
+        trans_table = trans_table[filter_mask]
+        sc_gids = list(np.sort(trans_table[gid_key].unique()))
+        sc_gids = [int(gid) for gid in sc_gids]
+        mask = np.ones((int(1 + max(sc_gids)), ), dtype=bool)
+
+        return trans_table, sc_gids, mask
 
     @staticmethod
     def _create_handler(trans_table, trans_costs=None):
@@ -254,9 +293,11 @@ class SupplyCurve:
         if max_workers is None:
             max_workers = os.cpu_count()
 
+        gid_mask = ~pd.isna(trans_table['sc_gid'])
+
         logger.info('Computing LCOT costs for all possible connections...')
         if max_workers > 1:
-            groups = trans_table.groupby('sc_gid')
+            groups = trans_table[gid_mask].groupby('sc_gid')
             with SpawnProcessPool(max_workers=max_workers) as exe:
                 futures = []
                 for sc_gid, sc_table in groups:
@@ -284,7 +325,7 @@ class SupplyCurve:
             feature = TC(trans_table, line_limited=line_limited,
                          **trans_costs)
             cost = []
-            for _, row in trans_table.iterrows():
+            for _, row in trans_table[gid_mask].iterrows():
                 if connectable:
                     capacity = row['capacity']
                 else:
@@ -297,7 +338,8 @@ class SupplyCurve:
 
             cost = np.array(cost, dtype='float32')
 
-        lcot = (cost * fcr) / (trans_table['mean_cf'].values * 8760)
+        cf_mean_arr = trans_table.loc[gid_mask, 'mean_cf'].values
+        lcot = (cost * fcr) / (cf_mean_arr * 8760)
 
         logger.info('LCOT cost calculation is complete.')
 
@@ -337,47 +379,21 @@ class SupplyCurve:
         return trans_table
 
     @staticmethod
-    def _parse_trans_table(sc_points, trans_table, fcr, trans_costs=None,
-                           line_limited=False, connectable=True,
-                           max_workers=None,
-                           merge_cols=('capacity', 'sc_gid', 'mean_cf',
-                                       'mean_lcoe')):
+    def _parse_trans_table(trans_table):
         """
-        Import supply curve table, add in supply curve point capacity
+        Import transmission features table
 
         Parameters
         ----------
-        sc_points : pd.DataFrame
-            Table of supply curve point summary
-        trans_table : pd.DataFrame
+        trans_table : pd.DataFrame | str
             Table mapping supply curve points to transmission features
-        fcr : float
-            Fixed charge rate, used to compute LCOT
-        trans_costs : str | dict
-            Transmission feature costs to use with TransmissionFeatures
-            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
-            center_tie_in_cost, sink_tie_in_cost
-        line_limited : bool
-            Substation connection is limited by maximum capacity of the
-            attached lines, legacy method
-        connectable : bool
-            Determine if connection is possible
-        max_workers : int | NoneType
-            Number of workers to use to compute lcot, if > 1 run in parallel.
-            None uses all available cpu's.
-        merge_cols : tuple | list
-            List of column from sc_points to merge into the trans table.
+            (either str filepath to table file or pre-loaded dataframe).
 
         Returns
         -------
         trans_table : pd.DataFrame
-            Updated table mapping supply curve points to transmission features
+            Loaded transmission feature table.
         """
-        if isinstance(merge_cols, tuple):
-            merge_cols = list(merge_cols)
-
-        if 'mean_lcoe_friction' in sc_points:
-            merge_cols.append('mean_lcoe_friction')
 
         trans_table = SupplyCurve._load_table(trans_table)
 
@@ -385,6 +401,75 @@ class SupplyCurve:
         for col in drop_cols:
             if col in trans_table:
                 trans_table = trans_table.drop(col, axis=1)
+
+        return trans_table
+
+    @staticmethod
+    def _check_sc_trans_table(sc_points, trans_table):
+        """Run self checks on sc_points table and the merged trans_table
+
+        Parameters
+        ----------
+        sc_points : pd.DataFrame
+            Table of supply curve point summary
+        trans_table : pd.DataFrame
+            Table mapping supply curve points to transmission features
+            (should already be merged with SC points).
+        """
+        sc_gids = set(sc_points['sc_gid'].unique())
+        trans_sc_gids = set(trans_table['sc_gid'].unique())
+        missing = sorted(list(sc_gids - trans_sc_gids))
+        if any(missing):
+            msg = ("There are {} Supply Curve points with missing "
+                   "transmission mappings. Supply curve points with no "
+                   "transmission features will not be connected! "
+                   "Missing sc_gid's: {}"
+                   .format(len(missing), missing))
+            logger.warning(msg)
+            warn(msg)
+
+        if not any(trans_sc_gids) or not any(sc_gids):
+            msg = ('Merging of sc points table and transmission features '
+                   'table failed with {} original sc gids and {} transmission '
+                   'sc gids after table merge.'
+                   .format(len(sc_gids), len(trans_sc_gids)))
+            logger.error(msg)
+            raise SupplyCurveError(msg)
+
+        logger.debug('There are {} original SC gids and {} sc gids in the '
+                     'merged transmission table.'
+                     .format(len(sc_gids), len(trans_sc_gids)))
+        logger.debug('Transmission Table created with columns: {}'
+                     .format(trans_table.columns.values.tolist()))
+
+    @staticmethod
+    def _merge_sc_trans_tables(sc_points, trans_table,
+                               merge_cols=('capacity', 'sc_gid', 'mean_cf',
+                                           'mean_lcoe')):
+        """Merge the supply curve table with the transmission features table.
+
+        Parameters
+        ----------
+        sc_points : pd.DataFrame
+            Table of supply curve point summary
+        trans_table : pd.DataFrame
+            Table mapping supply curve points to transmission features
+        merge_cols : tuple | list
+            List of column from sc_points to merge into the trans table.
+
+        Returns
+        -------
+        trans_table : pd.DataFrame
+            Updated table mapping supply curve points to transmission features.
+            This is performed by merging left with trans_table, so there may be
+            rows with nan sc_gid.
+        """
+
+        if isinstance(merge_cols, tuple):
+            merge_cols = list(merge_cols)
+
+        if 'mean_lcoe_friction' in sc_points:
+            merge_cols.append('mean_lcoe_friction')
 
         point_merge_cols = SupplyCurve._get_merge_cols(sc_points.columns)
         table_merge_cols = SupplyCurve._get_merge_cols(trans_table.columns)
@@ -399,20 +484,43 @@ class SupplyCurve:
         rename = {p: t for p, t in zip(point_merge_cols, table_merge_cols)}
         sc_cap = sc_cap.rename(columns=rename)
 
+        logger.debug('Merging SC table and Trans Table on columns: {}'
+                     .format(table_merge_cols))
         trans_table = trans_table.merge(sc_cap, on=table_merge_cols,
-                                        how='inner')
+                                        how='left')
+        return trans_table
 
-        sc_gids = set(sc_cap['sc_gid'].unique())
-        trans_sc_gids = set(trans_table['sc_gid'].unique())
-        missing = sorted(list(sc_gids - trans_sc_gids))
-        if any(missing):
-            msg = ("There are {} Supply Curve points with missing "
-                   "transmission mappings. Supply curve points with no "
-                   "transmission features will not be connected! "
-                   "Missing sc_gid's: {}"
-                   .format(len(missing), missing))
-            logger.warning(msg)
-            warn(msg)
+    @staticmethod
+    def _add_trans_lcot(trans_table, fcr, trans_costs=None,
+                        line_limited=False, connectable=True,
+                        max_workers=None):
+        """Compute LCOT for possible connections and add to the trans_table
+
+        Parameters
+        ----------
+        trans_table : pd.DataFrame
+            Table mapping supply curve points to transmission features.
+        fcr : float
+            Fixed charge rate, used to compute LCOT
+        trans_costs : str | dict | None
+            Transmission feature costs to use with TransmissionFeatures
+            handler: line_tie_in_cost, line_cost, station_tie_in_cost,
+            center_tie_in_cost, sink_tie_in_cost
+        line_limited : bool
+            Substation connection is limited by maximum capacity of the
+            attached lines, legacy method
+        connectable : bool
+            Determine if connection is possible
+        max_workers : int | NoneType
+            Number of workers to use to compute lcot, if > 1 run in parallel.
+            None uses all available cpu's.
+
+        Returns
+        -------
+        trans_table : pd.DataFrame
+            Same as input table but with new columns for trans_cap_cost, lcot,
+            and total_lcoe.
+        """
 
         trans_table = SupplyCurve._feature_capacity(trans_table,
                                                     trans_costs=trans_costs)
@@ -422,14 +530,12 @@ class SupplyCurve:
                                                line_limited=line_limited,
                                                connectable=connectable,
                                                max_workers=max_workers)
-        trans_table['trans_cap_cost'] = cost
-        trans_table['lcot'] = lcot
+
+        gid_mask = ~pd.isna(trans_table['sc_gid'])
+        trans_table.loc[gid_mask, 'trans_cap_cost'] = cost
+        trans_table.loc[gid_mask, 'lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
                                      + trans_table['mean_lcoe'])
-
-        logger.debug('Transmission Table created with columns: {}'
-                     .format(trans_table.columns.values.tolist()))
-
         return trans_table
 
     def _calculate_total_lcoe_friction(self):
@@ -484,7 +590,7 @@ class SupplyCurve:
         init_list = [np.nan] * int(1 + np.max(self._sc_gids))
         conn_lists = {k: deepcopy(init_list) for k in columns}
 
-        trans_sc_gids = trans_table['sc_gid'].values
+        trans_sc_gids = trans_table['sc_gid'].values.astype(int)
         trans_gids = trans_table['trans_line_gid'].values
         trans_cap = trans_table['avail_cap'].values
         capacities = trans_table['capacity'].values
