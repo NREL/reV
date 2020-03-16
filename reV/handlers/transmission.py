@@ -239,6 +239,7 @@ class TransmissionFeatures:
                     if gid not in missing:
                         missing[gid] = []
                     missing[gid].append(line_gid)
+
         if any(missing):
             emsg = ('Transmission feature table has {} parent features that '
                     'depend on missing lines. Missing dependencies: {}'
