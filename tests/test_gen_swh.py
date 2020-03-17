@@ -9,16 +9,14 @@ Created on 2/6/2020
 import numpy as np
 import os
 import pytest
-import logging
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
 
-def test_gen_swh(caplog):
+def test_gen_swh():
     """Test generation for solar water heating"""
 
-    caplog.set_level(logging.DEBUG)
     points = slice(0, 1)
     sam_files = TESTDATADIR + '/SAM/swh_default.json'
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
@@ -33,12 +31,6 @@ def test_gen_swh(caplog):
                       output_request=output_request,
                       sites_per_worker=1, fout=None, scale_outputs=True)
 
-    #  for var in output_request:
-    #      if isinstance(gen.out[var], np.ndarray):
-    #          print(var, gen.out[var].sum())
-    #      else:
-    #          print(var, gen.out[var])
-
     def my_assert(x, y, digits):
         if isinstance(x, np.ndarray):
             x = float(x.sum())
@@ -46,17 +38,18 @@ def test_gen_swh(caplog):
 
     # Some results will be different with PySAM 2 vs 1.2.1, in particular,
     # solar_fraction and cf_mean
-    my_assert(gen.out['T_amb'], 204374, 0)
-    my_assert(gen.out['T_deliv'], 837587.6528, 0)
-    my_assert(gen.out['T_hot'], 837785.36, 0)
+    my_assert(gen.out['T_amb'], 204459, 0)
+    my_assert(gen.out['T_cold'], 433511.47, 0)
+    my_assert(gen.out['T_deliv'], 836763.3482, 0)
+    my_assert(gen.out['T_hot'], 836961.2498, 0)
     my_assert(gen.out['draw'], 145999.90, 0)
-    my_assert(gen.out['beam'], 3052417, 0)
-    my_assert(gen.out['diffuse'], 1221626, 0)
-    my_assert(gen.out['I_incident'], 3284008.791, 0)
-    my_assert(gen.out['I_transmitted'], 2773431.416, 0)
-    my_assert(gen.out['annual_Q_deliv'], 2701.62, 1)
-    my_assert(gen.out['Q_deliv'], 5403.240911, 0)
-    my_assert(gen.out['solar_fraction'], 0.6887506, 4)
+    my_assert(gen.out['beam'], 3047259, 0)
+    my_assert(gen.out['diffuse'], 1222013, 0)
+    my_assert(gen.out['I_incident'], 3279731.523, -1)
+    my_assert(gen.out['I_transmitted'], 2769482.776, -1)
+    my_assert(gen.out['annual_Q_deliv'], 2697.09, 1)
+    my_assert(gen.out['Q_deliv'], 5394.188339, 1)
+    my_assert(gen.out['solar_fraction'], 0.6875, 4)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

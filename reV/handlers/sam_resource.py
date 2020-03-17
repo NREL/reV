@@ -6,10 +6,13 @@ DataFrames
 import numpy as np
 import pandas as pd
 from warnings import warn
+import logging
 
 from reV.handlers.parse_keys import parse_keys
 from reV.utilities.exceptions import (HandlerKeyError, HandlerRuntimeError,
                                       HandlerValueError, SAMInputWarning)
+
+logger = logging.getLogger(__name__)
 
 
 class SAMResource:
@@ -95,30 +98,23 @@ class SAMResource:
         self._res_arrays = {}
         h = project_points.h
 
-        if project_points.tech.lower() == 'pv':
-            self._tech = 'pv'
-        elif project_points.tech.lower() == 'csp':
-            self._tech = 'csp'
-        elif project_points.tech.lower() == 'solarwaterheat':
-            self._tech = 'solarwaterheat'
-        elif project_points.tech.lower() == 'troughphysicalheat':
-            self._tech = 'troughphysicalheat'
-        elif project_points.tech.lower() == 'lineardirectsteam':
-            self._tech = 'lineardirectsteam'
-        elif 'wind' in project_points.tech.lower():
+        if project_points.tech.lower() in self.DATA_RANGES.keys():
+            self._tech = project_points.tech.lower()
+        else:
+            msg = 'Selected tech {} is not valid.'.format(project_points.tech)
+            logger.error(msg)
+            raise HandlerValueError(msg)
+
+        if self._tech == 'wind':
             # hub height specified, get WTK wind data.
-            self._tech = 'wind'
             if isinstance(h, (list, np.ndarray)):
                 if len(h) != self._n:
                     msg = 'Must have a unique height for each site'
+                    logger.error(msg)
                     raise HandlerValueError(msg)
             if not require_wind_dir:
                 self._res_arrays['winddirection'] = np.zeros(self._shape,
                                                              dtype='float32')
-        else:
-            raise HandlerValueError(f'Selected tech {project_points.tech} is'
-                                    ' not valid.')
-
         self._h = h
 
     def __repr__(self):
@@ -144,7 +140,9 @@ class SAMResource:
             site = var
             out, _ = self._get_res_df(site)
         else:
-            raise HandlerKeyError('Cannot interpret {}'.format(var))
+            msg = 'Cannot interpret {}'.format(var)
+            logger.error(msg)
+            raise HandlerKeyError(msg)
 
         return out
 
@@ -209,7 +207,9 @@ class SAMResource:
             if self._tech in self.RES_VARS:
                 self._var_list = list(self.RES_VARS[self._tech])
             else:
-                raise HandlerValueError("Resource type is invalid!")
+                msg = "Resource type {} is invalid!".format(self._tech)
+                logging.error(msg)
+                raise HandlerValueError(msg)
 
         return self._var_list
 
@@ -263,18 +263,21 @@ class SAMResource:
 
         Parameters
         ----------
-        meta : recarray | pandas.DataFrame
+        meta : array | pandas.DataFrame
             Sites meta as records array or DataFrame
         """
         if len(meta) != self._n:
-            raise HandlerValueError('Meta does not contain {} sites'
-                                    .format(self._n))
+            msg = 'Meta does not contain {} sites'.format(self._n)
+            logger.error(msg)
+            raise HandlerValueError(msg)
 
         if not isinstance(meta, pd.DataFrame):
             meta = pd.DataFrame(meta, index=self.sites)
         else:
             if not np.array_equal(meta.index, self.sites):
-                raise HandlerValueError('Meta does not match sites!')
+                msg = 'Meta does not match sites!'
+                logger.error(msg)
+                raise HandlerValueError(msg)
 
         self._meta = meta
 
@@ -310,6 +313,8 @@ class SAMResource:
         var_array : ndarray
             Variable data with updated units if needed
         """
+        pressure_change = ['csp', 'troughphysicalheat', 'lineardirectsteam',
+                           'solarwaterheat']
 
         if 'pressure' in var_name and tech.lower() == 'wind':
             # Check if pressure is in Pa, if so convert to atm
@@ -317,14 +322,13 @@ class SAMResource:
                 # convert pressure from Pa to ATM
                 var_array *= 9.86923e-6
 
-        elif 'pressure' in var_name:
-            if tech.lower() == 'csp' or tech.lower() == 'troughphysicalheat':
-                if np.min(var_array) < 200:
-                    # convert pressure from 100 to 1000 hPa
-                    var_array *= 10
-                if np.min(var_array) > 80000:
-                    # convert pressure from Pa to hPa
-                    var_array /= 100
+        elif 'pressure' in var_name and tech.lower() in pressure_change:
+            if np.min(var_array) < 200:
+                # convert pressure from 100 to 1000 hPa
+                var_array *= 10
+            if np.min(var_array) > 80000:
+                # convert pressure from Pa to hPa
+                var_array /= 100
 
         elif 'temperature' in var_name:
             # Check if tempearture is in K, if so convert to C
@@ -415,12 +419,15 @@ class SAMResource:
             Returns True if runnable check passes
         """
         if self._meta is None:
-            raise HandlerRuntimeError('meta has not been set!')
+            msg = 'meta has not been set!'
+            logger.error(msg)
+            raise HandlerRuntimeError(msg)
         else:
             for var in self.var_list:
                 if var not in self._res_arrays.keys():
-                    raise HandlerRuntimeError('{} has not been set!'
-                                              .format(var))
+                    msg = '{} has not been set!'.format(var)
+                    logger.error(msg)
+                    raise HandlerRuntimeError(msg)
 
         return True
 
@@ -446,12 +453,15 @@ class SAMResource:
                 var_arr[var_slice] = arr
                 self._res_arrays[var] = var_arr
             else:
-                raise HandlerValueError('{} has shape {}, '
-                                        'needs proper shape: {}'
-                                        .format(var, arr.shape, self._shape))
+                msg = ('{} has shape {}, '
+                       'needs proper shape: {}'.format(var,
+                                                       arr.shape, self._shape))
+                logger.error(msg)
+                raise HandlerValueError(msg)
         else:
-            raise HandlerKeyError('{} not in {}'
-                                  .format(var, self.var_list))
+            msg = '{} not in {}'.format(var, self.var_list)
+            logger.error(msg)
+            raise HandlerKeyError(msg)
 
     def _get_var_ts(self, var, *var_slice):
         """
@@ -474,15 +484,18 @@ class SAMResource:
             try:
                 var_array = self._res_arrays[var]
             except KeyError:
-                raise HandlerKeyError('{} has yet to be set!')
+                msg = '{} has yet to be set!'.format(var)
+                logger.error(msg)
+                raise HandlerKeyError(msg)
 
             sites = np.array(self.sites)
             ts = pd.DataFrame(var_array[var_slice],
                               index=self.time_index[var_slice[0]],
                               columns=sites[var_slice[1]])
         else:
-            raise HandlerKeyError('{} not in {}'
-                                  .format(var, self.var_list))
+            msg = '{} not in {}'.format(var, self.var_list)
+            logger.error(msg)
+            raise HandlerKeyError(msg)
 
         return ts
 
@@ -505,8 +518,9 @@ class SAMResource:
         try:
             idx = self.sites.index(site)
         except ValueError:
-            raise HandlerValueError('{} is not in available sites'
-                                    .format(site))
+            msg = '{} is not in available sites'.format(site)
+            logger.error(msg)
+            raise HandlerValueError(msg)
         site_meta = self.meta.loc[site].copy()
         if self._h is not None:
             try:
@@ -542,10 +556,13 @@ class SAMResource:
             site_pos = [self.sites.index(id) for id in gids]
 
         if curtailment.shape != shape:
-            raise HandlerValueError("curtailment must be of shape: {}"
-                                    .format(shape))
+            msg = "curtailment must be of shape: {}".format(shape)
+            logger.error(msg)
+            raise HandlerValueError(msg)
 
         if 'windspeed' in self._res_arrays:
             self._res_arrays['windspeed'][:, site_pos] *= curtailment
         else:
-            raise HandlerRuntimeError('windspeed has not be loaded!')
+            msg = 'windspeed has not be loaded!'
+            logger.error(msg)
+            raise HandlerRuntimeError(msg)

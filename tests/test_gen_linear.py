@@ -8,7 +8,6 @@ Created on 2/6/2020
 """
 
 import os
-import logging
 import pytest
 import numpy as np
 
@@ -16,10 +15,9 @@ from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
 
-def test_gen_linear(caplog):
+def test_gen_linear():
     """Test generation for linear Fresnel"""
 
-    caplog.set_level(logging.DEBUG)
     points = slice(0, 1)
     sam_files = TESTDATADIR + '/SAM/linear_default.json'
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
@@ -53,13 +51,13 @@ def test_gen_linear(caplog):
         assert round(x, digits) == round(y, digits)
 
     # Some results may be different with PySAM 2 vs 1.2.1
-    my_assert(gen.out['q_dot_to_heat_sink'], 10898.58, 0)
-    my_assert(gen.out['gen'], 10462639.51, -2)
-    my_assert(gen.out['m_dot_field'], 15153.68676, 1)
-    my_assert(gen.out['q_dot_sf_out'], 10970, 0)
-    my_assert(gen.out['W_dot_heat_sink_pump'], 0.17348091, 6)
-    my_assert(gen.out['annual_field_energy'], 5231320, 0)
-    my_assert(gen.out['annual_thermal_consumption'], 3195, 0)
+    my_assert(gen.out['q_dot_to_heat_sink'], 10874.82934, 0)
+    my_assert(gen.out['gen'], 10439836.56, -2)
+    my_assert(gen.out['m_dot_field'], 15146.1688, 1)
+    my_assert(gen.out['q_dot_sf_out'], 10946.40988, 0)
+    my_assert(gen.out['W_dot_heat_sink_pump'], 0.173017451, 6)
+    my_assert(gen.out['annual_field_energy'], 5219918, 0)
+    my_assert(gen.out['annual_thermal_consumption'], 3178, 0)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

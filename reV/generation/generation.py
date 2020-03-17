@@ -103,7 +103,7 @@ class Gen:
                  'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
-                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/mwh',
+                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
                  # Solar water heater
@@ -1087,7 +1087,7 @@ class Gen:
         """Flush generation data in self.out attribute to disk in .h5 format.
 
         The data to be flushed is accessed from the instance attribute
-        "self.out". The disk target is based on the isntance attributes
+        "self.out". The disk target is based on the instance attributes
         "self._fpath". Data is not flushed if _fpath is None or if .out is
         empty.
         """

@@ -528,7 +528,7 @@ class SAM(RevPySAM):
 
         Parameters
         ----------
-        res_arr : array-like
+        res_arr : np.ndarray
             Array of resource data.
         base : int
             Ensure that length of resource array is a multiple of this value.
@@ -539,19 +539,15 @@ class SAM(RevPySAM):
             Truncated array of resource data such that length(res_arr)%base=0.
         """
 
-        if len(res_arr) < 8760:
-            msg = ('Resource timeseries must be hourly. '
-                   'Received timeseries of length {}.'
-                   .format(len(res_arr)))
+        if len(res_arr) < base:
+            msg = ('Received timeseries of length {}, expected timeseries to'
+                   'be at least {}'.format(len(res_arr), base))
             logger.exception(msg)
             raise ResourceError(msg)
 
         if len(res_arr) % base != 0:
-            div = np.floor(len(res_arr) / 8760)
-            target_len = int(div * 8760)
-            warn('Resource array length is {}, but SAM requires a multiple of '
-                 '8760. Truncating the timeseries to length {}.'
-                 .format(len(res_arr), target_len), SAMInputWarning)
+            div = np.floor(len(res_arr) / base)
+            target_len = int(div * base)
             if len(res_arr.shape) == 1:
                 res_arr = res_arr[0:target_len]
             else:

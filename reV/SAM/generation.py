@@ -259,7 +259,7 @@ class Generation(SAM):
 
     @classmethod
     def reV_run(cls, points_control, res_file, output_request=('cf_mean',),
-                downscale=None, drop_leap=True):
+                downscale=None, drop_leap=False):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -628,7 +628,7 @@ class CSP(Solar):
 class SolarThermal(Solar):
     """ Base class for solar thermal """
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+                 output_request=None, drop_leap=False):
         """Initialize a SAM solar thermal object
 
         Parameters
@@ -645,11 +645,14 @@ class SolarThermal(Solar):
             'lcoe_fcr').
         drop_leap : bool
             Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years.
-
+            31st is dropped from leap years. PySAM will not accept csv data on
+            Feb 29th. For leap years, December 31st is dropped and time steps
+            are shifted to relabel Feb 29th as March 1st, March 1st as March
+            2nd, etc.
         """
+        self._drop_leap = drop_leap
         super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
+                         output_request=output_request, drop_leap=False)
 
     def set_nsrdb(self, resource):
         """
@@ -662,14 +665,15 @@ class SolarThermal(Solar):
             2D table with resource data. Available columns must have var_list.
         """
         self.time_interval = self.get_time_interval(resource.index.values)
-        # Create solar resource file
         self._pysam_w_fname = self._create_pysam_wfile(self._meta, resource)
         # pylint: disable=E1101
         self[self._pysam_weather_tag] = self._pysam_w_fname
 
-    def _create_pysam_wfile(self, meta, resource, drop_leap=False):
+    def _create_pysam_wfile(self, meta, resource):
         """
-        Create PySAM weather input file.
+        Create PySAM weather input file. PySAM will not accept data on Feb
+        29th. For leap years, December 31st is dropped and time steps are
+        shifted to relabel Feb 29th as March 1st, March 1st as March 2nd, etc.
 
         Parameters
         ----------
@@ -677,14 +681,16 @@ class SolarThermal(Solar):
             1D table with resource meta data.
         resource : pd.DataFrame
             2D table with resource data. Available columns must have var_list.
-        drop_leap : bool
-            Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years.
-        """
-        fname = f'{self._site}_weather.csv'
-        logger.debug(f'Creating PySAM weather data file: {fname}')
 
-        # Process metadata
+        Returns
+        -------
+            fname : string
+                Name of weather csv file
+        """
+        fname = '{}_weather.csv'.format(self._site)
+        logger.debug('Creating PySAM weather data file: {}'.format(fname))
+
+        # ------- Process metadata
         m = pd.DataFrame(meta).T
         timezone = m.timezone
         m['Source'] = 'NSRDB'
@@ -700,34 +706,22 @@ class SolarThermal(Solar):
         m['Dew Point Units'] = 'c'
         m['DHI Units'] = 'w/m2'
         m['DNI Units'] = 'w/m2'
-        # m['GHI Units'] = 'w/m2'
         m['Temperature Units'] = 'c'
         m['Pressure Units'] = 'mbar'
-        # m['Wind Direction Units'] = 'Degrees'
         m['Wind Speed'] = 'm/s'
-        # m['Surface Albedo Units'] = 'N/A'
-        # m['Version'] = 'v3.0.1'
         m = m.drop(['elevation', 'timezone', 'country', 'state', 'county',
                     'urban', 'population', 'landcover', 'latitude',
                     'longitude'], axis=1)
         m.to_csv(fname, index=False, mode='w')
 
-        # Process data
+        # --------- Process data
         df = resource.copy()
         df['dt'] = df.index
-
-        # Drop days for leap year before adjusting timezone
-        if df.dt.dt.is_leap_year.all():
-            if drop_leap:
-                df = df[~((df.dt.dt.month == 2) & (df.dt.dt.day == 29))]
-            else:
-                df = df[~((df.dt.dt.month == 12) & (df.dt.dt.day == 31))]
 
         # Adjust from UTC to local time
         rolled = np.roll(df.to_numpy(), timezone * self.time_interval,
                          axis=0)
         df = pd.DataFrame(rolled, columns=df.columns, index=df.index)
-
         df['DT_UTC'] = df.dt
         df['dt'] = df.index
         df['Year'] = df.dt.dt.year
@@ -741,11 +735,25 @@ class SolarThermal(Solar):
         df['Temperature'] = df.air_temperature
         df['Pressure'] = df.surface_pressure
         df['Wind Speed'] = df.wind_speed
+        leap_year = df.dt.dt.is_leap_year.all()
         df = df.drop(['dt', 'dni', 'dhi', 'wind_speed', 'air_temperature',
-                      'dew_point', 'surface_pressure'], axis=1)
-        df.to_csv(fname, index=False, mode='a')
-        assert df.shape[0] == 8760 * 2
+                     'dew_point', 'surface_pressure'], axis=1)
 
+        if leap_year:
+            feb_29 = (df.Month == 2) & (df.Day == 29)
+            if self._drop_leap:
+                df = df[~feb_29]
+            else:
+                # Drop December 31st and shift time steps
+                dec_31 = (df.Month == 12) & (df.Day == 31)
+                ts = df[['Year', 'Month', 'Day', 'Hour', 'Minute']]
+                data = df[['DT_UTC', 'DNI', 'DHI', 'Dew Point', 'Temperature',
+                          'Pressure', 'Wind Speed']]
+                ts = ts[~feb_29].reset_index()
+                data = data[~dec_31].reset_index()
+                df = pd.concat([ts, data], axis=1).drop('index', axis=1)
+
+        df.to_csv(fname, index=False, mode='a')
         return fname
 
     def _gen_exec(self, delete_wfile=True):
@@ -772,7 +780,7 @@ class SolarWaterHeat(SolarThermal):
     PYSAM = pysam_swh
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+                 output_request=None, drop_leap=False):
         """Initialize a SAM solar water heater object.
 
         Parameters
@@ -789,11 +797,14 @@ class SolarWaterHeat(SolarThermal):
             'lcoe_fcr').
         drop_leap : bool
             Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years.
+            31st is dropped from leap years. PySAM will not accept csv data on
+            Feb 29th. For leap years, December 31st is dropped and time steps
+            are shifted to relabel Feb 29th as March 1st, March 1st as March
+            2nd, etc.
         """
         self._pysam_weather_tag = 'solar_resource_file'
         super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
+                         output_request=output_request, drop_leap=drop_leap)
 
     @property
     def default(self):
@@ -821,7 +832,7 @@ class LinearDirectSteam(SolarThermal):
     PYSAM = pysam_lfdi
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+                 output_request=None, drop_leap=False):
         """Initialize a SAM process heat linear Fresnel direct steam object.
 
         Parameters
@@ -838,11 +849,14 @@ class LinearDirectSteam(SolarThermal):
             'lcoe_fcr').
         drop_leap : bool
             Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years.
+            31st is dropped from leap years. PySAM will not accept csv data on
+            Feb 29th. For leap years, December 31st is dropped and time steps
+            are shifted to relabel Feb 29th as March 1st, March 1st as March
+            2nd, etc.
         """
         self._pysam_weather_tag = 'file_name'
         super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
+                         output_request=output_request, drop_leap=drop_leap)
 
     def cf_mean(self):
         """Calculate mean capacity factor (fractional) from SAM.
@@ -854,7 +868,8 @@ class LinearDirectSteam(SolarThermal):
         """
         net_power = self['annual_field_energy'] \
             - self['annual_thermal_consumption']  # kW-hr
-        name_plate = self['q_pb_des'] * 8760 * 1000  # q_pb_des is in MW
+        # q_pb_des is in MW, convert to kW-hr
+        name_plate = self['q_pb_des'] * 8760 * 1000
         return net_power / name_plate
 
     @property
@@ -883,7 +898,7 @@ class TroughPhysicalHeat(SolarThermal):
     PYSAM = pysam_tpph
 
     def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+                 output_request=None, drop_leap=False):
         """Initialize a SAM trough physical process heat object.
 
         Parameters
@@ -900,11 +915,14 @@ class TroughPhysicalHeat(SolarThermal):
             'lcoe_fcr').
         drop_leap : bool
             Drops February 29th from the resource data. If False, December
-            31st is dropped from leap years.
+            31st is dropped from leap years. PySAM will not accept csv data on
+            Feb 29th. For leap years, December 31st is dropped and time steps
+            are shifted to relabel Feb 29th as March 1st, March 1st as March
+            2nd, etc.
         """
         self._pysam_weather_tag = 'file_name'
         super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
+                         output_request=output_request, drop_leap=drop_leap)
 
     def cf_mean(self):
         """Calculate mean capacity factor (fractional) from SAM.
@@ -916,7 +934,8 @@ class TroughPhysicalHeat(SolarThermal):
         """
         net_power = self['annual_gross_energy'] \
             - self['annual_thermal_consumption']  # kW-hr
-        name_plate = self['q_pb_design'] * 8760 * 1000  # q_pb_design is in MW
+        # q_pb_des is in MW, convert to kW-hr
+        name_plate = self['q_pb_design'] * 8760 * 1000
         return net_power / name_plate
 
     @property
@@ -1041,7 +1060,6 @@ class Wind(Generation):
                 DEFAULTSDIR, 'SAM/WY Southern-Flat Lands.csv')
             self._default = pysam_wind.default('WindPowerNone')
             self._default.WindResourceFile.wind_resource_filename = res_file
-            # self._default.wind_resource_filename = res_file
             self._default.execute()
         return self._default
 

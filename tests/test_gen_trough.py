@@ -9,16 +9,14 @@ Created on 2/6/2020
 import numpy as np
 import os
 import pytest
-import logging
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
 
-def test_gen_tph(caplog):
+def test_gen_tph():
     """Test generation for trough physical heat"""
 
-    caplog.set_level(logging.DEBUG)
     points = slice(0, 1)
     sam_files = TESTDATADIR + '/SAM/trough_default.json'
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2012)
@@ -49,15 +47,14 @@ def test_gen_tph(caplog):
         assert round(x, digits) == round(y, digits)
 
     # Some results may be different with PySAM 2 vs 1.2.1
-    my_assert(gen.out['T_field_cold_in'], 1591237.0, 0)
-    my_assert(gen.out['T_field_hot_out'], 1912855.0, 0)
-    my_assert(gen.out['m_dot_field_delivered'], 127769.113, 0)
-    my_assert(gen.out['m_dot_field_recirc'], 94023.448, 0)
-    my_assert(gen.out['q_dot_htf_sf_out'], 30396.0, 0)
-    my_assert(gen.out['q_dot_to_heat_sink'], 30031.35, 0)
-    my_assert(gen.out['annual_thermal_consumption'], 16239.159, 0)
-    my_assert(gen.out['beam'], 3052417.0, 0)
-    my_assert(gen.out['annual_gross_energy'], 15015675.0, 0)
+    my_assert(gen.out['T_field_cold_in'], 1591215.6, 0)
+    my_assert(gen.out['T_field_hot_out'], 1912134.6, 0)
+    my_assert(gen.out['m_dot_field_delivered'], 127568.76, 0)
+    my_assert(gen.out['m_dot_field_recirc'], 94081.37, 0)
+    my_assert(gen.out['q_dot_htf_sf_out'], 30337.857, 0)
+    my_assert(gen.out['q_dot_to_heat_sink'], 29976.771, 0)
+    my_assert(gen.out['annual_thermal_consumption'], 16291.977, 0)
+    my_assert(gen.out['annual_gross_energy'], 14988385, 0)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
