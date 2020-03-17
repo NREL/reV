@@ -76,7 +76,7 @@ setup(
     license="BSD 3-Clause",
     zip_safe=False,
     keywords="rev",
-    python_requires='==3.7',
+    python_requires='==3.7.*',
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
