@@ -20,8 +20,8 @@ pipeline status and to pipe i/o through the modules.
 1. All pipeline modules must have the same output directory.
 2. Only one pipeline can be run per output directory.
 3. Each module run by the pipeline must have a unique job name (not specifying
-    a name in the configs is preferred, and will use the directory name plus a
-    suffix for each module).
+   a name in the configs is preferred, and will use the directory name plus a
+   suffix for each module).
 
 Failed Jobs
 -----------
@@ -41,7 +41,7 @@ There are several files beyond the NSRDB resource data used in this example
 that are too big to be stored on github:
 
 1. ``conus_trans_lines_cache_064_sj_infsink.csv`` in
-    ``config_supply-curve.json`` is a transmission feature table from the reV
-    database.
+   ``config_supply-curve.json`` is a transmission feature table from the reV
+   database.
 2. ``rev_conus_exclusions.h5`` in ``config_aggregation.json`` is an h5
-    exclusions file containing exclusion layers for CONUS.
+   exclusions file containing exclusion layers for CONUS.

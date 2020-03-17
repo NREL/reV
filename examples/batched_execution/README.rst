@@ -10,13 +10,13 @@ Batching Config Description
  - "sets" in the batch config is a list of batches.
  - Each "batch" is a dictionary containing "args" and "files".
  - "args" are the key/value pairs from which the batching combinations will be
-    made. Each unique combination of args represents a job. If two args are
-    specified with three possible values each, nine jobs will be run.
+   made. Each unique combination of args represents a job. If two args are
+   specified with three possible values each, nine jobs will be run.
  - The unique combinations of "args" will be replaced in all files in the
-    "files" list. The arg must already exist in the file for the new values to
-    be inserted. The replacement is done recursively.
+   "files" list. The arg must already exist in the file for the new values to
+   be inserted. The replacement is done recursively.
  - Batch jobs will be assigned names based on the args. Accordingly, the name
-    field specification should be omitted in all configs.
+   field specification should be omitted in all configs.
 
 How to Run
 ----------

@@ -7,12 +7,7 @@ from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 from subprocess import check_call
 import shlex
-import sys
 from warnings import warn
-
-py_version = sys.version_info
-if py_version.major != 3 or py_version.minor != 7:
-    raise RuntimeError("reV is only compatible with python 3.7!")
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -81,6 +76,7 @@ setup(
     license="BSD 3-Clause",
     zip_safe=False,
     keywords="rev",
+    python_requires='==3.7',
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
