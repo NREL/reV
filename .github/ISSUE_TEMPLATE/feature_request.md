@@ -2,7 +2,7 @@
 name: Feature request
 about: Request a new reV feature
 title: ''
-labels: enhancement
+labels: feature
 assignees: ''
 
 ---
