@@ -32,14 +32,14 @@ proc ModulesHelp { } {
     global PKG_NAME
     puts stdout "Build:       $PKG_NAME-$PKG_VERSION"
     puts stdout "URL:         "
-    puts stdout "Description: reVX"
+    puts stdout "Description: reV"
     puts stdout "For assistance contact michael.rossol@nrel.gov"
     puts stdout " "
     puts stdout "Note: "
     puts stdout "      "
 }
 
-module-whatis "$PKG_NAME: NSRDB handler using reVX $PKG_VERSION"
+module-whatis "$PKG_NAME: reV package $PKG_VERSION"
 
 prepend-path PATH $PKG_ROOT
 prepend-path PYTHONPATH $PKG_ROOT

@@ -5,11 +5,11 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
-import pandas as pd
-import numpy as np
-from warnings import warn
 import logging
+import numpy as np
+import pandas as pd
 from scipy import stats
+from warnings import warn
 
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import GenerationSupplyCurvePoint
