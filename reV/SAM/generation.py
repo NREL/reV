@@ -716,44 +716,38 @@ class SolarThermal(Solar):
 
         # --------- Process data
         df = resource.copy()
+
         df['dt'] = df.index
 
         # Adjust from UTC to local time
         rolled = np.roll(df.to_numpy(), timezone * self.time_interval,
                          axis=0)
         df = pd.DataFrame(rolled, columns=df.columns, index=df.index)
-        df['DT_UTC'] = df.dt
-        df['dt'] = df.index
-        df['Year'] = df.dt.dt.year
-        df['Month'] = df.dt.dt.month
-        df['Day'] = df.dt.dt.day
-        df['Hour'] = df.dt.dt.hour
-        df['Minute'] = df.dt.dt.minute
-        df['DNI'] = df.dni
-        df['DHI'] = df.dhi
-        df['Dew Point'] = df.dew_point
-        df['Temperature'] = df.air_temperature
-        df['Pressure'] = df.surface_pressure
-        df['Wind Speed'] = df.wind_speed
-        leap_year = df.dt.dt.is_leap_year.all()
-        df = df.drop(['dt', 'dni', 'dhi', 'wind_speed', 'air_temperature',
-                     'dew_point', 'surface_pressure'], axis=1)
 
-        if leap_year:
-            feb_29 = (df.Month == 2) & (df.Day == 29)
-            if self._drop_leap:
-                df = df[~feb_29]
-            else:
-                # Drop December 31st and shift time steps
-                dec_31 = (df.Month == 12) & (df.Day == 31)
-                ts = df[['Year', 'Month', 'Day', 'Hour', 'Minute']]
-                data = df[['DT_UTC', 'DNI', 'DHI', 'Dew Point', 'Temperature',
-                          'Pressure', 'Wind Speed']]
-                ts = ts[~feb_29].reset_index()
-                data = data[~dec_31].reset_index()
-                df = pd.concat([ts, data], axis=1).drop('index', axis=1)
+        feb_29 = (df.index.month == 2) & (df.index.day == 29)
+        dec_31 = (df.index.month == 12) & (df.index.day == 31)
 
-        df.to_csv(fname, index=False, mode='a')
+        if self._drop_leap:
+            drop_day = feb_29
+        else:
+            drop_day = dec_31
+
+        # Drop Feb 29th from time stamps, and drop_day from data
+        new_df = pd.DataFrame(index=df.index[~feb_29])
+        new_df['DT_UTC'] = df.dt[~drop_day].to_numpy()
+        new_df['Year'] = new_df.index.year
+        new_df['Month'] = new_df.index.month
+        new_df['Day'] = new_df.index.day
+        new_df['Hour'] = new_df.index.hour
+        new_df['Minute'] = new_df.index.minute
+        new_df['DNI'] = df.dni[~drop_day].to_numpy()
+        new_df['DHI'] = df.dhi[~drop_day].to_numpy()
+        new_df['Wind Speed'] = df.wind_speed[~drop_day].to_numpy()
+        new_df['Temperature'] = df.air_temperature[~drop_day].to_numpy()
+        new_df['Dew Point'] = df.dew_point[~drop_day].to_numpy()
+        new_df['Pressure'] = df.surface_pressure[~drop_day].to_numpy()
+
+        new_df.to_csv(fname, index=False, mode='a')
         return fname
 
     def _gen_exec(self, delete_wfile=True):
@@ -768,7 +762,6 @@ class SolarThermal(Solar):
         super()._gen_exec()
 
         if delete_wfile:
-            logger.debug('Removing PySAM weather file')
             os.remove(self._pysam_w_fname)
 
 
