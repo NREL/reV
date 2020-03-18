@@ -6,7 +6,7 @@ import numpy as np
 import os
 import pytest
 
-from reV.handlers.resource import NSRDB
+from reV.handlers.rev_resource import NSRDB
 from reV.utilities.solar_position import SolarPosition
 from reV import TESTDATADIR
 
