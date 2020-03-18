@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractSupplyCurvePoint(ABC):
-    """Abstract SC point based on only the point gid, SC shape, and resolution.
+    """
+    Abstract SC point based on only the point gid, SC shape, and resolution.
     """
 
     def __init__(self, gid, exclusion_shape, resolution=64):
@@ -176,7 +177,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         self._excl_dict = excl_dict
         self._close = close
-        self._excl_fpath, self._exclusions = self._parse_excl_file(excl)
+        self._excl_fpath, self._excls = self._parse_excl_file(excl)
 
         if exclusion_shape is None:
             exclusion_shape = self.exclusions.shape
@@ -190,7 +191,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         if parse_tm:
             self._res_gids = self._parse_techmap(tm_dset)
 
-    def _parse_excl_file(self, excl):
+    @staticmethod
+    def _parse_excl_file(excl):
         """Parse excl filepath input or handler object and set to attrs.
 
         Parameters
@@ -210,10 +212,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         if isinstance(excl, str):
             excl_fpath = excl
             exclusions = None
-            if self._excl_dict is None:
-                raise SupplyCurveInputError('Exclusion fpath cannot be used '
-                                            'without an exclusions dictionary '
-                                            'input.')
         elif isinstance(excl, ExclusionMask):
             excl_fpath = excl.excl_h5.h5_file
             exclusions = excl
@@ -223,6 +221,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                                         'ExclusionMask handler but '
                                         'received: {}'
                                         .format(type(excl)))
+
         return excl_fpath, exclusions
 
     def _parse_techmap(self, tm_dset):
@@ -267,8 +266,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
     def close(self):
         """Close all file handlers."""
         if self._close:
-            if self._exclusions is not None:
-                self._exclusions.close()
+            if self._excls is not None:
+                self._excls.close()
 
     @property
     def exclusions(self):
@@ -276,13 +275,14 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         Returns
         -------
-        _exclusions : ExclusionMask
+        _excls : ExclusionMask
             ExclusionMask h5 handler object.
         """
-        if self._exclusions is None:
-            self._exclusions = ExclusionMaskFromDict(self._excl_fpath,
-                                                     self._excl_dict)
-        return self._exclusions
+        if self._excls is None:
+            self._excls = ExclusionMaskFromDict(self._excl_fpath,
+                                                layers_dict=self._excl_dict)
+
+        return self._excls
 
     @property
     def centroid(self):
@@ -323,6 +323,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         x = flat_arr[self._res_gids[self.bool_mask]]
         x *= self.excl_data_flat[self.bool_mask]
         mean = x.sum() / self.excl_data_flat[self.bool_mask].sum()
+
         return mean
 
     @property
@@ -463,6 +464,7 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
                                         'generation output file path or '
                                         'output handler, but received: {}'
                                         .format(type(gen)))
+
         return gen_fpath, gen
 
     def _parse_techmap(self, tm_dset, gen_index):
@@ -568,6 +570,7 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
         x = flat_arr[self._gen_gids[self.bool_mask]]
         x *= self.excl_data_flat[self.bool_mask]
         mean = x.sum() / self.excl_data_flat[self.bool_mask].sum()
+
         return mean
 
     @property
@@ -619,6 +622,7 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
         """
         if self._gen is None:
             self._gen = Outputs(self._gen_fpath, str_decode=False)
+
         return self._gen
 
 
@@ -645,10 +649,10 @@ class SupplyCurveExtent:
 
         if isinstance(f_excl, str):
             self._excl_fpath = f_excl
-            self._exclusions = ExclusionLayers(f_excl)
+            self._excls = ExclusionLayers(f_excl)
         elif isinstance(f_excl, ExclusionLayers):
             self._excl_fpath = f_excl.h5_file
-            self._exclusions = f_excl
+            self._excls = f_excl
         else:
             raise SupplyCurveInputError('SupplyCurvePoints needs an '
                                         'exclusions file path, or '
@@ -680,11 +684,12 @@ class SupplyCurveExtent:
         if gid >= len(self):
             raise KeyError('SC extent with {} points does not contain SC '
                            'point gid {}.'.format(len(self), gid))
+
         return self.points.loc[gid]
 
     def close(self):
         """Close all file handlers."""
-        self._exclusions.close()
+        self._excls.close()
 
     @property
     def shape(self):
@@ -704,10 +709,10 @@ class SupplyCurveExtent:
 
         Returns
         -------
-        _exclusions : ExclusionLayers
+        _excls : ExclusionLayers
             ExclusionLayers h5 handler object.
         """
-        return self._exclusions
+        return self._excls
 
     @property
     def resolution(self):
@@ -759,6 +764,7 @@ class SupplyCurveExtent:
         if self._rows_of_excl is None:
             self._rows_of_excl = self._chunk_excl(self.excl_rows,
                                                   self.resolution)
+
         return self._rows_of_excl
 
     @property
@@ -776,6 +782,7 @@ class SupplyCurveExtent:
         if self._cols_of_excl is None:
             self._cols_of_excl = self._chunk_excl(self.excl_cols,
                                                   self.resolution)
+
         return self._cols_of_excl
 
     @property
@@ -816,6 +823,7 @@ class SupplyCurveExtent:
             self._points = pd.DataFrame({'row_ind': sc_row_ind.flatten(),
                                          'col_ind': sc_col_ind.flatten()})
             self._points.index.name = 'gid'
+
         return self._points
 
     def get_excl_slices(self, gid):
@@ -846,6 +854,7 @@ class SupplyCurveExtent:
         excl_cols = self.cols_of_excl[sc_col_ind]
         row_slice = slice(np.min(excl_rows), np.max(excl_rows) + 1)
         col_slice = slice(np.min(excl_cols), np.max(excl_cols) + 1)
+
         return row_slice, col_slice
 
     def get_flat_excl_ind(self, gid):
@@ -866,6 +875,7 @@ class SupplyCurveExtent:
 
         row_slice, col_slice = self.get_excl_slices(gid)
         excl_ind = self.exclusions.iarr[row_slice, col_slice].flatten()
+
         return excl_ind
 
     def get_excl_points(self, dset, gid):
@@ -887,6 +897,7 @@ class SupplyCurveExtent:
         """
 
         row_slice, col_slice = self.get_excl_slices(gid)
+
         return self.exclusions[dset, row_slice, col_slice]
 
     def get_coord(self, gid):
@@ -906,6 +917,7 @@ class SupplyCurveExtent:
         excl_meta = self.get_excl_points('meta', gid)
         lat = (excl_meta['latitude'].min() + excl_meta['latitude'].max()) / 2
         lon = (excl_meta['longitude'].min() + excl_meta['longitude'].max()) / 2
+
         return (lat, lon)
 
     @staticmethod

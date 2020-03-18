@@ -173,6 +173,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         """
 
         seen = set()
+
         return [x for x in seq if not (x in seen or seen.add(x))]
 
     @property
@@ -353,6 +354,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         """
         gid_counts = [self.excl_data_flat[(self._res_gids == gid)].sum()
                       for gid in self.res_gid_set]
+
         return gid_counts
 
     @property
@@ -367,6 +369,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             List of exclusion pixels in each resource/generation gid.
         """
         n_gids = np.sum(self.excl_data_flat > 0)
+
         return n_gids
 
     @property
@@ -635,11 +638,12 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                      .format(method))
                 logger.error(e)
                 raise ValueError(e)
+
         return data
 
     def summarize(self, args=None, data_layers=None):
         """
-        [summary]
+        Get a summary dictionary of a single supply curve point.
 
         Parameters
         ----------

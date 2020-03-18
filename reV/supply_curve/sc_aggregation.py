@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class SupplyCurveAggFileHandler(AbstractAggFileHandler):
     """Simple framework to handle aggregation file context managers."""
 
-    def __init__(self, excl_fpath, gen_fpath=None, data_layers=None,
+    def __init__(self, excl_fpath, gen_fpath, data_layers=None,
                  power_density=None, excl_dict=None, friction_fpath=None,
                  friction_dset=None, area_filter_kernel='queen', min_area=None,
                  check_excl_layers=False):
@@ -71,11 +71,9 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
                          min_area=min_area,
                          check_excl_layers=check_excl_layers)
 
-        self._gen = None
-        if gen_fpath is not None:
-            self._gen = Outputs(gen_fpath, mode='r')
-            # pre-initialize any import attributes
-            _ = self._gen.meta
+        self._gen = Outputs(gen_fpath, mode='r')
+        # pre-initialize any import attributes
+        _ = self._gen.meta
 
         self._data_layers = self._open_data_layers(data_layers)
         self._power_density = power_density
@@ -114,6 +112,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
                     if attrs['fpath'] != self._excl_fpath:
                         data_layers[name]['fobj'] = ExclusionLayers(
                             attrs['fpath'])
+
         return data_layers
 
     @staticmethod
@@ -157,22 +156,10 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
     def close(self):
         """Close all file handlers."""
         self._excl.close()
-        if self._gen is not None:
-            self._gen.close()
+        self._gen.close()
         self._close_data_layers(self._data_layers)
         if self._friction_layer is not None:
             self._friction_layer.close()
-
-    @property
-    def exclusions(self):
-        """Get the exclusions file handler object.
-
-        Returns
-        -------
-        _excl : ExclusionMask
-            Exclusions h5 handler object.
-        """
-        return self._excl
 
     @property
     def gen(self):
@@ -551,8 +538,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 gids = range(len(sc))
 
         # pre-extract handlers so they are not repeatedly initialized
-        file_kwargs = {'gen_fpath': gen_fpath,
-                       'data_layers': data_layers,
+        file_kwargs = {'data_layers': data_layers,
                        'power_density': power_density,
                        'excl_dict': excl_dict,
                        'area_filter_kernel': area_filter_kernel,
@@ -560,8 +546,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                        'friction_fpath': friction_fpath,
                        'friction_dset': friction_dset,
                        'check_excl_layers': check_excl_layers}
-        with SupplyCurveAggFileHandler(excl_fpath, **file_kwargs) as fh:
-
+        with SupplyCurveAggFileHandler(excl_fpath, gen_fpath,
+                                       **file_kwargs) as fh:
             inputs = SupplyCurveAggregation._get_input_data(fh.gen,
                                                             gen_fpath,
                                                             res_class_dset,
@@ -699,12 +685,11 @@ class SupplyCurveAggregation(AbstractAggregation):
             points for single offshore resource pixels.
         """
 
-        file_kwargs = {'gen_fpath': self._gen_fpath,
-                       'data_layers': self._data_layers,
+        file_kwargs = {'data_layers': self._data_layers,
                        'power_density': self._power_density,
                        'excl_dict': self._excl_dict}
-        with SupplyCurveAggFileHandler(self._excl_fpath, **file_kwargs) as fh:
-
+        with SupplyCurveAggFileHandler(self._excl_fpath, self._gen_fpath,
+                                       **file_kwargs) as fh:
             inp = SupplyCurveAggregation._get_input_data(fh.gen,
                                                          self._gen_fpath,
                                                          self._res_class_dset,
@@ -893,6 +878,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         summary = summary.sort_values('sc_point_gid')
         summary = summary.reset_index(drop=True)
         summary.index.name = 'sc_gid'
+
         return summary
 
     def summarize(self, args=None, ex_area=0.0081, close=False,

@@ -96,6 +96,7 @@ class TechMapping:
         if wmsg is not None:
             logger.warning(wmsg)
             warn(wmsg, FileInputWarning)
+
         if emsg is not None:
             logger.exception(emsg)
             raise FileInputError(emsg)
@@ -115,6 +116,7 @@ class TechMapping:
 
         ind = -1 * np.ones((self._n_excl, ), dtype=np.int32)
         coords = np.zeros((self._n_excl, 2), dtype=np.float32)
+
         return ind, coords
 
     @property
@@ -202,6 +204,7 @@ class TechMapping:
                     lat_range[1] = np.max((lat_range[1], np.max(emeta[:, 0])))
                     lon_range[0] = np.min((lon_range[0], np.min(emeta[:, 1])))
                     lon_range[1] = np.max((lon_range[1], np.max(emeta[:, 1])))
+
         return coords_out, lat_range, lon_range
 
     def _parallel_resource_map(self):
@@ -259,6 +262,7 @@ class TechMapping:
         ind_all = ind_all.reshape(self._excl_shape)
         lats = coords_all[:, 0].reshape(self._excl_shape)
         lons = coords_all[:, 1].reshape(self._excl_shape)
+
         return lats, lons, ind_all
 
     @staticmethod

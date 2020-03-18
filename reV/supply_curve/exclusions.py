@@ -66,6 +66,7 @@ class LayerMask:
     def __repr__(self):
         msg = ("{} for {} exclusion, of type {}"
                .format(self.__class__.__name__, self.layer, self.mask_type))
+
         return msg
 
     def __getitem__(self, data):
@@ -371,6 +372,7 @@ class ExclusionMask:
         msg = ("{} from {} with {} input layers"
                .format(self.__class__.__name__, self.excl_h5.h5_file,
                        len(self)))
+
         return msg
 
     def __len__(self):

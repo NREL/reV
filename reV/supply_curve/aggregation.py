@@ -9,6 +9,7 @@ import h5py
 import numpy as np
 import logging
 
+from reV.handlers.outputs import Outputs
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.utilities.execution import SpawnProcessPool
@@ -69,6 +70,53 @@ class AbstractAggFileHandler(ABC):
             Exclusions h5 handler object.
         """
         return self._excl
+
+
+class AggFileHandler(AbstractAggFileHandler):
+    """Simple framework to handle aggregation file context managers."""
+
+    def __init__(self, excl_fpath, h5_fpath, excl_dict=None,
+                 area_filter_kernel='queen', min_area=None,
+                 check_excl_layers=False):
+        """
+        Parameters
+        ----------
+        excl_fpath : str
+            Filepath to exclusions h5 with techmap dataset.
+        h5_fpath : str
+            Filepath to .h5 file to be aggregated
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+        area_filter_kernel : str
+            Contiguous area filter method to use on final exclusions mask
+        min_area : float | None
+            Minimum required contiguous area filter in sq-km
+        check_excl_layers : bool
+            Run a pre-flight check on each exclusion layer to ensure they
+            contain un-excluded values
+        """
+        super().__init__(excl_fpath, excl_dict=excl_dict,
+                         area_filter_kernel=area_filter_kernel,
+                         min_area=min_area,
+                         check_excl_layers=check_excl_layers)
+
+        self._h5 = Outputs(h5_fpath, mode='r')
+
+    def close(self):
+        """Close all file handlers."""
+        self._excl.close()
+        self._h5.close()
+
+    @property
+    def h5(self):
+        """Get the h5 file handler object.
+
+        Returns
+        -------
+        _h5 : Outputs
+            reV h5 outputs handler object.
+        """
+        return self._h5
 
 
 class AbstractAggregation(ABC):

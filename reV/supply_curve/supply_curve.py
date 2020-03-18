@@ -82,6 +82,7 @@ class SupplyCurve:
 
     def __repr__(self):
         msg = "{} with {} points".format(self.__class__.__name__, len(self))
+
         return msg
 
     def __len__(self):
@@ -242,6 +243,7 @@ class SupplyCurve:
             Columns to merge on
         """
         merge_cols = [c for c in columns if 'row' in c or 'col' in c]
+
         return sorted(merge_cols)
 
     @staticmethod
@@ -488,6 +490,7 @@ class SupplyCurve:
                      .format(table_merge_cols))
         trans_table = trans_table.merge(sc_cap, on=table_merge_cols,
                                         how='left')
+
         return trans_table
 
     @staticmethod
@@ -536,6 +539,7 @@ class SupplyCurve:
         trans_table.loc[gid_mask, 'lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
                                      + trans_table['mean_lcoe'])
+
         return trans_table
 
     def _calculate_total_lcoe_friction(self):
@@ -740,6 +744,7 @@ class SupplyCurve:
                  line_limited=line_limited, max_workers=max_workers)
         connections = sc.full_sort(sort_on=sort_on, columns=columns)
         supply_curve = sc._sc_points.merge(connections, on='sc_gid')
+
         return supply_curve
 
     @classmethod
@@ -790,4 +795,5 @@ class SupplyCurve:
                  max_workers=max_workers)
         connections = sc.simple_sort(sort_on=sort_on, columns=columns)
         supply_curve = sc._sc_points.merge(connections, on='sc_gid')
+
         return supply_curve
