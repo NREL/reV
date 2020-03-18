@@ -124,9 +124,7 @@ def check_dset(res_cls, ds_name):
     """
     Run tests on dataset ds_name
     """
-    time_index = res_cls['time_index']
-    meta = res_cls['meta']
-    ds_shape = (len(time_index), len(meta))
+    ds_shape = res_cls.shape
     max_sites = int(ds_shape[1] * 0.8)
     arr = res_cls[ds_name]
     ds = res_cls[ds_name]
@@ -188,6 +186,75 @@ def check_dset(res_cls, ds_name):
     # time and site lists
     with pytest.raises(IndexError):
         assert res_cls[ds_name, times, sites]
+
+
+def check_dset_handler(res_cls, ds_name):
+    """
+    Run tests on dataset ds_name
+    """
+    ds_shape = res_cls.shape
+    max_sites = int(ds_shape[1] * 0.8)
+    dset = res_cls.open_dataset(ds_name)
+    arr = dset[...]
+    ds = res_cls[ds_name]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == ds_shape
+    assert np.allclose(arr, ds)
+    # single site all time
+    ds = dset[:, 1]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (ds_shape[0],)
+    # single time all sites
+    ds = dset[10]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (ds_shape[1],)
+    assert np.allclose(arr[10], ds)
+    # single value
+    ds = dset[10, max_sites]
+    assert isinstance(ds, (np.integer, np.floating))
+    assert np.allclose(arr[10, max_sites], ds)
+    # site slice
+    sites = slice(int(max_sites / 2), max_sites)
+    ds = dset[:, sites]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (ds_shape[0], sites.stop - sites.start)
+    assert np.allclose(arr[:, sites], ds)
+    # time slice
+    ds = dset[10:20]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (10, ds_shape[1])
+    assert np.allclose(arr[10:20], ds)
+    # slice in time and space
+    ds = dset[100:200, sites]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (100, sites.stop - sites.start)
+    assert np.allclose(arr[100:200, sites], ds)
+    # site list
+    sites = sorted(np.random.choice(ds_shape[1], max_sites, replace=False))
+    ds = dset[:, sites]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (ds_shape[0], len(sites))
+    assert np.allclose(arr[:, sites], ds)
+    # site list single time
+    sites = sorted(np.random.choice(ds_shape[1], max_sites, replace=False))
+    ds = dset[0, sites]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (len(sites),)
+    assert np.allclose(arr[0, sites], ds)
+    # time list
+    times = sorted(np.random.choice(ds_shape[0], 100, replace=False))
+    ds = dset[times]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (100, ds_shape[1])
+    assert np.allclose(arr[times], ds)
+    # time list single site
+    ds = dset[times, 0]
+    assert isinstance(ds, np.ndarray)
+    assert ds.shape == (100,)
+    assert np.allclose(arr[times, 0], ds)
+    # time and site lists
+    with pytest.raises(IndexError):
+        assert dset[times, sites]
 
 
 def check_scale(res_cls, ds_name):
@@ -255,6 +322,7 @@ class TestNSRDB:
         test extraction of a variable array
         """
         check_dset(NSRDB_res, ds_name)
+        check_dset_handler(NSRDB_res, ds_name)
         NSRDB_res.close()
 
     @staticmethod
@@ -279,52 +347,53 @@ class TestNSRDB2018:
     MultiFileNSRDB Resource handler tests
     """
     @staticmethod
-    def test_res(NSRDB_res):
+    def test_res(NSRDB_2018):
         """
         test NSRDB class calls
         """
-        check_res(NSRDB_res)
-        NSRDB_res.close()
+        check_res(NSRDB_2018)
+        NSRDB_2018.close()
 
     @staticmethod
-    def test_meta(NSRDB_res):
+    def test_meta(NSRDB_2018):
         """
         test extraction of NSRDB meta data
         """
-        check_meta(NSRDB_res)
-        NSRDB_res.close()
+        check_meta(NSRDB_2018)
+        NSRDB_2018.close()
 
     @staticmethod
-    def test_time_index(NSRDB_res):
+    def test_time_index(NSRDB_2018):
         """
         test extraction of NSRDB time_index
         """
-        check_time_index(NSRDB_res)
-        NSRDB_res.close()
+        check_time_index(NSRDB_2018)
+        NSRDB_2018.close()
 
     @staticmethod
-    def test_ds(NSRDB_res, ds_name='dni'):
+    def test_ds(NSRDB_2018, ds_name='dni'):
         """
         test extraction of a variable array
         """
-        check_dset(NSRDB_res, ds_name)
-        NSRDB_res.close()
+        check_dset(NSRDB_2018, ds_name)
+        check_dset_handler(NSRDB_2018, ds_name)
+        NSRDB_2018.close()
 
     @staticmethod
-    def test_unscale_dni(NSRDB_res):
+    def test_unscale_dni(NSRDB_2018):
         """
         test unscaling of dni values
         """
-        check_scale(NSRDB_res, 'dni')
-        NSRDB_res.close()
+        check_scale(NSRDB_2018, 'dni')
+        NSRDB_2018.close()
 
     @staticmethod
-    def test_unscale_pressure(NSRDB_res):
+    def test_unscale_pressure(NSRDB_2018):
         """
         test unscaling of pressure values
         """
-        check_scale(NSRDB_res, 'surface_pressure')
-        NSRDB_res.close()
+        check_scale(NSRDB_2018, 'surface_pressure')
+        NSRDB_2018.close()
 
 
 class TestWindResource:
@@ -361,6 +430,7 @@ class TestWindResource:
         test extraction of a variable array
         """
         check_dset(WindResource_res, ds_name)
+        check_dset_handler(WindResource_res, ds_name)
         WindResource_res.close()
 
     @staticmethod
@@ -454,6 +524,7 @@ class TestGroupResource:
         test extraction of a variable array
         """
         check_dset(wind_group, ds_name)
+        check_dset_handler(wind_group, ds_name)
         wind_group.close()
 
     @staticmethod
@@ -537,6 +608,7 @@ class TestMultiFileWTK:
         test extraction of a variable array
         """
         check_dset(FiveMinWind_res, ds_name)
+        check_dset_handler(FiveMinWind_res, ds_name)
         FiveMinWind_res.close()
 
     @staticmethod

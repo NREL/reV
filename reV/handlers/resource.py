@@ -608,6 +608,29 @@ class Resource:
 
         return df
 
+    def open_dataset(self, ds_name):
+        """
+        Open resource dataset
+
+        Parameters
+        ----------
+        ds_name : str
+            Dataset name to open
+
+        Returns
+        -------
+        ds : ResourceDataset
+            Handler for open resource dataset
+        """
+        if ds_name not in self.datasets:
+            raise HandlerKeyError('{} not in {}'
+                                  .format(ds_name, self.datasets))
+
+        ds = ResourceDataset(self.h5[ds_name], scale_attr=self.SCALE_ATTR,
+                             add_attr=self.ADD_ATTR, unscale=self._unscale)
+
+        return ds
+
     def get_attrs(self, dset=None):
         """
         Get h5 attributes either from file or dataset
