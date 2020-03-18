@@ -9,8 +9,8 @@ import pandas as pd
 import pytest
 
 from reV import TESTDATADIR
-from reV.handlers.resource import (NSRDB, WindResource, MultiFileNSRDB,
-                                   MultiFileWTK)
+from reV.handlers.rev_resource import (NSRDB, WindResource, MultiFileNSRDB,
+                                       MultiFileWTK)
 from reV.utilities.exceptions import HandlerKeyError
 
 

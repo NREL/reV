@@ -12,7 +12,7 @@ import time
 
 from reV.version import __version__
 from reV.handlers.resource import Resource
-from reV.handlers.parse_keys import parse_keys
+from reV.handlers.parse_keys import parse_keys, parse_slice
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
                                       HandlerValueError)
 
@@ -63,11 +63,11 @@ class Outputs(Resource):
         ds, ds_slice = parse_keys(keys)
         if ds in self.datasets:
             if ds.endswith('time_index'):
-                out = self._get_time_index(ds, *ds_slice)
+                out = self._get_time_index(ds, ds_slice)
             elif ds.endswith('meta'):
-                out = self._get_meta(ds, *ds_slice)
+                out = self._get_meta(ds, ds_slice)
             else:
-                out = self._get_ds(ds, *ds_slice)
+                out = self._get_ds(ds, ds_slice)
         else:
             msg = '{} is not a valid Dataset'.format(ds)
             raise HandlerKeyError(msg)
@@ -87,7 +87,7 @@ class Outputs(Resource):
             elif ds.endswith('time_index') and slice_test:
                 self._set_time_index(ds, arr)
             else:
-                self._set_ds_array(ds, arr, *ds_slice)
+                self._set_ds_array(ds, arr, ds_slice)
 
     def set_version_attr(self):
         """Set the version attribute to the h5 file."""
@@ -442,7 +442,7 @@ class Outputs(Resource):
 
         return data
 
-    def _set_ds_array(self, ds_name, arr, *ds_slice):
+    def _set_ds_array(self, ds_name, arr, ds_slice):
         """
         Write ds to disk
 
@@ -461,7 +461,7 @@ class Outputs(Resource):
 
         dtype = self.h5[ds_name].dtype
         scale_factor = self.get_scale(ds_name)
-
+        ds_slice = parse_slice(ds_slice)
         self.h5[ds_name][ds_slice] = self._check_data_dtype(arr, dtype,
                                                             scale_factor)
 
@@ -614,7 +614,7 @@ class Outputs(Resource):
 
         arr = self.__getitem__(keys)
         if not np.array_equal(arr, dset_array):
-            self._set_ds_array(dset, dset_array, *dset_slice)
+            self._set_ds_array(dset, dset_array, dset_slice)
 
     def write_dataset(self, dset_name, data, dtype, chunks=None, attrs=None):
         """
