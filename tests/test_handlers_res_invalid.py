@@ -5,7 +5,7 @@ pytests for resource handlers with invalid ranges
 import numpy as np
 import os
 import pytest
-from reV.handlers.resource import WindResource
+from reV.handlers.rev_resource import WindResource
 from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 

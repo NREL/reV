@@ -10,9 +10,9 @@ import pandas as pd
 from warnings import warn
 import PySAM.GenericSystem as generic
 
-from reV.handlers.resource import (WindResource, SolarResource, NSRDB,
-                                   MultiFileResource, MultiFileWTK,
-                                   MultiFileNSRDB)
+from reV.handlers.resource import MultiFileResource
+from reV.handlers.rev_resource import (WindResource, SolarResource, NSRDB,
+                                       MultiFileWTK, MultiFileNSRDB)
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
                                       SAMExecutionError, ResourceError)
 from reV.utilities.utilities import check_res_file

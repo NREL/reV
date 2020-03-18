@@ -8,7 +8,7 @@ import json
 import numpy as np
 
 from reV.handlers.parse_keys import parse_keys
-from reV.handlers.resource import Resource
+from reV.handlers.resource import ResourceDataset
 from reV.utilities.exceptions import HandlerKeyError
 
 logger = logging.getLogger(__name__)
@@ -249,7 +249,7 @@ class ExclusionLayers:
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        lat = Resource._extract_ds_slice(self.h5['latitude'], *ds_slice)
+        lat = ResourceDataset.extract(self.h5['latitude'], ds_slice)
 
         return lat
 
@@ -273,7 +273,7 @@ class ExclusionLayers:
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        lat = Resource._extract_ds_slice(self.h5['longitude'], *ds_slice)
+        lat = ResourceDataset.extract(self.h5['longitude'], ds_slice)
 
         return lat
 
@@ -304,7 +304,6 @@ class ExclusionLayers:
         else:
             slices = ds_slice
 
-        layer_data = Resource._extract_ds_slice(self.h5[layer_name],
-                                                *slices)
+        layer_data = ResourceDataset.extract(self.h5[layer_name], slices)
 
         return layer_data
