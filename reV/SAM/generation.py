@@ -716,36 +716,50 @@ class SolarThermal(Solar):
 
         # --------- Process data
         df = resource.copy()
-
-        df['dt'] = df.index
+        df['dt_utc'] = df.index
 
         # Adjust from UTC to local time
         rolled = np.roll(df.to_numpy(), timezone * self.time_interval,
                          axis=0)
         df = pd.DataFrame(rolled, columns=df.columns, index=df.index)
 
-        feb_29 = (df.index.month == 2) & (df.index.day == 29)
-        dec_31 = (df.index.month == 12) & (df.index.day == 31)
+        if df.index.is_leap_year.any():
+            feb_29 = (df.index.month == 2) & (df.index.day == 29)
+            dec_31 = (df.index.month == 12) & (df.index.day == 31)
 
-        if self._drop_leap:
-            drop_day = feb_29
+            if self._drop_leap:
+                drop_day = feb_29
+            else:
+                drop_day = dec_31
+
+            # Drop Feb 29th from time stamps, and drop_day from data
+            new_df = pd.DataFrame(index=df.index[~feb_29])
+            new_df['DT_UTC'] = df.dt_utc[~drop_day].to_numpy()
+            new_df['Year'] = new_df.index.year
+            new_df['Month'] = new_df.index.month
+            new_df['Day'] = new_df.index.day
+            new_df['Hour'] = new_df.index.hour
+            new_df['Minute'] = new_df.index.minute
+            new_df['DNI'] = df.dni[~drop_day].to_numpy()
+            new_df['DHI'] = df.dhi[~drop_day].to_numpy()
+            new_df['Wind Speed'] = df.wind_speed[~drop_day].to_numpy()
+            new_df['Temperature'] = df.air_temperature[~drop_day].to_numpy()
+            new_df['Dew Point'] = df.dew_point[~drop_day].to_numpy()
+            new_df['Pressure'] = df.surface_pressure[~drop_day].to_numpy()
         else:
-            drop_day = dec_31
-
-        # Drop Feb 29th from time stamps, and drop_day from data
-        new_df = pd.DataFrame(index=df.index[~feb_29])
-        new_df['DT_UTC'] = df.dt[~drop_day].to_numpy()
-        new_df['Year'] = new_df.index.year
-        new_df['Month'] = new_df.index.month
-        new_df['Day'] = new_df.index.day
-        new_df['Hour'] = new_df.index.hour
-        new_df['Minute'] = new_df.index.minute
-        new_df['DNI'] = df.dni[~drop_day].to_numpy()
-        new_df['DHI'] = df.dhi[~drop_day].to_numpy()
-        new_df['Wind Speed'] = df.wind_speed[~drop_day].to_numpy()
-        new_df['Temperature'] = df.air_temperature[~drop_day].to_numpy()
-        new_df['Dew Point'] = df.dew_point[~drop_day].to_numpy()
-        new_df['Pressure'] = df.surface_pressure[~drop_day].to_numpy()
+            new_df = pd.DataFrame(index=df.index)
+            new_df['DT_UTC'] = df.dt_utc
+            new_df['Year'] = new_df.index.year
+            new_df['Month'] = new_df.index.month
+            new_df['Day'] = new_df.index.day
+            new_df['Hour'] = new_df.index.hour
+            new_df['Minute'] = new_df.index.minute
+            new_df['DNI'] = df.dni
+            new_df['DHI'] = df.dhi
+            new_df['Wind Speed'] = df.wind_speed
+            new_df['Temperature'] = df.air_temperature
+            new_df['Dew Point'] = df.dew_point
+            new_df['Pressure'] = df.surface_pressure
 
         new_df.to_csv(fname, index=False, mode='a')
         return fname
