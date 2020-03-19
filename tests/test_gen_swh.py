@@ -14,8 +14,43 @@ from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
 
-def test_gen_swh():
-    """Test generation for solar water heating"""
+def my_assert(x, y, digits):
+    """
+    Sum time series data for comparison to rounded known value. This is an
+    arbitrary method of comparison but it's simple.
+    """
+    if isinstance(x, np.ndarray):
+        x = float(x.sum())
+    assert round(x, digits) == round(y, digits)
+
+
+def test_gen_swh_non_leap_year():
+    """Test generation for solar water heating for non leap year (2013)"""
+
+    points = slice(0, 1)
+    sam_files = TESTDATADIR + '/SAM/swh_default.json'
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(2013)
+
+    output_request = ('T_amb', 'T_cold', 'T_deliv', 'T_hot', 'draw',
+                      'beam', 'diffuse', 'I_incident', 'I_transmitted',
+                      'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction')
+
+    # run reV 2.0 generation
+    gen = Gen.reV_run(tech='solarwaterheat', points=points,
+                      sam_files=sam_files, res_file=res_file, max_workers=1,
+                      output_request=output_request,
+                      sites_per_worker=1, fout=None, scale_outputs=True)
+
+    # Some results will be different with PySAM 2 vs 1.2.1
+    my_assert(gen.out['T_amb'], 180621, 0)
+    my_assert(gen.out['T_cold'], 410491.1066, 0)
+    my_assert(gen.out['T_deliv'], 813060.4364, 0)
+    my_assert(gen.out['T_hot'], 813419.981, 0)
+    my_assert(gen.out['Q_deliv'], 5390.47749, 1)
+
+
+def test_gen_swh_leap_year():
+    """Test generation for solar water heating for a leap year (2012)"""
 
     points = slice(0, 1)
     sam_files = TESTDATADIR + '/SAM/swh_default.json'
@@ -30,11 +65,6 @@ def test_gen_swh():
                       sam_files=sam_files, res_file=res_file, max_workers=1,
                       output_request=output_request,
                       sites_per_worker=1, fout=None, scale_outputs=True)
-
-    def my_assert(x, y, digits):
-        if isinstance(x, np.ndarray):
-            x = float(x.sum())
-        assert round(x, digits) == round(y, digits)
 
     # Some results will be different with PySAM 2 vs 1.2.1, in particular,
     # solar_fraction and cf_mean
