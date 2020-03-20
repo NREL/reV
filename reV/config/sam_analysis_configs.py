@@ -261,7 +261,7 @@ class EconConfig(SAMAnalysisConfig):
                 # need to make list of res files for each year
                 self._cf_files = [fname.format(year) for year in self.years]
             elif 'PIPELINE' in fname:
-                self._cf_files = Pipeline.parse_previous(self.dirout,
+                self._cf_files = Pipeline.parse_previous(super().dirout,
                                                          'econ',
                                                          target='fpath')
             else:
