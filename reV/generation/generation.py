@@ -875,9 +875,20 @@ class Gen:
                                curtailment=curtailment)
 
             #  make Points Control instance
-            if points_range is None:
+            if points_range is None and res_file is None:
                 # PointsControl is for all of the project points
                 pc = PointsControl(pp, sites_per_split=sites_per_worker)
+            elif points_range is None and res_file is not None:
+                # PointsControl is for all of the project points
+                with Outputs(res_file, mode='r') as f:
+                    if 'gid' in f.meta:
+                        gid0 = f.meta['gid'].values[0]
+                        gid1 = f.meta['gid'].values[-1] + 1
+                        pc = PointsControl.split(
+                            gid0, gid1, pp, sites_per_split=sites_per_worker)
+                    else:
+                        pc = PointsControl(
+                            pp, sites_per_split=sites_per_worker)
             else:
                 # PointsControl is for just a subset of the projec points...
                 # this is the case if generation is being initialized on one

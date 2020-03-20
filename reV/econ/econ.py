@@ -439,14 +439,14 @@ class Econ(Gen):
 
         # get a points control instance
         pc = cls.get_pc(points, points_range, sam_files, tech='econ',
-                        sites_per_worker=sites_per_worker)
+                        sites_per_worker=sites_per_worker, res_file=cf_file)
 
         # make a Gen class instance to operate with
         econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
                    output_request=output_request, fout=fout, dirout=dirout,
                    append=append)
 
-        diff = set(pc.sites) - set(econ.meta['gid'].values)
+        diff = list(set(pc.sites) - set(econ.meta['gid'].values))
         if diff:
             raise Exception('The following analysis sites were requested '
                             'through project points for econ but are not '

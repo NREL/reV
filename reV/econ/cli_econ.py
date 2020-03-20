@@ -70,6 +70,8 @@ def from_config(ctx, config_file, verbose):
     logger.info('The following SAM configs are available to this run:\n{}'
                 .format(pprint.pformat(config.get('sam_files', None),
                                        indent=4)))
+    logger.debug('Submitting jobs for the following cf_files: {}'
+                 .format(config.cf_files))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -85,17 +87,26 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['TIMEOUT'] = config.timeout
 
-    for i, year in enumerate(config.years):
-        submit_from_config(ctx, name, year, config, verbose, i)
+    if len(config.years) == len(config.cf_files):
+        for i, year in enumerate(config.years):
+            cf_file = config.cf_files[i]
+            submit_from_config(ctx, name, cf_file, year, config, verbose)
+    else:
+        for i, cf_file in enumerate(config.cf_files):
+            year = parse_year(cf_file)
+            if str(year) in [str(y) for y in config.years]:
+                submit_from_config(ctx, name, cf_file, year, config, verbose)
 
 
-def submit_from_config(ctx, name, year, config, verbose, i):
+def submit_from_config(ctx, name, cf_file, year, config, verbose):
     """Function to submit one year from a config file.
 
     Parameters
     ----------
     ctx : cli.ctx
         Click context object. Use case: data = ctx.obj['key']
+    cf_file : str
+        reV generation file with capacity factors to calculate econ for.
     name : str
         Job name.
     year : int | str | NoneType
@@ -105,25 +116,26 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     """
 
     # set the year-specific variables
-    ctx.obj['CF_FILE'] = config.cf_files[i]
+    ctx.obj['CF_FILE'] = cf_file
     ctx.obj['CF_YEAR'] = year
 
     # check to make sure that the year matches the resource file
-    if str(year) not in config.cf_files[i]:
+    if str(year) not in cf_file:
         warn('reV gen results file and year do not appear to match. '
              'Expected the string representation of the year '
              'to be in the generation results file name. '
              'Year: {}, generation results file: {}'
-             .format(year, config.cf_files[i]))
+             .format(year, cf_file))
 
     # if the year isn't in the name, add it before setting the file output
     ctx.obj['FOUT'] = make_fout(name, year)
     if config.append:
-        ctx.obj['FOUT'] = os.path.basename(ctx.obj['CF_FILE'])
+        ctx.obj['FOUT'] = os.path.basename(cf_file)
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
         name_year = make_fout(name, year).replace('.h5', '')
+        name_year = name_year.replace('gen', 'econ')
         ctx.obj['NAME'] = name_year
         status = Status.retrieve_job_status(config.dirout, 'econ', name_year)
         if status != 'successful':
@@ -467,15 +479,20 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                                      'reV.utilities', 'reV.SAM'],
               verbose=False)
 
-    pc = get_node_pc(points, sam_files, nodes)
+    if append:
+        pc = [None]
+    else:
+        pc = get_node_pc(points, sam_files, nodes)
 
     for i, split in enumerate(pc):
         node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
+        node_name = node_name.replace('gen', 'econ')
 
+        points_range = split.split_range if split is not None else None
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,
-                           points_range=split.split_range,
+                           points_range=points_range,
                            sites_per_worker=sites_per_worker,
                            max_workers=max_workers, timeout=timeout,
                            fout=fout_node,
@@ -492,7 +509,7 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
         else:
             logger.info('Running reV econ on SLURM with node name "{}" for '
                         '{} (points range: {}).'
-                        .format(node_name, pc, split.split_range))
+                        .format(node_name, pc, points_range))
             # create and submit the SLURM job
             slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
                           feature=feature, name=node_name,
