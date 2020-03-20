@@ -239,7 +239,7 @@ def econ_local(ctx, max_workers, timeout, points_range, verbose):
 
     # initialize loggers for multiple modules
     log_modules = [__name__, 'reV.econ.econ', 'reV.generation', 'reV.config',
-                   'reV.utilities', 'reV.SAM']
+                   'reV.utilities', 'reV.SAM', 'reV.handlers']
     init_mult(name, logdir, modules=log_modules,
               verbose=verbose, node=True)
 

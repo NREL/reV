@@ -504,7 +504,7 @@ class Outputs(Resource):
         return ds_chunks
 
     def _create_dset(self, ds_name, shape, dtype, chunks=None, attrs=None,
-                     data=None):
+                     data=None, replace=True):
         """
         Initialize dataset
 
@@ -522,8 +522,13 @@ class Outputs(Resource):
             Dataset attributes
         data : ndarray
             Dataset data array
+        replace : bool
+            If previous dataset exists with the same name, it will be replaced.
         """
         if self.writable:
+            if ds_name in self.datasets and replace:
+                del self.h5[ds_name]
+
             chunks = self._check_chunks(chunks, data=data)
             ds = self.h5.create_dataset(ds_name, shape=shape, dtype=dtype,
                                         chunks=chunks)
