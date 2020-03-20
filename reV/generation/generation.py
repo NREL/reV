@@ -464,11 +464,11 @@ class Gen:
         if self._fpath is not None:
 
             if 'w' in mode:
-                logger.info('Initializing full output file: "{}"'
-                            .format(self._fpath))
+                logger.info('Initializing full output file: "{}" with mode: {}'
+                            .format(self._fpath, mode))
             elif 'a' in mode:
-                logger.info('Appending data to output file: "{}"'
-                            .format(self._fpath))
+                logger.info('Appending data to output file: "{}" with mode: {}'
+                            .format(self._fpath, mode))
 
             attrs = {d: {} for d in self.output_request}
             chunks = {}
