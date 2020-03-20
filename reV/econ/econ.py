@@ -81,7 +81,7 @@ class Econ(Gen):
 
     def __init__(self, points_control, cf_file, cf_year, site_data=None,
                  output_request=('lcoe_fcr',), fout=None, dirout='./econ_out',
-                 mem_util_lim=0.4):
+                 append=False, mem_util_lim=0.4):
         """Initialize an econ instance.
 
         Parameters
@@ -106,6 +106,9 @@ class Econ(Gen):
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
+        append : bool
+            Flag to append econ datasets to source cf_file. This has priority
+            over the fout and dirout inputs.
         """
         self._points_control = points_control
         self._cf_file = cf_file
@@ -129,8 +132,8 @@ class Econ(Gen):
                            'cf_file': cf_file,
                            'site_data': str(site_data),
                            'output_request': output_request,
-                           'fout': fout,
-                           'dirout': dirout,
+                           'fout': str(fout),
+                           'dirout': str(dirout),
                            'mem_util_lim': mem_util_lim,
                            'sam_module': self._sam_module.MODULE}
 
@@ -141,9 +144,13 @@ class Econ(Gen):
         self._out_chunk = ()
         self._init_out_arrays()
 
-        # initialize output file
-        self._init_fpath()
-        self._init_h5()
+        # initialize output file or append econ data to gen file
+        if append:
+            self._fpath = self._cf_file
+        else:
+            self._init_fpath()
+        mode = 'a' if append else 'w'
+        self._init_h5(mode=mode)
 
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
@@ -374,7 +381,7 @@ class Econ(Gen):
                 cf_year=None, site_data=None, output_request=('lcoe_fcr',),
                 max_workers=1, sites_per_worker=100, pool_size=72,
                 timeout=1800, points_range=None, fout=None,
-                dirout='./econ_out'):
+                dirout='./econ_out', append=False):
         """Execute a parallel reV econ run with smart data flushing.
 
         Parameters
@@ -420,6 +427,9 @@ class Econ(Gen):
         dirout : str | None
             Optional output directory specification. The directory will be
             created if it does not already exist.
+        append : bool
+            Flag to append econ datasets to source cf_file. This has priority
+            over the fout and dirout inputs.
 
         Returns
         -------
@@ -433,7 +443,8 @@ class Econ(Gen):
 
         # make a Gen class instance to operate with
         econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
-                   output_request=output_request, fout=fout, dirout=dirout)
+                   output_request=output_request, fout=fout, dirout=dirout,
+                   append=append)
 
         diff = set(pc.sites) - set(econ.meta['gid'].values)
         if diff:

@@ -12,6 +12,8 @@ import os
 import h5py
 import pytest
 import numpy as np
+import shutil
+from pandas.testing import assert_frame_equal
 
 from reV.econ.econ import Econ
 from reV import TESTDATADIR
@@ -78,6 +80,51 @@ def test_fout(year):
         os.remove(fpath)
 
     assert result
+
+
+@pytest.mark.parametrize('year', ('2012', '2013'))
+def test_append_data(year):
+    """Gen PV CF profiles with write to disk and compare against rev1."""
+    original_file = os.path.join(TESTDATADIR,
+                                 'gen_out/gen_ri_pv_{}_x000.h5'.format(year))
+    cf_file = os.path.join(TESTDATADIR,
+                           'gen_out/copy_gen_ri_pv_{}_x000.h5'.format(year))
+    shutil.copy(original_file, cf_file)
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/i_lcoe_naris_pv_1axis_inv13.json')
+    r1f = os.path.join(TESTDATADIR,
+                       'ri_pv/scalar_outputs/project_outputs.h5')
+    points = slice(0, 100)
+    Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
+                 cf_year=year, output_request='lcoe_fcr',
+                 max_workers=1, sites_per_worker=25,
+                 points_range=None, append=True)
+
+    with Outputs(cf_file) as f:
+        new_dsets = f.dsets
+        cf_profile = f['cf_profile']
+        lcoe = f['lcoe_fcr']
+        meta = f.meta
+        ti = f.time_index
+
+    with Outputs(original_file) as f:
+        og_dsets = f.dsets
+        og_profiles = f['cf_profile']
+        og_meta = f.meta
+        og_ti = f.time_index
+
+    with h5py.File(r1f) as f:
+        year_rows = {'2012': 0, '2013': 1}
+        r1_lcoe = f['pv']['lcoefcr'][year_rows[str(year)], 0:100] * 1000
+
+    if PURGE_OUT:
+        os.remove(cf_file)
+
+    assert np.allclose(lcoe, r1_lcoe, rtol=RTOL, atol=ATOL)
+    assert np.allclose(cf_profile, og_profiles)
+    assert_frame_equal(meta, og_meta)
+    assert all(ti == og_ti)
+    assert all([d in new_dsets for d in og_dsets])
 
 
 def execute_pytest(capture='all', flags='-rapP'):

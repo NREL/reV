@@ -251,9 +251,9 @@ class Gen:
         self._run_attrs = {'points_control': str(points_control),
                            'res_file': res_file,
                            'output_request': output_request,
-                           'fout': fout,
-                           'dirout': dirout,
-                           'drop_leap': drop_leap,
+                           'fout': str(fout),
+                           'dirout': str(dirout),
+                           'drop_leap': str(drop_leap),
                            'mem_util_lim': mem_util_lim,
                            'downscale': str(downscale),
                            'sam_module': self._sam_module.MODULE}
@@ -452,13 +452,23 @@ class Gen:
             else:
                 self._fpath = self._fout
 
-    def _init_h5(self):
-        """Initialize the single h5 output file with all output requests."""
+    def _init_h5(self, mode='w'):
+        """Initialize the single h5 output file with all output requests.
+
+        Parameters
+        ----------
+        mode : str
+            Mode to instantiate h5py.File instance
+        """
 
         if self._fpath is not None:
 
-            logger.info('Initializing full output file: "{}"'
-                        .format(self._fpath))
+            if 'w' in mode:
+                logger.info('Initializing full output file: "{}"'
+                            .format(self._fpath))
+            elif 'a' in mode:
+                logger.info('Appending data to output file: "{}"'
+                            .format(self._fpath))
 
             attrs = {d: {} for d in self.output_request}
             chunks = {}
@@ -492,7 +502,8 @@ class Gen:
 
             Outputs.init_h5(self._fpath, self.output_request, shapes, attrs,
                             chunks, dtypes, self.meta, time_index=ti,
-                            configs=self.sam_metas, run_attrs=self.run_attrs)
+                            configs=self.sam_metas, run_attrs=self.run_attrs,
+                            mode=mode)
 
     def _init_out_arrays(self, index_0=0):
         """Initialize output arrays based on the number of sites that can be
