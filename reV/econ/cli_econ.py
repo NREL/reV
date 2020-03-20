@@ -79,6 +79,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
+    ctx.obj['APPEND'] = config.append
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
@@ -117,6 +118,8 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 
     # if the year isn't in the name, add it before setting the file output
     ctx.obj['FOUT'] = make_fout(name, year)
+    if config.append:
+        ctx.obj['FOUT'] = os.path.basename(ctx.obj['CF_FILE'])
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
@@ -176,11 +179,15 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 @click.option('-or', '--output_request', type=STRLIST, default=['lcoe_fcr'],
               help=('Requested output variable name(s). '
                     'Default is ["lcoe_fcr"].'))
+@click.option('-ap', '--append', is_flag=True,
+              help='Flag to append econ datasets to source cf_file. This has '
+              'priority over fout and dirout inputs.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
-           sites_per_worker, fout, dirout, logdir, output_request, verbose):
+           sites_per_worker, fout, dirout, logdir, output_request,
+           append, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['POINTS'] = points
@@ -193,6 +200,7 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
     ctx.obj['DIROUT'] = dirout
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
+    ctx.obj['APPEND'] = append
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
 
@@ -222,7 +230,12 @@ def econ_local(ctx, max_workers, timeout, points_range, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
+
+    if append:
+        fout = os.path.basename(cf_file)
+        dirout = os.path.dirname(cf_file)
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
@@ -250,7 +263,8 @@ def econ_local(ctx, max_workers, timeout, points_range, verbose):
                  sites_per_worker=sites_per_worker,
                  points_range=points_range,
                  fout=fout,
-                 dirout=dirout)
+                 dirout=dirout,
+                 append=append)
 
     tmp_str = ' with points range {}'.format(points_range)
     runtime = (time.time() - t0) / 60
@@ -303,7 +317,7 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                  sites_per_worker=None, max_workers=None, timeout=1800,
                  fout='reV.h5', dirout='./out/econ_out',
                  logdir='./out/log_econ', output_request='lcoe_fcr',
-                 verbose=False):
+                 append=False, verbose=False):
     """Made a reV econ direct-local command line interface call string.
 
     Parameters
@@ -342,6 +356,9 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         Target directory to save log files.
     output_request : list | tuple
         Output variable requested from SAM.
+    append : bool
+        Flag to append econ datasets to source cf_file. This has priority
+        over the fout and dirout inputs.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -385,10 +402,11 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
     arg_loc = ('-mw {max_workers} '
                '-to {timeout} '
                '-pr {points_range} '
-               '{v}'.format(max_workers=SubprocessManager.s(max_workers),
-                            timeout=SubprocessManager.s(timeout),
-                            points_range=SubprocessManager.s(points_range),
-                            v='-v' if verbose else ''))
+               '{a}{v}'.format(max_workers=SubprocessManager.s(max_workers),
+                               timeout=SubprocessManager.s(timeout),
+                               points_range=SubprocessManager.s(points_range),
+                               a='-ap ' if append else '',
+                               v='-v ' if verbose else ''))
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
@@ -439,6 +457,7 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -459,7 +478,8 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                            max_workers=max_workers, timeout=timeout,
                            fout=fout_node,
                            dirout=dirout, logdir=logdir,
-                           output_request=output_request, verbose=verbose)
+                           output_request=output_request, append=append,
+                           verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'econ', node_name)
 

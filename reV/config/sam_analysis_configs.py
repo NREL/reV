@@ -6,6 +6,7 @@ Created on Mon Jan 28 11:43:27 2019
 
 @author: gbuster
 """
+import os
 import logging
 from math import ceil
 
@@ -296,3 +297,29 @@ class EconConfig(SAMAnalysisConfig):
         """
         self._site_data = self.get('site_data', self._site_data)
         return self._site_data
+
+    @property
+    def dirout(self):
+        """Get the output directory, look for key "output_directory" in the
+        "directories" config group. Overwritten if append is True.
+
+        Returns
+        -------
+        dirout : str
+            Target path for reV output files.
+        """
+        self._dirout = super().dirout
+        if self.append:
+            self._dirout = os.path.dirname(self.cf_files[0])
+        return self._dirout
+
+    @property
+    def append(self):
+        """Get the flag to append econ results to cf_file inputs.
+
+        Returns
+        -------
+        append : bool
+            Flag to append econ results to gen results. Default is False.
+        """
+        return bool(self.get('append', False))
