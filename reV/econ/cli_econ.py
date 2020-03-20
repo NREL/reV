@@ -385,7 +385,8 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                   '-fo {fout} '
                   '-do {dirout} '
                   '-lo {logdir} '
-                  '-or {out_req} ')
+                  '-or {out_req} '
+                  '{append}')
     arg_direct = arg_direct.format(
         points=SubprocessManager.s(points),
         sam_files=SubprocessManager.s(sam_files),
@@ -396,17 +397,17 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         fout=SubprocessManager.s(fout),
         dirout=SubprocessManager.s(dirout),
         logdir=SubprocessManager.s(logdir),
-        out_req=SubprocessManager.s(output_request))
+        out_req=SubprocessManager.s(output_request),
+        append='-ap ' if append else '')
 
     # make a cli arg string for local() in this module
     arg_loc = ('-mw {max_workers} '
                '-to {timeout} '
                '-pr {points_range} '
-               '{a}{v}'.format(max_workers=SubprocessManager.s(max_workers),
-                               timeout=SubprocessManager.s(timeout),
-                               points_range=SubprocessManager.s(points_range),
-                               a='-ap ' if append else '',
-                               v='-v ' if verbose else ''))
+               '{v}'.format(max_workers=SubprocessManager.s(max_workers),
+                            timeout=SubprocessManager.s(timeout),
+                            points_range=SubprocessManager.s(points_range),
+                            v='-v ' if verbose else ''))
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
