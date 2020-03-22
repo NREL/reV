@@ -9,9 +9,18 @@ Created on 2/6/2020
 import numpy as np
 import os
 import pytest
+import pickle
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
+
+PICKLEFILE = TESTDATADIR + '/SAM/swh_profiles_2013.pkl'
+
+
+def save_outputs(out):
+    """ Save appropriate outputs to pickle file """
+    new_out = {'gen_profile': out['gen_profile']}
+    pickle.dump(new_out, open(PICKLEFILE, 'wb'))
 
 
 def my_assert(x, y, digits):
@@ -33,7 +42,8 @@ def test_gen_swh_non_leap_year():
 
     output_request = ('T_amb', 'T_cold', 'T_deliv', 'T_hot', 'draw',
                       'beam', 'diffuse', 'I_incident', 'I_transmitted',
-                      'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction')
+                      'annual_Q_deliv', 'Q_deliv', 'cf_mean', 'solar_fraction',
+                      'gen_profile')
 
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='solarwaterheat', points=points,
@@ -47,6 +57,11 @@ def test_gen_swh_non_leap_year():
     my_assert(gen.out['T_deliv'], 813060.4364, 0)
     my_assert(gen.out['T_hot'], 813419.981, 0)
     my_assert(gen.out['Q_deliv'], 5390.47749, 1)
+
+    # Verify series are in correct order and have been rolled correctly
+    profiles = pickle.load(open(PICKLEFILE, 'rb'))
+    for k in profiles.keys():
+        assert np.array_equal(profiles[k], gen.out[k])
 
 
 def test_gen_swh_leap_year():

@@ -138,6 +138,14 @@ class Generation(SAM):
                     raise SAMExecutionError(msg)
         return meta
 
+    @property
+    def has_timezone(self):
+        """ Returns true if instance has a timezone set """
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                return True
+        return False
+
     def cf_mean(self):
         """Get mean capacity factor (fractional) from SAM.
 
@@ -188,16 +196,11 @@ class Generation(SAM):
             1D array of hourly power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        gen = np.array(self['gen'], dtype=np.float32)
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                gen = np.roll(gen, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return gen
+        return np.array(self['gen'], dtype=np.float32)
 
     def collect_outputs(self, output_lookup=None):
-        """Collect SAM gen output_request.
+        """
+        Collect SAM gen output_request. Rolls outputs to UTC if appropriate.
 
         Parameters
         ----------
@@ -215,6 +218,43 @@ class Generation(SAM):
                              }
 
         super().collect_outputs(output_lookup=output_lookup)
+
+        # Roll back outputs from local time to UTC
+        if self.has_timezone:
+            for key in self.outputs:
+                if self._is_time_series(self.outputs[key]):
+                    # TODO - this defaults to int64/float64, is that ok?
+                    arr = np.asarray(self.outputs[key])
+                    arr = np.roll(arr, -1 * self.meta['timezone']
+                                  * self.time_interval)
+                    self.outputs[key] = arr
+
+    def _is_time_series(self, val):
+        """ Returns true if val has same length as resource time stamps """
+        # pylint: disable=E1101
+        if self._time_stamps.is_leap_year.all():
+            if (self._len(val) + 24 * self.time_interval
+                # pylint: disable=E1101
+               == len(self._time_stamps)):
+                return True
+        else:
+            # pylint: disable=E1101
+            if self._len(val) == len(self._time_stamps):
+                return True
+        return False
+
+    @staticmethod
+    def _len(val):
+        """ Smart len() that can handle floats and ints """
+        try:
+            return len(val)
+        except TypeError:
+            if isinstance(val, int) or isinstance(val, float):
+                return 1
+            else:
+                msg = 'Unknown expected value type {}'.format(type(val))
+                logger.error(msg)
+                raise SAMExecutionError(msg)
 
     def _gen_exec(self):
         """Run SAM generation with possibility for follow on econ analysis."""
@@ -375,6 +415,8 @@ class Solar(Generation):
         if resource is not None and meta is not None:
             self.set_nsrdb(resource)
 
+        self._time_stamps = resource.index
+
     def set_latitude_tilt_az(self, parameters, meta):
         """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0
 
@@ -507,23 +549,6 @@ class PV(Solar):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
-    def poa(self):
-        """Get plane-of-array irradiance profile (orig timezone) in W/m2.
-
-        Returns
-        -------
-        output : np.ndarray
-            1D array of plane-of-array irradiance in W/m2.
-            Datatype is float32 and array length is 8760*time_interval.
-        """
-        poa = np.array(self['poa'], dtype=np.float32)
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                poa = np.roll(poa, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return poa
-
     def gen_profile(self):
         """Get AC inverter power generation profile (orig timezone) in kW.
 
@@ -533,13 +558,7 @@ class PV(Solar):
             1D array of hourly AC inverter power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        gen = np.array(self['ac'], dtype=np.float32) / 1000
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                gen = np.roll(gen, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return gen
+        return np.array(self['ac'], dtype=np.float32) / 1000
 
     @property
     def default(self):
@@ -575,7 +594,6 @@ class PV(Solar):
                              'annual_energy': self.annual_energy,
                              'energy_yield': self.energy_yield,
                              'gen_profile': self.gen_profile,
-                             'poa': self.poa,
                              }
 
         super().collect_outputs(output_lookup=output_lookup)
@@ -721,7 +739,6 @@ class SolarThermal(Solar):
                            index=resource.index)
         leap_mask = (res.index.month == 2) & (res.index.day == 29)
         no_leap_index = res.index[~leap_mask]
-
         df = pd.DataFrame(index=no_leap_index)
         df['Year'] = df.index.year
         df['Month'] = df.index.month
@@ -981,6 +998,8 @@ class Wind(Generation):
         if resource is not None and meta is not None:
             self.set_wtk(resource)
 
+        self._time_stamps = resource.index
+
     def set_wtk(self, resource):
         """Set WTK resource data arrays.
 
@@ -1001,6 +1020,7 @@ class Wind(Generation):
         if 'rh' in resource:
             # set relative humidity for icing.
             rh = np.roll(self.ensure_res_len(resource['rh'].values),
+                         # TODO - why is there an int here? (typ)
                          int(self.meta['timezone'] * self.time_interval),
                          axis=0)
             data_dict['rh'] = rh.tolist()

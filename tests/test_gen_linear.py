@@ -6,13 +6,15 @@ This is intended to be run with PySAM 1.2.1
 Created on 2/6/2020
 @author: Mike Bannister
 """
-
 import os
 import pytest
 import numpy as np
+import pickle
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
+
+PICKLEFILE = TESTDATADIR + '/SAM/linear_profiles.pkl'
 
 
 def test_gen_linear():
@@ -36,8 +38,8 @@ def test_gen_linear():
     #     sequence: Receiver mass flow rate [kg/s]
     output_request = ('q_dot_to_heat_sink', 'gen', 'm_dot_field',
                       'q_dot_sf_out', 'W_dot_heat_sink_pump', 'm_dot_loop',
-                      'q_dot_rec_inc', 'cf_mean', 'annual_field_energy',
-                      'annual_thermal_consumption')
+                      'q_dot_rec_inc', 'cf_mean', 'gen_profile',
+                      'annual_field_energy', 'annual_thermal_consumption',)
 
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='lineardirectsteam', points=points,
@@ -58,6 +60,11 @@ def test_gen_linear():
     my_assert(gen.out['W_dot_heat_sink_pump'], 0.173017451, 6)
     my_assert(gen.out['annual_field_energy'], 5219918, 0)
     my_assert(gen.out['annual_thermal_consumption'], 3178, 0)
+
+    # Verify series are in correct order and have been rolled correctly
+    profiles = pickle.load(open(PICKLEFILE, 'rb'))
+    for k in profiles.keys():
+        assert np.array_equal(profiles[k], gen.out[k])
 
 
 def execute_pytest(capture='all', flags='-rapP'):
