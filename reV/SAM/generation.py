@@ -219,43 +219,6 @@ class Generation(SAM):
 
         super().collect_outputs(output_lookup=output_lookup)
 
-        # Roll back outputs from local time to UTC
-        if self.has_timezone:
-            for key in self.outputs:
-                if self._is_time_series(self.outputs[key]):
-                    # TODO - this defaults to int64/float64, is that ok?
-                    arr = np.asarray(self.outputs[key])
-                    arr = np.roll(arr, -1 * self.meta['timezone']
-                                  * self.time_interval)
-                    self.outputs[key] = arr
-
-    def _is_time_series(self, val):
-        """ Returns true if val has same length as resource time stamps """
-        # pylint: disable=E1101
-        if self._time_stamps.is_leap_year.all():
-            if (self._len(val) + 24 * self.time_interval
-                # pylint: disable=E1101
-               == len(self._time_stamps)):
-                return True
-        else:
-            # pylint: disable=E1101
-            if self._len(val) == len(self._time_stamps):
-                return True
-        return False
-
-    @staticmethod
-    def _len(val):
-        """ Smart len() that can handle floats and ints """
-        try:
-            return len(val)
-        except TypeError:
-            if isinstance(val, int) or isinstance(val, float):
-                return 1
-            else:
-                msg = 'Unknown expected value type {}'.format(type(val))
-                logger.error(msg)
-                raise SAMExecutionError(msg)
-
     def _gen_exec(self):
         """Run SAM generation with possibility for follow on econ analysis."""
 
@@ -280,6 +243,7 @@ class Generation(SAM):
         self.assign_inputs()
         self.execute()
         self.collect_outputs()
+        self.outputs_to_utc_arr()
 
         if lcoe_out_req is not None:
             self.parameters['annual_energy'] = self.annual_energy()
@@ -287,6 +251,7 @@ class Generation(SAM):
             lcoe.assign_inputs()
             lcoe.execute()
             lcoe.collect_outputs()
+            lcoe.outputs_to_utc_arr()
             self.outputs.update(lcoe.outputs)
 
         elif so_out_req is not None:
@@ -295,6 +260,7 @@ class Generation(SAM):
             so.assign_inputs()
             so.execute()
             so.collect_outputs()
+            so.outputs_to_utc_arr()
             self.outputs.update(so.outputs)
 
     @classmethod
@@ -414,8 +380,6 @@ class Solar(Generation):
 
         if resource is not None and meta is not None:
             self.set_nsrdb(resource)
-
-        self._time_stamps = resource.index
 
     def set_latitude_tilt_az(self, parameters, meta):
         """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0
@@ -734,7 +698,8 @@ class SolarThermal(Solar):
 
         # --------- Process data
         # Adjust from UTC to local time
-        local = np.roll(resource.values, timezone * self.time_interval, axis=0)
+        local = np.roll(resource.values, int(timezone * self.time_interval),
+                        axis=0)
         res = pd.DataFrame(local, columns=resource.columns,
                            index=resource.index)
         leap_mask = (res.index.month == 2) & (res.index.day == 29)
@@ -998,8 +963,6 @@ class Wind(Generation):
         if resource is not None and meta is not None:
             self.set_wtk(resource)
 
-        self._time_stamps = resource.index
-
     def set_wtk(self, resource):
         """Set WTK resource data arrays.
 
@@ -1020,7 +983,6 @@ class Wind(Generation):
         if 'rh' in resource:
             # set relative humidity for icing.
             rh = np.roll(self.ensure_res_len(resource['rh'].values),
-                         # TODO - why is there an int here? (typ)
                          int(self.meta['timezone'] * self.time_interval),
                          axis=0)
             data_dict['rh'] = rh.tolist()

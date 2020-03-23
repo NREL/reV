@@ -591,6 +591,49 @@ class SAM(RevPySAM):
                 time_interval += 1
         return int(time_interval)
 
+    @staticmethod
+    def _is_arr_like(val):
+        """Returns true if SAM data is array-like. False if scalar."""
+        if isinstance(val, (int, float, str)):
+            return False
+        else:
+            try:
+                len(val)
+            except TypeError:
+                return False
+            else:
+                return True
+
+    @staticmethod
+    def _is_hourly(val):
+        """Returns true if SAM data is hourly or sub-hourly. False otherise."""
+        if not SAM._is_arr_like(val):
+            return False
+        else:
+            L = len(val)
+            if L >= 8760:
+                return True
+            else:
+                return False
+
+    def outputs_to_utc_arr(self):
+        """Convert array-like SAM outputs to UTC np.ndarrays"""
+        if self.outputs is not None:
+            for key, output in self.outputs.items():
+                if self._is_arr_like(output):
+                    output = np.asarray(output)
+
+                    if output.dtype == np.float64:
+                        output = output.astype(np.float32)
+                    elif output.dtype == np.int64:
+                        output = output.astype(np.int32)
+
+                    if self._is_hourly(output):
+                        output = np.roll(output, int(-1 * self.meta['timezone']
+                                                     * self.time_interval))
+
+                    self.outputs[key] = output
+
     def collect_outputs(self, output_lookup):
         """Collect SAM output_request.
 

@@ -321,6 +321,7 @@ class Economic(SAM):
         sim.assign_inputs()
         sim.execute()
         sim.collect_outputs()
+        sim.outputs_to_utc_arr()
 
         return sim.outputs
 

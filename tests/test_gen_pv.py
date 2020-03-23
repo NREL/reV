@@ -12,7 +12,6 @@ import os
 import h5py
 import pytest
 import numpy as np
-import pickle
 
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
@@ -23,14 +22,6 @@ from reV.handlers.outputs import Outputs
 RTOL = 0.0
 ATOL = 0.04
 PURGE_OUT = True
-
-PICKLEFILE = TESTDATADIR + '/SAM/pv_profiles.pkl'
-
-
-def save_outputs(out):
-    new_out = {'gen_profile': out['gen_profile'],
-               'poa': out['poa']}
-    pickle.dump(new_out, open(PICKLEFILE, 'wb'))
 
 
 class pv_results:
@@ -70,25 +61,6 @@ def is_num(n):
         return True
     except Exception:
         return False
-
-
-def test_pv_tz_roll(f_rev1_out='project_outputs.h5',
-                    rev2_points=TESTDATADIR + '/project_points/ri.csv',
-                    res_file=TESTDATADIR + '/nsrdb/ri_100_nsrdb_2012.h5'):
-    """Test project points csv input with dictionary-based sam files."""
-    sam_files = {'sam_param_0': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
-                 'sam_param_1': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'}
-    output_request = ('poa', 'gen_profile')
-
-    # run reV 2.0 generation
-    gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      output_request=output_request,
-                      res_file=res_file, fout=None)
-
-    # Verify series are in correct order and have been rolled correctly
-    profiles = pickle.load(open(PICKLEFILE, 'rb'))
-    for k in profiles.keys():
-        assert np.array_equal(profiles[k], gen.out[k])
 
 
 def _to_list(gen_out):
