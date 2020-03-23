@@ -311,6 +311,7 @@ class EconConfig(SAMAnalysisConfig):
         self._dirout = super().dirout
         if self.append:
             self._dirout = os.path.dirname(self.cf_files[0])
+
         return self._dirout
 
     @property

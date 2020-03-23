@@ -529,9 +529,21 @@ class Outputs(Resource):
             if ds_name in self.datasets and replace:
                 del self.h5[ds_name]
 
-            chunks = self._check_chunks(chunks, data=data)
-            ds = self.h5.create_dataset(ds_name, shape=shape, dtype=dtype,
-                                        chunks=chunks)
+            elif ds_name in self.datasets:
+                old_shape, old_dtype, _ = self.get_dset_properties(ds_name)
+                if old_shape != shape or old_dtype != dtype:
+                    e = ('Trying to create dataset "{}", but already exists '
+                         'with mismatched shape and dtype. New shape/dtype '
+                         'is {}/{}, previous shape/dtype is {}/{}'
+                         .format(ds_name, shape, dtype, old_shape, old_dtype))
+                    logger.error(e)
+                    raise HandlerRuntimeError(e)
+
+            else:
+                chunks = self._check_chunks(chunks, data=data)
+                ds = self.h5.create_dataset(ds_name, shape=shape, dtype=dtype,
+                                            chunks=chunks)
+
             if attrs is not None:
                 for key, value in attrs.items():
                     ds.attrs[key] = value

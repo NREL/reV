@@ -149,6 +149,7 @@ class Econ(Gen):
             self._fpath = self._cf_file
         else:
             self._init_fpath()
+
         mode = 'a' if append else 'w'
         self._init_h5(mode=mode)
 
