@@ -13,13 +13,15 @@ from warnings import warn
 import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Windpower as pysam_wind
 import PySAM.TcsmoltenSalt as pysam_csp
+import PySAM.Swh as pysam_swh
+import PySAM.TroughPhysicalProcessHeat as pysam_tpph
+import PySAM.LinearFresnelDsgIph as pysam_lfdi
 
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
 from reV.utilities.utilities import mean_irrad
 from reV.SAM.SAM import SAM
 from reV.SAM.econ import LCOE, SingleOwner
-
 
 logger = logging.getLogger(__name__)
 DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -136,6 +138,14 @@ class Generation(SAM):
                     raise SAMExecutionError(msg)
         return meta
 
+    @property
+    def has_timezone(self):
+        """ Returns true if instance has a timezone set """
+        if self._meta is not None:
+            if 'timezone' in self.meta:
+                return True
+        return False
+
     def cf_mean(self):
         """Get mean capacity factor (fractional) from SAM.
 
@@ -186,16 +196,11 @@ class Generation(SAM):
             1D array of hourly power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        gen = np.array(self['gen'], dtype=np.float32)
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                gen = np.roll(gen, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return gen
+        return np.array(self['gen'], dtype=np.float32)
 
     def collect_outputs(self, output_lookup=None):
-        """Collect SAM gen output_request.
+        """
+        Collect SAM gen output_request. Rolls outputs to UTC if appropriate.
 
         Parameters
         ----------
@@ -238,6 +243,7 @@ class Generation(SAM):
         self.assign_inputs()
         self.execute()
         self.collect_outputs()
+        self.outputs_to_utc_arr()
 
         if lcoe_out_req is not None:
             self.parameters['annual_energy'] = self.annual_energy()
@@ -245,6 +251,7 @@ class Generation(SAM):
             lcoe.assign_inputs()
             lcoe.execute()
             lcoe.collect_outputs()
+            lcoe.outputs_to_utc_arr()
             self.outputs.update(lcoe.outputs)
 
         elif so_out_req is not None:
@@ -253,6 +260,7 @@ class Generation(SAM):
             so.assign_inputs()
             so.execute()
             so.collect_outputs()
+            so.outputs_to_utc_arr()
             self.outputs.update(so.outputs)
 
     @classmethod
@@ -284,7 +292,6 @@ class Generation(SAM):
             the second level key is the variable name, second level value is
             the output variable value.
         """
-
         # initialize output dictionary
         out = {}
 
@@ -506,23 +513,6 @@ class PV(Solar):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
-    def poa(self):
-        """Get plane-of-array irradiance profile (orig timezone) in W/m2.
-
-        Returns
-        -------
-        output : np.ndarray
-            1D array of plane-of-array irradiance in W/m2.
-            Datatype is float32 and array length is 8760*time_interval.
-        """
-        poa = np.array(self['poa'], dtype=np.float32)
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                poa = np.roll(poa, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return poa
-
     def gen_profile(self):
         """Get AC inverter power generation profile (orig timezone) in kW.
 
@@ -532,13 +522,7 @@ class PV(Solar):
             1D array of hourly AC inverter power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        gen = np.array(self['ac'], dtype=np.float32) / 1000
-        # Roll back to native timezone if resource meta has a timezone
-        if self._meta is not None:
-            if 'timezone' in self.meta:
-                gen = np.roll(gen, -1 * int(self.meta['timezone']
-                                            * self.time_interval))
-        return gen
+        return np.array(self['ac'], dtype=np.float32) / 1000
 
     @property
     def default(self):
@@ -574,7 +558,6 @@ class PV(Solar):
                              'annual_energy': self.annual_energy,
                              'energy_yield': self.energy_yield,
                              'gen_profile': self.gen_profile,
-                             'poa': self.poa,
                              }
 
         super().collect_outputs(output_lookup=output_lookup)
@@ -620,6 +603,317 @@ class CSP(Solar):
                 'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
             self._default = pysam_csp.default('MSPTSingleOwner')
             self._default.LocationAndResource.solar_resource_file = res_file
+            self._default.execute()
+        return self._default
+
+
+class SolarThermal(Solar):
+    """ Base class for solar thermal """
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None, drop_leap=False):
+        """Initialize a SAM solar thermal object
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict or ParametersManager()
+            SAM model input parameters.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years. PySAM will not accept csv data on
+            Feb 29th. For leap years, December 31st is dropped and time steps
+            are shifted to relabel Feb 29th as March 1st, March 1st as March
+            2nd, etc.
+        """
+        self._drop_leap = drop_leap
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request, drop_leap=False)
+
+    def set_nsrdb(self, resource):
+        """
+        Set NSRDB resource file. Overloads Solar.set_nsrdb(). Solar thermal
+        PySAM models require a data file, not raw data.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have var_list.
+        """
+        self.time_interval = self.get_time_interval(resource.index.values)
+        self._pysam_w_fname = self._create_pysam_wfile(self._meta, resource)
+        # pylint: disable=E1101
+        self[self._pysam_weather_tag] = self._pysam_w_fname
+
+    def _create_pysam_wfile(self, meta, resource):
+        """
+        Create PySAM weather input file. PySAM will not accept data on Feb
+        29th. For leap years, December 31st is dropped and time steps are
+        shifted to relabel Feb 29th as March 1st, March 1st as March 2nd, etc.
+
+        Parameters
+        ----------
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have var_list.
+
+        Returns
+        -------
+            fname : string
+                Name of weather csv file
+        """
+        fname = '{}_weather.csv'.format(self._site)
+        logger.debug('Creating PySAM weather data file: {}'.format(fname))
+
+        # ------- Process metadata
+        m = pd.DataFrame(meta).T
+        timezone = m.timezone
+        m['Source'] = 'NSRDB'
+        m['Location ID'] = meta.name
+        m['City'] = '-'
+        m['State'] = m.state.apply(lambda x: '-' if x == 'None' else x)
+        m['Country'] = m.country.apply(lambda x: '-' if x == 'None' else x)
+        m['Latitude'] = m.latitude
+        m['Longitude'] = m.longitude
+        m['Time Zone'] = m.timezone
+        m['Elevation'] = m.elevation
+        m['Local Time Zone'] = m.timezone
+        m['Dew Point Units'] = 'c'
+        m['DHI Units'] = 'w/m2'
+        m['DNI Units'] = 'w/m2'
+        m['Temperature Units'] = 'c'
+        m['Pressure Units'] = 'mbar'
+        m['Wind Speed'] = 'm/s'
+        m = m.drop(['elevation', 'timezone', 'country', 'state', 'county',
+                    'urban', 'population', 'landcover', 'latitude',
+                    'longitude'], axis=1)
+        m.to_csv(fname, index=False, mode='w')
+
+        # --------- Process data
+        # Adjust from UTC to local time
+        local = np.roll(resource.values, int(timezone * self.time_interval),
+                        axis=0)
+        res = pd.DataFrame(local, columns=resource.columns,
+                           index=resource.index)
+        leap_mask = (res.index.month == 2) & (res.index.day == 29)
+        no_leap_index = res.index[~leap_mask]
+        df = pd.DataFrame(index=no_leap_index)
+        df['Year'] = df.index.year
+        df['Month'] = df.index.month
+        df['Day'] = df.index.day
+        df['Hour'] = df.index.hour
+        df['Minute'] = df.index.minute
+        df['DNI'] = self.ensure_res_len(res.dni.values)
+        df['DHI'] = self.ensure_res_len(res.dhi.values)
+        df['Wind Speed'] = self.ensure_res_len(res.wind_speed.values)
+        df['Temperature'] = self.ensure_res_len(res.air_temperature.values)
+        df['Dew Point'] = self.ensure_res_len(res.dew_point.values)
+        df['Pressure'] = self.ensure_res_len(res.surface_pressure.values)
+        df.to_csv(fname, index=False, mode='a')
+        return fname
+
+    def _gen_exec(self, delete_wfile=True):
+        """
+        Run SAM generation with possibility for follow on econ analysis.
+
+        Parameters
+        ----------
+        delete_wfile : bool
+            Delete PySAM weather file after processing is complete
+        """
+        super()._gen_exec()
+
+        if delete_wfile:
+            os.remove(self._pysam_w_fname)
+
+
+class SolarWaterHeat(SolarThermal):
+    """
+    Solar Water Heater generation
+    """
+    MODULE = 'solarwaterheat'
+    PYSAM = pysam_swh
+
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None, drop_leap=False):
+        """Initialize a SAM solar water heater object.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict or ParametersManager()
+            SAM model input parameters.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years. PySAM will not accept csv data on
+            Feb 29th. For leap years, December 31st is dropped and time steps
+            are shifted to relabel Feb 29th as March 1st, March 1st as March
+            2nd, etc.
+        """
+        self._pysam_weather_tag = 'solar_resource_file'
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request, drop_leap=drop_leap)
+
+    @property
+    def default(self):
+        """Get the executed default pysam swh object.
+        Returns
+        -------
+        _default : PySAM.
+            Executed  pysam object.
+        """
+        if self._default is None:
+            res_file = os.path.join(
+                DEFAULTSDIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            self._default = pysam_swh.default('SolarWaterHeatingNone')
+            self._default.Weather.solar_resource_file = res_file
+            self._default.execute()
+        return self._default
+
+
+class LinearDirectSteam(SolarThermal):
+    """
+    Process heat linear Fresnel direct steam generation
+    """
+    MODULE = 'lineardirectsteam'
+    PYSAM = pysam_lfdi
+
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None, drop_leap=False):
+        """Initialize a SAM process heat linear Fresnel direct steam object.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict or ParametersManager()
+            SAM model input parameters.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years. PySAM will not accept csv data on
+            Feb 29th. For leap years, December 31st is dropped and time steps
+            are shifted to relabel Feb 29th as March 1st, March 1st as March
+            2nd, etc.
+        """
+        self._pysam_weather_tag = 'file_name'
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request, drop_leap=drop_leap)
+
+    def cf_mean(self):
+        """Calculate mean capacity factor (fractional) from SAM.
+
+        Returns
+        -------
+        output : float
+            Mean capacity factor (fractional).
+        """
+        net_power = self['annual_field_energy'] \
+            - self['annual_thermal_consumption']  # kW-hr
+        # q_pb_des is in MW, convert to kW-hr
+        name_plate = self['q_pb_des'] * 8760 * 1000
+        return net_power / name_plate
+
+    @property
+    def default(self):
+        """Get the executed default pysam linear Fresnel object.
+        Returns
+        -------
+        _default : PySAM.
+            Executed  pysam object.
+        """
+        if self._default is None:
+            res_file = os.path.join(
+                DEFAULTSDIR,
+                'SAM/USA CA Daggett (TMY2).csv')
+            self._default = pysam_lfdi.default('DSGLIPHNone')
+            self._default.Weather.file_name = res_file
+            self._default.execute()
+        return self._default
+
+
+class TroughPhysicalHeat(SolarThermal):
+    """
+    Trough Physical Process Heat generation
+    """
+    MODULE = 'troughphysicalheat'
+    PYSAM = pysam_tpph
+
+    def __init__(self, resource=None, meta=None, parameters=None,
+                 output_request=None, drop_leap=False):
+        """Initialize a SAM trough physical process heat object.
+
+        Parameters
+        ----------
+        resource : pd.DataFrame
+            2D table with resource data. Available columns must have solar_vars
+        meta : pd.DataFrame
+            1D table with resource meta data.
+        parameters : dict or ParametersManager()
+            SAM model input parameters.
+        output_request : list
+            Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
+            'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
+            'lcoe_fcr').
+        drop_leap : bool
+            Drops February 29th from the resource data. If False, December
+            31st is dropped from leap years. PySAM will not accept csv data on
+            Feb 29th. For leap years, December 31st is dropped and time steps
+            are shifted to relabel Feb 29th as March 1st, March 1st as March
+            2nd, etc.
+        """
+        self._pysam_weather_tag = 'file_name'
+        super().__init__(resource=resource, meta=meta, parameters=parameters,
+                         output_request=output_request, drop_leap=drop_leap)
+
+    def cf_mean(self):
+        """Calculate mean capacity factor (fractional) from SAM.
+
+        Returns
+        -------
+        output : float
+            Mean capacity factor (fractional).
+        """
+        net_power = self['annual_gross_energy'] \
+            - self['annual_thermal_consumption']  # kW-hr
+        # q_pb_des is in MW, convert to kW-hr
+        name_plate = self['q_pb_design'] * 8760 * 1000
+        return net_power / name_plate
+
+    @property
+    def default(self):
+        """Get the executed default pysam trough object.
+        Returns
+        -------
+        _default : PySAM.
+            Executed  pysam object.
+        """
+        if self._default is None:
+            res_file = os.path.join(
+                DEFAULTSDIR,
+                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+            self._default = pysam_tpph.default('PhysicalTroughIPHNone')
+            self._default.Weather.file_name = res_file
             self._default.execute()
         return self._default
 

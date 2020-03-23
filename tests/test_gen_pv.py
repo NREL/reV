@@ -63,7 +63,7 @@ def is_num(n):
         return False
 
 
-def to_list(gen_out):
+def _to_list(gen_out):
     """Generation output handler that converts to the rev 1.0 format."""
     if isinstance(gen_out, list) and len(gen_out) == 1:
         out = [c['cf_mean'] for c in gen_out[0].values()]

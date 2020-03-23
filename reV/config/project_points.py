@@ -457,7 +457,7 @@ class ProjectPoints:
     def _check_points_config_mapping(self):
         """
         Check to ensure the project points (df) and SAM configs
-        (sam_config_obj) are compatible. Update as neccesary or break
+        (sam_config_obj) are compatible. Update as necessary or break
         """
         # Extract unique config refences from project_points DataFrame
         df_configs = self.df['config'].unique()

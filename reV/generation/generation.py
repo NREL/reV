@@ -10,7 +10,10 @@ import sys
 import psutil
 from warnings import warn
 
-from reV.SAM.generation import PV, CSP, LandBasedWind, OffshoreWind
+from reV.SAM.generation import (
+    PV, CSP, LandBasedWind, OffshoreWind, SolarWaterHeat, TroughPhysicalHeat,
+    LinearDirectSteam
+)
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import SpawnProcessPool
 from reV.handlers.outputs import Outputs
@@ -30,6 +33,9 @@ class Gen:
     # Mapping of reV technology strings to SAM generation objects
     OPTIONS = {'pv': PV,
                'csp': CSP,
+               'solarwaterheat': SolarWaterHeat,
+               'troughphysicalheat': TroughPhysicalHeat,
+               'lineardirectsteam': LinearDirectSteam,
                'wind': LandBasedWind,
                'windpower': LandBasedWind,
                'landbasedwind': LandBasedWind,
@@ -100,6 +106,102 @@ class Gen:
                  'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
                               'dtype': 'float32', 'chunks': None,
                               'type': 'scalar'},
+                 # Solar water heater
+                 'T_amb': {'scale_factor': 1, 'units': 'C',
+                           'dtype': 'int16', 'chunks': None,
+                           'type': 'array'},
+                 'T_cold': {'scale_factor': 1, 'units': 'C',
+                            'dtype': 'float32', 'chunks': None,
+                            'type': 'array'},
+                 'T_deliv': {'scale_factor': 1, 'units': 'C',
+                             'dtype': 'float32', 'chunks': None,
+                             'type': 'array'},
+                 'T_hot': {'scale_factor': 1, 'units': 'C',
+                           'dtype': 'float32', 'chunks': None,
+                           'type': 'array'},
+                 'T_tank': {'scale_factor': 1, 'units': 'C',
+                            'dtype': 'float32', 'chunks': None,
+                            'type': 'array'},
+                 'draw': {'scale_factor': 1, 'units': 'kg/hr',
+                          'dtype': 'float32', 'chunks': None,
+                          'type': 'array'},
+                 'beam': {'scale_factor': 1, 'units': 'W/m2',
+                          'dtype': 'uint16', 'chunks': None,
+                          'type': 'array'},
+                 'diffuse': {'scale_factor': 1, 'units': 'W/m2',
+                             'dtype': 'uint16', 'chunks': None,
+                             'type': 'array'},
+                 'I_incident': {'scale_factor': 1, 'units': 'W/m2',
+                                'dtype': 'float32', 'chunks': None,
+                                'type': 'array'},
+                 'I_transmitted': {'scale_factor': 1, 'units': 'W/m2',
+                                   'dtype': 'float32', 'chunks': None,
+                                   'type': 'array'},
+                 'Q_deliv': {'scale_factor': 1, 'units': 'kW',
+                             'dtype': 'float32', 'chunks': None,
+                             'type': 'array'},
+                 'annual_Q_deliv': {'scale_factor': 1, 'units': 'kWh',
+                                    'dtype': 'float32', 'chunks': None,
+                                    'type': 'scalar'},
+                 'solar_fraction': {'scale_factor': 1, 'units': 'None',
+                                    'dtype': 'float32', 'chunks': None,
+                                    'type': 'scalar'},
+                 # Linear Fresnel
+                 'q_dot_to_heat_sink': {'scale_factor': 1, 'units': 'MWt',
+                                        'dtype': 'float32', 'chunks': None,
+                                        'type': 'array'},
+                 'gen': {'scale_factor': 1, 'units': 'kW',
+                         'dtype': 'float32', 'chunks': None,
+                         'type': 'array'},
+                 'm_dot_field': {'scale_factor': 1, 'units': 'kg/s',
+                                 'dtype': 'float32', 'chunks': None,
+                                 'type': 'array'},
+                 'q_dot_sf_out': {'scale_factor': 1, 'units': 'MWt',
+                                  'dtype': 'float32', 'chunks': None,
+                                  'type': 'array'},
+                 'W_dot_heat_sink_pump': {'scale_factor': 1, 'units': 'MWe',
+                                          'dtype': 'float32', 'chunks': None,
+                                          'type': 'array'},
+                 'm_dot_loop': {'scale_factor': 1, 'units': 'kg/s',
+                                'dtype': 'float32', 'chunks': None,
+                                'type': 'array'},
+                 'q_dot_rec_inc': {'scale_factor': 1, 'units': 'MWt',
+                                   'dtype': 'float32', 'chunks': None,
+                                   'type': 'array'},
+                 'annual_field_energy': {'scale_factor': 1, 'units': 'kWh',
+                                         'dtype': 'float32', 'chunks': None,
+                                         'type': 'scalar'},
+                 'annual_thermal_consumption': {'scale_factor': 1,
+                                                'units': 'kWh',
+                                                'dtype': 'float32',
+                                                'chunks': None,
+                                                'type': 'scalar'},
+
+                 # Trough physical process heat
+                 'T_field_cold_in': {'scale_factor': 1, 'units': 'C',
+                                     'dtype': 'float32', 'chunks': None,
+                                     'type': 'array'},
+                 'T_field_hot_out': {'scale_factor': 1, 'units': 'C',
+                                     'dtype': 'float32', 'chunks': None,
+                                     'type': 'array'},
+                 'm_dot_field_delivered': {'scale_factor': 1, 'units': 'kg/s',
+                                           'dtype': 'float32', 'chunks': None,
+                                           'type': 'array'},
+                 'm_dot_field_recirc': {'scale_factor': 1, 'units': 'kg/s',
+                                        'dtype': 'float32', 'chunks': None,
+                                        'type': 'array'},
+                 'q_dot_htf_sf_out': {'scale_factor': 1, 'units': 'MWt',
+                                      'dtype': 'float32', 'chunks': None,
+                                      'type': 'array'},
+                 'qinc_costh': {'scale_factor': 1, 'units': 'MWt',
+                                'dtype': 'float32', 'chunks': None,
+                                'type': 'array'},
+                 'dni_costh': {'scale_factor': 1, 'units': 'W/m2',
+                               'dtype': 'float32', 'chunks': None,
+                               'type': 'array'},
+                 'annual_gross_energy': {'scale_factor': 1, 'units': 'kWh',
+                                         'dtype': 'float32', 'chunks': None,
+                                         'type': 'scalar'},
                  }
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
@@ -722,7 +824,8 @@ class Gen:
             Can also be a single config file str. If it's a list, it is mapped
             to the sorted list of unique configs requested by points csv.
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
             resource file chunk size.
@@ -858,7 +961,6 @@ class Gen:
              - Dictionary input is interpreted as an already unpacked result.
              - None is interpreted as a signal to clear the output dictionary.
         """
-
         if isinstance(result, list):
             # unpack futures list to dictionary first
             result = self.unpack_futures(result)
@@ -985,7 +1087,7 @@ class Gen:
         """Flush generation data in self.out attribute to disk in .h5 format.
 
         The data to be flushed is accessed from the instance attribute
-        "self.out". The disk target is based on the isntance attributes
+        "self.out". The disk target is based on the instance attributes
         "self._fpath". Data is not flushed if _fpath is None or if .out is
         empty.
         """
@@ -1023,7 +1125,8 @@ class Gen:
         points_control : reV.config.PointsControl
             A PointsControl instance dictating what sites and configs are run.
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
         res_file : str
             Filepath to single resource file, multi-h5 directory,
             or /h5_dir/prefix*suffix
@@ -1228,7 +1331,8 @@ class Gen:
         Parameters
         ----------
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind).
+            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
         points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.

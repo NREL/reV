@@ -447,6 +447,9 @@ class SAM(RevPySAM):
     # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
     RESOURCE_TYPES = {'pv': SolarResource, 'pvwattsv5': SolarResource,
                       'csp': SolarResource, 'tcsmolten_salt': SolarResource,
+                      'solarwaterheat': SolarResource,
+                      'troughphysicalheat': SolarResource,
+                      'lineardirectsteam': SolarResource,
                       'wind': WindResource, 'landbasedwind': WindResource,
                       'offshorewind': WindResource, 'windpower': WindResource,
                       }
@@ -525,7 +528,7 @@ class SAM(RevPySAM):
 
         Parameters
         ----------
-        res_arr : array-like
+        res_arr : np.ndarray
             Array of resource data.
         base : int
             Ensure that length of resource array is a multiple of this value.
@@ -536,19 +539,15 @@ class SAM(RevPySAM):
             Truncated array of resource data such that length(res_arr)%base=0.
         """
 
-        if len(res_arr) < 8760:
-            msg = ('Resource timeseries must be hourly. '
-                   'Received timeseries of length {}.'
-                   .format(len(res_arr)))
+        if len(res_arr) < base:
+            msg = ('Received timeseries of length {}, expected timeseries to'
+                   'be at least {}'.format(len(res_arr), base))
             logger.exception(msg)
             raise ResourceError(msg)
 
         if len(res_arr) % base != 0:
-            div = np.floor(len(res_arr) / 8760)
-            target_len = int(div * 8760)
-            warn('Resource array length is {}, but SAM requires a multiple of '
-                 '8760. Truncating the timeseries to length {}.'
-                 .format(len(res_arr), target_len), SAMInputWarning)
+            div = np.floor(len(res_arr) / base)
+            target_len = int(div * base)
             if len(res_arr.shape) == 1:
                 res_arr = res_arr[0:target_len]
             else:
@@ -591,6 +590,49 @@ class SAM(RevPySAM):
             elif t == 0.0:
                 time_interval += 1
         return int(time_interval)
+
+    @staticmethod
+    def _is_arr_like(val):
+        """Returns true if SAM data is array-like. False if scalar."""
+        if isinstance(val, (int, float, str)):
+            return False
+        else:
+            try:
+                len(val)
+            except TypeError:
+                return False
+            else:
+                return True
+
+    @staticmethod
+    def _is_hourly(val):
+        """Returns true if SAM data is hourly or sub-hourly. False otherise."""
+        if not SAM._is_arr_like(val):
+            return False
+        else:
+            L = len(val)
+            if L >= 8760:
+                return True
+            else:
+                return False
+
+    def outputs_to_utc_arr(self):
+        """Convert array-like SAM outputs to UTC np.ndarrays"""
+        if self.outputs is not None:
+            for key, output in self.outputs.items():
+                if self._is_arr_like(output):
+                    output = np.asarray(output)
+
+                    if output.dtype == np.float64:
+                        output = output.astype(np.float32)
+                    elif output.dtype == np.int64:
+                        output = output.astype(np.int32)
+
+                    if self._is_hourly(output):
+                        output = np.roll(output, int(-1 * self.meta['timezone']
+                                                     * self.time_interval))
+
+                    self.outputs[key] = output
 
     def collect_outputs(self, output_lookup):
         """Collect SAM output_request.
