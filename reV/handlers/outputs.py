@@ -539,7 +539,7 @@ class Outputs(Resource):
                     logger.error(e)
                     raise HandlerRuntimeError(e)
 
-            else:
+            if ds_name not in self.datasets:
                 chunks = self._check_chunks(chunks, data=data)
                 ds = self.h5.create_dataset(ds_name, shape=shape, dtype=dtype,
                                             chunks=chunks)
