@@ -70,6 +70,8 @@ def from_config(ctx, config_file, verbose):
     logger.info('The following SAM configs are available to this run:\n{}'
                 .format(pprint.pformat(config.get('sam_files', None),
                                        indent=4)))
+    logger.debug('Submitting jobs for the following cf_files: {}'
+                 .format(config.cf_files))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -79,22 +81,32 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
+    ctx.obj['APPEND'] = config.append
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['TIMEOUT'] = config.timeout
 
-    for i, year in enumerate(config.years):
-        submit_from_config(ctx, name, year, config, verbose, i)
+    if len(config.years) == len(config.cf_files):
+        for i, year in enumerate(config.years):
+            cf_file = config.cf_files[i]
+            submit_from_config(ctx, name, cf_file, year, config, verbose)
+    else:
+        for i, cf_file in enumerate(config.cf_files):
+            year = parse_year(cf_file)
+            if str(year) in [str(y) for y in config.years]:
+                submit_from_config(ctx, name, cf_file, year, config, verbose)
 
 
-def submit_from_config(ctx, name, year, config, verbose, i):
+def submit_from_config(ctx, name, cf_file, year, config, verbose):
     """Function to submit one year from a config file.
 
     Parameters
     ----------
     ctx : cli.ctx
         Click context object. Use case: data = ctx.obj['key']
+    cf_file : str
+        reV generation file with capacity factors to calculate econ for.
     name : str
         Job name.
     year : int | str | NoneType
@@ -104,23 +116,26 @@ def submit_from_config(ctx, name, year, config, verbose, i):
     """
 
     # set the year-specific variables
-    ctx.obj['CF_FILE'] = config.cf_files[i]
+    ctx.obj['CF_FILE'] = cf_file
     ctx.obj['CF_YEAR'] = year
 
     # check to make sure that the year matches the resource file
-    if str(year) not in config.cf_files[i]:
+    if str(year) not in cf_file:
         warn('reV gen results file and year do not appear to match. '
              'Expected the string representation of the year '
              'to be in the generation results file name. '
              'Year: {}, generation results file: {}'
-             .format(year, config.cf_files[i]))
+             .format(year, cf_file))
 
     # if the year isn't in the name, add it before setting the file output
     ctx.obj['FOUT'] = make_fout(name, year)
+    if config.append:
+        ctx.obj['FOUT'] = os.path.basename(cf_file)
 
     # invoke direct methods based on the config execution option
     if config.execution_control.option == 'local':
         name_year = make_fout(name, year).replace('.h5', '')
+        name_year = name_year.replace('gen', 'econ')
         ctx.obj['NAME'] = name_year
         status = Status.retrieve_job_status(config.dirout, 'econ', name_year)
         if status != 'successful':
@@ -176,11 +191,15 @@ def submit_from_config(ctx, name, year, config, verbose, i):
 @click.option('-or', '--output_request', type=STRLIST, default=['lcoe_fcr'],
               help=('Requested output variable name(s). '
                     'Default is ["lcoe_fcr"].'))
+@click.option('-ap', '--append', is_flag=True,
+              help='Flag to append econ datasets to source cf_file. This has '
+              'priority over fout and dirout inputs.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
-           sites_per_worker, fout, dirout, logdir, output_request, verbose):
+           sites_per_worker, fout, dirout, logdir, output_request,
+           append, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['POINTS'] = points
@@ -193,6 +212,7 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
     ctx.obj['DIROUT'] = dirout
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
+    ctx.obj['APPEND'] = append
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
 
@@ -222,11 +242,17 @@ def econ_local(ctx, max_workers, timeout, points_range, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    if append:
+        fout = os.path.basename(cf_file)
+        dirout = os.path.dirname(cf_file)
+
     # initialize loggers for multiple modules
-    init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
-                                     'reV.utilities', 'reV.SAM'],
+    log_modules = [__name__, 'reV.econ.econ', 'reV.generation', 'reV.config',
+                   'reV.utilities', 'reV.SAM', 'reV.handlers']
+    init_mult(name, logdir, modules=log_modules,
               verbose=verbose, node=True)
 
     for key, val in ctx.obj.items():
@@ -250,7 +276,8 @@ def econ_local(ctx, max_workers, timeout, points_range, verbose):
                  sites_per_worker=sites_per_worker,
                  points_range=points_range,
                  fout=fout,
-                 dirout=dirout)
+                 dirout=dirout,
+                 append=append)
 
     tmp_str = ' with points range {}'.format(points_range)
     runtime = (time.time() - t0) / 60
@@ -303,7 +330,7 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                  sites_per_worker=None, max_workers=None, timeout=1800,
                  fout='reV.h5', dirout='./out/econ_out',
                  logdir='./out/log_econ', output_request='lcoe_fcr',
-                 verbose=False):
+                 append=False, verbose=False):
     """Made a reV econ direct-local command line interface call string.
 
     Parameters
@@ -342,6 +369,9 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         Target directory to save log files.
     output_request : list | tuple
         Output variable requested from SAM.
+    append : bool
+        Flag to append econ datasets to source cf_file. This has priority
+        over the fout and dirout inputs.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -368,7 +398,8 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                   '-fo {fout} '
                   '-do {dirout} '
                   '-lo {logdir} '
-                  '-or {out_req} ')
+                  '-or {out_req} '
+                  '{append}')
     arg_direct = arg_direct.format(
         points=SubprocessManager.s(points),
         sam_files=SubprocessManager.s(sam_files),
@@ -379,7 +410,8 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         fout=SubprocessManager.s(fout),
         dirout=SubprocessManager.s(dirout),
         logdir=SubprocessManager.s(logdir),
-        out_req=SubprocessManager.s(output_request))
+        out_req=SubprocessManager.s(output_request),
+        append='-ap ' if append else '')
 
     # make a cli arg string for local() in this module
     arg_loc = ('-mw {max_workers} '
@@ -388,7 +420,7 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
                '{v}'.format(max_workers=SubprocessManager.s(max_workers),
                             timeout=SubprocessManager.s(timeout),
                             points_range=SubprocessManager.s(points_range),
-                            v='-v' if verbose else ''))
+                            v='-v ' if verbose else ''))
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
@@ -439,6 +471,7 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize an info logger on the year level
@@ -446,20 +479,26 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                                      'reV.utilities', 'reV.SAM'],
               verbose=False)
 
-    pc = get_node_pc(points, sam_files, nodes)
+    if append:
+        pc = [None]
+    else:
+        pc = get_node_pc(points, sam_files, nodes)
 
     for i, split in enumerate(pc):
         node_name, fout_node = get_node_name_fout(name, fout, i, pc,
                                                   hpc='slurm')
+        node_name = node_name.replace('gen', 'econ')
 
+        points_range = split.split_range if split is not None else None
         cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
                            site_data=site_data, points=points,
-                           points_range=split.split_range,
+                           points_range=points_range,
                            sites_per_worker=sites_per_worker,
                            max_workers=max_workers, timeout=timeout,
                            fout=fout_node,
                            dirout=dirout, logdir=logdir,
-                           output_request=output_request, verbose=verbose)
+                           output_request=output_request, append=append,
+                           verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'econ', node_name)
 
@@ -470,7 +509,7 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
         else:
             logger.info('Running reV econ on SLURM with node name "{}" for '
                         '{} (points range: {}).'
-                        .format(node_name, pc, split.split_range))
+                        .format(node_name, pc, points_range))
             # create and submit the SLURM job
             slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
                           feature=feature, name=node_name,

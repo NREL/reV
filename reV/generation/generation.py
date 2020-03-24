@@ -251,9 +251,9 @@ class Gen:
         self._run_attrs = {'points_control': str(points_control),
                            'res_file': res_file,
                            'output_request': output_request,
-                           'fout': fout,
-                           'dirout': dirout,
-                           'drop_leap': drop_leap,
+                           'fout': str(fout),
+                           'dirout': str(dirout),
+                           'drop_leap': str(drop_leap),
                            'mem_util_lim': mem_util_lim,
                            'downscale': str(downscale),
                            'sam_module': self._sam_module.MODULE}
@@ -452,13 +452,23 @@ class Gen:
             else:
                 self._fpath = self._fout
 
-    def _init_h5(self):
-        """Initialize the single h5 output file with all output requests."""
+    def _init_h5(self, mode='w'):
+        """Initialize the single h5 output file with all output requests.
+
+        Parameters
+        ----------
+        mode : str
+            Mode to instantiate h5py.File instance
+        """
 
         if self._fpath is not None:
 
-            logger.info('Initializing full output file: "{}"'
-                        .format(self._fpath))
+            if 'w' in mode:
+                logger.info('Initializing full output file: "{}" with mode: {}'
+                            .format(self._fpath, mode))
+            elif 'a' in mode:
+                logger.info('Appending data to output file: "{}" with mode: {}'
+                            .format(self._fpath, mode))
 
             attrs = {d: {} for d in self.output_request}
             chunks = {}
@@ -492,7 +502,8 @@ class Gen:
 
             Outputs.init_h5(self._fpath, self.output_request, shapes, attrs,
                             chunks, dtypes, self.meta, time_index=ti,
-                            configs=self.sam_metas, run_attrs=self.run_attrs)
+                            configs=self.sam_metas, run_attrs=self.run_attrs,
+                            mode=mode)
 
     def _init_out_arrays(self, index_0=0):
         """Initialize output arrays based on the number of sites that can be
@@ -864,15 +875,26 @@ class Gen:
                                curtailment=curtailment)
 
             #  make Points Control instance
-            if points_range is None:
-                # PointsControl is for all of the project points
-                pc = PointsControl(pp, sites_per_split=sites_per_worker)
-            else:
-                # PointsControl is for just a subset of the projec points...
+            pc = None
+            if points_range is not None:
+                # PointsControl is for just a subset of the project points...
                 # this is the case if generation is being initialized on one
                 # of many HPC nodes in a large project
                 pc = PointsControl.split(points_range[0], points_range[1], pp,
                                          sites_per_split=sites_per_worker)
+            elif points_range is None and res_file is not None:
+                # PointsControl is for all of the project points
+                if os.path.isfile(res_file):
+                    with Outputs(res_file, mode='r') as f:
+                        if 'gid' in f.meta:
+                            gid0 = f.meta['gid'].values[0]
+                            gid1 = f.meta['gid'].values[-1] + 1
+                            pc = PointsControl.split(
+                                gid0, gid1, pp,
+                                sites_per_split=sites_per_worker)
+            if pc is None:
+                # PointsControl is for all of the project points
+                pc = PointsControl(pp, sites_per_split=sites_per_worker)
 
         elif isinstance(points, PointsControl):
             # received a pre-intialized instance of pointscontrol
