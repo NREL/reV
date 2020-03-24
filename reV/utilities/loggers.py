@@ -128,15 +128,24 @@ class LoggingAttributes:
     def __getitem__(self, logger_name):
         return self._loggers.get(logger_name, {})
 
-    def init_logger(self, logger_name):
+    def init_logger(self, loggers):
         """
         Extract logger attributes and initialize logger
+
+        Parameters
+        ----------
+        loggers : str | list
+            Logger names to initialize
         """
-        try:
-            attrs = self[logger_name]
-            setup_logger(logger_name, **attrs)
-        except KeyError:
-            pass
+        if not isinstance(loggers, list):
+            loggers = [loggers]
+
+        for logger_name in loggers:
+            try:
+                attrs = self[logger_name]
+                setup_logger(logger_name, **attrs)
+            except KeyError:
+                pass
 
 
 REV_LOGGERS = LoggingAttributes()
