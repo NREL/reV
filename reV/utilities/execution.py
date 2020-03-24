@@ -14,6 +14,7 @@ import getpass
 import shlex
 from warnings import warn
 
+from reV.utilities.loggers import REV_LOGGERS
 from reV.utilities.exceptions import (ExecutionError, SlurmWarning,
                                       ParallelExecutionWarning)
 
@@ -566,7 +567,13 @@ class SpawnProcessPool(cf.ProcessPoolExecutor):
     """An adaptation of concurrent futures ProcessPoolExecutor with
     spawn processes instead of fork or forkserver."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, loggers=None, **kwargs):
+        """
+        Parameters
+        ----------
+        loggers : str | list, optional
+            logger(s) to initialize on workers, by default None
+        """
         if 'mp_context' in kwargs:
             w = ('SpawnProcessPool being initialized with mp_context: "{}". '
                  'This will override default SpawnProcessPool behavior.'
@@ -575,6 +582,10 @@ class SpawnProcessPool(cf.ProcessPoolExecutor):
             warn(w, ParallelExecutionWarning)
         else:
             kwargs['mp_context'] = multiprocessing.get_context('spawn')
+
+        if loggers is not None:
+            kwargs['initializer'] = REV_LOGGERS.init_logger
+            kwargs['initargs'] = (loggers, )
 
         super().__init__(*args, **kwargs)
 
