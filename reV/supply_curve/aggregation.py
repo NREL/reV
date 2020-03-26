@@ -354,8 +354,14 @@ class Aggregation:
                                      .format(self._tm_dset,
                                              self._excl_fpath))
 
-    def _check_data_layers(self):
-        """Run pre-flight checks on requested aggregation data layers."""
+    def _check_data_layers(self, methods=('mean', 'mode', 'sum', 'category')):
+        """Run pre-flight checks on requested aggregation data layers.
+
+        Parameters
+        ----------
+        methods : list | tuple
+            Data layer aggregation methods that are available to the user.
+        """
 
         if self._data_layers is not None:
 
@@ -369,10 +375,10 @@ class Aggregation:
                 if 'method' not in v:
                     raise KeyError('Data aggregation "method" data layer "{}" '
                                    'must be specified.'.format(k))
-                elif v['method'].lower() not in ('mean', 'mode', 'sum'):
+                elif v['method'].lower() not in methods:
                     raise ValueError('Cannot recognize data layer agg method: '
-                                     '"{}". Can only do mean, mode, and sum.'
-                                     .format(v['method']))
+                                     '"{}". Can only do: {}.'
+                                     .format(v['method'], methods))
                 if 'fpath' in v:
                     with ExclusionLayers(v['fpath']) as f:
                         if any(f.shape != shape_base):
