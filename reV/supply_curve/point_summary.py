@@ -14,7 +14,8 @@ from scipy import stats
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import SupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      OutputWarning, FileInputError)
+                                      OutputWarning, FileInputError,
+                                      DataShapeError)
 
 
 logger = logging.getLogger(__name__)
@@ -556,6 +557,8 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                     nodata = attrs['fobj'].get_nodata_value(attrs['dset'])
 
                 data = raw.flatten()[self.bool_mask]
+                excl_mult = self.excl_data_flat[self.bool_mask]
+
                 if nodata is not None:
                     nodata_mask = (data == nodata)
 
@@ -563,12 +566,15 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                     # Reset data from raw without exclusions.
                     if all(nodata_mask):
                         data = raw.flatten()
+                        excl_mult = self.excl_data_flat
                         nodata_mask = (data == nodata)
 
                     data = data[~nodata_mask]
+                    excl_mult = excl_mult[~nodata_mask]
 
                     if not data.size:
                         data = None
+                        excl_mult = None
                         w = ('Data layer "{}" has no valid data for '
                              'SC point gid {} at ({}, {})!'
                              .format(name, self._gid, self.latitude,
@@ -576,13 +582,14 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                         logger.warning(w)
                         warn(w, OutputWarning)
 
-                data = self._agg_data_layer_method(data, attrs['method'])
+                data = self._agg_data_layer_method(data, excl_mult,
+                                                   attrs['method'])
                 summary[name] = data
 
         return summary
 
     @staticmethod
-    def _agg_data_layer_method(data, method):
+    def _agg_data_layer_method(data, excl_mult, method):
         """Aggregate the data array using specified method.
 
         Parameters
@@ -591,8 +598,11 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Data array that will be flattened and operated on using method.
             This must be the included data. Exclusions should be applied
             before this method.
+        excl_mult : np.ndarray | None
+            Scalar exclusion data for methods with exclusion-weighted
+            aggregation methods. Shape must match input data.
         method : str
-            Aggregation method (mode, mean, sum)
+            Aggregation method (mode, mean, sum, category)
 
         Returns
         -------
@@ -600,6 +610,12 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
             Result of applying method to data.
         """
         if data is not None:
+
+            if data.shape != excl_mult.shape:
+                e = ('Cannot aggregate data with shape that doesnt '
+                     'match excl mult!')
+                logger.error(e)
+                raise DataShapeError(e)
 
             if len(data.shape) > 1:
                 data = data.flatten()
@@ -610,9 +626,12 @@ class SupplyCurvePointSummary(SupplyCurvePoint):
                 data = data.mean()
             elif method.lower() == 'sum':
                 data = data.sum()
+            elif method.lower() == 'category':
+                data = {category: excl_mult[(data == category)].sum()
+                        for category in np.unique(data)}
             else:
                 e = ('Cannot recognize data layer agg method: '
-                     '"{}". Can only do mean, mode, and sum.'
+                     '"{}". Can only do mean, mode, sum, or category_count.'
                      .format(method))
                 logger.error(e)
                 raise ValueError(e)

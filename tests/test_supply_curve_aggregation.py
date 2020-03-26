@@ -133,6 +133,38 @@ def test_aggregation_scalar_excl():
             assert counts == 2 * counts_half[j], msg
 
 
+def test_aggregation_category_layer():
+    """Test aggregation of data layers with category method"""
+    data_layers = {'pct_slope': {'dset': 'ri_srtm_slope',
+                                 'method': 'mean'},
+                   'reeds_region': {'dset': 'ri_reeds_regions',
+                                    'method': 'category'},
+                   'padus': {'dset': 'ri_padus',
+                             'method': 'category'}}
+
+    s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
+                            res_class_dset=RES_CLASS_DSET,
+                            res_class_bins=RES_CLASS_BINS,
+                            data_layers=data_layers,
+                            max_workers=1)
+
+    for i in s.index.values:
+        counts = s.loc[i, 'gid_counts']
+        rr = s.loc[i, 'reeds_region']
+        assert isinstance(rr, dict)
+        rr_sum = sum(list(rr.values()))
+        padus = s.loc[i, 'padus']
+        assert isinstance(padus, dict)
+        padus_sum = sum(list(padus.values()))
+        try:
+            assert padus_sum == sum(counts)
+            assert padus_sum >= rr_sum
+        except AssertionError:
+            e = ('Categorical data layer aggregation failed:\n{}'
+                 .format(s.loc[i]))
+            raise RuntimeError(e)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
