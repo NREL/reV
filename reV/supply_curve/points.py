@@ -303,28 +303,58 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         return self._centroid
 
-    def exclusion_weighted_mean(self, flat_arr):
-        """Calc the exclusions-weighted mean value of a flat array of
-        resource data.
+    def exclusion_weighted_mean(self, arr):
+        """
+        Calc the exclusions-weighted mean value of an array of resource data.
 
         Parameters
         ----------
-        flat_arr : np.ndarray
-            Flattened array of resource data. Must be index-able with the
-            self._res_gids array (must be a 1D array with an entry for every
-            site in the resource extent).
+        arr : np.ndarray
+            Array of resource data.
 
         Returns
         -------
         mean : float
-            Mean of flat_arr masked by the binary exclusions then weighted by
+            Mean of arr masked by the binary exclusions then weighted by
             the non-zero exclusions.
         """
-        x = flat_arr[self._res_gids[self.bool_mask]]
+        if len(arr.shape) == 2:
+            x = arr[:, self._res_gids[self.bool_mask]]
+            ax = 1
+        else:
+            x = arr[self._res_gids[self.bool_mask]]
+            ax = 0
+
         x *= self.excl_data_flat[self.bool_mask]
-        mean = x.sum() / self.excl_data_flat[self.bool_mask].sum()
+        mean = x.sum(axis=ax) / self.excl_data_flat[self.bool_mask].sum()
 
         return mean
+
+    def aggregate(self, arr):
+        """
+        Calc sum (aggregation) of the resource data.
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            Array of resource data.
+
+        Returns
+        -------
+        agg : float
+            Sum of arr masked by the binary exclusions
+        """
+        if len(arr.shape) == 2:
+            x = arr[:, self._res_gids[self.bool_mask]]
+            ax = 1
+        else:
+            x = arr[self._res_gids[self.bool_mask]]
+            ax = 0
+
+        x *= self.excl_data_flat[self.bool_mask]
+        agg = x.sum(axis=ax)
+
+        return agg
 
     @property
     def excl_data(self):
@@ -379,6 +409,94 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
 
         return (self._res_gids != -1)
+
+    @classmethod
+    def sc_mean(cls, gid, excl, tm_dset, data, excl_dict=None, resolution=64,
+                exclusion_shape=None, close=True, parse_tm=True):
+        """
+        Compute exclusions weight mean for the sc point from data
+
+        Parameters
+        ----------
+        gid : int
+            gid for supply curve point to analyze.
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
+        data : ndarray | ResourceDataset
+            Array of data or open dataset handler to apply exclusions too
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        resolution : int
+            Number of exclusion points per SC point along an axis.
+            This number**2 is the total number of exclusion points per
+            SC point.
+        exclusion_shape : tuple
+            Shape of the full exclusions extent (rows, cols). Inputing this
+            will speed things up considerably.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
+        close : bool
+            Flag to close object file handlers on exit.
+        parse_tm : bool
+            Flag to parse techmap for valid resource gids. Can be set to false
+            if this behavior is superseded by a subclass.
+        """
+        kwargs = {"excl_dict": excl_dict, "resolution": resolution,
+                  "exclusion_shape": exclusion_shape, "close": close,
+                  "parse_tm": parse_tm}
+        with cls(gid, excl, tm_dset, **kwargs) as point:
+            means = point.exclusion_weighted_mean(data)
+
+        return means
+
+    @classmethod
+    def sc_sum(cls, gid, excl, tm_dset, data, excl_dict=None, resolution=64,
+               exclusion_shape=None, close=True, parse_tm=True):
+        """
+        Compute the aggregate (sum) of data for the sc point
+
+        Parameters
+        ----------
+        gid : int
+            gid for supply curve point to analyze.
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
+        data : ndarray | ResourceDataset
+            Array of data or open dataset handler to apply exclusions too
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        resolution : int
+            Number of exclusion points per SC point along an axis.
+            This number**2 is the total number of exclusion points per
+            SC point.
+        exclusion_shape : tuple
+            Shape of the full exclusions extent (rows, cols). Inputing this
+            will speed things up considerably.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
+        close : bool
+            Flag to close object file handlers on exit.
+        parse_tm : bool
+            Flag to parse techmap for valid resource gids. Can be set to false
+            if this behavior is superseded by a subclass.
+        """
+        kwargs = {"excl_dict": excl_dict, "resolution": resolution,
+                  "exclusion_shape": exclusion_shape, "close": close,
+                  "parse_tm": parse_tm}
+        with cls(gid, excl, tm_dset, **kwargs) as point:
+            agg = point.aggregate(data)
+
+        return agg
 
 
 class GenerationSupplyCurvePoint(SupplyCurvePoint):

@@ -6,8 +6,10 @@ Created on Fri Jun 21 13:24:31 2019
 @author: gbuster
 """
 from concurrent.futures import as_completed
+import h5py
 import logging
 import numpy as np
+import os
 import pandas as pd
 from scipy.spatial import cKDTree
 from warnings import warn
