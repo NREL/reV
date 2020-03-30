@@ -148,11 +148,11 @@ def test_aggregation_category_layer():
                    'padus': {'dset': 'ri_padus',
                              'method': 'category'}}
 
-    s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                            res_class_dset=RES_CLASS_DSET,
-                            res_class_bins=RES_CLASS_BINS,
-                            data_layers=data_layers,
-                            max_workers=1)
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=data_layers,
+                                       max_workers=1)
 
     for i in s.index.values:
         counts = s.loc[i, 'gid_counts']

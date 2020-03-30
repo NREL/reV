@@ -71,7 +71,6 @@ class AbstractAggFileHandler(ABC):
         """
         return self._excl
 
-    @abstractmethod
     @property
     def h5(self):
         "Placeholder for h5 property in AggFileHandler"
@@ -555,6 +554,8 @@ class Aggregation(AbstractAggregation):
             exclusions-to-resource mapping data.
         agg_dset : str
             Dataset to aggreate, can supply multiple datasets
+        agg_method : str
+            Aggregation method, either mean or sum/aggregate
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         area_filter_kernel : str
@@ -575,8 +576,8 @@ class Aggregation(AbstractAggregation):
 
         Returns
         -------
-        output : list
-            List of output objects from sc_point_method.
+        agg_out : dict
+            Aggregated values for each aggregation dataset
         """
         if agg_method.lower().startswith('mean'):
             agg_method = SupplyCurvePoint.sc_mean
@@ -622,17 +623,15 @@ class Aggregation(AbstractAggregation):
 
         return agg_out
 
-    def run_parallel(self, sc_point_method, args=None, kwargs=None,
-                     close=False, max_workers=None, chunk_point_len=1000):
+    def run_parallel(self, agg_method='mean', close=False, max_workers=None,
+                     chunk_point_len=1000):
         """
-        Aggregate with sc_point_method in parallel
+        Aggregate in parallel
 
         Parameters
         ----------
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
+        agg_method : str
+            Aggregation method, either mean or sum/aggregate
         close : bool
             Flag to close object file handlers on exit.
         max_workers : int | None
@@ -643,10 +642,9 @@ class Aggregation(AbstractAggregation):
 
         Returns
         -------
-        summary : list
-            List of outputs from sc_point_method.
+        agg_out : dict
+            Aggregated values for each aggregation dataset
         """
-
         chunks = np.array_split(
             self._gids, int(np.ceil(len(self._gids) / chunk_point_len)))
 
@@ -658,8 +656,7 @@ class Aggregation(AbstractAggregation):
 
         n_finished = 0
         futures = []
-        output = []
-
+        agg_out = {ds: [] for ds in self._agg_dsets}
         with SpawnProcessPool(max_workers=max_workers) as executor:
 
             # iterate through split executions, submitting each to worker
@@ -667,16 +664,18 @@ class Aggregation(AbstractAggregation):
                 # submit executions and append to futures list
                 futures.append(executor.submit(
                     self.run_serial,
-                    sc_point_method, self._excl_fpath, self._tm_dset,
+                    self._excl_fpath,
+                    self._h5_fpath,
+                    self._tm_dset,
+                    *self._agg_dsets,
+                    agg_method=agg_method,
                     excl_dict=self._excl_dict,
                     area_filter_kernel=self._area_filter_kernel,
                     min_area=self._min_area,
                     check_excl_layers=self._check_excl_layers,
                     resolution=self._resolution,
                     gids=gid_set,
-                    close=close,
-                    args=args,
-                    kwargs=kwargs))
+                    close=close))
 
             # gather results
             for future in as_completed(futures):
@@ -684,21 +683,20 @@ class Aggregation(AbstractAggregation):
                 logger.info('Parallel aggregation futures collected: '
                             '{} out of {}'
                             .format(n_finished, len(chunks)))
-                output += future.result()
+                for k, v in future.results():
+                    agg_out[k].append(v)
 
-        return output
+        return agg_out
 
-    def aggregate(self, sc_point_method, args=None, kwargs=None,
-                  close=False, max_workers=None, chunk_point_len=1000):
+    def aggregate(self, agg_method='mean', close=False, max_workers=None,
+                  chunk_point_len=1000):
         """
-        Aggregate with sc_point_method
+        Aggregate with given agg_method
 
         Parameters
         ----------
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
+        agg_method : str
+            Aggregation method, either mean or sum/aggregate
         close : bool
             Flag to close object file handlers on exit.
         max_workers : int | None
@@ -709,26 +707,27 @@ class Aggregation(AbstractAggregation):
 
         Returns
         -------
-        summary : list
-            List of outputs from sc_point_method.
+        agg : dict
+            Aggregated values for each aggregation dataset
         """
         if max_workers is None:
             max_workers = os.cpu_count()
 
         if max_workers == 1:
-            agg = self.run_serial(sc_point_method, self._excl_fpath,
+            agg = self.run_serial(self._excl_fpath,
+                                  self._h5_fpath,
                                   self._tm_dset,
+                                  *self._agg_dsets,
+                                  agg_method=agg_method,
                                   excl_dict=self._excl_dict,
                                   area_filter_kernel=self._area_filter_kernel,
                                   min_area=self._min_area,
                                   check_excl_layers=self._check_excl_layers,
                                   resolution=self._resolution,
                                   gids=self._gids,
-                                  close=close, args=args,
-                                  kwargs=kwargs)
+                                  close=close)
         else:
-            agg = self.run_parallel(sc_point_method, args=args,
-                                    kwargs=kwargs, close=close,
+            agg = self.run_parallel(agg_method=agg_method, close=close,
                                     max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
 

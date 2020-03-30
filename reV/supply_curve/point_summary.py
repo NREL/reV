@@ -28,7 +28,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
     POWER_DENSITY = {'pv': 36, 'wind': 3}
 
     def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
-                 res_class_dset=None, res_class_bin=None, ex_area=0.0081,
+                 res_class_dset=None, res_class_bin=None, excl_area=0.0081,
                  power_density=None, cf_dset='cf_mean-means',
                  lcoe_dset='lcoe_fcr-means', resolution=64,
                  exclusion_shape=None, close=False, offshore_flags=None,
@@ -60,7 +60,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         res_class_bin : list | None
             Two-entry lists dictating the single resource class bin.
             None if no resource classes.
-        ex_area : float
+        excl_area : float
             Area of an exclusion cell (square km).
         power_density : float | None | pd.DataFrame
             Constant power density float, None, or opened dataframe with
@@ -91,19 +91,18 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         self._cf_dset = cf_dset
         self._lcoe_dset = lcoe_dset
         self._res_gid_set = None
-        self._gen_gid_set = None
         self._mean_res = None
         self._res_data = None
+        self._gen_gid_set = None
         self._gen_data = None
         self._lcoe_data = None
-        self._ex_area = ex_area
         self._pd_obj = None
         self._power_density = power_density
         self._friction_layer = friction_layer
 
         super().__init__(gid, excl, gen, tm_dset, gen_index,
                          excl_dict=excl_dict, resolution=resolution,
-                         exclusion_shape=exclusion_shape,
+                         excl_area=excl_area, exclusion_shape=exclusion_shape,
                          offshore_flags=offshore_flags, close=close)
 
         self._apply_exclusions()
@@ -156,37 +155,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             boolean_exclude = (boolean_exclude | rex)
 
         return boolean_exclude
-
-    @staticmethod
-    def ordered_unique(seq):
-        """Get a list of unique values in the same order as the input sequence.
-
-        Parameters
-        ----------
-        seq : list | tuple
-            Sequence of values.
-
-        Returns
-        -------
-        seq : list
-            List of unique values in seq input with original order.
-        """
-
-        seen = set()
-
-        return [x for x in seq if not (x in seen or seen.add(x))]
-
-    @property
-    def area(self):
-        """Get the non-excluded resource area of the supply curve point in the
-        current resource class.
-
-        Returns
-        -------
-        area : float
-            Non-excluded resource/generation area in square km.
-        """
-        return self.excl_data.sum() * self._ex_area
 
     @property
     def res_data(self):
@@ -252,81 +220,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         return self._lcoe_data
 
     @property
-    def latitude(self):
-        """Get the SC point latitude"""
-        return self.centroid[0]
-
-    @property
-    def longitude(self):
-        """Get the SC point longitude"""
-        return self.centroid[1]
-
-    @property
-    def country(self):
-        """Get the SC point country based on the resource meta data."""
-        country = None
-        if 'country' in self.gen.meta:
-            country = self.gen.meta.loc[self.gen_gid_set, 'country'].values
-            country = stats.mode(country).mode[0]
-
-        return country
-
-    @property
-    def state(self):
-        """Get the SC point state based on the resource meta data."""
-        state = None
-        if 'state' in self.gen.meta:
-            state = self.gen.meta.loc[self.gen_gid_set, 'state'].values
-            state = stats.mode(state).mode[0]
-
-        return state
-
-    @property
-    def county(self):
-        """Get the SC point county based on the resource meta data."""
-        county = None
-        if 'county' in self.gen.meta:
-            county = self.gen.meta.loc[self.gen_gid_set, 'county'].values
-            county = stats.mode(county).mode[0]
-
-        return county
-
-    @property
-    def elevation(self):
-        """Get the SC point elevation based on the resource meta data."""
-        elevation = None
-        if 'elevation' in self.gen.meta:
-            elevation = self.gen.meta.loc[self.gen_gid_set, 'elevation'].mean()
-
-        return elevation
-
-    @property
-    def timezone(self):
-        """Get the SC point timezone based on the resource meta data."""
-        timezone = None
-        if 'timezone' in self.gen.meta:
-            timezone = self.gen.meta.loc[self.gen_gid_set, 'timezone'].values
-            timezone = stats.mode(timezone).mode[0]
-
-        return timezone
-
-    @property
-    def res_gid_set(self):
-        """Get list of unique resource gids corresponding to this sc point.
-
-        Returns
-        -------
-        res_gids : list
-            List of resource gids.
-        """
-        if self._res_gid_set is None:
-            self._res_gid_set = self.ordered_unique(self._res_gids)
-            if -1 in self._res_gid_set:
-                self._res_gid_set.remove(-1)
-
-        return self._res_gid_set
-
-    @property
     def gen_gid_set(self):
         """Get list of unique generation gids corresponding to this sc point.
 
@@ -341,36 +234,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                 self._gen_gid_set.remove(-1)
 
         return self._gen_gid_set
-
-    @property
-    def gid_counts(self):
-        """Get the number of exclusion pixels in each resource/generation gid
-        corresponding to this sc point.
-
-        Returns
-        -------
-        gid_counts : list
-            List of exclusion pixels in each resource/generation gid.
-        """
-        gid_counts = [self.excl_data_flat[(self._res_gids == gid)].sum()
-                      for gid in self.res_gid_set]
-
-        return gid_counts
-
-    @property
-    def n_gids(self):
-        """
-        Get the total number of resource/generation gids that were at
-        not excluded.
-
-        Returns
-        -------
-        n_gids : list
-            List of exclusion pixels in each resource/generation gid.
-        """
-        n_gids = np.sum(self.excl_data_flat > 0)
-
-        return n_gids
 
     @property
     def mean_cf(self):
@@ -695,7 +558,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
     @classmethod
     def summary(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                 excl_dict=None, res_class_dset=None, res_class_bin=None,
-                ex_area=0.0081, power_density=None, cf_dset='cf_mean-means',
+                excl_area=0.0081, power_density=None, cf_dset='cf_mean-means',
                 lcoe_dset='lcoe_fcr-means', resolution=64,
                 exclusion_shape=None, close=False, offshore_flags=None,
                 friction_layer=None, args=None, data_layers=None):
@@ -726,7 +589,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         res_class_bin : list | None
             Two-entry lists dictating the single resource class bin.
             None if no resource classes.
-        ex_area : float
+        excl_area : float
             Area of an exclusion cell (square km).
         power_density : float | None | pd.DataFrame
             Constant power density float, None, or opened dataframe with
@@ -764,7 +627,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
         kwargs = {"excl_dict": excl_dict, "res_class_dset": res_class_dset,
-                  "res_class_bin": res_class_bin, "ex_area": ex_area,
+                  "res_class_bin": res_class_bin, "excl_area": excl_area,
                   "power_density": power_density, "cf_dset": cf_dset,
                   "lcoe_dset": lcoe_dset, "resolution": resolution,
                   "exclusion_shape": exclusion_shape, "close": close,
