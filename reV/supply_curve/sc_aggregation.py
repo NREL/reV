@@ -14,8 +14,8 @@ import pandas as pd
 from scipy.spatial import cKDTree
 from warnings import warn
 
-from reV.handlers.outputs import Outputs
 from reV.handlers.exclusions import ExclusionLayers
+from reV.handlers.resource import Resource
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
                                           AbstractAggregation)
 from reV.supply_curve.exclusions import FrictionMask
@@ -77,7 +77,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
                          min_area=min_area,
                          check_excl_layers=check_excl_layers)
 
-        self._gen = Outputs(gen_fpath, mode='r')
+        self._gen = Resource(gen_fpath)
         # pre-initialize any import attributes
         _ = self._gen.meta
 
@@ -370,7 +370,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             generation run.
         """
 
-        with Outputs(gen_fpath, mode='r') as gen:
+        with Resource(gen_fpath) as gen:
             gen_index = gen.meta
 
         gen_index = gen_index.rename(columns={'gid': 'res_gids'})

@@ -11,7 +11,6 @@ from warnings import warn
 
 from reV.handlers.exclusions import ExclusionLayers
 from reV.handlers.resource import Resource
-from reV.handlers.outputs import Outputs
 from reV.supply_curve.exclusions import ExclusionMask, ExclusionMaskFromDict
 from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
                                       EmptySupplyCurvePointError, InputWarning)
@@ -1024,8 +1023,8 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             gid for supply curve point to analyze.
         excl : str | ExclusionMask
             Filepath to exclusions h5 or ExclusionMask file handler.
-        gen : str | reV.handlers.Outputs
-            Filepath to .h5 reV generation output results or reV Outputs file
+        gen : str | reV.handlers.Resource
+            Filepath to .h5 reV generation output results or reV Resource file
             handler.
         tm_dset : str
             Dataset name in the exclusions file containing the
@@ -1069,39 +1068,6 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
                                                              gen_index)
         self._remove_offshore(self._gen_gids, self._res_gids,
                               offshore_flags=offshore_flags)
-
-    @staticmethod
-    def _parse_h5_file(gen):
-        """Parse gen .h5 filepath input or handler object and set to attrs.
-
-        Parameters
-        ----------
-        gen : str | reV.handlers.Outputs
-            Filepath to .h5 reV generation output results or reV Outputs file
-            handler.
-
-        Returns
-        -------
-        gen_fpath : str
-            Filepath for generation outputs file
-        gen : Outputs | None
-            Generation Outputs handler object if input is already an open
-            handler or None if it is to be lazy instantiated.
-        """
-
-        if isinstance(gen, str):
-            gen_fpath = gen
-            gen = None
-        elif isinstance(gen, Outputs):
-            gen_fpath = gen._h5_file
-            gen = gen
-        else:
-            raise SupplyCurveInputError('SingleSupplyCurvePoint needs a '
-                                        'generation output file path or '
-                                        'output handler, but received: {}'
-                                        .format(type(gen)))
-
-        return gen_fpath, gen
 
     def _parse_techmap(self, tm_dset, gen_index):
         """Parse data from the tech map file (exclusions to resource mapping).
@@ -1253,11 +1219,11 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
 
         Returns
         -------
-        _gen : Outputs
-            reV generation outputs object
+        _gen : Resource
+            reV generation Resource object
         """
         if self._gen is None:
-            self._gen = Outputs(self._gen_fpath, str_decode=False)
+            self._gen = Resource(self._gen_fpath, str_decode=False)
 
         return self._gen
 

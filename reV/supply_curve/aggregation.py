@@ -10,7 +10,7 @@ import numpy as np
 import os
 import pandas as pd
 
-from reV.handlers.outputs import Outputs
+from reV.handlers.resource import Resource
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.points import (SupplyCurveExtent,
                                      AggregationSupplyCurvePoint)
@@ -106,7 +106,7 @@ class AggFileHandler(AbstractAggFileHandler):
                          min_area=min_area,
                          check_excl_layers=check_excl_layers)
 
-        self._h5 = Outputs(h5_fpath, mode='r')
+        self._h5 = Resource(h5_fpath)
 
     @property
     def h5(self):
