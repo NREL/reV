@@ -30,7 +30,11 @@ logger = logging.getLogger(__name__)
 
 
 class SupplyCurveAggFileHandler(AbstractAggFileHandler):
-    """Simple framework to handle aggregation file context managers."""
+    """
+    Framework to handle aggregation summary context managers:
+    - exclusions .h5 file
+    - generation .h5 file
+    """
 
     def __init__(self, excl_fpath, gen_fpath, data_layers=None,
                  power_density=None, excl_dict=None, friction_fpath=None,

@@ -2,7 +2,7 @@
 """
 reV aggregation framework.
 """
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractstaticmethod
 from concurrent.futures import as_completed
 import logging
 import h5py
@@ -73,16 +73,13 @@ class AbstractAggFileHandler(ABC):
         """
         return self._excl
 
-    @property
-    def h5(self):
-        """
-        Get the h5 file handler object.
-        """
-        pass
-
 
 class AggFileHandler(AbstractAggFileHandler):
-    """Simple framework to handle aggregation file context managers."""
+    """
+    Framework to handle aggregation file context manager:
+    - exclusions .h5 file
+    - h5 file to be aggregated
+    """
 
     def __init__(self, excl_fpath, h5_fpath, excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
@@ -194,8 +191,7 @@ class AbstractAggregation(ABC):
                                      .format(self._tm_dset,
                                              self._excl_fpath))
 
-    @staticmethod
-    @abstractmethod
+    @abstractstaticmethod
     def run_serial(sc_point_method, excl_fpath, tm_dset,
                    excl_dict=None, area_filter_kernel='queen',
                    min_area=None, check_excl_layers=False,
@@ -248,7 +244,6 @@ class AbstractAggregation(ABC):
         output = []
 
         with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
-            points = sc.points
             exclusion_shape = sc.exclusions.shape
             if gids is None:
                 gids = range(len(sc))

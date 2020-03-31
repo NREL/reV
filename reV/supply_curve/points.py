@@ -554,7 +554,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
 
 class AggregationSupplyCurvePoint(SupplyCurvePoint):
-    """Generic single SC point based on exclusions, resolution, and techmap"""
+    """Generic single SC point to aggregate data from an h5 file."""
 
     def __init__(self, gid, excl, agg_h5, tm_dset, excl_dict=None,
                  resolution=64, excl_area=0.0081, exclusion_shape=None,
@@ -583,9 +583,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
-        offshore_flags : np.ndarray | None
-            Array of offshore boolean flags if available from wind generation
-            data. None if offshore flag is not available.
         close : bool
             Flag to close object file handlers on exit.
         parse_tm : bool
@@ -668,14 +665,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                                         .format(type(h5)))
 
         return h5_fpath, h5
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-        if type is not None:
-            raise
 
     def close(self):
         """Close all file handlers."""
@@ -991,6 +980,11 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             data. None if offshore flag is not available.
         close : bool
             Flag to close object file handlers on exit.
+
+        Returns
+        -------
+        out : dict
+            Given datasets and meta data aggregated to supply curve points
         """
         if isinstance(agg_dset, str):
             agg_dset = (agg_dset, )
@@ -1012,7 +1006,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
 
             for dset in agg_dset:
                 ds = point.h5.open_dataset(dset)
-                out['dset'] = agg_method(ds)
+                out[dset] = agg_method(ds)
 
         return out
 
