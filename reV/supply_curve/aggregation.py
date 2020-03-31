@@ -4,14 +4,16 @@ reV aggregation framework.
 """
 from abc import ABC, abstractmethod
 from concurrent.futures import as_completed
-import os
+import logging
 import h5py
 import numpy as np
-import logging
+import os
+import pandas as pd
 
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
-from reV.supply_curve.points import SupplyCurveExtent, SupplyCurvePoint
+from reV.supply_curve.points import (SupplyCurveExtent,
+                                     AggregationSupplyCurvePoint)
 from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
@@ -73,7 +75,9 @@ class AbstractAggFileHandler(ABC):
 
     @property
     def h5(self):
-        "Placeholder for h5 property in AggFileHandler"
+        """
+        Get the h5 file handler object.
+        """
         pass
 
 
@@ -537,8 +541,8 @@ class Aggregation(AbstractAggregation):
     def run_serial(excl_fpath, h5_fpath, tm_dset, *agg_dset,
                    agg_method='mean', excl_dict=None,
                    area_filter_kernel='queen', min_area=None,
-                   check_excl_layers=False, resolution=64, gids=None,
-                   close=False):
+                   check_excl_layers=False, resolution=64, excl_area=0.0081,
+                   gids=None, close=False):
         """
         Standalone method to aggregate - can be parallelized.
 
@@ -578,24 +582,10 @@ class Aggregation(AbstractAggregation):
         agg_out : dict
             Aggregated values for each aggregation dataset
         """
-        if agg_method.lower().startswith('mean'):
-            agg_method = SupplyCurvePoint.sc_mean
-        elif agg_method.lower().startswith(('sum', 'agg')):
-            agg_method = SupplyCurvePoint.sc_sum
-        else:
-            msg = 'Aggregation method must be either mean or sum/aggregate'
-            logger.error(msg)
-            raise ValueError(msg)
-
-        if isinstance(agg_dset, str):
-            agg_dset = (agg_dset, )
-
         with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
             exclusion_shape = sc.exclusions.shape
             if gids is None:
                 gids = range(len(sc))
-
-        agg_out = {}
 
         # pre-extract handlers so they are not repeatedly initialized
         file_kwargs = {'excl_dict': excl_dict,
@@ -603,27 +593,28 @@ class Aggregation(AbstractAggregation):
                        'min_area': min_area,
                        'check_excl_layers': check_excl_layers}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
-            for dset in agg_dset:
-                output = []
-                ds = fh.h5.open_dataset(dset)
-                for gid in gids:
-                    try:
-                        gid_out = agg_method(gid, fh.exclusions, tm_dset, ds,
-                                             excl_dict=excl_dict,
-                                             resolution=resolution,
-                                             exclusion_shape=exclusion_shape,
-                                             close=close)
+            for gid in gids:
+                try:
+                    gid_out = AggregationSupplyCurvePoint(
+                        gid,
+                        fh.exclusions,
+                        fh.h5,
+                        tm_dset,
+                        *agg_dset,
+                        agg_method=agg_method,
+                        excl_dict=excl_dict,
+                        resolution=resolution,
+                        excl_area=excl_area,
+                        exclusion_shape=exclusion_shape,
+                        close=close)
 
-                    except EmptySupplyCurvePointError:
-                        pass
+                except EmptySupplyCurvePointError:
+                    pass
 
-                    else:
-                        output.append(gid_out)
+        return gid_out
 
-        return agg_out
-
-    def run_parallel(self, agg_method='mean', close=False, max_workers=None,
-                     chunk_point_len=1000):
+    def run_parallel(self, agg_method='mean', excl_area=0.0081, close=False,
+                     max_workers=None, chunk_point_len=1000):
         """
         Aggregate in parallel
 
@@ -655,9 +646,9 @@ class Aggregation(AbstractAggregation):
 
         n_finished = 0
         futures = []
-        agg_out = {ds: [] for ds in self._agg_dsets}
+        dsets = self._agg_dsets + ('meta', )
+        agg_out = {ds: [] for ds in dsets}
         with SpawnProcessPool(max_workers=max_workers) as executor:
-
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
                 # submit executions and append to futures list
@@ -673,11 +664,12 @@ class Aggregation(AbstractAggregation):
                     min_area=self._min_area,
                     check_excl_layers=self._check_excl_layers,
                     resolution=self._resolution,
+                    excl_area=excl_area,
                     gids=gid_set,
                     close=close))
 
             # gather results
-            for future in as_completed(futures):
+            for future in futures:
                 n_finished += 1
                 logger.info('Parallel aggregation futures collected: '
                             '{} out of {}'
@@ -685,10 +677,24 @@ class Aggregation(AbstractAggregation):
                 for k, v in future.results():
                     agg_out[k].append(v)
 
+        for k, v in agg_out.items():
+            if k == 'meta':
+                v = pd.concat(v, axis=1).T
+                v = v.sort_values('sc_point_gid')
+                v = v.reset_index(drop=True)
+                v.index.name = 'sc_gid'
+                agg_out[k] = v
+            else:
+                v = np.dstack(v)[0]
+                if v.shape[0] == 1:
+                    v = v.flatten()
+
+                agg_out[k] = v
+
         return agg_out
 
-    def aggregate(self, agg_method='mean', close=False, max_workers=None,
-                  chunk_point_len=1000):
+    def aggregate(self, agg_method='mean', excl_area=0.0081, close=False,
+                  max_workers=None, chunk_point_len=1000):
         """
         Aggregate with given agg_method
 
@@ -723,14 +729,14 @@ class Aggregation(AbstractAggregation):
                                   min_area=self._min_area,
                                   check_excl_layers=self._check_excl_layers,
                                   resolution=self._resolution,
-                                  gids=self._gids,
+                                  excl_area=excl_area,
                                   close=close)
         else:
-            agg = self.run_parallel(agg_method=agg_method, close=close,
-                                    max_workers=max_workers,
+            agg = self.run_parallel(agg_method=agg_method, excl_area=excl_area,
+                                    close=close, max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
 
-        if not any(agg):
+        if not any(agg['meta']):
             e = ('Supply curve aggregation found no non-excluded SC points. '
                  'Please check your exclusions or subset SC GID selection.')
             logger.error(e)

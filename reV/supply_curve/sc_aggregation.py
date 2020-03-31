@@ -461,7 +461,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', data_layers=None,
                    power_density=None, friction_fpath=None, friction_dset=None,
-                   excl_area=0.0081, ):
+                   excl_area=0.0081):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
