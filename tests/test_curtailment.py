@@ -112,6 +112,7 @@ def test_random(year, site):
                           scale_outputs=True)
 
         results.append(gen.out['cf_mean'])
+
     assert results[0] > results[1], 'Curtailment did not decrease cf_mean!'
 
     expected = (results[0] + results[1]) / 2
