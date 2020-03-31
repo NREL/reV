@@ -70,6 +70,17 @@ class AbstractSupplyCurvePoint(ABC):
         return rows, cols
 
     @property
+    def sc_point_gid(self):
+        """
+        Supply curve point gid
+
+        Returns
+        -------
+        int
+        """
+        return self._gid
+
+    @property
     def rows(self):
         """Get the rows of the exclusions layer associated with this SC point.
 
@@ -924,7 +935,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         pandas.Series
             List of supply curve point's meta data
         """
-        meta = {'sc_point_gid': self._gid,
+        meta = {'sc_point_gid': self.sc_point_gid,
                 'source_gids': self.h5_gid_set,
                 'gid_counts': self.gid_counts,
                 'n_gids': self.n_gids,
