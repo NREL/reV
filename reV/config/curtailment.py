@@ -31,6 +31,7 @@ class Curtailment(BaseConfig):
         self._temperature = None
         self._precipitation = None
         self._probability = None
+        self._random_seed = None
 
         if isinstance(curtailment_parameters, str):
             # received json, extract to dictionary
@@ -52,6 +53,7 @@ class Curtailment(BaseConfig):
 
         if self._wind_speed is None:
             self._wind_speed = float(self.get('wind_speed', 5.0))
+
         return self._wind_speed
 
     @property
@@ -73,13 +75,16 @@ class Curtailment(BaseConfig):
         if self._dawn_dusk is None:
             # set a default value
             self._dawn_dusk = presets['nautical']
+
             if 'dawn_dusk' in self:
                 if isinstance(self['dawn_dusk'], str):
                     # Use a pre-set dawn/dusk
                     self._dawn_dusk = presets[self['dawn_dusk']]
+
                 if isinstance(self['dawn_dusk'], (int, float)):
                     # Use an explicit solar zenith angle
                     self._dawn_dusk = float(self['dawn_dusk'])
+
         return self._dawn_dusk
 
     @property
@@ -95,6 +100,7 @@ class Curtailment(BaseConfig):
 
         if self._months is None:
             self._months = tuple(self.get('months', (4, 5, 6, 7)))
+
         return self._months
 
     @property
@@ -142,4 +148,19 @@ class Curtailment(BaseConfig):
 
         if self._probability is None:
             self._probability = float(self.get('probability', 1.0))
+
         return self._probability
+
+    @property
+    def random_seed(self):
+        """
+        Random seed to use for curtailment probability
+
+        Returns
+        -------
+        int
+        """
+        if self._random_seed is None:
+            self._random_seed = int(self.get('random_seed', 0))
+
+        return self._random_seed
