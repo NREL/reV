@@ -12,7 +12,7 @@ from warnings import warn
 
 from reV.SAM.generation import (
     PV, CSP, LandBasedWind, OffshoreWind, SolarWaterHeat, TroughPhysicalHeat,
-    LinearDirectSteam
+    LinearDirectSteam)
 from reV.SAM.version_checker import PySamVersionChecker
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.utilities.execution import SpawnProcessPool

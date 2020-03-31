@@ -608,7 +608,7 @@ class RevPySam(Sam):
     @staticmethod
     def _is_hourly(val):
         """Returns true if SAM data is hourly or sub-hourly. False otherise."""
-        if not SAM._is_arr_like(val):
+        if not RevPySam._is_arr_like(val):
             return False
         else:
             L = len(val)
