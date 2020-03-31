@@ -328,7 +328,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
     if verbose:
         args += '-v '
 
-    cmd = 'python -m reV.supply_curve.cli_aggregation {}'.format(args)
+    cmd = 'python -m reV.supply_curve.cli_sc_aggregation {}'.format(args)
     return cmd
 
 
