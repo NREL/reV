@@ -28,7 +28,7 @@ class Pipeline:
                 'offshore',
                 'collect',
                 'multi-year',
-                'aggregation',
+                'supply-curve-aggregation',
                 'supply-curve',
                 'rep-profiles')
 

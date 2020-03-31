@@ -304,7 +304,8 @@ class Generation(SAM):
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment
         if curtailment is not None:
-            resources = curtail(resources, curtailment)
+            resources = curtail(resources, curtailment,
+                                random_seed=curtailment.random_seed)
 
         # Use resource object iterator
         for res_df, meta in resources:

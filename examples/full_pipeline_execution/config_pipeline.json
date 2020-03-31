@@ -14,7 +14,7 @@
       "multi-year": "./config_multi-year.json"
     },
     {
-      "aggregation": "./config_aggregation.json"
+      "supply-curve-aggregation": "./config_aggregation.json"
     },
     {
       "supply-curve": "./config_supply-curve.json"

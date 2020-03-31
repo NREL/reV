@@ -6,7 +6,7 @@ Created on Wed Jun 19 15:37:05 2019
 """
 import pytest
 import os
-from reV.supply_curve.aggregation import Aggregation
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV.supply_curve.points import SupplyCurvePoint, SupplyCurveExtent
 from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
@@ -75,7 +75,7 @@ def plot_single_sc_point(gid=2, resolution=64):
     colors *= 100
 
     _, axs = plt.subplots(1, 1)
-    gen_index = Aggregation._parse_gen_index(F_GEN)
+    gen_index = SupplyCurveAggregation._parse_gen_index(F_GEN)
     with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_TM, gen_index,
                           resolution=resolution) as sc:
 

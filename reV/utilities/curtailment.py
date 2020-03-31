@@ -11,7 +11,7 @@ from reV.utilities.exceptions import HandlerWarning
 from reV.utilities.solar_position import SolarPosition
 
 
-def curtail(resource, curtailment, random_seed=None):
+def curtail(resource, curtailment, random_seed=0):
     """Curtail the SAM wind resource object based on project points.
 
     Parameters

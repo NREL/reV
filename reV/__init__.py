@@ -11,7 +11,7 @@ from reV.handlers import (NSRDB, MultiFileNSRDB, MultiFileWTK, Resource,
                           SolarResource, WindResource)
 from reV.pipeline import Pipeline, Status
 from reV.rep_profiles import RepProfiles
-from reV.supply_curve import (Aggregation, ExclusionMask,
+from reV.supply_curve import (SupplyCurveAggregation, ExclusionMask,
                               ExclusionMaskFromDict, SupplyCurve,
                               SupplyCurvePointSummary, TechMapping)
 from reV.version import __version__

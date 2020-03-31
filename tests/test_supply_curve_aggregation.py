@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import pytest
 import os
-from reV.supply_curve.aggregation import Aggregation
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 
 
@@ -37,11 +37,12 @@ def test_aggregation_extent(resolution=64):
     """Get the SC points aggregation summary and test that there are expected
     columns and that all resource gids were found"""
 
-    summary = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                                  res_class_dset=None,
-                                  res_class_bins=None,
-                                  data_layers=DATA_LAYERS,
-                                  resolution=resolution)
+    summary = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                             excl_dict=EXCL_DICT,
+                                             res_class_dset=None,
+                                             res_class_bins=None,
+                                             data_layers=DATA_LAYERS,
+                                             resolution=resolution)
 
     all_res_gids = []
     for gids in summary['res_gids']:
@@ -58,16 +59,18 @@ def test_parallel_agg(resolution=64):
     aggregation."""
 
     gids = list(range(50, 70))
-    summary_serial = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                                         res_class_dset=None,
-                                         res_class_bins=None,
-                                         resolution=resolution,
-                                         gids=gids, max_workers=1)
-    summary_parallel = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                                           res_class_dset=None,
-                                           res_class_bins=None,
-                                           resolution=resolution,
-                                           gids=gids, max_workers=3)
+    summary_serial = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                                    excl_dict=EXCL_DICT,
+                                                    res_class_dset=None,
+                                                    res_class_bins=None,
+                                                    resolution=resolution,
+                                                    gids=gids, max_workers=1)
+    summary_parallel = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                                      excl_dict=EXCL_DICT,
+                                                      res_class_dset=None,
+                                                      res_class_bins=None,
+                                                      resolution=resolution,
+                                                      gids=gids, max_workers=3)
 
     assert all(summary_serial == summary_parallel)
 
@@ -75,11 +78,12 @@ def test_parallel_agg(resolution=64):
 def test_aggregation_summary():
     """Test the aggregation summary method against a baseline file."""
 
-    s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                            res_class_dset=RES_CLASS_DSET,
-                            res_class_bins=RES_CLASS_BINS,
-                            data_layers=DATA_LAYERS,
-                            max_workers=1)
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1)
 
     if not os.path.exists(AGG_BASELINE):
         s.to_csv(AGG_BASELINE)
@@ -103,18 +107,20 @@ def test_aggregation_scalar_excl():
 
     gids_subset = list(range(0, 20))
     excl_dict_1 = {'ri_padus': {'exclude_values': [1]}}
-    s1 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_1,
-                             res_class_dset=RES_CLASS_DSET,
-                             res_class_bins=RES_CLASS_BINS,
-                             data_layers=DATA_LAYERS,
-                             max_workers=1, gids=gids_subset)
+    s1 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                        excl_dict=excl_dict_1,
+                                        res_class_dset=RES_CLASS_DSET,
+                                        res_class_bins=RES_CLASS_BINS,
+                                        data_layers=DATA_LAYERS,
+                                        max_workers=1, gids=gids_subset)
     excl_dict_2 = {'ri_padus': {'exclude_values': [1],
                                 'weight': 0.5}}
-    s2 = Aggregation.summary(EXCL, GEN, TM_DSET, excl_dict_2,
-                             res_class_dset=RES_CLASS_DSET,
-                             res_class_bins=RES_CLASS_BINS,
-                             data_layers=DATA_LAYERS,
-                             max_workers=1, gids=gids_subset)
+    s2 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                        excl_dict=excl_dict_2,
+                                        res_class_dset=RES_CLASS_DSET,
+                                        res_class_bins=RES_CLASS_BINS,
+                                        data_layers=DATA_LAYERS,
+                                        max_workers=1, gids=gids_subset)
 
     dsets = ['area_sq_km', 'capacity']
     for dset in dsets:
@@ -142,11 +148,11 @@ def test_aggregation_category_layer():
                    'padus': {'dset': 'ri_padus',
                              'method': 'category'}}
 
-    s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                            res_class_dset=RES_CLASS_DSET,
-                            res_class_bins=RES_CLASS_BINS,
-                            data_layers=data_layers,
-                            max_workers=1)
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=data_layers,
+                                       max_workers=1)
 
     for i in s.index.values:
         counts = s.loc[i, 'gid_counts']

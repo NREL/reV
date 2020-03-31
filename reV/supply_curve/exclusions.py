@@ -66,6 +66,7 @@ class LayerMask:
     def __repr__(self):
         msg = ("{} for {} exclusion, of type {}"
                .format(self.__class__.__name__, self.layer, self.mask_type))
+
         return msg
 
     def __getitem__(self, data):
@@ -371,6 +372,7 @@ class ExclusionMask:
         msg = ("{} from {} with {} input layers"
                .format(self.__class__.__name__, self.excl_h5.h5_file,
                        len(self)))
+
         return msg
 
     def __len__(self):
@@ -525,7 +527,7 @@ class ExclusionMask:
         return nodata
 
     @staticmethod
-    def _area_filter(mask, min_area=1, kernel='queen', ex_area=0.0081):
+    def _area_filter(mask, min_area=1, kernel='queen', excl_area=0.0081):
         """
         Ensure the contiguous area of included pixels is greater than
         prescribed minimum in sq-km
@@ -538,7 +540,7 @@ class ExclusionMask:
             Minimum required contiguous area in sq-km
         kernel : str
             Kernel type, either 'queen' or 'rook'
-        ex_area : float
+        excl_area : float
             Area of each exclusion pixel in km^2, assumes 90m resolution
 
         Returns
@@ -550,7 +552,7 @@ class ExclusionMask:
         labels, _ = ndimage.label(mask > 0, structure=s)
         l, c = np.unique(labels, return_counts=True)
 
-        min_counts = np.ceil(min_area / ex_area)
+        min_counts = np.ceil(min_area / excl_area)
         pos = c[1:] < min_counts
         bad_labels = l[1:][pos]
 

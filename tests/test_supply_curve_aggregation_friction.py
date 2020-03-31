@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test the supply curve aggregation with friction surface.
+"""Test the supply curve SupplyCurveAggregation with friction surface.
 
 Created on Wed Jun 19 15:37:05 2019
 
@@ -12,7 +12,7 @@ import os
 import warnings
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.exclusions import ExclusionMaskFromDict, FrictionMask
-from reV.supply_curve.aggregation import Aggregation
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 
 
@@ -65,20 +65,21 @@ def test_friction_mask():
 
 @pytest.mark.parametrize('gid', [100, 114, 130, 181])
 def test_agg_friction(gid):
-    """Test SC aggregation with friction by checking friction factors and LCOE
+    """Test SC Aggregation with friction by checking friction factors and LCOE
     against a hand calc."""
 
     warnings.filterwarnings('ignore')
 
     for gid in [100, 114, 130, 181]:
-        s = Aggregation.summary(EXCL_FPATH, GEN, TM_DSET, EXCL_DICT,
-                                res_class_dset=RES_CLASS_DSET,
-                                res_class_bins=RES_CLASS_BINS,
-                                data_layers=DATA_LAYERS,
-                                resolution=RESOLUTION,
-                                gids=[gid], max_workers=1,
-                                friction_fpath=FRICTION_FPATH,
-                                friction_dset=FRICTION_DSET)
+        s = SupplyCurveAggregation.summary(EXCL_FPATH, GEN, TM_DSET,
+                                           excl_dict=EXCL_DICT,
+                                           res_class_dset=RES_CLASS_DSET,
+                                           res_class_bins=RES_CLASS_BINS,
+                                           data_layers=DATA_LAYERS,
+                                           resolution=RESOLUTION,
+                                           gids=[gid], max_workers=1,
+                                           friction_fpath=FRICTION_FPATH,
+                                           friction_dset=FRICTION_DSET)
 
         row_slice, col_slice = EXTENT.get_excl_slices(gid)
 

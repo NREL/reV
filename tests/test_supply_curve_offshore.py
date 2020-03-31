@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import os
 from reV.handlers.outputs import Outputs
-from reV.supply_curve.aggregation import Aggregation
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 
 
@@ -41,12 +41,13 @@ def test_sc_agg_offshore():
     """Test the SC offshore aggregation and check offshore SC points against
     known offshore gen points."""
 
-    s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                            res_class_dset=RES_CLASS_DSET,
-                            res_class_bins=RES_CLASS_BINS,
-                            cf_dset=CF_DSET, lcoe_dset=LCOE_DSET,
-                            data_layers=DATA_LAYERS,
-                            max_workers=1)
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       cf_dset=CF_DSET, lcoe_dset=LCOE_DSET,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1)
 
     assert 'sub_type' in s, 'sub_type was not passed through to offshore agg!'
 
@@ -74,12 +75,13 @@ def test_sc_agg_offshore():
 def plot_sc_offshore(plot_var='mean_lcoe'):
     """Plot the supply curve map colored by plot_var."""
 
-    s = Aggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
-                            res_class_dset=RES_CLASS_DSET,
-                            res_class_bins=RES_CLASS_BINS,
-                            cf_dset=CF_DSET, lcoe_dset=LCOE_DSET,
-                            data_layers=DATA_LAYERS,
-                            max_workers=1)
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       cf_dset=CF_DSET, lcoe_dset=LCOE_DSET,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1)
     import matplotlib.pyplot as plt
 
     plt.scatter(s['longitude'], s['latitude'], c=s[plot_var], marker='s')
