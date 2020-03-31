@@ -175,8 +175,7 @@ class AbstractAggregation(ABC):
 
         self._gids = gids
 
-        self._check_files()
-
+    @abstractmethod
     def _check_files(self):
         """Do a preflight check on input files"""
 

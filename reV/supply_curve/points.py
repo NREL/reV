@@ -143,7 +143,7 @@ class AbstractSupplyCurvePoint(ABC):
 class SupplyCurvePoint(AbstractSupplyCurvePoint):
     """Generic single SC point based on exclusions, resolution, and techmap"""
 
-    def __init__(self, gid, excl, res, tm_dset, excl_dict=None,
+    def __init__(self, gid, excl, tm_dset, excl_dict=None,
                  resolution=64, excl_area=0.0081, exclusion_shape=None,
                  close=True, parse_tm=True):
         """
@@ -181,7 +181,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         self._excl_dict = excl_dict
         self._close = close
         self._excl_fpath, self._excls = self._parse_excl_file(excl)
-        self._res_fpath, self._res = self._parse_res_file(res)
 
         if exclusion_shape is None:
             exclusion_shape = self.exclusions.shape
@@ -192,10 +191,9 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         self._excl_data = None
         self._excl_data_flat = None
         self._excl_area = excl_area
-        self._res_gid_set = None
 
         if parse_tm:
-            self._res_gids = self._parse_techmap(tm_dset)
+            self._gids = self._parse_techmap(tm_dset)
 
     @staticmethod
     def _parse_excl_file(excl):
@@ -229,40 +227,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                                         .format(type(excl)))
 
         return excl_fpath, exclusions
-
-    @staticmethod
-    def _parse_res_file(res):
-        """
-        Parse res filepath input or handler object and set to attrs.
-
-        Parameters
-        ----------
-        res : str | Resource
-            Filepath to resource .h5 or Resource handler
-
-        Returns
-        -------
-        res_fpath : str
-            Filepath for resource .h5 file
-        res : Resource | None
-            Resource if input is already an open handler or None if it
-            is to be lazy instantiated.
-        """
-
-        if isinstance(res, str):
-            res_fpath = res
-            res = None
-        elif isinstance(res, Resource):
-            res_fpath = res.h5_file
-            res = res
-        else:
-            raise SupplyCurveInputError('SupplyCurvePoints needs a '
-                                        'resource file path, or '
-                                        'Resource handler but '
-                                        'received: {}'
-                                        .format(type(res)))
-
-        return res_fpath, res
 
     def _parse_techmap(self, tm_dset):
         """Parse data from the tech map file (exclusions to resource mapping).
@@ -309,28 +273,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             if self._excls is not None:
                 self._excls.close()
 
-            if self._res is not None:
-                self._res.close()
-
-    @staticmethod
-    def ordered_unique(seq):
-        """Get a list of unique values in the same order as the input sequence.
-
-        Parameters
-        ----------
-        seq : list | tuple
-            Sequence of values.
-
-        Returns
-        -------
-        seq : list
-            List of unique values in seq input with original order.
-        """
-
-        seen = set()
-
-        return [x for x in seq if not (x in seen or seen.add(x))]
-
     @property
     def exclusions(self):
         """Get the exclusions object.
@@ -345,21 +287,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                                                 layers_dict=self._excl_dict)
 
         return self._excls
-
-    @property
-    def res(self):
-        """
-        Get the resource object.
-
-        Returns
-        -------
-        _res : Resource
-            Resource h5 handler object.
-        """
-        if self._res is None:
-            self._res = Resource(self._res_fpath,)
-
-        return self._res
 
     @property
     def centroid(self):
@@ -403,86 +330,6 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         return self.centroid[1]
 
     @property
-    def country(self):
-        """Get the SC point country based on the resource meta data."""
-        country = None
-        if 'country' in self.res.meta:
-            country = self.res.meta.loc[self.res_gid_set, 'country'].values
-            country = stats.mode(country).mode[0]
-
-        return country
-
-    @property
-    def state(self):
-        """Get the SC point state based on the resource meta data."""
-        state = None
-        if 'state' in self.res.meta:
-            state = self.res.meta.loc[self.res_gid_set, 'state'].values
-            state = stats.mode(state).mode[0]
-
-        return state
-
-    @property
-    def county(self):
-        """Get the SC point county based on the resource meta data."""
-        county = None
-        if 'county' in self.res.meta:
-            county = self.res.meta.loc[self.res_gid_set, 'county'].values
-            county = stats.mode(county).mode[0]
-
-        return county
-
-    @property
-    def elevation(self):
-        """Get the SC point elevation based on the resource meta data."""
-        elevation = None
-        if 'elevation' in self.res.meta:
-            elevation = self.res.meta.loc[self.res_gid_set, 'elevation'].mean()
-
-        return elevation
-
-    @property
-    def timezone(self):
-        """Get the SC point timezone based on the resource meta data."""
-        timezone = None
-        if 'timezone' in self.res.meta:
-            timezone = self.res.meta.loc[self.res_gid_set, 'timezone'].values
-            timezone = stats.mode(timezone).mode[0]
-
-        return timezone
-
-    @property
-    def res_gid_set(self):
-        """Get list of unique resource gids corresponding to this sc point.
-
-        Returns
-        -------
-        res_gids : list
-            List of resource gids.
-        """
-        if self._res_gid_set is None:
-            self._res_gid_set = self.ordered_unique(self._res_gids)
-            if -1 in self._res_gid_set:
-                self._res_gid_set.remove(-1)
-
-        return self._res_gid_set
-
-    @property
-    def gid_counts(self):
-        """Get the number of exclusion pixels in each resource/generation gid
-        corresponding to this sc point.
-
-        Returns
-        -------
-        gid_counts : list
-            List of exclusion pixels in each resource/generation gid.
-        """
-        gid_counts = [self.excl_data_flat[(self._res_gids == gid)].sum()
-                      for gid in self.res_gid_set]
-
-        return gid_counts
-
-    @property
     def n_gids(self):
         """
         Get the total number of resource/generation gids that were at
@@ -513,10 +360,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             the non-zero exclusions.
         """
         if len(arr.shape) == 2:
-            x = arr[:, self._res_gids[self.bool_mask]]
+            x = arr[:, self._gids[self.bool_mask]]
             ax = 1
         else:
-            x = arr[self._res_gids[self.bool_mask]]
+            x = arr[self._gids[self.bool_mask]]
             ax = 0
 
         x *= self.excl_data_flat[self.bool_mask]
@@ -539,10 +386,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Sum of arr masked by the binary exclusions
         """
         if len(arr.shape) == 2:
-            x = arr[:, self._res_gids[self.bool_mask]]
+            x = arr[:, self._gids[self.bool_mask]]
             ax = 1
         else:
-            x = arr[self._res_gids[self.bool_mask]]
+            x = arr[self._gids[self.bool_mask]]
             ax = 0
 
         x *= self.excl_data_flat[self.bool_mask]
@@ -565,7 +412,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             self._excl_data = self.exclusions[self.rows, self.cols]
 
             # make sure exclusion pixels outside resource extent are excluded
-            out_of_extent = self._res_gids.reshape(self._excl_data.shape) == -1
+            out_of_extent = self._gids.reshape(self._excl_data.shape) == -1
             self._excl_data[out_of_extent] = 0.0
 
             if self._excl_data.max() > 1:
@@ -602,7 +449,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Mask with length equal to the flattened exclusion shape
         """
 
-        return (self._res_gids != -1)
+        return (self._gids != -1)
 
     @classmethod
     def sc_mean(cls, gid, excl, tm_dset, data, excl_dict=None, resolution=64,
@@ -693,12 +540,523 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         return agg
 
 
-class GenerationSupplyCurvePoint(SupplyCurvePoint):
+class AggregationSupplyCurvePoint(SupplyCurvePoint):
+    """Generic single SC point based on exclusions, resolution, and techmap"""
+
+    def __init__(self, gid, excl, agg_h5, tm_dset, excl_dict=None,
+                 resolution=64, excl_area=0.0081, exclusion_shape=None,
+                 close=True, parse_tm=True):
+        """
+        Parameters
+        ----------
+        gid : int
+            gid for supply curve point to analyze.
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        agg_h5 : str | Resource
+            Filepath to .h5 file to aggregate or Resource handler
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        resolution : int
+            Number of exclusion points per SC point along an axis.
+            This number**2 is the total number of exclusion points per
+            SC point.
+        excl_area : float
+            Area of an exclusion cell (square km).
+        exclusion_shape : tuple
+            Shape of the full exclusions extent (rows, cols). Inputing this
+            will speed things up considerably.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
+        close : bool
+            Flag to close object file handlers on exit.
+        """
+        super().__init__(gid, excl, tm_dset, excl_dict=excl_dict,
+                         resolution=resolution, excl_area=excl_area,
+                         exclusion_shape=exclusion_shape,
+                         close=close, parse_tm=False)
+
+        self._h5_gid_set = None
+        self._h5_fpath, self._h5 = self._parse_h5_file(agg_h5)
+        if parse_tm:
+            self._h5_gids = self._parse_techmap(tm_dset)
+
+    @staticmethod
+    def _parse_excl_file(excl):
+        """Parse excl filepath input or handler object and set to attrs.
+
+        Parameters
+        ----------
+        excl : str | ExclusionMask
+            Filepath to exclusions geotiff or ExclusionMask handler
+
+        Returns
+        -------
+        excl_fpath : str
+            Filepath for exclusions file
+        exclusions : ExclusionMask | None
+            Exclusions mask if input is already an open handler or None if it
+            is to be lazy instantiated.
+        """
+
+        if isinstance(excl, str):
+            excl_fpath = excl
+            exclusions = None
+        elif isinstance(excl, ExclusionMask):
+            excl_fpath = excl.excl_h5.h5_file
+            exclusions = excl
+        else:
+            raise SupplyCurveInputError('SupplyCurvePoints needs an '
+                                        'exclusions file path, or '
+                                        'ExclusionMask handler but '
+                                        'received: {}'
+                                        .format(type(excl)))
+
+        return excl_fpath, exclusions
+
+    @staticmethod
+    def _parse_h5_file(h5):
+        """
+        Parse .h5 filepath input or handler object and set to attrs.
+
+        Parameters
+        ----------
+        h5 : str | Resource
+            Filepath to .h5 file to aggregate or Resource handler
+
+        Returns
+        -------
+        h5_fpath : str
+            Filepath for .h5 file to aggregate
+        h5 : Resource | None
+            Resource if input is already an open handler or None if it
+            is to be lazy instantiated.
+        """
+
+        if isinstance(h5, str):
+            h5_fpath = h5
+            h5 = None
+        elif isinstance(h5, Resource):
+            h5_fpath = h5.h5_file
+            h5 = h5
+        else:
+            raise SupplyCurveInputError('SupplyCurvePoints needs a '
+                                        '.h5 file path, or '
+                                        'Resource handler but '
+                                        'received: {}'
+                                        .format(type(h5)))
+
+        return h5_fpath, h5
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+        if type is not None:
+            raise
+
+    def close(self):
+        """Close all file handlers."""
+        if self._close:
+            if self._excls is not None:
+                self._excls.close()
+
+            if self._h5 is not None:
+                self._h5.close()
+
+    @staticmethod
+    def ordered_unique(seq):
+        """Get a list of unique values in the same order as the input sequence.
+
+        Parameters
+        ----------
+        seq : list | tuple
+            Sequence of values.
+
+        Returns
+        -------
+        seq : list
+            List of unique values in seq input with original order.
+        """
+
+        seen = set()
+
+        return [x for x in seq if not (x in seen or seen.add(x))]
+
+    @property
+    def exclusions(self):
+        """Get the exclusions object.
+
+        Returns
+        -------
+        _excls : ExclusionMask
+            ExclusionMask h5 handler object.
+        """
+        if self._excls is None:
+            self._excls = ExclusionMaskFromDict(self._excl_fpath,
+                                                layers_dict=self._excl_dict)
+
+        return self._excls
+
+    @property
+    def h5(self):
+        """
+        Get the resource object.
+
+        Returns
+        -------
+        _h5 : Resource
+            Resource h5 handler object.
+        """
+        if self._h5 is None:
+            self._h5 = Resource(self._h5_fpath,)
+
+        return self._h5
+
+    @property
+    def centroid(self):
+        """Get the supply curve point centroid coordinate.
+
+        Returns
+        -------
+        centroid : tuple
+            SC point centroid (lat, lon).
+        """
+        decimals = 3
+
+        if self._centroid is None:
+            lats = self.exclusions.excl_h5['latitude', self.rows, self.cols]
+            lons = self.exclusions.excl_h5['longitude', self.rows, self.cols]
+            self._centroid = (np.round(lats.mean(), decimals=decimals),
+                              np.round(lons.mean(), decimals=decimals))
+
+        return self._centroid
+
+    @property
+    def area(self):
+        """Get the non-excluded resource area of the supply curve point in the
+        current resource class.
+
+        Returns
+        -------
+        area : float
+            Non-excluded resource/generation area in square km.
+        """
+        return self.excl_data.sum() * self._excl_area
+
+    @property
+    def latitude(self):
+        """Get the SC point latitude"""
+        return self.centroid[0]
+
+    @property
+    def longitude(self):
+        """Get the SC point longitude"""
+        return self.centroid[1]
+
+    @property
+    def country(self):
+        """Get the SC point country based on the resource meta data."""
+        country = None
+        if 'country' in self.h5.meta:
+            country = self.h5.meta.loc[self.h5_gid_set, 'country'].values
+            country = stats.mode(country).mode[0]
+
+        return country
+
+    @property
+    def state(self):
+        """Get the SC point state based on the resource meta data."""
+        state = None
+        if 'state' in self.h5.meta:
+            state = self.h5.meta.loc[self.h5_gid_set, 'state'].values
+            state = stats.mode(state).mode[0]
+
+        return state
+
+    @property
+    def county(self):
+        """Get the SC point county based on the resource meta data."""
+        county = None
+        if 'county' in self.h5.meta:
+            county = self.h5.meta.loc[self.h5_gid_set, 'county'].values
+            county = stats.mode(county).mode[0]
+
+        return county
+
+    @property
+    def elevation(self):
+        """Get the SC point elevation based on the resource meta data."""
+        elevation = None
+        if 'elevation' in self.h5.meta:
+            elevation = self.h5.meta.loc[self.h5_gid_set, 'elevation'].mean()
+
+        return elevation
+
+    @property
+    def timezone(self):
+        """Get the SC point timezone based on the resource meta data."""
+        timezone = None
+        if 'timezone' in self.h5.meta:
+            timezone = self.h5.meta.loc[self.h5_gid_set, 'timezone'].values
+            timezone = stats.mode(timezone).mode[0]
+
+        return timezone
+
+    @property
+    def h5_gid_set(self):
+        """Get list of unique h5 gids corresponding to this sc point.
+
+        Returns
+        -------
+        h5_gids : list
+            List of h5 gids.
+        """
+        if self._h5_gid_set is None:
+            self._h5_gid_set = self.ordered_unique(self._h5_gids)
+            if -1 in self._h5_gid_set:
+                self._h5_gid_set.remove(-1)
+
+        return self._h5_gid_set
+
+    @property
+    def gid_counts(self):
+        """Get the number of exclusion pixels in each resource/generation gid
+        corresponding to this sc point.
+
+        Returns
+        -------
+        gid_counts : list
+            List of exclusion pixels in each resource/generation gid.
+        """
+        gid_counts = [self.excl_data_flat[(self._h5_gids == gid)].sum()
+                      for gid in self.h5_gid_set]
+
+        return gid_counts
+
+    @property
+    def n_gids(self):
+        """
+        Get the total number of resource/generation gids that were at
+        not excluded.
+
+        Returns
+        -------
+        n_gids : list
+            List of exclusion pixels in each resource/generation gid.
+        """
+        n_gids = np.sum(self.excl_data_flat > 0)
+
+        return n_gids
+
+    def exclusion_weighted_mean(self, arr):
+        """
+        Calc the exclusions-weighted mean value of an array of resource data.
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            Array of resource data.
+
+        Returns
+        -------
+        mean : float
+            Mean of arr masked by the binary exclusions then weighted by
+            the non-zero exclusions.
+        """
+        if len(arr.shape) == 2:
+            x = arr[:, self._h5_gids[self.bool_mask]]
+            ax = 1
+        else:
+            x = arr[self._h5_gids[self.bool_mask]]
+            ax = 0
+
+        x *= self.excl_data_flat[self.bool_mask]
+        mean = x.sum(axis=ax) / self.excl_data_flat[self.bool_mask].sum()
+
+        return mean
+
+    def aggregate(self, arr):
+        """
+        Calc sum (aggregation) of the resource data.
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            Array of resource data.
+
+        Returns
+        -------
+        agg : float
+            Sum of arr masked by the binary exclusions
+        """
+        if len(arr.shape) == 2:
+            x = arr[:, self._h5_gids[self.bool_mask]]
+            ax = 1
+        else:
+            x = arr[self._h5_gids[self.bool_mask]]
+            ax = 0
+
+        x *= self.excl_data_flat[self.bool_mask]
+        agg = x.sum(axis=ax)
+
+        return agg
+
+    @property
+    def excl_data(self):
+        """Get the exclusions mask (normalized with expected range: [0, 1]).
+
+        Returns
+        -------
+        _excl_data : np.ndarray
+            2D exclusions data mask corresponding to the exclusions grid in
+            the SC domain.
+        """
+
+        if self._excl_data is None:
+            self._excl_data = self.exclusions[self.rows, self.cols]
+
+            # make sure exclusion pixels outside resource extent are excluded
+            out_of_extent = self._h5_gids.reshape(self._excl_data.shape) == -1
+            self._excl_data[out_of_extent] = 0.0
+
+            if self._excl_data.max() > 1:
+                w = ('Exclusions data max value is > 1: {}'
+                     .format(self._excl_data.max()), InputWarning)
+                logger.warning(w)
+                warn(w)
+
+        return self._excl_data
+
+    @property
+    def excl_data_flat(self):
+        """Get the flattened exclusions mask (normalized with expected
+        range: [0, 1]).
+
+        Returns
+        -------
+        _excl_data_flat : np.ndarray
+            1D flattened exclusions data mask.
+        """
+
+        if self._excl_data_flat is None:
+            self._excl_data_flat = self.excl_data.flatten()
+
+        return self._excl_data_flat
+
+    @property
+    def bool_mask(self):
+        """Get a boolean inclusion mask (True if excl point is not excluded).
+
+        Returns
+        -------
+        mask : np.ndarray
+            Mask with length equal to the flattened exclusion shape
+        """
+
+        return (self._h5_gids != -1)
+
+    @classmethod
+    def sc_mean(cls, gid, excl, tm_dset, data, excl_dict=None, resolution=64,
+                exclusion_shape=None, close=True, parse_tm=True):
+        """
+        Compute exclusions weight mean for the sc point from data
+
+        Parameters
+        ----------
+        gid : int
+            gid for supply curve point to analyze.
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
+        data : ndarray | ResourceDataset
+            Array of data or open dataset handler to apply exclusions too
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        resolution : int
+            Number of exclusion points per SC point along an axis.
+            This number**2 is the total number of exclusion points per
+            SC point.
+        exclusion_shape : tuple
+            Shape of the full exclusions extent (rows, cols). Inputing this
+            will speed things up considerably.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
+        close : bool
+            Flag to close object file handlers on exit.
+        parse_tm : bool
+            Flag to parse techmap for valid resource gids. Can be set to false
+            if this behavior is superseded by a subclass.
+        """
+        kwargs = {"excl_dict": excl_dict, "resolution": resolution,
+                  "exclusion_shape": exclusion_shape, "close": close,
+                  "parse_tm": parse_tm}
+        with cls(gid, excl, tm_dset, **kwargs) as point:
+            means = point.exclusion_weighted_mean(data)
+
+        return means
+
+    @classmethod
+    def sc_sum(cls, gid, excl, tm_dset, data, excl_dict=None, resolution=64,
+               exclusion_shape=None, close=True, parse_tm=True):
+        """
+        Compute the aggregate (sum) of data for the sc point
+
+        Parameters
+        ----------
+        gid : int
+            gid for supply curve point to analyze.
+        excl : str | ExclusionMask
+            Filepath to exclusions h5 or ExclusionMask file handler.
+        tm_dset : str
+            Dataset name in the exclusions file containing the
+            exclusions-to-resource mapping data.
+        data : ndarray | ResourceDataset
+            Array of data or open dataset handler to apply exclusions too
+        excl_dict : dict | None
+            Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
+            None if excl input is pre-initialized.
+        resolution : int
+            Number of exclusion points per SC point along an axis.
+            This number**2 is the total number of exclusion points per
+            SC point.
+        exclusion_shape : tuple
+            Shape of the full exclusions extent (rows, cols). Inputing this
+            will speed things up considerably.
+        offshore_flags : np.ndarray | None
+            Array of offshore boolean flags if available from wind generation
+            data. None if offshore flag is not available.
+        close : bool
+            Flag to close object file handlers on exit.
+        parse_tm : bool
+            Flag to parse techmap for valid resource gids. Can be set to false
+            if this behavior is superseded by a subclass.
+        """
+        kwargs = {"excl_dict": excl_dict, "resolution": resolution,
+                  "exclusion_shape": exclusion_shape, "close": close,
+                  "parse_tm": parse_tm}
+        with cls(gid, excl, tm_dset, **kwargs) as point:
+            agg = point.aggregate(data)
+
+        return agg
+
+
+class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
     """Single supply curve point with associated reV generation"""
 
     def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
-                 resolution=64, exclusion_shape=None, offshore_flags=None,
-                 close=True):
+                 resolution=64, excl_area=0.0081, exclusion_shape=None,
+                 offshore_flags=None, close=True):
         """
         Parameters
         ----------
@@ -723,6 +1081,8 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
             Number of exclusion points per SC point along an axis.
             This number**2 is the total number of exclusion points per
             SC point.
+        excl_area : float
+            Area of an exclusion cell (square km).
         exclusion_shape : tuple
             Shape of the full exclusions extent (rows, cols). Inputing this
             will speed things up considerably.
@@ -733,22 +1093,26 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
             Flag to close object file handlers on exit.
         """
 
-        super().__init__(gid, excl, tm_dset,
+        super().__init__(gid, excl, gen, tm_dset,
                          excl_dict=excl_dict,
                          resolution=resolution,
+                         excl_area=excl_area,
                          exclusion_shape=exclusion_shape,
                          close=close,
                          parse_tm=False)
 
-        self._gen_fpath, self._gen = self._parse_gen_file(gen)
+        self._res_gid_set = None
+        self._gen_gid_set = None
+
+        self._gen_fpath, self._gen = self._h5_fpath, self._h5
         self._gen_gids, self._res_gids = self._parse_techmap(tm_dset,
                                                              gen_index)
         self._remove_offshore(self._gen_gids, self._res_gids,
                               offshore_flags=offshore_flags)
 
     @staticmethod
-    def _parse_gen_file(gen):
-        """Parse gen filepath input or handler object and set to attrs.
+    def _parse_h5_file(gen):
+        """Parse gen .h5 filepath input or handler object and set to attrs.
 
         Parameters
         ----------
@@ -936,6 +1300,65 @@ class GenerationSupplyCurvePoint(SupplyCurvePoint):
             self._gen = Outputs(self._gen_fpath, str_decode=False)
 
         return self._gen
+
+    @property
+    def res_gid_set(self):
+        """Get list of unique resource gids corresponding to this sc point.
+
+        Returns
+        -------
+        res_gids : list
+            List of resource gids.
+        """
+        if self._res_gid_set is None:
+            self._res_gid_set = self.ordered_unique(self._res_gids)
+            if -1 in self._res_gid_set:
+                self._res_gid_set.remove(-1)
+
+        return self._res_gid_set
+
+    @property
+    def gen_gid_set(self):
+        """Get list of unique generation gids corresponding to this sc point.
+
+        Returns
+        -------
+        gen_gids : list
+            List of generation gids.
+        """
+        if self._gen_gid_set is None:
+            self._gen_gid_set = self.ordered_unique(self._gen_gids)
+            if -1 in self._gen_gid_set:
+                self._gen_gid_set.remove(-1)
+
+        return self._gen_gid_set
+
+    @property
+    def h5_gid_set(self):
+        """Get list of unique h5 gids corresponding to this sc point.
+        Same as gen_gid_set
+
+        Returns
+        -------
+        h5_gids : list
+            List of h5 gids.
+        """
+        return self.gen_gid_set
+
+    @property
+    def gid_counts(self):
+        """Get the number of exclusion pixels in each resource/generation gid
+        corresponding to this sc point.
+
+        Returns
+        -------
+        gid_counts : list
+            List of exclusion pixels in each resource/generation gid.
+        """
+        gid_counts = [self.excl_data_flat[(self._res_gids == gid)].sum()
+                      for gid in self.res_gid_set]
+
+        return gid_counts
 
 
 class SupplyCurveExtent:

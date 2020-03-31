@@ -90,10 +90,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         self._res_class_bin = res_class_bin
         self._cf_dset = cf_dset
         self._lcoe_dset = lcoe_dset
-        self._res_gid_set = None
         self._mean_res = None
         self._res_data = None
-        self._gen_gid_set = None
         self._gen_data = None
         self._lcoe_data = None
         self._pd_obj = None
@@ -218,22 +216,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                     self._lcoe_data = self.gen[self._lcoe_dset]
 
         return self._lcoe_data
-
-    @property
-    def gen_gid_set(self):
-        """Get list of unique generation gids corresponding to this sc point.
-
-        Returns
-        -------
-        gen_gids : list
-            List of generation gids.
-        """
-        if self._gen_gid_set is None:
-            self._gen_gid_set = self.ordered_unique(self._gen_gids)
-            if -1 in self._gen_gid_set:
-                self._gen_gid_set.remove(-1)
-
-        return self._gen_gid_set
 
     @property
     def mean_cf(self):
