@@ -521,7 +521,7 @@ class Aggregation(AbstractAggregation):
                                      .format(self._tm_dset,
                                              self._excl_fpath))
 
-        with h5py.File(self._excl_fpath, 'r') as f:
+        with h5py.File(self._h5_fpath, 'r') as f:
             for dset in self._agg_dsets:
                 if dset not in f:
                     raise FileInputError('Could not find provided dataset "{}"'
