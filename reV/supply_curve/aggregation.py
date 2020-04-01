@@ -584,7 +584,7 @@ class Aggregation(AbstractAggregation):
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
             for gid in gids:
                 try:
-                    gid_out = AggregationSupplyCurvePoint(
+                    gid_out = AggregationSupplyCurvePoint.run(
                         gid,
                         fh.exclusions,
                         fh.h5,
