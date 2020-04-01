@@ -591,12 +591,12 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         super().__init__(gid, excl, tm_dset, excl_dict=excl_dict,
                          resolution=resolution, excl_area=excl_area,
                          exclusion_shape=exclusion_shape,
-                         close=close, parse_tm=False)
+                         close=close, parse_tm=parse_tm)
 
         self._h5_gid_set = None
         self._h5_fpath, self._h5 = self._parse_h5_file(agg_h5)
         if parse_tm:
-            self._h5_gids = self._parse_techmap(tm_dset)
+            self._h5_gids = self._gids
 
     @staticmethod
     def _parse_excl_file(excl):
