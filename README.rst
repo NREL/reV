@@ -23,7 +23,7 @@ reV command line tools
 - `reV-offshore <https://nrel.github.io/reV/reV/reV.offshore.cli_offshore.html#rev-offshore>`_
 - `reV-collect <https://nrel.github.io/reV/reV/reV.handlers.cli_collect.html#rev-collect>`_
 - `reV-multiyear <https://nrel.github.io/reV/reV/reV.handlers.cli_multi_year.html#rev-multiyear>`_
-- `reV-aggregation <https://nrel.github.io/reV/reV/reV.supply_curve.cli_aggregation.html#rev-aggregation>`_
+- `reV-supply-curve-aggregation <https://nrel.github.io/reV/reV/reV.supply_curve.cli_sc_aggregation.html#rev-supply-curve-aggregation>`_
 - `reV-supply-curve <https://nrel.github.io/reV/reV/reV.supply_curve.cli_supply_curve.html#rev-supply-curve>`_
 - `reV-rep-profiles <https://nrel.github.io/reV/reV/reV.rep_profiles.cli_rep_profiles.html#rev-rep-profiles>`_
 - `reV-pipeline <https://nrel.github.io/reV/reV/reV.pipeline.cli_pipeline.html#rev-pipeline>`_
