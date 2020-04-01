@@ -598,7 +598,9 @@ class Aggregation(AbstractAggregation):
                         close=False)
 
                 except EmptySupplyCurvePointError:
-                    pass
+                    gid_out = {'meta': None}
+                    for ds in agg_dset:
+                        gid_out[ds] = None
 
         return gid_out
 
@@ -661,7 +663,8 @@ class Aggregation(AbstractAggregation):
                             '{} out of {}'
                             .format(n_finished, len(chunks)))
                 for k, v in future.result():
-                    agg_out[k].append(v)
+                    if v is not None:
+                        agg_out[k].append(v)
 
         for k, v in agg_out.items():
             if k == 'meta':
