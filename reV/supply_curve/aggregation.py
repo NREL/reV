@@ -2,7 +2,7 @@
 """
 reV aggregation framework.
 """
-from abc import ABC, abstractmethod, abstractstaticmethod, abstractproperty
+from abc import ABC, abstractmethod, abstractstaticmethod
 from concurrent.futures import as_completed
 import logging
 import h5py
@@ -73,7 +73,7 @@ class AbstractAggFileHandler(ABC):
         """
         return self._excl
 
-    @abstractproperty
+    @property
     def h5(self):
         """
         Placeholder for h5 Resource handler
