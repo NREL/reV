@@ -461,11 +461,10 @@ class SupplyCurveAggregation(AbstractAggregation):
     def run_serial(excl_fpath, gen_fpath, tm_dset, gen_index,
                    excl_dict=None, area_filter_kernel='queen', min_area=None,
                    check_excl_layers=False, resolution=64, gids=None,
-                   close=False, args=None, res_class_dset=None,
-                   res_class_bins=None, cf_dset='cf_mean-means',
-                   lcoe_dset='lcoe_fcr-means', data_layers=None,
-                   power_density=None, friction_fpath=None, friction_dset=None,
-                   excl_area=0.0081):
+                   args=None, res_class_dset=None, res_class_bins=None,
+                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
+                   data_layers=None, power_density=None, friction_fpath=None,
+                   friction_dset=None, excl_area=0.0081):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -496,8 +495,6 @@ class SupplyCurveAggregation(AbstractAggregation):
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
-        close : bool
-            Flag to close object file handlers on exit.
         args : list | None
             List of positional args for sc_point_method
         res_class_dset : str | None
@@ -580,7 +577,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                             args=args,
                             excl_dict=excl_dict,
                             excl_area=excl_area,
-                            close=close,
+                            close=False,
                             offshore_flags=inputs[4],
                             friction_layer=fh.friction_layer)
 
@@ -597,8 +594,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def run_parallel(self, args=None, excl_area=0.0081, close=False,
-                     max_workers=None):
+    def run_parallel(self, args=None, excl_area=0.0081, max_workers=None):
         """Get the supply curve points aggregation summary using futures.
 
         Parameters
@@ -608,8 +604,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             available args defined in the class attr.
         excl_area : float
             Area of an exclusion cell (square km).
-        close : bool
-            Flag to close object file handlers on exit.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -653,7 +647,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                     friction_dset=self._friction_dset,
                     area_filter_kernel=self._area_filter_kernel,
                     min_area=self._min_area,
-                    gids=gid_set, args=args, excl_area=excl_area, close=close,
+                    gids=gid_set, args=args, excl_area=excl_area,
                     check_excl_layers=self._check_excl_layers))
 
             # gather results
@@ -886,9 +880,9 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def summarize(self, args=None, excl_area=0.0081, close=False,
-                  max_workers=None, offshore_capacity=600,
-                  offshore_gid_counts=494, offshore_pixel_area=4):
+    def summarize(self, args=None, excl_area=0.0081, max_workers=None,
+                  offshore_capacity=600, offshore_gid_counts=494,
+                  offshore_pixel_area=4):
         """
         Get the supply curve points aggregation summary
 
@@ -899,8 +893,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             available args defined in the class attr.
         excl_area : float
             Area of an exclusion cell (square km).
-        close : bool
-            Flag to close object file handlers on exit.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -935,11 +927,11 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       area_filter_kernel=afk,
                                       min_area=self._min_area,
                                       gids=self._gids, args=args,
-                                      excl_area=excl_area, close=close,
+                                      excl_area=excl_area,
                                       check_excl_layers=chk)
         else:
             summary = self.run_parallel(args=args, excl_area=excl_area,
-                                        close=close, max_workers=max_workers)
+                                        max_workers=max_workers)
 
         summary = self.run_offshore(summary,
                                     offshore_capacity=offshore_capacity,
@@ -965,9 +957,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
-                args=None, excl_area=0.0081, close=False,
-                max_workers=None, offshore_capacity=600,
-                offshore_gid_counts=494, offshore_pixel_area=4):
+                args=None, excl_area=0.0081, max_workers=None,
+                offshore_capacity=600, offshore_gid_counts=494,
+                offshore_pixel_area=4):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -1024,8 +1016,6 @@ class SupplyCurveAggregation(AbstractAggregation):
             available args defined in the class attr.
         excl_area : float
             Area of an exclusion cell (square km).
-        close : bool
-            Flag to close object file handlers on exit.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -1052,7 +1042,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                   area_filter_kernel=area_filter_kernel, min_area=min_area,
                   check_excl_layers=check_excl_layers)
 
-        summary = agg.summarize(args=args, excl_area=excl_area, close=close,
+        summary = agg.summarize(args=args, excl_area=excl_area,
                                 max_workers=max_workers,
                                 offshore_capacity=offshore_capacity,
                                 offshore_gid_counts=offshore_gid_counts,

@@ -202,7 +202,7 @@ class AbstractAggregation(ABC):
     def run_serial(sc_point_method, excl_fpath, tm_dset,
                    excl_dict=None, area_filter_kernel='queen',
                    min_area=None, check_excl_layers=False,
-                   resolution=64, gids=None, close=False, args=None,
+                   resolution=64, gids=None, args=None,
                    kwargs=None):
         """Standalone method to create agg summary - can be parallelized.
 
@@ -230,8 +230,6 @@ class AbstractAggregation(ABC):
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
-        close : bool
-            Flag to close object file handlers on exit.
         args : list | None
             List of positional args for sc_point_method
         kwargs : dict | None
@@ -272,7 +270,7 @@ class AbstractAggregation(ABC):
                         excl_dict=excl_dict,
                         resolution=resolution,
                         exclusion_shape=exclusion_shape,
-                        close=close,
+                        close=False,
                         **kwargs)
 
                 except EmptySupplyCurvePointError:
@@ -285,7 +283,7 @@ class AbstractAggregation(ABC):
 
     @abstractmethod
     def run_parallel(self, sc_point_method, args=None, kwargs=None,
-                     close=False, max_workers=None, chunk_point_len=1000):
+                     max_workers=None, chunk_point_len=1000):
         """
         Aggregate with sc_point_method in parallel
 
@@ -295,8 +293,6 @@ class AbstractAggregation(ABC):
             List of positional args for sc_point_method
         kwargs : dict | None
             Dict of kwargs for sc_point_method
-        close : bool
-            Flag to close object file handlers on exit.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -336,7 +332,6 @@ class AbstractAggregation(ABC):
                     check_excl_layers=self._check_excl_layers,
                     resolution=self._resolution,
                     gids=gid_set,
-                    close=close,
                     args=args,
                     kwargs=kwargs))
 
@@ -351,7 +346,7 @@ class AbstractAggregation(ABC):
         return output
 
     def aggregate(self, sc_point_method, args=None, kwargs=None,
-                  close=False, max_workers=None, chunk_point_len=1000):
+                  max_workers=None, chunk_point_len=1000):
         """
         Aggregate with sc_point_method
 
@@ -361,8 +356,6 @@ class AbstractAggregation(ABC):
             List of positional args for sc_point_method
         kwargs : dict | None
             Dict of kwargs for sc_point_method
-        close : bool
-            Flag to close object file handlers on exit.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -386,12 +379,11 @@ class AbstractAggregation(ABC):
                                   check_excl_layers=self._check_excl_layers,
                                   resolution=self._resolution,
                                   gids=self._gids,
-                                  close=close, args=args,
+                                  args=args,
                                   kwargs=kwargs)
         else:
             agg = self.run_parallel(sc_point_method, args=args,
-                                    kwargs=kwargs, close=close,
-                                    max_workers=max_workers,
+                                    kwargs=kwargs, max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
 
         if not any(agg):
@@ -406,8 +398,7 @@ class AbstractAggregation(ABC):
     def run(cls, excl_fpath, tm_dset, sc_point_method, excl_dict=None,
             area_filter_kernel='queen', min_area=None,
             check_excl_layers=False, resolution=64, gids=None,
-            args=None, kwargs=None, close=False, max_workers=None,
-            chunk_point_len=1000):
+            args=None, kwargs=None, max_workers=None, chunk_point_len=1000):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -440,8 +431,6 @@ class AbstractAggregation(ABC):
             List of positional args for sc_point_method
         kwargs : dict | None
             Dict of kwargs for sc_point_method
-        close : bool
-            Flag to close object file handlers on exit.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -460,7 +449,7 @@ class AbstractAggregation(ABC):
                   gids=gids)
 
         aggregation = agg.aggregate(sc_point_method, args=args, kwargs=kwargs,
-                                    close=close, max_workers=max_workers,
+                                    max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
 
         return aggregation
@@ -544,7 +533,7 @@ class Aggregation(AbstractAggregation):
                    agg_method='mean', excl_dict=None,
                    area_filter_kernel='queen', min_area=None,
                    check_excl_layers=False, resolution=64, excl_area=0.0081,
-                   gids=None, close=False):
+                   gids=None):
         """
         Standalone method to aggregate - can be parallelized.
 
@@ -576,8 +565,6 @@ class Aggregation(AbstractAggregation):
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
-        close : bool
-            Flag to close object file handlers on exit.
 
         Returns
         -------
@@ -608,14 +595,14 @@ class Aggregation(AbstractAggregation):
                         resolution=resolution,
                         excl_area=excl_area,
                         exclusion_shape=exclusion_shape,
-                        close=close)
+                        close=False)
 
                 except EmptySupplyCurvePointError:
                     pass
 
         return gid_out
 
-    def run_parallel(self, agg_method='mean', excl_area=0.0081, close=False,
+    def run_parallel(self, agg_method='mean', excl_area=0.0081,
                      max_workers=None, chunk_point_len=1000):
         """
         Aggregate in parallel
@@ -624,8 +611,6 @@ class Aggregation(AbstractAggregation):
         ----------
         agg_method : str
             Aggregation method, either mean or sum/aggregate
-        close : bool
-            Flag to close object file handlers on exit.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -667,8 +652,7 @@ class Aggregation(AbstractAggregation):
                     check_excl_layers=self._check_excl_layers,
                     resolution=self._resolution,
                     excl_area=excl_area,
-                    gids=gid_set,
-                    close=close))
+                    gids=gid_set))
 
             # gather results
             for future in futures:
@@ -695,7 +679,7 @@ class Aggregation(AbstractAggregation):
 
         return agg_out
 
-    def aggregate(self, agg_method='mean', excl_area=0.0081, close=False,
+    def aggregate(self, agg_method='mean', excl_area=0.0081,
                   max_workers=None, chunk_point_len=1000):
         """
         Aggregate with given agg_method
@@ -704,8 +688,6 @@ class Aggregation(AbstractAggregation):
         ----------
         agg_method : str
             Aggregation method, either mean or sum/aggregate
-        close : bool
-            Flag to close object file handlers on exit.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -731,11 +713,10 @@ class Aggregation(AbstractAggregation):
                                   min_area=self._min_area,
                                   check_excl_layers=self._check_excl_layers,
                                   resolution=self._resolution,
-                                  excl_area=excl_area,
-                                  close=close)
+                                  excl_area=excl_area)
         else:
             agg = self.run_parallel(agg_method=agg_method, excl_area=excl_area,
-                                    close=close, max_workers=max_workers,
+                                    max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
 
         if not any(agg['meta']):
@@ -747,10 +728,10 @@ class Aggregation(AbstractAggregation):
         return agg
 
     @classmethod
-    def run(cls, excl_fpath, tm_dset, sc_point_method, excl_dict=None,
-            area_filter_kernel='queen', min_area=None,
+    def run(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
+            excl_dict=None, area_filter_kernel='queen', min_area=None,
             check_excl_layers=False, resolution=64, gids=None,
-            args=None, kwargs=None, close=False, max_workers=None,
+            agg_method='mean', excl_area=0.0081, max_workers=None,
             chunk_point_len=1000):
         """Get the supply curve points aggregation summary.
 
@@ -758,11 +739,13 @@ class Aggregation(AbstractAggregation):
         ----------
         excl_fpath : str
             Filepath to exclusions h5 with techmap dataset.
+        h5_fpath : str
+            Filepath to .h5 file to aggregate
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
-        sc_point_method : method
-            Supply Curve Point Method to operate on a single SC point.
+        agg_dset : str
+            Dataset to aggreate, can supply multiple datasets
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         area_filter_kernel : str
@@ -778,14 +761,8 @@ class Aggregation(AbstractAggregation):
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
-        sc_point_method : method
-            Supply Curve Point Method to operate on a single SC point.
-        args : list | None
-            List of positional args for sc_point_method
-        kwargs : dict | None
-            Dict of kwargs for sc_point_method
-        close : bool
-            Flag to close object file handlers on exit.
+        agg_method : str
+            Aggregation method, either mean or sum/aggregate
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -794,17 +771,16 @@ class Aggregation(AbstractAggregation):
 
         Returns
         -------
-        summary : DataFrame
-            Summary of the SC points.
+        agg : dict
+            Aggregated values for each aggregation dataset
         """
 
-        agg = cls(excl_fpath, tm_dset, excl_dict=excl_dict,
-                  area_filter_kernel=area_filter_kernel, min_area=min_area,
-                  check_excl_layers=check_excl_layers, resolution=resolution,
-                  gids=gids)
+        agg = cls(excl_fpath, h5_fpath, tm_dset, *agg_dset,
+                  excl_dict=excl_dict, area_filter_kernel=area_filter_kernel,
+                  min_area=min_area, check_excl_layers=check_excl_layers,
+                  resolution=resolution, gids=gids)
 
-        aggregation = agg.aggregate(sc_point_method, args=args, kwargs=kwargs,
-                                    close=close, max_workers=max_workers,
-                                    chunk_point_len=chunk_point_len)
+        aggregation = agg.aggregate(agg_method=agg_method, excl_area=excl_area,
+                                    max_workers=None, chunk_point_len=1000)
 
         return aggregation
