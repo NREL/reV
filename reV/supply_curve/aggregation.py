@@ -581,6 +581,8 @@ class Aggregation(AbstractAggregation):
                        'area_filter_kernel': area_filter_kernel,
                        'min_area': min_area,
                        'check_excl_layers': check_excl_layers}
+        dsets = agg_dset + ('meta', )
+        agg_out = {ds: [] for ds in dsets}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
             for gid in gids:
                 try:
@@ -598,11 +600,13 @@ class Aggregation(AbstractAggregation):
                         close=False)
 
                 except EmptySupplyCurvePointError:
-                    gid_out = {'meta': None}
-                    for ds in agg_dset:
-                        gid_out[ds] = None
+                    gid_out = None
+                else:
+                    if gid_out is not None:
+                        for k, v in gid_out.items():
+                            agg_out[k].append(v)
 
-        return gid_out
+        return agg_out
 
     def run_parallel(self, agg_method='mean', excl_area=0.0081,
                      max_workers=None, chunk_point_len=1000):
@@ -664,7 +668,7 @@ class Aggregation(AbstractAggregation):
                             .format(n_finished, len(chunks)))
                 for k, v in future.result():
                     if v is not None:
-                        agg_out[k].append(v)
+                        agg_out[k].extend(v)
 
         for k, v in agg_out.items():
             if k == 'meta':
