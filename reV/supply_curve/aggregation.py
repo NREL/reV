@@ -660,7 +660,7 @@ class Aggregation(AbstractAggregation):
                 logger.info('Parallel aggregation futures collected: '
                             '{} out of {}'
                             .format(n_finished, len(chunks)))
-                for k, v in future.results():
+                for k, v in future.result():
                     agg_out[k].append(v)
 
         for k, v in agg_out.items():
