@@ -48,6 +48,50 @@ class ResourceDataset:
         return out
 
     @property
+    def shape(self):
+        """
+        Dataset shape
+
+        Returns
+        -------
+        tuple
+        """
+        return self._ds.shape
+
+    @property
+    def size(self):
+        """
+        Dataset size
+
+        Returns
+        -------
+        int
+        """
+        return self._ds.size
+
+    @property
+    def dtype(self):
+        """
+        Dataset dtype
+
+        Returns
+        -------
+        str | numpy.dtype
+        """
+        return self._ds.dtype
+
+    @property
+    def chunks(self):
+        """
+        Dataset chunk size
+
+        Returns
+        -------
+        tuple
+        """
+        return self._ds.chunks
+
+    @property
     def scale_factor(self):
         """
         Dataset scale factor
