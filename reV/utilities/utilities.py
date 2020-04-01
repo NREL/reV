@@ -51,6 +51,39 @@ def safe_json_load(fpath):
     return j
 
 
+def jsonify_dict(di):
+    """Jsonify a dictionary into a string with handling for int/float keys.
+
+    Parameters
+    ----------
+    di : dict
+        Dictionary to be jsonified.
+
+    Returns
+    -------
+    sdi : str
+        Jsonified dictionary. Int/float keys will be represented as strings
+        because json objects outside of python cannot have int/float keys.
+    """
+
+    for k in list(di.keys()):
+        try:
+            float(k)
+        except ValueError as e:
+            pass
+        else:
+            di[str(k)] = di.pop(k)
+
+    try:
+        sdi = json.dumps(di)
+    except TypeError as e:
+        msg = ('Could not json serialize {}, received error: {}'
+               .format(di, e))
+        raise TypeError(msg)
+
+    return sdi
+
+
 def dict_str_load(dict_str):
     """
     Load jsonified string entries into dictionaries using JSON

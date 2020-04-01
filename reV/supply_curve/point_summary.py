@@ -11,6 +11,8 @@ import pandas as pd
 from scipy import stats
 from warnings import warn
 
+
+from reV.utilities.utilities import jsonify_dict
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import GenerationSupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
@@ -454,7 +456,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         Returns
         -------
-        data : float | int | None
+        data : float | int | str | None
             Result of applying method to data.
         """
         if data is not None:
@@ -475,11 +477,12 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             elif method.lower() == 'sum':
                 data = data.sum()
             elif method.lower() == 'category':
-                data = {category: excl_mult[(data == category)].sum()
+                data = {category: float(excl_mult[(data == category)].sum())
                         for category in np.unique(data)}
+                data = jsonify_dict(data)
             else:
                 e = ('Cannot recognize data layer agg method: '
-                     '"{}". Can only do mean, mode, sum, or category_count.'
+                     '"{}". Can only do mean, mode, sum, or category.'
                      .format(method))
                 logger.error(e)
                 raise ValueError(e)

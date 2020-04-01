@@ -73,6 +73,13 @@ class AbstractAggFileHandler(ABC):
         """
         return self._excl
 
+    @property
+    def h5(self):
+        """
+        Placeholder for h5 Resource handler
+        """
+        pass
+
 
 class AggFileHandler(AbstractAggFileHandler):
     """

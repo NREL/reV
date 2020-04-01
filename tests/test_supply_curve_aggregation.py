@@ -4,6 +4,7 @@ Created on Wed Jun 19 15:37:05 2019
 
 @author: gbuster
 """
+import json
 import pandas as pd
 import numpy as np
 import pytest
@@ -157,9 +158,13 @@ def test_aggregation_category_layer():
     for i in s.index.values:
         counts = s.loc[i, 'gid_counts']
         rr = s.loc[i, 'reeds_region']
+        assert isinstance(rr, str)
+        rr = json.loads(rr)
         assert isinstance(rr, dict)
         rr_sum = sum(list(rr.values()))
         padus = s.loc[i, 'padus']
+        assert isinstance(padus, str)
+        padus = json.loads(padus)
         assert isinstance(padus, dict)
         padus_sum = sum(list(padus.values()))
         try:
