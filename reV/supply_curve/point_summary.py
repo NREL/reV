@@ -5,6 +5,7 @@ Created on Fri Jun 21 13:24:31 2019
 
 @author: gbuster
 """
+import json
 import logging
 import numpy as np
 import pandas as pd
@@ -454,7 +455,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         Returns
         -------
-        data : float | int | None
+        data : float | int | str | None
             Result of applying method to data.
         """
         if data is not None:
@@ -475,14 +476,55 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             elif method.lower() == 'sum':
                 data = data.sum()
             elif method.lower() == 'category':
-                data = {category: excl_mult[(data == category)].sum()
-                        for category in np.unique(data)}
+                data = SupplyCurvePointSummary._agg_data_layer_category(
+                    data, excl_mult)
             else:
                 e = ('Cannot recognize data layer agg method: '
-                     '"{}". Can only do mean, mode, sum, or category_count.'
+                     '"{}". Can only do mean, mode, sum, or category.'
                      .format(method))
                 logger.error(e)
                 raise ValueError(e)
+
+        return data
+
+    def _agg_data_layer_category(data, excl_mult):
+        """Aggregate the data array by counting unique values as categories.
+
+        Parameters
+        ----------
+        data : np.ndarray | None
+            Data array that will be flattened and operated on using method.
+            This must be the included data. Exclusions should be applied
+            before this method.
+        excl_mult : np.ndarray | None
+            Scalar exclusion data for methods with exclusion-weighted
+            aggregation methods. Shape must match input data.
+
+        Returns
+        -------
+        data : str
+            Jsonified dictionary with keys being categories (unique values of
+            input data) and values being the number of instances of that
+            category in data.
+        """
+        data = {category: float(excl_mult[(data == category)].sum())
+                for category in np.unique(data)}
+
+        for k in list(data.keys()):
+            try:
+                float(k)
+            except ValueError as e:
+                pass
+            else:
+                data[str(k)] = data.pop(k)
+
+        try:
+            data = json.dumps(data)
+        except TypeError as e:
+            msg = ('Could not json serialize {}, received error: {}'
+                   .format(data, e))
+            logger.exception(msg)
+            raise TypeError(msg)
 
         return data
 
