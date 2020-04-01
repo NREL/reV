@@ -461,6 +461,20 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
 
         return (self._gids != -1)
 
+    @property
+    def h5(self):
+        """
+        placeholder for h5 Resource handler object
+        """
+        pass
+
+    @property
+    def summary(self):
+        """
+        Placeholder for Supply curve point's meta data summary
+        """
+        pass
+
     @classmethod
     def sc_mean(cls, gid, excl, tm_dset, data, excl_dict=None, resolution=64,
                 exclusion_shape=None, close=True):
@@ -711,7 +725,7 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
     @property
     def h5(self):
         """
-        Get the resource object.
+        h5 Resource handler object
 
         Returns
         -------
