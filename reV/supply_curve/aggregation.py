@@ -781,6 +781,7 @@ class Aggregation(AbstractAggregation):
                   resolution=resolution, gids=gids)
 
         aggregation = agg.aggregate(agg_method=agg_method, excl_area=excl_area,
-                                    max_workers=None, chunk_point_len=1000)
+                                    max_workers=max_workers,
+                                    chunk_point_len=chunk_point_len)
 
         return aggregation
