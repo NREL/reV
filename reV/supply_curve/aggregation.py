@@ -11,6 +11,7 @@ import os
 import pandas as pd
 
 from reV.handlers.resource import Resource
+from reV.handlers.outputs import Outputs
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.points import (SupplyCurveExtent,
                                      AggregationSupplyCurvePoint)
@@ -708,7 +709,7 @@ class Aggregation(AbstractAggregation):
                 logger.info('Parallel aggregation futures collected: '
                             '{} out of {}'
                             .format(n_finished, len(chunks)))
-                for k, v in future.result():
+                for k, v in future.result().items():
                     if v:
                         agg_out[k].extend(v)
 
@@ -767,7 +768,7 @@ class Aggregation(AbstractAggregation):
                 v = v.sort_values('sc_point_gid')
                 v = v.reset_index(drop=True)
                 v.index.name = 'sc_gid'
-                agg[k] = v
+                agg[k] = v.reset_index()
             else:
                 v = np.dstack(v)[0]
                 if v.shape[0] == 1:
@@ -777,12 +778,58 @@ class Aggregation(AbstractAggregation):
 
         return agg
 
+    def save_agg_to_h5(self, out_fpath, agg_out):
+        """
+        Save aggregated data to disc in .h5 format
+
+        Parameters
+        ----------
+        out_fpath : str
+            Output .h5 file path
+        agg_out : dict
+            Aggregated values for each aggregation dataset
+        """
+        meta = agg_out.pop('meta')
+        for c in meta.columns:
+            try:
+                meta[c] = pd.to_numeric(meta[c])
+            except ValueError:
+                pass
+
+        dsets = []
+        shapes = {}
+        attrs = {}
+        chunks = {}
+        dtypes = {}
+        time_index = None
+        with Resource(self._h5_fpath) as f:
+            for dset, data in agg_out.items():
+                dsets.append(dset)
+                shape = data.shape
+                shapes[dset] = shape
+                if len(data) == 2:
+                    if ('time_index' in f) and (shape[0] == f.shape[0]):
+                        if time_index is None:
+                            time_index = f.time_index
+
+                attrs[dset] = f.get_attrs(dset=dset)
+                _, dtype, chunks = f.get_dset_properties(dset)
+                chunks[dset] = chunks
+                dtypes[dset] = dtype
+
+        Outputs.init_h5(out_fpath, dsets, shapes, attrs, chunks, dtypes,
+                        meta, time_index=time_index)
+
+        with Outputs(out_fpath, mode='a') as out:
+            for dset, data in agg_out.items():
+                out[dset] = data
+
     @classmethod
     def run(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
             excl_dict=None, area_filter_kernel='queen', min_area=None,
             check_excl_layers=False, resolution=64, gids=None,
             agg_method='mean', excl_area=0.0081, max_workers=None,
-            chunk_point_len=1000):
+            chunk_point_len=1000, out_fpath=None):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -818,6 +865,8 @@ class Aggregation(AbstractAggregation):
             available cpus.
         chunk_point_len : int
             Number of SC points to process on a single parallel worker.
+        out_fpath : str
+            Output .h5 file path
 
         Returns
         -------
@@ -833,5 +882,8 @@ class Aggregation(AbstractAggregation):
         aggregation = agg.aggregate(agg_method=agg_method, excl_area=excl_area,
                                     max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
+
+        if out_fpath is not None:
+            agg.save_agg_to_h5(out_fpath, aggregation)
 
         return aggregation
