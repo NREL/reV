@@ -501,7 +501,7 @@ class Aggregation(AbstractAggregation):
 
         self._agg_dsets = agg_dset
 
-        self._check_files()
+        self._gen_index = self._check_files()
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -521,19 +521,55 @@ class Aggregation(AbstractAggregation):
                                      .format(self._tm_dset,
                                              self._excl_fpath))
 
-        with h5py.File(self._h5_fpath, 'r') as f:
+        with Resource(self._h5_fpath) as f:
             for dset in self._agg_dsets:
                 if dset not in f:
                     raise FileInputError('Could not find provided dataset "{}"'
                                          ' in h5 file: {}'
                                          .format(dset, self._h5_fpath))
 
+            gen_index = self._parse_gen_index(f.meta)
+
+        return gen_index
+
+    @staticmethod
+    def _parse_gen_index(meta):
+        """Parse gen outputs for an array of generation gids corresponding to
+        the resource gids.
+
+        Parameters
+        ----------
+        meta : pandas.DataFrame
+            site meta-data table
+
+        Returns
+        -------
+        gen_index : np.ndarray | None
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
+        """
+        if 'gid' in meta:
+            gen_index = meta.rename(columns={'gid': 'res_gids'})
+            gen_index['gen_gids'] = gen_index.index
+            gen_index = gen_index[['res_gids', 'gen_gids']]
+            gen_index = gen_index.set_index(keys='res_gids')
+            gen_index = gen_index.reindex(
+                range(int(gen_index.index.max() + 1)))
+            gen_index = gen_index['gen_gids'].values
+            gen_index[np.isnan(gen_index)] = -1
+            gen_index = gen_index.astype(np.int32)
+        else:
+            gen_index = None
+
+        return gen_index
+
     @staticmethod
     def run_serial(excl_fpath, h5_fpath, tm_dset, *agg_dset,
                    agg_method='mean', excl_dict=None,
                    area_filter_kernel='queen', min_area=None,
                    check_excl_layers=False, resolution=64, excl_area=0.0081,
-                   gids=None):
+                   gids=None, gen_index=None):
         """
         Standalone method to aggregate - can be parallelized.
 
@@ -565,6 +601,10 @@ class Aggregation(AbstractAggregation):
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
+        gen_index : np.ndarray
+            Array of generation gids with array index equal to resource gid.
+            Array value is -1 if the resource index was not used in the
+            generation run.
 
         Returns
         -------
@@ -597,7 +637,8 @@ class Aggregation(AbstractAggregation):
                         resolution=resolution,
                         excl_area=excl_area,
                         exclusion_shape=exclusion_shape,
-                        close=False)
+                        close=False,
+                        gen_index=gen_index)
 
                 except EmptySupplyCurvePointError:
                     gid_out = None
@@ -658,7 +699,8 @@ class Aggregation(AbstractAggregation):
                     check_excl_layers=self._check_excl_layers,
                     resolution=self._resolution,
                     excl_area=excl_area,
-                    gids=gid_set))
+                    gids=gid_set,
+                    gen_index=self._gen_index))
 
             # gather results
             for future in futures:
@@ -667,7 +709,7 @@ class Aggregation(AbstractAggregation):
                             '{} out of {}'
                             .format(n_finished, len(chunks)))
                 for k, v in future.result():
-                    if v is not None:
+                    if v:
                         agg_out[k].extend(v)
 
         return agg_out
@@ -706,13 +748,14 @@ class Aggregation(AbstractAggregation):
                                   min_area=self._min_area,
                                   check_excl_layers=self._check_excl_layers,
                                   resolution=self._resolution,
-                                  excl_area=excl_area)
+                                  excl_area=excl_area,
+                                  gen_index=self._gen_index)
         else:
             agg = self.run_parallel(agg_method=agg_method, excl_area=excl_area,
                                     max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
 
-        if not any(agg['meta']):
+        if not agg['meta']:
             e = ('Supply curve aggregation found no non-excluded SC points. '
                  'Please check your exclusions or subset SC GID selection.')
             logger.error(e)

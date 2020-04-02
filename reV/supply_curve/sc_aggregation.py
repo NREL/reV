@@ -302,7 +302,8 @@ class SupplyCurveAggregation(AbstractAggregation):
             warn(msg, InputWarning)
 
         self._check_data_layers()
-        self._gen_index = self._parse_gen_index(self._gen_fpath)
+        with Resource(self._gen_fpath) as gen:
+            self._gen_index = self._parse_gen_index(gen.meta)
 
     def _check_files(self):
         """Do a preflight check on input files"""
