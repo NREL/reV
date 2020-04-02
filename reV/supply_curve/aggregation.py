@@ -670,20 +670,6 @@ class Aggregation(AbstractAggregation):
                     if v is not None:
                         agg_out[k].extend(v)
 
-        for k, v in agg_out.items():
-            if k == 'meta':
-                v = pd.concat(v, axis=1).T
-                v = v.sort_values('sc_point_gid')
-                v = v.reset_index(drop=True)
-                v.index.name = 'sc_gid'
-                agg_out[k] = v
-            else:
-                v = np.dstack(v)[0]
-                if v.shape[0] == 1:
-                    v = v.flatten()
-
-                agg_out[k] = v
-
         return agg_out
 
     def aggregate(self, agg_method='mean', excl_area=0.0081,
@@ -731,6 +717,20 @@ class Aggregation(AbstractAggregation):
                  'Please check your exclusions or subset SC GID selection.')
             logger.error(e)
             raise EmptySupplyCurvePointError(e)
+
+        for k, v in agg.items():
+            if k == 'meta':
+                v = pd.concat(v, axis=1).T
+                v = v.sort_values('sc_point_gid')
+                v = v.reset_index(drop=True)
+                v.index.name = 'sc_gid'
+                agg[k] = v
+            else:
+                v = np.dstack(v)[0]
+                if v.shape[0] == 1:
+                    v = v.flatten()
+
+                agg[k] = v
 
         return agg
 
