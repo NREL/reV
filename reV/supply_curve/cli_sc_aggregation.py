@@ -57,11 +57,12 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'aggregation',
+        status = Status.retrieve_job_status(config.dirout,
+                                            'supply-curve-aggregation',
                                             name)
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'aggregation', name, replace=True,
+                config.dirout, 'supply-curve-aggregation', name, replace=True,
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
@@ -270,7 +271,7 @@ def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                   'job_status': 'successful',
                   'runtime': runtime,
                   'finput': finput}
-        Status.make_job_file(out_dir, 'aggregation', name, status)
+        Status.make_job_file(out_dir, 'supply-curve-aggregation', name, status)
 
 
 def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
@@ -386,7 +387,8 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        friction_fpath, friction_dset,
                        out_dir, log_dir, verbose)
 
-    status = Status.retrieve_job_status(out_dir, 'aggregation', name)
+    status = Status.retrieve_job_status(out_dir, 'supply-curve-aggregation',
+                                        name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -403,7 +405,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                    '(SLURM jobid #{}).'
                    .format(name, slurm.id))
             Status.add_job(
-                out_dir, 'aggregation', name, replace=True,
+                out_dir, 'supply-curve-aggregation', name, replace=True,
                 job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                            'fout': '{}.csv'.format(name), 'dirout': out_dir})
         else:
