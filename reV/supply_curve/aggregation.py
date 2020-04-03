@@ -502,7 +502,8 @@ class Aggregation(AbstractAggregation):
 
         self._agg_dsets = agg_dset
 
-        self._gen_index = self._check_files()
+        self._check_files()
+        self._gen_index = self._parse_gen_index(self._h5_fpath)
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -529,39 +530,35 @@ class Aggregation(AbstractAggregation):
                                          ' in h5 file: {}'
                                          .format(dset, self._h5_fpath))
 
-            gen_index = self._parse_gen_index(f.meta)
-
-        return gen_index
-
     @staticmethod
-    def _parse_gen_index(meta):
+    def _parse_gen_index(h5_fpath):
         """Parse gen outputs for an array of generation gids corresponding to
         the resource gids.
 
         Parameters
         ----------
-        meta : pandas.DataFrame
-            site meta-data table
+        h5_fpath : str
+            Filepath to reV compliant .h5 file
 
         Returns
         -------
-        gen_index : np.ndarray | None
+        gen_index : np.ndarray
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
             generation run.
         """
-        if 'gid' in meta:
-            gen_index = meta.rename(columns={'gid': 'res_gids'})
-            gen_index['gen_gids'] = gen_index.index
-            gen_index = gen_index[['res_gids', 'gen_gids']]
-            gen_index = gen_index.set_index(keys='res_gids')
-            gen_index = gen_index.reindex(
-                range(int(gen_index.index.max() + 1)))
-            gen_index = gen_index['gen_gids'].values
-            gen_index[np.isnan(gen_index)] = -1
-            gen_index = gen_index.astype(np.int32)
-        else:
-            gen_index = None
+
+        with Resource(h5_fpath) as f:
+            gen_index = f.meta
+
+        gen_index = gen_index.rename(columns={'gid': 'res_gids'})
+        gen_index['gen_gids'] = gen_index.index
+        gen_index = gen_index[['res_gids', 'gen_gids']]
+        gen_index = gen_index.set_index(keys='res_gids')
+        gen_index = gen_index.reindex(range(int(gen_index.index.max() + 1)))
+        gen_index = gen_index['gen_gids'].values
+        gen_index[np.isnan(gen_index)] = -1
+        gen_index = gen_index.astype(np.int32)
 
         return gen_index
 
