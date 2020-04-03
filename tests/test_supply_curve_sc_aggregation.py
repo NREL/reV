@@ -5,10 +5,11 @@ Created on Wed Jun 19 15:37:05 2019
 @author: gbuster
 """
 import json
-import pandas as pd
-import numpy as np
-import pytest
 import os
+import pandas as pd
+from pandas.testing import assert_frame_equal
+import pytest
+
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 
@@ -92,15 +93,12 @@ def test_aggregation_summary():
                         'Created: {}'.format(AGG_BASELINE))
 
     else:
+        for c in ['res_gids', 'gen_gids', 'gid_counts']:
+            s[c] = s[c].astype(str)
+
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
-        for i, c in enumerate(s.columns):
-            if c in s_baseline:
-                if not np.issubdtype(s.dtypes[i], np.object_):
-                    m = ('Aggregation summary column did not match baseline '
-                         'file: "{}"'.format(c))
-                    assert np.allclose(s[c].values, s_baseline[c].values,
-                                       rtol=RTOL, equal_nan=True), m
+        assert_frame_equal(s, s_baseline, check_dtype=False)
 
 
 def test_aggregation_scalar_excl():
