@@ -17,7 +17,8 @@ from warnings import warn
 from reV.handlers.exclusions import ExclusionLayers
 from reV.handlers.resource import Resource
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
-                                          AbstractAggregation)
+                                          AbstractAggregation,
+                                          Aggregation)
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
@@ -303,7 +304,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         self._check_data_layers()
         with Resource(self._gen_fpath) as gen:
-            self._gen_index = self._parse_gen_index(gen.meta)
+            self._gen_index = Aggregation._parse_gen_index(gen.meta)
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -352,38 +353,6 @@ class SupplyCurveAggregation(AbstractAggregation):
                                    'exclusions shape {}.'
                                    .format(k, f.shape, shape_base))
                             raise FileInputError(msg)
-
-    @staticmethod
-    def _parse_gen_index(gen_fpath):
-        """Parse gen outputs for an array of generation gids corresponding to
-        the resource gids.
-
-        Parameters
-        ----------
-        gen_fpath : str
-            Filepath to .h5 reV generation output results.
-
-        Returns
-        -------
-        gen_index : np.ndarray
-            Array of generation gids with array index equal to resource gid.
-            Array value is -1 if the resource index was not used in the
-            generation run.
-        """
-
-        with Resource(gen_fpath) as gen:
-            gen_index = gen.meta
-
-        gen_index = gen_index.rename(columns={'gid': 'res_gids'})
-        gen_index['gen_gids'] = gen_index.index
-        gen_index = gen_index[['res_gids', 'gen_gids']]
-        gen_index = gen_index.set_index(keys='res_gids')
-        gen_index = gen_index.reindex(range(int(gen_index.index.max() + 1)))
-        gen_index = gen_index['gen_gids'].values
-        gen_index[np.isnan(gen_index)] = -1
-        gen_index = gen_index.astype(np.int32)
-
-        return gen_index
 
     @staticmethod
     def _get_input_data(gen, gen_fpath, res_class_dset, res_class_bins,
