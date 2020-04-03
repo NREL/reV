@@ -778,7 +778,7 @@ class Aggregation(AbstractAggregation):
 
         return agg
 
-    def save_agg_to_h5(self, out_fpath, agg_out):
+    def save_agg_to_h5(self, out_fpath, aggregation):
         """
         Save aggregated data to disc in .h5 format
 
@@ -786,9 +786,10 @@ class Aggregation(AbstractAggregation):
         ----------
         out_fpath : str
             Output .h5 file path
-        agg_out : dict
+        aggregation : dict
             Aggregated values for each aggregation dataset
         """
+        agg_out = aggregation.copy()
         meta = agg_out.pop('meta')
         for c in meta.columns:
             try:

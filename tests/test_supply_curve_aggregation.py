@@ -43,6 +43,9 @@ def check_agg(agg_out, baseline_h5):
         for dset, test in agg_out.items():
             truth = f[dset]
             if dset == 'meta':
+                for c in ['source_gids', 'gid_counts']:
+                    test[c] = test[c].astype(str)
+
                 assert_frame_equal(truth, test, check_dtype=False)
             else:
                 assert np.allclose(truth, test, rtol=RTOL, atol=ATOL)
