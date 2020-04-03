@@ -487,8 +487,8 @@ class Aggregation(AbstractAggregation):
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
         gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
+            List of gids to get aggregation for (can use to subset if running
+            in parallel), or None for all gids in the SC extent.
         """
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
                          area_filter_kernel=area_filter_kernel,
@@ -793,7 +793,7 @@ class Aggregation(AbstractAggregation):
         for c in meta.columns:
             try:
                 meta[c] = pd.to_numeric(meta[c])
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
 
         dsets = []
@@ -807,14 +807,14 @@ class Aggregation(AbstractAggregation):
                 dsets.append(dset)
                 shape = data.shape
                 shapes[dset] = shape
-                if len(data) == 2:
+                if len(data.shape) == 2:
                     if ('time_index' in f) and (shape[0] == f.shape[0]):
                         if time_index is None:
                             time_index = f.time_index
 
                 attrs[dset] = f.get_attrs(dset=dset)
-                _, dtype, chunks = f.get_dset_properties(dset)
-                chunks[dset] = chunks
+                _, dtype, chunk = f.get_dset_properties(dset)
+                chunks[dset] = chunk
                 dtypes[dset] = dtype
 
         Outputs.init_h5(out_fpath, dsets, shapes, attrs, chunks, dtypes,
@@ -856,8 +856,8 @@ class Aggregation(AbstractAggregation):
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
         gids : list | None
-            List of gids to get summary for (can use to subset if running in
-            parallel), or None for all gids in the SC extent.
+            List of gids to get aggregation for (can use to subset if running
+            in parallel), or None for all gids in the SC extent.
         agg_method : str
             Aggregation method, either mean or sum/aggregate
         max_workers : int | None
