@@ -596,6 +596,8 @@ class Aggregation(AbstractAggregation):
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
+        excl_area : float
+            Area of an exclusion cell (square km).
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -656,6 +658,8 @@ class Aggregation(AbstractAggregation):
         ----------
         agg_method : str
             Aggregation method, either mean or sum/aggregate
+        excl_area : float
+            Area of an exclusion cell (square km).
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -721,6 +725,8 @@ class Aggregation(AbstractAggregation):
         ----------
         agg_method : str
             Aggregation method, either mean or sum/aggregate
+        excl_area : float
+            Area of an exclusion cell (square km).
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -858,6 +864,8 @@ class Aggregation(AbstractAggregation):
             in parallel), or None for all gids in the SC extent.
         agg_method : str
             Aggregation method, either mean or sum/aggregate
+        excl_area : float
+            Area of an exclusion cell (square km).
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
