@@ -24,7 +24,8 @@ EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
              'ri_reeds_regions': {'inclusion_range': (None, 400),
                                   'exclude_nodata': True}}
 
-RTOL = 0.001
+RTOL = 0.01
+ATOL = 0.001
 
 
 def check_agg(agg_out, baseline_h5):
@@ -44,7 +45,7 @@ def check_agg(agg_out, baseline_h5):
             if dset == 'meta':
                 assert_frame_equal(truth, test, check_dtype=False)
             else:
-                assert np.allclose(truth, test, rtol=RTOL)
+                assert np.allclose(truth, test, rtol=RTOL, atol=ATOL)
 
 
 @pytest.mark.parametrize(('excl_dict', 'baseline_name'),
@@ -63,7 +64,7 @@ def test_aggregation_seriel(excl_dict, baseline_name):
 @pytest.mark.parametrize(('excl_dict', 'baseline_name'),
                          [(None, 'baseline_agg.h5'),
                           (EXCL_DICT, 'baseline_agg_excl.h5')])
-def test_aggregation_(excl_dict, baseline_name):
+def test_aggregation_parallel(excl_dict, baseline_name):
     """
     test aggregation run in parallel
     """

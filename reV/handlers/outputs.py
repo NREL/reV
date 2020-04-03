@@ -398,7 +398,7 @@ class Outputs(Resource):
             dtype = Outputs.get_dtype(c_data)
 
             if np.issubdtype(dtype, np.bytes_):
-                data = c_data.str.encode('utf-8').values
+                data = c_data.astype(str).str.encode('utf-8').values
             else:
                 data = c_data.values
 

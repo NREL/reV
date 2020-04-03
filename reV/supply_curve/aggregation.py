@@ -4,8 +4,8 @@ reV aggregation framework.
 """
 from abc import ABC, abstractmethod, abstractstaticmethod
 from concurrent.futures import as_completed
-import logging
 import h5py
+import logging
 import numpy as np
 import os
 import pandas as pd
