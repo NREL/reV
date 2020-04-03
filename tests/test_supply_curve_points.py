@@ -4,18 +4,32 @@ Created on Wed Jun 19 15:37:05 2019
 
 @author: gbuster
 """
-import pytest
+# pylint: disable=no-member
 import os
+import numpy as np
+import pytest
+
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.supply_curve.points import SupplyCurvePoint, SupplyCurveExtent
+from reV.supply_curve.points import (SupplyCurvePoint,
+                                     GenerationSupplyCurvePoint,
+                                     SupplyCurveExtent)
 from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
 
 
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
+TM_DSET = 'techmap_nsrdb'
+EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
+                               'exclude_nodata': True},
+             'ri_padus': {'exclude_values': [1],
+                          'exclude_nodata': True},
+             'ri_reeds_regions': {'inclusion_range': (None, 400),
+                                  'exclude_nodata': True}}
+
 F_TECHMAP = os.path.join(TESTDATADIR, 'sc_out/baseline_ri_tech_map.h5')
 DSET_TM = 'res_ri_pv'
+RTOL = 0.001
 
 
 @pytest.mark.parametrize('resolution', [7, 32, 50, 64, 163])
@@ -45,6 +59,81 @@ def test_slicer(gids, resolution):
             assert col_slice0 == col_slice1, msg
 
 
+@pytest.mark.parametrize(('gid', 'resolution', 'excl_dict', 'time_series'),
+                         [(37, 64, None, None),
+                          (37, 64, EXCL_DICT, None),
+                          (37, 64, None, 100),
+                          (37, 64, EXCL_DICT, 100),
+                          (37, 37, None, None),
+                          (37, 37, EXCL_DICT, None),
+                          (37, 37, None, 100),
+                          (37, 37, EXCL_DICT, 100)])
+def test_weighted_means(gid, resolution, excl_dict, time_series):
+    """
+    Test Supply Curve Point exclusions weighted mean calculation
+    """
+    with SupplyCurvePoint(gid, F_EXCL, TM_DSET, excl_dict=excl_dict,
+                          resolution=resolution) as point:
+        shape = (point._gids.max() + 1, )
+        if time_series:
+            shape = (time_series, ) + shape
+
+        arr = np.random.random(shape)
+        means = point.exclusion_weighted_mean(arr.copy())
+        excl = point.excl_data_flat[point.bool_mask]
+        excl_sum = excl.sum()
+        if len(arr.shape) == 2:
+            assert means.shape[0] == shape[0]
+            x = arr[:, point._gids[point.bool_mask]]
+            x *= excl
+
+            x = x[0]
+            means = means[0]
+        else:
+            x = arr[point._gids[point.bool_mask]]
+            x *= excl
+
+        test = x.sum() / excl_sum
+        assert np.allclose(test, means, rtol=RTOL)
+
+
+@pytest.mark.parametrize(('gid', 'resolution', 'excl_dict', 'time_series'),
+                         [(37, 64, None, None),
+                          (37, 64, EXCL_DICT, None),
+                          (37, 64, None, 100),
+                          (37, 64, EXCL_DICT, 100),
+                          (37, 37, None, None),
+                          (37, 37, EXCL_DICT, None),
+                          (37, 37, None, 100),
+                          (37, 37, EXCL_DICT, 100)])
+def test_aggregate(gid, resolution, excl_dict, time_series):
+    """
+    Test Supply Curve Point aggregate calculation
+    """
+    with SupplyCurvePoint(gid, F_EXCL, TM_DSET, excl_dict=excl_dict,
+                          resolution=resolution) as point:
+        shape = (point._gids.max() + 1, )
+        if time_series:
+            shape = (time_series, ) + shape
+
+        arr = np.random.random(shape)
+        total = point.aggregate(arr.copy())
+        excl = point.excl_data_flat[point.bool_mask]
+        if len(arr.shape) == 2:
+            assert total.shape[0] == shape[0]
+            x = arr[:, point._gids[point.bool_mask]]
+            x *= excl
+
+            x = x[0]
+            total = total[0]
+        else:
+            x = arr[point._gids[point.bool_mask]]
+            x *= excl
+
+        test = x.sum()
+        assert np.allclose(test, total, rtol=RTOL)
+
+
 def plot_all_sc_points(resolution=64):
     """Test the calculation of the SC points setup from exclusions tiff."""
 
@@ -67,7 +156,7 @@ def plot_all_sc_points(resolution=64):
     plt.show()
 
 
-def plot_single_sc_point(gid=2, resolution=64):
+def plot_single_gen_sc_point(gid=2, resolution=64):
     """Test the calculation of the SC points setup from exclusions tiff."""
     import matplotlib.pyplot as plt
 
@@ -76,8 +165,9 @@ def plot_single_sc_point(gid=2, resolution=64):
 
     _, axs = plt.subplots(1, 1)
     gen_index = SupplyCurveAggregation._parse_gen_index(F_GEN)
-    with SupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_TM, gen_index,
-                          resolution=resolution) as sc:
+    with GenerationSupplyCurvePoint(gid, F_EXCL, F_GEN, F_TECHMAP, DSET_TM,
+                                    gen_index,
+                                    resolution=resolution) as sc:
 
         all_gen_gids = list(set(sc._gen_gids))
 
