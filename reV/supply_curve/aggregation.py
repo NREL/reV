@@ -551,14 +551,18 @@ class Aggregation(AbstractAggregation):
         with Resource(h5_fpath) as f:
             gen_index = f.meta
 
-        gen_index = gen_index.rename(columns={'gid': 'res_gids'})
-        gen_index['gen_gids'] = gen_index.index
-        gen_index = gen_index[['res_gids', 'gen_gids']]
-        gen_index = gen_index.set_index(keys='res_gids')
-        gen_index = gen_index.reindex(range(int(gen_index.index.max() + 1)))
-        gen_index = gen_index['gen_gids'].values
-        gen_index[np.isnan(gen_index)] = -1
-        gen_index = gen_index.astype(np.int32)
+        if 'gid' in gen_index:
+            gen_index = gen_index.rename(columns={'gid': 'res_gids'})
+            gen_index['gen_gids'] = gen_index.index
+            gen_index = gen_index[['res_gids', 'gen_gids']]
+            gen_index = gen_index.set_index(keys='res_gids')
+            gen_index = \
+                gen_index.reindex(range(int(gen_index.index.max() + 1)))
+            gen_index = gen_index['gen_gids'].values
+            gen_index[np.isnan(gen_index)] = -1
+            gen_index = gen_index.astype(np.int32)
+        else:
+            gen_index = None
 
         return gen_index
 
