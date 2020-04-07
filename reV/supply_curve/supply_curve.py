@@ -19,6 +19,56 @@ from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 logger = logging.getLogger(__name__)
 
 
+class CompetitiveWindFarms:
+    """
+    Handle competitive wind farm exclusion during supply curve sorting
+    """
+    def __init__(self, prominent_wind_directions, n_dirs=2):
+        """
+        Parameters
+        ----------
+        prominent_wind_directions : pandas.DataFrame | str
+            reVX.wind_dirs.wind_dirs.ProminentWindDirection output with
+            the sc_point_gid of each neighbor and prominent power rose
+            direction
+        """
+        self._neighbors = self._parse_neighbors(prominent_wind_directions,
+                                                n_dirs=n_dirs)
+        self._mask = None
+
+    def __getitem__(self, sc_point_gid):
+
+        return self._neighbors.loc[sc_point_gid].values
+
+    @staticmethod
+    def _parse_neighbors(wind_dirs, n_dirs=2):
+        if isinstance(wind_dirs, str):
+            if not wind_dirs.endswith('.csv'):
+                msg = ('Cannot parse {}, expecting a .csv file!'
+                       .format(wind_dirs))
+                logger.error(msg)
+                raise ValueError(msg)
+
+            wind_dirs = pd.read_csv(wind_dirs)
+        elif not isinstance(wind_dirs, pd.DataFrame):
+            msg = ('Cannot parse {}, expecting a .csv file or a pandas '
+                   'DataFrame'.format(wind_dirs))
+            logger.error(msg)
+            raise ValueError(msg)
+
+        cols = ['sc_point_gid']
+        rename = {}
+        for i in range(n_dirs):
+            c = 'prominent_direction_{}'.format(i + 1)
+            rename[c] = i
+            cols.append(c)
+
+        wind_dirs = wind_dirs[cols].set_index('sc_point_gid')
+        wind_dirs = wind_dirs.rename(columns=rename)
+
+        return wind_dirs
+
+
 class SupplyCurve:
     """
     Class to handle LCOT calcuation and SupplyCurve sorting
