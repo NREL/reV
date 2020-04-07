@@ -645,6 +645,8 @@ class Aggregation(AbstractAggregation):
                         gen_index=gen_index)
 
                 except EmptySupplyCurvePointError:
+                    logger.debug('SC gid {} is fully excluded or does not '
+                                 'have any valid source data!'.format(gid))
                     gid_out = None
                 else:
                     if gid_out is not None:
