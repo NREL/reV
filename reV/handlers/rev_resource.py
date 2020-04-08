@@ -343,8 +343,8 @@ class WindResource(Resource):
 
         Returns
         -------
-        self._heights : list
-            List of available heights for:
+        self._heights : dict
+            Dictionary of list of available heights for keys:
             windspeed, winddirection, temperature, and pressure
         """
         if self._heights is None:
@@ -586,11 +586,16 @@ class WindResource(Resource):
         """
         var_name, h = self._parse_name(ds_name)
         heights = self.heights[var_name]
+
+        if not any(heights):
+            e = 'No wind heights found for var "{}"'.format(var_name)
+            raise HandlerValueError(e)
         if len(heights) == 1:
             h = heights[0]
             ds_name = '{}_{}m'.format(var_name, h)
             warnings.warn('Only one hub-height available, returning {}'
                           .format(ds_name), HandlerWarning)
+
         if h in heights:
             ds_name = '{}_{}m'.format(var_name, int(h))
             out = super()._get_ds(ds_name, ds_slice)
