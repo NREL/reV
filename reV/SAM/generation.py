@@ -301,20 +301,11 @@ class Generation(RevPySam):
         # initialize output dictionary
         out = {}
 
-<<<<<<< HEAD
-        # Get the SAM resource object
-        resources = SAM.get_sam_res(res_file,
-                                    points_control.project_points,
-                                    points_control.project_points.tech,
-                                    output_request=output_request,
-                                    downscale=downscale)
-=======
         # Get the RevPySam resource object
         resources = RevPySam.get_sam_res(res_file,
                                          points_control.project_points,
                                          points_control.project_points.tech,
                                          downscale=downscale)
->>>>>>> Added SAM version checker with input modifications.
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment
