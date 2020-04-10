@@ -231,7 +231,7 @@ class CompetitiveWindFarms:
         bool
             Flag if gid is valid and was masked
         """
-        if sc_point_gid < len(self._mask):
+        if sc_point_gid in self._sc_point_gids.index:
             self._mask[sc_point_gid] = False
             out = True
         else:
@@ -500,7 +500,7 @@ class SupplyCurve:
         trans_table = trans_table[filter_mask]
         sc_gids = list(np.sort(trans_table[gid_key].unique()))
         sc_gids = [int(gid) for gid in sc_gids]
-        mask = np.ones((int(1 + max(sc_gids)), ), dtype=bool)
+        mask = np.ones(int(1 + max(sc_gids)), dtype=bool)
 
         return trans_table, sc_gids, mask
 
