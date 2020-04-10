@@ -991,11 +991,11 @@ class SupplyCurve:
         connections = connections[columns]
         connections = connections.reset_index()
 
-        if connected != len(self):
+        unconnected = np.where(self._mask[self._sc_gids])[0].tolist()
+        if unconnected:
             msg = ("{} supply curve points were not connected to tranmission! "
                    "Unconnected sc_gid's: {}"
-                   .format(len(self) - connected,
-                           np.where(self._mask[self._sc_gids])[0].tolist()))
+                   .format(len(unconnected), unconnected))
             logger.warning(msg)
             warn(msg)
 
