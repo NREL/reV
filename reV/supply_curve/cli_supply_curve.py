@@ -111,6 +111,18 @@ def from_config(ctx, config_file, verbose):
 @click.option('--sort_on', '-so', type=str, default='total_lcoe',
               help='The supply curve table column label to sort on. '
               'This determines the ordering of the SC buildout algorithm.')
+@click.option('--wind_dirs', '-wd', type=click.Path(exists=True), default=None,
+              help=('Path to .csv containing reVX.wind_dirs.wind_dirs.WindDirs'
+                    ' output with the neighboring supply curve point gids and '
+                    'power-rose value at each cardinal direction'))
+@click.option('--n_dirs', '-dirs', type=int, default=2,
+              help='Number of prominent directions to use')
+@click.option('--downwind' '-dw', is_flag=True,
+              help=('Flag to remove downwind neighbors as well as upwind '
+                    'neighbors'))
+@click.option('--max_workers', '-mw', type=INT, default=None,
+              help=('Number of workers to use to compute lcot, if > 1 run in '
+                    'parallel. None uses all available cpus.'))
 @click.option('--out_dir', '-o', type=STR, default='./',
               help='Directory to save aggregation summary output.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
@@ -125,8 +137,8 @@ def from_config(ctx, config_file, verbose):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
-         transmission_costs, sort_on, out_dir, log_dir, simple, line_limited,
-         verbose):
+         transmission_costs, sort_on, wind_dirs, n_dirs, downwind, max_workers,
+         out_dir, log_dir, simple, line_limited, verbose):
     """reV Supply Curve CLI."""
 
     ctx.ensure_object(dict)
@@ -137,6 +149,10 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
     ctx.obj['SC_FEATURES'] = sc_features
     ctx.obj['TRANSMISSION_COSTS'] = transmission_costs
     ctx.obj['SORT_ON'] = sort_on
+    ctx.obj['WIND_DIRS'] = wind_dirs
+    ctx.obj['N_DIRS'] = n_dirs
+    ctx.obj['DOWNWIND'] = downwind
+    ctx.obj['MAX_WORKERS'] = max_workers
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['SIMPLE'] = simple
@@ -162,7 +178,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
                          sc_features=sc_features,
                          transmission_costs=transmission_costs,
                          line_limited=line_limited,
-                         sort_on=sort_on)
+                         sort_on=sort_on, wind_dirs=wind_dirs, n_dirs=n_dirs,
+                         downwind=downwind, max_workers=max_workers)
         except Exception as e:
             logger.exception('Supply curve compute failed. Received the '
                              'following error:\n{}'.format(e))
@@ -191,8 +208,8 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
-                 transmission_costs, sort_on, out_dir, log_dir, simple,
-                 line_limited, verbose):
+                 transmission_costs, sort_on, wind_dirs, n_dirs, downwind,
+                 max_workers, out_dir, log_dir, simple, line_limited, verbose):
     """Get a CLI call command for the Supply Curve cli."""
 
     args = ('-n {name} '
@@ -202,6 +219,10 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-scf {sc_features} '
             '-tc {transmission_costs} '
             '-so {sort_on} '
+            '-wd {wind_dirs} '
+            '-dirs {n_dirs} '
+            '-dw {downward} '
+            '-mw {max_workers} '
             '-o {out_dir} '
             '-ld {log_dir} '
             )
@@ -213,6 +234,10 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
                        sc_features=SLURM.s(sc_features),
                        transmission_costs=SLURM.s(transmission_costs),
                        sort_on=SLURM.s(sort_on),
+                       wind_dirs=SLURM.s(wind_dirs),
+                       n_dirs=SLURM.s(n_dirs),
+                       downwind=SLURM.s(downwind),
+                       max_workers=SLURM.s(max_workers),
                        out_dir=SLURM.s(out_dir),
                        log_dir=SLURM.s(log_dir),
                        )
@@ -258,6 +283,10 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     simple = ctx.obj['SIMPLE']
     line_limited = ctx.obj['LINE_LIMITED']
     sort_on = ctx.obj['SORT_ON']
+    wind_dirs = ctx.obj['WIND_DIRS']
+    n_dirs = ctx.obj['N_DIRS']
+    downwind = ctx.obj['DOWNWIND']
+    max_workers = ctx.obj['MAX_WORKERS']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -266,8 +295,9 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         stdout_path = os.path.join(log_dir, 'stdout/')
 
     cmd = get_node_cmd(name, sc_points, trans_table, fixed_charge_rate,
-                       sc_features, transmission_costs, sort_on,
-                       out_dir, log_dir, simple, line_limited, verbose)
+                       sc_features, transmission_costs, sort_on, wind_dirs,
+                       n_dirs, downwind, max_workers, out_dir, log_dir, simple,
+                       line_limited, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'supply-curve', name)
     if status == 'successful':
