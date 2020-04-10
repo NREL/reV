@@ -27,5 +27,5 @@
   "sam_files": {
     "default": "./inputs/t205.json"
   },
-  "technology": "wind"
+  "technology": "windpower"
 }

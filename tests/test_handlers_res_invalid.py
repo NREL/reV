@@ -82,7 +82,7 @@ def test_preload_sam_hh():
 
     h5 = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012_invalid.h5')
     sam_configs = {'wind': os.path.join(TESTDATADIR, 'SAM/i_windpower.json')}
-    project_points = ProjectPoints(slice(0, 200), sam_configs, 'wind')
+    project_points = ProjectPoints(slice(0, 200), sam_configs, 'windpower')
 
     SAM_res = WindResource.preload_SAM(h5, project_points)
 

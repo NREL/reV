@@ -11,7 +11,7 @@ import psutil
 from warnings import warn
 
 from reV.SAM.generation import (
-    PV, CSP, LandBasedWind, OffshoreWind, SolarWaterHeat, TroughPhysicalHeat,
+    PV, CSP, LandBasedWind, SolarWaterHeat, TroughPhysicalHeat,
     LinearDirectSteam
 )
 from reV.config.project_points import ProjectPoints, PointsControl
@@ -36,10 +36,7 @@ class Gen:
                'solarwaterheat': SolarWaterHeat,
                'troughphysicalheat': TroughPhysicalHeat,
                'lineardirectsteam': LinearDirectSteam,
-               'wind': LandBasedWind,
                'windpower': LandBasedWind,
-               'landbasedwind': LandBasedWind,
-               'offshorewind': OffshoreWind,
                }
 
     # Mapping of reV generation outputs to scale factors and units.

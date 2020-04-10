@@ -975,6 +975,9 @@ class Wind(Generation):
 
         data_dict = {}
         var_list = ['temperature', 'pressure', 'windspeed', 'winddirection']
+        if 'winddirection' not in resource:
+            resource['winddirection'] = 0.0
+
         time_index = resource.index
         self.time_interval = self.get_time_interval(resource.index.values)
 

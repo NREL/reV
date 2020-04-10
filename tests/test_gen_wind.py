@@ -86,8 +86,8 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'wind', res_file=res_file)
-    gen = Gen.reV_run('wind', rev2_points, sam_files, res_file,
+    pp = ProjectPoints(rev2_points, sam_files, 'windpower', res_file=res_file)
+    gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
                       max_workers=max_workers, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
@@ -111,7 +111,7 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     output_request = ('cf_mean', 'cf_profile', 'monthly_energy')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('wind', points, sam_files, res_file,
+    gen = Gen.reV_run('windpower', points, sam_files, res_file,
                       max_workers=max_workers, sites_per_worker=3, fout=None,
                       output_request=output_request)
 
@@ -135,7 +135,7 @@ def test_windspeed_pass_through(rev2_points=slice(0, 10), year=2012,
     output_requests = ('cf_mean', 'windspeed')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run('wind', rev2_points, sam_files, res_file,
+    gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
                       max_workers=max_workers, sites_per_worker=3, fout=None,
                       output_request=output_requests)
     assert 'windspeed' in gen.out
@@ -151,7 +151,7 @@ def test_multi_file_5min_wtk():
     sam_files = TESTDATADIR + '/SAM/wind_gen_standard_losses_0.json'
     res_file = TESTDATADIR + '/wtk/wtk_{}_*m.h5'.format(2010)
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='wind', points=points, sam_files=sam_files,
+    gen = Gen.reV_run(tech='windpower', points=points, sam_files=sam_files,
                       res_file=res_file, max_workers=max_workers,
                       sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
