@@ -26,10 +26,10 @@ def get_curtailment(year):
     sam_files = {0: os.path.join(TESTDATADIR, 'SAM/',
                                  'wind_gen_standard_losses_0.json')}
     curtailment = os.path.join(TESTDATADIR, 'config/', 'curtailment.json')
-    pp = ProjectPoints(slice(0, 100), sam_files, 'wind',
+    pp = ProjectPoints(slice(0, 100), sam_files, 'windpower',
                        curtailment=curtailment)
 
-    resource = SAM.get_sam_res(res_file, pp, 'wind')
+    resource = SAM.get_sam_res(res_file, pp, 'windpower')
     non_curtailed_res = deepcopy(resource)
 
     out = curtail(resource, pp.curtailment, random_seed=0)
@@ -58,7 +58,7 @@ def test_cf_curtailment(year, site):
     points = slice(site, site + 1)
 
     # run reV 2.0 generation and write to disk
-    gen = Gen.reV_run('wind', points, sam_files, res_file, fout=None,
+    gen = Gen.reV_run('windpower', points, sam_files, res_file, fout=None,
                       output_request=('cf_profile',),
                       curtailment=curtailment,
                       max_workers=1, sites_per_worker=50,
@@ -105,7 +105,7 @@ def test_random(year, site):
         points = slice(site, site + 1)
 
         # run reV 2.0 generation and write to disk
-        gen = Gen.reV_run('wind', points, sam_files, res_file, fout=None,
+        gen = Gen.reV_run('windpower', points, sam_files, res_file, fout=None,
                           output_request=('cf_profile',),
                           curtailment=c,
                           max_workers=1, sites_per_worker=50,

@@ -56,7 +56,7 @@ def test_preload_sam_hh():
 
     h5 = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012_incomplete_2.h5')
     sam_configs = {'wind': os.path.join(TESTDATADIR, 'SAM/i_windpower.json')}
-    project_points = ProjectPoints(slice(0, 200), sam_configs, 'wind')
+    project_points = ProjectPoints(slice(0, 200), sam_configs, 'windpower')
     msg = ('Test SAM config {} changed! Expected HH at 80m but received: {}'
            .format(list(sam_configs.values())[0], project_points.h[0]))
     assert all([h == 80 for h in project_points.h]), msg

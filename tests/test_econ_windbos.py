@@ -189,7 +189,7 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
     cf_file = os.path.join(OUT_DIR, fn_gen)
 
     # run reV 2.0 generation
-    Gen.reV_run('wind', points, sam_files, res_file,
+    Gen.reV_run('windpower', points, sam_files, res_file,
                 output_request=('cf_mean', 'cf_profile'),
                 max_workers=max_workers, sites_per_worker=3, fout=fn_gen,
                 dirout=OUT_DIR)

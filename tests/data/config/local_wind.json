@@ -23,5 +23,5 @@
   "sam_files": {
     "wind0": "TESTDATADIR/SAM/wind_gen_standard_losses_0.json"
   },
-  "technology": "wind"
+  "technology": "windpower"
 }
