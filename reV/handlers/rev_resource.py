@@ -587,8 +587,9 @@ class WindResource(Resource):
         var_name, h = self._parse_name(ds_name)
         heights = self.heights[var_name]
 
-        if not any(heights):
-            e = 'No wind heights found for var "{}"'.format(var_name)
+        if not heights:
+            e = ('No wind heights found for var "{}". Heights lookup: {}'
+                 .format(var_name, self.heights))
             raise HandlerValueError(e)
         if len(heights) == 1:
             h = heights[0]
