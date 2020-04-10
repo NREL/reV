@@ -56,7 +56,7 @@ class SAMResource:
     # valid data ranges for wind resource in SAM based on the cpp file:
     # https://github.com/NREL/ssc/blob/develop/shared/lib_windfile.cpp
     WIND_DATA_RANGES = {'windspeed': (0, 120),
-                        'pressure': (0.5, 1.1),
+                        'pressure': (0.5, 1.099),
                         'temperature': (-200, 100),
                         'rh': (0.1, 99.9)}
 
@@ -319,7 +319,7 @@ class SAMResource:
 
         if 'pressure' in var_name and 'wind' in tech.lower():
             # Check if pressure is in Pa, if so convert to atm
-            if np.min(var_array) > 1e3:
+            if np.median(var_array) > 1e3:
                 # convert pressure from Pa to ATM
                 var_array *= 9.86923e-6
 
@@ -327,13 +327,13 @@ class SAMResource:
             if np.min(var_array) < 200:
                 # convert pressure from 100 to 1000 hPa
                 var_array *= 10
-            if np.min(var_array) > 80000:
+            if np.median(var_array) > 70000:
                 # convert pressure from Pa to hPa
                 var_array /= 100
 
         elif 'temperature' in var_name:
             # Check if tempearture is in K, if so convert to C
-            if np.max(var_array) > 200.00:
+            if np.median(var_array) > 200.00:
                 var_array -= 273.15
 
         return var_array
