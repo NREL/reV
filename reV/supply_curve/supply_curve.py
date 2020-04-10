@@ -41,7 +41,8 @@ class CompetitiveWindFarms:
         self._sc_gids, self._sc_point_gids, self._mask = \
             self._parse_sc_points(sc_points)
 
-        self._wind_dirs = self._wind_dirs.loc[self._sc_point_gids.index.values]
+        mask = self._wind_dirs.index.isin(self._sc_point_gids.index.values)
+        self._wind_dirs = self._wind_dirs.loc[mask]
         self._upwind, self._downwind = self._get_neighbors(self._wind_dirs,
                                                            n_dirs=n_dirs)
 
@@ -62,7 +63,7 @@ class CompetitiveWindFarms:
 
         source, gid = keys
         if source == 'sc_gid':
-            out = self._sc_gids.loc[gid].values
+            out = self._sc_gids.loc[gid].values[0]
         elif source == 'sc_point_gid':
             out = self._sc_point_gids.loc[gid].values[0]
         elif source == 'upwind':
@@ -71,11 +72,22 @@ class CompetitiveWindFarms:
             out = self._downwind.loc[gid].values
         else:
             msg = ("{} must be: 'sc_gid', 'sc_point_gid',  or 'upwind', "
-                   "'downwind'".format(keys))
+                   "'downwind'".format(source))
             logger.error(msg)
             raise ValueError(msg)
 
         return out
+
+    @property
+    def mask(self):
+        """
+        Supply curve point boolean mask, used for efficient exclusion
+
+        Returns
+        -------
+        ndarray
+        """
+        return self._mask
 
     @property
     def sc_point_gids(self):
@@ -86,9 +98,9 @@ class CompetitiveWindFarms:
         -------
         ndarray
         """
-        pos = np.where(self._mask)[0]
+        mask = self.mask[self._sc_point_gids.index.values]
 
-        return self._sc_point_gids.index.values[pos]
+        return self._sc_point_gids.index.values[mask]
 
     @property
     def sc_gids(self):
@@ -99,8 +111,9 @@ class CompetitiveWindFarms:
         -------
         ndarray
         """
-        pos = np.where(self._mask)[0]
-        sc_gids = np.concatenate(self._sc_point_gids.loc[pos].values.flatten())
+        mask = self.mask[self._sc_point_gids.index.values]
+        sc_gids = \
+            np.concatenate(self._sc_point_gids.loc[mask].values.flatten())
 
         return sc_gids
 
@@ -124,7 +137,7 @@ class CompetitiveWindFarms:
         wind_dirs = SupplyCurve._load_table(wind_dirs)
 
         wind_dirs = wind_dirs.set_index('sc_point_gid')
-        columns = [c for c in wind_dirs if c.endswith('_gid', '_pr')]
+        columns = [c for c in wind_dirs if c.endswith(('_gid', '_pr'))]
         wind_dirs = wind_dirs[columns]
 
         return wind_dirs
@@ -180,7 +193,8 @@ class CompetitiveWindFarms:
         downwind_gids : pandas.DataFrame
             Downwind neighbor gids for n prominent wind directions
         """
-        cols = [c for c in wind_dirs if c.endswith('_gid')]
+        cols = [c for c in wind_dirs
+                if (c.endswith('_gid') and not c.startswith('sc'))]
         directions = [c.split('_')[0] for c in cols]
         upwind_gids = wind_dirs[cols].values
 
@@ -202,6 +216,28 @@ class CompetitiveWindFarms:
                                      columns=[i for i in range(n_dirs)])
 
         return upwind_gids, downwind_gids
+
+    def mask_gid(self, sc_point_gid):
+        """
+        Mask given supply curve point id
+
+        Parameters
+        ----------
+        sc_point_gid : int
+            supply curve point gid to mask
+
+        Returns
+        -------
+        bool
+            Flag if gid is valid and was masked
+        """
+        if sc_point_gid < len(self._mask):
+            self._mask[sc_point_gid] = False
+            out = True
+        else:
+            out = False
+
+        return out
 
     def remove_noncompetitive_farm(self, sc_points, sort_on='total_lcoe',
                                    downwind=False):
@@ -233,20 +269,20 @@ class CompetitiveWindFarms:
 
         for i in range(len(sc_points)):
             gid = sc_point_gids[i]
-            if self._mask[gid]:
+            if self.mask[gid]:
                 upwind_gids = self['upwind', gid]
                 for n in upwind_gids:
-                    self._mask[n] = False
+                    self.mask_gid(n)
 
                 if downwind:
                     downwind_gids = self['downwind', gid]
                     for n in downwind_gids:
-                        self._mask[n] = False
+                        self.mask_gid(n)
 
         sc_gids = self.sc_gids
         mask = sc_points['sc_gid'].isin(sc_gids)
 
-        return sc_points.loc[mask]
+        return sc_points.loc[mask].reset_index(drop=True)
 
     @classmethod
     def run(cls, wind_dirs, sc_points, n_dirs=2, sort_on='total_lcoe',
@@ -846,21 +882,23 @@ class SupplyCurve:
             updated CompetitiveWindFarms instance
         """
         gid = wind_dirs['sc_gid', sc_gid]
-        if wind_dirs._mask[gid]:
+        if wind_dirs.mask[gid]:
             upwind_gids = wind_dirs['upwind', gid]
             for n in upwind_gids:
-                wind_dirs._mask[n] = False
-                sc_gids = wind_dirs['sc_point_gids', n]
-                for sc_id in sc_gids:
-                    self._mask[sc_id] = False
+                check = wind_dirs.mask_gid(n)
+                if check:
+                    sc_gids = wind_dirs['sc_point_gid', n]
+                    for sc_id in sc_gids:
+                        self._mask[sc_id] = False
 
         if downwind:
             downwind_gids = wind_dirs['downwind', gid]
             for n in downwind_gids:
-                wind_dirs._mask[n] = False
-                sc_gids = wind_dirs['sc_point_gids', n]
-                for sc_id in sc_gids:
-                    self._mask[sc_id] = False
+                check = wind_dirs.mask_gid(n)
+                if check:
+                    sc_gids = wind_dirs['sc_point_gid', n]
+                    for sc_id in sc_gids:
+                        self._mask[sc_id] = False
 
         return wind_dirs
 
@@ -1025,7 +1063,7 @@ class SupplyCurve:
                                        sort_on=sort_on, columns=columns,
                                        downwind=downwind)
 
-        return supply_curve
+        return supply_curve.reset_index(drop=True)
 
     def simple_sort(self, trans_table=None, sort_on='total_lcoe',
                     columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
@@ -1085,7 +1123,7 @@ class SupplyCurve:
                                                     sort_on=sort_on,
                                                     downwind=downwind)
 
-        return supply_curve
+        return supply_curve.reset_index(drop=True)
 
     @classmethod
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
