@@ -13,6 +13,7 @@ from warnings import warn
 
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
+from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
 from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 
@@ -192,7 +193,7 @@ class SupplyCurve:
         trans_table = trans_table[filter_mask]
         sc_gids = list(np.sort(trans_table[gid_key].unique()))
         sc_gids = [int(gid) for gid in sc_gids]
-        mask = np.ones((int(1 + max(sc_gids)), ), dtype=bool)
+        mask = np.ones(int(1 + max(sc_gids)), dtype=bool)
 
         return trans_table, sc_gids, mask
 
@@ -554,43 +555,81 @@ class SupplyCurve:
             logger.info('Found mean LCOE with friction. Adding key '
                         '"total_lcoe_friction" to trans table.')
 
-    def full_sort(self, trans_table=None, sort_on='total_lcoe',
-                  columns=('trans_gid', 'trans_capacity', 'trans_type',
-                           'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe')):
+    def _exclude_noncompetitive_wind_farms(self, comp_wind_dirs, sc_gid,
+                                           downwind=False):
         """
-        run supply curve sorting in serial
+        Exclude non-competitive wind farms for given sc_gid
 
         Parameters
         ----------
-        trans_table : pandas.DataFrame | NoneType
-            Supply Curve Tranmission table to sort on
-            If none use self._trans_table
-        sort_on : str
-            Column label to sort the Supply Curve table on. This affects the
-            build priority - connections with the lowest value in this column
-            will be built first.
-        columns : list | tuple
-            Columns to preserve in output connections dataframe.
+        comp_wind_dirs : CompetitiveWindFarms
+            Pre-initilized CompetitiveWindFarms instance
+        sc_gid : int
+            Supply curve gid to exclude non-competitive wind farms around
+        downwind : bool, optional
+            Flag to remove downwind neighbors as well as upwind neighbors,
+            by default False
 
         Returns
         -------
-        connections : pandas.DataFrame
-            DataFrame with Supply Curve connections
+        comp_wind_dirs : CompetitiveWindFarms
+            updated CompetitiveWindFarms instance
         """
-        if trans_table is None:
-            trans_table = self._trans_table
+        gid = comp_wind_dirs['sc_point_gid', sc_gid]
+        if comp_wind_dirs.mask[gid]:
+            upwind_gids = comp_wind_dirs['upwind', gid]
+            for n in upwind_gids:
+                check = comp_wind_dirs.exclude_sc_point_gid(n)
+                if check:
+                    sc_gids = comp_wind_dirs['sc_gid', n]
+                    for sc_id in sc_gids:
+                        self._mask[sc_id] = False
 
-        if isinstance(columns, tuple):
-            columns = list(columns)
+        if downwind:
+            downwind_gids = comp_wind_dirs['downwind', gid]
+            for n in downwind_gids:
+                check = comp_wind_dirs.exclude_sc_point_gid(n)
+                if check:
+                    sc_gids = comp_wind_dirs['sc_gid', n]
+                    for sc_id in sc_gids:
+                        self._mask[sc_id] = False
 
-        pos = trans_table['lcot'].isnull()
-        trans_table = trans_table.loc[~pos].sort_values(sort_on)
+        return comp_wind_dirs
 
-        total_lcoe_fric = None
-        if self._consider_friction and 'mean_lcoe_friction' in trans_table:
-            columns.append('total_lcoe_friction')
-            total_lcoe_fric = trans_table['total_lcoe_friction'].values
+    def _full_sort(self, trans_table, comp_wind_dirs=None,
+                   total_lcoe_fric=None, sort_on='total_lcoe',
+                   columns=('trans_gid', 'trans_capacity', 'trans_type',
+                            'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+                   downwind=False):
+        """
+        Internal method to handle full supply curve sorting
 
+        Parameters
+        ----------
+        trans_table : pandas.DataFrame
+            Supply Curve Tranmission table to sort on
+        comp_wind_dirs : CompetitiveWindFarms, optional
+            Pre-initilized CompetitiveWindFarms instance, by default None
+        total_lcoe_fric : ndarray, optional
+            Vector of lcoe friction values, by default None
+        sort_on : str, optional
+            Column label to sort the Supply Curve table on. This affects the
+            build priority - connections with the lowest value in this column
+            will be built first, by default 'total_lcoe'
+        columns : tuple, optional
+            Columns to preserve in output connections dataframe,
+            by default ('trans_gid', 'trans_capacity', 'trans_type',
+                        'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe')
+        downwind : bool, optional
+            Flag to remove downwind neighbors as well as upwind neighbors,
+            by default False
+
+        Returns
+        -------
+        supply_curve : pandas.DataFrame
+            Updated sc_points table with transmission connections, LCOT
+            and LCOE+LCOT based on full supply curve connections
+        """
         init_list = [np.nan] * int(1 + np.max(self._sc_gids))
         conn_lists = {k: deepcopy(init_list) for k in columns}
 
@@ -634,6 +673,11 @@ class SupplyCurve:
                         logger.info('{} % of supply curve points connected'
                                     .format(progress))
 
+                    if comp_wind_dirs is not None:
+                        comp_wind_dirs = \
+                            self._exclude_noncompetitive_wind_farms(
+                                comp_wind_dirs, sc_gid, downwind=downwind)
+
         index = range(0, int(1 + np.max(self._sc_gids)))
         connections = pd.DataFrame(conn_lists, index=index)
         connections.index.name = 'sc_gid'
@@ -641,19 +685,87 @@ class SupplyCurve:
         connections = connections[columns]
         connections = connections.reset_index()
 
-        if connected != len(self):
+        unconnected = np.where(self._mask[self._sc_gids])[0].tolist()
+        if unconnected:
             msg = ("{} supply curve points were not connected to tranmission! "
                    "Unconnected sc_gid's: {}"
-                   .format(len(self) - connected,
-                           np.where(self._mask[self._sc_gids])[0].tolist()))
+                   .format(len(unconnected), unconnected))
             logger.warning(msg)
             warn(msg)
 
-        return connections
+        supply_curve = self._sc_points.merge(connections, on='sc_gid')
+        if comp_wind_dirs is not None:
+            sc_gids = comp_wind_dirs.sc_gids
+            mask = supply_curve['sc_gid'].isin(sc_gids)
+            supply_curve = supply_curve.loc[mask]
+
+        return supply_curve
+
+    def full_sort(self, trans_table=None, sort_on='total_lcoe',
+                  columns=('trans_gid', 'trans_capacity', 'trans_type',
+                           'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
+                  wind_dirs=None, n_dirs=2, downwind=False):
+        """
+        run full supply curve sorting
+
+        Parameters
+        ----------
+        trans_table : pandas.DataFrame | NoneType
+            Supply Curve Tranmission table to sort on
+            If none use self._trans_table
+        sort_on : str
+            Column label to sort the Supply Curve table on. This affects the
+            build priority - connections with the lowest value in this column
+            will be built first.
+        columns : list | tuple
+            Columns to preserve in output connections dataframe.
+        wind_dirs : pandas.DataFrame | str
+            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
+            the neighboring supply curve point gids and power-rose value at
+            each cardinal direction
+        n_dirs : int, optional
+            Number of prominent directions to use, by default 2
+        downwind : bool, optional
+            Flag to remove downwind neighbors as well as upwind neighbors,
+            by default False
+
+        Returns
+        -------
+        supply_curve : pandas.DataFrame
+            Updated sc_points table with transmission connections, LCOT
+            and LCOE+LCOT based on full supply curve connections
+        """
+        if trans_table is None:
+            trans_table = self._trans_table
+
+        if isinstance(columns, tuple):
+            columns = list(columns)
+
+        pos = trans_table['lcot'].isnull()
+        trans_table = trans_table.loc[~pos].sort_values(sort_on)
+
+        total_lcoe_fric = None
+        if self._consider_friction and 'mean_lcoe_friction' in trans_table:
+            columns.append('total_lcoe_friction')
+            total_lcoe_fric = trans_table['total_lcoe_friction'].values
+
+        comp_wind_dirs = None
+        if wind_dirs is not None:
+            comp_wind_dirs = CompetitiveWindFarms(wind_dirs, self._sc_points,
+                                                  n_dirs=n_dirs)
+
+        supply_curve = self._full_sort(trans_table,
+                                       comp_wind_dirs=comp_wind_dirs,
+                                       total_lcoe_fric=total_lcoe_fric,
+                                       sort_on=sort_on, columns=columns,
+                                       downwind=downwind)
+
+        return supply_curve.reset_index(drop=True)
 
     def simple_sort(self, trans_table=None, sort_on='total_lcoe',
                     columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
-                             'trans_cap_cost')):
+                             'trans_cap_cost'),
+                    wind_dirs=None, n_dirs=2, downwind=False):
         """
         Run simple supply curve sorting that does not take into account
         available capacity
@@ -669,11 +781,20 @@ class SupplyCurve:
             will be built first.
         columns : list | tuple
             Columns to preserve in output connections dataframe.
+        wind_dirs : pandas.DataFrame | str
+            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
+            the neighboring supply curve point gids and power-rose value at
+            each cardinal direction
+        n_dirs : int, optional
+            Number of prominent directions to use, by default 2
+        downwind : bool, optional
+            Flag to remove downwind neighbors as well as upwind neighbors
 
         Returns
         -------
-        connections : pandas.DataFrame
-            DataFrame with simple Supply Curve connections
+        supply_curve : pandas.DataFrame
+            Updated sc_points table with transmission connections, LCOT
+            and LCOE+LCOT based on simple supply curve connections
         """
         if trans_table is None:
             trans_table = self._trans_table
@@ -691,14 +812,22 @@ class SupplyCurve:
         connections = connections.rename(columns=rename)
         connections = connections[columns].reset_index()
 
-        return connections
+        supply_curve = self._sc_points.merge(connections, on='sc_gid')
+        if wind_dirs is not None:
+            supply_curve = CompetitiveWindFarms.run(wind_dirs,
+                                                    supply_curve,
+                                                    n_dirs=n_dirs,
+                                                    sort_on=sort_on,
+                                                    downwind=downwind)
+
+        return supply_curve.reset_index(drop=True)
 
     @classmethod
     def full(cls, sc_points, trans_table, fcr, sc_features=None,
              transmission_costs=None, line_limited=False, sort_on='total_lcoe',
              columns=('trans_gid', 'trans_capacity', 'trans_type',
                       'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
-             max_workers=None):
+             max_workers=None, wind_dirs=None, n_dirs=2, downwind=False):
         """
         Run full supply curve taking into account available capacity of
         tranmission features when making connections.
@@ -732,6 +861,14 @@ class SupplyCurve:
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
+        wind_dirs : pandas.DataFrame | str
+            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
+            the neighboring supply curve point gids and power-rose value at
+            each cardinal direction
+        n_dirs : int, optional
+            Number of prominent directions to use, by default 2
+        downwind : bool, optional
+            Flag to remove downwind neighbors as well as upwind neighbors
 
         Returns
         -------
@@ -742,8 +879,9 @@ class SupplyCurve:
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
                  transmission_costs=transmission_costs,
                  line_limited=line_limited, max_workers=max_workers)
-        connections = sc.full_sort(sort_on=sort_on, columns=columns)
-        supply_curve = sc._sc_points.merge(connections, on='sc_gid')
+        supply_curve = sc.full_sort(sort_on=sort_on, columns=columns,
+                                    wind_dirs=wind_dirs, n_dirs=n_dirs,
+                                    downwind=downwind)
 
         return supply_curve
 
@@ -752,7 +890,7 @@ class SupplyCurve:
                transmission_costs=None, sort_on='total_lcoe',
                columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                         'trans_cap_cost'),
-               max_workers=None):
+               max_workers=None, wind_dirs=None, n_dirs=2, downwind=False):
         """
         Run simple supply curve by connecting to the cheapest tranmission
         feature.
@@ -783,6 +921,14 @@ class SupplyCurve:
         max_workers : int | NoneType
             Number of workers to use to compute lcot, if > 1 run in parallel.
             None uses all available cpu's.
+        wind_dirs : pandas.DataFrame | str
+            path to .csv or reVX.wind_dirs.wind_dirs.WindDirs output with
+            the neighboring supply curve point gids and power-rose value at
+            each cardinal direction
+        n_dirs : int, optional
+            Number of prominent directions to use, by default 2
+        downwind : bool, optional
+            Flag to remove downwind neighbors as well as upwind neighbors
 
         Returns
         -------
@@ -793,7 +939,8 @@ class SupplyCurve:
         sc = cls(sc_points, trans_table, fcr, sc_features=sc_features,
                  transmission_costs=transmission_costs, connectable=False,
                  max_workers=max_workers)
-        connections = sc.simple_sort(sort_on=sort_on, columns=columns)
-        supply_curve = sc._sc_points.merge(connections, on='sc_gid')
+        supply_curve = sc.simple_sort(sort_on=sort_on, columns=columns,
+                                      wind_dirs=wind_dirs, n_dirs=n_dirs,
+                                      downwind=downwind)
 
         return supply_curve

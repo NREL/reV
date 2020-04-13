@@ -209,6 +209,7 @@ class SupplyCurveConfig(AnalysisConfig):
         self._default_sc_features = None
         self._default_transmission_costs = None
         self._default_sort_on = 'total_lcoe'
+        self._default_n_dirs = 2
 
         self._sc_preflight()
 
@@ -272,3 +273,23 @@ class SupplyCurveConfig(AnalysisConfig):
         """Get the SC table column label to sort on.
         This determines the ordering of the buildout algorithm."""
         return self.get('sort_on', self._default_sort_on)
+
+    @property
+    def wind_dirs(self):
+        """Get the supply curve power-rose wind directions"""
+        return self.get('wind_dirs', None)
+
+    @property
+    def n_dirs(self):
+        """Get the number of prominent wind directions to exclude"""
+        return self.get('n_dirs', self._default_n_dirs)
+
+    @property
+    def downwind(self):
+        """Get the flag to exclude downwind as well as upwind sites"""
+        return self.get('downwind', False)
+
+    @property
+    def max_workers(self):
+        """Get the number of workers to use during computation"""
+        return self.get('max_workers', None)
