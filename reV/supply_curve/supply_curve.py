@@ -575,13 +575,13 @@ class SupplyCurve:
         comp_wind_dirs : CompetitiveWindFarms
             updated CompetitiveWindFarms instance
         """
-        gid = comp_wind_dirs['sc_gid', sc_gid]
+        gid = comp_wind_dirs['sc_point_gid', sc_gid]
         if comp_wind_dirs.mask[gid]:
             upwind_gids = comp_wind_dirs['upwind', gid]
             for n in upwind_gids:
                 check = comp_wind_dirs.exclude_sc_point_gid(n)
                 if check:
-                    sc_gids = comp_wind_dirs['sc_point_gid', n]
+                    sc_gids = comp_wind_dirs['sc_gid', n]
                     for sc_id in sc_gids:
                         self._mask[sc_id] = False
 
@@ -590,7 +590,7 @@ class SupplyCurve:
             for n in downwind_gids:
                 check = comp_wind_dirs.exclude_sc_point_gid(n)
                 if check:
-                    sc_gids = comp_wind_dirs['sc_point_gid', n]
+                    sc_gids = comp_wind_dirs['sc_gid', n]
                     for sc_id in sc_gids:
                         self._mask[sc_id] = False
 
@@ -674,7 +674,7 @@ class SupplyCurve:
                                     .format(progress))
 
                     if wind_dirs is not None:
-                        wind_dirs = \
+                        comp_wind_dirs = \
                             self._exclude_noncompetitive_wind_farms(
                                 wind_dirs, sc_gid, downwind=downwind)
 
@@ -694,8 +694,8 @@ class SupplyCurve:
             warn(msg)
 
         supply_curve = self._sc_points.merge(connections, on='sc_gid')
-        if wind_dirs is not None:
-            sc_gids = wind_dirs.sc_gids
+        if comp_wind_dirs is not None:
+            sc_gids = comp_wind_dirs.sc_gids
             mask = supply_curve['sc_gid'].isin(sc_gids)
             supply_curve = supply_curve.loc[mask]
 

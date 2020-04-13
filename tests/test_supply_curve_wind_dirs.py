@@ -82,6 +82,48 @@ def test_sc_simple_wind_dirs(downwind):
     assert_frame_equal(sc_out, baseline, check_dtype=False)
 
 
+def test_upwind_exclusion():
+    """
+    Ensure all upwind neighbors are excluded
+    """
+    cwf = CompetitiveWindFarms(WIND_DIRS, SC_POINTS, n_dirs=2)
+
+    sc_out = os.path.join(TESTDATADIR, 'comp_wind_farms',
+                          'sc_full_upwind.csv')
+    sc_out = pd.read_csv(sc_out)
+
+    sc_point_gids = sc_out['sc_point_gid'].values.tolist()
+
+    for sc_gid in sc_out['sc_gid'].values:
+        sc_point_gid = cwf['sc_point_gid', sc_gid]
+        for gid in cwf['upwind', sc_point_gid]:
+            msg = 'Upwind gid {} was not excluded!'.format(gid)
+            assert gid not in sc_point_gids, msg
+
+
+def test_upwind_downwind_exclusion():
+    """
+    Ensure all upwind and downwind neighbors are excluded
+    """
+    cwf = CompetitiveWindFarms(WIND_DIRS, SC_POINTS, n_dirs=2)
+
+    sc_out = os.path.join(TESTDATADIR, 'comp_wind_farms',
+                          'sc_full_downwind.csv')
+    sc_out = pd.read_csv(sc_out)
+
+    sc_point_gids = sc_out['sc_point_gid'].values.tolist()
+
+    for sc_gid in sc_out['sc_gid'].values:
+        sc_point_gid = cwf['sc_point_gid', sc_gid]
+        for gid in cwf['upwind', sc_point_gid]:
+            msg = 'Upwind gid {} was not excluded!'.format(gid)
+            assert gid not in sc_point_gids, msg
+
+        for gid in cwf['downwind', sc_point_gid]:
+            msg = 'downwind gid {} was not excluded!'.format(gid)
+            assert gid not in sc_point_gids, msg
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

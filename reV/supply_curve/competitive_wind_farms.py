@@ -51,7 +51,7 @@ class CompetitiveWindFarms:
         Parameters
         ----------
         keys : tuple
-            (mapping, gid) pair
+            (gid(s) to extract, gid) pair
 
         Returns
         -------
@@ -66,9 +66,9 @@ class CompetitiveWindFarms:
             raise ValueError(msg)
 
         source, gid = keys
-        if source == 'sc_gid':
+        if source == 'sc_point_gid':
             out = self.map_sc_gid_to_sc_point_gid(gid)
-        elif source == 'sc_point_gid':
+        elif source == 'sc_gid':
             out = self.map_sc_point_gid_to_sc_gid(gid)
         elif source == 'upwind':
             out = self.map_upwind(gid)
