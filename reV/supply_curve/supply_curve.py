@@ -596,7 +596,7 @@ class SupplyCurve:
 
         return comp_wind_dirs
 
-    def _full_sort(self, trans_table, wind_dirs, total_lcoe_fric,
+    def _full_sort(self, trans_table, comp_wind_dirs, total_lcoe_fric,
                    sort_on='total_lcoe',
                    columns=('trans_gid', 'trans_capacity', 'trans_type',
                             'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
@@ -608,7 +608,7 @@ class SupplyCurve:
         ----------
         trans_table : pandas.DataFrame
             Supply Curve Tranmission table to sort on
-        wind_dirs : CompetitiveWindFarms
+        comp_wind_dirs : CompetitiveWindFarms
             Pre-initilized CompetitiveWindFarms instance
         total_lcoe_fric : ndarray
             Vector of lcoe friction values
@@ -673,10 +673,10 @@ class SupplyCurve:
                         logger.info('{} % of supply curve points connected'
                                     .format(progress))
 
-                    if wind_dirs is not None:
+                    if comp_wind_dirs is not None:
                         comp_wind_dirs = \
                             self._exclude_noncompetitive_wind_farms(
-                                wind_dirs, sc_gid, downwind=downwind)
+                                comp_wind_dirs, sc_gid, downwind=downwind)
 
         index = range(0, int(1 + np.max(self._sc_gids)))
         connections = pd.DataFrame(conn_lists, index=index)
@@ -750,11 +750,12 @@ class SupplyCurve:
             total_lcoe_fric = trans_table['total_lcoe_friction'].values
 
         if wind_dirs is not None:
-            wind_dirs = CompetitiveWindFarms(wind_dirs, self._sc_points,
-                                             n_dirs=n_dirs)
+            comp_wind_dirs = CompetitiveWindFarms(wind_dirs, self._sc_points,
+                                                  n_dirs=n_dirs)
 
-        supply_curve = self._full_sort(trans_table, wind_dirs, total_lcoe_fric,
-                                       sort_on=sort_on, columns=columns,
+        supply_curve = self._full_sort(trans_table, comp_wind_dirs,
+                                       total_lcoe_fric, sort_on=sort_on,
+                                       columns=columns,
                                        downwind=downwind)
 
         return supply_curve.reset_index(drop=True)
