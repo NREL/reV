@@ -526,6 +526,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                                             cf_dset,
                                                             lcoe_dset)
 
+            n_finished = 0
             for gid in gids:
                 for ri, res_bin in enumerate(inputs[1]):
                     try:
@@ -560,6 +561,10 @@ class SupplyCurveAggregation(AbstractAggregation):
                         pointsum['res_class'] = ri
 
                         summary.append(pointsum)
+                        n_finished += 1
+                        logger.debug('Serial aggregation: '
+                                     '{} out of {} points complete'
+                                     .format(n_finished, len(gids)))
 
         return summary
 

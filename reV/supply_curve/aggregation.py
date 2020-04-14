@@ -628,6 +628,7 @@ class Aggregation(AbstractAggregation):
         dsets = agg_dset + ('meta', )
         agg_out = {ds: [] for ds in dsets}
         with AggFileHandler(excl_fpath, h5_fpath, **file_kwargs) as fh:
+            n_finished = 0
             for gid in gids:
                 try:
                     gid_out = AggregationSupplyCurvePoint.run(
@@ -649,6 +650,10 @@ class Aggregation(AbstractAggregation):
                                  'have any valid source data!'.format(gid))
                     gid_out = None
                 else:
+                    n_finished += 1
+                    logger.debug('Serial aggregation: '
+                                 '{} out of {} points complete'
+                                 .format(n_finished, len(gids)))
                     if gid_out is not None:
                         for k, v in gid_out.items():
                             agg_out[k].append(v)
