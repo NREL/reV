@@ -319,7 +319,7 @@ class AbstractAggregation(ABC):
         n_finished = 0
         futures = []
         output = []
-        loggers = (__name__, 'reV.supply_curve.points')
+        loggers = [__name__, 'reV.supply_curve.points']
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
 
             # iterate through split executions, submitting each to worker

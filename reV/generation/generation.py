@@ -1267,7 +1267,7 @@ class Gen:
             failed_futures = False
             chunks = {}
             futures = []
-            loggers = (__name__, 'reV.econ.econ')
+            loggers = [__name__, 'reV.econ.econ']
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
                 for pc in pc_chunk:
