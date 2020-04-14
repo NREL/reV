@@ -291,7 +291,9 @@ class Outputs(Resource):
         """
         self._time_index = time_index
         if isinstance(time_index, pd.DatetimeIndex):
-            time_index = np.array(time_index.astype(str), dtype='S20')
+            time_index = time_index.astype(str)
+            dtype = "S{}".format(len(time_index[0]))
+            time_index = np.array(time_index, dtype=dtype)
 
         if ds in self.datasets:
             self.update_dset(ds, time_index)
