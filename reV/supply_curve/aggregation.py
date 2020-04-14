@@ -18,6 +18,7 @@ from reV.supply_curve.points import (SupplyCurveExtent,
 from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
+from reV.utilities.loggers import log_mem
 
 
 logger = logging.getLogger(__name__)
@@ -654,6 +655,7 @@ class Aggregation(AbstractAggregation):
                     logger.debug('Serial aggregation: '
                                  '{} out of {} points complete'
                                  .format(n_finished, len(gids)))
+                    log_mem(logger)
                     if gid_out is not None:
                         for k, v in gid_out.items():
                             agg_out[k].append(v)
