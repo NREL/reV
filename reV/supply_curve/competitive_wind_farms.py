@@ -32,15 +32,16 @@ class CompetitiveWindFarms:
         self._sc_gids, self._sc_point_gids, self._mask = \
             self._parse_sc_points(sc_points)
 
-        mask = self._wind_dirs.index.isin(self._sc_point_gids.index.values)
+        mask = self._wind_dirs.index.isin(self._sc_point_gids.keys())
         self._wind_dirs = self._wind_dirs.loc[mask]
         self._upwind, self._downwind = self._get_neighbors(self._wind_dirs,
                                                            n_dirs=n_dirs)
 
     def __repr__(self):
-        shape = self._upwind.shape
+        gids = len(self._upwind)
+        neighbors = len(self._upwind.values[0])
         msg = ("{} with {} sc_point_gids and {} prominent directions"
-               .format(self.__class__.__name__, shape[0], shape[1]))
+               .format(self.__class__.__name__, gids, neighbors))
 
         return msg
 
@@ -103,9 +104,10 @@ class CompetitiveWindFarms:
         -------
         ndarray
         """
-        mask = self.mask[self._sc_point_gids.index.values]
+        sc_point_gids = np.array(list(self._sc_point_gids.keys()))
+        mask = self.mask[sc_point_gids]
 
-        return self._sc_point_gids.index.values[mask]
+        return sc_point_gids[mask]
 
     @property
     def sc_gids(self):
@@ -116,9 +118,9 @@ class CompetitiveWindFarms:
         -------
         ndarray
         """
-        mask = self.mask[self._sc_point_gids.index.values]
         sc_gids = \
-            np.concatenate(self._sc_point_gids.loc[mask].values.flatten())
+            np.concatenate([self._sc_point_gids[gid]
+                            for gid in self.sc_point_gids])
 
         return sc_gids
 
@@ -197,10 +199,13 @@ class CompetitiveWindFarms:
         """
         sc_points = CompetitiveWindFarms._parse_table(sc_points)
         sc_points = sc_points[['sc_gid', 'sc_point_gid']]
+        sc_gids = {k: v for k, v in zip()}
         sc_gids = sc_points.set_index('sc_gid')
+        sc_gids = {k: v[0] for k, v in sc_gids.iterrows()}
 
         sc_point_gids = \
             sc_points.groupby('sc_point_gid')['sc_gid'].unique().to_frame()
+        sc_point_gids = {k: v['sc_gid'] for k, v in sc_point_gids.iterrows()}
 
         mask = np.ones(int(1 + sc_points['sc_point_gid'].max()), dtype=bool)
 
@@ -221,9 +226,9 @@ class CompetitiveWindFarms:
 
         Returns
         -------
-        upwind_gids : pandas.DataFrame
+        upwind : pandas.DataFrame
             Upwind neighbor gids for n prominent wind directions
-        downwind_gids : pandas.DataFrame
+        downwind : pandas.DataFrame
             Downwind neighbor gids for n prominent wind directions
         """
         cols = [c for c in wind_dirs
@@ -236,19 +241,20 @@ class CompetitiveWindFarms:
 
         neighbors = np.argsort(neighbor_pr)[:, :n_dirs]
         upwind_gids = np.take_along_axis(upwind_gids, neighbors, axis=1)
-        upwind_gids = pd.DataFrame(upwind_gids, index=wind_dirs.index.values,
-                                   columns=[i for i in range(n_dirs)])
 
         downwind_map = {'N': 'S', 'NE': 'SW', 'E': 'W', 'SE': 'NW', 'S': 'N',
                         'SW': 'NE', 'W': 'E', 'NW': 'SE'}
         cols = ["{}_gid".format(downwind_map[d]) for d in directions]
         downwind_gids = wind_dirs[cols].values
         downwind_gids = np.take_along_axis(downwind_gids, neighbors, axis=1)
-        downwind_gids = pd.DataFrame(downwind_gids,
-                                     index=wind_dirs.index.values,
-                                     columns=[i for i in range(n_dirs)])
 
-        return upwind_gids, downwind_gids
+        downwind = {}
+        upwind = {}
+        for i, gid in enumerate(wind_dirs.index.values):
+            downwind[gid] = downwind_gids[i]
+            upwind[gid] = upwind_gids[i]
+
+        return upwind, downwind
 
     def map_sc_point_gid_to_sc_gid(self, sc_point_gid):
         """
@@ -264,7 +270,7 @@ class CompetitiveWindFarms:
         int | list
             Equivalent supply curve gid(s)
         """
-        return self._sc_point_gids.loc[sc_point_gid].values[0]
+        return self._sc_point_gids[sc_point_gid]
 
     def map_sc_gid_to_sc_point_gid(self, sc_gid):
         """
@@ -280,7 +286,7 @@ class CompetitiveWindFarms:
         int | list
             Equivalent supply point curve gid
         """
-        return self._sc_gids.loc[sc_gid].values[0]
+        return self._sc_gids[sc_gid]
 
     def map_upwind(self, sc_point_gid):
         """
@@ -295,7 +301,7 @@ class CompetitiveWindFarms:
         int | list
             upwind neighborings
         """
-        return self._upwind.loc[sc_point_gid].values
+        return self._upwind[sc_point_gid]
 
     def map_downwind(self, sc_point_gid):
         """
@@ -310,7 +316,7 @@ class CompetitiveWindFarms:
         int | list
             downwind neighborings
         """
-        return self._downwind.loc[sc_point_gid].values
+        return self._downwind[sc_point_gid]
 
     def exclude_sc_point_gid(self, sc_point_gid):
         """
@@ -327,7 +333,7 @@ class CompetitiveWindFarms:
         bool
             Flag if gid is valid and was masked
         """
-        if sc_point_gid in self._sc_point_gids.index:
+        if sc_point_gid in self._sc_point_gids:
             self._mask[sc_point_gid] = False
             out = True
         else:
