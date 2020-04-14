@@ -739,7 +739,9 @@ class Offshore:
         """Run offshore gen aggregation and ORCA econ compute in parallel."""
 
         futures = {}
-        with SpawnProcessPool(self._max_workers) as exe:
+        loggers = __name__
+        with SpawnProcessPool(max_workers=self._max_workers,
+                              loggers=loggers) as exe:
 
             iterator = self.meta_out_offshore.iterrows()
             for i, (ifarm, meta) in enumerate(iterator):

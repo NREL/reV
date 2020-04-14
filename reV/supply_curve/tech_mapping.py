@@ -231,17 +231,19 @@ class TechMapping:
 
         n_finished = 0
         futures = {}
-        with SpawnProcessPool(max_workers=self._max_workers) as executor:
+        loggers = __name__
+        with SpawnProcessPool(max_workers=self._max_workers,
+                              loggers=loggers) as exe:
 
             # iterate through split executions, submitting each to worker
             for i, gid_set in enumerate(gid_chunks):
                 # submit executions and append to futures list
-                futures[executor.submit(self.map_resource_gids,
-                                        gid_set,
-                                        self._excl_fpath,
-                                        self._res_fpath,
-                                        self.distance_upper_bound,
-                                        self._map_chunk)] = i
+                futures[exe.submit(self.map_resource_gids,
+                                   gid_set,
+                                   self._excl_fpath,
+                                   self._res_fpath,
+                                   self.distance_upper_bound,
+                                   self._map_chunk)] = i
 
             for future in as_completed(futures):
                 n_finished += 1
