@@ -89,7 +89,8 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         self._friction_layer = None
         if friction_fpath is not None and friction_dset is not None:
             self._friction_layer = FrictionMask(friction_fpath, friction_dset)
-            if not all(self._friction_layer.shape == self._excl.shape):
+
+            if not np.all(self._friction_layer.shape == self._excl.shape):
                 e = ('Friction layer shape {} must match exclusions shape {}!'
                      .format(self._friction_layer.shape, self._excl.shape))
                 logger.error(e)
@@ -506,7 +507,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             points = sc.points
             exclusion_shape = sc.exclusions.shape
             if gids is None:
-                gids = range(len(sc))
+                gids = sc.valid_sc_points(tm_dset)
 
         # pre-extract handlers so they are not repeatedly initialized
         file_kwargs = {'data_layers': data_layers,
