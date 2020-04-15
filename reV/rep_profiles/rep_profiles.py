@@ -988,7 +988,9 @@ class RepProfiles(RepProfilesBase):
         for iter_chunk in iter_chunks:
             logger.debug('Starting process pool...')
             futures = {}
-            with SpawnProcessPool(max_workers=max_workers) as exe:
+            loggers = __name__
+            with SpawnProcessPool(max_workers=max_workers,
+                                  loggers=loggers) as exe:
                 for i in iter_chunk:
                     row = self.meta.loc[i, :]
                     region_dict = {k: v for (k, v) in row.to_dict().items()
@@ -1209,7 +1211,9 @@ class AggregatedRepProfiles(RepProfilesBase):
         for iter_chunk in iter_chunks:
             logger.debug('Starting process pool...')
             futures = {}
-            with SpawnProcessPool(max_workers=max_workers) as exe:
+            loggers = __name__
+            with SpawnProcessPool(max_workers=max_workers,
+                                  loggers=loggers) as exe:
                 for i in iter_chunk:
                     row = self.meta.loc[i, :]
                     row = pd.DataFrame(row).T

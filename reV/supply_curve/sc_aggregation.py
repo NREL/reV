@@ -600,13 +600,13 @@ class SupplyCurveAggregation(AbstractAggregation):
         n_finished = 0
         futures = []
         summary = []
-
-        with SpawnProcessPool(max_workers=max_workers) as executor:
+        loggers = [__name__, 'reV.supply_curve.point_summary']
+        with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
 
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
                 # submit executions and append to futures list
-                futures.append(executor.submit(
+                futures.append(exe.submit(
                     self.run_serial,
                     self._excl_fpath, self._gen_fpath,
                     self._tm_dset, self._gen_index,
