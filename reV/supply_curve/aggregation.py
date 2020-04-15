@@ -179,7 +179,7 @@ class AbstractAggregation(ABC):
 
         if gids is None:
             with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
-                gids = np.array(range(len(sc)), dtype=np.uint32)
+                gids = sc.valid_sc_points(tm_dset)
         elif not isinstance(gids, np.ndarray):
             gids = np.array(gids)
 
@@ -619,7 +619,7 @@ class Aggregation(AbstractAggregation):
         with SupplyCurveExtent(excl_fpath, resolution=resolution) as sc:
             exclusion_shape = sc.exclusions.shape
             if gids is None:
-                gids = range(len(sc))
+                gids = sc.valid_sc_points(tm_dset)
 
         # pre-extract handlers so they are not repeatedly initialized
         file_kwargs = {'excl_dict': excl_dict,
@@ -649,16 +649,14 @@ class Aggregation(AbstractAggregation):
                 except EmptySupplyCurvePointError:
                     logger.debug('SC gid {} is fully excluded or does not '
                                  'have any valid source data!'.format(gid))
-                    gid_out = None
                 else:
                     n_finished += 1
                     logger.debug('Serial aggregation: '
                                  '{} out of {} points complete'
                                  .format(n_finished, len(gids)))
                     log_mem(logger)
-                    if gid_out is not None:
-                        for k, v in gid_out.items():
-                            agg_out[k].append(v)
+                    for k, v in gid_out.items():
+                        agg_out[k].append(v)
 
         return agg_out
 

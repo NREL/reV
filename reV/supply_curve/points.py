@@ -628,39 +628,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         self._check_excl()
 
     @staticmethod
-    def _parse_excl_file(excl):
-        """Parse excl filepath input or handler object and set to attrs.
-
-        Parameters
-        ----------
-        excl : str | ExclusionMask
-            Filepath to exclusions geotiff or ExclusionMask handler
-
-        Returns
-        -------
-        excl_fpath : str
-            Filepath for exclusions file
-        exclusions : ExclusionMask | None
-            Exclusions mask if input is already an open handler or None if it
-            is to be lazy instantiated.
-        """
-
-        if isinstance(excl, str):
-            excl_fpath = excl
-            exclusions = None
-        elif isinstance(excl, ExclusionMask):
-            excl_fpath = excl.excl_h5.h5_file
-            exclusions = excl
-        else:
-            raise SupplyCurveInputError('SupplyCurvePoints needs an '
-                                        'exclusions file path, or '
-                                        'ExclusionMask handler but '
-                                        'received: {}'
-                                        .format(type(excl)))
-
-        return excl_fpath, exclusions
-
-    @staticmethod
     def _parse_h5_file(h5):
         """
         Parse .h5 filepath input or handler object and set to attrs.
@@ -750,21 +717,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
         return [x for x in seq if not (x in seen or seen.add(x))]
 
     @property
-    def exclusions(self):
-        """Get the exclusions object.
-
-        Returns
-        -------
-        _excls : ExclusionMask
-            ExclusionMask h5 handler object.
-        """
-        if self._excls is None:
-            self._excls = ExclusionMaskFromDict(self._excl_fpath,
-                                                layers_dict=self._excl_dict)
-
-        return self._excls
-
-    @property
     def h5(self):
         """
         h5 Resource handler object
@@ -778,47 +730,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             self._h5 = Resource(self._h5_fpath,)
 
         return self._h5
-
-    @property
-    def centroid(self):
-        """Get the supply curve point centroid coordinate.
-
-        Returns
-        -------
-        centroid : tuple
-            SC point centroid (lat, lon).
-        """
-        decimals = 3
-
-        if self._centroid is None:
-            lats = self.exclusions.excl_h5['latitude', self.rows, self.cols]
-            lons = self.exclusions.excl_h5['longitude', self.rows, self.cols]
-            self._centroid = (np.round(lats.mean(), decimals=decimals),
-                              np.round(lons.mean(), decimals=decimals))
-
-        return self._centroid
-
-    @property
-    def area(self):
-        """Get the non-excluded resource area of the supply curve point in the
-        current resource class.
-
-        Returns
-        -------
-        area : float
-            Non-excluded resource/generation area in square km.
-        """
-        return self.excl_data.sum() * self._excl_area
-
-    @property
-    def latitude(self):
-        """Get the SC point latitude"""
-        return self.centroid[0]
-
-    @property
-    def longitude(self):
-        """Get the SC point longitude"""
-        return self.centroid[1]
 
     @property
     def country(self):
@@ -899,21 +810,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                       for gid in self.h5_gid_set]
 
         return gid_counts
-
-    @property
-    def n_gids(self):
-        """
-        Get the total number of resource/generation gids that were at
-        not excluded.
-
-        Returns
-        -------
-        n_gids : list
-            List of exclusion pixels in each resource/generation gid.
-        """
-        n_gids = np.sum(self.excl_data_flat > 0)
-
-        return n_gids
 
     @property
     def summary(self):
@@ -1532,6 +1428,36 @@ class SupplyCurveExtent:
                 break
             else:
                 chunks.append(arr[i:i + resolution])
+
             i = np.min((len(arr), i + resolution))
 
         return chunks
+
+    def valid_sc_points(self, tm_dset):
+        """
+        Determine which sc_point_gids contain resource gids and are thus
+        valid supply curve points
+
+        Parameters
+        ----------
+        tm_dset : str
+            Techmpa dataset name
+
+        Returns
+        -------
+        valid_gids : ndarray
+            Vector of valid sc_point_gids that contain resource gis
+        """
+        valid_gids = []
+        tm = self._excls[tm_dset]
+        gid = 0
+        for r in range(self.n_rows):
+            r = slice(r * self._res, (r + 1) * self._res)
+            for c in range(self.n_cols):
+                c = slice(c * self._res, (c + 1) * self._res)
+                if np.any(tm[r, c] != -1):
+                    valid_gids.append(gid)
+
+                gid += 1
+
+        return np.array(valid_gids, dtype=np.uint32)

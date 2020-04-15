@@ -39,6 +39,7 @@ class ExclusionLayers:
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_file)
+
         return msg
 
     def __enter__(self):
@@ -98,6 +99,7 @@ class ExclusionLayers:
             N = self.shape[0] * self.shape[1]
             self._iarr = np.arange(N, dtype=np.uint32)
             self._iarr = self._iarr.reshape(self.shape)
+
         return self._iarr
 
     @property
@@ -124,6 +126,7 @@ class ExclusionLayers:
         """
         layers = [ds for ds in self.h5
                   if ds != 'meta']
+
         return layers
 
     @property
@@ -136,7 +139,7 @@ class ExclusionLayers:
         shape : tuple
             Shape of exclusion array (latitude, longitude)
         """
-        return self.h5.attrs['shape']
+        return tuple(self.h5.attrs['shape'])
 
     @property
     def latitude(self):
@@ -175,6 +178,7 @@ class ExclusionLayers:
             GeoTiff profile for single exclusion layer
         """
         profile = json.loads(self.h5[layer].attrs['profile'])
+
         return profile
 
     def get_layer_values(self, layer):
@@ -192,6 +196,7 @@ class ExclusionLayers:
             GeoTiff values for single exclusion layer
         """
         values = self.h5[layer][...]
+
         return values
 
     def get_layer_description(self, layer):
@@ -209,6 +214,7 @@ class ExclusionLayers:
             Description of layer
         """
         description = self.h5[layer].attrs['description']
+
         return description
 
     def get_nodata_value(self, layer):
@@ -227,6 +233,7 @@ class ExclusionLayers:
         """
         profile = self.get_layer_profile(layer)
         nodata = profile.get('nodata', None)
+
         return nodata
 
     def _get_latitude(self, *ds_slice):
