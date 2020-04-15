@@ -555,6 +555,10 @@ class SupplyCurveAggregation(AbstractAggregation):
                     except EmptySupplyCurvePointError:
                         pass
 
+                    except Exception:
+                        logger.exception('SC gid {} failed!'.format(gid))
+                        raise
+
                     else:
                         pointsum['sc_point_gid'] = gid
                         pointsum['sc_row_ind'] = points.loc[gid, 'row_ind']

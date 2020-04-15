@@ -278,6 +278,10 @@ class AbstractAggregation(ABC):
                 except EmptySupplyCurvePointError:
                     pass
 
+                except Exception:
+                    logger.exception('SC gid {} failed!'.format(gid))
+                    raise
+
                 else:
                     output.append(gid_out)
 
@@ -649,6 +653,9 @@ class Aggregation(AbstractAggregation):
                 except EmptySupplyCurvePointError:
                     logger.debug('SC gid {} is fully excluded or does not '
                                  'have any valid source data!'.format(gid))
+                except Exception:
+                    logger.exception('SC gid {} failed!'.format(gid))
+                    raise
                 else:
                     n_finished += 1
                     logger.debug('Serial aggregation: '
