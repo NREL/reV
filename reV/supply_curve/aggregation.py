@@ -702,11 +702,12 @@ class Aggregation(AbstractAggregation):
         futures = []
         dsets = self._agg_dsets + ('meta', )
         agg_out = {ds: [] for ds in dsets}
-        with SpawnProcessPool(max_workers=max_workers) as executor:
+        loggers = [__name__, 'reV.supply_curve.points']
+        with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
                 # submit executions and append to futures list
-                futures.append(executor.submit(
+                futures.append(exe.submit(
                     self.run_serial,
                     self._excl_fpath,
                     self._h5_fpath,
