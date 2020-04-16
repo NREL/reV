@@ -72,7 +72,8 @@ def test_aggregation_parallel(excl_dict, baseline_name):
     test aggregation run in parallel
     """
     agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
-                              excl_dict=excl_dict, max_workers=None)
+                              excl_dict=excl_dict, max_workers=None,
+                              chunk_point_len=10)
     baseline_h5 = os.path.join(TESTDATADIR, "sc_out", baseline_name)
     check_agg(agg_out, baseline_h5)
 
