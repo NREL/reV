@@ -18,8 +18,9 @@ import logging
 
 from reV.pipeline.pipeline import Pipeline
 from reV.config.batch import BatchConfig
-from reV.utilities import safe_json_load, parse_year
 from reV.utilities.exceptions import PipelineError
+
+from rex.utilities import safe_json_load, parse_year
 
 
 logger = logging.getLogger(__name__)

@@ -15,12 +15,12 @@ import logging
 import time
 
 from reV.config.offshore_config import OffshoreConfig
-from reV.utilities.cli_dtypes import STR, INT, PROJECTPOINTS, SAMFILES
-from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
 from reV.offshore.offshore import Offshore
-from reV.utilities.execution import SLURM
 
+from rex.utilities.cli_dtypes import STR, INT, PROJECTPOINTS, SAMFILES
+from rex.utilities.loggers import init_mult
+from rex.utilities.execution import SLURM
 
 logger = logging.getLogger(__name__)
 

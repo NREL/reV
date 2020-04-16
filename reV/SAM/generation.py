@@ -17,11 +17,12 @@ import PySAM.Swh as pysam_swh
 import PySAM.TroughPhysicalProcessHeat as pysam_tpph
 import PySAM.LinearFresnelDsgIph as pysam_lfdi
 
-from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
-from reV.utilities.curtailment import curtail
-from reV.utilities.utilities import mean_irrad
 from reV.SAM.SAM import SAM
 from reV.SAM.econ import LCOE, SingleOwner
+from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
+from reV.utilities.curtailment import curtail
+
+from rex.utilities.utilities import mean_irrad
 
 logger = logging.getLogger(__name__)
 DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

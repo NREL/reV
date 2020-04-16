@@ -10,9 +10,8 @@ import time
 from warnings import warn
 import shutil
 
-from reV.utilities import safe_json_load
-from reV.utilities.execution import SLURM, PBS
-
+from rex.utilities import safe_json_load
+from rex.utilities.execution import SLURM, PBS
 
 logger = logging.getLogger(__name__)
 

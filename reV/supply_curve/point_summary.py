@@ -11,14 +11,13 @@ import pandas as pd
 from scipy import stats
 from warnings import warn
 
-
-from reV.utilities.utilities import jsonify_dict
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import GenerationSupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       DataShapeError)
 
+from rex.utilities.utilities import jsonify_dict
 
 logger = logging.getLogger(__name__)
 

@@ -16,14 +16,14 @@ from scipy.spatial import cKDTree
 import logging
 from warnings import warn
 
-from reV.handlers.collection import DatasetCollector
 from reV.generation.generation import Gen
+from reV.handlers.collection import DatasetCollector
 from reV.handlers.outputs import Outputs
 from reV.offshore.orca import ORCA_LCOE
-from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import (OffshoreWindInputWarning,
                                       NearestNeighborError)
 
+from rex.utilities.execution import SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 

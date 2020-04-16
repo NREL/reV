@@ -15,13 +15,14 @@ import os
 import pandas as pd
 from scipy import stats
 
-from reV.handlers.resource import Resource
-from reV.handlers.outputs import Outputs
-from reV.utilities.execution import SpawnProcessPool
-from reV.utilities.exceptions import FileInputError, DataShapeError
-from reV.utilities.utilities import parse_year
-from reV.utilities.loggers import log_mem
 
+from reV.handlers.outputs import Outputs
+from reV.utilities.exceptions import FileInputError, DataShapeError
+
+from rex.resource import Resource
+from rex.utilities.execution import SpawnProcessPool
+from rex.utilities.utilities import parse_year
+from rex.utilities.loggers import log_mem
 
 logger = logging.getLogger(__name__)
 

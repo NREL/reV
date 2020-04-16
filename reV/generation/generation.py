@@ -2,27 +2,27 @@
 """
 reV generation module.
 """
+from concurrent.futures import TimeoutError
 import logging
 import numpy as np
 import os
 import pprint
-import sys
 import psutil
+import sys
 from warnings import warn
 
+from reV.config.project_points import ProjectPoints, PointsControl
+from reV.handlers.outputs import Outputs
 from reV.SAM.generation import (
     PV, CSP, LandBasedWind, SolarWaterHeat, TroughPhysicalHeat,
     LinearDirectSteam
 )
-from reV.config.project_points import ProjectPoints, PointsControl
-from reV.utilities.execution import SpawnProcessPool
-from reV.handlers.outputs import Outputs
-from reV.handlers.resource import Resource, MultiFileResource
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       ParallelExecutionWarning)
-from concurrent.futures import TimeoutError
-from reV.utilities.utilities import check_res_file
 
+from rex.resource import Resource, MultiFileResource
+from rex.utilities.execution import SpawnProcessPool
+from rex.utilities.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
 

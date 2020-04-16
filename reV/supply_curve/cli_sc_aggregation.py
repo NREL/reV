@@ -10,13 +10,14 @@ import time
 import h5py
 
 from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
-from reV.utilities.execution import SLURM
-from reV.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST, STRFLOAT
-from reV.utilities.loggers import init_mult
-from reV.utilities.utilities import dict_str_load
+from reV.pipeline.status import Status
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
-from reV.pipeline.status import Status
+
+from rex.utilities.execution import SLURM
+from rex.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST, STRFLOAT
+from rex.utilities.loggers import init_mult
+from rex.utilities.utilities import dict_str_load
 
 logger = logging.getLogger(__name__)
 

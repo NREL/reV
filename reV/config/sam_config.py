@@ -6,10 +6,10 @@ import logging
 import os
 from warnings import warn
 
-from reV.utilities import safe_json_load
+from rex.utilities import safe_json_load
+
 from reV.utilities.exceptions import ConfigWarning, SAMInputWarning
 from reV.config.base_config import BaseConfig
-
 
 logger = logging.getLogger(__name__)
 

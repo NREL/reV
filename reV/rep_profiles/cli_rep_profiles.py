@@ -8,12 +8,13 @@ import logging
 import pprint
 import time
 
-from reV.utilities.execution import SLURM
-from reV.utilities.cli_dtypes import STR, INT, STRLIST
-from reV.utilities.loggers import init_mult
 from reV.config.rep_profiles_config import RepProfilesConfig
-from reV.rep_profiles.rep_profiles import RepProfiles, AggregatedRepProfiles
 from reV.pipeline.status import Status
+from reV.rep_profiles.rep_profiles import RepProfiles, AggregatedRepProfiles
+
+from rex.utilities.execution import SLURM
+from rex.utilities.cli_dtypes import STR, INT, STRLIST
+from rex.utilities.loggers import init_mult
 
 logger = logging.getLogger(__name__)
 

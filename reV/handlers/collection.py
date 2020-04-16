@@ -16,7 +16,8 @@ from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import (CollectionRuntimeError,
                                       CollectionValueError,
                                       CollectionWarning)
-from reV.utilities.loggers import log_mem
+
+from rex.utilities.loggers import log_mem
 
 logger = logging.getLogger(__name__)
 

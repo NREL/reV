@@ -6,7 +6,6 @@ import logging
 
 from reV.config.base_config import BaseConfig
 
-
 logger = logging.getLogger(__name__)
 
 

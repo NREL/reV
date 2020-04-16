@@ -13,11 +13,10 @@ import PySAM.Pvwattsv5 as pysam_pv
 import PySAM.Lcoefcr as pysam_lcoe
 import PySAM.Singleowner as pysam_so
 
-from reV.SAM.windbos import WindBos
 from reV.handlers.outputs import Outputs
 from reV.SAM.SAM import SAM
+from reV.SAM.windbos import WindBos
 from reV.utilities.exceptions import SAMExecutionError
-
 
 logger = logging.getLogger(__name__)
 DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

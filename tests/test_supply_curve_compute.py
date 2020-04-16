@@ -12,7 +12,6 @@ import numpy as np
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import SupplyCurve
 
-
 TRANS_COSTS_1 = {'line_tie_in_cost': 200, 'line_cost': 1000,
                  'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
                  'sink_tie_in_cost': 100, 'available_capacity': 0.3}

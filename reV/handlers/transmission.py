@@ -9,9 +9,10 @@ import os
 import pandas as pd
 from warnings import warn
 
-from reV.utilities import safe_json_load
 from reV.utilities.exceptions import (HandlerWarning, HandlerKeyError,
                                       HandlerRuntimeError)
+
+from rex.utilities import safe_json_load
 
 logger = logging.getLogger(__name__)
 

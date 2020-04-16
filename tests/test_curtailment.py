@@ -14,8 +14,9 @@ from reV.SAM.SAM import SAM
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 from reV.utilities.curtailment import curtail
-from reV.utilities.solar_position import SolarPosition
 from reV.generation.generation import Gen
+
+from rex.utilities.solar_position import SolarPosition
 
 
 def get_curtailment(year):

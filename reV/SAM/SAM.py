@@ -10,12 +10,13 @@ import pandas as pd
 from warnings import warn
 import PySAM.GenericSystem as generic
 
-from reV.handlers.resource import MultiFileResource
-from reV.handlers.rev_resource import (WindResource, SolarResource, NSRDB,
-                                       MultiFileWTK, MultiFileNSRDB)
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
                                       SAMExecutionError, ResourceError)
-from reV.utilities.utilities import check_res_file
+
+from rex.resource import MultiFileResource
+from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
+                                    MultiFileWTK, MultiFileNSRDB)
+from rex.utilities.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
 
@@ -81,15 +82,17 @@ class SAMResourceRetriever:
         -------
         kwargs : dict
             Extra input args to preload sam resource.
+        args : tuple
+            Args for res_handler.preload_SAM class method
         res_handler : SolarResource | NSRDB
             Solar resource handler.
         """
+        args = (project_points.sites,)
 
         kwargs = {}
-
         # check for clearsky irradiation analysis for NSRDB
         kwargs['clearsky'] = project_points.sam_config_obj.clearsky
-
+        kwargs['tech'] = project_points.tech
         # check for downscaling request
         if downscale is not None:
             # make sure that downscaling is only requested for NSRDB resource
@@ -104,7 +107,7 @@ class SAMResourceRetriever:
                 # pass through the downscaling request
                 kwargs['downscale'] = downscale
 
-        return kwargs, res_handler
+        return kwargs, args, res_handler
 
     @staticmethod
     def _make_wind_kwargs(res_handler, project_points):
@@ -122,10 +125,12 @@ class SAMResourceRetriever:
         -------
         kwargs : dict
             Extra input args to preload sam resource.
+        args : tuple
+            Args for res_handler.preload_SAM class method
         res_handler : WindResource | MultiFileWTK
             Wind resource handler.
         """
-
+        args = (project_points.sites, project_points.h)
         kwargs = {}
         kwargs['icing'] = project_points.sam_config_obj.icing
         if project_points.curtailment is not None:
@@ -133,7 +138,7 @@ class SAMResourceRetriever:
                 # make precip rate available for curtailment analysis
                 kwargs['precip_rate'] = True
 
-        return kwargs, res_handler
+        return kwargs, args, res_handler
 
     @staticmethod
     def _multi_file_mods(res_handler, kwargs, res_file):
@@ -200,11 +205,11 @@ class SAMResourceRetriever:
         res_handler = cls._get_base_handler(res_file, module)
 
         if res_handler in (SolarResource, NSRDB):
-            kwargs, res_handler = cls._make_solar_kwargs(
+            kwargs, args, res_handler = cls._make_solar_kwargs(
                 res_handler, project_points, downscale=downscale)
 
         elif res_handler == WindResource:
-            kwargs, res_handler = cls._make_wind_kwargs(
+            kwargs, args, res_handler = cls._make_wind_kwargs(
                 res_handler, project_points)
 
         multi_h5_res, hsds = check_res_file(res_file)
@@ -215,7 +220,7 @@ class SAMResourceRetriever:
         else:
             kwargs['hsds'] = hsds
 
-        res = res_handler.preload_SAM(res_file, project_points, **kwargs)
+        res = res_handler.preload_SAM(res_file, *args, **kwargs)
 
         return res
 

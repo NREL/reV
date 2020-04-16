@@ -10,7 +10,6 @@ import pytest
 from reV import TESTDATADIR
 from reV.supply_curve.supply_curve import CompetitiveWindFarms, SupplyCurve
 
-
 TRANS_COSTS = {'line_tie_in_cost': 200, 'line_cost': 1000,
                'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
                'sink_tie_in_cost': 100, 'available_capacity': 0.3}

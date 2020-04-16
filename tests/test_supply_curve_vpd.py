@@ -8,10 +8,10 @@ import pandas as pd
 import numpy as np
 import pytest
 import os
+
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
 from reV.utilities.exceptions import FileInputError
-
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_gen.h5')

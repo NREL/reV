@@ -5,6 +5,7 @@ SAM Wind Balance of System Cost Model
 from copy import deepcopy
 import numpy as np
 from PySAM.PySSC import ssc_sim_from_dict
+
 from reV.utilities.exceptions import SAMInputError
 
 

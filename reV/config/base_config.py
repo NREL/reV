@@ -7,7 +7,8 @@ import logging
 import os
 from warnings import warn
 
-from reV.utilities import safe_json_load
+from rex.utilities import safe_json_load
+
 from reV.utilities.exceptions import ConfigError, reVDeprecationWarning
 
 

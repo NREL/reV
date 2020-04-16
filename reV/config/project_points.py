@@ -10,10 +10,11 @@ from warnings import warn
 from math import ceil
 
 from reV.utilities.exceptions import ConfigError, ConfigWarning
-from reV.handlers.resource import Resource, MultiFileResource
 from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
-from reV.utilities import check_res_file
+
+from rex.resource import Resource, MultiFileResource
+from rex.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
 

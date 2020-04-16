@@ -10,7 +10,6 @@ from reV.utilities.exceptions import ConfigError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
 
-
 logger = logging.getLogger(__name__)
 
 

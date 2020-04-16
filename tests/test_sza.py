@@ -6,9 +6,10 @@ import numpy as np
 import os
 import pytest
 
-from reV.handlers.rev_resource import NSRDB
-from reV.utilities.solar_position import SolarPosition
 from reV import TESTDATADIR
+
+from rex.renewable_resource import NSRDB
+from rex.utilities.solar_position import SolarPosition
 
 NSRDB_DIR = os.path.join(TESTDATADIR, 'sza')
 

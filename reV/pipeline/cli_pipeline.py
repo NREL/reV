@@ -3,6 +3,7 @@
 Pipeline CLI entry points.
 """
 import click
+
 from reV.generation.cli_gen import main
 from reV.pipeline.pipeline import Pipeline
 

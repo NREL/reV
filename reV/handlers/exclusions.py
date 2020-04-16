@@ -7,9 +7,10 @@ import logging
 import json
 import numpy as np
 
-from reV.handlers.parse_keys import parse_keys
-from reV.handlers.resource import ResourceDataset
 from reV.utilities.exceptions import HandlerKeyError
+
+from rex.utilities.parse_keys import parse_keys
+from rex.resource import ResourceDataset
 
 logger = logging.getLogger(__name__)
 

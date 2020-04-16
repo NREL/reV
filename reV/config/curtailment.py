@@ -7,8 +7,8 @@ Created on Mon Jan 28 11:43:27 2019
 @author: gbuster
 """
 import logging
-from reV.config.base_config import BaseConfig
 
+from reV.config.base_config import BaseConfig
 
 logger = logging.getLogger(__name__)
 

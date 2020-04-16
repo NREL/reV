@@ -7,7 +7,6 @@ Created on Mon Jul  8 09:37:23 2019
 
 @author: gbuster
 """
-
 from warnings import warn
 from reV.utilities.exceptions import ConfigWarning
 

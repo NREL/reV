@@ -8,14 +8,13 @@ import pandas as pd
 import pprint
 from warnings import warn
 
+from reV.generation.generation import Gen
+from reV.handlers.outputs import Outputs
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
-from reV.handlers.outputs import Outputs
-from reV.generation.generation import Gen
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       OffshoreWindInputWarning)
-
 
 logger = logging.getLogger(__name__)
 
