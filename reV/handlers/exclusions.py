@@ -140,7 +140,11 @@ class ExclusionLayers:
         shape : tuple
             Shape of exclusion array (latitude, longitude)
         """
-        return tuple(self.h5.attrs['shape'])
+        shape = self.h5.attrs.get('shape', None)
+        if shape is None:
+            shape = self.h5['latitude'].shape
+
+        return tuple(shape)
 
     @property
     def latitude(self):
