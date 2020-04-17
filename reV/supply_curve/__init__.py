@@ -2,8 +2,8 @@
 """
 reV Supply Curve
 """
-from .sc_aggregation import SupplyCurveAggregation
+from .aggregation import Aggregation
 from .exclusions import ExclusionMask, ExclusionMaskFromDict
-from .point_summary import SupplyCurvePointSummary
+from .sc_aggregation import SupplyCurveAggregation
 from .supply_curve import SupplyCurve
 from .tech_mapping import TechMapping
