@@ -27,7 +27,7 @@ def res():
                  enumerate(sam_files)}
 
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
-    res = NSRDB.preload_SAM(res_file, pp)
+    res = NSRDB.preload_SAM(res_file, pp.sites)
     return res
 
 
