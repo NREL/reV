@@ -19,8 +19,8 @@ import time
 
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
-from reV.utilities.execution import PBS
-from reV.utilities.loggers import init_logger
+from rex.utilities.execution import PBS
+from rex.utilities.loggers import init_logger
 from reV.generation.cli_gen import get_node_cmd
 
 
