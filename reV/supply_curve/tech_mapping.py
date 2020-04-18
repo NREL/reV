@@ -16,11 +16,11 @@ from scipy.spatial import cKDTree
 import logging
 from warnings import warn
 
-from reV.handlers.resource import Resource
 from reV.supply_curve.points import SupplyCurveExtent
-from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import FileInputWarning, FileInputError
 
+from rex.resource import Resource
+from rex.utilities.execution import SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 

@@ -7,10 +7,10 @@ import os
 from pandas.testing import assert_frame_equal
 import pytest
 
-from reV.handlers.resource import Resource
 from reV.supply_curve.aggregation import Aggregation
 from reV import TESTDATADIR
 
+from rex.resource import Resource
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_wind_gen_profiles_2010.h5')

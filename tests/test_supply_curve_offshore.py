@@ -8,10 +8,10 @@ import json
 import numpy as np
 import pytest
 import os
+
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
-
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 GEN = os.path.join(TESTDATADIR, 'offshore/ri_offshore_archive.h5')

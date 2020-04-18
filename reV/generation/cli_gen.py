@@ -13,14 +13,15 @@ from warnings import warn
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
-from reV.utilities.cli_dtypes import (INT, STR, SAMFILES, PROJECTPOINTS,
-                                      INTLIST, STRLIST)
-from reV.utilities.execution import SLURM, SubprocessManager
-from reV.utilities.loggers import init_mult
-from reV.utilities.exceptions import ConfigError
 from reV.pipeline.status import Status
-from reV.utilities.utilities import parse_year
+from reV.utilities.exceptions import ConfigError
+from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 
+from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
+from rex.utilities.execution import SLURM, SubprocessManager
+from rex.utilities.loggers import init_mult
+
+from rex.utilities.utilities import parse_year
 
 logger = logging.getLogger(__name__)
 

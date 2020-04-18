@@ -11,7 +11,8 @@ from reV.rep_profiles.rep_profiles import (RegionRepProfile, RepProfiles,
                                            RepresentativeMethods,
                                            AggregatedRepProfiles)
 from reV import TESTDATADIR
-from reV.handlers.resource import Resource
+
+from rex.resource import Resource
 
 
 GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')

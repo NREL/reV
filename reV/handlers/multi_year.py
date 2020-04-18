@@ -9,7 +9,8 @@ import pandas as pd
 
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import HandlerRuntimeError
-from reV.utilities.utilities import parse_year
+
+from rex.utilities.utilities import parse_year
 
 logger = logging.getLogger(__name__)
 

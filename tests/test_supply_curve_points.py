@@ -16,7 +16,6 @@ from reV.supply_curve.points import (SupplyCurvePoint,
 from reV.handlers.outputs import Outputs
 from reV import TESTDATADIR
 
-
 F_EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 F_GEN = os.path.join(TESTDATADIR, 'gen_out/gen_ri_pv_2012_x000.h5')
 TM_DSET = 'techmap_nsrdb'

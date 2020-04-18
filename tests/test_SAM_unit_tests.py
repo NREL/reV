@@ -9,9 +9,10 @@ import pandas as pd
 import warnings
 
 from reV.SAM.generation import PV
-from reV.handlers.rev_resource import NSRDB
 from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
+
+from rex.renewable_resource import NSRDB
 
 
 @pytest.fixture
@@ -26,7 +27,7 @@ def res():
                  enumerate(sam_files)}
 
     pp = ProjectPoints(rev2_points, sam_files, 'pv')
-    res = NSRDB.preload_SAM(res_file, pp)
+    res = NSRDB.preload_SAM(res_file, pp.sites)
     return res
 
 

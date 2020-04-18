@@ -7,8 +7,10 @@ Created on Fri Mar  1 13:47:30 2019
 """
 import numpy as np
 from warnings import warn
+
 from reV.utilities.exceptions import HandlerWarning
-from reV.utilities.solar_position import SolarPosition
+
+from rex.utilities.solar_position import SolarPosition
 
 
 def curtail(resource, curtailment, random_seed=0):

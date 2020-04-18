@@ -9,13 +9,13 @@ import logging
 from warnings import warn
 
 from reV.config.base_analysis_config import AnalysisConfig
-from reV.utilities import safe_json_load
-from reV.utilities.execution import SubprocessManager, SLURM
-from reV.utilities.exceptions import ExecutionError
-from reV.pipeline.status import Status
 from reV.config.pipeline import PipelineConfig
-from reV.utilities.loggers import init_logger
+from reV.pipeline.status import Status
+from reV.utilities.exceptions import ExecutionError
 
+from rex.utilities import safe_json_load
+from rex.utilities.execution import SubprocessManager, SLURM
+from rex.utilities.loggers import init_logger
 
 logger = logging.getLogger(__name__)
 

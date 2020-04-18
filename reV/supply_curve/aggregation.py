@@ -10,16 +10,16 @@ import numpy as np
 import os
 import pandas as pd
 
-from reV.handlers.resource import Resource
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.points import (SupplyCurveExtent,
                                      AggregationSupplyCurvePoint)
-from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       FileInputError)
-from reV.utilities.loggers import log_mem
 
+from rex.resource import Resource
+from rex.utilities.execution import SpawnProcessPool
+from rex.utilities.loggers import log_mem
 
 logger = logging.getLogger(__name__)
 

@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 import logging
-from reV.utilities.exceptions import OrcaOutputWarning
 
+from reV.utilities.exceptions import OrcaOutputWarning
 
 logger = logging.getLogger(__name__)
 

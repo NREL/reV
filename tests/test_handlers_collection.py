@@ -8,8 +8,9 @@ import os
 import pytest
 
 from reV.handlers.collection import Collector
-from reV.utilities.loggers import init_logger
 from reV import TESTDATADIR
+
+from rex.utilities.loggers import init_logger
 
 TEMP_DIR = os.path.join(TESTDATADIR, 'ri_gen_collect')
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')

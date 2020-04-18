@@ -7,9 +7,10 @@ import logging
 import json
 import numpy as np
 
-from reV.handlers.parse_keys import parse_keys
-from reV.handlers.resource import ResourceDataset
 from reV.utilities.exceptions import HandlerKeyError
+
+from rex.utilities.parse_keys import parse_keys
+from rex.resource import ResourceDataset
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +140,11 @@ class ExclusionLayers:
         shape : tuple
             Shape of exclusion array (latitude, longitude)
         """
-        return tuple(self.h5.attrs['shape'])
+        shape = self.h5.attrs.get('shape', None)
+        if shape is None:
+            shape = self.h5['latitude'].shape
+
+        return tuple(shape)
 
     @property
     def latitude(self):

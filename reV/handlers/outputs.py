@@ -11,10 +11,11 @@ from pandas.api.types import CategoricalDtype
 import time
 
 from reV.version import __version__
-from reV.handlers.resource import Resource
-from reV.handlers.parse_keys import parse_keys, parse_slice
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
                                       HandlerValueError)
+
+from rex.resource import Resource
+from rex.utilities.parse_keys import parse_keys, parse_slice
 
 logger = logging.getLogger(__name__)
 

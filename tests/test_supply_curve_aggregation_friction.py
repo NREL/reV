@@ -10,11 +10,11 @@ import numpy as np
 import pytest
 import os
 import warnings
+
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.exclusions import ExclusionMaskFromDict, FrictionMask
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
-
 
 EXCL_FPATH = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 FRICTION_FPATH = os.path.join(TESTDATADIR, 'ri_exclusions/ri_friction.h5')

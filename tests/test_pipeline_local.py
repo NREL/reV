@@ -14,7 +14,6 @@ import shutil
 from reV import TESTDATADIR
 from reV.pipeline.pipeline import Pipeline
 
-
 PURGE_OUT = True
 
 

@@ -18,7 +18,6 @@ from reV.config.project_points import PointsControl, ProjectPoints
 from reV.utilities.exceptions import ConfigError
 from reV.pipeline.pipeline import Pipeline
 
-
 logger = logging.getLogger(__name__)
 
 

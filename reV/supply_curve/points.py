@@ -10,10 +10,11 @@ from scipy import stats
 from warnings import warn
 
 from reV.handlers.exclusions import ExclusionLayers
-from reV.handlers.resource import Resource
 from reV.supply_curve.exclusions import ExclusionMask, ExclusionMaskFromDict
 from reV.utilities.exceptions import (SupplyCurveError, SupplyCurveInputError,
                                       EmptySupplyCurvePointError, InputWarning)
+
+from rex.resource import Resource
 
 logger = logging.getLogger(__name__)
 

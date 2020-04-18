@@ -10,10 +10,11 @@ import time
 
 from reV.config.collection import CollectionConfig
 from reV.handlers.collection import Collector
-from reV.utilities.cli_dtypes import STR, STRLIST, INT
-from reV.utilities.loggers import init_mult
 from reV.pipeline.status import Status
-from reV.utilities.execution import SubprocessManager, SLURM
+
+from rex.utilities.cli_dtypes import STR, STRLIST, INT
+from rex.utilities.execution import SubprocessManager, SLURM
+from rex.utilities.loggers import init_mult
 
 logger = logging.getLogger(__name__)
 

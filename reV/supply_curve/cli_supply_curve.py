@@ -9,12 +9,13 @@ import pprint
 import time
 
 from reV.config.supply_curve_configs import SupplyCurveConfig
-from reV.utilities.execution import SLURM
-from reV.utilities.cli_dtypes import STR, INT
-from reV.utilities.loggers import init_mult
-from reV.utilities.utilities import dict_str_load
-from reV.supply_curve.supply_curve import SupplyCurve
 from reV.pipeline.status import Status
+from reV.supply_curve.supply_curve import SupplyCurve
+
+from rex.utilities.execution import SLURM
+from rex.utilities.cli_dtypes import STR, INT
+from rex.utilities.loggers import init_mult
+from rex.utilities.utilities import dict_str_load
 
 logger = logging.getLogger(__name__)
 

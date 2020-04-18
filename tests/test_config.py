@@ -11,7 +11,7 @@ Created on Thu Nov 29 09:54:51 2018
 import os
 import pytest
 
-from reV.utilities.exceptions import HandlerKeyError
+from rex.utilities.exceptions import ResourceKeyError
 from reV.SAM.SAM import SAM
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV import TESTDATADIR
@@ -26,7 +26,7 @@ def test_clearsky():
         # Get the SAM resource object
         SAM.get_sam_res(res_file, pp, pp.tech)
         assert False
-    except HandlerKeyError:
+    except ResourceKeyError:
         # Should look for clearsky_dni and not find it in RI data
         assert True
 

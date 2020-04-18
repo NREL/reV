@@ -14,8 +14,9 @@ from warnings import warn
 from reV.handlers.transmission import TransmissionCosts as TC
 from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
-from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
+
+from rex.utilities.execution import SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 

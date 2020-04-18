@@ -15,17 +15,18 @@ from scipy.spatial import cKDTree
 from warnings import warn
 
 from reV.handlers.exclusions import ExclusionLayers
-from reV.handlers.resource import Resource
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
                                           AbstractAggregation,
                                           Aggregation)
 from reV.supply_curve.exclusions import FrictionMask
 from reV.supply_curve.points import SupplyCurveExtent
 from reV.supply_curve.point_summary import SupplyCurvePointSummary
-from reV.utilities.execution import SpawnProcessPool
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       OutputWarning, FileInputError,
                                       InputWarning, SupplyCurveInputError)
+
+from rex.resource import Resource
+from rex.utilities.execution import SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 

@@ -11,11 +11,12 @@ from reV.econ.cli_econ import from_config as run_econ_from_config
 from reV.generation.cli_gen import from_config as run_gen_from_config
 from reV.offshore.cli_offshore import from_config as run_offshore_from_config
 from reV.pipeline.cli_pipeline import from_config as run_pipeline_from_config
+from reV.rep_profiles.cli_rep_profiles import from_config as run_rp_from_config
 from reV.supply_curve.cli_sc_aggregation import (from_config
                                                  as run_sc_agg_from_config)
 from reV.supply_curve.cli_supply_curve import from_config as run_sc_from_config
-from reV.rep_profiles.cli_rep_profiles import from_config as run_rp_from_config
-from reV.utilities.cli_dtypes import STR
+
+from rex.utilities.cli_dtypes import STR
 
 
 @click.group()
