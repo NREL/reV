@@ -1,3 +1,4 @@
+***
 reV
 ***
 
@@ -9,6 +10,9 @@ reV
 
 .. image:: https://github.com/NREL/reV/workflows/Pytests/badge.svg
     :target: https://github.com/NREL/reV/actions?query=workflow%3A%22Pytests%22
+
+.. image:: https://img.shields.io/pypi/pyversions/NREL-reV.svg
+    :target: https://pypi.org/project/NREL-reV/
 
 The Renewable Energy Potential (reV) Model
 
