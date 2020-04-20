@@ -544,6 +544,10 @@ class ProjectPoints:
         _tech : str
             reV technology being executed.
         """
+        tech = self._tech
+        if 'wind' in tech.lower():
+            tech = 'windpower'
+
         return self._tech
 
     @property

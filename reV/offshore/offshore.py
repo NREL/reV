@@ -825,7 +825,7 @@ class Offshore:
             Offshore aggregation object.
         """
         points_range = None
-        pc = Gen.get_pc(points, points_range, sam_files, 'wind',
+        pc = Gen.get_pc(points, points_range, sam_files, 'windpower',
                         sites_per_worker=100)
         offshore = cls(gen_fpath, offshore_fpath, pc.project_points,
                        offshore_gid_adder=offshore_gid_adder,
