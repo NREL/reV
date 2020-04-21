@@ -323,6 +323,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     else:
         logger.info('Running reV Supply Curve on SLURM with '
                     'node name "{}"'.format(name))
+        logger.debug('\t{}'.format(cmd))
         slurm = SLURM(cmd, alloc=alloc, memory=memory,
                       walltime=walltime, feature=feature,
                       name=name, stdout_path=stdout_path,
