@@ -237,7 +237,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-so {sort_on} '
             '-wd {wind_dirs} '
             '-dirs {n_dirs} '
-            '-dw {downward} '
+            '-dw {downwind} '
             '-mw {max_workers} '
             '-o {out_dir} '
             '-ld {log_dir} '
