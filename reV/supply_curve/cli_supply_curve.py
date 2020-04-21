@@ -236,7 +236,6 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-tc {transmission_costs} '
             '-so {sort_on} '
             '-dirs {n_dirs} '
-            '-dw {downwind} '
             '-mw {max_workers} '
             '-o {out_dir} '
             '-ld {log_dir} '
@@ -250,7 +249,6 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
                        transmission_costs=SLURM.s(transmission_costs),
                        sort_on=SLURM.s(sort_on),
                        n_dirs=SLURM.s(n_dirs),
-                       downwind=SLURM.s(downwind),
                        max_workers=SLURM.s(max_workers),
                        out_dir=SLURM.s(out_dir),
                        log_dir=SLURM.s(log_dir),
@@ -258,6 +256,9 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
     if wind_dirs is not None:
         args += '-wd {wind_dirs} '.format(wind_dirs=SLURM.s(wind_dirs))
+
+    if downwind:
+        args += '-dw '
 
     if simple:
         args += '-s '
