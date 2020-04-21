@@ -64,12 +64,23 @@ def from_config(ctx, config_file, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
-            ctx.invoke(main, name, config.sc_points, config.trans_table,
-                       config.fixed_charge_rate, config.sc_features,
-                       config.transmission_costs, config.sort_on,
-                       config.dirout, config.logdir,
-                       config.simple, config.line_limited,
-                       verbose)
+            ctx.invoke(main,
+                       name=name,
+                       sc_points=config.sc_points,
+                       trans_table=config.trans_table,
+                       fixed_charge_rate=config.fixed_charge_rate,
+                       sc_features=config.sc_features,
+                       transmission_costs=config.transmission_costs,
+                       sort_on=config.sort_on,
+                       wind_dirs=config.wind_dirs,
+                       n_dirs=config.n_dirs,
+                       downwind=config.downwind,
+                       max_workers=config.max_workers,
+                       out_dir=config.dirout,
+                       log_dir=config.logdir,
+                       simple=config.simple,
+                       line_limited=config.line_limited,
+                       verbose=verbose)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
 
@@ -80,6 +91,10 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['SC_FEATURES'] = config.sc_features
         ctx.obj['TRANSMISSION_COSTS'] = config.transmission_costs
         ctx.obj['SORT_ON'] = config.sort_on
+        ctx.obj['WIND_DIRS'] = config.wind_dirs
+        ctx.obj['N_DIRS'] = config.n_dirs
+        ctx.obj['DOWNWIND'] = config.downwind
+        ctx.obj['MAX_WORKERS'] = config.max_workers
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['SIMPLE'] = config.simple
