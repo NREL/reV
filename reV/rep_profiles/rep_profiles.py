@@ -19,6 +19,7 @@ from scipy import stats
 from reV.handlers.outputs import Outputs
 from reV.utilities.exceptions import FileInputError, DataShapeError
 
+from rex.rechunk_h5 import to_records_array
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.utilities import parse_year
@@ -776,7 +777,7 @@ class RepProfilesBase(ABC):
 
         if save_rev_summary:
             with Outputs(fout, mode='a') as out:
-                rev_sum = Outputs.to_records_array(self._rev_summary)
+                rev_sum = to_records_array(self._rev_summary)
                 out._create_dset('rev_summary', rev_sum.shape,
                                  rev_sum.dtype, data=rev_sum)
 
@@ -795,7 +796,7 @@ class RepProfilesBase(ABC):
         with Outputs(fout, mode='a') as out:
 
             if 'rev_summary' in out.datasets and save_rev_summary:
-                rev_sum = Outputs.to_records_array(self._rev_summary)
+                rev_sum = to_records_array(self._rev_summary)
                 out['rev_summary'] = rev_sum
 
             for i in range(self._n_profiles):
