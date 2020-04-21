@@ -133,7 +133,7 @@ def from_config(ctx, config_file, verbose):
                     'power-rose value at each cardinal direction'))
 @click.option('--n_dirs', '-dirs', type=int, default=2,
               help='Number of prominent directions to use')
-@click.option('--downwind' '-dw', is_flag=True,
+@click.option('--downwind', '-dw', is_flag=True,
               help=('Flag to remove downwind neighbors as well as upwind '
                     'neighbors'))
 @click.option('--max_workers', '-mw', type=INT, default=None,
