@@ -7,13 +7,13 @@ import json
 import logging
 import numpy as np
 import pandas as pd
-from pandas.api.types import CategoricalDtype
 import time
 
 from reV.version import __version__
 from reV.utilities.exceptions import (HandlerRuntimeError, HandlerKeyError,
                                       HandlerValueError)
 
+from rex.rechunk_h5 import to_records_array
 from rex.resource import Resource
 from rex.utilities.parse_keys import parse_keys, parse_slice
 
@@ -269,7 +269,7 @@ class Outputs(Resource):
         """
         self._meta = meta
         if isinstance(meta, pd.DataFrame):
-            meta = self.to_records_array(meta)
+            meta = to_records_array(meta)
 
         if ds in self.datasets:
             self.update_dset(ds, meta)
@@ -341,75 +341,6 @@ class Outputs(Resource):
                     key = str(key)
 
                 self.h5['meta'].attrs[key] = config
-
-    @staticmethod
-    def get_dtype(col):
-        """
-        Get column dtype for converstion to records array
-
-        Parameters
-        ----------
-        col : pandas.Series
-            Column from pandas DataFrame
-
-        Returns
-        -------
-        out : str
-            String representation of converted dtype for column:
-            -  float = float32
-            -  int = int16 or int32 depending on data range
-            -  object/str = U* max length of strings in col
-        """
-        dtype = col.dtype
-
-        if isinstance(dtype, CategoricalDtype):
-            col = col.astype(type(col.values[0]))
-            out = Outputs.get_dtype(col)
-        elif np.issubdtype(dtype, np.floating):
-            out = 'float32'
-        elif np.issubdtype(dtype, np.integer):
-            if col.max() < 32767:
-                out = 'int16'
-            else:
-                out = 'int32'
-        elif np.issubdtype(dtype, np.object_):
-            size = int(col.astype(str).str.len().max())
-            out = 'S{:}'.format(size)
-        else:
-            out = dtype
-
-        return out
-
-    @staticmethod
-    def to_records_array(df):
-        """
-        Convert pandas DataFrame to numpy Records Array
-
-        Parameters
-        ----------
-        df : pandas.DataFrame
-            Pandas DataFrame to be converted
-
-        Returns
-        -------
-        numpy.rec.array
-            Records array of input df
-        """
-        meta_arrays = []
-        dtypes = []
-        for c_name, c_data in df.iteritems():
-            dtype = Outputs.get_dtype(c_data)
-
-            if np.issubdtype(dtype, np.bytes_):
-                data = c_data.astype(str).str.encode('utf-8').values
-            else:
-                data = c_data.values
-
-            arr = np.array(data, dtype=dtype)
-            meta_arrays.append(arr)
-            dtypes.append((c_name, dtype))
-
-        return np.core.records.fromarrays(meta_arrays, dtype=dtypes)
 
     @staticmethod
     def _check_data_dtype(data, dtype, scale_factor=1):
