@@ -32,6 +32,14 @@ class CompetitiveWindFarms:
         self._sc_gids, self._sc_point_gids, self._mask = \
             self._parse_sc_points(sc_points)
 
+        valid = np.isin(self.sc_point_gids, self._wind_dirs.index)
+        if not np.all(valid):
+            msg = ("'sc_points contains sc_point_gid values that do not "
+                   "correspond to valid 'wind_dirs' sc_point_gids:\n{}"
+                   .format(self.sc_point_gids[~valid]))
+            logger.error(msg)
+            raise RuntimeError(msg)
+
         mask = self._wind_dirs.index.isin(self._sc_point_gids.keys())
         self._wind_dirs = self._wind_dirs.loc[mask]
         self._upwind, self._downwind = self._get_neighbors(self._wind_dirs,
@@ -104,7 +112,7 @@ class CompetitiveWindFarms:
         -------
         ndarray
         """
-        sc_point_gids = np.array(list(self._sc_point_gids.keys()))
+        sc_point_gids = np.array(list(self._sc_point_gids.keys()), dtype=int)
         mask = self.mask[sc_point_gids]
 
         return sc_point_gids[mask]
