@@ -578,24 +578,25 @@ class SupplyCurve:
         comp_wind_dirs : CompetitiveWindFarms
             updated CompetitiveWindFarms instance
         """
-        gid = comp_wind_dirs['sc_point_gid', sc_gid]
-        if comp_wind_dirs.mask[gid]:
-            upwind_gids = comp_wind_dirs['upwind', gid]
-            for n in upwind_gids:
-                check = comp_wind_dirs.exclude_sc_point_gid(n)
-                if check:
-                    sc_gids = comp_wind_dirs['sc_gid', n]
-                    for sc_id in sc_gids:
-                        self._mask[sc_id] = False
+        gid = comp_wind_dirs.check_sc_gid(sc_gid)
+        if gid is not None:
+            if comp_wind_dirs.mask[gid]:
+                upwind_gids = comp_wind_dirs['upwind', gid]
+                for n in upwind_gids:
+                    check = comp_wind_dirs.exclude_sc_point_gid(n)
+                    if check:
+                        sc_gids = comp_wind_dirs['sc_gid', n]
+                        for sc_id in sc_gids:
+                            self._mask[sc_id] = False
 
-        if downwind:
-            downwind_gids = comp_wind_dirs['downwind', gid]
-            for n in downwind_gids:
-                check = comp_wind_dirs.exclude_sc_point_gid(n)
-                if check:
-                    sc_gids = comp_wind_dirs['sc_gid', n]
-                    for sc_id in sc_gids:
-                        self._mask[sc_id] = False
+            if downwind:
+                downwind_gids = comp_wind_dirs['downwind', gid]
+                for n in downwind_gids:
+                    check = comp_wind_dirs.exclude_sc_point_gid(n)
+                    if check:
+                        sc_gids = comp_wind_dirs['sc_gid', n]
+                        for sc_id in sc_gids:
+                            self._mask[sc_id] = False
 
         return comp_wind_dirs
 
@@ -754,7 +755,9 @@ class SupplyCurve:
 
         comp_wind_dirs = None
         if wind_dirs is not None:
-            comp_wind_dirs = CompetitiveWindFarms(wind_dirs, self._sc_points,
+            mask = self._sc_points['offshore'] == 0
+            comp_wind_dirs = CompetitiveWindFarms(wind_dirs,
+                                                  self._sc_points.loc[mask],
                                                   n_dirs=n_dirs)
 
         supply_curve = self._full_sort(trans_table,

@@ -291,10 +291,32 @@ class CompetitiveWindFarms:
 
         Returns
         -------
-        int | list
+        int
             Equivalent supply point curve gid
         """
         return self._sc_gids[sc_gid]
+
+    def check_sc_gid(self, sc_gid):
+        """
+        Check to see if sc_gid is valid, if so return associated
+        sc_point_gids
+
+        Parameters
+        ----------
+        sc_gid : int
+            Supply curve gid to map to equivalent supply point curve gid
+
+        Returns
+        -------
+        int | None
+            Equivalent supply point curve gid or None if sc_gid is invalid
+            (offshore)
+        """
+        sc_point_gid = None
+        if sc_gid in self._sc_gids:
+            sc_point_gid = self._sc_gids[sc_gid]
+
+        return sc_point_gid
 
     def map_upwind(self, sc_point_gid):
         """
