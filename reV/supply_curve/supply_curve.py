@@ -708,7 +708,7 @@ class SupplyCurve:
     def full_sort(self, trans_table=None, sort_on='total_lcoe',
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
                            'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
-                  wind_dirs=None, n_dirs=2, downwind=False):
+                  wind_dirs=None, n_dirs=2, downwind=False, offshore=False):
         """
         run full supply curve sorting
 
@@ -732,6 +732,9 @@ class SupplyCurve:
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors,
             by default False
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
 
         Returns
         -------
@@ -755,10 +758,10 @@ class SupplyCurve:
 
         comp_wind_dirs = None
         if wind_dirs is not None:
-            mask = self._sc_points['offshore'] == 0
             comp_wind_dirs = CompetitiveWindFarms(wind_dirs,
-                                                  self._sc_points.loc[mask],
-                                                  n_dirs=n_dirs)
+                                                  self._sc_points,
+                                                  n_dirs=n_dirs,
+                                                  offshore=offshore)
 
         supply_curve = self._full_sort(trans_table,
                                        comp_wind_dirs=comp_wind_dirs,

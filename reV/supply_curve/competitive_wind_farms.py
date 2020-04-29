@@ -14,7 +14,7 @@ class CompetitiveWindFarms:
     Handle competitive wind farm exclusion during supply curve sorting
     """
 
-    def __init__(self, wind_dirs, sc_points, n_dirs=2):
+    def __init__(self, wind_dirs, sc_points, n_dirs=2, offshore=False):
         """
         Parameters
         ----------
@@ -26,11 +26,14 @@ class CompetitiveWindFarms:
             Supply curve point summary table
         n_dirs : int, optional
             Number of prominent directions to use, by default 2
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
         """
         self._wind_dirs = self._parse_wind_dirs(wind_dirs)
 
         self._sc_gids, self._sc_point_gids, self._mask = \
-            self._parse_sc_points(sc_points)
+            self._parse_sc_points(sc_points, offshore=offshore)
 
         valid = np.isin(self.sc_point_gids, self._wind_dirs.index)
         if not np.all(valid):
@@ -186,7 +189,7 @@ class CompetitiveWindFarms:
         return wind_dirs
 
     @staticmethod
-    def _parse_sc_points(sc_points):
+    def _parse_sc_points(sc_points, offshore=False):
         """
         Parse supply curve point summary table into sc_gid to sc_point_gid
         mapping and vis-versa.
@@ -195,6 +198,9 @@ class CompetitiveWindFarms:
         ----------
         sc_points : pandas.DataFrame | str
             Supply curve point summary table
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
 
         Returns
         -------
@@ -206,8 +212,13 @@ class CompetitiveWindFarms:
             Mask array to mask excluded sc_point_gids
         """
         sc_points = CompetitiveWindFarms._parse_table(sc_points)
+        if 'offshore' in sc_points and not offshore:
+            logger.debug('Not including offshore supply curve points in'
+                         'CompetitiveWindFarm')
+            mask = sc_points['offshore'] == 0
+            sc_points = sc_points.loc[mask]
+
         sc_points = sc_points[['sc_gid', 'sc_point_gid']]
-        sc_gids = {k: v for k, v in zip()}
         sc_gids = sc_points.set_index('sc_gid')
         sc_gids = {k: v[0] for k, v in sc_gids.iterrows()}
 
