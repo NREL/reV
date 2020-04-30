@@ -22,8 +22,6 @@ from reV.SAM.econ import LCOE, SingleOwner
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
 
-from rex.utilities.utilities import mean_irrad
-
 logger = logging.getLogger(__name__)
 DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
@@ -67,13 +65,15 @@ class Generation(SAM):
         return res_out, out_req_cleaned
 
     @staticmethod
-    def _get_res_mean(res_df, output_request):
+    def _get_res_mean(resource, site, output_request):
         """Get the resource annual means (single site).
 
         Parameters
         ----------
-        res_df : pd.DataFrame
-            2D table with resource data.
+        resource : rex.sam_resource.SAMResource
+            SAM resource object for WIND resource
+        site : int
+            Site to extract means for
         output_request : list
             Outputs to retrieve from SAM.
 
@@ -87,23 +87,24 @@ class Generation(SAM):
 
         out_req_nomeans = copy.deepcopy(output_request)
         res_mean = None
+        idx = resource.sites.index(site)
 
         if 'ws_mean' in out_req_nomeans:
             out_req_nomeans.remove('ws_mean')
             res_mean = {}
-            res_mean['ws_mean'] = res_df['windspeed'].mean()
+            res_mean['ws_mean'] = resource['mean_windspeed', idx]
 
         else:
             if 'dni_mean' in out_req_nomeans:
                 out_req_nomeans.remove('dni_mean')
                 res_mean = {}
-                res_mean['dni_mean'] = mean_irrad(res_df['dni'])
+                res_mean['dni_mean'] = resource['mean_dni', idx] / 1000 * 24
 
             if 'ghi_mean' in out_req_nomeans:
                 out_req_nomeans.remove('ghi_mean')
                 if res_mean is None:
                     res_mean = {}
-                res_mean['ghi_mean'] = mean_irrad(res_df['ghi'])
+                res_mean['ghi_mean'] = resource['mean_ghi', idx] / 1000 * 24
 
         return res_mean, out_req_nomeans
 
@@ -300,6 +301,7 @@ class Generation(SAM):
         resources = SAM.get_sam_res(res_file,
                                     points_control.project_points,
                                     points_control.project_points.tech,
+                                    output_request,
                                     downscale=downscale)
 
         # run resource through curtailment filter if applicable
@@ -320,7 +322,7 @@ class Generation(SAM):
             _, inputs = points_control.project_points[site]
 
             res_outs, out_req_cleaned = cls._get_res(res_df, output_request)
-            res_mean, out_req_cleaned = cls._get_res_mean(res_df,
+            res_mean, out_req_cleaned = cls._get_res_mean(resources, site,
                                                           out_req_cleaned)
 
             # iterate through requested sites.
@@ -333,6 +335,7 @@ class Generation(SAM):
 
             if res_outs is not None:
                 out[site].update(res_outs)
+
             if res_mean is not None:
                 out[site].update(res_mean)
 
@@ -423,6 +426,7 @@ class Solar(Generation):
             else:
                 # below the equator, az = 0
                 parameters['azimuth'] = 0
+
             logger.debug('Tilt specified at "latitude", setting tilt to: {}, '
                          'azimuth to: {}'
                          .format(parameters['tilt'], parameters['azimuth']))
@@ -542,6 +546,7 @@ class PV(Solar):
             self._default = pysam_pv.default('PVWattsNone')
             self._default.LocationAndResource.solar_resource_file = res_file
             self._default.execute()
+
         return self._default
 
     def collect_outputs(self, output_lookup=None):
@@ -606,6 +611,7 @@ class CSP(Solar):
             self._default = pysam_csp.default('MSPTSingleOwner')
             self._default.LocationAndResource.solar_resource_file = res_file
             self._default.execute()
+
         return self._default
 
 
@@ -719,6 +725,7 @@ class SolarThermal(Solar):
         df['Dew Point'] = self.ensure_res_len(res.dew_point.values)
         df['Pressure'] = self.ensure_res_len(res.surface_pressure.values)
         df.to_csv(fname, index=False, mode='a')
+
         return fname
 
     def _gen_exec(self, delete_wfile=True):
@@ -785,6 +792,7 @@ class SolarWaterHeat(SolarThermal):
             self._default = pysam_swh.default('SolarWaterHeatingNone')
             self._default.Weather.solar_resource_file = res_file
             self._default.execute()
+
         return self._default
 
 
@@ -834,6 +842,7 @@ class LinearDirectSteam(SolarThermal):
             - self['annual_thermal_consumption']  # kW-hr
         # q_pb_des is in MW, convert to kW-hr
         name_plate = self['q_pb_des'] * 8760 * 1000
+
         return net_power / name_plate
 
     @property
@@ -851,6 +860,7 @@ class LinearDirectSteam(SolarThermal):
             self._default = pysam_lfdi.default('DSGLIPHNone')
             self._default.Weather.file_name = res_file
             self._default.execute()
+
         return self._default
 
 
@@ -900,6 +910,7 @@ class TroughPhysicalHeat(SolarThermal):
             - self['annual_thermal_consumption']  # kW-hr
         # q_pb_des is in MW, convert to kW-hr
         name_plate = self['q_pb_design'] * 8760 * 1000
+
         return net_power / name_plate
 
     @property
@@ -917,6 +928,7 @@ class TroughPhysicalHeat(SolarThermal):
             self._default = pysam_tpph.default('PhysicalTroughIPHNone')
             self._default.Weather.file_name = res_file
             self._default.execute()
+
         return self._default
 
 
@@ -1028,6 +1040,7 @@ class Wind(Generation):
             self._default = pysam_wind.default('WindPowerNone')
             self._default.WindResourceFile.wind_resource_filename = res_file
             self._default.execute()
+
         return self._default
 
 

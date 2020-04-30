@@ -63,7 +63,8 @@ class SAMResourceRetriever:
         return res_handler
 
     @staticmethod
-    def _make_solar_kwargs(res_handler, project_points, downscale=None):
+    def _make_solar_kwargs(res_handler, project_points, output_request,
+                           downscale=None):
         """Make kwargs dict for Solar | NSRDB resource handler initialization.
 
         Parameters
@@ -73,6 +74,8 @@ class SAMResourceRetriever:
         project_points : reV.config.ProjectPoints
             reV Project Points instance used to retrieve resource data at a
             specific set of sites.
+        output_request : list
+            Outputs to retrieve from SAM.
         downscale : NoneType | str
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
@@ -93,6 +96,10 @@ class SAMResourceRetriever:
         # check for clearsky irradiation analysis for NSRDB
         kwargs['clearsky'] = project_points.sam_config_obj.clearsky
         kwargs['tech'] = project_points.tech
+        # Check for resource means:
+        if 'dni_mean' in output_request or 'ghi_mean' in output_request:
+            kwargs['means'] = True
+
         # check for downscaling request
         if downscale is not None:
             # make sure that downscaling is only requested for NSRDB resource
@@ -110,7 +117,7 @@ class SAMResourceRetriever:
         return kwargs, args, res_handler
 
     @staticmethod
-    def _make_wind_kwargs(res_handler, project_points):
+    def _make_wind_kwargs(res_handler, project_points, output_request):
         """Make kwargs dict for Wind resource handler initialization.
 
         Parameters
@@ -120,6 +127,8 @@ class SAMResourceRetriever:
         project_points : reV.config.ProjectPoints
             reV Project Points instance used to retrieve resource data at a
             specific set of sites.
+        output_request : list
+            Outputs to retrieve from SAM.
 
         Returns
         -------
@@ -137,6 +146,10 @@ class SAMResourceRetriever:
             if project_points.curtailment.precipitation:
                 # make precip rate available for curtailment analysis
                 kwargs['precip_rate'] = True
+
+        # Check for resource means:
+        if 'ws_mean' in output_request:
+            kwargs['means'] = True
 
         return kwargs, args, res_handler
 
@@ -175,7 +188,8 @@ class SAMResourceRetriever:
         return res_handler, kwargs, res_file
 
     @classmethod
-    def get(cls, res_file, project_points, module, downscale=None):
+    def get(cls, res_file, project_points, module, output_request,
+            downscale=None):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -191,6 +205,8 @@ class SAMResourceRetriever:
             Example: module set to 'pvwatts' or 'tcsmolten' means that this
             expects a SolarResource file. If 'nsrdb' is in the res_file name,
             the NSRDB handler will be used.
+        output_request : list | tuple
+            Outputs to retrieve from SAM.
         downscale : NoneType | str
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
@@ -206,11 +222,12 @@ class SAMResourceRetriever:
 
         if res_handler in (SolarResource, NSRDB):
             kwargs, args, res_handler = cls._make_solar_kwargs(
-                res_handler, project_points, downscale=downscale)
+                res_handler, project_points, output_request,
+                downscale=downscale)
 
         elif res_handler == WindResource:
             kwargs, args, res_handler = cls._make_wind_kwargs(
-                res_handler, project_points)
+                res_handler, project_points, output_request)
 
         multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
