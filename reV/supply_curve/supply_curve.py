@@ -587,6 +587,8 @@ class SupplyCurve:
                     if check:
                         sc_gids = comp_wind_dirs['sc_gid', n]
                         for sc_id in sc_gids:
+                            logger.debug('Excluding upwind sc_gid {}'
+                                         .format(sc_id))
                             self._mask[sc_id] = False
 
             if downwind:
@@ -596,6 +598,8 @@ class SupplyCurve:
                     if check:
                         sc_gids = comp_wind_dirs['sc_gid', n]
                         for sc_id in sc_gids:
+                            logger.debug('Excluding downind sc_gid {}'
+                                         .format(sc_id))
                             self._mask[sc_id] = False
 
         return comp_wind_dirs
@@ -758,6 +762,16 @@ class SupplyCurve:
 
         comp_wind_dirs = None
         if wind_dirs is not None:
+            msg = "Excluding {} upwind"
+            if downwind:
+                msg += " and downwind"
+
+            msg += " onshore"
+            if offshore:
+                msg += " and offshore"
+
+            msg += " windfarms"
+            logger.info(msg)
             comp_wind_dirs = CompetitiveWindFarms(wind_dirs,
                                                   self._sc_points,
                                                   n_dirs=n_dirs,
