@@ -762,7 +762,7 @@ class SupplyCurve:
 
         comp_wind_dirs = None
         if wind_dirs is not None:
-            msg = "Excluding {} upwind"
+            msg = "Excluding {} upwind".format(n_dirs)
             if downwind:
                 msg += " and downwind"
 
