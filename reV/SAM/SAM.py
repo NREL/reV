@@ -188,8 +188,8 @@ class SAMResourceRetriever:
         return res_handler, kwargs, res_file
 
     @classmethod
-    def get(cls, res_file, project_points, module, output_request,
-            downscale=None):
+    def get(cls, res_file, project_points, module,
+            output_request=('cf_mean', ), downscale=None):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -205,12 +205,12 @@ class SAMResourceRetriever:
             Example: module set to 'pvwatts' or 'tcsmolten' means that this
             expects a SolarResource file. If 'nsrdb' is in the res_file name,
             the NSRDB handler will be used.
-        output_request : list | tuple
-            Outputs to retrieve from SAM.
-        downscale : NoneType | str
+        output_request : list | tuple, optional
+            Outputs to retrieve from SAM, by default ('cf_mean', )
+        downscale : NoneType | str, optional
             Option for NSRDB resource downscaling to higher temporal
             resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
+            e.g. '5min', by default None
 
         Returns
         -------
