@@ -58,7 +58,7 @@ def test_cf_curtailment(year, site):
     curtailment = os.path.join(TESTDATADIR, 'config/', 'curtailment.json')
     points = slice(site, site + 1)
 
-    # run reV 2.0 generation and write to disk
+    # run reV 2.0 generation
     gen = Gen.reV_run('windpower', points, sam_files, res_file, fout=None,
                       output_request=('cf_profile',),
                       curtailment=curtailment,
@@ -78,6 +78,44 @@ def test_cf_curtailment(year, site):
     assert np.sum(check) == 0, msg
 
     return results
+
+
+@pytest.mark.parametrize('year', ['2012', '2013'])
+def test_curtailment_res_mean(year):
+    """Run Wind generation and ensure that the cf_profile is zero when
+    curtailment is expected.
+
+    Note that the probability of curtailment must be 1 for this to succeed.
+    """
+
+    res_file = os.path.join(TESTDATADIR,
+                            'wtk/ri_100_wtk_{}.h5'.format(year))
+    sam_files = os.path.join(TESTDATADIR,
+                             'SAM/wind_gen_standard_losses_0.json')
+
+    curtailment = os.path.join(TESTDATADIR, 'config/', 'curtailment.json')
+    points = slice(0, 100)
+    output_request = ('cf_mean', 'ws_mean')
+    pc = Gen.get_pc(points, None, sam_files, 'windpower',
+                    sites_per_worker=50, res_file=res_file,
+                    curtailment=curtailment)
+
+    resources = SAM.get_sam_res(res_file,
+                                pc.project_points,
+                                pc.project_points.tech,
+                                output_request)
+    truth = resources['mean_windspeed']
+
+    # run reV 2.0 generation
+    gen = Gen.reV_run('windpower', points, sam_files, res_file, fout=None,
+                      output_request=output_request,
+                      curtailment=curtailment,
+                      max_workers=1, sites_per_worker=50,
+                      scale_outputs=True)
+
+    test = gen.out['ws_mean'] / 1000
+
+    assert np.allclose(truth, test, rtol=0.001)
 
 
 @pytest.mark.parametrize(('year', 'site'),

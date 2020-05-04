@@ -18,7 +18,7 @@ def curtail(resource, curtailment, random_seed=0):
 
     Parameters
     ----------
-    resource : reV.handlers.sam_resource.SAMResource
+    resource : rex.sam_resource.SAMResource
         SAM resource object for WIND resource.
     curtailment : reV.config.curtailment.Curtailment
         Curtailment config object.
