@@ -4,7 +4,10 @@ Quality assurance and control module
 """
 import logging
 import numpy as np
+import os
 import pandas as pd
+import plotting as mplt
+import plotly.express as px
 from warnings import warn
 
 from rex import Resource
@@ -13,27 +16,26 @@ from rex.utilities.execution import SpawnProcessPool
 logger = logging.getLogger(__name__)
 
 
-class QAQC:
+class Summarize:
     """
-    reV Quality Assurance and Control Handler
+    reV Summary data for QA/QC
     """
-    def __init__(self, h5_file):
+    def __init__(self, h5_file, group=None):
+        """
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file to summarize data from
+        group : str, optional
+            Group within h5_file to summarize datasets for, by default None
+        """
         self._h5_file = h5_file
-        self._h5 = Resource(h5_file)
+        self._group = group
 
     def __repr__(self):
         msg = "{} for {}".format(self.__class__.__name__, self.h5_file)
 
         return msg
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self._h5.close()
-
-        if type is not None:
-            raise
 
     @property
     def h5_file(self):
@@ -54,7 +56,7 @@ class QAQC:
         Parameters
         ----------
         h5_fhandle : Resource
-            Resource handler object
+            Open Resource handler object
         ds_name : str
             Dataset name of interest
         sites : list | slice, optional
@@ -121,56 +123,54 @@ class QAQC:
         Returns
         -------
         summary : pandas.DataFrame
-            Summary table for dataset
+            Summary summary for dataset
         """
-        ds_shape, _, ds_chunks = self._h5.get_dset_properties(ds_name)
-        if len(ds_shape) > 1:
-            sites = np.arange(ds_shape[1])
-            if max_workers > 1:
-                if process_size is None:
-                    process_size = ds_chunks
+        with Resource(self.h5_file, group=self._group) as f:
+            ds_shape, _, ds_chunks = f.get_dset_properties(ds_name)
+            if len(ds_shape) > 1:
+                sites = np.arange(ds_shape[1])
+                if max_workers > 1:
+                    if process_size is None:
+                        process_size = ds_chunks
 
-                sites = np.array_split(sites,
+                    sites = \
+                        np.array_split(sites,
                                        int(np.ceil(len(sites) / process_size)))
-                loggers = [__name__]
-                with SpawnProcessPool(max_workers=max_workers,
-                                      loggers=loggers) as ex:
-                    futures = []
-                    for site_slice in sites:
-                        futures.append(ex.submit(
-                            self._compute_sites_summary,
-                            self._h5,
-                            ds_name,
-                            site_slice))
+                    loggers = [__name__]
+                    with SpawnProcessPool(max_workers=max_workers,
+                                          loggers=loggers) as ex:
+                        futures = []
+                        for site_slice in sites:
+                            futures.append(ex.submit(
+                                self._compute_sites_summary,
+                                f, ds_name, site_slice))
 
-                    summary = [future.result() for future in futures]
-
-                summary = pd.concat(summary)
-            else:
-                if process_size is None:
-                    summary = self._compute_ds_summary(self._h5, ds_name,
-                                                       sites)
-                else:
-                    sites = np.array_split(
-                        sites, int(np.ceil(len(sites) / process_size)))
-
-                    summary = []
-                    for site_slice in sites:
-                        summary.append(self._compute_ds_summary(self._h5,
-                                                                ds_name,
-                                                                site_slice))
+                        summary = [future.result() for future in futures]
 
                     summary = pd.concat(summary)
+                else:
+                    if process_size is None:
+                        summary = self._compute_ds_summary(f, ds_name, sites)
+                    else:
+                        sites = np.array_split(
+                            sites, int(np.ceil(len(sites) / process_size)))
 
-            summary.index.name = 'gid'
-        else:
-            if process_size is not None or max_workers > 1:
-                msg = ("Computing summary statistics for 1D datasets will "
-                       "proceed in serial")
-                logger.warning(msg)
-                warn(msg)
+                        summary = []
+                        for site_slice in sites:
+                            summary.append(self._compute_ds_summary(
+                                f, ds_name, site_slice))
 
-            summary = self._compute_ds_summary(self._h5, ds_name)
+                        summary = pd.concat(summary)
+
+                summary.index.name = 'gid'
+            else:
+                if process_size is not None or max_workers > 1:
+                    msg = ("Computing summary statistics for 1D datasets will "
+                           "proceed in serial")
+                    logger.warning(msg)
+                    warn(msg)
+
+                summary = self._compute_ds_summary(f, ds_name)
 
         if out_path is not None:
             summary.to_csv(out_path)
@@ -179,28 +179,328 @@ class QAQC:
 
     def summarize_means(self, out_path=None):
         """
-        [
+        Add means datasets to meta data
 
         Parameters
         ----------
-        out_path : [type], optional
-            [description], by default None
+        out_path : str, optional
+            Path to .csv file to save update meta data to, by default None
 
         Returns
         -------
-        [type]
-            [description]
+        meta : pandas.DataFrame
+            Meta data with means datasets added
         """
-        meta = self._h5.meta
-        meta.index.name = 'gid'
-        meta = meta.reset_index()
-        for ds_name in self._h5.datasets:
-            if ds_name not in ['meta', 'time_index']:
-                shape = self._h5.get_dset_properties(ds_name)[0]
-                if len(shape) == 1:
-                    meta[ds_name] = self._h5[ds_name]
+        with Resource(self.h5_file, group=self._group) as f:
+            meta = f.meta
+            meta.index.name = 'gid'
+            meta = meta.reset_index()
+            for ds_name in f.datasets:
+                if ds_name not in ['meta', 'time_index']:
+                    shape = f.get_dset_properties(ds_name)[0]
+                    if len(shape) == 1:
+                        meta[ds_name] = f[ds_name]
 
         if out_path is not None:
             meta.to_csv(out_path)
 
         return meta
+
+    @classmethod
+    def run(cls, h5_file, out_dir, group=None, dsets=None,
+            process_size=None, max_workers=None):
+        """
+        Summarize all datasets in h5_file and dump to out_dir
+
+        Parameters
+        ----------
+        h5_file : str
+            Path to .h5 file to summarize data from
+        out_dir : str
+            Directory to dump summary .csv files to
+        group : str, optional
+            Group within h5_file to summarize datasets for, by default None
+        dsets : str | list, optional
+            Datasets to summarize, by default None
+        process_size : int, optional
+            Number of sites to process at a time, by default None
+        max_workers : int, optional
+            Number of workers to use when summarizing 2D datasets,
+            by default None
+        """
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        if dsets is None:
+            with Resource(h5_file, group=group) as f:
+                dsets = [dset for dset in f.datasets
+                         if dset not in ['meta', 'time_index']]
+        elif isinstance(dsets, str):
+            dsets = [dsets]
+
+        summary = cls(h5_file)
+        for ds_name in dsets:
+            out_path = os.path.join(out_dir,
+                                    "{}_summary.csv".format(ds_name))
+            summary.summarize_dset(ds_name, process_size=process_size,
+                                   max_workers=max_workers, out_path=out_path)
+
+        out_path = os.path.basename(h5_file).replace('.h5', '_summary.csv')
+        out_path = os.path.join(out_dir, out_path)
+        summary.summarize_means(out_path=out_path)
+
+
+class SummaryPlots:
+    """
+    Plot summary data for QA/QC
+    """
+    def __init__(self, summary):
+        """
+        [summary]
+
+        Parameters
+        ----------
+        summary : str | pandas.DataFrame
+            Summary DataFrame or path to summary .csv
+        """
+        self._summary = self._parse_summary(summary)
+
+    @property
+    def summary(self):
+        """
+        Summary table
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        return self._summary
+
+    @property
+    def columns(self):
+        """
+        Available columns in summary table
+
+        Returns
+        -------
+        list
+        """
+        return list(self._summary.columns)
+
+    @staticmethod
+    def _parse_summary(summary):
+        """
+        Extract summary statistics
+
+        Parameters
+        ----------
+        summary : str | pd.DataFrame
+            Path to .csv or .json or DataFrame to parse
+
+        Returns
+        -------
+        summary : pandas.DataFrame
+            DataFrame of summary statistics
+        """
+        if isinstance(summary, str):
+            if summary.endswith('.csv'):
+                summary = pd.read_csv(summary)
+            elif summary.endswith('.json'):
+                summary = pd.read_json(summary)
+            else:
+                raise ValueError('Cannot parse {}'.format(summary))
+
+        elif not isinstance(summary, pd.DataFrame):
+            raise ValueError("summary must be a .csv, .json, or "
+                             "a pandas DataFrame")
+
+        return summary
+
+    @staticmethod
+    def _save_plotly(fig, out_path):
+        """
+        Save plotly figure to disk
+
+        Parameters
+        ----------
+        fig : plotly.Figure
+            Plotly Figure object
+        out_path : str
+            File path to save plot to, can be a .html or static image
+        """
+        if out_path.endswith('.html'):
+            fig.write_html(out_path)
+        else:
+            fig.write_image(out_path)
+
+    def _check_value(self, values, scatter=True):
+        """
+        Check summary table for needed columns
+
+        Parameters
+        ----------
+        values : str | list
+            Column(s) to plot
+        scatter : bool, optional
+            Flag to check for latitude and longitude columns, by default True
+        """
+        if isinstance(values, str):
+            values = [values]
+
+        if scatter:
+            values += ['latitude', 'longitude']
+
+        for value in values:
+            if value not in self.summary:
+                msg = ("{} is not a valid column in summary table:\n{}"
+                       .format(value, self.columns))
+                logger.error(msg)
+                raise ValueError(msg)
+
+    def scatter_plot(self, value, cmap='viridis', out_path=None, **kwargs):
+        """
+        Plot scatter plot of value versus longitude and latitude using
+        pandas.plot.scatter
+
+        Parameters
+        ----------
+        value : str
+            Column name to plot as color
+        cmap : str, optional
+            Matplotlib colormap name, by default 'viridis'
+        out_path : str, optional
+            File path to save plot to, by default None
+        kwargs : dict
+            Additional kwargs for plotting.dataframes.df_scatter
+        """
+        self._check_value(value)
+        mplt.df_scatter(self.summary, x='longitude', y='latitude', c=value,
+                        colormap=cmap, colorbar=True, filename=out_path,
+                        **kwargs)
+
+    def scatter_plotly(self, value, cmap='Viridis', out_path=None, **kwargs):
+        """
+        Plot scatter plot of value versus longitude and latitude using
+        plotly
+
+        Parameters
+        ----------
+        value : str
+            Column name to plot as color
+        cmap : str | px.color, optional
+            Continuous color scale to use, by default 'Viridis'
+        out_path : str, optional
+            File path to save plot to, can be a .html or static image,
+            by default None
+        kwargs : dict
+            Additional kwargs for plotly.express.scatter
+        """
+        self._check_value(value)
+        fig = px.scatter(self.summary, x='logitude', y='latitude', color=value,
+                         color_continuous_scale=cmap, **kwargs)
+        fig.update_layout(font=dict(family="Arial", size=18, color="black"))
+
+        if out_path is not None:
+            self._save_plotly(fig, out_path)
+
+        fig.show()
+
+    def _extract_sc_data(self, lcoe='total_lcoe'):
+        """
+        Extract supply curve data
+
+        Parameters
+        ----------
+        lcoe : str, optional
+            LCOE value to use for supply curve, by default 'total_lcoe'
+
+        Returns
+        -------
+        sc_df : pandas.DataFrame
+            Supply curve data
+        """
+        values = ['capacity', lcoe]
+        self._check_value(values, scatter=False)
+        sc_df = self.summary[values].sort_values(lcoe)
+        sc_df['cumulative_capacity'] = sc_df['capacity'].cumsum()
+
+        return sc_df
+
+    def supply_curve_plot(self, lcoe='total_lcoe', out_path=None, **kwargs):
+        """
+        Plot supply curve (cumulative capacity vs lcoe) using seaborn.scatter
+
+        Parameters
+        ----------
+        lcoe : str, optional
+            LCOE value to plot, by default 'total_lcoe'
+        out_path : str, optional
+            File path to save plot to, by default None
+        kwargs : dict
+            Additional kwargs for plotting.dataframes.point_plot
+        """
+        sc_df = self._extract_sc_data(lcoe=lcoe)
+        mplt.point_plot(sc_df, x='cumulative_capacity', y=lcoe,
+                        filename=out_path, **kwargs)
+
+    def supply_curve_plotly(self, lcoe='total_lcoe', out_path=None, **kwargs):
+        """
+        Plot supply curve (cumulative capacity vs lcoe) using plotly
+
+        Parameters
+        ----------
+        lcoe : str, optional
+            LCOE value to plot, by default 'total_lcoe'
+        out_path : str, optional
+            File path to save plot to, can be a .html or static image,
+            by default None
+        kwargs : dict
+            Additional kwargs for plotly.express.scatter
+        """
+        sc_df = self._extract_sc_data(lcoe=lcoe)
+        fig = px.scatter(sc_df, x='cumulative_capacity', y=lcoe, **kwargs)
+        fig.update_layout(font=dict(family="Arial", size=18, color="black"))
+
+        if out_path is not None:
+            self._save_plotly(fig, out_path)
+
+        fig.show()
+
+    def dist_plot(self, value, out_path=None, **kwargs):
+        """
+        Plot distribution plot of value using seaborn.distplot
+
+        Parameters
+        ----------
+        value : str
+            Column name to plot
+        out_path : str, optional
+            File path to save plot to, by default None
+        kwargs : dict
+            Additional kwargs for plotting.dataframes.dist_plot
+        """
+        self._check_value(value, scatter=False)
+        series = self.summary(value)
+        mplt.dist_plot(series, filename=out_path, **kwargs)
+
+    def dist_plotly(self, value, out_path=None, **kwargs):
+        """
+        Plot histogram of value using plotly
+
+        Parameters
+        ----------
+        value : str
+            Column name to plot
+        out_path : str, optional
+            File path to save plot to, by default None
+        kwargs : dict
+            Additional kwargs for plotly.express.histogram
+        """
+        self._check_value(value, scatter=False)
+
+        fig = px.histogram(self.summary, x=value)
+
+        if out_path is not None:
+            self._save_plotly(fig, out_path, **kwargs)
+
+        fig.show()
