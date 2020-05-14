@@ -256,8 +256,6 @@ class SummaryPlots:
     """
     def __init__(self, summary):
         """
-        [summary]
-
         Parameters
         ----------
         summary : str | pandas.DataFrame
@@ -504,3 +502,123 @@ class SummaryPlots:
             self._save_plotly(fig, out_path, **kwargs)
 
         fig.show()
+
+    @classmethod
+    def scatter(cls, summary_csv, out_dir, value, type='plot', cmap='viridis',
+                **kwargs):
+        """
+        Create scatter plot for given value in summary table and save to
+        out_dir
+
+        Parameters
+        ----------
+        summary_csv : str
+            Path to .csv file containing summary table
+        out_dir : str
+            Output directory to save plots to
+        value : str
+            Column name to plot as color
+        type : str, optional
+            Type of plot to create 'plot' or 'plotly', by default 'plot'
+        cmap : str, optional
+            Colormap name, by default 'viridis'
+        kwargs : dict
+            Additional plotting kwargs
+        """
+        splt = cls(summary_csv)
+        if type == 'plot':
+            out_path = os.path.basename(summary_csv).replace('.csv', '.png')
+            out_path = os.path.join(out_dir, out_path)
+            splt.scatter_plot(value, cmap=cmap, out_path=out_path, **kwargs)
+        elif type == 'plotly':
+            out_path = os.path.basename(summary_csv).replace('.csv', '.html')
+            out_path = os.path.join(out_dir, out_path)
+            splt.scatter_plotly(value, cmap=cmap, out_path=out_path, **kwargs)
+        else:
+            msg = ("type must be 'plot' or 'plotly' but {} was given"
+                   .format(type))
+            logger.error(msg)
+            raise ValueError(msg)
+
+    @classmethod
+    def scatter_all(cls, summary_csv, out_dir, type='plot', cmap='viridis',
+                    **kwargs):
+        """
+        Create scatter plot for all summary stats in summary table and save to
+        out_dir
+
+        Parameters
+        ----------
+        summary_csv : str
+            Path to .csv file containing summary table
+        out_dir : str
+            Output directory to save plots to
+        type : str, optional
+            Type of plot to create 'plot' or 'plotly', by default 'plot'
+        cmap : str, optional
+            Colormap name, by default 'viridis'
+        kwargs : dict
+            Additional plotting kwargs
+        """
+        splt = cls(summary_csv)
+        datasets = []
+        for c in splt.summary.columns:
+            cols = ['mean', 'std', 'min', '25%', '50%', '75%', 'max', 'sum']
+            if c.endswith('mean') or c in cols:
+                datasets.append(c)
+
+        for value in datasets:
+            if type == 'plot':
+                out_path = '_{}.png'.format(value)
+                out_path = \
+                    os.path.basename(summary_csv).replace('.csv', out_path)
+                out_path = os.path.join(out_dir, out_path)
+                splt.scatter_plot(value, cmap=cmap, out_path=out_path,
+                                  **kwargs)
+            elif type == 'plotly':
+                out_path = '_{}.html'.format(value)
+                out_path = \
+                    os.path.basename(summary_csv).replace('.csv', out_path)
+                out_path = os.path.join(out_dir, out_path)
+                splt.scatter_plotly(value, cmap=cmap, out_path=out_path,
+                                    **kwargs)
+            else:
+                msg = ("type must be 'plot' or 'plotly' but {} was given"
+                       .format(type))
+                logger.error(msg)
+                raise ValueError(msg)
+
+    @classmethod
+    def supply_curve(cls, summary_csv, out_dir, type='plot',
+                     lcoe='total_lcoe', **kwargs):
+        """
+        Create supply curve plot from summary csv using lcoe value and save
+        to out_dir
+
+        Parameters
+        ----------
+        summary_csv : str
+            Path to .csv file containing summary table
+        out_dir : str
+            Output directory to save plots to
+        type : str, optional
+            Type of plot to create 'plot' or 'plotly', by default 'plot'
+        lcoe : str, optional
+            LCOE value to plot, by default 'total_lcoe'
+        kwargs : dict
+            Additional plotting kwargs
+        """
+        splt = cls(summary_csv)
+        if type == 'plot':
+            out_path = os.path.basename(summary_csv).replace('.csv', '.png')
+            out_path = os.path.join(out_dir, out_path)
+            splt.supply_curve_plot(lcoe=lcoe, out_path=out_path, **kwargs)
+        elif type == 'plotly':
+            out_path = os.path.basename(summary_csv).replace('.csv', '.html')
+            out_path = os.path.join(out_dir, out_path)
+            splt.supply_curve_plotly(lcoe=lcoe, out_path=out_path, **kwargs)
+        else:
+            msg = ("type must be 'plot' or 'plotly' but {} was given"
+                   .format(type))
+            logger.error(msg)
+            raise ValueError(msg)
