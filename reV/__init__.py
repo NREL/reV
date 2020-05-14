@@ -13,6 +13,7 @@ from reV.rep_profiles import RepProfiles
 from reV.supply_curve import (Aggregation, ExclusionMask,
                               ExclusionMaskFromDict, SupplyCurveAggregation,
                               SupplyCurve, TechMapping)
+from reV.utilities import Summarize, SummaryPlots
 from reV.version import __version__
 
 __author__ = """Galen Maclaurin"""

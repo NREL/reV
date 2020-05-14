@@ -150,14 +150,15 @@ class Summarize:
                     summary = pd.concat(summary)
                 else:
                     if process_size is None:
-                        summary = self._compute_ds_summary(f, ds_name, sites)
+                        summary = self._compute_sites_summary(f, ds_name,
+                                                              sites)
                     else:
                         sites = np.array_split(
                             sites, int(np.ceil(len(sites) / process_size)))
 
                         summary = []
                         for site_slice in sites:
-                            summary.append(self._compute_ds_summary(
+                            summary.append(self._compute_sites_summary(
                                 f, ds_name, site_slice))
 
                         summary = pd.concat(summary)
@@ -193,8 +194,10 @@ class Summarize:
         """
         with Resource(self.h5_file, group=self._group) as f:
             meta = f.meta
-            meta.index.name = 'gid'
-            meta = meta.reset_index()
+            if 'gid' not in meta:
+                meta.index.name = 'gid'
+                meta = meta.reset_index()
+
             for ds_name in f.datasets:
                 if ds_name not in ['meta', 'time_index']:
                     shape = f.get_dset_properties(ds_name)[0]
@@ -202,7 +205,7 @@ class Summarize:
                         meta[ds_name] = f[ds_name]
 
         if out_path is not None:
-            meta.to_csv(out_path)
+            meta.to_csv(out_path, index=False)
 
         return meta
 
@@ -373,8 +376,7 @@ class SummaryPlots:
         """
         self._check_value(value)
         mplt.df_scatter(self.summary, x='longitude', y='latitude', c=value,
-                        colormap=cmap, colorbar=True, filename=out_path,
-                        **kwargs)
+                        colormap=cmap, filename=out_path, **kwargs)
 
     def scatter_plotly(self, value, cmap='Viridis', out_path=None, **kwargs):
         """
@@ -394,8 +396,8 @@ class SummaryPlots:
             Additional kwargs for plotly.express.scatter
         """
         self._check_value(value)
-        fig = px.scatter(self.summary, x='logitude', y='latitude', color=value,
-                         color_continuous_scale=cmap, **kwargs)
+        fig = px.scatter(self.summary, x='longitude', y='latitude',
+                         color=value, color_continuous_scale=cmap, **kwargs)
         fig.update_layout(font=dict(family="Arial", size=18, color="black"))
 
         if out_path is not None:
@@ -435,10 +437,10 @@ class SummaryPlots:
         out_path : str, optional
             File path to save plot to, by default None
         kwargs : dict
-            Additional kwargs for plotting.dataframes.point_plot
+            Additional kwargs for plotting.dataframes.df_scatter
         """
         sc_df = self._extract_sc_data(lcoe=lcoe)
-        mplt.point_plot(sc_df, x='cumulative_capacity', y=lcoe,
+        mplt.df_scatter(sc_df, x='cumulative_capacity', y=lcoe,
                         filename=out_path, **kwargs)
 
     def supply_curve_plotly(self, lcoe='total_lcoe', out_path=None, **kwargs):
@@ -564,7 +566,7 @@ class SummaryPlots:
         datasets = []
         for c in splt.summary.columns:
             cols = ['mean', 'std', 'min', '25%', '50%', '75%', 'max', 'sum']
-            if c.endswith('mean') or c in cols:
+            if c.endswith('_mean') or c in cols:
                 datasets.append(c)
 
         for value in datasets:
