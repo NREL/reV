@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Quality assurance and control module
+Compute and plot summary data
 """
 import logging
 import numpy as np

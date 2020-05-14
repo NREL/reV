@@ -9,11 +9,11 @@ from reV.econ import Econ
 from reV.generation import Gen
 from reV.handlers import Outputs, ExclusionLayers
 from reV.pipeline import Pipeline, Status
+from reV.qa_qc import Summarize, SummaryPlots
 from reV.rep_profiles import RepProfiles
 from reV.supply_curve import (Aggregation, ExclusionMask,
                               ExclusionMaskFromDict, SupplyCurveAggregation,
                               SupplyCurve, TechMapping)
-from reV.utilities import Summarize, SummaryPlots
 from reV.version import __version__
 
 __author__ = """Galen Maclaurin"""

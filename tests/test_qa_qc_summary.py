@@ -8,7 +8,7 @@ from pandas.testing import assert_frame_equal
 import pytest
 
 from reV import TESTDATADIR
-from reV.utilities.qa_qc import Summarize
+from reV.qa_qc.summary import Summarize
 
 H5_FILE = os.path.join(TESTDATADIR, 'gen_out', 'ri_wind_gen_profiles_2010.h5')
 SUMMARY_DIR = os.path.join(TESTDATADIR, 'qa_qc')
