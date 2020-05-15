@@ -11,4 +11,6 @@ Submodules
 
 .. toctree::
 
+   reV.qa_qc.cli_qa_qc
+   reV.qa_qc.qa_qc
    reV.qa_qc.summary

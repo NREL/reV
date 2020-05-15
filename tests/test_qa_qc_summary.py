@@ -11,6 +11,7 @@ from reV import TESTDATADIR
 from reV.qa_qc.summary import Summarize
 
 H5_FILE = os.path.join(TESTDATADIR, 'gen_out', 'ri_wind_gen_profiles_2010.h5')
+SC_TABLE = os.path.join(TESTDATADIR, 'sc_out', 'sc_full_out_1.csv')
 SUMMARY_DIR = os.path.join(TESTDATADIR, 'qa_qc')
 
 
@@ -35,5 +36,15 @@ def test_summarize(dataset):
         baseline = pd.read_csv(baseline, index_col=0)
         test = summary.summarize_dset(
             dataset, process_size=None, max_workers=1)
+
+    assert_frame_equal(test, baseline, check_dtype=False)
+
+
+def test_sc_summarize():
+    """Run QA/QC Summarize and compare with baseline"""
+    test = Summarize.supply_curve_summary(SC_TABLE)
+    baseline = os.path.join(SUMMARY_DIR,
+                            'sc_full_out_1_summary.csv')
+    baseline = pd.read_csv(baseline, index_col=0)
 
     assert_frame_equal(test, baseline, check_dtype=False)

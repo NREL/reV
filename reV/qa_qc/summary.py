@@ -102,6 +102,68 @@ class Summarize:
 
         return ds_summary
 
+    @staticmethod
+    def supply_curve_summary(sc_table, columns=None, out_path=None):
+        """
+        Summarize Supply Curve Table
+
+        Parameters
+        ----------
+        sc_table : str | pandas.DataFrame
+            Supply curve table or .csv containing table
+        columns : str | list, optional
+            Column(s) to summarize, if None summarize all numeric columns,
+            by default None
+        out_path : str, optional
+            Path to .csv to save summary to, by default None
+
+        Returns
+        -------
+        sc_summary : pandas.DataFrame
+            Summary statistics (mean, stdev, median, min, max, sum) for
+            Supply Curve table columns
+        """
+        sc_table = SummaryPlots._parse_summary(sc_table)
+        if columns is not None:
+            if isinstance(columns, str):
+                columns = [columns]
+
+            sc_table = sc_table[columns]
+
+        sc_table = sc_table.select_dtypes(include=np.number)
+
+        sc_summary = []
+        sc_stat = sc_table.mean(axis=0)
+        sc_stat.name = 'mean'
+        sc_summary.append(sc_stat)
+
+        sc_stat = sc_table.std(axis=0)
+        sc_stat.name = 'stdev'
+        sc_summary.append(sc_stat)
+
+        sc_stat = sc_table.median(axis=0)
+        sc_stat.name = 'median'
+        sc_summary.append(sc_stat)
+
+        sc_stat = sc_table.min(axis=0)
+        sc_stat.name = 'min'
+        sc_summary.append(sc_stat)
+
+        sc_stat = sc_table.max(axis=0)
+        sc_stat.name = 'max'
+        sc_summary.append(sc_stat)
+
+        sc_stat = sc_table.sum(axis=0)
+        sc_stat.name = 'sum'
+        sc_summary.append(sc_stat)
+
+        sc_summary = pd.concat(sc_summary, axis=1).T
+
+        if out_path is not None:
+            sc_summary.to_csv(out_path)
+
+        return sc_summary
+
     def summarize_dset(self, ds_name, process_size=None, max_workers=None,
                        out_path=None):
         """
@@ -251,6 +313,28 @@ class Summarize:
         out_path = os.path.basename(h5_file).replace('.h5', '_summary.csv')
         out_path = os.path.join(out_dir, out_path)
         summary.summarize_means(out_path=out_path)
+
+    @classmethod
+    def supply_curve(cls, sc_table, out_dir, columns=None):
+        """
+        Summarize Supply Curve Table and save to disk
+
+        Parameters
+        ----------
+        sc_table : str | pandas.DataFrame
+            Path to .csv containing Supply Curve table
+        out_dir : str
+            Directory to dump summary .csv files to
+        columns : str | list, optional
+            Column(s) to summarize, if None summarize all numeric columns,
+            by default None
+        """
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        out_path = os.path.basename(sc_table).replace('.csv', '_summary.csv')
+        out_path = os.path.join(out_dir, out_path)
+        cls.supply_curve_summary(sc_table, columns=columns, out_path=out_path)
 
 
 class SummaryPlots:
@@ -593,16 +677,16 @@ class SummaryPlots:
                 raise ValueError(msg)
 
     @classmethod
-    def supply_curve(cls, summary_csv, out_dir, plot_type='plot',
+    def supply_curve(cls, sc_table, out_dir, plot_type='plot',
                      lcoe='total_lcoe', **kwargs):
         """
-        Create supply curve plot from summary csv using lcoe value and save
-        to out_dir
+        Create supply curve plot from supply curve table using lcoe value
+        and save to out_dir
 
         Parameters
         ----------
-        summary_csv : str
-            Path to .csv file containing summary table
+        sc_table : str
+            Path to .csv file containing Supply Curve table
         out_dir : str
             Output directory to save plots to
         plot_type : str, optional
@@ -612,13 +696,13 @@ class SummaryPlots:
         kwargs : dict
             Additional plotting kwargs
         """
-        splt = cls(summary_csv)
+        splt = cls(sc_table)
         if plot_type == 'plot':
-            out_path = os.path.basename(summary_csv).replace('.csv', '.png')
+            out_path = os.path.basename(sc_table).replace('.csv', '.png')
             out_path = os.path.join(out_dir, out_path)
             splt.supply_curve_plot(lcoe=lcoe, out_path=out_path, **kwargs)
         elif plot_type == 'plotly':
-            out_path = os.path.basename(summary_csv).replace('.csv', '.html')
+            out_path = os.path.basename(sc_table).replace('.csv', '.html')
             out_path = os.path.join(out_dir, out_path)
             splt.supply_curve_plotly(lcoe=lcoe, out_path=out_path, **kwargs)
         else:

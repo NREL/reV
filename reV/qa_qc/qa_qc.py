@@ -34,7 +34,7 @@ class QaQc:
         self._dsets = dsets
 
     @staticmethod
-    def _plot_summary(summary_csv, out_root, plot_type='plot', cmap='viridis',
+    def _scatter_plot(summary_csv, out_root, plot_type='plot', cmap='viridis',
                       **kwargs):
         """
         Create scatter plot for all summary stats in summary table and save to
@@ -60,6 +60,31 @@ class QaQc:
 
         SummaryPlots.scatter_all(summary_csv, out_dir, plot_type=plot_type,
                                  cmap=cmap, **kwargs)
+
+    @staticmethod
+    def _scatter_plots(out_dir, plot_type='plot', cmap='viridis', **kwargs):
+        """
+        Create scatter plot for all compatible summary .csv files
+
+        Parameters
+        ----------
+        out_dir : str
+            Directory path to save summary tables and plots too
+        plot_type : str, optional
+            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+        cmap : str, optional
+            Colormap name, by default 'viridis'
+        kwargs : dict
+            Additional plotting kwargs
+        """
+        for file in os.listdir(out_dir):
+            if file.endswith('.csv'):
+                summary_csv = os.path.join(out_dir, file)
+                summary = pd.read_csv(summary_csv)
+                if 'gid' in summary:
+                    QaQc._scatter_plot(summary_csv, out_dir,
+                                       plot_type=plot_type, cmap=cmap,
+                                       **kwargs)
 
     def summarize(self, group=None, process_size=None, max_workers=None):
         """
@@ -92,14 +117,8 @@ class QaQc:
         kwargs : dict
             Additional plotting kwargs
         """
-        for file in os.listdir(self._out_dir):
-            if file.endswith('.csv'):
-                summary_csv = os.path.join(self._out_dir, file)
-                summary = pd.read_csv(summary_csv)
-                if 'gid' in summary:
-                    self._plot_summary(summary_csv, self._out_dir,
-                                       plot_type=plot_type, cmap=cmap,
-                                       **kwargs)
+        self._scatter_plots(self._out_dir, plot_type=plot_type, cmap=cmap,
+                            **kwargs)
 
     @classmethod
     def run(cls, h5_file, out_dir, dsets=None, group=None, process_size=None,
@@ -136,8 +155,8 @@ class QaQc:
         qa_qc.scatter_plots(plot_type=plot_type, cmap=cmap, **kwargs)
 
     @classmethod
-    def supply_curve(cls, sc_table, out_dir, lcoe='total_lcoe',
-                     plot_type='plot', **kwargs):
+    def supply_curve(cls, sc_table, out_dir, columns=None,
+                     lcoe='total_lcoe', plot_type='plot', **kwargs):
         """
         Plot supply curve
 
@@ -147,6 +166,9 @@ class QaQc:
             Path to .csv file containing supply curve table
         out_dir : str
             Directory path to save summary tables and plots too
+        columns : str | list, optional
+            Column(s) to summarize, if None summarize all numeric columns,
+            by default None
         lcoe : str, optional
             LCOE value to plot, by default 'total_lcoe'
         plot_type : str, optional
@@ -154,5 +176,6 @@ class QaQc:
         kwargs : dict
             Additional plotting kwargs
         """
+        Summarize.supply_curve(sc_table, out_dir, columns=columns)
         SummaryPlots.supply_curve(sc_table, out_dir, plot_type=plot_type,
                                   lcoe=lcoe, **kwargs)
