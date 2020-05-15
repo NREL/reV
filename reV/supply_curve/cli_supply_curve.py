@@ -20,7 +20,20 @@ from rex.utilities.utilities import dict_str_load
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.option('--name', '-n', default='reV-sc', type=STR,
+              help='Job name. Default is "reV-sc".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Supply Curve Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV exclusions configuration json file.')
@@ -110,9 +123,7 @@ def from_config(ctx, config_file, verbose):
                    module=config.execution_control.module)
 
 
-@click.group(invoke_without_command=True)
-@click.option('--name', '-n', default='agg', type=STR,
-              help='Job name. Default is "agg".')
+@main.group(invoke_without_command=True)
 @click.option('--sc_points', '-sc', type=STR, required=True,
               help='Supply curve point summary table (.csv or .json).')
 @click.option('--trans_table', '-tt', type=STR, required=True,
@@ -152,13 +163,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
-         transmission_costs, sort_on, wind_dirs, n_dirs, downwind, max_workers,
-         out_dir, log_dir, simple, line_limited, verbose):
+def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
+           transmission_costs, sort_on, wind_dirs, n_dirs, downwind,
+           max_workers, out_dir, log_dir, simple, line_limited, verbose):
     """reV Supply Curve CLI."""
-
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
+    name = ctx.obj['NAME']
     ctx.obj['SC_POINTS'] = sc_points
     ctx.obj['TRANS_TABLE'] = trans_table
     ctx.obj['FIXED_CHARGE_RATE'] = fixed_charge_rate
@@ -273,7 +282,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
     return cmd
 
 
-@main.command()
+@direct.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
 @click.option('--memory', '-mem', default=None, type=INT, help='SLURM node '

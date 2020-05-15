@@ -19,7 +19,20 @@ from rex.utilities.execution import SubprocessManager, SLURM
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.option('--name', '-n', default='reV_multi-year', type=str,
+              help='Multi-year job name. Default is "reV_multi-year".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Multi-Year Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV multi-year configuration json file.')
@@ -85,23 +98,19 @@ def from_config(ctx, config_file, verbose):
                    verbose=verbose)
 
 
-@click.group()
-@click.option('--name', '-n', default='reV_multi-year', type=str,
-              help='Multi-year job name. Default is "reV_multi-year".')
+@main.group()
 @click.option('--my_file', '-f', required=True, type=click.Path(),
               help='h5 file to use for multi-year collection.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def main(ctx, name, my_file, verbose):
+def direct(ctx, my_file, verbose):
     """Main entry point for collection with context passing."""
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
     ctx.obj['MY_FILE'] = my_file
     ctx.obj['VERBOSE'] = verbose
 
 
-@main.command()
+@direct.command()
 @click.option('--group', '-g', type=STR, default=None,
               help=('Group to collect into. Useful for collecting multiple '
                     'scenarios into a single file.'))
@@ -156,7 +165,7 @@ def multi_year(ctx, group, source_files, dsets, verbose):
                          status)
 
 
-@main.command()
+@direct.command()
 @click.option('--group_params', '-gp', required=True, type=str,
               help=('List of groups and their parameters'
                     '(group, source_files, dsets) to collect'))
@@ -252,7 +261,7 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
     return cmd
 
 
-@main.command()
+@direct.command()
 @click.option('--alloc', '-a', default='rev', type=str,
               help='SLURM allocation account name. Default is "rev".')
 @click.option('--walltime', '-wt', default=4.0, type=float,

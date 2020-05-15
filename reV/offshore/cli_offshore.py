@@ -26,19 +26,31 @@ from rex.utilities.execution import SLURM
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.option('--name', '-n', default='reV-off', type=STR,
+              help='Job name. Default is "reV-off".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Offshore Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
-              help='reV exclusions configuration json file.')
+              help='reV offshore configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def from_config(ctx, config_file, verbose):
     """Run reV offshore aggregation from a config file."""
-    name = ctx.obj['NAME']
-
     # Instantiate the config object
     config = OffshoreConfig(config_file)
+    name = ctx.obj['NAME']
 
     # take name from config if not default
     if config.name.lower() != 'rev':
@@ -98,9 +110,7 @@ def from_config(ctx, config_file, verbose):
                        conda_env=config.execution_control.conda_env)
 
 
-@click.group(invoke_without_command=True)
-@click.option('--name', '-n', default='off', type=STR,
-              help='Job name. Default is "off".')
+@main.group(invoke_without_command=True)
 @click.option('--gen_fpath', '-gf', type=STR, required=True,
               help='reV wind generation/econ output file.')
 @click.option('--offshore_fpath', '-of', type=STR, required=True,
@@ -116,11 +126,10 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, gen_fpath, offshore_fpath, points, sam_files,
-         log_dir, verbose):
+def direct(ctx, gen_fpath, offshore_fpath, points, sam_files,
+           log_dir, verbose):
     """Main entry point to run offshore wind aggregation"""
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
+    name = ctx.obj['NAME']
     ctx.obj['GEN_FPATH'] = gen_fpath
     ctx.obj['OFFSHORE_FPATH'] = offshore_fpath
     ctx.obj['POINTS'] = points
@@ -182,7 +191,7 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
     return cmd
 
 
-@main.command()
+@direct.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
 @click.option('--feature', '-l', default=None, type=STR,

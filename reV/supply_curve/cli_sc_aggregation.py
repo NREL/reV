@@ -22,7 +22,20 @@ from rex.utilities.utilities import dict_str_load
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.option('--name', '-n', default='reV-agg', type=STR,
+              help='Job name. Default is "reV-agg".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Supply Curve Aggregation Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV exclusions configuration json file.')
@@ -123,9 +136,7 @@ def from_config(ctx, config_file, verbose):
                    module=config.execution_control.module)
 
 
-@click.group(invoke_without_command=True)
-@click.option('--name', '-n', default='agg', type=STR,
-              help='Job name. Default is "agg".')
+@main.group(invoke_without_command=True)
 @click.option('--excl_fpath', '-ef', type=STR, required=True,
               help='Exclusions file (.h5).')
 @click.option('--gen_fpath', '-gf', type=STR, required=True,
@@ -182,14 +193,13 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
-         check_excl_layers, res_class_dset, res_class_bins, cf_dset, lcoe_dset,
-         data_layers, resolution, power_density, area_filter_kernel, min_area,
-         friction_fpath, friction_dset, out_dir, log_dir, verbose):
+def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
+           check_excl_layers, res_class_dset, res_class_bins, cf_dset,
+           lcoe_dset, data_layers, resolution, power_density,
+           area_filter_kernel, min_area, friction_fpath, friction_dset,
+           out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
-
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
+    name = ctx.obj['NAME']
     ctx.obj['EXCL_FPATH'] = excl_fpath
     ctx.obj['GEN_FPATH'] = gen_fpath
     ctx.obj['RES_FPATH'] = res_fpath
@@ -334,7 +344,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
     return cmd
 
 
-@main.command()
+@direct.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
 @click.option('--walltime', '-wt', default=1.0, type=float,

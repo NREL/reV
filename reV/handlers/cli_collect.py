@@ -19,7 +19,20 @@ from rex.utilities.loggers import init_mult
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.option('--name', '-n', default='reV_collect', type=str,
+              help='Collection job name. Default is "reV_collect".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Collect Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV collection configuration json file.')
@@ -98,9 +111,7 @@ def from_config(ctx, config_file, verbose):
                        verbose=verbose)
 
 
-@click.group()
-@click.option('--name', '-n', default='reV_collect', type=str,
-              help='Collection job name. Default is "reV_collect".')
+@main.command()
 @click.option('--h5_file', '-f', required=True, type=click.Path(),
               help='H5 file to be collected into.')
 @click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
@@ -119,11 +130,9 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
-         log_dir, purge_chunks, verbose):
+def direct(ctx, h5_file, h5_dir, project_points, dsets, file_prefix,
+           log_dir, purge_chunks, verbose):
     """Main entry point for collection with context passing."""
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
     ctx.obj['H5_FILE'] = h5_file
     ctx.obj['H5_DIR'] = h5_dir
     ctx.obj['PROJECT_POINTS'] = project_points
@@ -134,7 +143,7 @@ def main(ctx, name, h5_file, h5_dir, project_points, dsets, file_prefix,
     ctx.obj['VERBOSE'] = verbose
 
 
-@main.command()
+@direct.command()
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
@@ -254,7 +263,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
     return cmd
 
 
-@main.command()
+@direct.command()
 @click.option('--alloc', '-a', default='rev', type=str,
               help='SLURM allocation account name. Default is "rev".')
 @click.option('--memory', '-mem', default=None, type=INT,

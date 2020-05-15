@@ -13,7 +13,6 @@ from warnings import warn
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.sam_analysis_configs import EconConfig
 from reV.econ.econ import Econ
-from reV.generation.cli_gen import main
 from reV.generation.cli_gen import get_node_name_fout, make_fout
 from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
@@ -24,6 +23,19 @@ from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import parse_year
 
 logger = logging.getLogger(__name__)
+
+
+@click.group()
+@click.option('--name', '-n', default='reV-econ', type=STR,
+              help='reV Economics job name, by default "reV-econ".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Economics Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['VERBOSE'] = verbose
+    ctx.obj['NAME'] = name
 
 
 @main.command()

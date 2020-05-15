@@ -19,7 +19,20 @@ from rex.utilities.loggers import init_mult
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.option('--name', '-n', default='reV-rep_profiles', type=STR,
+              help='Job name. Default is "reV-rep_profiles".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Representative Profiles Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV representative profiles configuration json file.')
@@ -113,9 +126,7 @@ def from_config(ctx, config_file, verbose):
                        module=config.execution_control.module)
 
 
-@click.group(invoke_without_command=True)
-@click.option('--name', '-n', default='rep_profiles', type=STR,
-              help='Job name. Default is "rep_profiles".')
+@main.group(invoke_without_command=True)
 @click.option('--gen_fpath', '-g', type=click.Path(exists=True), required=True,
               help='Filepath to reV gen file.')
 @click.option('--rev_summary', '-r', type=click.Path(exists=True),
@@ -152,13 +163,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
-         err_method, weight, n_profiles, out_dir, log_dir, max_workers,
-         aggregate_profiles, verbose):
+def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
+           err_method, weight, n_profiles, out_dir, log_dir, max_workers,
+           aggregate_profiles, verbose):
     """reV representative profiles CLI."""
-
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
+    name = ctx.obj['NAME']
     ctx.obj['GEN_FPATH'] = gen_fpath
     ctx.obj['REV_SUMMARY'] = rev_summary
     ctx.obj['REG_COLS'] = reg_cols
@@ -246,7 +255,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
     return cmd
 
 
-@main.command()
+@direct.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
 @click.option('--memory', '-mem', default=None, type=INT,
