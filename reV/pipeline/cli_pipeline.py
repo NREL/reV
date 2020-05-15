@@ -4,8 +4,21 @@ Pipeline CLI entry points.
 """
 import click
 
-from reV.generation.cli_gen import main
 from reV.pipeline.pipeline import Pipeline
+from rex.utilities.cli_dtypes import STR
+
+
+@click.group()
+@click.option('--name', '-n', default='reV-pipeline', type=STR,
+              help='reV pipeline name, by default "reV-pipeline".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Pipeline Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
 
 
 @main.command()
