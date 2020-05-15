@@ -506,8 +506,8 @@ class SummaryPlots:
         fig.show()
 
     @classmethod
-    def scatter(cls, summary_csv, out_dir, value, type='plot', cmap='viridis',
-                **kwargs):
+    def scatter(cls, summary_csv, out_dir, value, plot_type='plot',
+                cmap='viridis', **kwargs):
         """
         Create scatter plot for given value in summary table and save to
         out_dir
@@ -520,31 +520,33 @@ class SummaryPlots:
             Output directory to save plots to
         value : str
             Column name to plot as color
-        type : str, optional
-            Type of plot to create 'plot' or 'plotly', by default 'plot'
+        plot_type : str, optional
+            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
         cmap : str, optional
             Colormap name, by default 'viridis'
         kwargs : dict
             Additional plotting kwargs
         """
         splt = cls(summary_csv)
-        if type == 'plot':
+        if plot_type == 'plot':
             out_path = os.path.basename(summary_csv).replace('.csv', '.png')
             out_path = os.path.join(out_dir, out_path)
-            splt.scatter_plot(value, cmap=cmap, out_path=out_path, **kwargs)
-        elif type == 'plotly':
+            splt.scatter_plot(value, cmap=cmap.lower(), out_path=out_path,
+                              **kwargs)
+        elif plot_type == 'plotly':
             out_path = os.path.basename(summary_csv).replace('.csv', '.html')
             out_path = os.path.join(out_dir, out_path)
-            splt.scatter_plotly(value, cmap=cmap, out_path=out_path, **kwargs)
+            splt.scatter_plotly(value, cmap=cmap.capitalize(),
+                                out_path=out_path, **kwargs)
         else:
-            msg = ("type must be 'plot' or 'plotly' but {} was given"
-                   .format(type))
+            msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
+                   .format(plot_type))
             logger.error(msg)
             raise ValueError(msg)
 
     @classmethod
-    def scatter_all(cls, summary_csv, out_dir, type='plot', cmap='viridis',
-                    **kwargs):
+    def scatter_all(cls, summary_csv, out_dir, plot_type='plot',
+                    cmap='viridis', **kwargs):
         """
         Create scatter plot for all summary stats in summary table and save to
         out_dir
@@ -555,8 +557,8 @@ class SummaryPlots:
             Path to .csv file containing summary table
         out_dir : str
             Output directory to save plots to
-        type : str, optional
-            Type of plot to create 'plot' or 'plotly', by default 'plot'
+        plot_type : str, optional
+            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
         cmap : str, optional
             Colormap name, by default 'viridis'
         kwargs : dict
@@ -570,28 +572,28 @@ class SummaryPlots:
                 datasets.append(c)
 
         for value in datasets:
-            if type == 'plot':
+            if plot_type == 'plot':
                 out_path = '_{}.png'.format(value)
                 out_path = \
                     os.path.basename(summary_csv).replace('.csv', out_path)
                 out_path = os.path.join(out_dir, out_path)
-                splt.scatter_plot(value, cmap=cmap, out_path=out_path,
+                splt.scatter_plot(value, cmap=cmap.lower(), out_path=out_path,
                                   **kwargs)
-            elif type == 'plotly':
+            elif plot_type == 'plotly':
                 out_path = '_{}.html'.format(value)
                 out_path = \
                     os.path.basename(summary_csv).replace('.csv', out_path)
                 out_path = os.path.join(out_dir, out_path)
-                splt.scatter_plotly(value, cmap=cmap, out_path=out_path,
-                                    **kwargs)
+                splt.scatter_plotly(value, cmap=cmap.capitalize(),
+                                    out_path=out_path, **kwargs)
             else:
-                msg = ("type must be 'plot' or 'plotly' but {} was given"
-                       .format(type))
+                msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
+                       .format(plot_type))
                 logger.error(msg)
                 raise ValueError(msg)
 
     @classmethod
-    def supply_curve(cls, summary_csv, out_dir, type='plot',
+    def supply_curve(cls, summary_csv, out_dir, plot_type='plot',
                      lcoe='total_lcoe', **kwargs):
         """
         Create supply curve plot from summary csv using lcoe value and save
@@ -603,24 +605,24 @@ class SummaryPlots:
             Path to .csv file containing summary table
         out_dir : str
             Output directory to save plots to
-        type : str, optional
-            Type of plot to create 'plot' or 'plotly', by default 'plot'
+        plot_type : str, optional
+            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
         lcoe : str, optional
             LCOE value to plot, by default 'total_lcoe'
         kwargs : dict
             Additional plotting kwargs
         """
         splt = cls(summary_csv)
-        if type == 'plot':
+        if plot_type == 'plot':
             out_path = os.path.basename(summary_csv).replace('.csv', '.png')
             out_path = os.path.join(out_dir, out_path)
             splt.supply_curve_plot(lcoe=lcoe, out_path=out_path, **kwargs)
-        elif type == 'plotly':
+        elif plot_type == 'plotly':
             out_path = os.path.basename(summary_csv).replace('.csv', '.html')
             out_path = os.path.join(out_dir, out_path)
             splt.supply_curve_plotly(lcoe=lcoe, out_path=out_path, **kwargs)
         else:
-            msg = ("type must be 'plot' or 'plotly' but {} was given"
-                   .format(type))
+            msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
+                   .format(plot_type))
             logger.error(msg)
             raise ValueError(msg)
