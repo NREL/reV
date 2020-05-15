@@ -111,7 +111,7 @@ def from_config(ctx, config_file, verbose):
                        verbose=verbose)
 
 
-@main.command()
+@main.group()
 @click.option('--h5_file', '-f', required=True, type=click.Path(),
               help='H5 file to be collected into.')
 @click.option('--h5_dir', '-d', required=True, type=click.Path(exists=True),
