@@ -51,6 +51,8 @@ def from_config(ctx, config_file, verbose):
     if config.name.lower() != 'rev':
         name = config.name
 
+    ctx.obj['NAME'] = name
+
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
         verbose = True
@@ -77,8 +79,7 @@ def from_config(ctx, config_file, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
-            ctx.invoke(main,
-                       name=name,
+            ctx.invoke(direct,
                        sc_points=config.sc_points,
                        trans_table=config.trans_table,
                        fixed_charge_rate=config.fixed_charge_rate,

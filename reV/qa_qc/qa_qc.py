@@ -156,7 +156,7 @@ class QaQc:
 
     @classmethod
     def supply_curve(cls, sc_table, out_dir, columns=None,
-                     lcoe='total_lcoe', plot_type='plotly', **kwargs):
+                     lcoe='mean_lcoe', plot_type='plotly', **kwargs):
         """
         Plot supply curve
 
@@ -170,7 +170,7 @@ class QaQc:
             Column(s) to summarize, if None summarize all numeric columns,
             by default None
         lcoe : str, optional
-            LCOE value to plot, by default 'total_lcoe'
+            LCOE value to plot, by default 'mean_lcoe'
         plot_type : str, optional
             plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         kwargs : dict

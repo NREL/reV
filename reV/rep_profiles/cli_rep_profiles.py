@@ -50,6 +50,8 @@ def from_config(ctx, config_file, verbose):
     if config.name.lower() != 'rev':
         name = config.name
 
+    ctx.obj['NAME'] = name
+
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
         verbose = True
@@ -93,13 +95,20 @@ def from_config(ctx, config_file, verbose):
                     job_attrs={'hardware': 'local',
                                'fout': '{}.h5'.format(name),
                                'dirout': config.dirout})
-                ctx.invoke(main, name, gen_fpath, config.rev_summary,
-                           config.reg_cols, dset, config.rep_method,
-                           config.err_method, config.weight,
-                           config.dirout, config.logdir,
-                           config.execution_control.max_workers,
-                           config.aggregate_profiles,
-                           verbose)
+                ctx.invoke(direct,
+                           gen_fpath=gen_fpath,
+                           rev_summary=config.rev_summary,
+                           reg_cols=config.reg_cols,
+                           cf_dset=dset,
+                           rep_method=config.rep_method,
+                           err_method=config.err_method,
+                           weight=config.weight,
+                           out_dir=config.dirout,
+                           log_dir=config.logdir,
+                           n_profiles=config.n_profiles,
+                           max_workers=config.execution_control.max_workers,
+                           aggregate_profiles=config.aggregate_profiles,
+                           verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
             ctx.obj['NAME'] = name

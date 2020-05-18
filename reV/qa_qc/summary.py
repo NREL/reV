@@ -489,14 +489,14 @@ class SummaryPlots:
 
         fig.show()
 
-    def _extract_sc_data(self, lcoe='total_lcoe'):
+    def _extract_sc_data(self, lcoe='mean_lcoe'):
         """
         Extract supply curve data
 
         Parameters
         ----------
         lcoe : str, optional
-            LCOE value to use for supply curve, by default 'total_lcoe'
+            LCOE value to use for supply curve, by default 'mean_lcoe'
 
         Returns
         -------
@@ -510,14 +510,14 @@ class SummaryPlots:
 
         return sc_df
 
-    def supply_curve_plot(self, lcoe='total_lcoe', out_path=None, **kwargs):
+    def supply_curve_plot(self, lcoe='mean_lcoe', out_path=None, **kwargs):
         """
         Plot supply curve (cumulative capacity vs lcoe) using seaborn.scatter
 
         Parameters
         ----------
         lcoe : str, optional
-            LCOE value to plot, by default 'total_lcoe'
+            LCOE value to plot, by default 'mean_lcoe'
         out_path : str, optional
             File path to save plot to, by default None
         kwargs : dict
@@ -527,14 +527,14 @@ class SummaryPlots:
         mplt.df_scatter(sc_df, x='cumulative_capacity', y=lcoe,
                         filename=out_path, **kwargs)
 
-    def supply_curve_plotly(self, lcoe='total_lcoe', out_path=None, **kwargs):
+    def supply_curve_plotly(self, lcoe='mean_lcoe', out_path=None, **kwargs):
         """
         Plot supply curve (cumulative capacity vs lcoe) using plotly
 
         Parameters
         ----------
         lcoe : str, optional
-            LCOE value to plot, by default 'total_lcoe'
+            LCOE value to plot, by default 'mean_lcoe'
         out_path : str, optional
             File path to save plot to, can be a .html or static image,
             by default None
@@ -678,7 +678,7 @@ class SummaryPlots:
 
     @classmethod
     def supply_curve(cls, sc_table, out_dir, plot_type='plotly',
-                     lcoe='total_lcoe', **kwargs):
+                     lcoe='mean_lcoe', **kwargs):
         """
         Create supply curve plot from supply curve table using lcoe value
         and save to out_dir
@@ -692,7 +692,7 @@ class SummaryPlots:
         plot_type : str, optional
             plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         lcoe : str, optional
-            LCOE value to plot, by default 'total_lcoe'
+            LCOE value to plot, by default 'mean_lcoe'
         kwargs : dict
             Additional plotting kwargs
         """
