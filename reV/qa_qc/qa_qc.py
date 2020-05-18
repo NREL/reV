@@ -34,8 +34,8 @@ class QaQc:
         self._dsets = dsets
 
     @staticmethod
-    def _scatter_plot(summary_csv, out_root, plot_type='plot', cmap='viridis',
-                      **kwargs):
+    def _scatter_plot(summary_csv, out_root, plot_type='plotly',
+                      cmap='viridis', **kwargs):
         """
         Create scatter plot for all summary stats in summary table and save to
         out_dir
@@ -47,7 +47,7 @@ class QaQc:
         out_root : str
             Output directory to save plots to
         plot_type : str, optional
-            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
             Colormap name, by default 'viridis'
         kwargs : dict
@@ -62,7 +62,7 @@ class QaQc:
                                  cmap=cmap, **kwargs)
 
     @staticmethod
-    def _scatter_plots(out_dir, plot_type='plot', cmap='viridis', **kwargs):
+    def _scatter_plots(out_dir, plot_type='plotly', cmap='viridis', **kwargs):
         """
         Create scatter plot for all compatible summary .csv files
 
@@ -71,7 +71,7 @@ class QaQc:
         out_dir : str
             Directory path to save summary tables and plots too
         plot_type : str, optional
-            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
             Colormap name, by default 'viridis'
         kwargs : dict
@@ -104,14 +104,14 @@ class QaQc:
                       dsets=self._dsets, process_size=process_size,
                       max_workers=max_workers)
 
-    def scatter_plots(self, plot_type='plot', cmap='viridis', **kwargs):
+    def scatter_plots(self, plot_type='plotly', cmap='viridis', **kwargs):
         """
         Create scatter plot for all compatible summary .csv files
 
         Parameters
         ----------
         plot_type : str, optional
-            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
             Colormap name, by default 'viridis'
         kwargs : dict
@@ -122,7 +122,7 @@ class QaQc:
 
     @classmethod
     def run(cls, h5_file, out_dir, dsets=None, group=None, process_size=None,
-            max_workers=None, plot_type='plot', cmap='viridis', **kwargs):
+            max_workers=None, plot_type='plotly', cmap='viridis', **kwargs):
         """
         Run QA/QC by computing summary stats from dsets in h5_file and
         plotting scatters plots of compatible summary stats
@@ -143,7 +143,7 @@ class QaQc:
             Number of workers to use when summarizing 2D datasets,
             by default None
         plot_type : str, optional
-            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
             Colormap name, by default 'viridis'
         kwargs : dict
@@ -156,7 +156,7 @@ class QaQc:
 
     @classmethod
     def supply_curve(cls, sc_table, out_dir, columns=None,
-                     lcoe='total_lcoe', plot_type='plot', **kwargs):
+                     lcoe='total_lcoe', plot_type='plotly', **kwargs):
         """
         Plot supply curve
 
@@ -172,7 +172,7 @@ class QaQc:
         lcoe : str, optional
             LCOE value to plot, by default 'total_lcoe'
         plot_type : str, optional
-            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         kwargs : dict
             Additional plotting kwargs
         """

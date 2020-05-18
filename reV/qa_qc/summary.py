@@ -590,7 +590,7 @@ class SummaryPlots:
         fig.show()
 
     @classmethod
-    def scatter(cls, summary_csv, out_dir, value, plot_type='plot',
+    def scatter(cls, summary_csv, out_dir, value, plot_type='plotly',
                 cmap='viridis', **kwargs):
         """
         Create scatter plot for given value in summary table and save to
@@ -605,7 +605,7 @@ class SummaryPlots:
         value : str
             Column name to plot as color
         plot_type : str, optional
-            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
             Colormap name, by default 'viridis'
         kwargs : dict
@@ -629,7 +629,7 @@ class SummaryPlots:
             raise ValueError(msg)
 
     @classmethod
-    def scatter_all(cls, summary_csv, out_dir, plot_type='plot',
+    def scatter_all(cls, summary_csv, out_dir, plot_type='plotly',
                     cmap='viridis', **kwargs):
         """
         Create scatter plot for all summary stats in summary table and save to
@@ -642,7 +642,7 @@ class SummaryPlots:
         out_dir : str
             Output directory to save plots to
         plot_type : str, optional
-            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
             Colormap name, by default 'viridis'
         kwargs : dict
@@ -677,7 +677,7 @@ class SummaryPlots:
                 raise ValueError(msg)
 
     @classmethod
-    def supply_curve(cls, sc_table, out_dir, plot_type='plot',
+    def supply_curve(cls, sc_table, out_dir, plot_type='plotly',
                      lcoe='total_lcoe', **kwargs):
         """
         Create supply curve plot from supply curve table using lcoe value
@@ -690,7 +690,7 @@ class SummaryPlots:
         out_dir : str
             Output directory to save plots to
         plot_type : str, optional
-            plot_type of plot to create 'plot' or 'plotly', by default 'plot'
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         lcoe : str, optional
             LCOE value to plot, by default 'total_lcoe'
         kwargs : dict

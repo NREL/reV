@@ -68,7 +68,7 @@ def h5(ctx, h5_file, dsets, group, process_size, max_workers):
 
 
 @summarize.command()
-@click.option('--plot_type', '-plt', default='plot',
+@click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
@@ -101,7 +101,7 @@ def supply_curve_table(ctx, sc_table, columns):
 @click.option('--sc_table', '-sct', type=click.Path(exists=True), default=None,
               help=("Path to .csv containing Supply Curve table, can be "
                     "supplied in 'supply-curve-table'"))
-@click.option('--plot_type', '-plt', default='plot',
+@click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
@@ -134,7 +134,7 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
 @click.option('--max_workers', '-w', type=INT, default=None,
               help=('Number of workers to use when summarizing 2D datasets,'
                     ' by default None'))
-@click.option('--plot_type', '-plt', default='plot',
+@click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
@@ -170,7 +170,7 @@ def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
 @click.option('--columns', '-cols', type=STRLIST, default=None,
               help=('Column(s) to summarize, if None summarize all numeric '
                     'columns, by default None'))
-@click.option('--plot_type', '-plt', default='plot',
+@click.option('--plot_type', '-plt', default='plotly',
               type=click.Choice(['plot', 'plotly'], case_sensitive=False),
               help=(" plot_type of plot to create 'plot' or 'plotly', by "
                     "default 'plot'"))
