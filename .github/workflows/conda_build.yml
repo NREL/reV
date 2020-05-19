@@ -31,5 +31,5 @@ jobs:
         export CONDA_BLD_PATH
         conda install --yes --quiet conda-build conda-verify
         conda install --yes --quiet anaconda-client
-        conda-build conda.recipe/ --python=${{ matrix.python-version }}
+        conda-build conda.recipe/ --python=${{ matrix.python-version }} --channel=nrel
         anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload -u nrel $(conda-build conda.recipe/ --python=${{ matrix.python-version }} --output)
