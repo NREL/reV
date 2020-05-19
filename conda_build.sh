@@ -27,7 +27,7 @@ done
 find $CONDA_BLD_PATH/ -name *.tar.bz2 | while read file
 do
     echo $file
-    anaconda -t $ANACONDA_TOKEN upload -u nrel $file
+    anaconda upload -u nrel $file
 done
 
 echo "Building and uploading conda package done!"
