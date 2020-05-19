@@ -32,8 +32,8 @@ requirements:
     - scipy
 
 about:
-  home: "https://github.com/NREL/rex"
+  home: "https://github.com/NREL/reV"
   license: BSD 3-Clause
-  summary: "REsource eXtraction (rex) tool"
-  doc_url: "https://nrel.github.io/rex"
-  dev_url: "https://github.com/NREL/rex"
+  summary: "The Renewable Energy Potential (reV) Model"
+  doc_url: "https://nrel.github.io/reV"
+  dev_url: "https://github.com/NREL/reV"
