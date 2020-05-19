@@ -14,22 +14,22 @@ do
 done
 
 # # convert package to other platforms
-# platforms=( osx-64 linux-64 win-64 )
-# find $CONDA_BLD_PATH/ -name $PKG_NAME*.tar.bz2 | while read file
-# do
-#     echo $file
-#     for platform in "${platforms[@]}"
-#     do
-#        conda convert --platform $platform $file  -o $CONDA_BLD_PATH/
-#     done
-# done
+platforms=( osx-64 linux-64 win-64 )
+find $CONDA_BLD_PATH/ -name $PKG_NAME*.tar.bz2 | while read file
+do
+    echo $file
+    for platform in "${platforms[@]}"
+    do
+       conda convert --platform $platform $file  -o $CONDA_BLD_PATH/
+    done
+done
 
-# # upload packages to conda
-# find $CONDA_BLD_PATH/ -name $PKG_NAME*.tar.bz2 | while read file
-# do
-#     echo $file
-#     anaconda upload -u nrel $file
-# done
+# upload packages to conda
+find $CONDA_BLD_PATH/ -name $PKG_NAME*.tar.bz2 | while read file
+do
+    echo $file
+    anaconda upload -u nrel $file
+done
 
-# echo "Building and uploading conda package done!"
-# rm -rf $CONDA_BLD_PATH/*
+echo "Building and uploading conda package done!"
+rm -rf $CONDA_BLD_PATH/*

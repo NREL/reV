@@ -78,10 +78,16 @@ Option 1: PIP Install (recommended for analysts):
 
 1. Create a new environment:
     ``conda create --name rev python=3.7``
+
 2. Activate directory:
     ``conda activate rev``
+
 3. Install reV:
-    ``pip install NREL-reV``
+    1) ``pip install NREL-reV`` or
+    2) ``conda install nrel-rev --channel=nrel``
+
+       - NOTE: If you conda install and want to you HSDS you'll also need to
+         install h5pyd manually: ``pip install h5pyd``
 
 Option 2: Clone repo (recommended for developers)
 -------------------------------------------------
