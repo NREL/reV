@@ -1,0 +1,35 @@
+name: Conda Build and Upload
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    name: Conda (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 3
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+        python-version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: goanpeca/setup-miniconda@v1.0.2
+      with:
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+
+    - name: Build and upload conda package ${{ matrix.python-version }}
+      shell: bash
+      run: |
+        CONDA_BLD_PATH=$HOME/conda-bld
+        export CONDA_BLD_PATH
+        conda install --yes --quiet conda-build conda-verify
+        conda install --yes --quiet anaconda-client
+        conda-build conda.recipe/ --python=${{ matrix.python-version }}
+        anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload -u nrel $(conda-build conda.recipe/ --python=${{ matrix.python-version }} --output)

@@ -1,0 +1,39 @@
+package:
+    name: NREL-reV
+    version: {{ environ.get('GIT_DESCRIBE_TAG','').replace('v', '', 1) }}
+
+build:
+  number: 0
+
+source:
+    git_url: ../
+
+requirements:
+  build:
+    - python
+    - pip
+    - click
+    - h5py
+    - NREL-PySAM==1.2.1
+    - NREL-rex>=0.1.3
+    - numpy
+    - pandas
+    - psutil
+    - scipy
+  run:
+    - python {{ python }}
+    - click
+    - h5py
+    - NREL-PySAM==1.2.1
+    - NREL-rex>=0.1.3
+    - {{ pin_compatible('numpy') }}
+    - pandas
+    - psutil
+    - scipy
+
+about:
+  home: "https://github.com/NREL/rex"
+  license: BSD 3-Clause
+  summary: "REsource eXtraction (rex) tool"
+  doc_url: "https://nrel.github.io/rex"
+  dev_url: "https://github.com/NREL/rex"
