@@ -2,9 +2,6 @@
 reV
 ***
 
-.. image:: https://badge.fury.io/py/NREL-reV.svg
-    :target: https://badge.fury.io/py/NREL-reV
-
 .. image:: https://github.com/NREL/reV/workflows/Documentation/badge.svg
     :target: https://nrel.github.io/reV/
 
@@ -13,6 +10,21 @@ reV
 
 .. image:: https://img.shields.io/pypi/pyversions/NREL-reV.svg
     :target: https://pypi.org/project/NREL-reV/
+
+.. image:: https://badge.fury.io/py/NREL-reV.svg
+    :target: https://badge.fury.io/py/NREL-reV
+
+.. image:: https://anaconda.org/nrel/nrel-rev/badges/version.svg
+    :target: https://anaconda.org/nrel/nrel-rev
+
+.. image:: https://anaconda.org/nrel/nrel-rev/badges/platforms.svg
+    :target: https://anaconda.org/nrel/nrel-rev
+
+.. image:: https://anaconda.org/nrel/nrel-rev/badges/downloads.svg
+    :target: https://anaconda.org/nrel/nrel-rev
+
+.. image:: https://anaconda.org/nrel/nrel-rev/badges/license.svg
+    :target: https://anaconda.org/nrel/nrel-rev
 
 The Renewable Energy Potential (reV) Model
 
