@@ -21,7 +21,6 @@ done
 # upload packages to conda
 find $CONDA_BLD_PATH/ -name $PKG_NAME*.tar.bz2 | while read file
 do
-    echo Uploading $file
     anaconda upload -u nrel $file
 done
 
