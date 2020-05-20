@@ -13,7 +13,7 @@ requirements:
     - python
     - pip
   run:
-    - python {{ python }}
+    - python
     - click
     - h5py
     - nrel-pysam==1.2.1
