@@ -231,7 +231,8 @@ def from_config(ctx, config_file, verbose):
 
     # initialize loggers
     init_mult(name, config.logdir, modules=[__name__, 'reV.config',
-                                            'reV.utilities', 'reV.qa_qc'],
+                                            'reV.utilities', 'reV.qa_qc',
+                                            'rex.utilities'],
               verbose=verbose)
 
     # Initial log statements

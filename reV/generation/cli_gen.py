@@ -70,7 +70,8 @@ def from_config(ctx, config_file, verbose):
     # initialize loggers.
     init_mult(name, config.logdir,
               modules=[__name__, 'reV.generation.generation',
-                       'reV.config', 'reV.utilities', 'reV.SAM'],
+                       'reV.config', 'reV.utilities', 'reV.SAM',
+                       'rex.utilities'],
               verbose=verbose)
 
     # Initial log statements
@@ -306,7 +307,8 @@ def gen_local(ctx, max_workers, timeout, points_range, verbose):
 
     # initialize loggers for multiple modules
     init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
-                                     'reV.config', 'reV.utilities', 'reV.SAM'],
+                                     'reV.config', 'reV.utilities', 'reV.SAM',
+                                     'rex.utilities'],
               verbose=verbose, node=True)
 
     for key, val in ctx.obj.items():

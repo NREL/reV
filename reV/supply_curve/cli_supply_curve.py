@@ -59,7 +59,7 @@ def from_config(ctx, config_file, verbose):
 
     # initialize loggers
     init_mult(name, config.logdir, modules=[__name__, 'reV.config',
-                                            'reV.utilities'],
+                                            'reV.utilities', 'rex.utilities'],
               verbose=verbose)
 
     # Initial log statements
@@ -188,7 +188,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
     if ctx.invoked_subcommand is None:
         t0 = time.time()
         init_mult(name, log_dir, modules=[__name__, 'reV.supply_curve',
-                                          'reV.handlers'],
+                                          'reV.handlers', 'rex'],
                   verbose=verbose)
 
         if isinstance(transmission_costs, str):
