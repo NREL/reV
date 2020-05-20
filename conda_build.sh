@@ -8,16 +8,9 @@ PY_VERSION=( 3.7 )
 
 export CONDA_BLD_PATH=~/conda-bld
 
-platforms=( osx-64 linux-64 win-64 )
 for py in "${PY_VERSION[@]}"
 do
 	conda build conda.recipe/ --python=$py --channel=nrel
-    file=$(conda build conda.recipe/ --python=$py --output)
-    echo Building $file
-    for platform in "${platforms[@]}"
-    do
-       conda convert -f --platform $platform $file -o $CONDA_BLD_PATH/
-    done
 done
 
 # upload packages to conda

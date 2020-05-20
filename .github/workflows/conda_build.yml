@@ -27,9 +27,8 @@ jobs:
     - name: Build and upload conda package ${{ matrix.python-version }}
       shell: bash
       run: |
-        CONDA_BLD_PATH=$HOME/conda-bld
-        export CONDA_BLD_PATH
+        export CONDA_BLD_PATH=$HOME/conda-bld
         conda install --yes --quiet conda-build conda-verify
         conda install --yes --quiet anaconda-client
-        conda-build conda.recipe/ --python=${{ matrix.python-version }} --channel=nrel
+        conda build conda.recipe/ --python=${{ matrix.python-version }} --channel=nrel
         anaconda -t ${{ secrets.ANACONDA_TOKEN }} upload -u nrel $(conda-build conda.recipe/ --python=${{ matrix.python-version }} --output)
