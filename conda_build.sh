@@ -16,7 +16,7 @@ do
     echo Building $file
     for platform in "${platforms[@]}"
     do
-       conda convert --platform $platform $file -o $CONDA_BLD_PATH/
+       conda convert -f --platform $platform $file -o $CONDA_BLD_PATH/
     done
 done
 
