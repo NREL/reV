@@ -21,6 +21,9 @@
     },
     {
       "rep-profiles": "./config_rep-profiles.json"
+    },
+    {
+      "QA-QC": "./config_qa-qc.json"
     }
   ]
 }

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class QaQcConfig(AnalysisConfig):
     """QA/QC config."""
 
-    NAME = 'QA_QC'
+    NAME = 'QA-QC'
 
     REQUIREMENTS = ('modules',)
 
@@ -88,9 +88,9 @@ class QaQcConfig(AnalysisConfig):
         return rep_profiles
 
     @property
-    def aggregation(self):
+    def supply_curve_aggregation(self):
         """Get the aggregation QA/QC inputs in the config dict."""
-        aggregation = self.modules.get('aggregation', None)
+        aggregation = self.modules.get('supply-curve-aggregation', None)
         if aggregation is not None:
             aggregation = QaQcModule(
                 'aggregation', aggregation, self.dirout)

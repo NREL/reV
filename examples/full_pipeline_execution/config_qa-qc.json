@@ -1,0 +1,41 @@
+{
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "memory": 90,
+    "nodes": 20,
+    "option": "eagle",
+    "sites_per_worker": 100,
+    "walltime": 4.0
+  },
+  "log_level": "INFO",
+  "modules": {
+    "collect": {
+      "fpath": "PIPELINE",
+      "out_dir": "./QA_collect"
+    },
+    "multi-year": {
+      "fpath": "PIPELINE",
+      "out_dir": "./QA_multi-year",
+      "plot_type": "plot"
+    },
+    "rep-profiles": {
+      "fpath": "PIPELINE",
+      "out_dir": "./QA_rep-profiles"
+    },
+    "supply-curve": {
+      "fpath": "PIPELINE",
+      "lcoe": "total_lcoe",
+      "out_dir": "./QA_supply-curve"
+    },
+    "supply-curve-aggregation": {
+      "fpath": "PIPELINE",
+      "out_dir": "./QA_supply-curve-aggregation",
+      "plot_type": "plot"
+    }
+  }
+}
