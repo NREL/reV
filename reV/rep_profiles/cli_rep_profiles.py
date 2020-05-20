@@ -226,8 +226,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                  aggregate_profiles, verbose):
     """Get a CLI call command for the rep profiles cli."""
 
-    args = ('-n {name} '
-            '-g {gen_fpath} '
+    args = ('-g {gen_fpath} '
             '-r {rev_summary} '
             '-rc {reg_cols} '
             '-cf {cf_dset} '
@@ -240,8 +239,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
             '-mw {max_workers} '
             )
 
-    args = args.format(name=SLURM.s(name),
-                       gen_fpath=SLURM.s(gen_fpath),
+    args = args.format(gen_fpath=SLURM.s(gen_fpath),
                        rev_summary=SLURM.s(rev_summary),
                        reg_cols=SLURM.s(reg_cols),
                        cf_dset=SLURM.s(cf_dset),
@@ -260,7 +258,9 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
     if verbose:
         args += '-v '
 
-    cmd = 'python -m reV.rep_profiles.cli_rep_profiles {}'.format(args)
+    cmd = ('python -m reV.rep_profiles.cli_rep_profiles -n {} direct {}'
+           .format(SLURM.s(name), args))
+
     return cmd
 
 

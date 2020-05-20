@@ -38,7 +38,7 @@ def main(ctx, name, verbose):
 @main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
-              help='reV exclusions configuration json file.')
+              help='reV aggregation configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -293,8 +293,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                  out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
-    args = ('-n {name} '
-            '-ef {excl_fpath} '
+    args = ('-ef {excl_fpath} '
             '-gf {gen_fpath} '
             '-rf {res_fpath} '
             '-tm {tm_dset} '
@@ -314,8 +313,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
             '-ld {log_dir} '
             )
 
-    args = args.format(name=SLURM.s(name),
-                       excl_fpath=SLURM.s(excl_fpath),
+    args = args.format(excl_fpath=SLURM.s(excl_fpath),
                        gen_fpath=SLURM.s(gen_fpath),
                        res_fpath=SLURM.s(res_fpath),
                        tm_dset=SLURM.s(tm_dset),
@@ -341,7 +339,9 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
     if verbose:
         args += '-v '
 
-    cmd = 'python -m reV.supply_curve.cli_sc_aggregation {}'.format(args)
+    cmd = ('python -m reV.supply_curve.cli_sc_aggregation -n {} direct {}'
+           .format(SLURM.s(name), args))
+
     return cmd
 
 
@@ -365,7 +365,6 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
           stdout_path):
     """slurm (Eagle) submission tool for reV supply curve aggregation."""
-
     name = ctx.obj['NAME']
     excl_fpath = ctx.obj['EXCL_FPATH']
     gen_fpath = ctx.obj['GEN_FPATH']

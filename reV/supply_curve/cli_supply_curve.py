@@ -36,7 +36,7 @@ def main(ctx, name, verbose):
 @main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
-              help='reV exclusions configuration json file.')
+              help='reV supply curve configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -238,8 +238,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
                  max_workers, out_dir, log_dir, simple, line_limited, verbose):
     """Get a CLI call command for the Supply Curve cli."""
 
-    args = ('-n {name} '
-            '-sc {sc_points} '
+    args = ('-sc {sc_points} '
             '-tt {trans_table} '
             '-fcr {fixed_charge_rate} '
             '-scf {sc_features} '
@@ -251,8 +250,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-ld {log_dir} '
             )
 
-    args = args.format(name=SLURM.s(name),
-                       sc_points=SLURM.s(sc_points),
+    args = args.format(sc_points=SLURM.s(sc_points),
                        trans_table=SLURM.s(trans_table),
                        fixed_charge_rate=SLURM.s(fixed_charge_rate),
                        sc_features=SLURM.s(sc_features),
@@ -279,7 +277,9 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
     if verbose:
         args += '-v '
 
-    cmd = 'python -m reV.supply_curve.cli_supply_curve {}'.format(args)
+    cmd = ('python -m reV.supply_curve.cli_supply_curve -n {} direct {}'
+           .format(SLURM.s(name), args))
+
     return cmd
 
 
@@ -293,17 +293,16 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
-@click.option('--conda_env', '-env', default=None, type=STR,
-              help='Conda env to activate')
 @click.option('--module', '-mod', default=None, type=STR,
               help='Module to load')
+@click.option('--conda_env', '-env', default=None, type=STR,
+              help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
+def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
           stdout_path):
-    """slurm (eagle) submission tool for reV supply curve aggregation."""
-
+    """slurm (eagle) submission tool for reV supply curve."""
     name = ctx.obj['NAME']
     sc_points = ctx.obj['SC_POINTS']
     trans_table = ctx.obj['TRANS_TABLE']
