@@ -165,8 +165,9 @@ class QaQc:
                         .format(os.path.basename(h5_file), out_dir))
 
     @classmethod
-    def supply_curve(cls, sc_table, out_dir, columns=None,
-                     lcoe='mean_lcoe', plot_type='plotly', **kwargs):
+    def supply_curve(cls, sc_table, out_dir, columns=None, lcoe='mean_lcoe',
+                     plot_type='plotly', cmap='viridis', sc_plot_kwargs=None,
+                     scatter_plot_kwargs=None):
         """
         Plot supply curve
 
@@ -183,13 +184,25 @@ class QaQc:
             LCOE value to plot, by default 'mean_lcoe'
         plot_type : str, optional
             plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
-        kwargs : dict
-            Additional plotting kwargs
+        cmap : str, optional
+            Colormap name, by default 'viridis'
+        sc_plot_kwargs : dict, optional
+            Kwargs for supply curve plot, by default None
+        scatter_plot_kwargs : dict
+            Kwargs for scatter plot, by default None
         """
+        if sc_plot_kwargs is None:
+            sc_plot_kwargs = {}
+
+        if scatter_plot_kwargs is None:
+            scatter_plot_kwargs = {}
+
         try:
             Summarize.supply_curve(sc_table, out_dir, columns=columns)
             SummaryPlots.supply_curve(sc_table, out_dir, plot_type=plot_type,
-                                      lcoe=lcoe, **kwargs)
+                                      lcoe=lcoe, **sc_plot_kwargs)
+            QaQc._scatter_plot(sc_table, out_dir, plot_type=plot_type,
+                               cmap=cmap, **scatter_plot_kwargs)
         except Exception as e:
             logger.exception('QAQC failed on file: {}. Received exception:\n{}'
                              .format(os.path.basename(sc_table), e))
