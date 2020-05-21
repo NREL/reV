@@ -273,10 +273,9 @@ class Summarize:
                 meta = meta.reset_index()
 
             for ds_name in f.datasets:
-                if 'meta' not in ds_name and 'time_index' not in ds_name:
-                    shape = f.get_dset_properties(ds_name)[0]
-                    if len(shape) == 1:
-                        meta[ds_name] = f[ds_name]
+                shape, dtype, _ = f.get_dset_properties(ds_name)
+                if len(shape) == 1 and np.issubdtype(dtype, np.number):
+                    meta[ds_name] = f[ds_name]
 
         if out_path is not None:
             meta.to_csv(out_path, index=False)

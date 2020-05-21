@@ -82,7 +82,8 @@ class QaQc:
             if file.endswith('.csv'):
                 summary_csv = os.path.join(out_dir, file)
                 summary = pd.read_csv(summary_csv)
-                if 'gid' in summary:
+                if ('gid' in summary and 'latitude' in summary
+                        and 'longitude' in summary):
                     QaQc._scatter_plot(summary_csv, out_dir,
                                        plot_type=plot_type, cmap=cmap,
                                        **kwargs)
