@@ -155,7 +155,7 @@ class QaQcModule:
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self._out_root, 'QA-QC', target='fpath',
+                        self._out_root, 'qa-qc', target='fpath',
                         target_module=target_module)[0]
                 except KeyError:
                     pass

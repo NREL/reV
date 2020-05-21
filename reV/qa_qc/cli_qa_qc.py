@@ -130,7 +130,7 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
 @main.command()
 @click.option('--h5_file', '-h5', type=click.Path(exists=True), required=True,
               help='Path to .h5 file to summarize')
-@click.option('--out_dir', '-o', type=click.Path(), requried=True,
+@click.option('--out_dir', '-o', type=click.Path(), required=True,
               help="Directory path to save summary tables and plots too")
 @click.option('--dsets', '-ds', type=STRLIST, default=None,
               help='Datasets to summarize, by default None')
@@ -182,7 +182,7 @@ def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
 @main.command()
 @click.option('--sc_table', '-sct', type=click.Path(exists=True),
               required=True, help='Path to .csv containing Supply Curve table')
-@click.option('--out_dir', '-o', type=click.Path(), requried=True,
+@click.option('--out_dir', '-o', type=click.Path(), required=True,
               help="Directory path to save summary tables and plots too")
 @click.option('--columns', '-cols', type=STRLIST, default=None,
               help=('Column(s) to summarize, if None summarize all numeric '
@@ -313,7 +313,7 @@ def from_config(ctx, config_file, verbose):
                     raise ValueError(msg)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
-        launch_slurm(config)
+        launch_slurm(config, verbose)
 
 
 def get_h5_cmd(name, h5_file, out_dir, dsets, group, process_size, max_workers,
@@ -347,7 +347,7 @@ def get_h5_cmd(name, h5_file, out_dir, dsets, group, process_size, max_workers,
     if terminal:
         args += '-t '
 
-    cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} reV-h5 {}'
+    cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} rev-h5 {}'
            .format(SLURM.s(name), args))
 
     return cmd
@@ -384,7 +384,7 @@ def get_sc_cmd(name, sc_table, out_dir, columns, plot_type, lcoe, log_file,
     return cmd
 
 
-def launch_slurm(config):
+def launch_slurm(config, verbose):
     """
     Launch slurm QA/QC job
 
@@ -393,10 +393,10 @@ def launch_slurm(config):
     config : dict
         'reV QA/QC configuration dictionary'
     """
-    if config.log_level == logging.DEBUG:
-        verbose = True
 
     out_dir = config.dirout
+    log_file = os.path.join(config.logdir, config.name + '.log')
+    stdout_path = os.path.join(config.logdir, 'stdout/')
 
     node_cmd = []
     terminal = False
@@ -406,9 +406,6 @@ def launch_slurm(config):
         module_config = config.get_module_inputs(module)
         fpath = module_config.fpath
         if fpath.endswith('.h5'):
-            log_file = os.path.join(
-                config.logdir,
-                os.path.basename(fpath).replace('.h5', '.log'))
             node_cmd.append(get_h5_cmd(config.name, fpath,
                                        module_config.out_dir,
                                        module_config.dsets,
@@ -421,9 +418,6 @@ def launch_slurm(config):
                                        verbose,
                                        terminal))
         elif fpath.endswith('.csv'):
-            log_file = os.path.join(
-                config.logdir,
-                os.path.basename(fpath).replace('.csv', '.log'))
             node_cmd.append(get_sc_cmd(config.name, fpath,
                                        module_config.out_dir,
                                        module_config.columns,
@@ -453,7 +447,8 @@ def launch_slurm(config):
                       feature=config.execution_control.feature,
                       walltime=config.execution_control.walltime,
                       conda_env=config.execution_control.conda_env,
-                      module=config.execution_control.module)
+                      module=config.execution_control.module,
+                      stdout_path=stdout_path)
         if slurm.id:
             msg = ('Kicked off reV QA-QC job "{}" '
                    '(SLURM jobid #{}).'
