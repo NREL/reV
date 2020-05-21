@@ -194,6 +194,7 @@ class Summarize:
                 if max_workers != 1:
                     if process_size is None and ds_chunks is not None:
                         process_size = ds_chunks[1]
+
                     if process_size is None:
                         process_size = ds_shape[-1]
 
@@ -258,7 +259,7 @@ class Summarize:
                 meta = meta.reset_index()
 
             for ds_name in f.datasets:
-                if ds_name not in ['meta', 'time_index']:
+                if 'meta' not in ds_name and 'time_index' not in ds_name:
                     shape = f.get_dset_properties(ds_name)[0]
                     if len(shape) == 1:
                         meta[ds_name] = f[ds_name]
