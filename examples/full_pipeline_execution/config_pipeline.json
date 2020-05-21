@@ -23,7 +23,7 @@
       "rep-profiles": "./config_rep-profiles.json"
     },
     {
-      "QA-QC": "./config_qa-qc.json"
+      "qa-qc": "./config_qa-qc.json"
     }
   ]
 }
