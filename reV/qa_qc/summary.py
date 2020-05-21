@@ -663,7 +663,7 @@ class SummaryPlots:
         datasets = []
         for c in splt.summary.columns:
             cols = ['mean', 'std', 'min', '25%', '50%', '75%', 'max', 'sum']
-            if c.endswith('_mean') or c in cols:
+            if '_mean' in c or c in cols:
                 datasets.append(c)
 
         for value in datasets:
