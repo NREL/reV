@@ -474,6 +474,28 @@ class ExclusionMask:
         mask = self[...]
         return mask
 
+    @property
+    def latitude(self):
+        """
+        Latitude coordinates array
+
+        Returns
+        -------
+        ndarray
+        """
+        return self.excl_h5['latitude']
+
+    @property
+    def longitude(self):
+        """
+        Longitude coordinates array
+
+        Returns
+        -------
+        ndarray
+        """
+        return self.excl_h5['longitude']
+
     def add_layer(self, layer, replace=False):
         """
         Add layer to be combined

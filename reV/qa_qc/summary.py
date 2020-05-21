@@ -429,6 +429,50 @@ class SummaryPlots:
         else:
             fig.write_image(out_path)
 
+    @staticmethod
+    def exclusion_plot(mask, cmap='Viridis', out_path=None, **kwargs):
+        """
+        Plot exclusion mask as a seaborn heatmap
+
+        Parameters
+        ----------
+        mask : ndarray
+            ndarray of final exclusion mask
+        cmap : str | px.color, optional
+            Continuous color scale to use, by default 'Viridis'
+        out_path : str, optional
+            File path to save plot to, can be a .html or static image,
+            by default None
+        kwargs : dict
+            Additional kwargs for plotting.colormaps.heatmap_plot
+        """
+        mplt.heatmap_plot(mask, cmap=cmap, filename=out_path, **kwargs)
+
+    @staticmethod
+    def exclusion_plotly(mask, cmap='Viridis', out_path=None, **kwargs):
+        """
+        Plot exclusion mask as a plotly heatmap
+
+        Parameters
+        ----------
+        mask : ndarray
+            ndarray of final exclusion mask
+        cmap : str | px.color, optional
+            Continuous color scale to use, by default 'Viridis'
+        out_path : str, optional
+            File path to save plot to, can be a .html or static image,
+            by default None
+        kwargs : dict
+            Additional kwargs for plotly.express.imshow
+        """
+        fig = px.imshow(mask, color_continuous_scale=cmap, **kwargs)
+        fig.update_layout(font=dict(family="Arial", size=18, color="black"))
+
+        if out_path is not None:
+            SummaryPlots._save_plotly(fig, out_path)
+
+        fig.show()
+
     def _check_value(self, values, scatter=True):
         """
         Check summary table for needed columns
@@ -714,6 +758,41 @@ class SummaryPlots:
             out_path = os.path.basename(sc_table).replace('.csv', '.html')
             out_path = os.path.join(out_dir, out_path)
             splt.supply_curve_plotly(lcoe=lcoe, out_path=out_path, **kwargs)
+        else:
+            msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
+                   .format(plot_type))
+            logger.error(msg)
+            raise ValueError(msg)
+
+    @classmethod
+    def exclusion_mask(cls, mask, out_dir, plot_type='plotly', cmap='Viridis',
+                       **kwargs):
+        """
+        Plot exclusions mask and save to out_dir
+
+        Parameters
+        ----------
+        mask : ndarray
+            ndarray of final exclusion mask
+        out_dir : str
+            Output directory to save plots to
+        plot_type : str, optional
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
+        cmap : str, optional
+            Colormap name, by default 'viridis'
+        kwargs : dict
+            Additional plotting kwargs
+        """
+        if plot_type == 'plot':
+            out_path = 'exclusions_mask.png'
+            out_path = os.path.join(out_dir, out_path)
+            cls.exclusion_plot(mask, cmap=cmap.lower(), out_path=out_path,
+                               **kwargs)
+        elif plot_type == 'plotly':
+            out_path = 'exclusions_mask.html'
+            out_path = os.path.join(out_dir, out_path)
+            cls.exclusion_plotly(mask, cmap=cmap.capitalize(),
+                                 out_path=out_path, **kwargs)
         else:
             msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
                    .format(plot_type))

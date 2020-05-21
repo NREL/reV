@@ -3,10 +3,12 @@
 reV quality assurance and control classes
 """
 import logging
+import numpy as np
 import os
 import pandas as pd
 
 from reV.qa_qc.summary import Summarize, SummaryPlots
+from reV.supply_curve.exclusions import ExclusionMaskFromDict
 
 logger = logging.getLogger(__name__)
 
@@ -210,3 +212,56 @@ class QaQc:
         else:
             logger.info('Finished QAQC on file: {} output directory: {}'
                         .format(os.path.basename(sc_table), out_dir))
+
+    @classmethod
+    def exclusion_mask(cls, excl_h5, out_dir, layers_dict=None, min_area=None,
+                       kernel='queen', hsds=False, plot_type='plotly',
+                       cmap='viridis', **kwargs):
+        """
+        Create inclusion mask from given layers dictionary, dump to disk and
+        plot
+
+        Parameters
+        ----------
+        excl_h5 : str
+            Path to exclusions .h5 file
+        layers_dict : dict | NoneType
+            Dictionary of LayerMask arugments {layer: {kwarg: value}}
+        min_area : float | NoneType
+            Minimum required contiguous area in sq-km
+        kernel : str
+            Contiguous filter method to use on final exclusion
+        hsds : bool
+            Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
+            behind HSDS
+        plot_type : str, optional
+            plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
+        cmap : str, optional
+            Colormap name, by default 'viridis'
+        kwargs : dict
+            Additional plotting kwargs
+        """
+        try:
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
+
+            excl_mask = ExclusionMaskFromDict.run(excl_h5,
+                                                  layers_dict=layers_dict,
+                                                  min_area=min_area,
+                                                  kernel=kernel,
+                                                  hsds=hsds)
+
+            out_file = os.path.basename(excl_h5).replace('.h5', '_mask.npy')
+            out_file = os.path.join(out_dir, out_file)
+            np.save(out_file, excl_mask)
+
+            SummaryPlots.exclusion_mask(excl_mask, out_dir,
+                                        plot_type=plot_type, cmap=cmap,
+                                        **kwargs)
+        except Exception as e:
+            logger.exception('QAQC failed on file: {}. Received exception:\n{}'
+                             .format(os.path.basename(excl_h5), e))
+            raise e
+        else:
+            logger.info('Finished QAQC on file: {} output directory: {}'
+                        .format(os.path.basename(excl_h5), out_dir))
