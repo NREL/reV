@@ -660,11 +660,9 @@ class SummaryPlots:
             Additional plotting kwargs
         """
         splt = cls(summary_csv)
-        datasets = []
-        for c in splt.summary.columns:
-            cols = ['mean', 'std', 'min', '25%', '50%', '75%', 'max', 'sum']
-            if '_mean' in c or c in cols:
-                datasets.append(c)
+        splt._summary = splt.summary.select_dtypes(include=np.number)
+        datasets = [c for c in splt.summary.columns
+                    if not c.startswith(('lat', 'lon'))]
 
         for value in datasets:
             if plot_type == 'plot':
