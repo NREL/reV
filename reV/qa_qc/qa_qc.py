@@ -161,7 +161,7 @@ class QaQc:
             raise e
         else:
             logger.info('Finished QAQC on file: {} output directory: {}'
-                        .format(os.path.basename(h5_file, out_dir)))
+                        .format(os.path.basename(h5_file), out_dir))
 
     @classmethod
     def supply_curve(cls, sc_table, out_dir, columns=None,
@@ -195,4 +195,4 @@ class QaQc:
             raise e
         else:
             logger.info('Finished QAQC on file: {} output directory: {}'
-                        .format(os.path.basename(sc_table, out_dir)))
+                        .format(os.path.basename(sc_table), out_dir))
