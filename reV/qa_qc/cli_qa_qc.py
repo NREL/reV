@@ -401,37 +401,43 @@ def launch_slurm(config, verbose):
     node_cmd = []
     terminal = False
     for i, module in enumerate(config.module_names):
-        if i == len(config.module_names) - 1:
-            terminal = True
         module_config = config.get_module_inputs(module)
-        fpath = module_config.fpath
-        if fpath.endswith('.h5'):
-            node_cmd.append(get_h5_cmd(config.name, fpath,
-                                       module_config.out_dir,
-                                       module_config.dsets,
-                                       module_config.group,
-                                       module_config.process_size,
-                                       module_config.max_workers,
-                                       module_config.plot_type,
-                                       module_config.cmap,
-                                       log_file,
-                                       verbose,
-                                       terminal))
-        elif fpath.endswith('.csv'):
-            node_cmd.append(get_sc_cmd(config.name, fpath,
-                                       module_config.out_dir,
-                                       module_config.columns,
-                                       module_config.plot_type,
-                                       module_config.lcoe,
-                                       log_file,
-                                       verbose,
-                                       terminal))
-        else:
-            msg = ("Cannot run QA/QC for {}: 'fpath' must be a '*.h5' "
-                   "or '*.csv' reV output file, but {} was given!"
-                   .format(module, fpath))
-            logger.error(msg)
-            raise ValueError(msg)
+        fpaths = module_config.fpath
+
+        if isinstance(fpaths, str):
+            fpaths = [fpaths]
+
+        for j, fpath in enumerate(fpaths):
+            if (i == len(config.module_names) - 1) and (j == len(fpaths) - 1):
+                terminal = True
+
+            if fpath.endswith('.h5'):
+                node_cmd.append(get_h5_cmd(config.name, fpath,
+                                           module_config.out_dir,
+                                           module_config.dsets,
+                                           module_config.group,
+                                           module_config.process_size,
+                                           module_config.max_workers,
+                                           module_config.plot_type,
+                                           module_config.cmap,
+                                           log_file,
+                                           verbose,
+                                           terminal))
+            elif fpath.endswith('.csv'):
+                node_cmd.append(get_sc_cmd(config.name, fpath,
+                                           module_config.out_dir,
+                                           module_config.columns,
+                                           module_config.plot_type,
+                                           module_config.lcoe,
+                                           log_file,
+                                           verbose,
+                                           terminal))
+            else:
+                msg = ("Cannot run QA/QC for {}: 'fpath' must be a '*.h5' "
+                       "or '*.csv' reV output file, but {} was given!"
+                       .format(module, fpath))
+                logger.error(msg)
+                raise ValueError(msg)
 
     status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name)
     if status == 'successful':

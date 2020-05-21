@@ -26,6 +26,7 @@ class QaQc:
         dsets : str | list, optional
             Datasets to summarize, by default None
         """
+        logger.info('QAQC initializing on: {}'.format(h5_file))
         self._h5_file = h5_file
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
@@ -149,10 +150,18 @@ class QaQc:
         kwargs : dict
             Additional plotting kwargs
         """
-        qa_qc = cls(h5_file, out_dir, dsets=dsets)
-        qa_qc.summarize(group=group, process_size=process_size,
-                        max_workers=max_workers)
-        qa_qc.scatter_plots(plot_type=plot_type, cmap=cmap, **kwargs)
+        try:
+            qa_qc = cls(h5_file, out_dir, dsets=dsets)
+            qa_qc.summarize(group=group, process_size=process_size,
+                            max_workers=max_workers)
+            qa_qc.scatter_plots(plot_type=plot_type, cmap=cmap, **kwargs)
+        except Exception as e:
+            logger.exception('QAQC failed on file: {}. Received exception:\n{}'
+                             .format(os.path.basename(h5_file), e))
+            raise e
+        else:
+            logger.info('Finished QAQC on file: {} output directory: {}'
+                        .format(os.path.basename(h5_file, out_dir)))
 
     @classmethod
     def supply_curve(cls, sc_table, out_dir, columns=None,
@@ -176,6 +185,14 @@ class QaQc:
         kwargs : dict
             Additional plotting kwargs
         """
-        Summarize.supply_curve(sc_table, out_dir, columns=columns)
-        SummaryPlots.supply_curve(sc_table, out_dir, plot_type=plot_type,
-                                  lcoe=lcoe, **kwargs)
+        try:
+            Summarize.supply_curve(sc_table, out_dir, columns=columns)
+            SummaryPlots.supply_curve(sc_table, out_dir, plot_type=plot_type,
+                                      lcoe=lcoe, **kwargs)
+        except Exception as e:
+            logger.exception('QAQC failed on file: {}. Received exception:\n{}'
+                             .format(os.path.basename(sc_table), e))
+            raise e
+        else:
+            logger.info('Finished QAQC on file: {} output directory: {}'
+                        .format(os.path.basename(sc_table, out_dir)))

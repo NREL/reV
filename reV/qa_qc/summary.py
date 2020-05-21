@@ -8,7 +8,6 @@ import os
 import pandas as pd
 import plotting as mplt
 import plotly.express as px
-from warnings import warn
 
 from rex import Resource
 from rex.utilities.execution import SpawnProcessPool
@@ -29,6 +28,7 @@ class Summarize:
         group : str, optional
             Group within h5_file to summarize datasets for, by default None
         """
+        logger.info('QAQC Summarize initializing on: {}'.format(h5_file))
         self._h5_file = h5_file
         self._group = group
 
@@ -191,9 +191,11 @@ class Summarize:
             ds_shape, _, ds_chunks = f.get_dset_properties(ds_name)
             if len(ds_shape) > 1:
                 sites = np.arange(ds_shape[1])
-                if max_workers > 1:
+                if max_workers != 1:
+                    if process_size is None and ds_chunks is not None:
+                        process_size = ds_chunks[1]
                     if process_size is None:
-                        process_size = ds_chunks
+                        process_size = ds_shape[-1]
 
                     sites = \
                         np.array_split(sites,
@@ -226,13 +228,8 @@ class Summarize:
                         summary = pd.concat(summary)
 
                 summary.index.name = 'gid'
-            else:
-                if process_size is not None or max_workers > 1:
-                    msg = ("Computing summary statistics for 1D datasets will "
-                           "proceed in serial")
-                    logger.warning(msg)
-                    warn(msg)
 
+            else:
                 summary = self._compute_ds_summary(f, ds_name)
 
         if out_path is not None:

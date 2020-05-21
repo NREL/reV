@@ -146,7 +146,13 @@ class QaQcModule:
 
     @property
     def fpath(self):
-        """Get the generation data filepath"""
+        """Get the reV module output filepath(s)
+
+        Returns
+        -------
+        fpaths : str | list
+            One or more filepaths output by current module being QA'd
+        """
 
         fpath = self._config['fpath']
 
@@ -156,7 +162,7 @@ class QaQcModule:
                 try:
                     fpath = Pipeline.parse_previous(
                         self._out_root, 'qa-qc', target='fpath',
-                        target_module=target_module)[0]
+                        target_module=target_module)
                 except KeyError:
                     pass
                 else:
