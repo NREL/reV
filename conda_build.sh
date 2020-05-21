@@ -10,7 +10,7 @@ export CONDA_BLD_PATH=~/conda-bld
 platforms=( osx-64 linux-64 win-64 )
 for py in "${PY_VERSION[@]}"
 do
-	conda build conda.recipe/ --python=$py --channel=nrel
+	conda build conda.recipe/ --python=$py --channel=nrel --channel=mrossol
     file=$(conda build conda.recipe/ --python=$py --output)
     for platform in "${platforms[@]}"
     do
@@ -21,7 +21,6 @@ done
 # upload packages to conda
 find $CONDA_BLD_PATH/ -name $PKG_NAME*.tar.bz2 | while read file
 do
-    echo Uploading $file
     anaconda upload -u nrel $file
 done
 

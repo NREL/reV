@@ -19,6 +19,7 @@ Subpackages
    reV.handlers
    reV.offshore
    reV.pipeline
+   reV.qa_qc
    reV.rep_profiles
    reV.supply_curve
    reV.utilities

@@ -107,3 +107,7 @@ ENV/
 
 # VSCode
 *.vscode
+
+# VIM
+*.swp
+tags

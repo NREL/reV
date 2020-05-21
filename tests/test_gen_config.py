@@ -34,8 +34,8 @@ def test_gen_from_config(tech):
     elif tech == 'wind':
         fconfig = 'local_wind.json'
 
-    config = os.path.join(TESTDATADIR, 'config/{}'.format(fconfig))\
-        .replace('\\', '/')
+    config = os.path.join(TESTDATADIR,
+                          'config/{}'.format(fconfig)).replace('\\', '/')
 
     cmd = 'python -m reV.cli -n "{}" -c {} generation'.format(job_name, config)
     cmd = shlex.split(cmd)

@@ -20,10 +20,23 @@ from rex.utilities.utilities import dict_str_load
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.option('--name', '-n', default='reV-sc', type=STR,
+              help='Job name. Default is "reV-sc".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Supply Curve Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
-              help='reV exclusions configuration json file.')
+              help='reV supply curve configuration json file.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -38,13 +51,15 @@ def from_config(ctx, config_file, verbose):
     if config.name.lower() != 'rev':
         name = config.name
 
+    ctx.obj['NAME'] = name
+
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
         verbose = True
 
     # initialize loggers
     init_mult(name, config.logdir, modules=[__name__, 'reV.config',
-                                            'reV.utilities'],
+                                            'reV.utilities', 'rex.utilities'],
               verbose=verbose)
 
     # Initial log statements
@@ -64,8 +79,7 @@ def from_config(ctx, config_file, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': '{}.csv'.format(name),
                            'dirout': config.dirout})
-            ctx.invoke(main,
-                       name=name,
+            ctx.invoke(direct,
                        sc_points=config.sc_points,
                        trans_table=config.trans_table,
                        fixed_charge_rate=config.fixed_charge_rate,
@@ -110,9 +124,7 @@ def from_config(ctx, config_file, verbose):
                    module=config.execution_control.module)
 
 
-@click.group(invoke_without_command=True)
-@click.option('--name', '-n', default='agg', type=STR,
-              help='Job name. Default is "agg".')
+@main.group(invoke_without_command=True)
 @click.option('--sc_points', '-sc', type=STR, required=True,
               help='Supply curve point summary table (.csv or .json).')
 @click.option('--trans_table', '-tt', type=STR, required=True,
@@ -152,13 +164,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
-         transmission_costs, sort_on, wind_dirs, n_dirs, downwind, max_workers,
-         out_dir, log_dir, simple, line_limited, verbose):
+def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
+           transmission_costs, sort_on, wind_dirs, n_dirs, downwind,
+           max_workers, out_dir, log_dir, simple, line_limited, verbose):
     """reV Supply Curve CLI."""
-
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
+    name = ctx.obj['NAME']
     ctx.obj['SC_POINTS'] = sc_points
     ctx.obj['TRANS_TABLE'] = trans_table
     ctx.obj['FIXED_CHARGE_RATE'] = fixed_charge_rate
@@ -178,7 +188,7 @@ def main(ctx, name, sc_points, trans_table, fixed_charge_rate, sc_features,
     if ctx.invoked_subcommand is None:
         t0 = time.time()
         init_mult(name, log_dir, modules=[__name__, 'reV.supply_curve',
-                                          'reV.handlers'],
+                                          'reV.handlers', 'rex'],
                   verbose=verbose)
 
         if isinstance(transmission_costs, str):
@@ -228,8 +238,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
                  max_workers, out_dir, log_dir, simple, line_limited, verbose):
     """Get a CLI call command for the Supply Curve cli."""
 
-    args = ('-n {name} '
-            '-sc {sc_points} '
+    args = ('-sc {sc_points} '
             '-tt {trans_table} '
             '-fcr {fixed_charge_rate} '
             '-scf {sc_features} '
@@ -241,8 +250,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-ld {log_dir} '
             )
 
-    args = args.format(name=SLURM.s(name),
-                       sc_points=SLURM.s(sc_points),
+    args = args.format(sc_points=SLURM.s(sc_points),
                        trans_table=SLURM.s(trans_table),
                        fixed_charge_rate=SLURM.s(fixed_charge_rate),
                        sc_features=SLURM.s(sc_features),
@@ -269,11 +277,13 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
     if verbose:
         args += '-v '
 
-    cmd = 'python -m reV.supply_curve.cli_supply_curve {}'.format(args)
+    cmd = ('python -m reV.supply_curve.cli_supply_curve -n {} direct {}'
+           .format(SLURM.s(name), args))
+
     return cmd
 
 
-@main.command()
+@direct.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
 @click.option('--memory', '-mem', default=None, type=INT, help='SLURM node '
@@ -283,17 +293,16 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 @click.option('--feature', '-l', default=None, type=STR,
               help=('Additional flags for SLURM job. Format is "--qos=high" '
                     'or "--depend=[state:job_id]". Default is None.'))
-@click.option('--conda_env', '-env', default=None, type=STR,
-              help='Conda env to activate')
 @click.option('--module', '-mod', default=None, type=STR,
               help='Module to load')
+@click.option('--conda_env', '-env', default=None, type=STR,
+              help='Conda env to activate')
 @click.option('--stdout_path', '-sout', default=None, type=STR,
               help='Subprocess standard output path. Default is in out_dir.')
 @click.pass_context
-def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
+def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
           stdout_path):
-    """slurm (eagle) submission tool for reV supply curve aggregation."""
-
+    """slurm (eagle) submission tool for reV supply curve."""
     name = ctx.obj['NAME']
     sc_points = ctx.obj['SC_POINTS']
     trans_table = ctx.obj['TRANS_TABLE']

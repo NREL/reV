@@ -13,7 +13,6 @@ from warnings import warn
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.sam_analysis_configs import EconConfig
 from reV.econ.econ import Econ
-from reV.generation.cli_gen import main
 from reV.generation.cli_gen import get_node_name_fout, make_fout
 from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
@@ -24,6 +23,19 @@ from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import parse_year
 
 logger = logging.getLogger(__name__)
+
+
+@click.group()
+@click.option('--name', '-n', default='reV-econ', type=STR,
+              help='reV Economics job name, by default "reV-econ".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Economics Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['VERBOSE'] = verbose
+    ctx.obj['NAME'] = name
 
 
 @main.command()
@@ -57,7 +69,7 @@ def from_config(ctx, config_file, verbose):
     # initialize loggers.
     init_mult(name, config.logdir, modules=[__name__, 'reV.econ.econ',
                                             'reV.config', 'reV.utilities',
-                                            'reV.SAM'],
+                                            'reV.SAM', 'rex.utilities'],
               verbose=verbose)
 
     # Initial log statements
@@ -251,7 +263,7 @@ def econ_local(ctx, max_workers, timeout, points_range, verbose):
 
     # initialize loggers for multiple modules
     log_modules = [__name__, 'reV.econ.econ', 'reV.generation', 'reV.config',
-                   'reV.utilities', 'reV.SAM', 'reV.handlers']
+                   'reV.utilities', 'reV.SAM', 'reV.handlers', 'rex.utilities']
     init_mult(name, logdir, modules=log_modules,
               verbose=verbose, node=True)
 
@@ -476,7 +488,8 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
 
     # initialize an info logger on the year level
     init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
-                                     'reV.utilities', 'reV.SAM'],
+                                     'reV.utilities', 'reV.SAM',
+                                     'rex.utilities'],
               verbose=False)
 
     if append:

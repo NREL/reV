@@ -20,8 +20,11 @@ requirements:
     - nrel-rex
     - numpy
     - pandas
+    - plotting
+    - plotly
     - psutil
     - scipy
+
 
 about:
   home: "https://github.com/NREL/reV"

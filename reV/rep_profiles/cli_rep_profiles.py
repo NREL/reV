@@ -19,7 +19,20 @@ from rex.utilities.loggers import init_mult
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+@click.option('--name', '-n', default='reV-rep_profiles', type=STR,
+              help='Job name. Default is "reV-rep_profiles".')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging. Default is not verbose.')
+@click.pass_context
+def main(ctx, name, verbose):
+    """reV Representative Profiles Command Line Interface"""
+    ctx.ensure_object(dict)
+    ctx.obj['NAME'] = name
+    ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
               help='reV representative profiles configuration json file.')
@@ -36,6 +49,8 @@ def from_config(ctx, config_file, verbose):
     # take name from config if not default
     if config.name.lower() != 'rev':
         name = config.name
+
+    ctx.obj['NAME'] = name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:
@@ -80,13 +95,20 @@ def from_config(ctx, config_file, verbose):
                     job_attrs={'hardware': 'local',
                                'fout': '{}.h5'.format(name),
                                'dirout': config.dirout})
-                ctx.invoke(main, name, gen_fpath, config.rev_summary,
-                           config.reg_cols, dset, config.rep_method,
-                           config.err_method, config.weight,
-                           config.dirout, config.logdir,
-                           config.execution_control.max_workers,
-                           config.aggregate_profiles,
-                           verbose)
+                ctx.invoke(direct,
+                           gen_fpath=gen_fpath,
+                           rev_summary=config.rev_summary,
+                           reg_cols=config.reg_cols,
+                           cf_dset=dset,
+                           rep_method=config.rep_method,
+                           err_method=config.err_method,
+                           weight=config.weight,
+                           out_dir=config.dirout,
+                           log_dir=config.logdir,
+                           n_profiles=config.n_profiles,
+                           max_workers=config.execution_control.max_workers,
+                           aggregate_profiles=config.aggregate_profiles,
+                           verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
             ctx.obj['NAME'] = name
@@ -113,9 +135,7 @@ def from_config(ctx, config_file, verbose):
                        module=config.execution_control.module)
 
 
-@click.group(invoke_without_command=True)
-@click.option('--name', '-n', default='rep_profiles', type=STR,
-              help='Job name. Default is "rep_profiles".')
+@main.group(invoke_without_command=True)
 @click.option('--gen_fpath', '-g', type=click.Path(exists=True), required=True,
               help='Filepath to reV gen file.')
 @click.option('--rev_summary', '-r', type=click.Path(exists=True),
@@ -152,13 +172,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
-         err_method, weight, n_profiles, out_dir, log_dir, max_workers,
-         aggregate_profiles, verbose):
+def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
+           err_method, weight, n_profiles, out_dir, log_dir, max_workers,
+           aggregate_profiles, verbose):
     """reV representative profiles CLI."""
-
-    ctx.ensure_object(dict)
-    ctx.obj['NAME'] = name
+    name = ctx.obj['NAME']
     ctx.obj['GEN_FPATH'] = gen_fpath
     ctx.obj['REV_SUMMARY'] = rev_summary
     ctx.obj['REG_COLS'] = reg_cols
@@ -208,8 +226,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                  aggregate_profiles, verbose):
     """Get a CLI call command for the rep profiles cli."""
 
-    args = ('-n {name} '
-            '-g {gen_fpath} '
+    args = ('-g {gen_fpath} '
             '-r {rev_summary} '
             '-rc {reg_cols} '
             '-cf {cf_dset} '
@@ -222,8 +239,7 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
             '-mw {max_workers} '
             )
 
-    args = args.format(name=SLURM.s(name),
-                       gen_fpath=SLURM.s(gen_fpath),
+    args = args.format(gen_fpath=SLURM.s(gen_fpath),
                        rev_summary=SLURM.s(rev_summary),
                        reg_cols=SLURM.s(reg_cols),
                        cf_dset=SLURM.s(cf_dset),
@@ -242,11 +258,13 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
     if verbose:
         args += '-v '
 
-    cmd = 'python -m reV.rep_profiles.cli_rep_profiles {}'.format(args)
+    cmd = ('python -m reV.rep_profiles.cli_rep_profiles -n {} direct {}'
+           .format(SLURM.s(name), args))
+
     return cmd
 
 
-@main.command()
+@direct.command()
 @click.option('--alloc', '-a', required=True, type=STR,
               help='SLURM allocation account name.')
 @click.option('--memory', '-mem', default=None, type=INT,
