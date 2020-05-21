@@ -131,7 +131,9 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
 @click.option('--h5_file', '-h5', type=click.Path(exists=True), required=True,
               help='Path to .h5 file to summarize')
 @click.option('--out_dir', '-o', type=click.Path(), required=True,
-              help="Directory path to save summary tables and plots too")
+              help="Project output directory path.")
+@click.option('--sub_dir', '-sd', type=STR, required=True,
+              help="Sub directory to save summary tables and plots too")
 @click.option('--dsets', '-ds', type=STRLIST, default=None,
               help='Datasets to summarize, by default None')
 @click.option('--group', '-grp', type=STR, default=None,
@@ -156,8 +158,8 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
               help=('Flag for terminal QA pipeline call. '
                     'Prints successful status file.'))
 @click.pass_context
-def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
-           plot_type, cmap, log_file, verbose, terminal):
+def reV_h5(ctx, h5_file, out_dir, sub_dir, dsets, group, process_size,
+           max_workers, plot_type, cmap, log_file, verbose, terminal):
     """
     Summarize and plot data for reV h5_file
     """
@@ -169,7 +171,11 @@ def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
 
     init_logger('reV.qa_qc', log_file=log_file, log_level=log_level)
 
-    QaQc.run(h5_file, out_dir, dsets=dsets, group=group,
+    qa_dir = out_dir
+    if sub_dir is not None:
+        qa_dir = os.path.join(out_dir, sub_dir)
+
+    QaQc.run(h5_file, qa_dir, dsets=dsets, group=group,
              process_size=process_size, max_workers=max_workers,
              plot_type=plot_type, cmap=cmap)
 
@@ -183,7 +189,9 @@ def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
 @click.option('--sc_table', '-sct', type=click.Path(exists=True),
               required=True, help='Path to .csv containing Supply Curve table')
 @click.option('--out_dir', '-o', type=click.Path(), required=True,
-              help="Directory path to save summary tables and plots too")
+              help="Project output directory path.")
+@click.option('--sub_dir', '-sd', type=STR, required=True,
+              help="Sub directory to save summary tables and plots too")
 @click.option('--columns', '-cols', type=STRLIST, default=None,
               help=('Column(s) to summarize, if None summarize all numeric '
                     'columns, by default None'))
@@ -201,8 +209,8 @@ def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
               help=('Flag for terminal QA pipeline call. '
                     'Prints successful status file.'))
 @click.pass_context
-def supply_curve(ctx, sc_table, out_dir, columns, plot_type, lcoe, log_file,
-                 verbose, terminal):
+def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, lcoe,
+                 log_file, verbose, terminal):
     """
     Summarize and plot reV Supply Curve dataß
     """
@@ -214,7 +222,11 @@ def supply_curve(ctx, sc_table, out_dir, columns, plot_type, lcoe, log_file,
 
     init_logger('reV.qa_qc', log_file=log_file, log_level=log_level)
 
-    QaQc.supply_curve(sc_table, out_dir, columns=columns, lcoe=lcoe,
+    qa_dir = out_dir
+    if sub_dir is not None:
+        qa_dir = os.path.join(out_dir, sub_dir)
+
+    QaQc.supply_curve(sc_table, qa_dir, columns=columns, lcoe=lcoe,
                       plot_type=plot_type)
 
     if terminal:
@@ -283,7 +295,8 @@ def from_config(ctx, config_file, verbose):
                         os.path.basename(fpath).replace('.h5', '.log'))
                     ctx.invoke(reV_h5,
                                h5_file=fpath,
-                               out_dir=module_config.out_dir,
+                               out_dir=config.dirout,
+                               sub_dir=module_config.sub_dir,
                                dsets=module_config.dsets,
                                group=module_config.group,
                                process_size=module_config.process_size,
@@ -299,7 +312,8 @@ def from_config(ctx, config_file, verbose):
                         os.path.basename(fpath).replace('.csv', '.log'))
                     ctx.invoke(supply_curve,
                                sc_table=fpath,
-                               out_dir=module_config.out_dir,
+                               out_dir=config.dirout,
+                               sub_dir=module_config.sub_dir,
                                columns=module_config.columns,
                                plot_type=module_config.plot_type,
                                lcoe=module_config.lcoe,
@@ -317,12 +331,13 @@ def from_config(ctx, config_file, verbose):
         launch_slurm(config, verbose)
 
 
-def get_h5_cmd(name, h5_file, out_dir, dsets, group, process_size, max_workers,
-               plot_type, cmap, log_file, verbose, terminal):
+def get_h5_cmd(name, h5_file, out_dir, sub_dir, dsets, group, process_size,
+               max_workers, plot_type, cmap, log_file, verbose, terminal):
     """Build CLI call for reV_h5."""
 
     args = ('-h5 {h5_file} '
             '-o {out_dir} '
+            '-sd {sub_dir} '
             '-ds {dsets} '
             '-grp {group} '
             '-ps {process_size} '
@@ -334,6 +349,7 @@ def get_h5_cmd(name, h5_file, out_dir, dsets, group, process_size, max_workers,
 
     args = args.format(h5_file=SLURM.s(h5_file),
                        out_dir=SLURM.s(out_dir),
+                       sub_dir=SLURM.s(sub_dir),
                        dsets=SLURM.s(dsets),
                        group=SLURM.s(group),
                        process_size=SLURM.s(process_size),
@@ -355,12 +371,13 @@ def get_h5_cmd(name, h5_file, out_dir, dsets, group, process_size, max_workers,
     return cmd
 
 
-def get_sc_cmd(name, sc_table, out_dir, columns, plot_type, lcoe, log_file,
-               verbose, terminal):
+def get_sc_cmd(name, sc_table, out_dir, sub_dir, columns, plot_type, lcoe,
+               log_file, verbose, terminal):
     """Build CLI call for supply_curve."""
 
     args = ('-sct {sc_table} '
             '-o {out_dir} '
+            '-sd {sub_dir} '
             '-cols {columns} '
             '-plt {plot_type} '
             '-lcoe {lcoe} '
@@ -369,6 +386,7 @@ def get_sc_cmd(name, sc_table, out_dir, columns, plot_type, lcoe, log_file,
 
     args = args.format(sc_table=SLURM.s(sc_table),
                        out_dir=SLURM.s(out_dir),
+                       sub_dir=SLURM.s(sub_dir),
                        columns=SLURM.s(columns),
                        plot_type=SLURM.s(plot_type),
                        lcoe=SLURM.s(lcoe),
@@ -415,8 +433,8 @@ def launch_slurm(config, verbose):
                 terminal = True
 
             if fpath.endswith('.h5'):
-                node_cmd.append(get_h5_cmd(config.name, fpath,
-                                           module_config.out_dir,
+                node_cmd.append(get_h5_cmd(config.name, fpath, out_dir,
+                                           module_config.sub_dir,
                                            module_config.dsets,
                                            module_config.group,
                                            module_config.process_size,
@@ -427,8 +445,8 @@ def launch_slurm(config, verbose):
                                            verbose,
                                            terminal))
             elif fpath.endswith('.csv'):
-                node_cmd.append(get_sc_cmd(config.name, fpath,
-                                           module_config.out_dir,
+                node_cmd.append(get_sc_cmd(config.name, fpath, out_dir,
+                                           module_config.sub_dir,
                                            module_config.columns,
                                            module_config.plot_type,
                                            module_config.lcoe,

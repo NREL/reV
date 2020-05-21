@@ -178,15 +178,11 @@ class QaQcModule:
         return fpath
 
     @property
-    def out_dir(self):
+    def sub_dir(self):
         """
-        QA/QC output directory
+        QA/QC sub directory for this module's outputs
         """
-        out_dir = self._config.get('out_dir', None)
-        if out_dir is None:
-            out_dir = self._out_root
-
-        return out_dir
+        return self._config.get('sub_dir', None)
 
     @property
     def plot_type(self):
