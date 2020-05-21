@@ -7,7 +7,7 @@ PKG_NAME=nrel-rev
 PY_VERSION=( 3.7 )
 
 export CONDA_BLD_PATH=~/conda-bld
-platforms=( osx-64 win-64 )
+platforms=( osx-64 linux-64 win-64 )
 for py in "${PY_VERSION[@]}"
 do
 	conda build conda.recipe/ --python=$py --channel=nrel --channel=mrossol
