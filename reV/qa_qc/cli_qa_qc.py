@@ -274,6 +274,7 @@ def from_config(ctx, config_file, verbose):
             for i, module in enumerate(config.module_names):
                 if i == len(config.module_names) - 1:
                     terminal = True
+
                 module_config = config.get_module_inputs(module)
                 fpath = module_config.fpath
                 if fpath.endswith('.h5'):
@@ -344,6 +345,7 @@ def get_h5_cmd(name, h5_file, out_dir, dsets, group, process_size, max_workers,
 
     if verbose:
         args += '-v '
+
     if terminal:
         args += '-t '
 
@@ -375,6 +377,7 @@ def get_sc_cmd(name, sc_table, out_dir, columns, plot_type, lcoe, log_file,
 
     if verbose:
         args += '-v '
+
     if terminal:
         args += '-t '
 

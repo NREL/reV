@@ -194,6 +194,7 @@ class Summarize:
                 if max_workers != 1:
                     if process_size is None and ds_chunks is not None:
                         process_size = ds_chunks[1]
+
                     if process_size is None:
                         process_size = ds_shape[-1]
 
