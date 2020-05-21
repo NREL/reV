@@ -30,7 +30,9 @@ class Pipeline:
                 'multi-year',
                 'supply-curve-aggregation',
                 'supply-curve',
-                'rep-profiles')
+                'rep-profiles',
+                'qa-qc',
+                )
 
     RETURN_CODES = {0: 'successful',
                     1: 'running',

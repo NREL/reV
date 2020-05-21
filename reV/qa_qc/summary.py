@@ -8,7 +8,6 @@ import os
 import pandas as pd
 import plotting as mplt
 import plotly.express as px
-from warnings import warn
 
 from rex import Resource
 from rex.utilities.execution import SpawnProcessPool
@@ -29,6 +28,7 @@ class Summarize:
         group : str, optional
             Group within h5_file to summarize datasets for, by default None
         """
+        logger.info('QAQC Summarize initializing on: {}'.format(h5_file))
         self._h5_file = h5_file
         self._group = group
 
@@ -49,18 +49,20 @@ class Summarize:
         return self._h5_file
 
     @staticmethod
-    def _compute_sites_summary(h5_fhandle, ds_name, sites=None):
+    def _compute_sites_summary(h5_file, ds_name, sites=None, group=None):
         """
         Compute summary stats for given sites of given dataset
 
         Parameters
         ----------
-        h5_fhandle : Resource
-            Open Resource handler object
+        h5_file : str
+            Path to .h5 file to summarize data from
         ds_name : str
             Dataset name of interest
         sites : list | slice, optional
             sites of interest, by default None
+        group : str, optional
+            Group within h5_file to summarize datasets for, by default None
 
         Returns
         -------
@@ -70,8 +72,10 @@ class Summarize:
         if sites is None:
             sites = slice(None)
 
-        sites_meta = h5_fhandle['meta', sites]
-        sites_data = h5_fhandle[ds_name, :, sites]
+        with Resource(h5_file, group=group) as f:
+            sites_meta = f['meta', sites]
+            sites_data = f[ds_name, :, sites]
+
         sites_summary = pd.DataFrame(sites_data, columns=sites_meta.index)
         sites_summary = sites_summary.describe().T.drop(columns=['count'])
         sites_summary['sum'] = sites_data.sum(axis=0)
@@ -79,23 +83,27 @@ class Summarize:
         return sites_summary
 
     @staticmethod
-    def _compute_ds_summary(h5_fhandle, ds_name):
+    def _compute_ds_summary(h5_file, ds_name, group=None):
         """
         Compute summary statistics for given dataset (assumed to be a vector)
 
         Parameters
         ----------
-        h5_fhandle : Resource
-            Resource handler object
+        h5_file : str
+            Path to .h5 file to summarize data from
         ds_name : str
             Dataset name of interest
+        group : str, optional
+            Group within h5_file to summarize datasets for, by default None
 
         Returns
         -------
         ds_summary : pandas.DataFrame
             Summary statistics for dataset
         """
-        ds_data = h5_fhandle[ds_name, :]
+        with Resource(h5_file, group=group) as f:
+            ds_data = f[ds_name, :]
+
         ds_summary = pd.DataFrame(ds_data, columns=[ds_name])
         ds_summary = ds_summary.describe().drop(['count'])
         ds_summary.at['sum'] = ds_data.sum()
@@ -189,51 +197,55 @@ class Summarize:
         """
         with Resource(self.h5_file, group=self._group) as f:
             ds_shape, _, ds_chunks = f.get_dset_properties(ds_name)
-            if len(ds_shape) > 1:
-                sites = np.arange(ds_shape[1])
-                if max_workers > 1:
-                    if process_size is None:
-                        process_size = ds_chunks
 
-                    sites = \
-                        np.array_split(sites,
-                                       int(np.ceil(len(sites) / process_size)))
-                    loggers = [__name__]
-                    with SpawnProcessPool(max_workers=max_workers,
-                                          loggers=loggers) as ex:
-                        futures = []
-                        for site_slice in sites:
-                            futures.append(ex.submit(
-                                self._compute_sites_summary,
-                                f, ds_name, site_slice))
+        if len(ds_shape) > 1:
+            sites = np.arange(ds_shape[1])
+            if max_workers != 1:
+                if process_size is None and ds_chunks is not None:
+                    process_size = ds_chunks[1]
+                if process_size is None:
+                    process_size = ds_shape[-1]
 
-                        summary = [future.result() for future in futures]
+                sites = \
+                    np.array_split(sites,
+                                   int(np.ceil(len(sites) / process_size)))
+                loggers = [__name__]
+                with SpawnProcessPool(max_workers=max_workers,
+                                      loggers=loggers) as ex:
+                    futures = []
+                    for site_slice in sites:
+                        futures.append(ex.submit(
+                            self._compute_sites_summary,
+                            self.h5_file, ds_name, sites=site_slice,
+                            group=self._group))
+
+                    summary = [future.result() for future in futures]
+
+                summary = pd.concat(summary)
+            else:
+                if process_size is None:
+                    summary = self._compute_sites_summary(self.h5_file,
+                                                          ds_name,
+                                                          sites=sites,
+                                                          group=self._group)
+                else:
+                    sites = np.array_split(
+                        sites, int(np.ceil(len(sites) / process_size)))
+
+                    summary = []
+                    for site_slice in sites:
+                        summary.append(self._compute_sites_summary(
+                            self.h5_file, ds_name,
+                            sites=site_slice,
+                            group=self._group))
 
                     summary = pd.concat(summary)
-                else:
-                    if process_size is None:
-                        summary = self._compute_sites_summary(f, ds_name,
-                                                              sites)
-                    else:
-                        sites = np.array_split(
-                            sites, int(np.ceil(len(sites) / process_size)))
 
-                        summary = []
-                        for site_slice in sites:
-                            summary.append(self._compute_sites_summary(
-                                f, ds_name, site_slice))
+            summary.index.name = 'gid'
 
-                        summary = pd.concat(summary)
-
-                summary.index.name = 'gid'
-            else:
-                if process_size is not None or max_workers > 1:
-                    msg = ("Computing summary statistics for 1D datasets will "
-                           "proceed in serial")
-                    logger.warning(msg)
-                    warn(msg)
-
-                summary = self._compute_ds_summary(f, ds_name)
+        else:
+            summary = self._compute_ds_summary(self.h5_file, ds_name,
+                                               group=self._group)
 
         if out_path is not None:
             summary.to_csv(out_path)
@@ -261,10 +273,9 @@ class Summarize:
                 meta = meta.reset_index()
 
             for ds_name in f.datasets:
-                if ds_name not in ['meta', 'time_index']:
-                    shape = f.get_dset_properties(ds_name)[0]
-                    if len(shape) == 1:
-                        meta[ds_name] = f[ds_name]
+                shape, dtype, _ = f.get_dset_properties(ds_name)
+                if len(shape) == 1 and np.issubdtype(dtype, np.number):
+                    meta[ds_name] = f[ds_name]
 
         if out_path is not None:
             meta.to_csv(out_path, index=False)
@@ -649,11 +660,9 @@ class SummaryPlots:
             Additional plotting kwargs
         """
         splt = cls(summary_csv)
-        datasets = []
-        for c in splt.summary.columns:
-            cols = ['mean', 'std', 'min', '25%', '50%', '75%', 'max', 'sum']
-            if c.endswith('_mean') or c in cols:
-                datasets.append(c)
+        splt._summary = splt.summary.select_dtypes(include=np.number)
+        datasets = [c for c in splt.summary.columns
+                    if not c.startswith(('lat', 'lon'))]
 
         for value in datasets:
             if plot_type == 'plot':

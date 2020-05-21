@@ -146,7 +146,13 @@ class QaQcModule:
 
     @property
     def fpath(self):
-        """Get the generation data filepath"""
+        """Get the reV module output filepath(s)
+
+        Returns
+        -------
+        fpaths : str | list
+            One or more filepaths output by current module being QA'd
+        """
 
         fpath = self._config['fpath']
 
@@ -155,8 +161,8 @@ class QaQcModule:
             for target_module in target_modules:
                 try:
                     fpath = Pipeline.parse_previous(
-                        self._out_root, 'QA-QC', target='fpath',
-                        target_module=target_module)[0]
+                        self._out_root, 'qa-qc', target='fpath',
+                        target_module=target_module)
                 except KeyError:
                     pass
                 else:
@@ -172,15 +178,11 @@ class QaQcModule:
         return fpath
 
     @property
-    def out_dir(self):
+    def sub_dir(self):
         """
-        QA/QC output directory
+        QA/QC sub directory for this module's outputs
         """
-        out_dir = self._config.get('out_dir', None)
-        if out_dir is None:
-            out_dir = self._out_root
-
-        return out_dir
+        return self._config.get('sub_dir', None)
 
     @property
     def plot_type(self):

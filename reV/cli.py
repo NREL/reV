@@ -15,6 +15,7 @@ from reV.rep_profiles.cli_rep_profiles import from_config as run_rp_from_config
 from reV.supply_curve.cli_sc_aggregation import (from_config
                                                  as run_sc_agg_from_config)
 from reV.supply_curve.cli_supply_curve import from_config as run_sc_from_config
+from reV.qa_qc.cli_qa_qc import from_config as run_qa_qc_from_config
 
 from rex.utilities.cli_dtypes import STR
 
@@ -158,6 +159,17 @@ def rep_profiles(ctx, verbose):
     config_file = ctx.obj['CONFIG_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
     ctx.invoke(run_rp_from_config, config_file=config_file, verbose=verbose)
+
+
+@main.command()
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.pass_context
+def qa_qc(ctx, verbose):
+    """Run reV qa-qc using the config file."""
+    config_file = ctx.obj['CONFIG_FILE']
+    verbose = any([verbose, ctx.obj['VERBOSE']])
+    ctx.invoke(run_qa_qc_from_config, config_file=config_file, verbose=verbose)
 
 
 if __name__ == '__main__':

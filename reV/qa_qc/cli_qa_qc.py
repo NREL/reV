@@ -32,7 +32,7 @@ def main(ctx, name, verbose):
 
 
 @main.group(chain=True)
-@click.option('--out_dir', '-o', type=click.Path(), requried=True,
+@click.option('--out_dir', '-o', type=click.Path(), required=True,
               help="Directory path to save summary tables and plots too")
 @click.option('--log_file', '-log', type=click.Path(), default=None,
               help='File to log to, by default None')
@@ -130,8 +130,10 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
 @main.command()
 @click.option('--h5_file', '-h5', type=click.Path(exists=True), required=True,
               help='Path to .h5 file to summarize')
-@click.option('--out_dir', '-o', type=click.Path(), requried=True,
-              help="Directory path to save summary tables and plots too")
+@click.option('--out_dir', '-o', type=click.Path(), required=True,
+              help="Project output directory path.")
+@click.option('--sub_dir', '-sd', type=STR, required=True,
+              help="Sub directory to save summary tables and plots too")
 @click.option('--dsets', '-ds', type=STRLIST, default=None,
               help='Datasets to summarize, by default None')
 @click.option('--group', '-grp', type=STR, default=None,
@@ -152,12 +154,16 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
               help='File to log to, by default None')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
+@click.option('-t', '--terminal', is_flag=True,
+              help=('Flag for terminal QA pipeline call. '
+                    'Prints successful status file.'))
 @click.pass_context
-def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
-           plot_type, cmap, log_file, verbose):
+def reV_h5(ctx, h5_file, out_dir, sub_dir, dsets, group, process_size,
+           max_workers, plot_type, cmap, log_file, verbose, terminal):
     """
     Summarize and plot data for reV h5_file
     """
+    name = ctx.obj['NAME']
     if any([verbose, ctx.obj['VERBOSE']]):
         log_level = 'DEBUG'
     else:
@@ -165,16 +171,27 @@ def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
 
     init_logger('reV.qa_qc', log_file=log_file, log_level=log_level)
 
-    QaQc.run(h5_file, out_dir, dsets=dsets, group=group,
+    qa_dir = out_dir
+    if sub_dir is not None:
+        qa_dir = os.path.join(out_dir, sub_dir)
+
+    QaQc.run(h5_file, qa_dir, dsets=dsets, group=group,
              process_size=process_size, max_workers=max_workers,
              plot_type=plot_type, cmap=cmap)
+
+    if terminal:
+        status = {'dirout': out_dir, 'job_status': 'successful',
+                  'finput': h5_file}
+        Status.make_job_file(out_dir, 'qa-qc', name, status)
 
 
 @main.command()
 @click.option('--sc_table', '-sct', type=click.Path(exists=True),
               required=True, help='Path to .csv containing Supply Curve table')
-@click.option('--out_dir', '-o', type=click.Path(), requried=True,
-              help="Directory path to save summary tables and plots too")
+@click.option('--out_dir', '-o', type=click.Path(), required=True,
+              help="Project output directory path.")
+@click.option('--sub_dir', '-sd', type=STR, required=True,
+              help="Sub directory to save summary tables and plots too")
 @click.option('--columns', '-cols', type=STRLIST, default=None,
               help=('Column(s) to summarize, if None summarize all numeric '
                     'columns, by default None'))
@@ -188,12 +205,16 @@ def reV_h5(ctx, h5_file, out_dir, dsets, group, process_size, max_workers,
               help='File to log to, by default None')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
+@click.option('-t', '--terminal', is_flag=True,
+              help=('Flag for terminal QA pipeline call. '
+                    'Prints successful status file.'))
 @click.pass_context
-def supply_curve(ctx, sc_table, out_dir, columns, plot_type, lcoe, log_file,
-                 verbose):
+def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, lcoe,
+                 log_file, verbose, terminal):
     """
     Summarize and plot reV Supply Curve dataß
     """
+    name = ctx.obj['NAME']
     if any([verbose, ctx.obj['VERBOSE']]):
         log_level = 'DEBUG'
     else:
@@ -201,8 +222,17 @@ def supply_curve(ctx, sc_table, out_dir, columns, plot_type, lcoe, log_file,
 
     init_logger('reV.qa_qc', log_file=log_file, log_level=log_level)
 
-    QaQc.supply_curve(sc_table, out_dir, columns=columns, lcoe=lcoe,
+    qa_dir = out_dir
+    if sub_dir is not None:
+        qa_dir = os.path.join(out_dir, sub_dir)
+
+    QaQc.supply_curve(sc_table, qa_dir, columns=columns, lcoe=lcoe,
                       plot_type=plot_type)
+
+    if terminal:
+        status = {'dirout': out_dir, 'job_status': 'successful',
+                  'finput': sc_table}
+        Status.make_job_file(out_dir, 'qa-qc', name, status)
 
 
 @main.command()
@@ -244,15 +274,19 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     if config.execution_control.option == 'local':
-        status = Status.retrieve_job_status(config.dirout, 'QA-QC',
+        status = Status.retrieve_job_status(config.dirout, 'qa-qc',
                                             name)
         if status != 'successful':
             Status.add_job(
-                config.dirout, 'QA-QC', name, replace=True,
+                config.dirout, 'qa-qc', name, replace=True,
                 job_attrs={'hardware': 'local',
                            'dirout': config.dirout})
 
-            for module in config.module_names:
+            terminal = False
+            for i, module in enumerate(config.module_names):
+                if i == len(config.module_names) - 1:
+                    terminal = True
+
                 module_config = config.get_module_inputs(module)
                 fpath = module_config.fpath
                 if fpath.endswith('.h5'):
@@ -261,7 +295,8 @@ def from_config(ctx, config_file, verbose):
                         os.path.basename(fpath).replace('.h5', '.log'))
                     ctx.invoke(reV_h5,
                                h5_file=fpath,
-                               out_dir=module_config.out_dir,
+                               out_dir=config.dirout,
+                               sub_dir=module_config.sub_dir,
                                dsets=module_config.dsets,
                                group=module_config.group,
                                process_size=module_config.process_size,
@@ -269,19 +304,22 @@ def from_config(ctx, config_file, verbose):
                                plot_type=module_config.plot_type,
                                cmap=module_config.cmap,
                                log_file=log_file,
-                               verbose=verbose)
+                               verbose=verbose,
+                               terminal=terminal)
                 elif fpath.endswith('.csv'):
                     log_file = os.path.join(
                         config.logdir,
                         os.path.basename(fpath).replace('.csv', '.log'))
                     ctx.invoke(supply_curve,
                                sc_table=fpath,
-                               out_dir=module_config.out_dir,
+                               out_dir=config.dirout,
+                               sub_dir=module_config.sub_dir,
                                columns=module_config.columns,
                                plot_type=module_config.plot_type,
                                lcoe=module_config.lcoe,
                                log_file=log_file,
-                               verbose=verbose)
+                               verbose=verbose,
+                               terminal=terminal)
                 else:
                     msg = ("Cannot run QA/QC for {}: 'fpath' must be a '*.h5' "
                            "or '*.csv' reV output file, but {} was given!"
@@ -290,26 +328,28 @@ def from_config(ctx, config_file, verbose):
                     raise ValueError(msg)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
-        launch_slurm(config)
+        launch_slurm(config, verbose)
 
 
-def get_h5_cmd(name, h5_file, out_dir, dsets, group, process_size, max_workers,
-               plot_type, cmap, log_file, verbose):
+def get_h5_cmd(name, h5_file, out_dir, sub_dir, dsets, group, process_size,
+               max_workers, plot_type, cmap, log_file, verbose, terminal):
     """Build CLI call for reV_h5."""
 
     args = ('-h5 {h5_file} '
             '-o {out_dir} '
+            '-sd {sub_dir} '
             '-ds {dsets} '
             '-grp {group} '
             '-ps {process_size} '
             '-w {max_workers} '
             '-plt {plot_type} '
             '-cmap {cmap} '
-            '-log {log_file}'
+            '-log {log_file} '
             )
 
     args = args.format(h5_file=SLURM.s(h5_file),
                        out_dir=SLURM.s(out_dir),
+                       sub_dir=SLURM.s(sub_dir),
                        dsets=SLURM.s(dsets),
                        group=SLURM.s(group),
                        process_size=SLURM.s(process_size),
@@ -322,26 +362,31 @@ def get_h5_cmd(name, h5_file, out_dir, dsets, group, process_size, max_workers,
     if verbose:
         args += '-v '
 
-    cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} reV-h5 {}'
+    if terminal:
+        args += '-t '
+
+    cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} rev-h5 {}'
            .format(SLURM.s(name), args))
 
     return cmd
 
 
-def get_sc_cmd(name, sc_table, out_dir, columns, plot_type, lcoe, log_file,
-               verbose):
+def get_sc_cmd(name, sc_table, out_dir, sub_dir, columns, plot_type, lcoe,
+               log_file, verbose, terminal):
     """Build CLI call for supply_curve."""
 
     args = ('-sct {sc_table} '
             '-o {out_dir} '
+            '-sd {sub_dir} '
             '-cols {columns} '
             '-plt {plot_type} '
             '-lcoe {lcoe} '
-            '-log {log_file}'
+            '-log {log_file} '
             )
 
     args = args.format(sc_table=SLURM.s(sc_table),
                        out_dir=SLURM.s(out_dir),
+                       sub_dir=SLURM.s(sub_dir),
                        columns=SLURM.s(columns),
                        plot_type=SLURM.s(plot_type),
                        lcoe=SLURM.s(lcoe),
@@ -351,13 +396,16 @@ def get_sc_cmd(name, sc_table, out_dir, columns, plot_type, lcoe, log_file,
     if verbose:
         args += '-v '
 
+    if terminal:
+        args += '-t '
+
     cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} supply-curve {}'
            .format(SLURM.s(name), args))
 
     return cmd
 
 
-def launch_slurm(config):
+def launch_slurm(config, verbose):
     """
     Launch slurm QA/QC job
 
@@ -366,72 +414,78 @@ def launch_slurm(config):
     config : dict
         'reV QA/QC configuration dictionary'
     """
-    if config.log_level == logging.DEBUG:
-        verbose = True
 
     out_dir = config.dirout
+    log_file = os.path.join(config.logdir, config.name + '.log')
+    stdout_path = os.path.join(config.logdir, 'stdout/')
 
     node_cmd = []
-    for module in config.module_names:
+    terminal = False
+    for i, module in enumerate(config.module_names):
         module_config = config.get_module_inputs(module)
-        fpath = module_config.fpath
-        if fpath.endswith('.h5'):
-            log_file = os.path.join(
-                config.logdir,
-                os.path.basename(fpath).replace('.h5', '.log'))
-            node_cmd.append(get_h5_cmd(config.name, fpath,
-                                       module_config.out_dir,
-                                       module_config.dsets,
-                                       module_config.group,
-                                       module_config.process_size,
-                                       module_config.max_workers,
-                                       module_config.plot_type,
-                                       module_config.cmap,
-                                       log_file,
-                                       verbose))
-        elif fpath.endswith('.csv'):
-            log_file = os.path.join(
-                config.logdir,
-                os.path.basename(fpath).replace('.csv', '.log'))
-            node_cmd.append(get_sc_cmd(config.name, fpath,
-                                       module_config.out_dir,
-                                       module_config.columns,
-                                       module_config.plot_type,
-                                       module_config.lcoe,
-                                       log_file,
-                                       verbose))
-        else:
-            msg = ("Cannot run QA/QC for {}: 'fpath' must be a '*.h5' "
-                   "or '*.csv' reV output file, but {} was given!"
-                   .format(module, fpath))
-            logger.error(msg)
-            raise ValueError(msg)
+        fpaths = module_config.fpath
 
-    status = Status.retrieve_job_status(out_dir, 'QA-QC', config.name)
+        if isinstance(fpaths, str):
+            fpaths = [fpaths]
+
+        for j, fpath in enumerate(fpaths):
+            if (i == len(config.module_names) - 1) and (j == len(fpaths) - 1):
+                terminal = True
+
+            if fpath.endswith('.h5'):
+                node_cmd.append(get_h5_cmd(config.name, fpath, out_dir,
+                                           module_config.sub_dir,
+                                           module_config.dsets,
+                                           module_config.group,
+                                           module_config.process_size,
+                                           module_config.max_workers,
+                                           module_config.plot_type,
+                                           module_config.cmap,
+                                           log_file,
+                                           verbose,
+                                           terminal))
+            elif fpath.endswith('.csv'):
+                node_cmd.append(get_sc_cmd(config.name, fpath, out_dir,
+                                           module_config.sub_dir,
+                                           module_config.columns,
+                                           module_config.plot_type,
+                                           module_config.lcoe,
+                                           log_file,
+                                           verbose,
+                                           terminal))
+            else:
+                msg = ("Cannot run QA/QC for {}: 'fpath' must be a '*.h5' "
+                       "or '*.csv' reV output file, but {} was given!"
+                       .format(module, fpath))
+                logger.error(msg)
+                raise ValueError(msg)
+
+    status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
                .format(config.name, out_dir))
     else:
         node_cmd = '\n'.join(node_cmd)
-        logger.info('Running reV SC aggregation on SLURM with '
+        logger.info('Running reV QA-QC on SLURM with '
                     'node name "{}"'.format(config.name))
         slurm = SLURM(node_cmd, alloc=config.execution_control.alloc,
                       memory=config.execution_control.node_mem,
                       feature=config.execution_control.feature,
                       walltime=config.execution_control.walltime,
                       conda_env=config.execution_control.conda_env,
-                      module=config.execution_control.module)
+                      module=config.execution_control.module,
+                      stdout_path=stdout_path)
         if slurm.id:
-            msg = ('Kicked off reV SC aggregation job "{}" '
+            msg = ('Kicked off reV QA-QC job "{}" '
                    '(SLURM jobid #{}).'
                    .format(config.name, slurm.id))
             Status.add_job(
-                out_dir, 'supply-curve-aggregation', config.name, replace=True,
+                out_dir, 'qa-qc', config.name, replace=True,
                 job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
                            'dirout': out_dir})
         else:
-            msg = ('Was unable to kick off reV SC job "{}". '
+            msg = ('Was unable to kick off reV QA-QC job "{}". '
                    'Please see the stdout error messages'
                    .format(config.name))
 
