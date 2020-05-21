@@ -258,7 +258,7 @@ class Summarize:
                 meta = meta.reset_index()
 
             for ds_name in f.datasets:
-                if ds_name not in ['meta', 'time_index']:
+                if 'meta' not in ds_name and 'time_index' not in ds_name:
                     shape = f.get_dset_properties(ds_name)[0]
                     if len(shape) == 1:
                         meta[ds_name] = f[ds_name]
