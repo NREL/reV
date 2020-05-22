@@ -573,7 +573,7 @@ def launch_slurm(config, verbose):
         module_config = config.get_module_inputs(module)
         fpaths = module_config.fpath
 
-        if isinstance(fpaths, str):
+        if isinstance(fpaths, (str, type(None))):
             fpaths = [fpaths]
 
         for j, fpath in enumerate(fpaths):
