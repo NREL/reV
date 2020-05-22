@@ -216,7 +216,7 @@ class QaQc:
     @classmethod
     def exclusions_mask(cls, excl_h5, out_dir, layers_dict=None, min_area=None,
                         kernel='queen', hsds=False, plot_type='plotly',
-                        cmap='viridis', **kwargs):
+                        cmap='viridis', plot_step=100, **kwargs):
         """
         Create inclusion mask from given layers dictionary, dump to disk and
         plot
@@ -238,6 +238,8 @@ class QaQc:
             plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
             Colormap name, by default 'viridis'
+        plot_step : int
+            Step between points to plot
         kwargs : dict
             Additional plotting kwargs
         """
@@ -257,7 +259,7 @@ class QaQc:
 
             SummaryPlots.exclusions_mask(excl_mask, out_dir,
                                          plot_type=plot_type, cmap=cmap,
-                                         **kwargs)
+                                         plot_step=plot_step, **kwargs)
         except Exception as e:
             logger.exception('QAQC failed on file: {}. Received exception:\n{}'
                              .format(os.path.basename(excl_h5), e))

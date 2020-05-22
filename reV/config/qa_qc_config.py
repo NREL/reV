@@ -143,6 +143,7 @@ class QaQcModule:
         self._out_root = out_root
         self._default_plot_type = 'plotly'
         self._default_cmap = 'viridis'
+        self._default_plot_step = 100
         self._default_lcoe = 'mean_lcoe'
         self._default_area_filter_kernel = 'queen'
 
@@ -215,6 +216,11 @@ class QaQcModule:
     def cmap(self):
         """Get the QA/QC plot colormap"""
         return self._config.get('cmap', self._default_cmap)
+
+    @property
+    def plot_step(self):
+        """Get the QA/QC step between exclusion mask points to plot"""
+        return self._config.get('cmap', self._default_plot_step)
 
     @property
     def columns(self):

@@ -139,14 +139,17 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
                     "default 'plot'"))
 @click.option('--cmap', '-cmap', type=str, default='viridis',
               help="Colormap name, by default 'viridis'")
+@click.option('--plot_step', '-step', type=int, default=100,
+              help="Step between points to plot")
 @click.pass_context
-def exclusions_mask(ctx, excl_mask, plot_type, cmap):
+def exclusions_mask(ctx, excl_mask, plot_type, cmap, plot_step):
     """
     create heat map of exclusions mask
     """
     excl_mask = np.load(excl_mask)
-    SummaryPlots.exclusions_mask(excl_mask, ctx.obj['OUT_DIR'], plot_type,
-                                 cmap)
+    SummaryPlots.exclusions_mask(excl_mask, ctx.obj['OUT_DIR'],
+                                 plot_type=plot_type, cmap=cmap,
+                                 plot_step=plot_step)
 
 
 @main.command()
@@ -284,6 +287,8 @@ def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
                     "default 'plot'"))
 @click.option('--cmap', '-cmap', type=str, default='viridis',
               help="Colormap name, by default 'viridis'")
+@click.option('--plot_step', '-step', type=int, default=100,
+              help="Step between points to plot")
 @click.option('--log_file', '-log', type=click.Path(), default=None,
               help='File to log to, by default None')
 @click.option('-v', '--verbose', is_flag=True,
@@ -293,8 +298,8 @@ def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
                     'Prints successful status file.'))
 @click.pass_context
 def exclusions(ctx, excl_fpath, out_dir, sub_dir, excl_dict,
-               area_filter_kernel, min_area, plot_type, cmap, log_file,
-               verbose, terminal):
+               area_filter_kernel, min_area, plot_type, cmap, plot_step,
+               log_file, verbose, terminal):
     """
     Extract and plot reV exclusions mask
     """
@@ -315,7 +320,7 @@ def exclusions(ctx, excl_fpath, out_dir, sub_dir, excl_dict,
 
     QaQc.exclusions_mask(excl_fpath, qa_dir, layers_dict=excl_dict,
                          min_area=min_area, kernel=area_filter_kernel,
-                         plot_type=plot_type, cmap=cmap)
+                         plot_type=plot_type, cmap=cmap, plot_step=plot_step)
 
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
@@ -390,6 +395,7 @@ def from_config(ctx, config_file, verbose):
                                min_area=module_config.min_area,
                                plot_type=module_config.plot_type,
                                cmap=module_config.cmap,
+                               plot_step=module_config.plot_step,
                                log_file=log_file,
                                verbose=verbose,
                                terminal=terminal)
@@ -515,8 +521,8 @@ def get_sc_cmd(name, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
 
 
 def get_excl_cmd(name, excl_fpath, out_dir, sub_dir, excl_dict,
-                 area_filter_kernel, min_area, plot_type, cmap, log_file,
-                 verbose, terminal):
+                 area_filter_kernel, min_area, plot_type, cmap, plot_step,
+                 log_file, verbose, terminal):
     """Build CLI call for exclusions."""
 
     args = ('-excl {excl_fpath} '
@@ -527,6 +533,7 @@ def get_excl_cmd(name, excl_fpath, out_dir, sub_dir, excl_dict,
             '-ma {min_area} '
             '-plt {plot_type} '
             '-cmap {cmap} '
+            '-step {plot_step} '
             '-log {log_file} '
             )
 
@@ -538,6 +545,7 @@ def get_excl_cmd(name, excl_fpath, out_dir, sub_dir, excl_dict,
                        min_area=SLURM.s(min_area),
                        plot_type=SLURM.s(plot_type),
                        cmap=SLURM.s(cmap),
+                       plot_step=SLURM.s(plot_step),
                        log_file=SLURM.s(log_file),
                        )
 
@@ -589,6 +597,7 @@ def launch_slurm(config, verbose):
                                              module_config.min_area,
                                              module_config.plot_type,
                                              module_config.cmap,
+                                             module_config.plot_step,
                                              log_file,
                                              verbose,
                                              terminal))

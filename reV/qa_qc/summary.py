@@ -430,7 +430,8 @@ class SummaryPlots:
             fig.write_image(out_path)
 
     @staticmethod
-    def exclusions_plot(mask, cmap='Viridis', out_path=None, **kwargs):
+    def exclusions_plot(mask, cmap='Viridis', plot_step=100, out_path=None,
+                        **kwargs):
         """
         Plot exclusions mask as a seaborn heatmap
 
@@ -440,16 +441,20 @@ class SummaryPlots:
             ndarray of final exclusions mask
         cmap : str | px.color, optional
             Continuous color scale to use, by default 'Viridis'
+        plot_step : int
+            Step between points to plot
         out_path : str, optional
             File path to save plot to, can be a .html or static image,
             by default None
         kwargs : dict
             Additional kwargs for plotting.colormaps.heatmap_plot
         """
-        mplt.heatmap_plot(mask, cmap=cmap, filename=out_path, **kwargs)
+        mplt.heatmap_plot(mask[::plot_step, ::plot_step], cmap=cmap,
+                          filename=out_path, **kwargs)
 
     @staticmethod
-    def exclusions_plotly(mask, cmap='Viridis', out_path=None, **kwargs):
+    def exclusions_plotly(mask, cmap='Viridis', plot_step=100, out_path=None,
+                          **kwargs):
         """
         Plot exclusions mask as a plotly heatmap
 
@@ -459,13 +464,16 @@ class SummaryPlots:
             ndarray of final exclusions mask
         cmap : str | px.color, optional
             Continuous color scale to use, by default 'Viridis'
+        plot_step : int
+            Step between points to plot
         out_path : str, optional
             File path to save plot to, can be a .html or static image,
             by default None
         kwargs : dict
             Additional kwargs for plotly.express.imshow
         """
-        fig = px.imshow(mask, color_continuous_scale=cmap, **kwargs)
+        fig = px.imshow(mask[::plot_step, ::plot_step],
+                        color_continuous_scale=cmap, **kwargs)
         fig.update_layout(font=dict(family="Arial", size=18, color="black"))
 
         if out_path is not None:
@@ -766,7 +774,7 @@ class SummaryPlots:
 
     @classmethod
     def exclusions_mask(cls, mask, out_dir, plot_type='plotly', cmap='Viridis',
-                        **kwargs):
+                        plot_step=100, **kwargs):
         """
         Plot exclusions mask and save to out_dir
 
@@ -780,6 +788,8 @@ class SummaryPlots:
             plot_type of plot to create 'plot' or 'plotly', by default 'plotly'
         cmap : str, optional
             Colormap name, by default 'viridis'
+        plot_step : int
+            Step between points to plot
         kwargs : dict
             Additional plotting kwargs
         """
@@ -787,7 +797,8 @@ class SummaryPlots:
             out_path = 'exclusions_mask.png'
             out_path = os.path.join(out_dir, out_path)
             try:
-                cls.exclusions_plot(mask, cmap=cmap.lower(), out_path=out_path,
+                cls.exclusions_plot(mask, cmap=cmap.lower(),
+                                    plot_step=plot_step, out_path=out_path,
                                     **kwargs)
             except Exception as e:
                 msg = ('Could not QA exclusions mask, received the following '
@@ -799,7 +810,8 @@ class SummaryPlots:
                 out_path = 'exclusions_mask.html'
                 out_path = os.path.join(out_dir, out_path)
                 cls.exclusions_plotly(mask, cmap=cmap.capitalize(),
-                                      out_path=out_path, **kwargs)
+                                      plot_step=plot_step, out_path=out_path,
+                                      **kwargs)
             except Exception as e:
                 msg = ('Could not QA exclusions mask, received the following '
                        'error:\n{}'.format(e))
