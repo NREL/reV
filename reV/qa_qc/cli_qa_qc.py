@@ -224,7 +224,7 @@ def reV_h5(ctx, h5_file, out_dir, sub_dir, dsets, group, process_size,
 @click.option('--cmap', '-cmap', type=str, default='viridis',
               help="Colormap name, by default 'viridis'")
 @click.option('--lcoe', '-lcoe', type=STR, default='mean_lcoe',
-              help="LCOE value to plot, by default 'mean_lcoe'")
+              help="LCOE column label to plot, by default 'mean_lcoe'")
 @click.option('--log_file', '-log', type=click.Path(), default=None,
               help='File to log to, by default None')
 @click.option('-v', '--verbose', is_flag=True,
@@ -580,7 +580,9 @@ def launch_slurm(config, verbose):
             if (i == len(config.module_names) - 1) and (j == len(fpaths) - 1):
                 terminal = True
             if module.lower() == 'exclusions':
-                node_cmd.append(get_excl_cmd(config.name, fpath, out_dir,
+                node_cmd.append(get_excl_cmd(config.name,
+                                             module_config.excl_fpath,
+                                             out_dir,
                                              module_config.sub_dir,
                                              module_config.excl_dict,
                                              module_config.area_filter_kernel,

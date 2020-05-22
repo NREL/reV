@@ -3,6 +3,7 @@
 reV QA/QC config
 """
 import logging
+from warnings import warn
 
 from reV.utilities.exceptions import ConfigError, PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
@@ -226,17 +227,94 @@ class QaQcModule:
         return self._config.get('lcoe', self._default_lcoe)
 
     @property
+    def excl_fpath(self):
+        """Get the source exclusions filepath"""
+        excl_fpath = self._config.get('excl_fpath', 'PIPELINE')
+
+        if excl_fpath == 'PIPELINE':
+            try:
+                excl_fpath = Pipeline.parse_previous(
+                    self._out_root, 'qa-qc', target='excl_fpath',
+                    target_module='supply-curve-aggregation')[0]
+            except KeyError:
+                excl_fpath = None
+                msg = ('Could not parse excl_fpath from previous '
+                       'pipeline jobs, defaulting to: {}'.format(excl_fpath))
+                logger.warning(msg)
+                warn(msg)
+            else:
+                logger.info('QA/QC using the following '
+                            'pipeline input for excl_fpath: {}'
+                            .format(excl_fpath))
+
+        return excl_fpath
+
+    @property
     def excl_dict(self):
         """Get the exclusions dictionary"""
-        return self._config.get('excl_dict', None)
+        excl_dict = self._config.get('excl_dict', 'PIPELINE')
+
+        if excl_dict == 'PIPELINE':
+            try:
+                excl_dict = Pipeline.parse_previous(
+                    self._out_root, 'qa-qc', target='excl_dict',
+                    target_module='supply-curve-aggregation')[0]
+            except KeyError:
+                excl_dict = None
+                msg = ('Could not parse excl_dict from previous '
+                       'pipeline jobs, defaulting to: {}'.format(excl_dict))
+                logger.warning(msg)
+                warn(msg)
+            else:
+                logger.info('QA/QC using the following '
+                            'pipeline input for excl_dict: {}'
+                            .format(excl_dict))
+
+        return excl_dict
 
     @property
     def area_filter_kernel(self):
         """Get the minimum area filter kernel name ('queen' or 'rook')."""
-        return self._config.get('area_filter_kernel',
-                                self._default_area_filter_kernel)
+        area_filter_kernel = self._config.get('area_filter_kernel', 'PIPELINE')
+
+        if area_filter_kernel == 'PIPELINE':
+            try:
+                area_filter_kernel = Pipeline.parse_previous(
+                    self._out_root, 'qa-qc', target='area_filter_kernel',
+                    target_module='supply-curve-aggregation')[0]
+            except KeyError:
+                area_filter_kernel = self._default_area_filter_kernel
+                msg = ('Could not parse area_filter_kernel from previous '
+                       'pipeline jobs, defaulting to: {}'
+                       .format(area_filter_kernel))
+                logger.warning(msg)
+                warn(msg)
+            else:
+                logger.info('QA/QC using the following '
+                            'pipeline input for area_filter_kernel: {}'
+                            .format(area_filter_kernel))
+
+        return area_filter_kernel
 
     @property
     def min_area(self):
         """Get the minimum area filter minimum area in km2."""
-        return self._config.get('min_area', None)
+        min_area = self._config.get('min_area', 'PIPELINE')
+
+        if min_area == 'PIPELINE':
+            try:
+                min_area = Pipeline.parse_previous(
+                    self._out_root, 'qa-qc', target='min_area',
+                    target_module='supply-curve-aggregation')[0]
+            except KeyError:
+                min_area = None
+                msg = ('Could not parse min_area from previous '
+                       'pipeline jobs, defaulting to: {}.'.format(min_area))
+                logger.warning(msg)
+                warn(msg)
+            else:
+                logger.info('QA/QC using the following '
+                            'pipeline input for min_area: {}'
+                            .format(min_area))
+
+        return min_area

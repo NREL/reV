@@ -786,13 +786,25 @@ class SummaryPlots:
         if plot_type == 'plot':
             out_path = 'exclusions_mask.png'
             out_path = os.path.join(out_dir, out_path)
-            cls.exclusions_plot(mask, cmap=cmap.lower(), out_path=out_path,
-                                **kwargs)
+            try:
+                cls.exclusions_plot(mask, cmap=cmap.lower(), out_path=out_path,
+                                    **kwargs)
+            except Exception as e:
+                msg = ('Could not QA exclusions mask, received the following '
+                       'error:\n{}'.format(e))
+                logger.exception(msg)
+                raise RuntimeError(msg)
         elif plot_type == 'plotly':
-            out_path = 'exclusions_mask.html'
-            out_path = os.path.join(out_dir, out_path)
-            cls.exclusions_plotly(mask, cmap=cmap.capitalize(),
-                                  out_path=out_path, **kwargs)
+            try:
+                out_path = 'exclusions_mask.html'
+                out_path = os.path.join(out_dir, out_path)
+                cls.exclusions_plotly(mask, cmap=cmap.capitalize(),
+                                      out_path=out_path, **kwargs)
+            except Exception as e:
+                msg = ('Could not QA exclusions mask, received the following '
+                       'error:\n{}'.format(e))
+                logger.exception(msg)
+                raise RuntimeError(msg)
         else:
             msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
                    .format(plot_type))
