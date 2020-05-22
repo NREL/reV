@@ -214,9 +214,9 @@ class QaQc:
                         .format(os.path.basename(sc_table), out_dir))
 
     @classmethod
-    def exclusion_mask(cls, excl_h5, out_dir, layers_dict=None, min_area=None,
-                       kernel='queen', hsds=False, plot_type='plotly',
-                       cmap='viridis', **kwargs):
+    def exclusions_mask(cls, excl_h5, out_dir, layers_dict=None, min_area=None,
+                        kernel='queen', hsds=False, plot_type='plotly',
+                        cmap='viridis', **kwargs):
         """
         Create inclusion mask from given layers dictionary, dump to disk and
         plot
@@ -230,7 +230,7 @@ class QaQc:
         min_area : float | NoneType
             Minimum required contiguous area in sq-km
         kernel : str
-            Contiguous filter method to use on final exclusion
+            Contiguous filter method to use on final exclusions
         hsds : bool
             Boolean flag to use h5pyd to handle .h5 'files' hosted on AWS
             behind HSDS
@@ -255,9 +255,9 @@ class QaQc:
             out_file = os.path.join(out_dir, out_file)
             np.save(out_file, excl_mask)
 
-            SummaryPlots.exclusion_mask(excl_mask, out_dir,
-                                        plot_type=plot_type, cmap=cmap,
-                                        **kwargs)
+            SummaryPlots.exclusions_mask(excl_mask, out_dir,
+                                         plot_type=plot_type, cmap=cmap,
+                                         **kwargs)
         except Exception as e:
             logger.exception('QAQC failed on file: {}. Received exception:\n{}'
                              .format(os.path.basename(excl_h5), e))

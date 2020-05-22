@@ -4,11 +4,13 @@ QA/QC CLI entry points.
 """
 import click
 import logging
+import numpy as np
 import os
 import pprint
-from rex.utilities.cli_dtypes import STR, STRLIST, INT
+from rex.utilities.cli_dtypes import STR, STRLIST, INT, FLOAT
 from rex.utilities.execution import SLURM
 from rex.utilities.loggers import init_logger, init_mult
+from rex.utilities.utilities import dict_str_load
 
 from reV.config.qa_qc_config import QaQcConfig
 from reV.pipeline.status import Status
@@ -127,6 +129,26 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
                               plot_type=plot_type, lcoe=lcoe)
 
 
+@summarize.command()
+@click.option('--excl_mask', '-mask', type=click.Path(exists=True),
+              required=True,
+              help='Path to .npy file containing final exclusions mask')
+@click.option('--plot_type', '-plt', default='plotly',
+              type=click.Choice(['plot', 'plotly'], case_sensitive=False),
+              help=(" plot_type of plot to create 'plot' or 'plotly', by "
+                    "default 'plot'"))
+@click.option('--cmap', '-cmap', type=str, default='viridis',
+              help="Colormap name, by default 'viridis'")
+@click.pass_context
+def exclusions_mask(ctx, excl_mask, plot_type, cmap):
+    """
+    create heat map of exclusions mask
+    """
+    excl_mask = np.load(excl_mask)
+    SummaryPlots.exclusions_mask(excl_mask, ctx.obj['OUT_DIR'], plot_type,
+                                 cmap)
+
+
 @main.command()
 @click.option('--h5_file', '-h5', type=click.Path(exists=True), required=True,
               help='Path to .h5 file to summarize')
@@ -234,6 +256,70 @@ def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
                   'finput': sc_table}
+        Status.make_job_file(out_dir, 'qa-qc', name, status)
+
+
+@main.command()
+@click.option('--excl_fpath', '-excl', type=click.Path(exists=True),
+              required=True,
+              help='Exclusions file (.h5).')
+@click.option('--out_dir', '-o', type=click.Path(), required=True,
+              help="Project output directory path.")
+@click.option('--sub_dir', '-sd', type=STR, required=True,
+              help="Sub directory to save summary tables and plots too")
+@click.option('--excl_dict', '-exd', type=STR, default=None,
+              help='String representation of a dictionary of exclusions '
+              'LayerMask arguments {layer: {kwarg: value}} where layer is a '
+              'dataset in excl_fpath and kwarg can be "inclusion_range", '
+              '"exclude_values", "include_values", "use_as_weights", '
+              '"exclude_nodata", and/or "weight".')
+@click.option('--area_filter_kernel', '-afk', type=STR, default='queen',
+              help='Contiguous area filter kernel name ("queen", "rook").')
+@click.option('--min_area', '-ma', type=FLOAT, default=None,
+              help='Contiguous area filter minimum area, default is None '
+              '(No minimum area filter).')
+@click.option('--plot_type', '-plt', default='plotly',
+              type=click.Choice(['plot', 'plotly'], case_sensitive=False),
+              help=(" plot_type of plot to create 'plot' or 'plotly', by "
+                    "default 'plot'"))
+@click.option('--cmap', '-cmap', type=str, default='viridis',
+              help="Colormap name, by default 'viridis'")
+@click.option('--log_file', '-log', type=click.Path(), default=None,
+              help='File to log to, by default None')
+@click.option('-v', '--verbose', is_flag=True,
+              help='Flag to turn on debug logging.')
+@click.option('-t', '--terminal', is_flag=True,
+              help=('Flag for terminal QA pipeline call. '
+                    'Prints successful status file.'))
+@click.pass_context
+def exclusions(ctx, excl_fpath, out_dir, sub_dir, excl_dict,
+               area_filter_kernel, min_area, plot_type, cmap, log_file,
+               verbose, terminal):
+    """
+    Extract and plot reV exclusions mask
+    """
+    name = ctx.obj['NAME']
+    if any([verbose, ctx.obj['VERBOSE']]):
+        log_level = 'DEBUG'
+    else:
+        log_level = 'INFO'
+
+    init_logger('reV.qa_qc', log_file=log_file, log_level=log_level)
+
+    qa_dir = out_dir
+    if sub_dir is not None:
+        qa_dir = os.path.join(out_dir, sub_dir)
+
+    if isinstance(excl_dict, str):
+        excl_dict = dict_str_load(excl_dict)
+
+    QaQc.exclusions_mask(excl_fpath, qa_dir, layers_dict=excl_dict,
+                         min_area=min_area, kernel=area_filter_kernel,
+                         plot_type=plot_type, cmap=cmap)
+
+    if terminal:
+        status = {'dirout': out_dir, 'job_status': 'successful',
+                  'finput': excl_fpath}
         Status.make_job_file(out_dir, 'qa-qc', name, status)
 
 
@@ -405,6 +491,45 @@ def get_sc_cmd(name, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
         args += '-t '
 
     cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} supply-curve {}'
+           .format(SLURM.s(name), args))
+
+    return cmd
+
+
+def get_excl_cmd(name, excl_fpath, out_dir, sub_dir, excl_dict,
+                 area_filter_kernel, min_area, plot_type, cmap, log_file,
+                 verbose, terminal):
+    """Build CLI call for exclusions."""
+
+    args = ('-excl {excl_fpath} '
+            '-o {out_dir} '
+            '-sd {sub_dir} '
+            '-exd {excl_dict} '
+            '-afk {area_filter_kernel} '
+            '-ma {min_area} '
+            '-plt {plot_type} '
+            '-cmap {cmap} '
+            '-log {log_file} '
+            )
+
+    args = args.format(excl_fpath=SLURM.s(excl_fpath),
+                       out_dir=SLURM.s(out_dir),
+                       sub_dir=SLURM.s(sub_dir),
+                       excl_dict=SLURM.s(excl_dict),
+                       area_filter_kernel=SLURM.s(area_filter_kernel),
+                       min_area=SLURM.s(min_area),
+                       plot_type=SLURM.s(plot_type),
+                       cmap=SLURM.s(cmap),
+                       log_file=SLURM.s(log_file),
+                       )
+
+    if verbose:
+        args += '-v '
+
+    if terminal:
+        args += '-t '
+
+    cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} exclusions {}'
            .format(SLURM.s(name), args))
 
     return cmd

@@ -143,6 +143,7 @@ class QaQcModule:
         self._default_plot_type = 'plotly'
         self._default_cmap = 'viridis'
         self._default_lcoe = 'mean_lcoe'
+        self._default_area_filter_kernel = 'queen'
 
     @property
     def fpath(self):
@@ -223,3 +224,19 @@ class QaQcModule:
     def lcoe(self):
         """Get the supply_curve lcoe column to plot"""
         return self._config.get('lcoe', self._default_lcoe)
+
+    @property
+    def excl_dict(self):
+        """Get the exclusions dictionary"""
+        return self._config.get('excl_dict', None)
+
+    @property
+    def area_filter_kernel(self):
+        """Get the minimum area filter kernel name ('queen' or 'rook')."""
+        return self._config.get('area_filter_kernel',
+                                self._default_area_filter_kernel)
+
+    @property
+    def min_area(self):
+        """Get the minimum area filter minimum area in km2."""
+        return self._config.get('min_area', None)

@@ -430,14 +430,14 @@ class SummaryPlots:
             fig.write_image(out_path)
 
     @staticmethod
-    def exclusion_plot(mask, cmap='Viridis', out_path=None, **kwargs):
+    def exclusions_plot(mask, cmap='Viridis', out_path=None, **kwargs):
         """
-        Plot exclusion mask as a seaborn heatmap
+        Plot exclusions mask as a seaborn heatmap
 
         Parameters
         ----------
         mask : ndarray
-            ndarray of final exclusion mask
+            ndarray of final exclusions mask
         cmap : str | px.color, optional
             Continuous color scale to use, by default 'Viridis'
         out_path : str, optional
@@ -449,14 +449,14 @@ class SummaryPlots:
         mplt.heatmap_plot(mask, cmap=cmap, filename=out_path, **kwargs)
 
     @staticmethod
-    def exclusion_plotly(mask, cmap='Viridis', out_path=None, **kwargs):
+    def exclusions_plotly(mask, cmap='Viridis', out_path=None, **kwargs):
         """
-        Plot exclusion mask as a plotly heatmap
+        Plot exclusions mask as a plotly heatmap
 
         Parameters
         ----------
         mask : ndarray
-            ndarray of final exclusion mask
+            ndarray of final exclusions mask
         cmap : str | px.color, optional
             Continuous color scale to use, by default 'Viridis'
         out_path : str, optional
@@ -765,15 +765,15 @@ class SummaryPlots:
             raise ValueError(msg)
 
     @classmethod
-    def exclusion_mask(cls, mask, out_dir, plot_type='plotly', cmap='Viridis',
-                       **kwargs):
+    def exclusions_mask(cls, mask, out_dir, plot_type='plotly', cmap='Viridis',
+                        **kwargs):
         """
         Plot exclusions mask and save to out_dir
 
         Parameters
         ----------
         mask : ndarray
-            ndarray of final exclusion mask
+            ndarray of final exclusions mask
         out_dir : str
             Output directory to save plots to
         plot_type : str, optional
@@ -786,13 +786,13 @@ class SummaryPlots:
         if plot_type == 'plot':
             out_path = 'exclusions_mask.png'
             out_path = os.path.join(out_dir, out_path)
-            cls.exclusion_plot(mask, cmap=cmap.lower(), out_path=out_path,
-                               **kwargs)
+            cls.exclusions_plot(mask, cmap=cmap.lower(), out_path=out_path,
+                                **kwargs)
         elif plot_type == 'plotly':
             out_path = 'exclusions_mask.html'
             out_path = os.path.join(out_dir, out_path)
-            cls.exclusion_plotly(mask, cmap=cmap.capitalize(),
-                                 out_path=out_path, **kwargs)
+            cls.exclusions_plotly(mask, cmap=cmap.capitalize(),
+                                  out_path=out_path, **kwargs)
         else:
             msg = ("plot_type must be 'plot' or 'plotly' but {} was given"
                    .format(plot_type))
