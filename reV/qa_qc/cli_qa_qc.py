@@ -344,8 +344,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['NAME'] = name
 
     # Enforce verbosity if logging level is specified in the config
-    if config.log_level == logging.DEBUG:
-        verbose = True
+    verbose = True if config.log_level == logging.DEBUG else False
 
     # initialize loggers
     init_mult(name, config.logdir, modules=[__name__, 'reV.config',
@@ -377,7 +376,25 @@ def from_config(ctx, config_file, verbose):
 
                 module_config = config.get_module_inputs(module)
                 fpath = module_config.fpath
-                if fpath.endswith('.h5'):
+                if module.lower() == 'exclusions':
+                    log_file = os.path.join(
+                        config.logdir,
+                        os.path.basename(fpath).replace('.h5', '.log'))
+                    afk = module_config.area_filter_kernel
+                    ctx.invoke(exclusions,
+                               excl_fpath=fpath,
+                               out_dir=config.dirout,
+                               sub_dir=module_config.sub_dir,
+                               excl_dict=module_config.excl_dict,
+                               area_filter_kernel=afk,
+                               min_area=module_config.min_area,
+                               plot_type=module_config.plot_type,
+                               cmap=module_config.cmap,
+                               log_file=log_file,
+                               verbose=verbose,
+                               terminal=terminal)
+
+                elif fpath.endswith('.h5'):
                     log_file = os.path.join(
                         config.logdir,
                         os.path.basename(fpath).replace('.h5', '.log'))
@@ -394,6 +411,7 @@ def from_config(ctx, config_file, verbose):
                                log_file=log_file,
                                verbose=verbose,
                                terminal=terminal)
+
                 elif fpath.endswith('.csv'):
                     log_file = os.path.join(
                         config.logdir,
@@ -561,8 +579,18 @@ def launch_slurm(config, verbose):
         for j, fpath in enumerate(fpaths):
             if (i == len(config.module_names) - 1) and (j == len(fpaths) - 1):
                 terminal = True
-
-            if fpath.endswith('.h5'):
+            if module.lower() == 'exclusions':
+                node_cmd.append(get_excl_cmd(config.name, fpath, out_dir,
+                                             module_config.sub_dir,
+                                             module_config.excl_dict,
+                                             module_config.area_filter_kernel,
+                                             module_config.min_area,
+                                             module_config.plot_type,
+                                             module_config.cmap,
+                                             log_file,
+                                             verbose,
+                                             terminal))
+            elif fpath.endswith('.h5'):
                 node_cmd.append(get_h5_cmd(config.name, fpath, out_dir,
                                            module_config.sub_dir,
                                            module_config.dsets,
