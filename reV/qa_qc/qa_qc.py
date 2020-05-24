@@ -252,6 +252,7 @@ class QaQc:
                                                   min_area=min_area,
                                                   kernel=kernel,
                                                   hsds=hsds)
+            excl_mask = np.round(excl_mask * 100).astype('uint8')
 
             out_file = os.path.basename(excl_h5).replace('.h5', '_mask.npy')
             out_file = os.path.join(out_dir, out_file)
