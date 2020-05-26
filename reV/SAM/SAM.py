@@ -305,9 +305,10 @@ class Sam:
                 setattr(getattr(self.pysam, group), key, value)
             except Exception as e:
                 msg = ('Could not set input key "{}" to '
-                       'group "{}" in "{}". '
+                       'group "{}" in "{}".\n'
+                       'Data is: {} ({})\n'
                        'Received the following error: "{}"'
-                       .format(key, group, self.pysam, e))
+                       .format(key, group, self.pysam, value, type(value), e))
                 logger.exception(msg)
                 raise SAMInputError(msg)
 
