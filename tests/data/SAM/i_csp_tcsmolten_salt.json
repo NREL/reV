@@ -45184,6 +45184,7 @@
   "system_use_lifetime_output": 0,
   "system_use_recapitalization": 0,
   "tank_pairs": 1,
+  "tanks_in_parallel": 0,
   "tech_type": 1,
   "term_int_rate": 7,
   "term_tenor": 18,

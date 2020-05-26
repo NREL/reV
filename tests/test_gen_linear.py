@@ -58,13 +58,17 @@ def test_gen_linear():
     my_assert(gen.out['m_dot_field'], 15146.1688, 1)
     my_assert(gen.out['q_dot_sf_out'], 10946.40988, 0)
     my_assert(gen.out['W_dot_heat_sink_pump'], 0.173017451, 6)
-    my_assert(gen.out['annual_field_energy'], 5219918, 0)
+    my_assert(gen.out['annual_field_energy'], 5219916.0, 0)
     my_assert(gen.out['annual_thermal_consumption'], 3178, 0)
 
     # Verify series are in correct order and have been rolled correctly
-    profiles = pickle.load(open(PICKLEFILE, 'rb'))
-    for k in profiles.keys():
-        assert np.array_equal(profiles[k], gen.out[k])
+    if os.path.exists(PICKLEFILE):
+        profiles = pickle.load(open(PICKLEFILE, 'rb'))
+        for k in profiles.keys():
+            assert np.array_equal(profiles[k], gen.out[k])
+    else:
+        with open(PICKLEFILE, 'wb') as handle:
+            pickle.dump(gen.out, handle)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
