@@ -98,7 +98,8 @@ class SamResourceRetriever:
         kwargs['clearsky'] = project_points.sam_config_obj.clearsky
         kwargs['tech'] = project_points.tech
         # Check for resource means:
-        if 'dni_mean' in output_request or 'ghi_mean' in output_request:
+        mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']
+        if any([x in output_request for x in mean_keys]):
             kwargs['means'] = True
 
         # check for downscaling request

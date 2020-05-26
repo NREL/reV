@@ -20,11 +20,8 @@ import PySAM.LinearFresnelDsgIph as pysam_lfdi
 
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
-from reV.utilities.utilities import mean_irrad
 from reV.SAM.SAM import RevPySam
 from reV.SAM.econ import LCOE, SingleOwner
-from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
-from reV.utilities.curtailment import curtail
 
 logger = logging.getLogger(__name__)
 DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -305,7 +302,8 @@ class Generation(RevPySam):
         resources = RevPySam.get_sam_res(res_file,
                                          points_control.project_points,
                                          points_control.project_points.tech,
-                                         downscale=downscale)
+                                         downscale=downscale,
+                                         output_request=output_request)
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment
