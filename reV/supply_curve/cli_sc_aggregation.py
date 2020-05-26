@@ -279,10 +279,15 @@ def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
             finput.append(res_fpath)
 
         # add job to reV status file.
-        status = {'dirout': out_dir, 'fout': fn_out,
+        status = {'dirout': out_dir,
+                  'fout': fn_out,
                   'job_status': 'successful',
                   'runtime': runtime,
-                  'finput': finput}
+                  'finput': finput,
+                  'excl_fpath': excl_fpath,
+                  'excl_dict': excl_dict,
+                  'area_filter_kernel': area_filter_kernel,
+                  'min_area': min_area}
         Status.make_job_file(out_dir, 'supply-curve-aggregation', name, status)
 
 

@@ -22,6 +22,7 @@ Submodules
    reV.config.output_request
    reV.config.pipeline
    reV.config.project_points
+   reV.config.qa_qc_config
    reV.config.rep_profiles_config
    reV.config.sam_analysis_configs
    reV.config.sam_config
