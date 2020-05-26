@@ -5,7 +5,7 @@
   ],
   "directories": {
     "log_directory": "./logs/",
-    "output_directory": "./"
+    "output_directory": "./outputs/"
   },
   "execution_control": {
     "allocation": "rev",
