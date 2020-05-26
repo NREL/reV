@@ -4,28 +4,29 @@
 Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
-import json
 import copy
 import os
 import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
-import PySAM.Pvwattsv5 as pysam_pv
-import PySAM.Windpower as pysam_wind
-import PySAM.TcsmoltenSalt as pysam_csp
-import PySAM.Swh as pysam_swh
-import PySAM.TroughPhysicalProcessHeat as pysam_tpph
-import PySAM.LinearFresnelDsgIph as pysam_lfdi
+import PySAM.Pvwattsv5 as PySamPV5
+import PySAM.Windpower as PySamWindPower
+import PySAM.TcsmoltenSalt as PySamCSP
+import PySAM.Swh as PySamSWH
+import PySAM.TroughPhysicalProcessHeat as PySamTPPH
+import PySAM.LinearFresnelDsgIph as PySamLDS
 
+from reV.SAM.defaults import (DefaultPvwattsv5, DefaultWindPower,
+                              DefaultTcsMoltenSalt, DefaultSwh,
+                              DefaultTroughPhysicalProcessHeat,
+                              DefaultLinearFresnelDsgIph)
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
 from reV.SAM.SAM import RevPySam
 from reV.SAM.econ import LCOE, SingleOwner
 
 logger = logging.getLogger(__name__)
-DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
 
 
 class Generation(RevPySam):
@@ -498,7 +499,7 @@ class PV(Solar):
     """Photovoltaic (PV) generation with pvwattsv5.
     """
     MODULE = 'pvwattsv5'
-    PYSAM = pysam_pv
+    PYSAM = PySamPV5
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
@@ -541,20 +542,7 @@ class PV(Solar):
             Executed pvwatts pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            config_file = os.path.join(DEFAULTSDIR, 'SAM/i_pvwatts.json')
-            with open(config_file, 'r') as f:
-                config = json.load(f)
-            self._default = pysam_pv.new()
-            for k, v in config.items():
-                group = self._get_group(k, outputs=False)
-                if group:
-                    setattr(getattr(self._default, group), k, v)
-            self._default.AdjustmentFactors.constant = 0.0
-            self._default.SolarResource.solar_resource_file = res_file
-            self._default.execute()
+            self._default = DefaultPvwattsv5.default()
 
         return self._default
 
@@ -583,7 +571,7 @@ class CSP(Solar):
     """Concentrated Solar Power (CSP) generation
     """
     MODULE = 'tcsmolten_salt'
-    PYSAM = pysam_csp
+    PYSAM = PySamCSP
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
@@ -614,12 +602,7 @@ class CSP(Solar):
             Executed TcsmoltenSalt pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            self._default = pysam_csp.default('MSPTSingleOwner')
-            self._default.SolarResource.solar_resource_file = res_file
-            self._default.execute()
+            self._default = DefaultTcsMoltenSalt.default()
 
         return self._default
 
@@ -757,7 +740,7 @@ class SolarWaterHeat(SolarThermal):
     Solar Water Heater generation
     """
     MODULE = 'solarwaterheat'
-    PYSAM = pysam_swh
+    PYSAM = PySamSWH
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -795,12 +778,7 @@ class SolarWaterHeat(SolarThermal):
             Executed  pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            self._default = pysam_swh.default('SolarWaterHeatingNone')
-            self._default.Weather.solar_resource_file = res_file
-            self._default.execute()
+            self._default = DefaultSwh.default()
 
         return self._default
 
@@ -810,7 +788,7 @@ class LinearDirectSteam(SolarThermal):
     Process heat linear Fresnel direct steam generation
     """
     MODULE = 'lineardirectsteam'
-    PYSAM = pysam_lfdi
+    PYSAM = PySamLDS
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -863,12 +841,7 @@ class LinearDirectSteam(SolarThermal):
             Executed  pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA CA Daggett (TMY2).csv')
-            self._default = pysam_lfdi.default('DSGLIPHNone')
-            self._default.Weather.file_name = res_file
-            self._default.execute()
+            self._default = DefaultLinearFresnelDsgIph.default()
 
         return self._default
 
@@ -878,7 +851,7 @@ class TroughPhysicalHeat(SolarThermal):
     Trough Physical Process Heat generation
     """
     MODULE = 'troughphysicalheat'
-    PYSAM = pysam_tpph
+    PYSAM = PySamTPPH
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -931,12 +904,7 @@ class TroughPhysicalHeat(SolarThermal):
             Executed  pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            self._default = pysam_tpph.default('PhysicalTroughIPHNone')
-            self._default.Weather.file_name = res_file
-            self._default.execute()
+            self._default = DefaultTroughPhysicalProcessHeat.default()
 
         return self._default
 
@@ -945,7 +913,7 @@ class Wind(Generation):
     """Base class for Wind generation from SAM
     """
     MODULE = 'windpower'
-    PYSAM = pysam_wind
+    PYSAM = PySamWindPower
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -1044,11 +1012,7 @@ class Wind(Generation):
             Executed Windpower pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR, 'SAM/WY Southern-Flat Lands.csv')
-            self._default = pysam_wind.default('WindPowerNone')
-            self._default.Resource .wind_resource_filename = res_file
-            self._default.execute()
+            self._default = DefaultWindPower.default()
 
         return self._default
 
