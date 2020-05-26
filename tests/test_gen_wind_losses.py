@@ -49,13 +49,13 @@ LOW_TEMP_BASELINE = {0: {'temp': -5.0,
 @pytest.mark.parametrize('loss', [0.0, 16.7, 30.0])
 def test_wind_generic_losses(loss):
     """Test varying wind turbine losses"""
-    pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'wind',
+    pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
 
     del pc.project_points.sam_configs[SAM_FILE]['wind_farm_losses_percent']
     pc.project_points.sam_configs[SAM_FILE]['turb_generic_loss'] = loss
 
-    gen = Gen.reV_run('wind', pc, SAM_FILE, RES_FILE,
+    gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
@@ -65,7 +65,7 @@ def test_wind_generic_losses(loss):
 @pytest.mark.parametrize('i', range(3))
 def test_wind_icing_losses(i):
     """Test wind icing losses."""
-    pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'wind',
+    pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
 
     pc.project_points.sam_configs[SAM_FILE]['en_icing_cutoff'] = 1
@@ -74,7 +74,7 @@ def test_wind_icing_losses(i):
     pc.project_points.sam_configs[SAM_FILE]['icing_cutoff_rh'] = \
         ICING_BASELINE[i]['rh']
 
-    gen = Gen.reV_run('wind', pc, SAM_FILE, RES_FILE,
+    gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
@@ -84,14 +84,14 @@ def test_wind_icing_losses(i):
 @pytest.mark.parametrize('i', range(2))
 def test_wind_low_temp_cutoff(i):
     """Test wind low temperature cutoff."""
-    pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'wind',
+    pc = Gen.get_pc(REV2_POINTS, None, SAM_FILE, 'windpower',
                     sites_per_worker=3, res_file=RES_FILE)
 
     pc.project_points.sam_configs[SAM_FILE]['en_low_temp_cutoff'] = 1
     pc.project_points.sam_configs[SAM_FILE]['low_temp_cutoff'] = \
         LOW_TEMP_BASELINE[i]['temp']
 
-    gen = Gen.reV_run('wind', pc, SAM_FILE, RES_FILE,
+    gen = Gen.reV_run('windpower', pc, SAM_FILE, RES_FILE,
                       max_workers=1, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
