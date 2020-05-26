@@ -15,7 +15,8 @@ from rex.utilities.utilities import dict_str_load
 from reV.config.qa_qc_config import QaQcConfig
 from reV.pipeline.status import Status
 from reV.qa_qc.qa_qc import QaQc
-from reV.qa_qc.summary import Summarize, SummaryPlots
+from reV.qa_qc.summary import (SummarizeH5, SummarizeSupplyCurve,
+                               SupplyCurvePlot, ExclusionsMask)
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +74,8 @@ def h5(ctx, h5_file, dsets, group, process_size, max_workers):
     """
     Summarize datasets in .h5 file
     """
-    Summarize.run(h5_file, ctx.obj['OUT_DIR'], group=group, dsets=dsets,
-                  process_size=process_size, max_workers=max_workers)
+    SummarizeH5.run(h5_file, ctx.obj['OUT_DIR'], group=group, dsets=dsets,
+                    process_size=process_size, max_workers=max_workers)
 
 
 @summarize.command()
@@ -89,7 +90,7 @@ def scatter_plots(ctx, plot_type, cmap):
     """
     create scatter plots from h5 summary tables
     """
-    QaQc._scatter_plots(ctx.obj['OUT_DIR'], plot_type, cmap)
+    QaQc.create_scatter_plots(ctx.obj['OUT_DIR'], plot_type, cmap)
 
 
 @summarize.command()
@@ -104,7 +105,7 @@ def supply_curve_table(ctx, sc_table, columns):
     Summarize Supply Curve Table
     """
     ctx.obj['SC_TABLE'] = sc_table
-    Summarize.supply_curve(sc_table, ctx.obj['OUT_DIR'], columns=columns)
+    SummarizeSupplyCurve.run(sc_table, ctx.obj['OUT_DIR'], columns=columns)
 
 
 @summarize.command()
@@ -125,8 +126,8 @@ def supply_curve_plot(ctx, sc_table, plot_type, lcoe):
     if sc_table is None:
         sc_table = ctx.obj['SC_TABLE']
 
-    SummaryPlots.supply_curve(sc_table, ctx.obj['OUT_DIR'],
-                              plot_type=plot_type, lcoe=lcoe)
+    SupplyCurvePlot.plot(sc_table, ctx.obj['OUT_DIR'],
+                         plot_type=plot_type, lcoe=lcoe)
 
 
 @summarize.command()
@@ -147,9 +148,9 @@ def exclusions_mask(ctx, excl_mask, plot_type, cmap, plot_step):
     create heat map of exclusions mask
     """
     excl_mask = np.load(excl_mask)
-    SummaryPlots.exclusions_mask(excl_mask, ctx.obj['OUT_DIR'],
-                                 plot_type=plot_type, cmap=cmap,
-                                 plot_step=plot_step)
+    ExclusionsMask.plot(excl_mask, ctx.obj['OUT_DIR'],
+                        plot_type=plot_type, cmap=cmap,
+                        plot_step=plot_step)
 
 
 @main.command()
@@ -200,9 +201,9 @@ def reV_h5(ctx, h5_file, out_dir, sub_dir, dsets, group, process_size,
     if sub_dir is not None:
         qa_dir = os.path.join(out_dir, sub_dir)
 
-    QaQc.run(h5_file, qa_dir, dsets=dsets, group=group,
-             process_size=process_size, max_workers=max_workers,
-             plot_type=plot_type, cmap=cmap)
+    QaQc.h5(h5_file, qa_dir, dsets=dsets, group=group,
+            process_size=process_size, max_workers=max_workers,
+            plot_type=plot_type, cmap=cmap)
 
     if terminal:
         status = {'dirout': out_dir, 'job_status': 'successful',
