@@ -20,6 +20,11 @@
       "fpath": "PIPELINE",
       "sub_dir": "QA_collect"
     },
+    "exclusions": {
+      "fpath": null,
+      "plot_type": "plotly",
+      "sub_dir": "QA_exclusions"
+    },
     "multi-year": {
       "dsets": [
         "cf_mean-means",
