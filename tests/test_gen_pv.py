@@ -273,7 +273,9 @@ def test_pv_name_error():
 
 
 def test_pvwattsv7():
-    """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
+    """Test reV pvwattsv7 generation against baseline data"""
+
+    baseline_cf_mean = np.array([151, 151, 157])
 
     year = 2012
     rev2_points = slice(0, 3)
@@ -285,7 +287,8 @@ def test_pvwattsv7():
     gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
                       sam_files=sam_files, res_file=res_file, max_workers=1,
                       sites_per_worker=1, fout=None)
-    print(gen.out)
+
+    assert all(gen.out['cf_mean'] == baseline_cf_mean)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

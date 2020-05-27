@@ -488,6 +488,11 @@ class Solar(Generation, ABC):
         resource['lon'] = self.meta['longitude']
         resource['tz'] = self.meta['timezone']
 
+        if 'elevation' in self.meta:
+            resource['elev'] = self.meta['elevation']
+        else:
+            resource['elev'] = 0.0
+
         resource['minute'] = self.ensure_res_len(time_index.minute)
         resource['hour'] = self.ensure_res_len(time_index.hour)
         resource['year'] = self.ensure_res_len(time_index.year)
