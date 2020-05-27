@@ -255,6 +255,39 @@ def get_r1_profiles(year=2012):
     return data
 
 
+def test_pv_name_error():
+    """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+
+    # run reV 2.0 generation
+    with pytest.raises(KeyError) as record:
+        pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
+        Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
+                    res_file=res_file, max_workers=1,
+                    sites_per_worker=1, fout=None)
+        assert 'Did not recognize' in record[0].message
+
+
+def test_pvwattsv7():
+    """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
+
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, max_workers=1,
+                      sites_per_worker=1, fout=None)
+    print(gen.out)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

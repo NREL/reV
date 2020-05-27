@@ -3,14 +3,20 @@
 """reV SAM unit test module
 """
 import os
+from pkg_resources import get_distribution
+from packaging import version
 import pytest
 import numpy as np
 import pandas as pd
 import warnings
 
+from reV.SAM.defaults import (DefaultPvwattsv5, DefaultPvwattsv7,
+                              DefaultWindPower)
 from reV.SAM.generation import Pvwattsv5
 from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
+from reV.SAM.version_checker import PySamVersionChecker
+from reV.utilities.exceptions import PySAMVersionWarning
 
 from rex.renewable_resource import NSRDB
 
@@ -89,6 +95,56 @@ def test_time_interval(dt):
                        freq=dt)[:-1]
     interval = Pvwattsv5.get_time_interval(ti)
     assert interval == baseline[dt]
+
+
+def test_pysam_version_checker_pv():
+    """Test that the pysam version checker passes through PV config untouched.
+    """
+    pv_config = {'gcr': 0.4, 'system_capacity': 1}
+
+    with pytest.warns(None) as record:
+        parameters = PySamVersionChecker.run('pvwattsv5', pv_config)
+
+    assert not any(record)
+    assert 'gcr' in parameters
+    assert 'system_capacity' in parameters
+
+
+def test_pysam_version_checker_wind():
+    """Check that the pysam version checker recognizes outdated config keys
+    from pysam v1 and fixes them and raises warning.
+    """
+    wind_config = {'wind_farm_losses_percent': 10, 'system_capacity': 1}
+
+    pysam_version = str(get_distribution('nrel-pysam')).split(' ')[1]
+    pysam_version = version.parse(pysam_version)
+
+    if pysam_version > version.parse('2.1.0'):
+        with pytest.warns(PySAMVersionWarning) as record:
+            parameters = PySamVersionChecker.run('windpower', wind_config)
+
+        assert 'old SAM v1 keys' in str(record[0].message)
+        assert 'turb_generic_loss' in parameters
+        assert 'system_capacity' in parameters
+        assert 'wind_farm_losses_percent'
+
+
+def test_default_pvwattsv5():
+    """Test default pvwattsv5 execution and compare baseline annual energy"""
+    default = DefaultPvwattsv5.default()
+    assert round(default.Outputs.annual_energy, -1) == 6830
+
+
+def test_default_pvwattsv7():
+    """Test default pvwattsv7 execution and compare baseline annual energy"""
+    default = DefaultPvwattsv7.default()
+    assert round(default.Outputs.annual_energy, -1) == 6940
+
+
+def test_default_windpower():
+    """Test default windpower execution and compare baseline annual energy"""
+    default = DefaultWindPower.default()
+    assert round(default.Outputs.annual_energy, -1) == 201595970
 
 
 def execute_pytest(capture='all', flags='-rapP'):

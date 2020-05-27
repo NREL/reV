@@ -2,7 +2,6 @@
 """PySAM default implementations."""
 import json
 import os
-from reV.SAM.SAM import Sam
 import PySAM.Pvwattsv5 as PySamPV5
 import PySAM.Pvwattsv7 as PySamPV7
 import PySAM.Windpower as PySamWindPower
@@ -18,26 +17,24 @@ DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
 
 
-class DefaultPvwattsv5(Sam):
+class DefaultPvwattsv5:
     """Class for default PVWattsv5"""
-    PYSAM = PySamPV5
 
-    @classmethod
-    def default(cls):
+    @staticmethod
+    def default():
         """Get the default PySAM pvwattsv5 object"""
-        base_instance = cls()
         res_file = os.path.join(
             DEFAULTSDIR,
             'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         config_file = os.path.join(DEFAULTSDIR, 'SAM/i_pvwattsv5.json')
+
         with open(config_file, 'r') as f:
             config = json.load(f)
-        obj = base_instance.PYSAM.new()
 
+        obj = PySamPV5.new()
         for k, v in config.items():
-            group = base_instance._get_group(k, outputs=False)
-            if group:
-                setattr(getattr(obj, group), k, v)
+            if 'adjust:' not in k and 'file' not in k:
+                obj.value(k, v)
 
         obj.AdjustmentFactors.constant = 0.0
         obj.SolarResource.solar_resource_file = res_file
