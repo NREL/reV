@@ -19,7 +19,7 @@ class PySamVersionChecker:
     """Check the PySAM version and modify input keys if required."""
 
     WIND = {'wind_farm_losses_percent': 'turb_generic_loss'}
-    V2_KEYS = {'wind': WIND}
+    V2_KEYS = {'windpower': WIND}
 
     def __init__(self, requirement='2'):
         """
@@ -62,16 +62,17 @@ class PySamVersionChecker:
             Updated input parameters dictionary
         """
 
-        corrections = None
-        for key, value in self.V2_KEYS.items():
-            if key in tech:
-                corrections = value
-                break
+        if version.parse(self.version) >= version.parse('2'):
 
-        if corrections is not None:
-            if version.parse(self.version) >= version.parse('2'):
-                for key in parameters.keys():
-                    if key in corrections:
+            corrections = None
+            for key, value in self.V2_KEYS.items():
+                if key in tech:
+                    corrections = value
+                    break
+
+            if corrections is not None:
+                for key in corrections:
+                    if key in parameters:
                         new_key = corrections[key]
                         parameters[new_key] = parameters.pop(key)
                         m = ('It appears old SAM v1 keys are being used. '

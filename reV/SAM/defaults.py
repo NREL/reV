@@ -29,7 +29,7 @@ class DefaultPvwattsv5(Sam):
         res_file = os.path.join(
             DEFAULTSDIR,
             'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-        config_file = os.path.join(DEFAULTSDIR, 'SAM/i_pvwatts.json')
+        config_file = os.path.join(DEFAULTSDIR, 'SAM/i_pvwattsv5.json')
         with open(config_file, 'r') as f:
             config = json.load(f)
         obj = base_instance.PYSAM.new()
