@@ -48,7 +48,7 @@ def test_gen_tph():
 
     # Some results may be different with PySAM 2 vs 1.2.1
     my_assert(gen.out['annual_thermal_consumption'], 17648.283, 0)
-    my_assert(gen.out['annual_gross_energy'], 14399956., -2)
+    my_assert(gen.out['annual_gross_energy'], 14400000., -6)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

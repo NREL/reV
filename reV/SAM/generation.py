@@ -731,7 +731,7 @@ class SolarThermal(Solar):
         """
         super()._gen_exec()
 
-        if delete_wfile:
+        if delete_wfile and os.path.exists(self._pysam_w_fname):
             os.remove(self._pysam_w_fname)
 
 
