@@ -61,10 +61,13 @@ class SAMAnalysisConfig(AnalysisConfig):
         Returns
         -------
         tech : str
-            reV technology string to analyze (e.g. pv, csp, wind, etc...).
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string is lower-cased with spaces and underscores removed.
         """
         if self._tech is None:
-            self._tech = self['technology'].lower().replace(' ', '')
+            self._tech = self['technology'].lower()
+            self._tech = self._tech.replace(' ', '').replace('_', '')
         return self._tech
 
     @property

@@ -29,5 +29,5 @@
   "sam_files": {
     "default": "./pv.json"
   },
-  "technology": "pv"
+  "technology": "pvwattsv7"
 }

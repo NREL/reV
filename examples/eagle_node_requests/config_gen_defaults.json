@@ -24,5 +24,5 @@
   "sam_files": {
     "i_pvwatts": "./sam_configs/i_pvwatts_gen.json"
   },
-  "technology": "pv"
+  "technology": "pvwattsv7"
 }

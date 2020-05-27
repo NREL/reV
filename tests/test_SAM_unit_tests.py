@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import warnings
 
-from reV.SAM.generation import PV
+from reV.SAM.generation import Pvwattsv5
 from reV import TESTDATADIR
 from reV.config.project_points import ProjectPoints
 
@@ -36,7 +36,7 @@ def test_res_length(res):
     for res_df, meta in res:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            res_dropped = PV.ensure_res_len(res_df.values)
+            res_dropped = Pvwattsv5.ensure_res_len(res_df.values)
         break
     compare = np.allclose(res_dropped[:9000, :], res_df.values[:9000, :])
     return compare
@@ -46,7 +46,7 @@ def test_leap_year(res):
     """Test the method to ensure resource array length with dropping leap day.
     """
     for res_df, meta in res:
-        res_dropped = PV.drop_leap(res_df)
+        res_dropped = Pvwattsv5.drop_leap(res_df)
         break
     compare = np.allclose(res_dropped.iloc[-9000:, :].values,
                           res_df.iloc[-9000:, :].values)
@@ -72,8 +72,8 @@ def test_PV_lat_tilt(res, site_index):
             # iterate through requested sites.
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                sim = PV(resource=res_df, meta=meta, parameters=inputs,
-                         output_request=('cf_mean',))
+                sim = Pvwattsv5(resource=res_df, meta=meta, parameters=inputs,
+                                output_request=('cf_mean',))
             break
         else:
             pass
@@ -87,7 +87,7 @@ def test_time_interval(dt):
     baseline = {'1h': 1, '30min': 2, '5min': 12}
     ti = pd.date_range('1-1-{y}'.format(y=2012), '1-1-{y}'.format(y=2013),
                        freq=dt)[:-1]
-    interval = PV.get_time_interval(ti)
+    interval = Pvwattsv5.get_time_interval(ti)
     assert interval == baseline[dt]
 
 

@@ -471,7 +471,8 @@ class RevPySam(Sam):
     # Mapping for reV technology and SAM module to h5 resource handler type
     # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
     RESOURCE_TYPES = {'pv': SolarResource, 'pvwattsv5': SolarResource,
-                      'csp': SolarResource, 'tcsmolten_salt': SolarResource,
+                      'pvwattsv7': SolarResource,
+                      'csp': SolarResource, 'tcsmoltensalt': SolarResource,
                       'solarwaterheat': SolarResource,
                       'troughphysicalheat': SolarResource,
                       'lineardirectsteam': SolarResource,

@@ -89,10 +89,10 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
-    gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, max_workers=max_workers,
-                      sites_per_worker=3, fout=None)
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5', res_file=res_file)
+    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file,
+                      max_workers=max_workers, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -113,11 +113,11 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
                              f_rev1_out)
     sam_files = {'sam_param_0': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
                  'sam_param_1': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'}
-    pp = ProjectPoints(rev2_points, sam_files, 'pv')
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, fout=None)
+    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -140,9 +140,9 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
                  TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json']
     sam_files = {'sam_param_{}'.format(i): k for i, k in
                  enumerate(sam_files)}
-    pp = ProjectPoints(rev2_points, sam_files, 'pv')
-    gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, fout=None)
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5')
+    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -166,7 +166,7 @@ def test_pv_gen_profiles(year):
     points = slice(0, 100)
 
     # run reV 2.0 generation and write to disk
-    Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
+    Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
                 res_file=res_file, fout=rev2_out,
                 output_request=('cf_profile',),
                 max_workers=2, sites_per_worker=50, dirout=rev2_out_dir)
@@ -204,7 +204,7 @@ def test_smart(year):
     points = slice(0, 10)
 
     # run reV 2.0 generation and write to disk
-    Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
+    Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
                 res_file=res_file, fout=rev2_out,
                 max_workers=2, sites_per_worker=50, dirout=rev2_out_dir,
                 output_request=('cf_profile',))
@@ -238,7 +238,7 @@ def test_multi_file_nsrdb_2018():
     sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
     res_file = TESTDATADIR + '/nsrdb/nsrdb_*{}.h5'.format(2018)
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
+    gen = Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
                       res_file=res_file, max_workers=max_workers,
                       sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)

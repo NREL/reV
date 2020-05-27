@@ -213,7 +213,9 @@ class ProjectPoints:
             of unique configs requested by points csv. Can also be a
             pre loaded SAMConfig object.
         tech : str
-            reV technology being executed.
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
@@ -551,7 +553,9 @@ class ProjectPoints:
         Returns
         -------
         _tech : str
-            reV technology being executed.
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
         """
         tech = self._tech
         if 'wind' in tech.lower():
