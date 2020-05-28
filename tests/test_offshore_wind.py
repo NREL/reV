@@ -10,12 +10,14 @@ Created on Dec 16 2019
 import os
 import pytest
 import numpy as np
+import pandas as pd
 import json
 
 from reV.offshore.offshore import Offshore
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.supply_curve.supply_curve import SupplyCurve
 
 
 GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/ri_wind_gen_profiles_2010.h5')
@@ -29,7 +31,11 @@ OUTPUT_FILE = os.path.join(TESTDATADIR, 'offshore/out.h5')
 # this is an archived version of the test_offshore_module()
 # output file (OUTPUT_FILE) used for input to test_sc_agg_offshore()
 OFFSHORE_BASELINE = os.path.join(TESTDATADIR,
-                                 'offshore/ri_offshore_archive.h5')
+                                 'offshore/ri_offshore_baseline.h5')
+AGG_BASELINE = os.path.join(TESTDATADIR,
+                            'offshore/ri_offshore_agg_baseline.csv')
+SC_BASELINE = os.path.join(TESTDATADIR,
+                           'offshore/ri_offshore_sc_baseline.csv')
 TM_DSET = 'techmap_wtk'
 RES_CLASS_DSET = 'ws_mean'
 CF_DSET = 'cf_mean'
@@ -47,10 +53,28 @@ EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
                           'exclude_nodata': True},
              'ri_reeds_regions': {'inclusion_range': (None, 400),
                                   'exclude_nodata': True}}
+TRANS_COSTS_1 = {'line_tie_in_cost': 200, 'line_cost': 1000,
+                 'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
+                 'sink_tie_in_cost': 100, 'available_capacity': 0.3}
 
 RTOL = 0.001
 
 PURGE_OUT = True
+
+
+@pytest.fixture
+def sc_points():
+    """Get the supply curve aggregation summary table"""
+    sc_points = pd.read_csv(AGG_BASELINE)
+    return sc_points
+
+
+@pytest.fixture
+def trans_table():
+    """Get the transmission mapping table"""
+    path = os.path.join(TESTDATADIR, 'trans_tables/ri_transmission_table.csv')
+    trans_table = pd.read_csv(path)
+    return trans_table
 
 
 @pytest.fixture
@@ -188,6 +212,33 @@ def test_sc_agg_offshore():
                 assert res_gid not in offshore_gids
     for gid in offshore_gids:
         assert gid in s['sc_point_gid'].values
+
+
+def test_offshore_sc_compute(sc_points, trans_table):
+    """Run the full SC compute and validate offshore parameters"""
+    sc_full = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
+                               transmission_costs=TRANS_COSTS_1)
+    baseline = pd.read_csv(SC_BASELINE)
+
+    for col in Offshore.DEFAULT_META_COLS:
+        msg = ('Offshore data column "{}" was not passed through to SC table'
+               .format(col))
+        assert col in sc_full, msg
+    assert 'combined_cap_cost' in sc_full
+
+    offshore_mask = (sc_full['offshore'] == 1)
+
+    cost = sc_full.loc[offshore_mask, 'combined_cap_cost'].values
+    columns = ['array_cable_CAPEX', 'export_cable_CAPEX', 'trans_cap_cost']
+    truth = sc_full.loc[offshore_mask, columns].values.sum(axis=1)
+    assert np.allclose(cost, truth), 'Offshore combined_cap_cost is incorrect'
+
+    cost = sc_full.loc[~offshore_mask, 'combined_cap_cost'].values
+    truth = sc_full.loc[~offshore_mask, 'trans_cap_cost'].values
+    assert np.allclose(cost, truth), 'Onshore combined_cap_cost is incorrect'
+
+    msg = 'Offshore SC compute no longer matches baseline data.'
+    assert np.allclose(sc_full['total_lcoe'], baseline['total_lcoe']), msg
 
 
 def plot_map(offshore):
