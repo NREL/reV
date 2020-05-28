@@ -40,7 +40,7 @@ def test_proj_control_iter(start, interval):
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     sam_files = os.path.join(TESTDATADIR,
                              'SAM/wind_gen_standard_losses_0.json')
-    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'wind',
+    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'windpower',
                        res_file=res_file)
     pc = PointsControl(pp, sites_per_split=n)
 
@@ -60,7 +60,7 @@ def test_proj_points_split(start, interval):
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     sam_files = os.path.join(TESTDATADIR,
                              'SAM/wind_gen_standard_losses_0.json')
-    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'wind',
+    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'windpower',
                        res_file=res_file)
 
     iter_interval = 5
@@ -81,7 +81,7 @@ def test_split_iter():
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     sam_files = os.path.join(TESTDATADIR,
                              'SAM/wind_gen_standard_losses_0.json')
-    pp = ProjectPoints(slice(0, 500, 5), sam_files, 'wind',
+    pp = ProjectPoints(slice(0, 500, 5), sam_files, 'windpower',
                        res_file=res_file)
 
     n = 3

@@ -99,7 +99,7 @@ def test_eagle(year):
     for mod in modules:
         init_logger(mod, log_level=log_level, log_file=log_file)
 
-    cmd = get_node_cmd(name=name, tech='pv',
+    cmd = get_node_cmd(name=name, tech='pvwattsv5',
                        points=points, points_range=None,
                        sam_files=sam_files, res_file=res_file,
                        sites_per_worker=None, max_workers=None,

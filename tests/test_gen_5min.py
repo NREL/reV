@@ -29,7 +29,7 @@ def test_gen_downscaling():
     res_file = os.path.join(TESTDATADIR, 'nsrdb', 'nsrdb_surfrad_2017.h5')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='pv', points=slice(0, None),
+    gen = Gen.reV_run(tech='pvwattsv5', points=slice(0, None),
                       sam_files=sam_files, res_file=res_file,
                       output_request=('cf_mean', 'cf_profile'),
                       downscale='5min', max_workers=1, sites_per_worker=100,

@@ -265,8 +265,9 @@ def test_pv_name_error():
 
     # run reV 2.0 generation
     with pytest.raises(KeyError) as record:
-        pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
-        Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
+        pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5',
+                           res_file=res_file)
+        Gen.reV_run(tech='pvwattsv5', points=rev2_points, sam_files=sam_files,
                     res_file=res_file, max_workers=1,
                     sites_per_worker=1, fout=None)
         assert 'Did not recognize' in record[0].message
