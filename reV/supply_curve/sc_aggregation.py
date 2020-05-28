@@ -15,6 +15,7 @@ from scipy.spatial import cKDTree
 from warnings import warn
 
 from reV.handlers.exclusions import ExclusionLayers
+from reV.offshore.offshore import Offshore as OffshoreClass
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
                                           AbstractAggregation,
                                           Aggregation)
@@ -641,7 +642,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         return summary
 
     def run_offshore(self, summary, offshore_capacity=600,
-                     offshore_gid_counts=494, offshore_pixel_area=4):
+                     offshore_gid_counts=494, offshore_pixel_area=4,
+                     offshore_meta_cols=None):
         """Get the offshore supply curve point summary. Each offshore resource
         pixel will be summarized in its own supply curve point.
 
@@ -656,6 +658,11 @@ class SupplyCurveAggregation(AbstractAggregation):
             offshore pixel area.
         offshore_pixel_area : int | float
             Approximate area of offshore resource pixels in km2.
+        offshore_meta_cols : list | tuple | None
+            Column labels from original offshore data file that were passed
+            through to the offshore module output meta data. None will use
+            Offshore class variable DEFAULT_META_COLS, and any
+            additional requested cols will be added to DEFAULT_META_COLS.
 
         Returns
         -------
@@ -682,9 +689,11 @@ class SupplyCurveAggregation(AbstractAggregation):
                 for i, _ in enumerate(summary):
                     summary[i]['offshore'] = 0
 
+                offshore_meta_cols = self._offshore_parse_meta_cols(
+                    offshore_meta_cols, fh.gen.meta)
+
                 for gen_gid, offshore in enumerate(offshore_flag):
                     if offshore:
-
                         if 'offshore_res_gids' not in fh.gen.meta:
                             e = ('Offshore sites found in wind data, but '
                                  '"offshore_res_gids" not found in the '
@@ -700,20 +709,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                         timezone = fh.gen.meta.loc[gen_gid, 'timezone']
                         res_gids = fh.gen.meta\
                             .loc[gen_gid, 'offshore_res_gids']
-                        sub_type = fh.gen.meta.loc[gen_gid, 'sub_type']
 
-                        res_class = 0
-                        if (res_class_bins[0] is not None
-                                and res_data is not None):
-                            for ri, res_bin in enumerate(res_class_bins):
-
-                                c1 = res_data[gen_gid] > np.min(res_bin)
-                                c2 = res_data[gen_gid] < np.max(res_bin)
-
-                                if c1 and c2:
-                                    res_class = ri
-                                    break
-
+                        res_class = self._offshore_get_res_class(
+                            res_class_bins, res_data, gen_gid)
                         cf = self._offshore_get_means(cf_data, gen_gid)
                         lcoe = self._offshore_get_means(lcoe_data, gen_gid)
                         res = self._offshore_get_means(res_data, gen_gid)
@@ -735,12 +733,50 @@ class SupplyCurveAggregation(AbstractAggregation):
                                     'timezone': timezone,
                                     'elevation': 0,
                                     'offshore': 1,
-                                    'sub_type': sub_type
                                     }
+
+                        for label in offshore_meta_cols:
+                            pointsum[label] = fh.gen.meta.loc[gen_gid, label]
 
                         summary.append(pointsum)
 
         return summary
+
+    @staticmethod
+    def _offshore_get_res_class(res_class_bins, res_data, gen_gid):
+        """Get the offshore resource class for one site if data is available.
+
+        Parameters
+        ----------
+        res_class_bins : list
+            List of resource class bins. Can be [None] if not resource
+            classes are requested (output will be 0).
+        res_data : np.ndarray | None
+            Generation output array of site resource data indexed by gen_gid.
+            None if no resource data was computed (output will be 0).
+        gen_gid : int
+            Generation gid (index) for site in question.
+            This is used to index res_data.
+
+        Returns
+        -------
+        res_class : int
+            Resource class integer. Zero if required data is not available.
+        """
+
+        res_class = 0
+        if (res_class_bins[0] is not None
+                and res_data is not None):
+            for ri, res_bin in enumerate(res_class_bins):
+
+                c1 = res_data[gen_gid] > np.min(res_bin)
+                c2 = res_data[gen_gid] < np.max(res_bin)
+
+                if c1 and c2:
+                    res_class = ri
+                    break
+
+        return res_class
 
     @staticmethod
     def _offshore_get_means(data, gen_gid):
@@ -804,6 +840,46 @@ class SupplyCurveAggregation(AbstractAggregation):
         return summary
 
     @staticmethod
+    def _offshore_parse_meta_cols(offshore_meta_cols, gen_meta):
+        """Parse the offshore meta columns and return a validated list.
+
+        Parameters
+        ----------
+        offshore_meta_cols : list | tuple | None
+            Column labels from original offshore data file that were passed
+            through to the offshore module output meta data. None will use
+            Offshore class variable DEFAULT_META_COLS, and any
+            additional requested cols will be added to DEFAULT_META_COLS.
+        gen_meta : pd.DataFrame
+            Meta data from the offshore generation output h5 file.
+
+        Returns
+        -------
+        offshore_meta_cols : list
+            List of offshore meta columns to include in aggregation summary,
+            validated for columns that are present in gen_meta.
+        """
+
+        if offshore_meta_cols is None:
+            offshore_meta_cols = list(OffshoreClass.DEFAULT_META_COLS)
+        else:
+            offshore_meta_cols = list(offshore_meta_cols)
+            offshore_meta_cols += list(OffshoreClass.DEFAULT_META_COLS)
+            offshore_meta_cols = list(set(offshore_meta_cols))
+
+        missing = [c for c in offshore_meta_cols if c not in gen_meta]
+        offshore_meta_cols = [c for c in offshore_meta_cols if c in gen_meta]
+
+        if any(missing):
+            msg = ('Requested offshore columns {} not found in '
+                   'generation meta data. Not including in '
+                   'aggregation output table.'.format(missing))
+            logger.warning(msg)
+            warn(msg)
+
+        return offshore_meta_cols
+
+    @staticmethod
     def _convert_bins(bins):
         """Convert a list of floats or ints to a list of two-entry bin bounds.
 
@@ -862,7 +938,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
     def summarize(self, args=None, excl_area=0.0081, max_workers=None,
                   offshore_capacity=600, offshore_gid_counts=494,
-                  offshore_pixel_area=4):
+                  offshore_pixel_area=4, offshore_meta_cols=None):
         """
         Get the supply curve points aggregation summary
 
@@ -883,6 +959,11 @@ class SupplyCurveAggregation(AbstractAggregation):
             offshore pixel area.
         offshore_pixel_area : int | float
             Approximate area of offshore resource pixels in km2.
+        offshore_meta_cols : list | tuple | None
+            Column labels from original offshore data file that were passed
+            through to the offshore module output meta data. None will use
+            Offshore class variable DEFAULT_META_COLS, and any
+            additional requested cols will be added to DEFAULT_META_COLS.
 
         Returns
         -------
@@ -916,7 +997,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         summary = self.run_offshore(summary,
                                     offshore_capacity=offshore_capacity,
                                     offshore_gid_counts=offshore_gid_counts,
-                                    offshore_pixel_area=offshore_pixel_area)
+                                    offshore_pixel_area=offshore_pixel_area,
+                                    offshore_meta_cols=offshore_meta_cols)
 
         if not any(summary):
             e = ('Supply curve selfregation found no non-excluded SC points. '
@@ -939,7 +1021,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 friction_fpath=None, friction_dset=None,
                 args=None, excl_area=0.0081, max_workers=None,
                 offshore_capacity=600, offshore_gid_counts=494,
-                offshore_pixel_area=4):
+                offshore_pixel_area=4, offshore_meta_cols=None):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -1006,6 +1088,11 @@ class SupplyCurveAggregation(AbstractAggregation):
             offshore pixel area.
         offshore_pixel_area : int | float
             Approximate area of offshore resource pixels in km2.
+        offshore_meta_cols : list | tuple | None
+            Column labels from original offshore data file that were passed
+            through to the offshore module output meta data. None will use
+            Offshore class variable DEFAULT_META_COLS, and any
+            additional requested cols will be added to DEFAULT_META_COLS.
 
         Returns
         -------
@@ -1026,6 +1113,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                 max_workers=max_workers,
                                 offshore_capacity=offshore_capacity,
                                 offshore_gid_counts=offshore_gid_counts,
-                                offshore_pixel_area=offshore_pixel_area)
+                                offshore_pixel_area=offshore_pixel_area,
+                                offshore_meta_cols=offshore_meta_cols)
 
         return summary
