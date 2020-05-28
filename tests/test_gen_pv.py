@@ -272,7 +272,7 @@ def test_pv_name_error():
         assert 'Did not recognize' in record[0].message
 
 
-def test_pvwattsv7():
+def test_pvwattsv7_baseline():
     """Test reV pvwattsv7 generation against baseline data"""
 
     baseline_cf_mean = np.array([151, 151, 157])
@@ -288,7 +288,32 @@ def test_pvwattsv7():
                       sam_files=sam_files, res_file=res_file, max_workers=1,
                       sites_per_worker=1, fout=None)
 
-    assert all(gen.out['cf_mean'] == baseline_cf_mean)
+    msg = ('PVWattsv7 cf_mean results {} did not match baseline: {}'
+           .format(gen.out['cf_mean'], baseline_cf_mean))
+    assert all(gen.out['cf_mean'] == baseline_cf_mean), msg
+
+
+def test_pvwatts_v5_v7():
+    """Test reV pvwatts generation for v5 vs. v7"""
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen7 = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                       sam_files=sam_files, res_file=res_file,
+                       max_workers=1, sites_per_worker=1, fout=None)
+
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5', res_file=res_file)
+    gen5 = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
+                       sam_files=sam_files, res_file=res_file,
+                       max_workers=1, sites_per_worker=1, fout=None)
+
+    msg = 'PVwatts v5 and v7 did not match within test tolerance'
+    assert np.allclose(gen7.out['cf_mean'], gen5.out['cf_mean'], atol=3), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):
