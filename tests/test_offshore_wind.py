@@ -10,36 +10,89 @@ Created on Dec 16 2019
 import os
 import pytest
 import numpy as np
+import pandas as pd
 import json
 
-pytest.importorskip("ORCA")
-
-from reV.handlers.outputs import Outputs
-from reV import TESTDATADIR
 from reV.offshore.offshore import Offshore
+from reV import TESTDATADIR
+from reV.handlers.outputs import Outputs
+from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV.supply_curve.supply_curve import SupplyCurve
 
 
 GEN_FPATH = os.path.join(TESTDATADIR, 'gen_out/ri_wind_gen_profiles_2010.h5')
-OFFSHORE_FPATH = os.path.join(
-    TESTDATADIR, 'offshore/preliminary_orca_results_09042019_JN.csv')
+EXCL_FPATH = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
+OFFSHORE_FPATH = os.path.join(TESTDATADIR, 'offshore/',
+                              'preliminary_orca_results_09042019_JN.csv')
 POINTS = os.path.join(TESTDATADIR, 'offshore/project_points.csv')
-SAM_FILES = {'default': os.path.join(TESTDATADIR,
-                                     'offshore/6MW_offshore.json')}
+SAM_FILE = {'default': os.path.join(TESTDATADIR, 'offshore/6MW_offshore.json')}
 OUTPUT_FILE = os.path.join(TESTDATADIR, 'offshore/out.h5')
+
+# this is an archived version of the test_offshore_module()
+# output file (OUTPUT_FILE) used for input to test_sc_agg_offshore()
+OFFSHORE_BASELINE = os.path.join(TESTDATADIR,
+                                 'offshore/ri_offshore_baseline.h5')
+AGG_BASELINE = os.path.join(TESTDATADIR,
+                            'offshore/ri_offshore_agg_baseline.csv')
+SC_BASELINE = os.path.join(TESTDATADIR,
+                           'offshore/ri_offshore_sc_baseline.csv')
+TM_DSET = 'techmap_wtk'
+RES_CLASS_DSET = 'ws_mean'
+CF_DSET = 'cf_mean'
+LCOE_DSET = 'lcoe_fcr'
+RES_CLASS_BINS = [0, 6, 7, 8, 9, 100]
+DATA_LAYERS = {'pct_slope': {'dset': 'ri_srtm_slope',
+                             'method': 'mean'},
+               'reeds_region': {'dset': 'ri_reeds_regions',
+                                'method': 'mode'},
+               'padus': {'dset': 'ri_padus',
+                         'method': 'mode'}}
+EXCL_DICT = {'ri_srtm_slope': {'inclusion_range': (None, 5),
+                               'exclude_nodata': True},
+             'ri_padus': {'exclude_values': [1],
+                          'exclude_nodata': True},
+             'ri_reeds_regions': {'inclusion_range': (None, 400),
+                                  'exclude_nodata': True}}
+TRANS_COSTS_1 = {'line_tie_in_cost': 200, 'line_cost': 1000,
+                 'station_tie_in_cost': 50, 'center_tie_in_cost': 10,
+                 'sink_tie_in_cost': 100, 'available_capacity': 0.3}
+
+RTOL = 0.001
 
 PURGE_OUT = True
 
 
 @pytest.fixture
+def sc_points():
+    """Get the supply curve aggregation summary table"""
+    sc_points = pd.read_csv(AGG_BASELINE)
+    return sc_points
+
+
+@pytest.fixture
+def offshore_trans_table():
+    """Get the transmission mapping table"""
+    path1 = os.path.join(TESTDATADIR, 'trans_tables/ri_transmission_table.csv')
+    path2 = os.path.join(TESTDATADIR, 'trans_tables/'
+                         'ri_transmission_table_offshore.csv')
+    trans_table = pd.read_csv(path1)
+    trans_table_offshore = pd.read_csv(path2)
+    trans_table = trans_table.append(trans_table_offshore)
+    trans_table = trans_table.reset_index(drop=True)
+    return trans_table
+
+
+@pytest.fixture
 def offshore():
-    """Offshore aggregation object for tests and plotting."""
-    obj = Offshore.run(GEN_FPATH, OFFSHORE_FPATH, POINTS, SAM_FILES,
+    """Offshore module object for tests and plotting."""
+    pytest.importorskip("ORCA")  # skip tests with this fixture if no ORCA
+    obj = Offshore.run(GEN_FPATH, OFFSHORE_FPATH, POINTS, SAM_FILE,
                        fpath_out=OUTPUT_FILE, sub_dir=None)
     return obj
 
 
-def test_offshore_agg(offshore):
-    """Run an offshore aggregation test and validate a few outputs against
+def test_offshore_module(offshore):
+    """Run an offshore module test and validate a few outputs against
     the raw gen output."""
     assert len(offshore.out['cf_mean']) == len(offshore.meta_out_offshore)
     assert all(offshore.meta_out['gid'] == sorted(offshore.meta_out['gid']))
@@ -60,7 +113,10 @@ def test_offshore_agg(offshore):
             out_ws_data = out['ws_mean']
             out_profile_data = out['cf_profile']
 
-    assert 'sub_type' in out_meta, 'sub_type was not passed through to meta'
+    for col in Offshore.DEFAULT_META_COLS:
+        msg = ('Offshore data column "{}" was not passed through to meta'
+               .format(col))
+        assert col in out_meta, msg
 
     for gid in offshore.onshore_gids:
         source_loc = np.where(source_meta['gid'] == gid)[0][0]
@@ -125,6 +181,74 @@ def test_offshore_agg(offshore):
         os.remove(OUTPUT_FILE)
 
 
+def test_sc_agg_offshore():
+    """Test the SC offshore aggregation and check offshore SC points against
+    known offshore gen points."""
+
+    s = SupplyCurveAggregation.summary(EXCL_FPATH, OFFSHORE_BASELINE, TM_DSET,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       cf_dset=CF_DSET, lcoe_dset=LCOE_DSET,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1)
+
+    for col in Offshore.DEFAULT_META_COLS:
+        msg = ('Offshore data column "{}" was not passed through to agg table'
+               .format(col))
+        assert col in s, msg
+
+    with Outputs(OFFSHORE_BASELINE, mode='r') as out:
+        meta = out.meta
+
+    offshore_mask = (meta.offshore == 1)
+    offshore_gids = meta.loc[offshore_mask, 'gid'].values.tolist()
+
+    for sc_gid in s.index:
+        if s.at[sc_gid, 'offshore']:
+            assert int(s.at[sc_gid, 'sc_point_gid']) > 1e7
+            assert int(s.at[sc_gid, 'sc_point_gid']) in offshore_gids
+            assert all(np.array(json.loads(s.at[sc_gid, 'res_gids'])) < 3e6)
+            assert s.at[sc_gid, 'elevation'] == 0.0
+            assert s.at[sc_gid, 'capacity'] == 600
+            assert np.isnan(s.at[sc_gid, 'pct_slope'])
+        else:
+            for res_gid in s.at[sc_gid, 'res_gids']:
+                assert res_gid not in offshore_gids
+    for gid in offshore_gids:
+        assert gid in s['sc_point_gid'].values
+
+
+def test_offshore_sc_compute(sc_points, offshore_trans_table):
+    """Run the full SC compute and validate offshore parameters"""
+    sc_full = SupplyCurve.full(sc_points, offshore_trans_table, fcr=0.1,
+                               transmission_costs=TRANS_COSTS_1)
+    baseline = pd.read_csv(SC_BASELINE)
+
+    assert len(sc_full) == len(sc_points), 'Not all SC agg points were built!'
+
+    for col in Offshore.DEFAULT_META_COLS:
+        msg = ('Offshore data column "{}" was not passed through to SC table'
+               .format(col))
+        assert col in sc_full, msg
+    assert 'combined_cap_cost' in sc_full
+
+    offshore_mask = (sc_full['offshore'] == 1)
+    assert offshore_mask.sum() > 1, 'No offshore buildouts in SC table!'
+
+    cost = sc_full.loc[offshore_mask, 'combined_cap_cost'].values
+    columns = ['array_cable_CAPEX', 'export_cable_CAPEX', 'trans_cap_cost']
+    truth = sc_full.loc[offshore_mask, columns].values.sum(axis=1)
+    assert np.allclose(cost, truth), 'Offshore combined_cap_cost is incorrect'
+
+    cost = sc_full.loc[~offshore_mask, 'combined_cap_cost'].values
+    truth = sc_full.loc[~offshore_mask, 'trans_cap_cost'].values
+    assert np.allclose(cost, truth), 'Onshore combined_cap_cost is incorrect'
+
+    msg = 'Offshore SC compute no longer matches baseline data.'
+    assert np.allclose(sc_full['total_lcoe'], baseline['total_lcoe']), msg
+
+
 def plot_map(offshore):
     """Plot a map of offshore farm aggregation."""
     import matplotlib.pyplot as plt
@@ -166,6 +290,23 @@ def plot_timeseries(offshore, i=0):
     plt.ylabel('Capacity Factor Profile')
     plt.show()
     plt.close()
+
+
+def plot_sc_offshore(plot_var='mean_lcoe'):
+    """Plot the supply curve map colored by plot_var."""
+    import matplotlib.pyplot as plt
+
+    s = SupplyCurveAggregation.summary(EXCL_FPATH, OFFSHORE_BASELINE, TM_DSET,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       cf_dset=CF_DSET, lcoe_dset=LCOE_DSET,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1)
+
+    plt.scatter(s['longitude'], s['latitude'], c=s[plot_var], marker='s')
+    plt.axis('equal')
+    plt.colorbar(label=plot_var)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -604,6 +604,43 @@ class SupplyCurve:
 
         return comp_wind_dirs
 
+    @staticmethod
+    def add_sum_cols(table, sum_cols):
+        """Add a summation column to table.
+
+        Parameters
+        ----------
+        table : pd.DataFrame
+            Supply curve table.
+        sum_cols : dict
+            Mapping of new column label(s) to multiple column labels to sum.
+            Example: sum_col={'total_cap_cost': ['cap_cost1', 'cap_cost2']}
+            Which would add a new 'total_cap_cost' column which would be the
+            sum of 'cap_cost1' and 'cap_cost2' if they are present in table.
+
+        Returns
+        -------
+        table : pd.DataFrame
+            Supply curve table with additional summation columns.
+        """
+
+        for new_label, sum_labels in sum_cols.items():
+            missing = [s for s in sum_labels if s not in table]
+
+            if any(missing):
+                logger.info('Could not make sum column "{}", missing: {}'
+                            .format(new_label, missing))
+            else:
+                sum_arr = np.zeros(len(table))
+                for s in sum_labels:
+                    temp = table[s].values
+                    temp[np.isnan(temp)] = 0
+                    sum_arr += temp
+
+                table[new_label] = sum_arr
+
+        return table
+
     def _full_sort(self, trans_table, comp_wind_dirs=None,
                    total_lcoe_fric=None, sort_on='total_lcoe',
                    columns=('trans_gid', 'trans_capacity', 'trans_type',
@@ -782,8 +819,13 @@ class SupplyCurve:
                                        total_lcoe_fric=total_lcoe_fric,
                                        sort_on=sort_on, columns=columns,
                                        downwind=downwind)
+        supply_curve = supply_curve.reset_index(drop=True)
+        sum_cols = {'combined_cap_cost': ['array_cable_CAPEX',
+                                          'export_cable_CAPEX',
+                                          'trans_cap_cost']}
+        supply_curve = self.add_sum_cols(supply_curve, sum_cols)
 
-        return supply_curve.reset_index(drop=True)
+        return supply_curve
 
     def simple_sort(self, trans_table=None, sort_on='total_lcoe',
                     columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
@@ -843,7 +885,13 @@ class SupplyCurve:
                                                     sort_on=sort_on,
                                                     downwind=downwind)
 
-        return supply_curve.reset_index(drop=True)
+        supply_curve = supply_curve.reset_index(drop=True)
+        sum_cols = {'combined_cap_cost': ['array_cable_CAPEX',
+                                          'export_cable_CAPEX',
+                                          'trans_cap_cost']}
+        supply_curve = self.add_sum_cols(supply_curve, sum_cols)
+
+        return supply_curve
 
     @classmethod
     def full(cls, sc_points, trans_table, fcr, sc_features=None,

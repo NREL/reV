@@ -31,10 +31,15 @@ logger = logging.getLogger(__name__)
 class Offshore:
     """Framework to handle offshore wind analysis."""
 
+    # Default columns from the offshore wind farm data to join to the
+    # offshore meta data
+    DEFAULT_META_COLS = ('min_sub_tech', 'sub_type', 'array_cable_CAPEX',
+                         'export_cable_CAPEX')
+
     def __init__(self, gen_fpath, offshore_fpath, project_points,
                  max_workers=None, offshore_gid_adder=1e7,
                  farm_gid_label='wfarm_id', small_farm_limit=7,
-                 offshore_meta_cols=('min_sub_tech', 'sub_type')):
+                 offshore_meta_cols=None):
         """
         Parameters
         ----------
@@ -55,9 +60,10 @@ class Offshore:
             Wind farms with less than this number of neighboring resource
             pixels will not be included in the output. Default is 7 based on
             median number of farm resource neighbors in a small test case.
-        offshore_meta_cols : list | tuple
+        offshore_meta_cols : list | tuple | None
             Column labels from offshore_fpath to preserve in the output
-            meta data.
+            meta data. None will use class variable DEFAULT_META_COLS, and any
+            additional requested cols will be added to DEFAULT_META_COLS.
         """
 
         self._gen_fpath = gen_fpath
@@ -71,8 +77,13 @@ class Offshore:
         self._farm_gid_label = farm_gid_label
         self._small_farm_limit = small_farm_limit
 
-        if isinstance(offshore_meta_cols, tuple):
+        if offshore_meta_cols is None:
+            offshore_meta_cols = list(self.DEFAULT_META_COLS)
+        else:
             offshore_meta_cols = list(offshore_meta_cols)
+            offshore_meta_cols += list(self.DEFAULT_META_COLS)
+            offshore_meta_cols = list(set(offshore_meta_cols))
+
         self._offshore_meta_cols = offshore_meta_cols
 
         self._meta_source, self._onshore_mask, self._offshore_mask = \
