@@ -70,10 +70,15 @@ def sc_points():
 
 
 @pytest.fixture
-def trans_table():
+def offshore_trans_table():
     """Get the transmission mapping table"""
-    path = os.path.join(TESTDATADIR, 'trans_tables/ri_transmission_table.csv')
-    trans_table = pd.read_csv(path)
+    path1 = os.path.join(TESTDATADIR, 'trans_tables/ri_transmission_table.csv')
+    path2 = os.path.join(TESTDATADIR, 'trans_tables/'
+                         'ri_transmission_table_offshore.csv')
+    trans_table = pd.read_csv(path1)
+    trans_table_offshore = pd.read_csv(path2)
+    trans_table = trans_table.append(trans_table_offshore)
+    trans_table = trans_table.reset_index(drop=True)
     return trans_table
 
 
@@ -214,11 +219,13 @@ def test_sc_agg_offshore():
         assert gid in s['sc_point_gid'].values
 
 
-def test_offshore_sc_compute(sc_points, trans_table):
+def test_offshore_sc_compute(sc_points, offshore_trans_table):
     """Run the full SC compute and validate offshore parameters"""
-    sc_full = SupplyCurve.full(sc_points, trans_table, fcr=0.1,
+    sc_full = SupplyCurve.full(sc_points, offshore_trans_table, fcr=0.1,
                                transmission_costs=TRANS_COSTS_1)
     baseline = pd.read_csv(SC_BASELINE)
+
+    assert len(sc_full) == len(sc_points), 'Not all SC agg points were built!'
 
     for col in Offshore.DEFAULT_META_COLS:
         msg = ('Offshore data column "{}" was not passed through to SC table'
@@ -227,6 +234,7 @@ def test_offshore_sc_compute(sc_points, trans_table):
     assert 'combined_cap_cost' in sc_full
 
     offshore_mask = (sc_full['offshore'] == 1)
+    assert offshore_mask.sum() > 1, 'No offshore buildouts in SC table!'
 
     cost = sc_full.loc[offshore_mask, 'combined_cap_cost'].values
     columns = ['array_cable_CAPEX', 'export_cable_CAPEX', 'trans_cap_cost']
