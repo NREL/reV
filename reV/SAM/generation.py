@@ -493,11 +493,12 @@ class Solar(Generation, ABC):
         else:
             resource['elev'] = 0.0
 
-        resource['minute'] = self.ensure_res_len(time_index.minute)
-        resource['hour'] = self.ensure_res_len(time_index.hour)
-        resource['year'] = self.ensure_res_len(time_index.year)
-        resource['month'] = self.ensure_res_len(time_index.month)
-        resource['day'] = self.ensure_res_len(time_index.day)
+        ti_8760 = self.ensure_res_len(time_index)
+        resource['minute'] = ti_8760.minute
+        resource['hour'] = ti_8760.hour
+        resource['year'] = ti_8760.year
+        resource['month'] = ti_8760.month
+        resource['day'] = ti_8760.day
 
         self['solar_resource_data'] = resource
 
