@@ -44,6 +44,7 @@ class PySamVersionChecker:
             else:
                 logger.warning(m)
                 warn(m, PySAMVersionWarning)
+
         else:
             logger.info('reV is using PySAM version {}'
                         .format(self.pysam_version))

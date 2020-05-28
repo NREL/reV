@@ -410,6 +410,7 @@ class Gen:
             if self._sam_obj_default is None:
                 init_obj = self._sam_module()
                 self._sam_obj_default = init_obj.default
+
             try:
                 out_data = getattr(self._sam_obj_default.Outputs, dset)
             except AttributeError as e:
@@ -537,6 +538,7 @@ class Gen:
             dtype = 'float32'
             if request in self.OUT_ATTRS:
                 dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+
             shape = self._get_data_shape(request, self._out_n_sites)
 
             # initialize the output request as an array of zeros
@@ -615,8 +617,10 @@ class Gen:
                 dtype = 'float32'
                 if request in self.OUT_ATTRS:
                     dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+
                 shape = self._get_data_shape(request, n)
                 self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
+
             self._site_mem = self._site_mem / 1e6 / n
             logger.info('Output results from a single site are calculated to '
                         'use {0:.1f} KB of memory.'
@@ -906,6 +910,7 @@ class Gen:
                             pc = PointsControl.split(
                                 gid0, gid1, pp,
                                 sites_per_split=sites_per_worker)
+
             if pc is None:
                 # PointsControl is for all of the project points
                 pc = PointsControl(pp, sites_per_split=sites_per_worker)
@@ -916,6 +921,7 @@ class Gen:
         else:
             raise TypeError('Points input type is unrecognized: '
                             '"{}"'.format(type(points)))
+
         return pc
 
     @staticmethod
@@ -971,6 +977,7 @@ class Gen:
             sites_per_worker = chunks[1]
             logger.debug('Sites per worker being set to {} based on chunk '
                          'size of {}.'.format(sites_per_worker, res_file))
+
         return sites_per_worker
 
     @property

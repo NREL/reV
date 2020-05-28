@@ -142,6 +142,7 @@ class Generation(RevPySam, ABC):
                     msg = ('Need timezone input to run SAM gen. Not found in '
                            'resource meta or technology json input config.')
                     raise SAMExecutionError(msg)
+
         return meta
 
     @property
@@ -150,6 +151,7 @@ class Generation(RevPySam, ABC):
         if self._meta is not None:
             if 'timezone' in self.meta:
                 return True
+
         return False
 
     def cf_mean(self):

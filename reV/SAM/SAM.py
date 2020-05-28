@@ -329,6 +329,7 @@ class Sam:
         if self._default is None:
             self._default = self.PYSAM.default('GenericSystemNone')
             self._default.execute()
+
         return self._default
 
     @property
@@ -346,6 +347,7 @@ class Sam:
             keys = self._get_pysam_attrs(self.pysam)
             self._attr_dict = {k: self._get_pysam_attrs(getattr(self.pysam, k))
                                for k in keys}
+
         return self._attr_dict
 
     @property
@@ -361,6 +363,7 @@ class Sam:
             for k, v in self.attr_dict.items():
                 if k.lower() != 'outputs':
                     self._inputs += v
+
         return self._inputs
 
     def _get_group(self, key, outputs=True):
@@ -390,6 +393,7 @@ class Sam:
             if key in v:
                 group = k
                 break
+
         return group
 
     def _get_pysam_attrs(self, obj):
@@ -436,8 +440,10 @@ class Sam:
 
         if '.' in key:
             key = key.replace('.', '_')
+
         if ':constant' in key and 'adjust:' in key:
             key = key.replace('adjust:', '')
+
         return key
 
     def assign_inputs(self, inputs, raise_warning=False):
@@ -470,14 +476,13 @@ class RevPySam(Sam):
 
     # Mapping for reV technology and SAM module to h5 resource handler type
     # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
-    RESOURCE_TYPES = {'pv': SolarResource, 'pvwattsv5': SolarResource,
+    RESOURCE_TYPES = {'pvwattsv5': SolarResource,
                       'pvwattsv7': SolarResource,
-                      'csp': SolarResource, 'tcsmoltensalt': SolarResource,
+                      'tcsmoltensalt': SolarResource,
                       'solarwaterheat': SolarResource,
                       'troughphysicalheat': SolarResource,
                       'lineardirectsteam': SolarResource,
-                      'wind': WindResource, 'landbasedwind': WindResource,
-                      'offshorewind': WindResource, 'windpower': WindResource,
+                      'windpower': WindResource,
                       }
 
     def __init__(self, meta, parameters, output_request):
@@ -546,6 +551,7 @@ class RevPySam(Sam):
                 leap_day = ((resource.index.month == 2)
                             & (resource.index.day == 29))
                 resource = resource.drop(resource.index[leap_day])
+
         return resource
 
     @staticmethod
@@ -578,6 +584,7 @@ class RevPySam(Sam):
                 res_arr = res_arr[0:target_len]
             else:
                 res_arr = res_arr[0:target_len, :]
+
         return res_arr
 
     @staticmethod
@@ -585,6 +592,7 @@ class RevPySam(Sam):
         """Ensure that pd series is a datetime series with dt accessor"""
         if not hasattr(series, 'dt'):
             series = pd.to_datetime(pd.Series(series))
+
         return series
 
     @staticmethod
@@ -615,6 +623,7 @@ class RevPySam(Sam):
                 break
             elif t == 0.0:
                 time_interval += 1
+
         return int(time_interval)
 
     @staticmethod
