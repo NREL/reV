@@ -41,6 +41,7 @@ reV command line tools
 - `reV-rep-profiles <https://nrel.github.io/reV/reV/reV.rep_profiles.cli_rep_profiles.html#rev-rep-profiles>`_
 - `reV-pipeline <https://nrel.github.io/reV/reV/reV.pipeline.cli_pipeline.html#rev-pipeline>`_
 - `reV-batch <https://nrel.github.io/reV/reV/reV.batch.cli_batch.html#rev-batch>`_
+- `reV-QA-QC <https://nrel.github.io/reV/reV/reV.qa_qc.cli_qa_qc.html#rev-qa-qc>`_
 
 Using Eagle Module
 ==================

@@ -13,10 +13,10 @@ from warnings import warn
 
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.handlers.outputs import Outputs
-from reV.SAM.generation import (
-    PV, CSP, LandBasedWind, SolarWaterHeat, TroughPhysicalHeat,
-    LinearDirectSteam
-)
+from reV.SAM.generation import (Pvwattsv5, Pvwattsv7, TcsMoltenSalt, WindPower,
+                                SolarWaterHeat, TroughPhysicalHeat,
+                                LinearDirectSteam)
+from reV.SAM.version_checker import PySamVersionChecker
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       ParallelExecutionWarning)
 
@@ -31,12 +31,13 @@ class Gen:
     """Base class for reV generation."""
 
     # Mapping of reV technology strings to SAM generation objects
-    OPTIONS = {'pv': PV,
-               'csp': CSP,
+    OPTIONS = {'pvwattsv5': Pvwattsv5,
+               'pvwattsv7': Pvwattsv7,
+               'tcsmoltensalt': TcsMoltenSalt,
                'solarwaterheat': SolarWaterHeat,
                'troughphysicalheat': TroughPhysicalHeat,
                'lineardirectsteam': LinearDirectSteam,
-               'windpower': LandBasedWind,
+               'windpower': WindPower,
                }
 
     # Mapping of reV generation outputs to scale factors and units.
@@ -265,10 +266,12 @@ class Gen:
             self._set_downscaled_ti(downscale)
 
         if self.tech not in self.OPTIONS:
-            raise KeyError('Requested technology "{}" is not available. '
-                           'reV generation can analyze the following '
-                           'technologies: {}'
-                           .format(self.tech, list(self.OPTIONS.keys())))
+            msg = ('Requested technology "{}" is not available. '
+                   'reV generation can analyze the following '
+                   'SAM technologies: {}'
+                   .format(self.tech, list(self.OPTIONS.keys())))
+            logger.error(msg)
+            raise KeyError(msg)
 
         # pre-initialize output arrays to store results when available.
         self._out = {}
@@ -276,6 +279,7 @@ class Gen:
         self._out_n_sites = 0
         self._out_chunk = ()
         self._init_out_arrays()
+        self._check_sam_version_inputs()
 
         # initialize output file
         self._init_fpath()
@@ -406,6 +410,7 @@ class Gen:
             if self._sam_obj_default is None:
                 init_obj = self._sam_module()
                 self._sam_obj_default = init_obj.default
+
             try:
                 out_data = getattr(self._sam_obj_default.Outputs, dset)
             except AttributeError as e:
@@ -533,10 +538,18 @@ class Gen:
             dtype = 'float32'
             if request in self.OUT_ATTRS:
                 dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+
             shape = self._get_data_shape(request, self._out_n_sites)
 
             # initialize the output request as an array of zeros
             self._out[request] = np.zeros(shape, dtype=dtype)
+
+    def _check_sam_version_inputs(self):
+        """Check the PySAM version and input keys. Fix where necessary."""
+        for key, parameters in self.project_points.sam_configs.items():
+            updated = PySamVersionChecker.run(self.tech, parameters)
+            sam_obj = self._points_control._project_points._sam_config_obj
+            sam_obj._inputs[key] = updated
 
     @property
     def output_request(self):
@@ -604,8 +617,10 @@ class Gen:
                 dtype = 'float32'
                 if request in self.OUT_ATTRS:
                     dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+
                 shape = self._get_data_shape(request, n)
                 self._site_mem += sys.getsizeof(np.ones(shape, dtype=dtype))
+
             self._site_mem = self._site_mem / 1e6 / n
             logger.info('Output results from a single site are calculated to '
                         'use {0:.1f} KB of memory.'
@@ -670,7 +685,9 @@ class Gen:
         Returns
         -------
         tech : str
-            reV technology being executed (e.g. pv, csp, wind).
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
         """
         return self.project_points.tech
 
@@ -826,14 +843,16 @@ class Gen:
             Optional two-entry list specifying the index range of the sites to
             analyze. To be taken from the reV.config.PointsControl.split_range
             property.
-        sam_files : dict | str | list
-            Dict contains SAM input configuration ID(s) and file path(s).
-            Keys are the SAM config ID(s), top level value is the SAM path.
-            Can also be a single config file str. If it's a list, it is mapped
-            to the sorted list of unique configs requested by points csv.
+        sam_files : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
             resource file chunk size.
@@ -855,9 +874,11 @@ class Gen:
         """
 
         if tech not in Gen.OPTIONS and tech.lower() != 'econ':
-            raise KeyError('Did not recognize gen tech "{}". '
-                           'Gen options are: {}'
-                           .format(tech, list(Gen.OPTIONS.keys())))
+            msg = ('Did not recognize reV-SAM technology string "{}". '
+                   'Technology string options are: {}'
+                   .format(tech, list(Gen.OPTIONS.keys())))
+            logger.error(msg)
+            raise KeyError(msg)
 
         if sites_per_worker is None:
             # get the optimal sites per split based on res file chunk size
@@ -889,6 +910,7 @@ class Gen:
                             pc = PointsControl.split(
                                 gid0, gid1, pp,
                                 sites_per_split=sites_per_worker)
+
             if pc is None:
                 # PointsControl is for all of the project points
                 pc = PointsControl(pp, sites_per_split=sites_per_worker)
@@ -899,6 +921,7 @@ class Gen:
         else:
             raise TypeError('Points input type is unrecognized: '
                             '"{}"'.format(type(points)))
+
         return pc
 
     @staticmethod
@@ -954,6 +977,7 @@ class Gen:
             sites_per_worker = chunks[1]
             logger.debug('Sites per worker being set to {} based on chunk '
                          'size of {}.'.format(sites_per_worker, res_file))
+
         return sites_per_worker
 
     @property
@@ -1144,8 +1168,9 @@ class Gen:
         points_control : reV.config.PointsControl
             A PointsControl instance dictating what sites and configs are run.
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
             or /h5_dir/prefix*suffix
@@ -1352,16 +1377,18 @@ class Gen:
         Parameters
         ----------
         tech : str
-            Technology to analyze (pv, csp, landbasedwind, offshorewind,
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
         points : slice | list | str | reV.config.project_points.PointsControl
             Slice specifying project points, or string pointing to a project
             points csv, or a fully instantiated PointsControl object.
-        sam_files : dict | str | list
-            Dict contains SAM input configuration ID(s) and file path(s).
-            Keys are the SAM config ID(s), top level value is the SAM path.
-            Can also be a single config file str. If it's a list, it is mapped
-            to the sorted list of unique configs requested by points csv.
+        sam_files : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
         res_file : str
             Filepath to single resource file, multi-h5 directory,
             or /h5_dir/prefix*suffix

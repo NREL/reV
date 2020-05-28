@@ -6,7 +6,7 @@
   "cf_file": "PIPELINE",
   "directories": {
     "log_directory": "./logs/",
-    "output_directory": "./"
+    "output_directory": "./outputs/"
   },
   "execution_control": {
     "allocation": "rev",
@@ -22,5 +22,5 @@
   "sam_files": {
     "sam_gen_pv_1": "TESTDATADIR/SAM/naris_pv_1axis_inv13.json"
   },
-  "technology": "pv"
+  "technology": "pvwattsv5"
 }

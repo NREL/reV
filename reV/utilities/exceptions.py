@@ -76,6 +76,12 @@ class ResourceError(Exception):
     """
 
 
+class PySAMVersionError(Exception):
+    """
+    Version error for SAM installation
+    """
+
+
 class SAMExecutionError(Exception):
     """
     Execution error for SAM simulations
@@ -169,6 +175,12 @@ class SAMInputWarning(Warning):
 class SAMExecutionWarning(Warning):
     """
     Warning for problematic SAM execution
+    """
+
+
+class PySAMVersionWarning(Warning):
+    """
+    Version warning for SAM installation
     """
 
 

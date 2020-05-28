@@ -89,10 +89,10 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
 
     # run reV 2.0 generation
-    pp = ProjectPoints(rev2_points, sam_files, 'pv', res_file=res_file)
-    gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, max_workers=max_workers,
-                      sites_per_worker=3, fout=None)
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5', res_file=res_file)
+    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file,
+                      max_workers=max_workers, sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -113,11 +113,11 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
                              f_rev1_out)
     sam_files = {'sam_param_0': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json',
                  'sam_param_1': TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'}
-    pp = ProjectPoints(rev2_points, sam_files, 'pv')
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5')
 
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, fout=None)
+    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -140,9 +140,9 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
                  TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json']
     sam_files = {'sam_param_{}'.format(i): k for i, k in
                  enumerate(sam_files)}
-    pp = ProjectPoints(rev2_points, sam_files, 'pv')
-    gen = Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
-                      res_file=res_file, fout=None)
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5')
+    gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
 
     # initialize the rev1 output hander
@@ -166,7 +166,7 @@ def test_pv_gen_profiles(year):
     points = slice(0, 100)
 
     # run reV 2.0 generation and write to disk
-    Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
+    Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
                 res_file=res_file, fout=rev2_out,
                 output_request=('cf_profile',),
                 max_workers=2, sites_per_worker=50, dirout=rev2_out_dir)
@@ -204,7 +204,7 @@ def test_smart(year):
     points = slice(0, 10)
 
     # run reV 2.0 generation and write to disk
-    Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
+    Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
                 res_file=res_file, fout=rev2_out,
                 max_workers=2, sites_per_worker=50, dirout=rev2_out_dir,
                 output_request=('cf_profile',))
@@ -238,7 +238,7 @@ def test_multi_file_nsrdb_2018():
     sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
     res_file = TESTDATADIR + '/nsrdb/nsrdb_*{}.h5'.format(2018)
     # run reV 2.0 generation
-    gen = Gen.reV_run(tech='pv', points=points, sam_files=sam_files,
+    gen = Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
                       res_file=res_file, max_workers=max_workers,
                       sites_per_worker=3, fout=None)
     gen_outs = list(gen.out['cf_mean'] / 1000)
@@ -253,6 +253,68 @@ def get_r1_profiles(year=2012):
     with Outputs(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
     return data
+
+
+def test_pv_name_error():
+    """Test reV 2.0 generation for PV and benchmark against reV 1.0 results."""
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+
+    # run reV 2.0 generation
+    with pytest.raises(KeyError) as record:
+        pp = ProjectPoints(rev2_points, sam_files, 'pv',
+                           res_file=res_file)
+        Gen.reV_run(tech='pv', points=rev2_points, sam_files=sam_files,
+                    res_file=res_file, max_workers=1,
+                    sites_per_worker=1, fout=None)
+        assert 'Did not recognize' in record[0].message
+
+
+def test_pvwattsv7_baseline():
+    """Test reV pvwattsv7 generation against baseline data"""
+
+    baseline_cf_mean = np.array([151, 151, 157])
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
+
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, max_workers=1,
+                      sites_per_worker=1, fout=None)
+
+    msg = ('PVWattsv7 cf_mean results {} did not match baseline: {}'
+           .format(gen.out['cf_mean'], baseline_cf_mean))
+    assert all(gen.out['cf_mean'] == baseline_cf_mean), msg
+
+
+def test_pvwatts_v5_v7():
+    """Test reV pvwatts generation for v5 vs. v7"""
+
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/naris_pv_1axis_inv13.json'
+
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen7 = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                       sam_files=sam_files, res_file=res_file,
+                       max_workers=1, sites_per_worker=1, fout=None)
+
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5', res_file=res_file)
+    gen5 = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
+                       sam_files=sam_files, res_file=res_file,
+                       max_workers=1, sites_per_worker=1, fout=None)
+
+    msg = 'PVwatts v5 and v7 did not match within test tolerance'
+    assert np.allclose(gen7.out['cf_mean'], gen5.out['cf_mean'], atol=3), msg
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -12,7 +12,7 @@ import os
 import pytest
 
 from rex.utilities.exceptions import ResourceKeyError
-from reV.SAM.SAM import SAM
+from reV.SAM.SAM import RevPySam
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV import TESTDATADIR
 
@@ -21,10 +21,11 @@ def test_clearsky():
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
     sam_config_dict = {0: os.path.join(TESTDATADIR, 'SAM/'
                                        'naris_pv_1axis_inv13_cs.json')}
-    pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pv', res_file=res_file)
+    pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pvwattsv5',
+                       res_file=res_file)
     try:
         # Get the SAM resource object
-        SAM.get_sam_res(res_file, pp, pp.tech)
+        RevPySam.get_sam_res(res_file, pp, pp.tech)
         assert False
     except ResourceKeyError:
         # Should look for clearsky_dni and not find it in RI data
@@ -39,7 +40,7 @@ def test_proj_control_iter(start, interval):
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     sam_files = os.path.join(TESTDATADIR,
                              'SAM/wind_gen_standard_losses_0.json')
-    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'wind',
+    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'windpower',
                        res_file=res_file)
     pc = PointsControl(pp, sites_per_split=n)
 
@@ -59,7 +60,7 @@ def test_proj_points_split(start, interval):
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     sam_files = os.path.join(TESTDATADIR,
                              'SAM/wind_gen_standard_losses_0.json')
-    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'wind',
+    pp = ProjectPoints(slice(start, 100, interval), sam_files, 'windpower',
                        res_file=res_file)
 
     iter_interval = 5
@@ -80,7 +81,7 @@ def test_split_iter():
     res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     sam_files = os.path.join(TESTDATADIR,
                              'SAM/wind_gen_standard_losses_0.json')
-    pp = ProjectPoints(slice(0, 500, 5), sam_files, 'wind',
+    pp = ProjectPoints(slice(0, 500, 5), sam_files, 'windpower',
                        res_file=res_file)
 
     n = 3

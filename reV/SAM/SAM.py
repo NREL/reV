@@ -18,10 +18,11 @@ from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
                                     MultiFileWTK, MultiFileNSRDB)
 from rex.utilities.utilities import check_res_file
 
+
 logger = logging.getLogger(__name__)
 
 
-class SAMResourceRetriever:
+class SamResourceRetriever:
     """Factory utility to get the SAM resource handler."""
 
     @staticmethod
@@ -46,13 +47,13 @@ class SAMResourceRetriever:
         """
 
         try:
-            res_handler = SAM.RESOURCE_TYPES[module.lower()]
+            res_handler = RevPySam.RESOURCE_TYPES[module.lower()]
 
         except KeyError:
             msg = ('Cannot interpret what kind of resource handler the SAM '
                    'module or reV technology "{}" requires. Expecting one of '
                    'the following SAM modules or reV technologies: {}'
-                   .format(module, list(SAM.RESOURCE_TYPES.keys())))
+                   .format(module, list(RevPySam.RESOURCE_TYPES.keys())))
             logger.exception(msg)
             raise SAMExecutionError(msg)
 
@@ -97,7 +98,8 @@ class SAMResourceRetriever:
         kwargs['clearsky'] = project_points.sam_config_obj.clearsky
         kwargs['tech'] = project_points.tech
         # Check for resource means:
-        if 'dni_mean' in output_request or 'ghi_mean' in output_request:
+        mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']
+        if any([x in output_request for x in mean_keys]):
             kwargs['means'] = True
 
         # check for downscaling request
@@ -242,7 +244,7 @@ class SAMResourceRetriever:
         return res
 
 
-class RevPySAM:
+class Sam:
     """reV wrapper on the PySAM framework."""
 
     # PySAM object wrapped by this class
@@ -303,9 +305,10 @@ class RevPySAM:
                 setattr(getattr(self.pysam, group), key, value)
             except Exception as e:
                 msg = ('Could not set input key "{}" to '
-                       'group "{}" in "{}". '
+                       'group "{}" in "{}".\n'
+                       'Data is: {} ({})\n'
                        'Received the following error: "{}"'
-                       .format(key, group, self.pysam, e))
+                       .format(key, group, self.pysam, value, type(value), e))
                 logger.exception(msg)
                 raise SAMInputError(msg)
 
@@ -326,6 +329,7 @@ class RevPySAM:
         if self._default is None:
             self._default = self.PYSAM.default('GenericSystemNone')
             self._default.execute()
+
         return self._default
 
     @property
@@ -343,6 +347,7 @@ class RevPySAM:
             keys = self._get_pysam_attrs(self.pysam)
             self._attr_dict = {k: self._get_pysam_attrs(getattr(self.pysam, k))
                                for k in keys}
+
         return self._attr_dict
 
     @property
@@ -358,6 +363,7 @@ class RevPySAM:
             for k, v in self.attr_dict.items():
                 if k.lower() != 'outputs':
                     self._inputs += v
+
         return self._inputs
 
     def _get_group(self, key, outputs=True):
@@ -387,6 +393,7 @@ class RevPySAM:
             if key in v:
                 group = k
                 break
+
         return group
 
     def _get_pysam_attrs(self, obj):
@@ -433,8 +440,10 @@ class RevPySAM:
 
         if '.' in key:
             key = key.replace('.', '_')
+
         if ':constant' in key and 'adjust:' in key:
             key = key.replace('adjust:', '')
+
         return key
 
     def assign_inputs(self, inputs, raise_warning=False):
@@ -459,21 +468,21 @@ class RevPySAM:
                 logger.warning(wmsg)
 
 
-class SAM(RevPySAM):
-    """Base class for SAM simulations (generation and econ)."""
+class RevPySam(Sam):
+    """Base class for reV-SAM simulations (generation and econ)."""
 
     DIR = os.path.dirname(os.path.realpath(__file__))
     MODULE = None
 
     # Mapping for reV technology and SAM module to h5 resource handler type
     # SolarResource is swapped for NSRDB if the res_file contains "nsrdb"
-    RESOURCE_TYPES = {'pv': SolarResource, 'pvwattsv5': SolarResource,
-                      'csp': SolarResource, 'tcsmolten_salt': SolarResource,
+    RESOURCE_TYPES = {'pvwattsv5': SolarResource,
+                      'pvwattsv7': SolarResource,
+                      'tcsmoltensalt': SolarResource,
                       'solarwaterheat': SolarResource,
                       'troughphysicalheat': SolarResource,
                       'lineardirectsteam': SolarResource,
-                      'wind': WindResource, 'landbasedwind': WindResource,
-                      'offshorewind': WindResource, 'windpower': WindResource,
+                      'windpower': WindResource,
                       }
 
     def __init__(self, meta, parameters, output_request):
@@ -518,7 +527,7 @@ class SAM(RevPySAM):
     @staticmethod
     def get_sam_res(*args, **kwargs):
         """Get the SAM resource iterator object (single year, single file)."""
-        return SAMResourceRetriever.get(*args, **kwargs)
+        return SamResourceRetriever.get(*args, **kwargs)
 
     @staticmethod
     def drop_leap(resource):
@@ -542,6 +551,7 @@ class SAM(RevPySAM):
                 leap_day = ((resource.index.month == 2)
                             & (resource.index.day == 29))
                 resource = resource.drop(resource.index[leap_day])
+
         return resource
 
     @staticmethod
@@ -574,6 +584,7 @@ class SAM(RevPySAM):
                 res_arr = res_arr[0:target_len]
             else:
                 res_arr = res_arr[0:target_len, :]
+
         return res_arr
 
     @staticmethod
@@ -581,6 +592,7 @@ class SAM(RevPySAM):
         """Ensure that pd series is a datetime series with dt accessor"""
         if not hasattr(series, 'dt'):
             series = pd.to_datetime(pd.Series(series))
+
         return series
 
     @staticmethod
@@ -600,7 +612,7 @@ class SAM(RevPySAM):
             So if the timestep is 0.5 hours, time_interval is 2.
         """
 
-        time_index = SAM.make_datetime(time_index)
+        time_index = RevPySam.make_datetime(time_index)
         x = time_index.dt.hour.diff()
         time_interval = 0
 
@@ -611,6 +623,7 @@ class SAM(RevPySAM):
                 break
             elif t == 0.0:
                 time_interval += 1
+
         return int(time_interval)
 
     @staticmethod
@@ -629,7 +642,7 @@ class SAM(RevPySAM):
     @staticmethod
     def _is_hourly(val):
         """Returns true if SAM data is hourly or sub-hourly. False otherise."""
-        if not SAM._is_arr_like(val):
+        if not RevPySam._is_arr_like(val):
             return False
         else:
             L = len(val)

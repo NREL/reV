@@ -4,26 +4,23 @@
 Wraps the NREL-PySAM lcoefcr and singleowner modules with
 additional reV features.
 """
-import os
 from copy import deepcopy
 import logging
 import numpy as np
 from warnings import warn
-import PySAM.Pvwattsv5 as pysam_pv
-import PySAM.Lcoefcr as pysam_lcoe
-import PySAM.Singleowner as pysam_so
+import PySAM.Lcoefcr as PySamLCOE
+import PySAM.Singleowner as PySamSingleOwner
 
+from reV.SAM.defaults import DefaultSingleOwner, DefaultLCOE
 from reV.handlers.outputs import Outputs
-from reV.SAM.SAM import SAM
 from reV.SAM.windbos import WindBos
+from reV.SAM.SAM import RevPySam
 from reV.utilities.exceptions import SAMExecutionError
 
 logger = logging.getLogger(__name__)
-DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
 
 
-class Economic(SAM):
+class Economic(RevPySam):
     """Base class for SAM economic models."""
     MODULE = None
 
@@ -306,9 +303,8 @@ class Economic(SAM):
 
         Returns
         -------
-        sim.outputs : SAM.SiteOutput
-            Slotted dictionary emulator keyed by SAM variable names with SAM
-            numerical results.
+        sim.outputs : dict
+            Dictionary keyed by SAM variable names with SAM numerical results.
         """
 
         # Create SAM econ instance and calculate requested output.
@@ -329,7 +325,7 @@ class LCOE(Economic):
     """SAM LCOE model.
     """
     MODULE = 'lcoefcr'
-    PYSAM = pysam_lcoe
+    PYSAM = PySamLCOE
 
     def __init__(self, parameters=None, site_parameters=None,
                  output_request=('lcoe_fcr',)):
@@ -405,16 +401,7 @@ class LCOE(Economic):
             Executed Lcoefcr pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            x = pysam_pv.default('PVWattsLCOECalculator')
-            x.LocationAndResource.solar_resource_file = res_file
-            x.execute()
-
-            self._default = pysam_lcoe.default('PVWattsLCOECalculator')
-            self._default.SimpleLCOE.annual_energy = x.Outputs.annual_energy
-            self._default.execute()
+            self._default = DefaultLCOE.default()
         return self._default
 
     @classmethod
@@ -469,7 +456,7 @@ class SingleOwner(Economic):
     """SAM single owner economic model.
     """
     MODULE = 'singleowner'
-    PYSAM = pysam_so
+    PYSAM = PySamSingleOwner
 
     def __init__(self, parameters=None, site_parameters=None,
                  output_request=('ppa_price',)):
@@ -522,16 +509,8 @@ class SingleOwner(Economic):
             Executed Singleowner pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            x = pysam_pv.default('PVWattsSingleOwner')
-            x.LocationAndResource.solar_resource_file = res_file
-            x.execute()
+            self._default = DefaultSingleOwner.default()
 
-            self._default = pysam_so.default('PVWattsSingleOwner')
-            self._default.SystemOutput.gen = x.Outputs.ac
-            self._default.execute()
         return self._default
 
     def collect_outputs(self):

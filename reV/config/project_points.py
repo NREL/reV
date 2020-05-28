@@ -206,13 +206,16 @@ class ProjectPoints:
         points : slice | str | pd.DataFrame | dict
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
-        sam_config : dict | str
+        sam_config : dict | str | list | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s), top level value is the SAM path. Can also be a single
             config file str. If it's a list, it is mapped to the sorted list
-            of unique configs requested by points csv.
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
         tech : str
-            reV technology being executed.
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
@@ -224,6 +227,7 @@ class ProjectPoints:
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
         """
+
         # set protected attributes
         self._df = self._parse_points(points, res_file=res_file)
         self._sam_config_obj = self._parse_sam_config(sam_config)
@@ -391,30 +395,37 @@ class ProjectPoints:
 
         Parameters
         ----------
-        sam_config : dict | str
+        sam_config : dict | str | list | SAMConfig
             SAM input configuration ID(s) and file path(s). Keys are the SAM
             config ID(s), top level value is the SAM path. Can also be a single
-            config file str.
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
 
         Returns
         -------
         _sam_config_obj : reV.config.sam_config.SAMConfig
             SAM configuration object.
         """
-        if isinstance(sam_config, dict):
-            config_dict = sam_config
-        elif isinstance(sam_config, str):
-            config_dict = {sam_config: sam_config}
+
+        if isinstance(sam_config, SAMConfig):
+            return sam_config
+
         else:
-            raise ValueError('Cannot parse SAM configs from {}'
-                             .format(type(sam_config)))
+            if isinstance(sam_config, dict):
+                config_dict = sam_config
+            elif isinstance(sam_config, str):
+                config_dict = {sam_config: sam_config}
+            else:
+                raise ValueError('Cannot parse SAM configs from {}'
+                                 .format(type(sam_config)))
 
-        for key, value in config_dict.items():
-            if not os.path.isfile(value):
-                raise ConfigError('Invalid SAM config {}: {} does not exist'
-                                  .format(key, value))
+            for key, value in config_dict.items():
+                if not os.path.isfile(value):
+                    raise ConfigError('Invalid SAM config {}: {} does not '
+                                      'exist'.format(key, value))
 
-        return SAMConfig(config_dict)
+            return SAMConfig(config_dict)
 
     @property
     def sam_files(self):
@@ -542,7 +553,9 @@ class ProjectPoints:
         Returns
         -------
         _tech : str
-            reV technology being executed.
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
         """
         tech = self._tech
         if 'wind' in tech.lower():
@@ -692,7 +705,9 @@ class ProjectPoints:
         points_df = project_points.df.iloc[i0:i1]
 
         # make a new instance of ProjectPoints with subset DF
-        sub = cls(points_df, project_points.sam_files, project_points.tech,
+        sub = cls(points_df,
+                  project_points.sam_config_obj,
+                  project_points.tech,
                   curtailment=project_points.curtailment)
 
         return sub

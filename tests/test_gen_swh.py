@@ -9,18 +9,12 @@ Created on 2/6/2020
 import numpy as np
 import os
 import pytest
-import pickle
+import json
 
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
-PICKLEFILE = TESTDATADIR + '/SAM/swh_profiles_2013.pkl'
-
-
-def save_outputs(out):
-    """ Save appropriate outputs to pickle file """
-    new_out = {'gen_profile': out['gen_profile']}
-    pickle.dump(new_out, open(PICKLEFILE, 'wb'))
+BASELINE = os.path.join(TESTDATADIR, 'SAM/output_swh.json')
 
 
 def my_assert(x, y, digits):
@@ -59,9 +53,15 @@ def test_gen_swh_non_leap_year():
     my_assert(gen.out['Q_deliv'], 5390.47749, 1)
 
     # Verify series are in correct order and have been rolled correctly
-    profiles = pickle.load(open(PICKLEFILE, 'rb'))
-    for k in profiles.keys():
-        assert np.array_equal(profiles[k], gen.out[k])
+    if os.path.exists(BASELINE):
+        with open(BASELINE, 'r') as f:
+            profiles = json.load(f)
+        for k in profiles.keys():
+            assert np.array_equal(profiles[k], gen.out[k])
+    else:
+        with open(BASELINE, 'w') as f:
+            out = {k: v.tolist() for k, v in gen.out.items()}
+            json.dump(out, f)
 
 
 def test_gen_swh_leap_year():
@@ -94,7 +94,7 @@ def test_gen_swh_leap_year():
     my_assert(gen.out['I_transmitted'], 2769482.776, -1)
     my_assert(gen.out['annual_Q_deliv'], 2697.09, 1)
     my_assert(gen.out['Q_deliv'], 5394.188339, 1)
-    my_assert(gen.out['solar_fraction'], 0.6875, 4)
+    my_assert(gen.out['solar_fraction'], 0.6772, 4)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

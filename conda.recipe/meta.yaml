@@ -16,7 +16,7 @@ requirements:
     - python
     - click
     - h5py
-    - nrel-pysam==1.2.1
+    - nrel-pysam>=2.1.1
     - nrel-rex
     - numpy
     - pandas

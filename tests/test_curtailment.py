@@ -10,7 +10,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
-from reV.SAM.SAM import SAM
+from reV.SAM.SAM import RevPySam
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
 from reV.utilities.curtailment import curtail
@@ -30,7 +30,7 @@ def get_curtailment(year):
     pp = ProjectPoints(slice(0, 100), sam_files, 'windpower',
                        curtailment=curtailment)
 
-    resource = SAM.get_sam_res(res_file, pp, 'windpower')
+    resource = RevPySam.get_sam_res(res_file, pp, 'windpower')
     non_curtailed_res = deepcopy(resource)
 
     out = curtail(resource, pp.curtailment, random_seed=0)
@@ -100,10 +100,10 @@ def test_curtailment_res_mean(year):
                     sites_per_worker=50, res_file=res_file,
                     curtailment=curtailment)
 
-    resources = SAM.get_sam_res(res_file,
-                                pc.project_points,
-                                pc.project_points.tech,
-                                output_request)
+    resources = RevPySam.get_sam_res(res_file,
+                                     pc.project_points,
+                                     pc.project_points.tech,
+                                     output_request)
     truth = resources['mean_windspeed']
 
     # run reV 2.0 generation
@@ -245,4 +245,3 @@ def execute_pytest(capture='all', flags='-rapP'):
 
 if __name__ == '__main__':
     execute_pytest()
-#    result = test_cf_curtailment(2012, 10)

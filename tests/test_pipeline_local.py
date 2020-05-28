@@ -21,14 +21,14 @@ def test_pipeline_local():
     """Test the reV pipeline execution on a local machine."""
 
     pipeline_dir = os.path.join(TESTDATADIR, 'pipeline/')
+    log_dir = os.path.join(pipeline_dir, 'logs/')
+    out_dir = os.path.join(pipeline_dir, 'outputs/')
     fpipeline = os.path.join(pipeline_dir, 'config_pipeline.json')
-
     fbaseline = os.path.join(pipeline_dir, 'baseline_pipeline_multi-year.h5')
-    ifiles = [os.path.join(pipeline_dir, f) for f in os.listdir(pipeline_dir)]
 
     Pipeline.run(fpipeline, monitor=True)
 
-    fpath_out = Pipeline.parse_previous(pipeline_dir, 'multi-year',
+    fpath_out = Pipeline.parse_previous(out_dir, 'multi-year',
                                         target_module='multi-year')[0]
 
     dsets = ['generation/cf_mean-means', 'econ/lcoe_fcr-means']
@@ -39,14 +39,8 @@ def test_pipeline_local():
                 assert np.allclose(f_new[dset][...], f_base[dset][...]), msg
 
     if PURGE_OUT:
-        del_list = [os.path.join(pipeline_dir, f) for
-                    f in os.listdir(pipeline_dir)]
-        del_list = [fpath for fpath in del_list if fpath not in ifiles]
-        for del_path in del_list:
-            if os.path.isdir(del_path):
-                shutil.rmtree(del_path)
-            else:
-                os.remove(del_path)
+        shutil.rmtree(log_dir)
+        shutil.rmtree(out_dir)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

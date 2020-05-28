@@ -4,30 +4,34 @@
 Wraps the NREL-PySAM pvwattsv5, windpower, and tcsmolensalt modules with
 additional reV features.
 """
+from abc import ABC
 import copy
 import os
 import logging
 import numpy as np
 import pandas as pd
 from warnings import warn
-import PySAM.Pvwattsv5 as pysam_pv
-import PySAM.Windpower as pysam_wind
-import PySAM.TcsmoltenSalt as pysam_csp
-import PySAM.Swh as pysam_swh
-import PySAM.TroughPhysicalProcessHeat as pysam_tpph
-import PySAM.LinearFresnelDsgIph as pysam_lfdi
+import PySAM.Pvwattsv5 as PySamPV5
+import PySAM.Pvwattsv7 as PySamPV7
+import PySAM.Windpower as PySamWindPower
+import PySAM.TcsmoltenSalt as PySamCSP
+import PySAM.Swh as PySamSWH
+import PySAM.TroughPhysicalProcessHeat as PySamTPPH
+import PySAM.LinearFresnelDsgIph as PySamLDS
 
-from reV.SAM.SAM import SAM
-from reV.SAM.econ import LCOE, SingleOwner
+from reV.SAM.defaults import (DefaultPvwattsv5, DefaultPvwattsv7,
+                              DefaultWindPower, DefaultTcsMoltenSalt,
+                              DefaultSwh, DefaultTroughPhysicalProcessHeat,
+                              DefaultLinearFresnelDsgIph)
 from reV.utilities.exceptions import SAMInputWarning, SAMExecutionError
 from reV.utilities.curtailment import curtail
+from reV.SAM.SAM import RevPySam
+from reV.SAM.econ import LCOE, SingleOwner
 
 logger = logging.getLogger(__name__)
-DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
 
 
-class Generation(SAM):
+class Generation(RevPySam, ABC):
     """Base class for SAM generation simulations."""
 
     @staticmethod
@@ -138,6 +142,7 @@ class Generation(SAM):
                     msg = ('Need timezone input to run SAM gen. Not found in '
                            'resource meta or technology json input config.')
                     raise SAMExecutionError(msg)
+
         return meta
 
     @property
@@ -146,6 +151,7 @@ class Generation(SAM):
         if self._meta is not None:
             if 'timezone' in self.meta:
                 return True
+
         return False
 
     def cf_mean(self):
@@ -297,12 +303,12 @@ class Generation(SAM):
         # initialize output dictionary
         out = {}
 
-        # Get the SAM resource object
-        resources = SAM.get_sam_res(res_file,
-                                    points_control.project_points,
-                                    points_control.project_points.tech,
-                                    output_request=output_request,
-                                    downscale=downscale)
+        # Get the RevPySam resource object
+        resources = RevPySam.get_sam_res(res_file,
+                                         points_control.project_points,
+                                         points_control.project_points.tech,
+                                         downscale=downscale,
+                                         output_request=output_request)
 
         # run resource through curtailment filter if applicable
         curtailment = points_control.project_points.curtailment
@@ -342,7 +348,7 @@ class Generation(SAM):
         return out
 
 
-class Solar(Generation):
+class Solar(Generation, ABC):
     """Base Class for Solar generation from SAM
     """
 
@@ -484,20 +490,26 @@ class Solar(Generation):
         resource['lon'] = self.meta['longitude']
         resource['tz'] = self.meta['timezone']
 
-        resource['minute'] = self.ensure_res_len(time_index.minute)
-        resource['hour'] = self.ensure_res_len(time_index.hour)
-        resource['year'] = self.ensure_res_len(time_index.year)
-        resource['month'] = self.ensure_res_len(time_index.month)
-        resource['day'] = self.ensure_res_len(time_index.day)
+        if 'elevation' in self.meta:
+            resource['elev'] = self.meta['elevation']
+        else:
+            resource['elev'] = 0.0
+
+        ti_8760 = self.ensure_res_len(time_index)
+        resource['minute'] = ti_8760.minute
+        resource['hour'] = ti_8760.hour
+        resource['year'] = ti_8760.year
+        resource['month'] = ti_8760.month
+        resource['day'] = ti_8760.day
 
         self['solar_resource_data'] = resource
 
 
-class PV(Solar):
+class Pvwatts(Solar, ABC):
     """Photovoltaic (PV) generation with pvwattsv5.
     """
-    MODULE = 'pvwattsv5'
-    PYSAM = pysam_pv
+    MODULE = 'pvwattsv7'
+    PYSAM = PySamPV7
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
@@ -519,6 +531,33 @@ class PV(Solar):
         super().__init__(resource=resource, meta=meta, parameters=parameters,
                          output_request=output_request)
 
+    def cf_mean(self):
+        """Get mean capacity factor (fractional) from SAM.
+
+        NOTE: PV capacity factor is the AC power production / the DC nameplate
+
+        Returns
+        -------
+        output : float
+            Mean capacity factor (fractional).
+            PV CF is calculated as AC power / DC nameplate.
+        """
+        return self['capacity_factor'] / 100
+
+    def cf_profile(self):
+        """Get hourly capacity factor (frac) profile in orig timezone.
+
+        NOTE: PV capacity factor is the AC power production / the DC nameplate
+
+        Returns
+        -------
+        cf_profile : np.ndarray
+            1D numpy array of capacity factor profile.
+            Datatype is float32 and array length is 8760*time_interval.
+            PV CF is calculated as AC power / DC nameplate.
+        """
+        return self.gen_profile() / self.parameters['system_capacity']
+
     def gen_profile(self):
         """Get AC inverter power generation profile (orig timezone) in kW.
 
@@ -532,22 +571,8 @@ class PV(Solar):
 
     @property
     def default(self):
-        """Get the executed default pysam PVWATTS object.
-
-        Returns
-        -------
-        _default : PySAM.Pvwattsv5
-            Executed pvwatts pysam object.
-        """
-        if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            self._default = pysam_pv.default('PVWattsNone')
-            self._default.LocationAndResource.solar_resource_file = res_file
-            self._default.execute()
-
-        return self._default
+        """Get the executed default pysam PVWATTS object."""
+        pass
 
     def collect_outputs(self, output_lookup=None):
         """Collect SAM gen output_request.
@@ -570,11 +595,53 @@ class PV(Solar):
         super().collect_outputs(output_lookup=output_lookup)
 
 
-class CSP(Solar):
-    """Concentrated Solar Power (CSP) generation
+class Pvwattsv5(Pvwatts):
+    """Photovoltaic (PV) generation with pvwattsv5.
+    """
+    MODULE = 'pvwattsv5'
+    PYSAM = PySamPV5
+
+    @property
+    def default(self):
+        """Get the executed default pysam PVWATTSV5 object.
+
+        Returns
+        -------
+        _default : PySAM.Pvwattsv5
+            Executed pvwatts pysam object.
+        """
+        if self._default is None:
+            self._default = DefaultPvwattsv5.default()
+
+        return self._default
+
+
+class Pvwattsv7(Pvwatts):
+    """Photovoltaic (PV) generation with pvwattsv7.
+    """
+    MODULE = 'pvwattsv7'
+    PYSAM = PySamPV7
+
+    @property
+    def default(self):
+        """Get the executed default pysam PVWATTSV7 object.
+
+        Returns
+        -------
+        _default : PySAM.Pvwattsv7
+            Executed pvwatts pysam object.
+        """
+        if self._default is None:
+            self._default = DefaultPvwattsv7.default()
+
+        return self._default
+
+
+class TcsMoltenSalt(Solar):
+    """Concentrated Solar Power (CSP) generation with tower molten salt
     """
     MODULE = 'tcsmolten_salt'
-    PYSAM = pysam_csp
+    PYSAM = PySamCSP
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None):
@@ -605,17 +672,12 @@ class CSP(Solar):
             Executed TcsmoltenSalt pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            self._default = pysam_csp.default('MSPTSingleOwner')
-            self._default.LocationAndResource.solar_resource_file = res_file
-            self._default.execute()
+            self._default = DefaultTcsMoltenSalt.default()
 
         return self._default
 
 
-class SolarThermal(Solar):
+class SolarThermal(Solar, ABC):
     """ Base class for solar thermal """
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -739,7 +801,7 @@ class SolarThermal(Solar):
         """
         super()._gen_exec()
 
-        if delete_wfile:
+        if delete_wfile and os.path.exists(self._pysam_w_fname):
             os.remove(self._pysam_w_fname)
 
 
@@ -748,7 +810,7 @@ class SolarWaterHeat(SolarThermal):
     Solar Water Heater generation
     """
     MODULE = 'solarwaterheat'
-    PYSAM = pysam_swh
+    PYSAM = PySamSWH
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -786,12 +848,7 @@ class SolarWaterHeat(SolarThermal):
             Executed  pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            self._default = pysam_swh.default('SolarWaterHeatingNone')
-            self._default.Weather.solar_resource_file = res_file
-            self._default.execute()
+            self._default = DefaultSwh.default()
 
         return self._default
 
@@ -801,7 +858,7 @@ class LinearDirectSteam(SolarThermal):
     Process heat linear Fresnel direct steam generation
     """
     MODULE = 'lineardirectsteam'
-    PYSAM = pysam_lfdi
+    PYSAM = PySamLDS
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -854,12 +911,7 @@ class LinearDirectSteam(SolarThermal):
             Executed  pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA CA Daggett (TMY2).csv')
-            self._default = pysam_lfdi.default('DSGLIPHNone')
-            self._default.Weather.file_name = res_file
-            self._default.execute()
+            self._default = DefaultLinearFresnelDsgIph.default()
 
         return self._default
 
@@ -869,7 +921,7 @@ class TroughPhysicalHeat(SolarThermal):
     Trough Physical Process Heat generation
     """
     MODULE = 'troughphysicalheat'
-    PYSAM = pysam_tpph
+    PYSAM = PySamTPPH
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -922,21 +974,16 @@ class TroughPhysicalHeat(SolarThermal):
             Executed  pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR,
-                'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-            self._default = pysam_tpph.default('PhysicalTroughIPHNone')
-            self._default.Weather.file_name = res_file
-            self._default.execute()
+            self._default = DefaultTroughPhysicalProcessHeat.default()
 
         return self._default
 
 
-class Wind(Generation):
+class WindPower(Generation):
     """Base class for Wind generation from SAM
     """
     MODULE = 'windpower'
-    PYSAM = pysam_wind
+    PYSAM = PySamWindPower
 
     def __init__(self, resource=None, meta=None, parameters=None,
                  output_request=None, drop_leap=False):
@@ -1035,32 +1082,6 @@ class Wind(Generation):
             Executed Windpower pysam object.
         """
         if self._default is None:
-            res_file = os.path.join(
-                DEFAULTSDIR, 'SAM/WY Southern-Flat Lands.csv')
-            self._default = pysam_wind.default('WindPowerNone')
-            self._default.WindResourceFile.wind_resource_filename = res_file
-            self._default.execute()
+            self._default = DefaultWindPower.default()
 
         return self._default
-
-
-class LandBasedWind(Wind):
-    """Onshore wind generation
-    """
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
-        """Initialize a SAM land based wind object."""
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
-
-
-class OffshoreWind(LandBasedWind):
-    """Offshore wind generation
-    """
-
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
-        """Initialize a SAM offshore wind object."""
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
-                         output_request=output_request)
