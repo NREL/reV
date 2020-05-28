@@ -141,7 +141,7 @@ def test_sc_points():
 def test_agg_profile():
     """Test aggregation of weighted meanoid profile for each SC point."""
 
-    gen_fpath = os.path.join(TESTDATADIR, 'offshore/ri_offshore_archive.h5')
+    gen_fpath = os.path.join(TESTDATADIR, 'offshore/ri_offshore_baseline.h5')
 
     rev_sc_fpath = os.path.join(TESTDATADIR, 'sc_out/ri_wind_farm_sc.csv')
     rev_summary = pd.read_csv(rev_sc_fpath, index_col=0).iloc[0:2]
