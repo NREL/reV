@@ -30,7 +30,7 @@ def get_curtailment(year):
     pp = ProjectPoints(slice(0, 100), sam_files, 'windpower',
                        curtailment=curtailment)
 
-    resource = RevPySam.get_sam_res(res_file, pp, 'wind')
+    resource = RevPySam.get_sam_res(res_file, pp, 'windpower')
     non_curtailed_res = deepcopy(resource)
 
     out = curtail(resource, pp.curtailment, random_seed=0)

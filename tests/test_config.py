@@ -21,7 +21,8 @@ def test_clearsky():
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
     sam_config_dict = {0: os.path.join(TESTDATADIR, 'SAM/'
                                        'naris_pv_1axis_inv13_cs.json')}
-    pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pv', res_file=res_file)
+    pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pvwattsv5',
+                       res_file=res_file)
     try:
         # Get the SAM resource object
         RevPySam.get_sam_res(res_file, pp, pp.tech)
