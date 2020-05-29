@@ -248,6 +248,33 @@ def test_no_excl(ds_slice):
         assert np.allclose(truth, test)
 
 
+def test_multiple_excl_fractions():
+    """
+    Test that multiple fraction exclusions are handled properly
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+
+    excl_dict = {'ri_smod': {'include_values': [1, ], 'weight': 0.5,
+                             'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        truth = f.mask
+
+    excl_dict = {'ri_padus': {'exclude_values': [1, ], 'weight': 0.25,
+                              'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        truth = np.minimum(truth, f.mask)
+
+    excl_dict = {'ri_smod': {'include_values': [1, ], 'weight': 0.5,
+                             'exclude_nodata': True},
+                 'ri_padus': {'exclude_values': [1, ], 'weight': 0.25,
+                              'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        test = f.mask
+
+    assert np.allclose(test, truth)
+    assert np.all(test[test > 0] >= 0.25)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

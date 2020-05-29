@@ -693,7 +693,7 @@ class ExclusionMask:
                 if mask is None:
                     mask = layer_mask
                 else:
-                    mask *= layer_mask
+                    mask = np.minimum(mask, layer_mask)
 
             if self._min_area is not None:
                 mask = self._area_filter(mask, min_area=self._min_area,
