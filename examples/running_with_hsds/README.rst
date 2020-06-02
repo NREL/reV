@@ -16,7 +16,6 @@ To get started install the h5pyd library:
 .. code-block:: bash
 
     pip install h5pyd
-    conda install h5pyd
 
 Next, configure h5pyd by running ``hsconfigure`` from the command line, or by
 creating a configuration file at ``~/.hscfg``:
