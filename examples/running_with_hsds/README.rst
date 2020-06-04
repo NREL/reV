@@ -39,16 +39,15 @@ bucket: s3://nrel-pds-hsds*
 Using HSDS with reV
 -------------------
 
-Once h5pyd has been installed and configured, reV can pull data directly from
-AWS using HSDS. To access the resource data used by reV (NSRDB or WTK) you have
-to turn on the ``hsds`` flag in the
-`resource handlers <https://github.com/NREL/reV/blob/master/reV/handlers/resource.py>`_:
+Once h5pyd has been installed and configured, `rex <https://github.com/nrel/rex>`_
+can pull data directly from AWS using HSDS. To access the resource data used
+by reV (NSRDB or WTK) you have to turn on the ``hsds`` flag in the
+`resource handlers <https://github.com/NREL/rex/blob/master/rex/renewable_resource.py>`_:
 
 .. code-block:: python
 
-    nsrdb_dir = '/nrel/nsrdb/'
-    nsrdb_file = os.path.join(nsrdb_dir, 'nsrdb_2013.h5')
-    with reV.Resource(nsrdb_file, hsds=True) as f:
+    nsrdb_file = '/nrel/nsrdb/nsrdb_2013.h5'
+    with rex.Resource(nsrdb_file, hsds=True) as f:
         meta_data = f.meta
         time_index = f.time_index
 
@@ -57,9 +56,9 @@ on disk or from HSDS:
 
 .. code-block:: python
 
-    gen = reV.Gen.reV_run(tech='pv', points=points, sam_files=config_path,
+    gen = reV.Gen.reV_run(tech='pvwattsv5', points=points, sam_files=config_path,
                           res_file=nsrdb_file, max_workers=1, fout=None,
                           output_request=('cf_mean', 'cf_profile'))
 
 For a fully operable HSDS example please see:
-https://github.com/NREL/reV/blob/master/examples/running_with_hsds/reV_HSDS_Examples.ipynb
+https://github.com/NREL/hsds-examples/blob/master/notebooks/09_NREL-reV.ipynb

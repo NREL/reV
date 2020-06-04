@@ -2,6 +2,7 @@ click>=7.0
 h5py>=2.9.0
 numpy>=1.16
 pandas>=1.0
+packaging>=20.3
 plotting>=0.0.6
 plotly>=4.7.1
 psutil>=5.6
