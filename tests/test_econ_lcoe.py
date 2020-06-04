@@ -25,8 +25,14 @@ ATOL = 0.001
 PURGE_OUT = True
 
 
-@pytest.mark.parametrize('year', ('2012', '2013'))
-def test_lcoe(year):
+@pytest.mark.parametrize(('year', 'max_workers'),
+                         [('2012', 1),
+                          ('2012', 2),
+                          ('2012', os.cpu_count() * 2),
+                          ('2013', 1),
+                          ('2013', 2),
+                          ('2013', os.cpu_count() * 2)])
+def test_lcoe(year, max_workers):
     """Gen PV CF profiles with write to disk and compare against rev1."""
     cf_file = os.path.join(TESTDATADIR,
                            'gen_out/gen_ri_pv_{}_x000.h5'.format(year))
@@ -37,11 +43,11 @@ def test_lcoe(year):
     points = slice(0, 100)
     obj = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
                        cf_year=year, output_request='lcoe_fcr',
-                       max_workers=1, sites_per_worker=25,
+                       max_workers=max_workers, sites_per_worker=25,
                        points_range=None, fout=None)
     lcoe = list(obj.out['lcoe_fcr'])
 
-    with h5py.File(r1f) as f:
+    with h5py.File(r1f, mode='r') as f:
         year_rows = {'2012': 0, '2013': 1}
         r1_lcoe = f['pv']['lcoefcr'][year_rows[str(year)], 0:100] * 1000
 
@@ -71,7 +77,7 @@ def test_fout(year):
     with Outputs(fpath) as f:
         lcoe = f['lcoe_fcr']
 
-    with h5py.File(r1f) as f:
+    with h5py.File(r1f, mode='r') as f:
         year_rows = {'2012': 0, '2013': 1}
         r1_lcoe = f['pv']['lcoefcr'][year_rows[str(year)], 0:100] * 1000
     result = np.allclose(lcoe, r1_lcoe, rtol=RTOL, atol=ATOL)
@@ -113,7 +119,7 @@ def test_append_data(year):
         og_meta = f.meta
         og_ti = f.time_index
 
-    with h5py.File(r1f) as f:
+    with h5py.File(r1f, mode='r') as f:
         year_rows = {'2012': 0, '2013': 1}
         r1_lcoe = f['pv']['lcoefcr'][year_rows[str(year)], 0:100] * 1000
 
