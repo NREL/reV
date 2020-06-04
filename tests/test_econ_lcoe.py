@@ -25,14 +25,16 @@ ATOL = 0.001
 PURGE_OUT = True
 
 
-@pytest.mark.parametrize(('year', 'max_workers'),
-                         [('2012', 1),
-                          ('2012', 2),
-                          ('2012', os.cpu_count() * 2),
-                          ('2013', 1),
-                          ('2013', 2),
-                          ('2013', os.cpu_count() * 2)])
-def test_lcoe(year, max_workers):
+@pytest.mark.parametrize(('year', 'max_workers', 'spw'),
+                         [('2012', 1, 25),
+                          ('2012', 2, 25),
+                          ('2012', os.cpu_count() * 2, 25),
+                          ('2012', 1, 1),
+                          ('2013', 1, 25),
+                          ('2013', 2, 25),
+                          ('2013', os.cpu_count() * 2, 25),
+                          ('2013', 1, 1)])
+def test_lcoe(year, max_workers, spw):
     """Gen PV CF profiles with write to disk and compare against rev1."""
     cf_file = os.path.join(TESTDATADIR,
                            'gen_out/gen_ri_pv_{}_x000.h5'.format(year))
