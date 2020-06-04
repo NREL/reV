@@ -4,6 +4,7 @@ reV econ module (lcoe-fcr, single owner, etc...)
 """
 import logging
 import numpy as np
+import os
 import pandas as pd
 import pprint
 from warnings import warn
@@ -379,7 +380,8 @@ class Econ(Gen):
     @classmethod
     def reV_run(cls, points=None, sam_files=None, cf_file=None,
                 cf_year=None, site_data=None, output_request=('lcoe_fcr',),
-                max_workers=1, sites_per_worker=100, pool_size=72,
+                max_workers=1, sites_per_worker=100,
+                pool_size=(os.cpu_count() * 2),
                 timeout=1800, points_range=None, fout=None,
                 dirout='./econ_out', append=False):
         """Execute a parallel reV econ run with smart data flushing.

@@ -1226,7 +1226,7 @@ class Gen:
 
         return out
 
-    def _pre_split_pc(self, pool_size=72):
+    def _pre_split_pc(self, pool_size=(os.cpu_count() * 2)):
         """Pre-split project control iterator into sub chunks to further
         split the parallelization.
 
@@ -1262,8 +1262,8 @@ class Gen:
                      .format(len(pc_chunks), [len(x) for x in pc_chunks]))
         return N, pc_chunks
 
-    def _parallel_run(self, max_workers=None, pool_size=72, timeout=1800,
-                      **kwargs):
+    def _parallel_run(self, max_workers=None, pool_size=(os.cpu_count() * 2),
+                      timeout=1800, **kwargs):
         """Execute parallel compute.
 
         Parameters
@@ -1370,7 +1370,8 @@ class Gen:
     def reV_run(cls, tech, points, sam_files, res_file,
                 output_request=('cf_mean',), curtailment=None,
                 downscale=None, max_workers=1, sites_per_worker=None,
-                pool_size=72, timeout=1800, points_range=None, fout=None,
+                pool_size=(os.cpu_count() * 2), timeout=1800,
+                points_range=None, fout=None,
                 dirout='./gen_out', mem_util_lim=0.4, scale_outputs=True):
         """Execute a parallel reV generation run with smart data flushing.
 
