@@ -13,7 +13,7 @@ from reV.handlers.collection import Collector
 from reV.pipeline.status import Status
 
 from rex.utilities.cli_dtypes import STR, STRLIST, INT
-from rex.utilities.execution import SubprocessManager, SLURM
+from rex.utilities.execution import SLURM
 from rex.utilities.loggers import init_mult
 
 logger = logging.getLogger(__name__)
@@ -233,33 +233,32 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
         appropriately formatted arguments based on input args:
             python -m reV.handlers.cli_collect [args] collect
     """
-
     # make a cli arg string for direct() in this module
-    arg_main = ('-n {name} '
-                '-f {h5_file} '
-                '-d {h5_dir} '
-                '-pp {project_points} '
-                '-ds {dsets} '
-                '-fp {file_prefix} '
-                '-ld {log_dir} '
-                '{purge}'
-                '{v}'
-                .format(name=SubprocessManager.s(name),
-                        h5_file=SubprocessManager.s(h5_file),
-                        h5_dir=SubprocessManager.s(h5_dir),
-                        project_points=SubprocessManager.s(project_points),
-                        dsets=SubprocessManager.s(dsets),
-                        file_prefix=SubprocessManager.s(file_prefix),
-                        log_dir=SubprocessManager.s(log_dir),
-                        purge='-p ' if purge_chunks else '',
-                        v='-v ' if verbose else '',
-                        ))
+    args = ('-f {h5_file} '
+            '-d {h5_dir} '
+            '-pp {project_points} '
+            '-ds {dsets} '
+            '-fp {file_prefix} '
+            '-ld {log_dir} '
+            '{purge}'
+            '{v}'
+            .format(name=SLURM.s(name),
+                    h5_file=SLURM.s(h5_file),
+                    h5_dir=SLURM.s(h5_dir),
+                    project_points=SLURM.s(project_points),
+                    dsets=SLURM.s(dsets),
+                    file_prefix=SLURM.s(file_prefix),
+                    log_dir=SLURM.s(log_dir),
+                    purge='-p ' if purge_chunks else '',
+                    v='-v ' if verbose else '',
+                    ))
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
-    cmd = ('python -m reV.handlers.cli_collect {arg_main} collect'
-           .format(arg_main=arg_main))
+    cmd = ('python -m reV.handlers.cli_collect -n {} direct {}'
+           .format(SLURM.s(name), args))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
+
     return cmd
 
 
