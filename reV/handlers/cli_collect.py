@@ -242,8 +242,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
             '-ld {log_dir} '
             '{purge}'
             '{v}'
-            .format(name=SLURM.s(name),
-                    h5_file=SLURM.s(h5_file),
+            .format(h5_file=SLURM.s(h5_file),
                     h5_dir=SLURM.s(h5_dir),
                     project_points=SLURM.s(project_points),
                     dsets=SLURM.s(dsets),
