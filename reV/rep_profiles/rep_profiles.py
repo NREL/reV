@@ -416,6 +416,13 @@ class RegionRepProfile:
                      'profiles with shape {}.'
                      .format(self._weight, len(self.weights),
                              self._gid_col, self.source_profiles.shape))
+                gen_gids = self._get_region_attr(self._rev_summary,
+                                                 self._gid_col)
+                logger.debug('Gids from column "{}" with len {}: {}'
+                             .format(self._gid_col, len(gen_gids), gen_gids))
+                logger.debug('Weights from column "{}" with len {}: {}'
+                             .format(self._weight, len(self.weights),
+                                     self.weights))
                 logger.error(e)
                 raise DataShapeError(e)
 
@@ -948,6 +955,8 @@ class RepProfiles(RepProfilesBase):
                                'for region: {} with no valid mask.'
                                .format(i + 1, len(meta_static), region_dict))
             else:
+                logger.debug('Working on profile {} out of {} for region: {}'
+                             .format(i + 1, len(meta_static), region_dict))
                 out = RegionRepProfile.get_region_rep_profile(
                     self._gen_fpath, self._rev_summary[mask],
                     gid_col=self._gid_col, cf_dset=self._cf_dset,
