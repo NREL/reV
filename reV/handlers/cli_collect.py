@@ -254,7 +254,7 @@ def get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
-    cmd = ('python -m reV.handlers.cli_collect -n {} direct {}'
+    cmd = ('python -m reV.handlers.cli_collect -n {} direct {} collect'
            .format(SLURM.s(name), args))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
