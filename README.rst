@@ -43,16 +43,30 @@ reV command line tools
 - `reV-batch <https://nrel.github.io/reV/reV/reV.batch.cli_batch.html#rev-batch>`_
 - `reV-QA-QC <https://nrel.github.io/reV/reV/reV.qa_qc.cli_qa_qc.html#rev-qa-qc>`_
 
-Using Eagle Module
-==================
+Using Eagle Env / Module
+========================
 
 If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled
-module:
+conda env:
+
+.. code-block:: bash
+
+    conda activate /shared-projects/rev/modulefiles/conda_env
+
+or
+
+.. code-block:: bash
+
+    source activate /shared-projects/rev/modulefiles/conda_env
+
+or module:
 
 .. code-block:: bash
 
     module use /shared-projects/rev/modulefiles
     module load reV
+
+**NOTE: Loading the reV module can take several minutes**
 
 Launching a run
 ---------------
