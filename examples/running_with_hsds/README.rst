@@ -40,9 +40,9 @@ Using HSDS with reV
 -------------------
 
 Once h5pyd has been installed and configured, `rex <https://github.com/nrel/rex>`_
-can pull data directly from AWS using HSDS. To access the resource data used
-by reV (NSRDB or WTK) you have to turn on the ``hsds`` flag in the
-`resource handlers <https://github.com/NREL/rex/blob/master/rex/renewable_resource.py>`_:
+can pull data directly from AWS using `HSDS <https://github.com/NREL/hsds-examples>`_
+To access the resource data used by reV (NSRDB or WTK) you have to turn on the
+``hsds`` flag in the `resource handlers <https://nrel.github.io/rex/rex/rex.renewable_resource.html>`_:
 
 .. code-block:: python
 
@@ -51,7 +51,7 @@ by reV (NSRDB or WTK) you have to turn on the ``hsds`` flag in the
         meta_data = f.meta
         time_index = f.time_index
 
-reV generation (``reV.Gen``) will automatically infer if a file path is locally
+reV generation (`reV.Gen <https://nrel.github.io/reV/reV/reV.generation.html>`_) will automatically infer if a file path is locally
 on disk or from HSDS:
 
 .. code-block:: python

@@ -110,8 +110,8 @@ Option 1: Install from PIP or Conda (recommended for analysts):
     1) ``pip install NREL-reV`` or
     2) ``conda install nrel-rev --channel=nrel``
 
-       - NOTE: If you conda install and want to you HSDS you'll also need to
-         install h5pyd manually: ``pip install h5pyd``
+       - NOTE: If you install using conda and want to use `HSDS <https://github.com/NREL/hsds-examples>`_
+         you will also need to install h5pyd manually: ``pip install h5pyd``
 
 Option 2: Clone repo (recommended for developers)
 -------------------------------------------------
