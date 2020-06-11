@@ -52,7 +52,7 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages'
+    'sphinx.ext.githubpages',
     'sphinx.ext.autosummary',
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
