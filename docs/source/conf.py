@@ -52,10 +52,16 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
+    'sphinx.ext.githubpages'
+    'sphinx.ext.autosummary',
+    'sphinx.ext.todo',
+    'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
-    'sphinx_click.ext'
+    'sphinx.ext.intersphinx',
+    'sphinx_click.ext',
 ]
+
+intersphinx_mapping = {'python': ('http://docs.python.org/3.5', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -84,7 +90,6 @@ exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -189,3 +194,4 @@ napoleon_google_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = False
 napoleon_use_rtype = False
+autosummary_generate = True
