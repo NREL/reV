@@ -57,8 +57,6 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "sphinx_rtd_theme",
-    "nbsphinx",
-    "IPython.sphinxext.ipython_console_highlighting",
     'sphinx_click.ext',
 ]
 
