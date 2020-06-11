@@ -48,14 +48,17 @@ release = v
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.coverage',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.intersphinx',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.coverage",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
+    "sphinx.ext.napoleon",
     "sphinx_rtd_theme",
+    "nbsphinx",
+    "IPython.sphinxext.ipython_console_highlighting",
     'sphinx_click.ext',
 ]
 
@@ -84,7 +87,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = []
+exclude_patterns = ["_build", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -101,8 +104,15 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-html_theme_options = {
-    'collapse_navigation': False,
+html_theme_options = {"navigation_depth": 4, "collapse_navigation": False}
+
+html_context = {
+    "display_github": True,
+    "github_user": "nrel",
+    "github_repo": "reV",
+    "github_version": "master",
+    "conf_py_path": "/docs/source/",
+    "source_suffix": source_suffix,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -182,9 +192,6 @@ texinfo_documents = [
 
 autoclass_content = 'both'
 autodoc_member_order = 'bysource'
-# Uncomment when https://github.com/sphinx-doc/sphinx/pull/4076 is
-# released.
-# autodoc_special_members = ['__getitem__', '__setitem__','__iter__']
 numpy_show_class_member = True
 napoleon_google_docstring = False
 napoleon_use_param = False

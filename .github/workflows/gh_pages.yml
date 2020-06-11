@@ -20,6 +20,7 @@ jobs:
           python -m pip install sphinx
           python -m pip install sphinx_rtd_theme
           python -m pip install sphinx-click
+          python -m pip install nbsphinx
       - name: build documentation
         run: |
           cd docs
