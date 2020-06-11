@@ -53,11 +53,9 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.todo',
-    'sphinx.ext.ifconfig',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    "sphinx_rtd_theme",
     'sphinx_click.ext',
 ]
 
@@ -105,8 +103,6 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 #
 html_theme_options = {
     'collapse_navigation': False,
-    'sticky_navigation': True,
-    'titles_only': False
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
