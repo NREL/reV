@@ -101,8 +101,7 @@ def from_config(ctx, config_file, verbose):
 
     # get downscale request and raise exception if not NSRDB
     ctx.obj['DOWNSCALE'] = config.downscale
-    if (config.downscale is not None and config.tech != 'pv'
-            and config.tech != 'csp'):
+    if config.downscale is not None and 'pv' not in config.tech.lower():
         raise ConfigError('User requested downscaling for a non-solar '
                           'technology. reV does not have this capability at '
                           'the current time. Please contact a developer for '
