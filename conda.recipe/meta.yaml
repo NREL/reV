@@ -23,7 +23,7 @@ requirements:
     - plotly
     - psutil
     - scipy
-    - NREL-rex>=0.1.12
+    - NREL-rex
     - NREL-PySAM>=2.1.4
   run:
     - python
@@ -37,7 +37,7 @@ requirements:
     - plotly
     - psutil
     - scipy
-    - NREL-rex>=0.1.12
+    - NREL-rex
     - NREL-PySAM>=2.1.4
 
 about:
