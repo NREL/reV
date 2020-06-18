@@ -374,7 +374,7 @@ class Gen:
             String in the Pandas frequency format, e.g. '5min'.
         """
         if ds_freq is not None:
-            from reV.utilities.downscale import make_time_index
+            from rex.utilities.downscale import make_time_index
             year = self.time_index.year[0]
             ti = make_time_index(year, ds_freq)
             self._time_index = self.handle_leap_ti(
