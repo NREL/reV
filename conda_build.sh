@@ -11,7 +11,7 @@ platforms=( osx-64 linux-64 win-64 )
 for py in "${PY_VERSION[@]}"
 do
     conda build conda.recipe/ --python=$py --channel=nrel --channel=mrossol
-    file=$(conda build conda.recipe/ --python=$py --output)
+    file=$(conda build conda.recipe/ --python=$py --channel=nrel --channel=mrossol --output)
     for platform in "${platforms[@]}"
     do
        conda convert --platform $platform $file -o $CONDA_BLD_PATH/
