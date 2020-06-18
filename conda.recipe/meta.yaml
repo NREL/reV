@@ -2,30 +2,43 @@ package:
     name: nrel-rev
     version: {{ environ.get('GIT_DESCRIBE_TAG','').replace('v', '', 1) }}
 
-build:
-  number: 0
-
 source:
     git_url: ../
 
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
 requirements:
-  build:
+  host:
     - python
     - pip
-  run:
-    - python
+    - setuptools
     - click
     - h5py
-    - nrel-pysam>=2.1.4
-    - nrel-rex>=0.1.10
-    - numpy
+    - numpy>=1.16
     - pandas
     - packaging
     - plotting
     - plotly
     - psutil
     - scipy
-
+    - NREL-rex>=0.1.12
+    - NREL-PySAM>=2.1.4
+  run:
+    - python
+    - pip
+    - click
+    - h5py
+    - {{ pin_compatible('numpy') }}
+    - pandas
+    - packaging
+    - plotting
+    - plotly
+    - psutil
+    - scipy
+    - NREL-rex>=0.1.12
+    - NREL-PySAM>=2.1.4
 
 about:
   home: "https://github.com/NREL/reV"
