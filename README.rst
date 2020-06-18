@@ -17,9 +17,6 @@ reV
 .. image:: https://anaconda.org/nrel/nrel-rev/badges/version.svg
     :target: https://anaconda.org/nrel/nrel-rev
 
-.. image:: https://anaconda.org/nrel/nrel-rev/badges/platforms.svg
-    :target: https://anaconda.org/nrel/nrel-rev
-
 .. image:: https://anaconda.org/nrel/nrel-rev/badges/license.svg
     :target: https://anaconda.org/nrel/nrel-rev
 
