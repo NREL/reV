@@ -4,7 +4,8 @@ Competitive Wind Farms exclusion handler
 """
 import logging
 import numpy as np
-import pandas as pd
+
+from rex.utilities.utilities import parse_table
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ class CompetitiveWindFarms:
 
     def __repr__(self):
         gids = len(self._upwind)
+        # pylint: disable=unsubscriptable-object
         neighbors = len(self._upwind.values[0])
         msg = ("{} with {} sc_point_gids and {} prominent directions"
                .format(self.__class__.__name__, gids, neighbors))
@@ -151,15 +153,11 @@ class CompetitiveWindFarms:
         table : pandas.DataFrame
             DataFrame extracted from file path
         """
-        if isinstance(table, str):
-            if table.endswith('.csv'):
-                table = pd.read_csv(table)
-            else:
-                raise ValueError('Cannot parse {}'.format(table))
-
-        elif not isinstance(table, pd.DataFrame):
-            raise ValueError("Table must be a .csv, or "
-                             "a pandas DataFrame")
+        try:
+            table = parse_table(table)
+        except ValueError as ex:
+            logger.error(ex)
+            raise
 
         return table
 

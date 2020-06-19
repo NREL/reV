@@ -831,17 +831,14 @@ class RepProfilesBase(ABC):
     @abstractmethod
     def _run_serial(self):
         """Abstract method for serial run method."""
-        pass
 
     @abstractmethod
     def _run_parallel(self):
         """Abstract method for parallel run method."""
-        pass
 
     @abstractmethod
     def run(self):
         """Abstract method for generic run method."""
-        pass
 
 
 class RepProfiles(RepProfilesBase):

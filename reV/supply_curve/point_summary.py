@@ -488,7 +488,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         return data
 
-    def summarize(self, args=None, data_layers=None):
+    def point_summary(self, args=None, data_layers=None):
         """
         Get a summary dictionary of a single supply curve point.
 
@@ -540,12 +540,13 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         return summary
 
     @classmethod
-    def summary(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
-                excl_dict=None, res_class_dset=None, res_class_bin=None,
-                excl_area=0.0081, power_density=None, cf_dset='cf_mean-means',
-                lcoe_dset='lcoe_fcr-means', resolution=64,
-                exclusion_shape=None, close=False, offshore_flags=None,
-                friction_layer=None, args=None, data_layers=None):
+    def summarize(cls, gid, excl_fpath, gen_fpath, tm_dset, gen_index,
+                  excl_dict=None, res_class_dset=None, res_class_bin=None,
+                  excl_area=0.0081, power_density=None,
+                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
+                  resolution=64, exclusion_shape=None, close=False,
+                  offshore_flags=None, friction_layer=None, args=None,
+                  data_layers=None):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -619,6 +620,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                   'friction_layer': friction_layer}
         with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                  **kwargs) as point:
-            summary = point.summarize(args=args, data_layers=data_layers)
+            summary = point.point_summary(args=args, data_layers=data_layers)
 
         return summary

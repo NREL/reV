@@ -323,6 +323,7 @@ class TechMapping:
         mask_ind = np.where(mask == True)[0]  # noqa: E712
 
         if np.sum(mask) > 0:
+            # pylint: disable=not-callable
             res_tree = cKDTree(res_meta[mask, :])
 
             logger.debug('Running tech mapping for chunks {} through {}'

@@ -153,7 +153,7 @@ class WindBos:
         """Get a sales tax multiplier (frac of the total installed cost)."""
         basis = self._inputs.get('sales_tax_basis', 0) / 100
         tax = self._datadict.get('sales_and_use_tax', 0) / 100
-        return (basis * tax)
+        return basis * tax
 
     @property
     def sales_tax_cost(self):

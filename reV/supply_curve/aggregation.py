@@ -80,7 +80,6 @@ class AbstractAggFileHandler(ABC):
         """
         Placeholder for h5 Resource handler
         """
-        pass
 
 
 class AggFileHandler(AbstractAggFileHandler):
@@ -260,6 +259,7 @@ class AbstractAggregation(ABC):
                        'area_filter_kernel': area_filter_kernel,
                        'min_area': min_area,
                        'check_excl_layers': check_excl_layers}
+        # pylint: disable=abstract-class-instantiated
         with AbstractAggFileHandler(excl_fpath, **file_kwargs) as fh:
 
             for gid in gids:

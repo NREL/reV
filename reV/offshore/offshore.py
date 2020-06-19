@@ -224,7 +224,7 @@ class Offshore:
             Maximum distance limit between wind farm points and resouce pixels.
         """
 
-        tree = cKDTree(self._farm_coords)
+        tree = cKDTree(self._farm_coords)  # pylint: disable=not-callable
         d, i = tree.query(self.meta_source_offshore[['latitude', 'longitude']])
 
         if len(self._farm_coords) > 1:

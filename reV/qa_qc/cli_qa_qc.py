@@ -350,7 +350,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['NAME'] = name
 
     # Enforce verbosity if logging level is specified in the config
-    verbose = True if config.log_level == logging.DEBUG else False
+    verbose = config.log_level == logging.DEBUG
 
     # initialize loggers
     init_mult(name, config.logdir, modules=[__name__, 'reV.config',

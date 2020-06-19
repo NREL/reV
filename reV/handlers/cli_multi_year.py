@@ -245,7 +245,6 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
     main_args = ('-n {name} '
                  '{v}'
                  .format(name=SLURM.s(name),
-                         my_file=SLURM.s(my_file),
                          v='-v ' if verbose else '',
                          ))
 

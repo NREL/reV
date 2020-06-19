@@ -412,7 +412,7 @@ class Solar(Generation, ABC):
         """
 
         set_tilt = False
-        if 'pv' in self.MODULE:
+        if 'pv' in self.MODULE:  # pylint: disable=unsupported-membership-test
             if parameters is not None and meta is not None:
                 if 'tilt' not in parameters:
                     warn('No tilt specified, setting at latitude.',
@@ -572,7 +572,6 @@ class Pvwatts(Solar, ABC):
     @property
     def default(self):
         """Get the executed default pysam PVWATTS object."""
-        pass
 
     def collect_outputs(self, output_lookup=None):
         """Collect SAM gen output_request.

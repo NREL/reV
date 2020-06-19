@@ -70,7 +70,7 @@ class SlottedDict:
         key : list
             List of slotted variable names that have been set.
         """
-        return [k for k in self.var_list]
+        return self.var_list
 
     def values(self):
         """Get a values list similar to a dictionary.

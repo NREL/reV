@@ -10,7 +10,7 @@ import plotting as mplt
 import plotly.express as px
 
 from rex import Resource
-from rex.utilities.execution import SpawnProcessPool
+from rex.utilities import SpawnProcessPool, parse_table
 
 logger = logging.getLogger(__name__)
 
@@ -302,17 +302,11 @@ class SummarizeSupplyCurve:
         summary : pandas.DataFrame
             DataFrame of summary statistics
         """
-        if isinstance(summary, str):
-            if summary.endswith('.csv'):
-                summary = pd.read_csv(summary)
-            elif summary.endswith('.json'):
-                summary = pd.read_json(summary)
-            else:
-                raise ValueError('Cannot parse {}'.format(summary))
-
-        elif not isinstance(summary, pd.DataFrame):
-            raise ValueError("summary must be a .csv, .json, or "
-                             "a pandas DataFrame")
+        try:
+            summary = parse_table(summary)
+        except ValueError as ex:
+            logger.error(ex)
+            raise
 
         return summary
 
@@ -592,7 +586,7 @@ class SummaryPlots(PlotBase):
             Additional kwargs for plotting.dataframes.dist_plot
         """
         self._check_value(self.summary, value, scatter=False)
-        series = self.summary(value)
+        series = self.summary[value]
         mplt.dist_plot(series, filename=out_path, **kwargs)
 
     def dist_plotly(self, value, out_path=None, **kwargs):
