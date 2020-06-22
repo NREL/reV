@@ -213,7 +213,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
 
         fn_out = '{}.csv'.format(name)
         fpath_out = os.path.join(out_dir, fn_out)
-        out.to_csv(fpath_out)
+        out.to_csv(fpath_out, index=False)
 
         runtime = (time.time() - t0) / 60
         logger.info('Supply curve complete. Time elapsed: {:.2f} min. '

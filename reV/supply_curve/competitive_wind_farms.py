@@ -216,6 +216,8 @@ class CompetitiveWindFarms:
             mask = sc_points['offshore'] == 0
             sc_points = sc_points.loc[mask]
 
+        mask = np.ones(int(1 + sc_points['sc_point_gid'].max()), dtype=bool)
+
         sc_points = sc_points[['sc_gid', 'sc_point_gid']]
         sc_gids = sc_points.set_index('sc_gid')
         sc_gids = {k: int(v[0]) for k, v in sc_gids.iterrows()}
@@ -224,8 +226,6 @@ class CompetitiveWindFarms:
             sc_points.groupby('sc_point_gid')['sc_gid'].unique().to_frame()
         sc_point_gids = {int(k): v['sc_gid']
                          for k, v in sc_point_gids.iterrows()}
-
-        mask = np.ones(int(1 + sc_points['sc_point_gid'].max()), dtype=bool)
 
         return sc_gids, sc_point_gids, mask
 
