@@ -47,7 +47,7 @@ def test_gen_tph():
         assert round(x, digits) == round(y, digits)
 
     # Some results may be different with PySAM 2 vs 1.2.1
-    my_assert(gen.out['annual_thermal_consumption'], 17648.283, 0)
+    my_assert(gen.out['annual_thermal_consumption'], 16361.0, 0)
     my_assert(gen.out['annual_gross_energy'], 14400000., -6)
 
 
