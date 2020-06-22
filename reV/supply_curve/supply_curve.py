@@ -731,7 +731,10 @@ class SupplyCurve:
         connections = connections[columns]
         connections = connections.reset_index()
 
-        unconnected = np.where(self._mask[self._sc_gids])[0].tolist()
+        sc_gids = connections['sc_gid'].sort_values
+        unconnected = np.isin(self._sc_gids, sc_gids)
+        unconnected = np.where(~unconnected)[0].tolist()
+
         if unconnected:
             msg = ("{} supply curve points were not connected to tranmission! "
                    "Unconnected sc_gid's: {}"
@@ -740,12 +743,6 @@ class SupplyCurve:
             warn(msg)
 
         supply_curve = self._sc_points.merge(connections, on='sc_gid')
-        if comp_wind_dirs is not None:
-            sc_gids = comp_wind_dirs.sc_gids
-            mask = supply_curve['sc_gid'].isin(sc_gids)
-            logger.info('{} no-competitive wind farms were excluded'
-                        .format(np.sum(~mask)))
-            supply_curve = supply_curve.loc[mask]
 
         return supply_curve
 
