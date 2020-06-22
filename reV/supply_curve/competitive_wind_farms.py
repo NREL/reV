@@ -213,7 +213,7 @@ class CompetitiveWindFarms:
         """
         sc_points = CompetitiveWindFarms._parse_table(sc_points)
         if 'offshore' in sc_points and not offshore:
-            logger.debug('Not including offshore supply curve points in'
+            logger.debug('Not including offshore supply curve points in '
                          'CompetitiveWindFarm')
             mask = sc_points['offshore'] == 0
             sc_points = sc_points.loc[mask]
@@ -408,8 +408,6 @@ class CompetitiveWindFarms:
         """
         sc_points = self._parse_table(sc_points)
         if 'offshore' in sc_points and not self._offshore:
-            logger.debug('Not including offshore supply curve points in'
-                         'CompetitiveWindFarm')
             mask = sc_points['offshore'] == 0
             sc_points = sc_points.loc[mask]
 
