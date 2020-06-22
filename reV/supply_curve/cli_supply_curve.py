@@ -270,8 +270,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
     if simple:
         args += '-s '
-
-    if line_limited:
+    elif line_limited:
         args += '-ll '
 
     if verbose:
