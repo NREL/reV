@@ -698,6 +698,7 @@ class SupplyCurve:
                                                        capacities[i])
                 if connect:
                     connected += 1
+                    logger.debug('Connecting sc gid {}'.format(sc_gid))
                     self._mask[sc_gid] = False
 
                     conn_lists['trans_gid'][sc_gid] = trans_gid
@@ -742,6 +743,8 @@ class SupplyCurve:
         if comp_wind_dirs is not None:
             sc_gids = comp_wind_dirs.sc_gids
             mask = supply_curve['sc_gid'].isin(sc_gids)
+            logger.info('{} no-competitive wind farms were excluded'
+                        .format(np.sum(~mask)))
             supply_curve = supply_curve.loc[mask]
 
         return supply_curve
