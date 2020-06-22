@@ -731,11 +731,12 @@ class SupplyCurve:
         connections = connections[columns]
         connections = connections.reset_index()
 
-        sc_gids = connections['sc_gid'].values
-        logger.debug('Connected gids {} out of total gids {}'
-                     .format(len(sc_gids), len(self._sc_gids)))
-        unconnected = np.isin(self._sc_gids, sc_gids)
-        unconnected = np.array(self._sc_gids)[~unconnected].tolist()
+        sc_gids = self._sc_points['sc_gid'].values
+        connected = connections['sc_gid'].values
+        logger.debug('Connected gids {} out of total supply curve gids {}'
+                     .format(len(connected), len(sc_gids)))
+        unconnected = ~np.isin(sc_gids, connected)
+        unconnected = sc_gids[unconnected].tolist()
 
         if unconnected:
             msg = ("{} supply curve points were not connected to tranmission! "
@@ -746,7 +747,7 @@ class SupplyCurve:
 
         supply_curve = self._sc_points.merge(connections, on='sc_gid')
 
-        return supply_curve
+        return supply_curve.reset_index(drop=True)
 
     def full_sort(self, trans_table=None, sort_on='total_lcoe',
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
@@ -821,7 +822,7 @@ class SupplyCurve:
                                        total_lcoe_fric=total_lcoe_fric,
                                        sort_on=sort_on, columns=columns,
                                        downwind=downwind)
-        supply_curve = supply_curve.reset_index(drop=True)
+
         sum_cols = {'combined_cap_cost': ['array_cable_CAPEX',
                                           'export_cable_CAPEX',
                                           'trans_cap_cost']}
