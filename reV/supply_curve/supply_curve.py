@@ -830,7 +830,7 @@ class SupplyCurve:
     def simple_sort(self, trans_table=None, sort_on='total_lcoe',
                     columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                              'trans_cap_cost'),
-                    wind_dirs=None, n_dirs=2, downwind=False):
+                    wind_dirs=None, n_dirs=2, downwind=False, offshore=False):
         """
         Run simple supply curve sorting that does not take into account
         available capacity
@@ -854,6 +854,9 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
 
         Returns
         -------
@@ -882,6 +885,7 @@ class SupplyCurve:
             supply_curve = CompetitiveWindFarms.run(wind_dirs,
                                                     supply_curve,
                                                     n_dirs=n_dirs,
+                                                    offshore=offshore,
                                                     sort_on=sort_on,
                                                     downwind=downwind)
 
@@ -898,7 +902,8 @@ class SupplyCurve:
              transmission_costs=None, line_limited=False, sort_on='total_lcoe',
              columns=('trans_gid', 'trans_capacity', 'trans_type',
                       'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
-             max_workers=None, wind_dirs=None, n_dirs=2, downwind=False):
+             max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
+             offshore=False):
         """
         Run full supply curve taking into account available capacity of
         tranmission features when making connections.
@@ -940,6 +945,9 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
 
         Returns
         -------
@@ -952,7 +960,7 @@ class SupplyCurve:
                  line_limited=line_limited, max_workers=max_workers)
         supply_curve = sc.full_sort(sort_on=sort_on, columns=columns,
                                     wind_dirs=wind_dirs, n_dirs=n_dirs,
-                                    downwind=downwind)
+                                    downwind=downwind, offshore=offshore)
 
         return supply_curve
 
@@ -961,7 +969,8 @@ class SupplyCurve:
                transmission_costs=None, sort_on='total_lcoe',
                columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                         'trans_cap_cost'),
-               max_workers=None, wind_dirs=None, n_dirs=2, downwind=False):
+               max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
+               offshore=False):
         """
         Run simple supply curve by connecting to the cheapest tranmission
         feature.
@@ -1000,6 +1009,9 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
 
         Returns
         -------
@@ -1012,6 +1024,6 @@ class SupplyCurve:
                  max_workers=max_workers)
         supply_curve = sc.simple_sort(sort_on=sort_on, columns=columns,
                                       wind_dirs=wind_dirs, n_dirs=n_dirs,
-                                      downwind=downwind)
+                                      downwind=downwind, offshore=offshore)
 
         return supply_curve

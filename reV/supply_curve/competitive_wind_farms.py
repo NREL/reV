@@ -36,6 +36,8 @@ class CompetitiveWindFarms:
         self._sc_gids, self._sc_point_gids, self._mask = \
             self._parse_sc_points(sc_points, offshore=offshore)
 
+        self._offshore = offshore
+
         valid = np.isin(self.sc_point_gids, self._wind_dirs.index)
         if not np.all(valid):
             msg = ("'sc_points contains sc_point_gid values that do not "
@@ -405,6 +407,12 @@ class CompetitiveWindFarms:
             wind farms
         """
         sc_points = self._parse_table(sc_points)
+        if 'offshore' in sc_points and not self._offshore:
+            logger.debug('Not including offshore supply curve points in'
+                         'CompetitiveWindFarm')
+            mask = sc_points['offshore'] == 0
+            sc_points = sc_points.loc[mask]
+
         sc_points = sc_points.sort_values(sort_on)
 
         sc_point_gids = sc_points['sc_point_gid'].values.astype(int)
@@ -427,8 +435,8 @@ class CompetitiveWindFarms:
         return sc_points.loc[mask].reset_index(drop=True)
 
     @classmethod
-    def run(cls, wind_dirs, sc_points, n_dirs=2, sort_on='total_lcoe',
-            downwind=False, out_fpath=None):
+    def run(cls, wind_dirs, sc_points, n_dirs=2, offshore=False,
+            sort_on='total_lcoe', downwind=False, out_fpath=None):
         """
         Exclude given number of neighboring Supply Point gids based on most
         prominent wind directions
@@ -443,6 +451,9 @@ class CompetitiveWindFarms:
             Supply curve point summary table
         n_dirs : int, optional
             Number of prominent directions to use, by default 2
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
         sort_on : str, optional
             column to sort on before excluding neighbors,
             by default 'total_lcoe'
@@ -459,7 +470,7 @@ class CompetitiveWindFarms:
             Updated supply curve points after removing non-competative
             wind farms
         """
-        cwf = cls(wind_dirs, sc_points, n_dirs=n_dirs)
+        cwf = cls(wind_dirs, sc_points, n_dirs=n_dirs, offshore=offshore)
         sc_points = cwf.remove_noncompetitive_farm(sc_points, sort_on=sort_on,
                                                    downwind=downwind)
 
