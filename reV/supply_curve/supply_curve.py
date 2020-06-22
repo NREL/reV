@@ -16,7 +16,7 @@ from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 
-from rex.utilities.execution import SpawnProcessPool
+from rex.utilities import parse_table, SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 
@@ -101,36 +101,6 @@ class SupplyCurve:
         return self._sc_points.iloc[i]
 
     @staticmethod
-    def _load_table(table):
-        """
-        Extract features and their capacity from supply curve transmission
-        mapping table
-
-        Parameters
-        ----------
-        table : str | pd.DataFrame
-            Path to .csv or .json or DataFrame to parse
-
-        Returns
-        -------
-        table : pandas.DataFrame
-            DataFrame extracted from file path
-        """
-        if isinstance(table, str):
-            if table.endswith('.csv'):
-                table = pd.read_csv(table)
-            elif table.endswith('.json'):
-                table = pd.read_json(table)
-            else:
-                raise ValueError('Cannot parse {}'.format(table))
-
-        elif not isinstance(table, pd.DataFrame):
-            raise ValueError("Table must be a .csv, .json, or "
-                             "a pandas DataFrame")
-
-        return table
-
-    @staticmethod
     def _parse_sc_points(sc_points, sc_features=None):
         """
         Import supply curve point summary and add any additional features
@@ -149,12 +119,12 @@ class SupplyCurve:
             DataFrame of supply curve point summary with additional features
             added if supplied
         """
-        sc_points = SupplyCurve._load_table(sc_points)
+        sc_points = parse_table(sc_points)
         logger.debug('Supply curve points table imported with columns: {}'
                      .format(sc_points.columns.values.tolist()))
 
         if sc_features is not None:
-            sc_features = SupplyCurve._load_table(sc_features)
+            sc_features = parse_table(sc_features)
             merge_cols = [c for c in sc_features
                           if c in sc_points]
             sc_points = sc_points.merge(sc_features, on=merge_cols, how='left')
@@ -401,7 +371,7 @@ class SupplyCurve:
             Loaded transmission feature table.
         """
 
-        trans_table = SupplyCurve._load_table(trans_table)
+        trans_table = parse_table(trans_table)
 
         drop_cols = ['sc_point_gid', 'sc_gid', 'cap_left']
         for col in drop_cols:
@@ -581,24 +551,17 @@ class SupplyCurve:
         gid = comp_wind_dirs.check_sc_gid(sc_gid)
         if gid is not None:
             if comp_wind_dirs.mask[gid]:
-                upwind_gids = comp_wind_dirs['upwind', gid]
-                for n in upwind_gids:
+                exclude_gids = comp_wind_dirs['upwind', gid]
+                if downwind:
+                    exclude_gids = np.append(exclude_gids,
+                                             comp_wind_dirs['downwind', gid])
+                for n in exclude_gids:
                     check = comp_wind_dirs.exclude_sc_point_gid(n)
                     if check:
                         sc_gids = comp_wind_dirs['sc_gid', n]
                         for sc_id in sc_gids:
-                            logger.debug('Excluding upwind sc_gid {}'
-                                         .format(sc_id))
-                            self._mask[sc_id] = False
-
-                if downwind:
-                    downwind_gids = comp_wind_dirs['downwind', gid]
-                    for n in downwind_gids:
-                        check = comp_wind_dirs.exclude_sc_point_gid(n)
-                        if check:
-                            sc_gids = comp_wind_dirs['sc_gid', n]
-                            for sc_id in sc_gids:
-                                logger.debug('Excluding downind sc_gid {}'
+                            if self._mask[sc_id]:
+                                logger.debug('Excluding sc_gid {}'
                                              .format(sc_id))
                                 self._mask[sc_id] = False
 
