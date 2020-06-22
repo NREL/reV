@@ -646,10 +646,7 @@ class RevPySam(Sam):
             return False
         else:
             L = len(val)
-            if L >= 8760:
-                return True
-            else:
-                return False
+            return L >= 8760
 
     def outputs_to_utc_arr(self):
         """Convert array-like SAM outputs to UTC np.ndarrays"""

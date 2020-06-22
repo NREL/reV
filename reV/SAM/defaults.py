@@ -89,6 +89,7 @@ class DefaultWindPower:
 class DefaultSwh:
     """Class for default solar water heating"""
 
+    @staticmethod
     def default():
         """Get the default PySAM object"""
         res_file = os.path.join(

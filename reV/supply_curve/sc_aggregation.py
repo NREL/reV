@@ -311,6 +311,7 @@ class OffshoreAggregation:
                 offshore_summary = summary[offshore_mask]
                 onshore_summary = summary[~offshore_mask]
 
+                # pylint: disable=not-callable
                 tree = cKDTree(onshore_summary[['latitude', 'longitude']])
                 _, nn = tree.query(offshore_summary[['latitude', 'longitude']])
 
@@ -787,7 +788,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             for gid in gids:
                 for ri, res_bin in enumerate(inputs[1]):
                     try:
-                        pointsum = SupplyCurvePointSummary.summary(
+                        pointsum = SupplyCurvePointSummary.summarize(
                             gid,
                             fh.exclusions,
                             fh.gen,

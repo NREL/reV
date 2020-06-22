@@ -487,7 +487,7 @@ class SupplyCurve:
             sc_points.loc[:, col] = sc_points.loc[:, col].fillna(1)
 
         sc_cap = sc_points[merge_cols].copy()
-        rename = {p: t for p, t in zip(point_merge_cols, table_merge_cols)}
+        rename = dict(zip(point_merge_cols, table_merge_cols))
         sc_cap = sc_cap.rename(columns=rename)
 
         logger.debug('Merging SC table and Trans Table on columns: {}'

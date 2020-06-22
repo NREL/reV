@@ -12,7 +12,7 @@ from warnings import warn
 from reV.utilities.exceptions import (HandlerWarning, HandlerKeyError,
                                       HandlerRuntimeError)
 
-from rex.utilities import safe_json_load
+from rex.utilities.utilities import parse_table, safe_json_load
 
 logger = logging.getLogger(__name__)
 
@@ -142,18 +142,11 @@ class TransmissionFeatures:
         trans_table : pandas.DataFrame
             DataFrame of transmission features
         """
-        if isinstance(trans_table, str):
-            if trans_table.endswith('.csv'):
-                trans_table = pd.read_csv(trans_table)
-            elif trans_table.endswith('.json'):
-                trans_table = pd.read_json(trans_table)
-            else:
-                raise ValueError('Cannot parse {}'.format(trans_table))
-        elif not isinstance(trans_table, pd.DataFrame):
-            msg = ("Supply Curve table must be a .csv, .json, or "
-                   "a pandas DataFrame")
-            logger.error(msg)
-            raise ValueError(msg)
+        try:
+            trans_table = parse_table(trans_table)
+        except ValueError as ex:
+            logger.error(ex)
+            raise
 
         return trans_table
 

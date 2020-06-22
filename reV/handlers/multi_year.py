@@ -346,12 +346,7 @@ class MultiYear(Outputs):
 
             shape, _, _ = f.get_dset_properties(dset)
 
-        if len(shape) == 2:
-            is_profile = True
-        else:
-            is_profile = False
-
-        return is_profile
+        return len(shape) == 2
 
     @classmethod
     def collect_means(cls, my_file, source_files, dset, group=None):

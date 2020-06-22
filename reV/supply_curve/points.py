@@ -401,22 +401,19 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         mask : np.ndarray
             Mask with length equal to the flattened exclusion shape
         """
-
-        return (self._gids != -1)
+        return self._gids != -1
 
     @property
     def h5(self):
         """
         placeholder for h5 Resource handler object
         """
-        pass
 
     @property
     def summary(self):
         """
         Placeholder for Supply curve point's meta data summary
         """
-        pass
 
     def _check_excl(self):
         """
@@ -652,7 +649,6 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
             h5 = None
         elif isinstance(h5, Resource):
             h5_fpath = h5.h5_file
-            h5 = h5
         else:
             raise SupplyCurveInputError('SupplyCurvePoints needs a '
                                         '.h5 file path, or '
