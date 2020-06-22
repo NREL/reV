@@ -591,16 +591,16 @@ class SupplyCurve:
                                          .format(sc_id))
                             self._mask[sc_id] = False
 
-            if downwind:
-                downwind_gids = comp_wind_dirs['downwind', gid]
-                for n in downwind_gids:
-                    check = comp_wind_dirs.exclude_sc_point_gid(n)
-                    if check:
-                        sc_gids = comp_wind_dirs['sc_gid', n]
-                        for sc_id in sc_gids:
-                            logger.debug('Excluding downind sc_gid {}'
-                                         .format(sc_id))
-                            self._mask[sc_id] = False
+                if downwind:
+                    downwind_gids = comp_wind_dirs['downwind', gid]
+                    for n in downwind_gids:
+                        check = comp_wind_dirs.exclude_sc_point_gid(n)
+                        if check:
+                            sc_gids = comp_wind_dirs['sc_gid', n]
+                            for sc_id in sc_gids:
+                                logger.debug('Excluding downind sc_gid {}'
+                                             .format(sc_id))
+                                self._mask[sc_id] = False
 
         return comp_wind_dirs
 
@@ -731,9 +731,11 @@ class SupplyCurve:
         connections = connections[columns]
         connections = connections.reset_index()
 
-        sc_gids = connections['sc_gid'].sort_values
+        sc_gids = connections['sc_gid'].values
+        logger.debug('Connected gids {} out of total gids {}'
+                     .format(len(sc_gids), len(self._sc_gids)))
         unconnected = np.isin(self._sc_gids, sc_gids)
-        unconnected = np.where(~unconnected)[0].tolist()
+        unconnected = np.array(self._sc_gids)[~unconnected].tolist()
 
         if unconnected:
             msg = ("{} supply curve points were not connected to tranmission! "
