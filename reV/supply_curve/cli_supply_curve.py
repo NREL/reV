@@ -194,18 +194,24 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
         if isinstance(transmission_costs, str):
             transmission_costs = dict_str_load(transmission_costs)
 
-        if simple:
-            sc_fun = SupplyCurve.simple
-        else:
-            sc_fun = SupplyCurve.full
-
         try:
-            out = sc_fun(sc_points, trans_table, fixed_charge_rate,
-                         sc_features=sc_features,
-                         transmission_costs=transmission_costs,
-                         line_limited=line_limited,
-                         sort_on=sort_on, wind_dirs=wind_dirs, n_dirs=n_dirs,
-                         downwind=downwind, max_workers=max_workers)
+            if simple:
+                out = SupplyCurve.simple(sc_points, trans_table,
+                                         fixed_charge_rate,
+                                         sc_features=sc_features,
+                                         transmission_costs=transmission_costs,
+                                         sort_on=sort_on, wind_dirs=wind_dirs,
+                                         n_dirs=n_dirs, downwind=downwind,
+                                         max_workers=max_workers)
+            else:
+                out = SupplyCurve.full(sc_points, trans_table,
+                                       fixed_charge_rate,
+                                       sc_features=sc_features,
+                                       transmission_costs=transmission_costs,
+                                       line_limited=line_limited,
+                                       sort_on=sort_on, wind_dirs=wind_dirs,
+                                       n_dirs=n_dirs, downwind=downwind,
+                                       max_workers=max_workers)
         except Exception as e:
             logger.exception('Supply curve compute failed. Received the '
                              'following error:\n{}'.format(e))
@@ -213,7 +219,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
 
         fn_out = '{}.csv'.format(name)
         fpath_out = os.path.join(out_dir, fn_out)
-        out.to_csv(fpath_out)
+        out.to_csv(fpath_out, index=False)
 
         runtime = (time.time() - t0) / 60
         logger.info('Supply curve complete. Time elapsed: {:.2f} min. '
@@ -270,8 +276,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
     if simple:
         args += '-s '
-
-    if line_limited:
+    elif line_limited:
         args += '-ll '
 
     if verbose:

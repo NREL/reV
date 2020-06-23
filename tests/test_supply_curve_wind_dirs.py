@@ -89,11 +89,12 @@ def test_upwind_exclusion():
 
     sc_out = os.path.join(TESTDATADIR, 'comp_wind_farms',
                           'sc_full_upwind.csv')
-    sc_out = pd.read_csv(sc_out)
+    sc_out = pd.read_csv(sc_out).sort_values('total_lcoe')
 
     sc_point_gids = sc_out['sc_point_gid'].values.tolist()
-
-    for sc_gid in sc_out['sc_gid'].values:
+    for _, row in sc_out.iterrows():
+        sc_gid = row['sc_gid']
+        sc_point_gids.remove(row['sc_point_gid'])
         sc_point_gid = cwf['sc_point_gid', sc_gid]
         for gid in cwf['upwind', sc_point_gid]:
             msg = 'Upwind gid {} was not excluded!'.format(gid)
@@ -108,11 +109,12 @@ def test_upwind_downwind_exclusion():
 
     sc_out = os.path.join(TESTDATADIR, 'comp_wind_farms',
                           'sc_full_downwind.csv')
-    sc_out = pd.read_csv(sc_out)
+    sc_out = pd.read_csv(sc_out).sort_values('total_lcoe')
 
     sc_point_gids = sc_out['sc_point_gid'].values.tolist()
-
-    for sc_gid in sc_out['sc_gid'].values:
+    for _, row in sc_out.iterrows():
+        sc_gid = row['sc_gid']
+        sc_point_gids.remove(row['sc_point_gid'])
         sc_point_gid = cwf['sc_point_gid', sc_gid]
         for gid in cwf['upwind', sc_point_gid]:
             msg = 'Upwind gid {} was not excluded!'.format(gid)

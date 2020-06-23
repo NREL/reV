@@ -16,7 +16,7 @@ from reV.handlers.transmission import TransmissionFeatures as TF
 from reV.supply_curve.competitive_wind_farms import CompetitiveWindFarms
 from reV.utilities.exceptions import SupplyCurveInputError, SupplyCurveError
 
-from rex.utilities.execution import SpawnProcessPool
+from rex.utilities import parse_table, SpawnProcessPool
 
 logger = logging.getLogger(__name__)
 
@@ -101,36 +101,6 @@ class SupplyCurve:
         return self._sc_points.iloc[i]
 
     @staticmethod
-    def _load_table(table):
-        """
-        Extract features and their capacity from supply curve transmission
-        mapping table
-
-        Parameters
-        ----------
-        table : str | pd.DataFrame
-            Path to .csv or .json or DataFrame to parse
-
-        Returns
-        -------
-        table : pandas.DataFrame
-            DataFrame extracted from file path
-        """
-        if isinstance(table, str):
-            if table.endswith('.csv'):
-                table = pd.read_csv(table)
-            elif table.endswith('.json'):
-                table = pd.read_json(table)
-            else:
-                raise ValueError('Cannot parse {}'.format(table))
-
-        elif not isinstance(table, pd.DataFrame):
-            raise ValueError("Table must be a .csv, .json, or "
-                             "a pandas DataFrame")
-
-        return table
-
-    @staticmethod
     def _parse_sc_points(sc_points, sc_features=None):
         """
         Import supply curve point summary and add any additional features
@@ -149,12 +119,12 @@ class SupplyCurve:
             DataFrame of supply curve point summary with additional features
             added if supplied
         """
-        sc_points = SupplyCurve._load_table(sc_points)
+        sc_points = parse_table(sc_points)
         logger.debug('Supply curve points table imported with columns: {}'
                      .format(sc_points.columns.values.tolist()))
 
         if sc_features is not None:
-            sc_features = SupplyCurve._load_table(sc_features)
+            sc_features = parse_table(sc_features)
             merge_cols = [c for c in sc_features
                           if c in sc_points]
             sc_points = sc_points.merge(sc_features, on=merge_cols, how='left')
@@ -401,7 +371,7 @@ class SupplyCurve:
             Loaded transmission feature table.
         """
 
-        trans_table = SupplyCurve._load_table(trans_table)
+        trans_table = parse_table(trans_table)
 
         drop_cols = ['sc_point_gid', 'sc_gid', 'cap_left']
         for col in drop_cols:
@@ -581,26 +551,19 @@ class SupplyCurve:
         gid = comp_wind_dirs.check_sc_gid(sc_gid)
         if gid is not None:
             if comp_wind_dirs.mask[gid]:
-                upwind_gids = comp_wind_dirs['upwind', gid]
-                for n in upwind_gids:
+                exclude_gids = comp_wind_dirs['upwind', gid]
+                if downwind:
+                    exclude_gids = np.append(exclude_gids,
+                                             comp_wind_dirs['downwind', gid])
+                for n in exclude_gids:
                     check = comp_wind_dirs.exclude_sc_point_gid(n)
                     if check:
                         sc_gids = comp_wind_dirs['sc_gid', n]
                         for sc_id in sc_gids:
-                            logger.debug('Excluding upwind sc_gid {}'
-                                         .format(sc_id))
-                            self._mask[sc_id] = False
-
-            if downwind:
-                downwind_gids = comp_wind_dirs['downwind', gid]
-                for n in downwind_gids:
-                    check = comp_wind_dirs.exclude_sc_point_gid(n)
-                    if check:
-                        sc_gids = comp_wind_dirs['sc_gid', n]
-                        for sc_id in sc_gids:
-                            logger.debug('Excluding downind sc_gid {}'
-                                         .format(sc_id))
-                            self._mask[sc_id] = False
+                            if self._mask[sc_id]:
+                                logger.debug('Excluding sc_gid {}'
+                                             .format(sc_id))
+                                self._mask[sc_id] = False
 
         return comp_wind_dirs
 
@@ -698,6 +661,7 @@ class SupplyCurve:
                                                        capacities[i])
                 if connect:
                     connected += 1
+                    logger.debug('Connecting sc gid {}'.format(sc_gid))
                     self._mask[sc_gid] = False
 
                     conn_lists['trans_gid'][sc_gid] = trans_gid
@@ -730,7 +694,13 @@ class SupplyCurve:
         connections = connections[columns]
         connections = connections.reset_index()
 
-        unconnected = np.where(self._mask[self._sc_gids])[0].tolist()
+        sc_gids = self._sc_points['sc_gid'].values
+        connected = connections['sc_gid'].values
+        logger.debug('Connected gids {} out of total supply curve gids {}'
+                     .format(len(connected), len(sc_gids)))
+        unconnected = ~np.isin(sc_gids, connected)
+        unconnected = sc_gids[unconnected].tolist()
+
         if unconnected:
             msg = ("{} supply curve points were not connected to tranmission! "
                    "Unconnected sc_gid's: {}"
@@ -739,12 +709,8 @@ class SupplyCurve:
             warn(msg)
 
         supply_curve = self._sc_points.merge(connections, on='sc_gid')
-        if comp_wind_dirs is not None:
-            sc_gids = comp_wind_dirs.sc_gids
-            mask = supply_curve['sc_gid'].isin(sc_gids)
-            supply_curve = supply_curve.loc[mask]
 
-        return supply_curve
+        return supply_curve.reset_index(drop=True)
 
     def full_sort(self, trans_table=None, sort_on='total_lcoe',
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
@@ -819,7 +785,7 @@ class SupplyCurve:
                                        total_lcoe_fric=total_lcoe_fric,
                                        sort_on=sort_on, columns=columns,
                                        downwind=downwind)
-        supply_curve = supply_curve.reset_index(drop=True)
+
         sum_cols = {'combined_cap_cost': ['array_cable_CAPEX',
                                           'export_cable_CAPEX',
                                           'trans_cap_cost']}
@@ -830,7 +796,7 @@ class SupplyCurve:
     def simple_sort(self, trans_table=None, sort_on='total_lcoe',
                     columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                              'trans_cap_cost'),
-                    wind_dirs=None, n_dirs=2, downwind=False):
+                    wind_dirs=None, n_dirs=2, downwind=False, offshore=False):
         """
         Run simple supply curve sorting that does not take into account
         available capacity
@@ -854,6 +820,9 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
 
         Returns
         -------
@@ -882,6 +851,7 @@ class SupplyCurve:
             supply_curve = CompetitiveWindFarms.run(wind_dirs,
                                                     supply_curve,
                                                     n_dirs=n_dirs,
+                                                    offshore=offshore,
                                                     sort_on=sort_on,
                                                     downwind=downwind)
 
@@ -898,7 +868,8 @@ class SupplyCurve:
              transmission_costs=None, line_limited=False, sort_on='total_lcoe',
              columns=('trans_gid', 'trans_capacity', 'trans_type',
                       'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
-             max_workers=None, wind_dirs=None, n_dirs=2, downwind=False):
+             max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
+             offshore=False):
         """
         Run full supply curve taking into account available capacity of
         tranmission features when making connections.
@@ -940,6 +911,9 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
 
         Returns
         -------
@@ -952,7 +926,7 @@ class SupplyCurve:
                  line_limited=line_limited, max_workers=max_workers)
         supply_curve = sc.full_sort(sort_on=sort_on, columns=columns,
                                     wind_dirs=wind_dirs, n_dirs=n_dirs,
-                                    downwind=downwind)
+                                    downwind=downwind, offshore=offshore)
 
         return supply_curve
 
@@ -961,7 +935,8 @@ class SupplyCurve:
                transmission_costs=None, sort_on='total_lcoe',
                columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                         'trans_cap_cost'),
-               max_workers=None, wind_dirs=None, n_dirs=2, downwind=False):
+               max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
+               offshore=False):
         """
         Run simple supply curve by connecting to the cheapest tranmission
         feature.
@@ -1000,6 +975,9 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
+        offshore : bool
+            Flag as to whether offshore farms should be included during
+            CompetitiveWindFarms
 
         Returns
         -------
@@ -1012,6 +990,6 @@ class SupplyCurve:
                  max_workers=max_workers)
         supply_curve = sc.simple_sort(sort_on=sort_on, columns=columns,
                                       wind_dirs=wind_dirs, n_dirs=n_dirs,
-                                      downwind=downwind)
+                                      downwind=downwind, offshore=offshore)
 
         return supply_curve
