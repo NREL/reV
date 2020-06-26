@@ -116,6 +116,25 @@ class ExclusionLayers:
         return json.loads(self.h5.attrs['profile'])
 
     @property
+    def pixel_area(self):
+        """Get pixel area in km2 from the transform profile of the excl file.
+
+        Returns
+        -------
+        area : float
+            Exclusion pixel area in km2. Will return None if the
+            appropriate transform attribute is not found.
+        """
+
+        area = None
+        if 'transform' in self.profile:
+            transform = self.profile['transform']
+            area = np.abs(transform[0] * transform[4])
+            area /= 1000 ** 2
+
+        return area
+
+    @property
     def layers(self):
         """
         Available exclusions layers
