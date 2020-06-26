@@ -158,6 +158,11 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         return self.get('resolution', self._default_resolution)
 
     @property
+    def excl_area(self):
+        """Get the exclusion pixel area in km2"""
+        return self.get('excl_area', None)
+
+    @property
     def power_density(self):
         """Get the power density (MW/km2) or string to variable power
         density file path."""

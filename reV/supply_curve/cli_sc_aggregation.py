@@ -95,6 +95,7 @@ def from_config(ctx, config_file, verbose):
                        lcoe_dset=config.lcoe_dset,
                        data_layers=config.data_layers,
                        resolution=config.resolution,
+                       excl_area=config.excl_area,
                        power_density=config.power_density,
                        area_filter_kernel=config.area_filter_kernel,
                        min_area=config.min_area,
@@ -119,6 +120,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['LCOE_DSET'] = config.lcoe_dset
         ctx.obj['DATA_LAYERS'] = config.data_layers
         ctx.obj['RESOLUTION'] = config.resolution
+        ctx.obj['EXCL_AREA'] = config.excl_area
         ctx.obj['POWER_DENSITY'] = config.power_density
         ctx.obj['AREA_FILTER_KERNEL'] = config.area_filter_kernel
         ctx.obj['MIN_AREA'] = config.min_area
@@ -172,6 +174,10 @@ def from_config(ctx, config_file, verbose):
 @click.option('--resolution', '-r', type=INT, default=64,
               help='Number of exclusion points along a squares edge to '
               'include in an aggregated supply curve point.')
+@click.option('--excl_area', '-ea', type=FLOAT, default=0.0081,
+              help='Area of an exclusion pixel in km2. None will try to '
+              'infer the area from the profile transform attribute in '
+              'excl_fpath.')
 @click.option('--power_density', '-pd', type=STRFLOAT, default=None,
               help='Power density in MW/km2 or filepath to variable power '
               'density csv file. None will attempt to infer a constant '
@@ -196,7 +202,7 @@ def from_config(ctx, config_file, verbose):
 @click.pass_context
 def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
            check_excl_layers, res_class_dset, res_class_bins, cf_dset,
-           lcoe_dset, data_layers, resolution, power_density,
+           lcoe_dset, data_layers, resolution, excl_area, power_density,
            area_filter_kernel, min_area, friction_fpath, friction_dset,
            out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
@@ -213,6 +219,7 @@ def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
     ctx.obj['LCOE_DSET'] = lcoe_dset
     ctx.obj['DATA_LAYERS'] = data_layers
     ctx.obj['RESOLUTION'] = resolution
+    ctx.obj['EXCL_AREA'] = excl_area
     ctx.obj['POWER_DENSITY'] = power_density
     ctx.obj['AREA_FILTER_KERNEL'] = area_filter_kernel
     ctx.obj['MIN_AREA'] = min_area
@@ -253,6 +260,7 @@ def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                 lcoe_dset=lcoe_dset,
                 data_layers=data_layers,
                 resolution=resolution,
+                excl_area=excl_area,
                 power_density=power_density,
                 area_filter_kernel=area_filter_kernel,
                 min_area=min_area,
@@ -293,7 +301,7 @@ def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
 
 def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                  check_excl_layers, res_class_dset, res_class_bins, cf_dset,
-                 lcoe_dset, data_layers, resolution, power_density,
+                 lcoe_dset, data_layers, resolution, excl_area, power_density,
                  area_filter_kernel, min_area, friction_fpath, friction_dset,
                  out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
@@ -309,6 +317,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
             '-lc {lcoe_dset} '
             '-d {data_layers} '
             '-r {resolution} '
+            '-ea {excl_area} '
             '-pd {power_density} '
             '-afk {area_filter_kernel} '
             '-ma {min_area} '
@@ -329,6 +338,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                        lcoe_dset=SLURM.s(lcoe_dset),
                        data_layers=SLURM.s(data_layers),
                        resolution=SLURM.s(resolution),
+                       excl_area=SLURM.s(excl_area),
                        power_density=SLURM.s(power_density),
                        area_filter_kernel=SLURM.s(area_filter_kernel),
                        min_area=SLURM.s(min_area),
@@ -383,6 +393,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     lcoe_dset = ctx.obj['LCOE_DSET']
     data_layers = ctx.obj['DATA_LAYERS']
     resolution = ctx.obj['RESOLUTION']
+    excl_area = ctx.obj['EXCL_AREA']
     power_density = ctx.obj['POWER_DENSITY']
     area_filter_kernel = ctx.obj['AREA_FILTER_KERNEL']
     min_area = ctx.obj['MIN_AREA']
@@ -398,7 +409,8 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     cmd = get_node_cmd(name, excl_fpath, gen_fpath, res_fpath,
                        tm_dset, excl_dict, check_excl_layers,
                        res_class_dset, res_class_bins,
-                       cf_dset, lcoe_dset, data_layers, resolution,
+                       cf_dset, lcoe_dset, data_layers,
+                       resolution, excl_area,
                        power_density, area_filter_kernel, min_area,
                        friction_fpath, friction_dset,
                        out_dir, log_dir, verbose)

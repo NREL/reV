@@ -11,11 +11,12 @@ import os
 import pandas as pd
 
 from reV.handlers.outputs import Outputs
+from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.points import (SupplyCurveExtent,
                                      AggregationSupplyCurvePoint)
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      FileInputError)
+                                      FileInputError, SupplyCurveInputError)
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
@@ -466,7 +467,8 @@ class Aggregation(AbstractAggregation):
 
     def __init__(self, excl_fpath, h5_fpath, tm_dset, *agg_dset,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
-                 check_excl_layers=False, resolution=64, gids=None):
+                 check_excl_layers=False, resolution=64, excl_area=None,
+                 gids=None):
         """
         Parameters
         ----------
@@ -491,6 +493,9 @@ class Aggregation(AbstractAggregation):
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
+        excl_area : float | None
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath.
         gids : list | None
             List of gids to get aggregation for (can use to subset if running
             in parallel), or None for all gids in the SC extent.
@@ -509,6 +514,16 @@ class Aggregation(AbstractAggregation):
 
         self._check_files()
         self._gen_index = self._parse_gen_index(self._h5_fpath)
+
+        if excl_area is None:
+            with ExclusionLayers(excl_fpath) as excl:
+                excl_area = excl.pixel_area
+        self._excl_area = excl_area
+        if self._excl_area is None:
+            e = ('No exclusion pixel area was input and could not parse '
+                 'area from the exclusion file attributes!')
+            logger.error(e)
+            raise SupplyCurveInputError(e)
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -735,8 +750,8 @@ class Aggregation(AbstractAggregation):
 
         return agg_out
 
-    def aggregate(self, agg_method='mean', excl_area=0.0081,
-                  max_workers=None, chunk_point_len=1000):
+    def aggregate(self, agg_method='mean', max_workers=None,
+                  chunk_point_len=1000):
         """
         Aggregate with given agg_method
 
@@ -744,8 +759,6 @@ class Aggregation(AbstractAggregation):
         ----------
         agg_method : str
             Aggregation method, either mean or sum/aggregate
-        excl_area : float
-            Area of an exclusion cell (square km).
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -771,10 +784,11 @@ class Aggregation(AbstractAggregation):
                                   min_area=self._min_area,
                                   check_excl_layers=self._check_excl_layers,
                                   resolution=self._resolution,
-                                  excl_area=excl_area,
+                                  excl_area=self._excl_area,
                                   gen_index=self._gen_index)
         else:
-            agg = self.run_parallel(agg_method=agg_method, excl_area=excl_area,
+            agg = self.run_parallel(agg_method=agg_method,
+                                    excl_area=self._excl_area,
                                     max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
 
@@ -851,7 +865,7 @@ class Aggregation(AbstractAggregation):
     def run(cls, excl_fpath, h5_fpath, tm_dset, *agg_dset,
             excl_dict=None, area_filter_kernel='queen', min_area=None,
             check_excl_layers=False, resolution=64, gids=None,
-            agg_method='mean', excl_area=0.0081, max_workers=None,
+            agg_method='mean', excl_area=None, max_workers=None,
             chunk_point_len=1000, out_fpath=None):
         """Get the supply curve points aggregation summary.
 
@@ -883,8 +897,9 @@ class Aggregation(AbstractAggregation):
             in parallel), or None for all gids in the SC extent.
         agg_method : str
             Aggregation method, either mean or sum/aggregate
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -902,9 +917,9 @@ class Aggregation(AbstractAggregation):
         agg = cls(excl_fpath, h5_fpath, tm_dset, *agg_dset,
                   excl_dict=excl_dict, area_filter_kernel=area_filter_kernel,
                   min_area=min_area, check_excl_layers=check_excl_layers,
-                  resolution=resolution, gids=gids)
+                  resolution=resolution, gids=gids, excl_area=excl_area)
 
-        aggregation = agg.aggregate(agg_method=agg_method, excl_area=excl_area,
+        aggregation = agg.aggregate(agg_method=agg_method,
                                     max_workers=max_workers,
                                     chunk_point_len=chunk_point_len)
 
