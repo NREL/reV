@@ -16,7 +16,7 @@ from reV.supply_curve.exclusions import ExclusionMaskFromDict
 from reV.supply_curve.points import (SupplyCurveExtent,
                                      AggregationSupplyCurvePoint)
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
-                                      FileInputError)
+                                      FileInputError, SupplyCurveInputError)
 
 from rex.resource import Resource
 from rex.utilities.execution import SpawnProcessPool
@@ -519,6 +519,11 @@ class Aggregation(AbstractAggregation):
             with ExclusionLayers(excl_fpath) as excl:
                 excl_area = excl.pixel_area
         self._excl_area = excl_area
+        if self._excl_area is None:
+            e = ('No exclusion pixel area was input and could not parse '
+                 'area from the exclusion file attributes!')
+            logger.error(e)
+            raise SupplyCurveInputError(e)
 
     def _check_files(self):
         """Do a preflight check on input files"""
