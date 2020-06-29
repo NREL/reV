@@ -478,8 +478,8 @@ class SupplyCurveAggregation(AbstractAggregation):
 
     def __init__(self, excl_fpath, gen_fpath, tm_dset, excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
-                 check_excl_layers=False, resolution=64, gids=None,
-                 res_class_dset=None, res_class_bins=None,
+                 check_excl_layers=False, resolution=64, excl_area=None,
+                 gids=None, res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                  data_layers=None, power_density=None,
                  friction_fpath=None, friction_dset=None):
@@ -505,6 +505,9 @@ class SupplyCurveAggregation(AbstractAggregation):
         resolution : int | None
             SC resolution, must be input in combination with gid. Prefered
             option is to use the row/col slices to define the SC point instead.
+        excl_area : float | None
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath.
         gids : list | None
             List of gids to get summary for (can use to subset if running in
             parallel), or None for all gids in the SC extent.
@@ -562,6 +565,16 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         self._check_data_layers()
         self._gen_index = Aggregation._parse_gen_index(self._gen_fpath)
+
+        if excl_area is None:
+            with ExclusionLayers(excl_fpath) as excl:
+                excl_area = excl.pixel_area
+        self._excl_area = excl_area
+        if self._excl_area is None:
+            e = ('No exclusion pixel area was input and could not parse '
+                 'area from the exclusion file attributes!')
+            logger.error(e)
+            raise SupplyCurveInputError(e)
 
     def _check_files(self):
         """Do a preflight check on input files"""
@@ -1008,7 +1021,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         return summary
 
-    def summarize(self, args=None, excl_area=0.0081, max_workers=None,
+    def summarize(self, args=None, max_workers=None,
                   offshore_capacity=600, offshore_gid_counts=494,
                   offshore_pixel_area=4, offshore_meta_cols=None):
         """
@@ -1019,8 +1032,6 @@ class SupplyCurveAggregation(AbstractAggregation):
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
-        excl_area : float
-            Area of an exclusion cell (square km).
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -1060,10 +1071,10 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       area_filter_kernel=afk,
                                       min_area=self._min_area,
                                       gids=self._gids, args=args,
-                                      excl_area=excl_area,
+                                      excl_area=self._excl_area,
                                       check_excl_layers=chk)
         else:
-            summary = self.run_parallel(args=args, excl_area=excl_area,
+            summary = self.run_parallel(args=args, excl_area=self._excl_area,
                                         max_workers=max_workers)
 
         summary = self.run_offshore(summary,
@@ -1092,7 +1103,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                 data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
-                args=None, excl_area=0.0081, max_workers=None,
+                args=None, excl_area=None, max_workers=None,
                 offshore_capacity=600, offshore_gid_counts=494,
                 offshore_pixel_area=4, offshore_meta_cols=None):
         """Get the supply curve points aggregation summary.
@@ -1149,8 +1160,9 @@ class SupplyCurveAggregation(AbstractAggregation):
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
-        excl_area : float
-            Area of an exclusion cell (square km).
+        excl_area : float | None
+            Area of an exclusion pixel in km2. None will try to infer the area
+            from the profile transform attribute in excl_fpath.
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
@@ -1180,9 +1192,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                   power_density=power_density, gids=gids,
                   friction_fpath=friction_fpath, friction_dset=friction_dset,
                   area_filter_kernel=area_filter_kernel, min_area=min_area,
-                  check_excl_layers=check_excl_layers)
+                  check_excl_layers=check_excl_layers, excl_area=excl_area)
 
-        summary = agg.summarize(args=args, excl_area=excl_area,
+        summary = agg.summarize(args=args,
                                 max_workers=max_workers,
                                 offshore_capacity=offshore_capacity,
                                 offshore_gid_counts=offshore_gid_counts,
