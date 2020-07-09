@@ -24,8 +24,8 @@ def get_curtailment(year):
     """
     res_file = os.path.join(TESTDATADIR, 'wtk/',
                             'ri_100_wtk_{}.h5'.format(year))
-    sam_files = {0: os.path.join(TESTDATADIR, 'SAM/',
-                                 'wind_gen_standard_losses_0.json')}
+    sam_files = os.path.join(
+        TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
     curtailment = os.path.join(TESTDATADIR, 'config/', 'curtailment.json')
     pp = ProjectPoints(slice(0, 100), sam_files, 'windpower',
                        curtailment=curtailment)
