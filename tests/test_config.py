@@ -13,6 +13,7 @@ import os
 import pytest
 
 from rex.utilities.exceptions import ResourceKeyError
+from reV.generation.generation import Gen
 from reV.SAM.SAM import RevPySam
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV import TESTDATADIR
@@ -20,8 +21,8 @@ from reV import TESTDATADIR
 
 def test_clearsky():
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
-    sam_config_dict = {0: os.path.join(TESTDATADIR, 'SAM/'
-                                       'naris_pv_1axis_inv13_cs.json')}
+    sam_config_dict = os.path.join(
+        TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
     pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pvwattsv5',
                        res_file=res_file)
     try:
@@ -116,6 +117,48 @@ def test_config_mapping():
         for site in pc_split.sites:
             cid = pc_split.project_points[site][0]
             assert cid == df.loc[site].values[0]
+
+
+def test_sam_config_kw_replace():
+    """Test that the SAM config with old keys from pysam v1 gets updated on
+    the fly and gets propogated to downstream splits."""
+
+    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
+    sam_files = {'onshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
+                 'offshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
+    res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
+    df = pd.read_csv(fpp, index_col=0)
+    pp = ProjectPoints(fpp, sam_files, 'windpower')
+    pc = PointsControl(pp, sites_per_split=100)
+
+    gen = Gen(pc, res_file)
+    config_on = gen.project_points.sam_configs['onshore']
+    config_of = gen.project_points.sam_configs['offshore']
+    assert 'turb_generic_loss' in config_on
+    assert 'turb_generic_loss' in config_of
+
+    pp_split = ProjectPoints.split(0, 10000, gen.project_points)
+    config_on = pp_split.sam_configs['onshore']
+    config_of = pp_split.sam_configs['offshore']
+    assert 'turb_generic_loss' in config_on
+    assert 'turb_generic_loss' in config_of
+
+    pc_split = PointsControl.split(0, 10000, gen.project_points)
+    config_on = pc_split.project_points.sam_configs['onshore']
+    config_of = pc_split.project_points.sam_configs['offshore']
+    assert 'turb_generic_loss' in config_on
+    assert 'turb_generic_loss' in config_of
+
+    for ipc in pc_split:
+        if 'onshore' in ipc.project_points.sam_configs:
+            config = ipc.project_points.sam_configs['onshore']
+            assert 'turb_generic_loss' in config
+
+        if 'offshore' in ipc.project_points.sam_configs:
+            config = ipc.project_points.sam_configs['offshore']
+            assert 'turb_generic_loss' in config
 
 
 def execute_pytest(capture='all', flags='-rapP'):
