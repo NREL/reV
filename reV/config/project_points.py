@@ -478,9 +478,11 @@ class ProjectPoints:
         # Checks to make sure that the same number of SAM config .json files
         # as references in project_points DataFrame
         if len(df_configs) > len(sam_configs):
-            raise ConfigError('Points references {} configs while only '
-                              '{} SAM configs were provided!'
-                              .format(len(df_configs), len(sam_configs)))
+            msg = ('Points references {} configs while only '
+                   '{} SAM configs were provided!'
+                   .format(len(df_configs), len(sam_configs)))
+            logger.error(msg)
+            raise ConfigError(msg)
 
         # If project_points DataFrame was created from a list,
         # config will be None and needs to be added to _df from sam_configs
@@ -500,11 +502,19 @@ class ProjectPoints:
             elif config in sam_configs:
                 configs[config] = sam_configs[config]
             else:
-                raise ConfigError('{} does not map to a valid configuration '
-                                  'file'.format(config))
+                msg = ('{} does not map to a valid configuration file'
+                       .format(config))
+                logger.error(msg)
+                raise ConfigError(msg)
 
-        if configs != sam_configs:
-            self._sam_config_obj = SAMConfig(configs)
+        # If configs has any keys that are not in sam_configs then
+        # something really weird happened so raise an error.
+        if any(set(configs) - set(sam_configs)):
+            msg = ('A wild config has appeared! Requested config keys for '
+                   'ProjectPoints are {} and previous config keys are {}'
+                   .format(list(configs.keys()), list(sam_configs.keys())))
+            logger.error(msg)
+            raise ConfigError(msg)
 
     @property
     def sites(self):
