@@ -8,6 +8,7 @@ Created on Thu Nov 29 09:54:51 2018
 @author: gbuster
 """
 
+import pandas as pd
 import os
 import pytest
 
@@ -99,6 +100,22 @@ def test_split_iter():
 
             msg = 'PointsControl iterator split did not function correctly!'
             assert split.equals(target), msg
+
+
+def test_config_mapping():
+    """Test the mapping of multiple configs in the project points."""
+    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
+    sam_files = {'onshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
+                 'offshore': os.path.join(
+                 TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
+    df = pd.read_csv(fpp, index_col=0)
+    pp = ProjectPoints(fpp, sam_files, 'windpower')
+    pc = PointsControl(pp, sites_per_split=100)
+    for i, pc_split in enumerate(pc):
+        for site in pc_split.sites:
+            cid = pc_split.project_points[site][0]
+            assert cid == df.loc[site].values[0]
 
 
 def execute_pytest(capture='all', flags='-rapP'):
