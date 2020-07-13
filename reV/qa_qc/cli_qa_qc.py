@@ -649,8 +649,8 @@ def launch_slurm(config, verbose):
         node_cmd = '\n'.join(node_cmd)
         logger.info('Running reV QA-QC on SLURM with '
                     'node name "{}"'.format(config.name))
-        slurm = SLURM(node_cmd, alloc=config.execution_control.alloc,
-                      memory=config.execution_control.node_mem,
+        slurm = SLURM(node_cmd, alloc=config.execution_control.allocation,
+                      memory=config.execution_control.memory,
                       feature=config.execution_control.feature,
                       walltime=config.execution_control.walltime,
                       conda_env=config.execution_control.conda_env,

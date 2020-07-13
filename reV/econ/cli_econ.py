@@ -174,9 +174,9 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(econ_slurm, nodes=config.execution_control.nodes,
-                   alloc=config.execution_control.alloc,
+                   alloc=config.execution_control.allocation,
                    walltime=config.execution_control.walltime,
-                   memory=config.execution_control.node_mem,
+                   memory=config.execution_control.memory,
                    feature=config.execution_control.feature,
                    module=config.execution_control.module,
                    conda_env=config.execution_control.conda_env,

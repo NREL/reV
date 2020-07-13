@@ -96,10 +96,10 @@ def from_config(ctx, config_file, verbose):
     elif config.execution_control.option in ('eagle', 'slurm'):
         ctx.obj['NAME'] = name
         ctx.invoke(multi_year_slurm,
-                   alloc=config.execution_control.alloc,
+                   alloc=config.execution_control.allocation,
                    walltime=config.execution_control.walltime,
                    feature=config.execution_control.feature,
-                   memory=config.execution_control.node_mem,
+                   memory=config.execution_control.memory,
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,
                    stdout_path=os.path.join(config.logdir, 'stdout'),

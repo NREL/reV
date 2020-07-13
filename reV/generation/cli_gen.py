@@ -104,7 +104,8 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['TIMEOUT'] = config.timeout
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
-    ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
+    ctx.obj['MEM_UTIL_LIM'] = \
+        config.execution_control.mememory_utilization_limit
 
     # get downscale request and raise exception if not NSRDB
     ctx.obj['DOWNSCALE'] = config.downscale
@@ -178,9 +179,9 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(gen_slurm, nodes=config.execution_control.nodes,
-                   alloc=config.execution_control.alloc,
+                   alloc=config.execution_control.allocation,
                    walltime=config.execution_control.walltime,
-                   memory=config.execution_control.node_mem,
+                   memory=config.execution_control.memory,
                    feature=config.execution_control.feature,
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,

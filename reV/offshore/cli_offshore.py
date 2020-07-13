@@ -115,8 +115,8 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['VERBOSE'] = verbose
 
             ctx.invoke(slurm,
-                       alloc=config.execution_control.alloc,
-                       memory=config.execution_control.node_mem,
+                       alloc=config.execution_control.allocation,
+                       memory=config.execution_control.memory,
                        walltime=config.execution_control.walltime,
                        feature=config.execution_control.feature,
                        module=config.execution_control.module,

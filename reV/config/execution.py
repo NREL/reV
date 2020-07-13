@@ -78,7 +78,7 @@ class BaseExecutionConfig(BaseConfig):
         return self._sites_per_worker
 
     @property
-    def mem_util_lim(self):
+    def mememory_utilization_limit(self):
         """Get the node memory utilization limit property. Key in the config
         json is "memory_utilization_limit".
 
@@ -113,7 +113,7 @@ class HPCConfig(BaseExecutionConfig):
         self._conda_env = None
 
     @property
-    def alloc(self):
+    def allocation(self):
         """Get the HPC allocation property.
 
         Returns
@@ -186,7 +186,7 @@ class SlurmConfig(HPCConfig):
         self._hpc_walltime = 1
 
     @property
-    def node_mem(self):
+    def memory(self):
         """Get the requested Eagle node "memory" value in GB or can be None.
 
         Returns

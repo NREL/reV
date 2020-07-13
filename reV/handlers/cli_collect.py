@@ -110,8 +110,8 @@ def from_config(ctx, config_file, verbose):
 
         elif config.execution_control.option in ('eagle', 'slurm'):
             ctx.invoke(collect_slurm,
-                       alloc=config.execution_control.alloc,
-                       memory=config.execution_control.node_mem,
+                       alloc=config.execution_control.allocation,
+                       memory=config.execution_control.memory,
                        walltime=config.execution_control.walltime,
                        feature=config.execution_control.feature,
                        conda_env=config.execution_control.conda_env,
