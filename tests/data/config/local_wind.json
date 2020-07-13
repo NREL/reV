@@ -5,7 +5,6 @@
     "output_directory": "TESTDATADIR/ri_wind_reV2"
   },
   "execution_control": {
-    "allocation": "rev",
     "max_workers": 2,
     "nodes": 1,
     "option": "local",
