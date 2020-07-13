@@ -17,7 +17,7 @@ from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from rex.utilities.execution import SLURM
 from rex.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST, STRFLOAT
 from rex.utilities.loggers import init_mult
-from rex.utilities.utilities import dict_str_load
+from rex.utilities.utilities import dict_str_load, get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid SupplyCurveAggregation config keys
+    """
+    click.echo(', '.join(get_class_properties(SupplyCurveAggregationConfig)))
 
 
 @main.command()

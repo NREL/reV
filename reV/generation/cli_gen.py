@@ -20,8 +20,7 @@ from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
 from rex.utilities.execution import SLURM, SubprocessManager
 from rex.utilities.loggers import init_mult
-
-from rex.utilities.utilities import parse_year
+from rex.utilities.utilities import parse_year, get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +36,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid Gen config keys
+    """
+    click.echo(', '.join(get_class_properties(GenConfig)))
 
 
 @main.command()

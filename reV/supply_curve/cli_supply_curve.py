@@ -15,7 +15,7 @@ from reV.supply_curve.supply_curve import SupplyCurve
 from rex.utilities.execution import SLURM
 from rex.utilities.cli_dtypes import STR, INT
 from rex.utilities.loggers import init_mult
-from rex.utilities.utilities import dict_str_load
+from rex.utilities.utilities import dict_str_load, get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid SupplyCurve config keys
+    """
+    click.echo(', '.join(get_class_properties(SupplyCurveConfig)))
 
 
 @main.command()

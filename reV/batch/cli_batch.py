@@ -4,8 +4,11 @@ Batch Job CLI entry points.
 """
 import click
 
-from reV.batch.batch import BatchJob
 from rex.utilities.cli_dtypes import STR
+from rex.utilities.utilities import get_class_properties
+
+from reV.batch.batch import BatchJob
+from reV.config.batch import BatchConfig
 
 
 @click.group()
@@ -19,6 +22,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['VERBOSE'] = verbose
     ctx.obj['NAME'] = name
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid Batch config keys
+    """
+    click.echo(', '.join(get_class_properties(BatchConfig)))
 
 
 @main.command()

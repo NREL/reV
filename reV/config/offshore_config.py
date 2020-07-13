@@ -44,7 +44,7 @@ class OffshoreConfig(AnalysisConfig):
             raise ConfigError(e)
 
     @property
-    def gen_fpaths(self):
+    def gen_fpath(self):
         """Get a list of generation data filepaths"""
 
         fpaths = self['gen_fpath']
@@ -53,9 +53,18 @@ class OffshoreConfig(AnalysisConfig):
             fpaths = Pipeline.parse_previous(
                 self.dirout, 'offshore', target='fpath',
                 target_module='generation')
+
         if isinstance(fpaths, str):
             fpaths = [fpaths]
+
         return fpaths
+
+    @property
+    def gen_fpaths(self):
+        """
+        Alias for gen_fpath
+        """
+        return self.gen_fpath
 
     @property
     def offshore_fpath(self):

@@ -22,6 +22,7 @@ from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from rex.utilities.cli_dtypes import STR, INT
 from rex.utilities.loggers import init_mult
 from rex.utilities.execution import SLURM
+from rex.utilities.utilities import get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid Offshore config keys
+    """
+    click.echo(', '.join(get_class_properties(OffshoreConfig)))
 
 
 @main.command()

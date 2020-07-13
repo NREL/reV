@@ -4,8 +4,11 @@ Pipeline CLI entry points.
 """
 import click
 
+from reV.config.pipeline import PipelineConfig
 from reV.pipeline.pipeline import Pipeline
+
 from rex.utilities.cli_dtypes import STR
+from rex.utilities.utilities import get_class_properties
 
 
 @click.group()
@@ -19,6 +22,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid Pipeline config keys
+    """
+    click.echo(', '.join(get_class_properties(PipelineConfig)))
 
 
 @main.command()

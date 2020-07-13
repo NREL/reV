@@ -17,6 +17,7 @@ from rex.utilities.exceptions import ResourceKeyError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.config.project_points import ProjectPoints, PointsControl
+from reV.generation.generation import Gen
 from reV.SAM.SAM import RevPySam
 from reV import TESTDATADIR
 from reV.utilities.exceptions import ConfigError

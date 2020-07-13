@@ -55,7 +55,7 @@ class SAMAnalysisConfig(AnalysisConfig):
             raise ConfigError(e)
 
     @property
-    def tech(self):
+    def technology(self):
         """Get the tech property from the config.
 
         Returns
@@ -68,7 +68,26 @@ class SAMAnalysisConfig(AnalysisConfig):
         if self._tech is None:
             self._tech = self['technology'].lower()
             self._tech = self._tech.replace(' ', '').replace('_', '')
+
         return self._tech
+
+    @property
+    def tech(self):
+        """
+        Alias for technology
+        """
+        return self.technology
+
+    @property
+    def sam_files(self):
+        """
+        SAM config files
+
+        Returns
+        -------
+        list
+        """
+        return self['sam_files']
 
     @property
     def sam_config(self):
@@ -81,6 +100,7 @@ class SAMAnalysisConfig(AnalysisConfig):
         """
         if self._sam_config is None:
             self._sam_config = SAMConfig(self['sam_files'])
+
         return self._sam_config
 
     @property
@@ -96,6 +116,24 @@ class SAMAnalysisConfig(AnalysisConfig):
         return self.get('timeout', self._default_timeout)
 
     @property
+    def project_points(self):
+        """
+        Get the generation project points object
+
+        Returns
+        -------
+        pp : ProjectPoints
+            ProjectPoints object
+        """
+        if self._pc is not None:
+            pp = self._pc.project_points
+        else:
+            pp = ProjectPoints(self['project_points'], self['sam_files'],
+                               self.tech)
+
+        return pp
+
+    @property
     def points_control(self):
         """Get the generation points control object.
 
@@ -105,7 +143,6 @@ class SAMAnalysisConfig(AnalysisConfig):
             PointsControl object based on specified project points and
             execution control option.
         """
-
         if self._pc is None:
             # make an instance of project points
             pp = ProjectPoints(self['project_points'], self['sam_files'],

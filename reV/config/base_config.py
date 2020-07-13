@@ -46,6 +46,9 @@ class BaseConfig(dict):
         if check_keys:
             self._check_keys()
 
+    def __repr__(self):
+        return self.__class__.__name__
+
     @property
     def config_dir(self):
         """Get the directory that the config file is in.
@@ -136,8 +139,8 @@ class BaseConfig(dict):
         """
         for key, value in self.items():
             if isinstance(value, str) and key not in self._keys:
-                msg = ('{} is not a valid config entry! Must be one of:\n{}'
-                       .format(key, self._keys))
+                msg = ('{} is not a valid config entry for {}! Must be one of:'
+                       '\n{}'.format(key, self, self._keys))
                 logger.error(msg)
                 raise ConfigError(msg)
 
