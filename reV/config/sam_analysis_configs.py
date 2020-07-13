@@ -279,7 +279,56 @@ class EconConfig(SAMAnalysisConfig):
         self._site_data = None
 
     @property
-    def cf_files(self):
+    def cf_file(self):
+        """
+        base cf_file path
+
+        Returns
+        -------
+        str
+        """
+        return self['cf_file']
+
+    @property
+    def site_data(self):
+        """Get the site-specific data file.
+
+        Returns
+        -------
+        site_data : str | NoneType
+            Target path for site-specific data file.
+        """
+        self._site_data = self.get('site_data', self._site_data)
+        return self._site_data
+
+    @property
+    def dirout(self):
+        """Get the output directory, look for key "output_directory" in the
+        "directories" config group. Overwritten if append is True.
+
+        Returns
+        -------
+        dirout : str
+            Target path for reV output files.
+        """
+        self._dirout = super().dirout
+        if self.append:
+            self._dirout = os.path.dirname(self.parse_cf_files()[0])
+
+        return self._dirout
+
+    @property
+    def append(self):
+        """Get the flag to append econ results to cf_file inputs.
+
+        Returns
+        -------
+        append : bool
+            Flag to append econ results to gen results. Default is False.
+        """
+        return bool(self.get('append', False))
+
+    def parse_cf_files(self):
         """Get the capacity factor files (reV generation output data).
 
         Returns
@@ -291,7 +340,7 @@ class EconConfig(SAMAnalysisConfig):
 
         if self._cf_files is None:
             # get base filename, may have {} for year format
-            fname = self['cf_file']
+            fname = self.cf_file
             if '{}' in fname:
                 # need to make list of res files for each year
                 self._cf_files = [fname.format(year) for year in self.years]
@@ -320,42 +369,3 @@ class EconConfig(SAMAnalysisConfig):
                                           .format(year, self._cf_files))
 
         return self._cf_files
-
-    @property
-    def site_data(self):
-        """Get the site-specific data file.
-
-        Returns
-        -------
-        site_data : str | NoneType
-            Target path for site-specific data file.
-        """
-        self._site_data = self.get('site_data', self._site_data)
-        return self._site_data
-
-    @property
-    def dirout(self):
-        """Get the output directory, look for key "output_directory" in the
-        "directories" config group. Overwritten if append is True.
-
-        Returns
-        -------
-        dirout : str
-            Target path for reV output files.
-        """
-        self._dirout = super().dirout
-        if self.append:
-            self._dirout = os.path.dirname(self.cf_files[0])
-
-        return self._dirout
-
-    @property
-    def append(self):
-        """Get the flag to append econ results to cf_file inputs.
-
-        Returns
-        -------
-        append : bool
-            Flag to append econ results to gen results. Default is False.
-        """
-        return bool(self.get('append', False))

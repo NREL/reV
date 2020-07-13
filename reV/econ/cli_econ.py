@@ -79,7 +79,7 @@ def from_config(ctx, config_file, verbose):
                                             'reV.config', 'reV.utilities',
                                             'reV.SAM', 'rex.utilities'],
               verbose=verbose)
-
+    cf_files = config.parse_cf_files()
     # Initial log statements
     logger.info('Running reV Econ from config file: "{}"'
                 .format(config_file))
@@ -91,7 +91,7 @@ def from_config(ctx, config_file, verbose):
                 .format(pprint.pformat(config.get('sam_files', None),
                                        indent=4)))
     logger.debug('Submitting jobs for the following cf_files: {}'
-                 .format(config.cf_files))
+                 .format(cf_files))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -107,12 +107,12 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['TIMEOUT'] = config.timeout
 
-    if len(config.years) == len(config.cf_files):
+    if len(config.years) == len(cf_files):
         for i, year in enumerate(config.years):
-            cf_file = config.cf_files[i]
+            cf_file = cf_files[i]
             submit_from_config(ctx, name, cf_file, year, config, verbose)
     else:
-        for i, cf_file in enumerate(config.cf_files):
+        for i, cf_file in enumerate(cf_files):
             year = parse_year(cf_file)
             if str(year) in [str(y) for y in config.years]:
                 submit_from_config(ctx, name, cf_file, year, config, verbose)
