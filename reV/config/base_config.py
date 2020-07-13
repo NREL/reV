@@ -27,7 +27,7 @@ class BaseConfig(dict):
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
         check_keys : bool, optional
-            Flag to check config keys against Class properties
+            Flag to check config keys against Class properties, by default True
         """
 
         # str_rep is a mapping of config strings to replace with real values
