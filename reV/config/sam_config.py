@@ -24,7 +24,7 @@ class SAMConfig(BaseConfig):
         SAM_configs : dict
             Keys are config ID's, values are filepaths to the SAM configs.
         """
-        super().__init__(SAM_configs, check_entries=False)
+        super().__init__(SAM_configs, check_keys=False)
         self._clearsky = None
         self._icing = None
         self._inputs = None

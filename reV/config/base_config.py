@@ -19,13 +19,15 @@ TESTDATADIR = os.path.join(os.path.dirname(REVDIR), 'tests', 'data')
 class BaseConfig(dict):
     """Base class for configuration frameworks."""
 
-    def __init__(self, config, check_entries=True):
+    def __init__(self, config, check_keys=True):
         """
         Parameters
         ----------
         config : str | dict
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
+        check_keys : bool, optional
+            Flag to check config keys against Class properties
         """
 
         # str_rep is a mapping of config strings to replace with real values
@@ -41,8 +43,8 @@ class BaseConfig(dict):
         self._base_preflight()
 
         self._keys = self._get_properties()
-        if check_entries:
-            self._check_entries()
+        if check_keys:
+            self._check_keys()
 
     @property
     def config_dir(self):
@@ -127,7 +129,7 @@ class BaseConfig(dict):
         """
         return get_class_properties(cls)
 
-    def _check_entries(self):
+    def _check_keys(self):
         """
         Check on config keys to ensure they match available
         properties
