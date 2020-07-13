@@ -96,8 +96,8 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
-    ctx.obj['POINTS'] = config['project_points']
-    ctx.obj['SAM_FILES'] = config.sam_config
+    ctx.obj['POINTS'] = config.project_points
+    ctx.obj['SAM_FILES'] = config.parse_sam_config()
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir

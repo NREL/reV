@@ -82,7 +82,7 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    for i, gen_fpath in enumerate(config.gen_fpaths):
+    for i, gen_fpath in enumerate(config.parse_gen_fpaths()):
         job_name = '{}_{}'.format(name, str(i).zfill(2))
 
         if config.execution_control.option == 'local':

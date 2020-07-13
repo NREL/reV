@@ -17,7 +17,7 @@ class OffshoreConfig(AnalysisConfig):
     """Offshore wind aggregation config."""
 
     NAME = 'offshore'
-    REQUIREMENTS = ('gen_fpaths', 'offshore_fpath', 'project_points',
+    REQUIREMENTS = ('gen_fpath', 'offshore_fpath', 'project_points',
                     'sam_files')
 
     def __init__(self, config):
@@ -44,20 +44,11 @@ class OffshoreConfig(AnalysisConfig):
             raise ConfigError(e)
 
     @property
-    def gen_fpaths(self):
-        """Get a list of generation data filepaths"""
-
-        fpaths = self['gen_fpaths']
-
-        if fpaths == 'PIPELINE':
-            fpaths = Pipeline.parse_previous(
-                self.dirout, 'offshore', target='fpath',
-                target_module='generation')
-
-        if isinstance(fpaths, str):
-            fpaths = [fpaths]
-
-        return fpaths
+    def gen_fpath(self):
+        """
+        Base generation fpath
+        """
+        return self['gen_fpath']
 
     @property
     def offshore_fpath(self):
@@ -73,3 +64,22 @@ class OffshoreConfig(AnalysisConfig):
     def sam_files(self):
         """Get the sam files dict"""
         return self['sam_files']
+
+    def parse_gen_fpaths(self):
+        """
+        Get a list of generation data filepaths
+
+        Returns
+        -------
+        list
+        """
+        fpaths = self.gen_fpath
+        if fpaths == 'PIPELINE':
+            fpaths = Pipeline.parse_previous(
+                self.dirout, 'offshore', target='fpath',
+                target_module='generation')
+
+        if isinstance(fpaths, str):
+            fpaths = [fpaths]
+
+        return fpaths

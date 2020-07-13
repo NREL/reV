@@ -95,9 +95,9 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
-    ctx.obj['TECH'] = config.tech
-    ctx.obj['POINTS'] = config['project_points']
-    ctx.obj['SAM_FILES'] = config.sam_config
+    ctx.obj['TECH'] = config.technology
+    ctx.obj['POINTS'] = config.project_points
+    ctx.obj['SAM_FILES'] = config.parse_sam_config()
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
@@ -108,7 +108,7 @@ def from_config(ctx, config_file, verbose):
 
     # get downscale request and raise exception if not NSRDB
     ctx.obj['DOWNSCALE'] = config.downscale
-    if config.downscale is not None and 'pv' not in config.tech.lower():
+    if config.downscale is not None and 'pv' not in config.technology.lower():
         raise ConfigError('User requested downscaling for a non-solar '
                           'technology. reV does not have this capability at '
                           'the current time. Please contact a developer for '
@@ -141,17 +141,17 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
     verbose : bool
         Flag to turn on debug logging. Default is not verbose.
     """
-
+    res_files = config.parse_res_files()
     # set the year-specific variables
-    ctx.obj['RES_FILE'] = config.res_files[i]
+    ctx.obj['RES_FILE'] = res_files[i]
 
     # check to make sure that the year matches the resource file
-    if str(year) not in config.res_files[i]:
+    if str(year) not in res_files[i]:
         warn('Resource file and year do not appear to match. '
              'Expected the string representation of the year '
              'to be in the resource file name. '
              'Year: {}, Resource file: {}'
-             .format(year, config.res_files[i]))
+             .format(year, res_files[i]))
 
     # if the year isn't in the name, add it before setting the file output
     ctx.obj['FOUT'] = make_fout(name, year)

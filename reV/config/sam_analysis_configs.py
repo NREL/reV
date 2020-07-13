@@ -83,20 +83,6 @@ class SAMAnalysisConfig(AnalysisConfig):
         return self['sam_files']
 
     @property
-    def sam_config(self):
-        """Get the SAM configuration object.
-
-        Returns
-        -------
-        sam_gen : reV.config.sam.SAMConfig
-            SAM config object. This object emulates a dictionary.
-        """
-        if self._sam_config is None:
-            self._sam_config = SAMConfig(self['sam_files'])
-
-        return self._sam_config
-
-    @property
     def timeout(self):
         """Get the parallel futures timeout value in seconds.
 
@@ -111,23 +97,46 @@ class SAMAnalysisConfig(AnalysisConfig):
     @property
     def project_points(self):
         """
-        Get the generation project points object
+        project_points input
 
         Returns
         -------
         pp : ProjectPoints
             ProjectPoints object
         """
-        if self._pc is not None:
-            pp = self._pc.project_points
-        else:
-            pp = ProjectPoints(self['project_points'], self['sam_files'],
-                               self.technology)
-
-        return pp
+        return self['project_points']
 
     @property
-    def points_control(self):
+    def output_request(self):
+        """Get the list of requested output variables.
+
+        Returns
+        -------
+        output_request : list
+            List of requested reV output variables corresponding to SAM
+            variable names.
+        """
+
+        if self._output_request is None:
+            self._output_request = self.get('output_request', 'cf_mean')
+            self._output_request = SAMOutputRequest(self._output_request)
+
+        return self._output_request
+
+    def parse_sam_config(self):
+        """Get the SAM configuration object.
+
+        Returns
+        -------
+        sam_gen : reV.config.sam.SAMConfig
+            SAM config object. This object emulates a dictionary.
+        """
+        if self._sam_config is None:
+            self._sam_config = SAMConfig(self['sam_files'])
+
+        return self._sam_config
+
+    def parse_points_control(self):
         """Get the generation points control object.
 
         Returns
@@ -138,7 +147,7 @@ class SAMAnalysisConfig(AnalysisConfig):
         """
         if self._pc is None:
             # make an instance of project points
-            pp = ProjectPoints(self['project_points'], self['sam_files'],
+            pp = ProjectPoints(self.project_points, self['sam_files'],
                                self.technology)
 
             if (self.execution_control.option == 'peregrine'
@@ -157,23 +166,6 @@ class SAMAnalysisConfig(AnalysisConfig):
             self._pc = PointsControl(pp, sites_per_split=sites_per_worker)
 
         return self._pc
-
-    @property
-    def output_request(self):
-        """Get the list of requested output variables.
-
-        Returns
-        -------
-        output_request : list
-            List of requested reV output variables corresponding to SAM
-            variable names.
-        """
-
-        if self._output_request is None:
-            self._output_request = self.get('output_request', 'cf_mean')
-            self._output_request = SAMOutputRequest(self._output_request)
-
-        return self._output_request
 
 
 class GenConfig(SAMAnalysisConfig):
@@ -228,7 +220,18 @@ class GenConfig(SAMAnalysisConfig):
         return self._downscale
 
     @property
-    def res_files(self):
+    def resource_file(self):
+        """
+        get base resource_file
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
+        return self['resource_file']
+
+    def parse_res_files(self):
         """Get a list of the resource files with years filled in.
 
         Returns
@@ -240,7 +243,7 @@ class GenConfig(SAMAnalysisConfig):
         """
         if self._res_files is None:
             # get base filename, may have {} for year format
-            fname = self['resource_file']
+            fname = self.resource_file
             if '{}' in fname:
                 # need to make list of res files for each year
                 self._res_files = [fname.format(year) for year in self.years]
