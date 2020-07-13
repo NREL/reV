@@ -31,7 +31,7 @@ class AnalysisConfig(BaseConfig):
         check_keys : bool, optional
             Flag to check config keys against Class properties, by default True
         """
-        super().__init__(config, check_keys=True)
+        super().__init__(config, check_keys=check_keys)
 
         self._years = None
         self._ec = None
