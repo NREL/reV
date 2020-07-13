@@ -72,13 +72,6 @@ class SAMAnalysisConfig(AnalysisConfig):
         return self._tech
 
     @property
-    def tech(self):
-        """
-        Alias for technology
-        """
-        return self.technology
-
-    @property
     def sam_files(self):
         """
         SAM config files
@@ -129,7 +122,7 @@ class SAMAnalysisConfig(AnalysisConfig):
             pp = self._pc.project_points
         else:
             pp = ProjectPoints(self['project_points'], self['sam_files'],
-                               self.tech)
+                               self.technology)
 
         return pp
 
@@ -146,7 +139,7 @@ class SAMAnalysisConfig(AnalysisConfig):
         if self._pc is None:
             # make an instance of project points
             pp = ProjectPoints(self['project_points'], self['sam_files'],
-                               self.tech)
+                               self.technology)
 
             if (self.execution_control.option == 'peregrine'
                     or self.execution_control.option == 'eagle'):
