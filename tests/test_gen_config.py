@@ -72,7 +72,7 @@ def test_gen_from_config(tech):
 
     # get reV 1.0 generation profiles
     rev1_profiles = get_r1_profiles(year=config_obj.years[0], tech=tech)
-    rev1_profiles = rev1_profiles[:, config_obj.points_control.sites]
+    rev1_profiles = rev1_profiles[:, config_obj.parse_points_control().sites]
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
 
