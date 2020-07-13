@@ -1,0 +1,20 @@
+{
+  "aggregate_profiles": true,
+  "directories": {
+    "collect_directory": "TESTDATADIR/ri_pv_reV2",
+    "log_directory": "TESTDATADIR/ri_pv_reV2",
+    "output_directory": "TESTDATADIR/ri_pv_reV2"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "memory": 90,
+    "option": "eagle",
+    "walltime": 0.5
+  },
+  "log_level": "DEBUG",
+  "n_profiles": 4,
+  "name": "rev",
+  "reg_cols": [
+    "state"
+  ]
+}

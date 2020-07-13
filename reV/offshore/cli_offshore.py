@@ -86,9 +86,13 @@ def from_config(ctx, config_file, verbose):
                                'fout': '{}_offshore.h5'.format(job_name),
                                'dirout': config.dirout,
                                'finput': gen_fpath})
-                ctx.invoke(main, job_name, gen_fpath, config.offshore_fpath,
-                           config.project_points, config.sam_files,
-                           config.logdir, verbose)
+                ctx.invoke(direct,
+                           gen_fpath=gen_fpath,
+                           offshore_fpath=config.offshore_fpath,
+                           points=config.project_points,
+                           sam_files=config.sam_files,
+                           logdir=config.logdir,
+                           verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
 

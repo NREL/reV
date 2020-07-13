@@ -228,6 +228,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
         finput = [sc_points, trans_table]
         if sc_features is not None:
             finput.append(sc_features)
+
         if transmission_costs is not None:
             finput.append(transmission_costs)
 

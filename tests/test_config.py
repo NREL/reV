@@ -13,13 +13,37 @@ import os
 import pytest
 
 from rex.utilities.exceptions import ResourceKeyError
-from reV.generation.generation import Gen
-from reV.SAM.SAM import RevPySam
+
+from reV.config.base_analysis_config import AnalysisConfig
+from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.config.project_points import ProjectPoints, PointsControl
+from reV.SAM.SAM import RevPySam
 from reV import TESTDATADIR
+from reV.utilities.exceptions import ConfigError
+
+
+def test_config_entries():
+    """
+    Test BaseConfig check_entry test
+    """
+    config_path = os.path.join(TESTDATADIR, 'config/collection.json')
+    with pytest.raises(ConfigError):
+        AnalysisConfig(config_path)
+
+
+def test_overwrite():
+    """
+    Test config overwrite check
+    """
+    config_path = os.path.join(TESTDATADIR, 'config/overwrite.json')
+    with pytest.raises(ConfigError):
+        RepProfilesConfig(config_path)
 
 
 def test_clearsky():
+    """
+    Test Clearsky
+    """
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
     sam_config_dict = os.path.join(
         TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')

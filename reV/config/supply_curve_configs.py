@@ -114,7 +114,9 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
                 for year in range(1998, 2018):
                     if os.path.exists(res_fpath.format(year)):
                         break
+
                 res_fpath = res_fpath.format(year)
+
         return res_fpath
 
     @property
@@ -266,6 +268,8 @@ class SupplyCurveConfig(AnalysisConfig):
     @property
     def simple(self):
         """Get the simple flag."""
+        self.check_overwrite_entries('simple', 'line_limited')
+
         return bool(self.get('simple', False))
 
     @property

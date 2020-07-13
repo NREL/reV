@@ -45,6 +45,7 @@ class RepProfilesConfig(AnalysisConfig):
         for req in self.REQUIREMENTS:
             if self.get(req, None) is None:
                 missing.append(req)
+
         if any(missing):
             raise ConfigError('Rep profiles config missing the following '
                               'keys: {}'.format(missing))
@@ -142,4 +143,8 @@ class RepProfilesConfig(AnalysisConfig):
         """Flag to calculate the aggregate (weighted meanoid) profile for each
         supply curve point. This behavior is instead of finding the single
         profile per region closest to the meanoid."""
+        self.check_overwrite_entries('aggregate_profiles', 'reg_cols',
+                                     'rep_method', 'err_method', 'weight',
+                                     'n_profiles')
+
         return bool(self.get('aggregate_profiles', False))
