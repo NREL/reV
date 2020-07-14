@@ -22,6 +22,7 @@ from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from rex.utilities.cli_dtypes import STR, INT
 from rex.utilities.loggers import init_mult
 from rex.utilities.execution import SLURM
+from rex.utilities.utilities import get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid Offshore config keys
+    """
+    click.echo(', '.join(get_class_properties(OffshoreConfig)))
 
 
 @main.command()
@@ -73,7 +82,7 @@ def from_config(ctx, config_file, verbose):
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
-    for i, gen_fpath in enumerate(config.gen_fpaths):
+    for i, gen_fpath in enumerate(config.parse_gen_fpaths()):
         job_name = '{}_{}'.format(name, str(i).zfill(2))
 
         if config.execution_control.option == 'local':
@@ -86,9 +95,13 @@ def from_config(ctx, config_file, verbose):
                                'fout': '{}_offshore.h5'.format(job_name),
                                'dirout': config.dirout,
                                'finput': gen_fpath})
-                ctx.invoke(main, job_name, gen_fpath, config.offshore_fpath,
-                           config.project_points, config.sam_files,
-                           config.logdir, verbose)
+                ctx.invoke(direct,
+                           gen_fpath=gen_fpath,
+                           offshore_fpath=config.offshore_fpath,
+                           points=config.project_points,
+                           sam_files=config.sam_files,
+                           logdir=config.logdir,
+                           verbose=verbose)
 
         elif config.execution_control.option in ('eagle', 'slurm'):
 
@@ -102,8 +115,8 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['VERBOSE'] = verbose
 
             ctx.invoke(slurm,
-                       alloc=config.execution_control.alloc,
-                       memory=config.execution_control.node_mem,
+                       alloc=config.execution_control.allocation,
+                       memory=config.execution_control.memory,
                        walltime=config.execution_control.walltime,
                        feature=config.execution_control.feature,
                        module=config.execution_control.module,

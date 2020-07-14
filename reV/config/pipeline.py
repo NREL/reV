@@ -54,7 +54,7 @@ class PipelineConfig(AnalysisConfig):
         names = []
         for di in self.pipeline_steps:
             for f_config in di.values():
-                config = AnalysisConfig(f_config)
+                config = AnalysisConfig(f_config, check_keys=False)
                 dirouts.append(config.dirout)
 
                 if 'name' in config:

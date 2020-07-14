@@ -15,6 +15,7 @@ from reV.pipeline.status import Status
 from rex.utilities.cli_dtypes import STR, STRLIST, PATHLIST, INT
 from rex.utilities.loggers import init_mult
 from rex.utilities.execution import SLURM
+from rex.utilities.utilities import get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid MultiYear config keys
+    """
+    click.echo(', '.join(get_class_properties(MultiYearConfig)))
 
 
 @main.command()
@@ -87,10 +96,10 @@ def from_config(ctx, config_file, verbose):
     elif config.execution_control.option in ('eagle', 'slurm'):
         ctx.obj['NAME'] = name
         ctx.invoke(multi_year_slurm,
-                   alloc=config.execution_control.alloc,
+                   alloc=config.execution_control.allocation,
                    walltime=config.execution_control.walltime,
                    feature=config.execution_control.feature,
-                   memory=config.execution_control.node_mem,
+                   memory=config.execution_control.memory,
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,
                    stdout_path=os.path.join(config.logdir, 'stdout'),

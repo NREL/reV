@@ -20,8 +20,7 @@ from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
 from rex.utilities.execution import SLURM, SubprocessManager
 from rex.utilities.loggers import init_mult
-
-from rex.utilities.utilities import parse_year
+from rex.utilities.utilities import parse_year, get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +36,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid Gen config keys
+    """
+    click.echo(', '.join(get_class_properties(GenConfig)))
 
 
 @main.command()
@@ -88,20 +95,21 @@ def from_config(ctx, config_file, verbose):
                  .format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
-    ctx.obj['TECH'] = config.tech
-    ctx.obj['POINTS'] = config['project_points']
-    ctx.obj['SAM_FILES'] = config.sam_config
+    ctx.obj['TECH'] = config.technology
+    ctx.obj['POINTS'] = config.project_points
+    ctx.obj['SAM_FILES'] = config.sam_files
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
     ctx.obj['TIMEOUT'] = config.timeout
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
-    ctx.obj['MEM_UTIL_LIM'] = config.execution_control.mem_util_lim
+    ctx.obj['MEM_UTIL_LIM'] = \
+        config.execution_control.mememory_utilization_limit
 
     # get downscale request and raise exception if not NSRDB
     ctx.obj['DOWNSCALE'] = config.downscale
-    if config.downscale is not None and 'pv' not in config.tech.lower():
+    if config.downscale is not None and 'pv' not in config.technology.lower():
         raise ConfigError('User requested downscaling for a non-solar '
                           'technology. reV does not have this capability at '
                           'the current time. Please contact a developer for '
@@ -134,17 +142,17 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
     verbose : bool
         Flag to turn on debug logging. Default is not verbose.
     """
-
+    res_files = config.parse_res_files()
     # set the year-specific variables
-    ctx.obj['RES_FILE'] = config.res_files[i]
+    ctx.obj['RES_FILE'] = res_files[i]
 
     # check to make sure that the year matches the resource file
-    if str(year) not in config.res_files[i]:
+    if str(year) not in res_files[i]:
         warn('Resource file and year do not appear to match. '
              'Expected the string representation of the year '
              'to be in the resource file name. '
              'Year: {}, Resource file: {}'
-             .format(year, config.res_files[i]))
+             .format(year, res_files[i]))
 
     # if the year isn't in the name, add it before setting the file output
     ctx.obj['FOUT'] = make_fout(name, year)
@@ -171,9 +179,9 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(gen_slurm, nodes=config.execution_control.nodes,
-                   alloc=config.execution_control.alloc,
+                   alloc=config.execution_control.allocation,
                    walltime=config.execution_control.walltime,
-                   memory=config.execution_control.node_mem,
+                   memory=config.execution_control.memory,
                    feature=config.execution_control.feature,
                    conda_env=config.execution_control.conda_env,
                    module=config.execution_control.module,

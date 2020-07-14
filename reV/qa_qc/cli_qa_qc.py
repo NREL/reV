@@ -7,10 +7,11 @@ import logging
 import numpy as np
 import os
 import pprint
+
 from rex.utilities.cli_dtypes import STR, STRLIST, INT, FLOAT
 from rex.utilities.execution import SLURM
 from rex.utilities.loggers import init_logger, init_mult
-from rex.utilities.utilities import dict_str_load
+from rex.utilities.utilities import dict_str_load, get_class_properties
 
 from reV.config.qa_qc_config import QaQcConfig
 from reV.pipeline.status import Status
@@ -32,6 +33,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid QaQc config keys
+    """
+    click.echo(', '.join(get_class_properties(QaQcConfig)))
 
 
 @main.group(chain=True)
@@ -640,8 +649,8 @@ def launch_slurm(config, verbose):
         node_cmd = '\n'.join(node_cmd)
         logger.info('Running reV QA-QC on SLURM with '
                     'node name "{}"'.format(config.name))
-        slurm = SLURM(node_cmd, alloc=config.execution_control.alloc,
-                      memory=config.execution_control.node_mem,
+        slurm = SLURM(node_cmd, alloc=config.execution_control.allocation,
+                      memory=config.execution_control.memory,
                       feature=config.execution_control.feature,
                       walltime=config.execution_control.walltime,
                       conda_env=config.execution_control.conda_env,

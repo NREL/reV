@@ -19,22 +19,26 @@ class AnalysisConfig(BaseConfig):
 
     NAME = None
 
-    def __init__(self, config, run_preflight=True):
+    def __init__(self, config, run_preflight=True, check_keys=True):
         """
         Parameters
         ----------
         config : str | dict
             File path to config json (str), serialized json object (str),
             or dictionary with pre-extracted config.
-        run_preflight : bool
-            Flag to run or disable preflight checks.
+        run_preflight : bool, optional
+            Flag to run or disable preflight checks, by default True
+        check_keys : bool, optional
+            Flag to check config keys against Class properties, by default True
         """
-        super().__init__(config)
+        super().__init__(config, check_keys=check_keys)
 
         self._years = None
         self._ec = None
         self._dirout = self.config_dir
         self._logdir = './logs/'
+
+        self._preflight()
 
         if run_preflight:
             self._analysis_config_preflight()

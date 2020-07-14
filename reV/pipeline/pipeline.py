@@ -197,7 +197,7 @@ class Pipeline:
         """
 
         config_dict = safe_json_load(f_config)
-        return AnalysisConfig(config_dict)
+        return AnalysisConfig(config_dict, check_keys=False)
 
     def _get_status_obj(self):
         """Get a reV pipeline status object.

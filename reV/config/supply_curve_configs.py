@@ -48,16 +48,9 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
 
     def _sc_agg_preflight(self):
         """Perform pre-flight checks on the SC agg config inputs"""
-        missing = []
-        for req in self.REQUIREMENTS:
-            if self.get(req, None) is None:
-                missing.append(req)
-        if any(missing):
-            raise ConfigError('SC Aggregation config missing the following '
-                              'keys: {}'.format(missing))
-
         with h5py.File(self.excl_fpath, mode='r') as f:
             dsets = list(f)
+
         if self.tm_dset not in dsets and self.res_fpath is None:
             raise ConfigError('Techmap dataset "{}" not found in exclusions '
                               'file, resource file input "res_fpath" is '
@@ -114,7 +107,9 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
                 for year in range(1998, 2018):
                     if os.path.exists(res_fpath.format(year)):
                         break
+
                 res_fpath = res_fpath.format(year)
+
         return res_fpath
 
     @property
@@ -266,7 +261,11 @@ class SupplyCurveConfig(AnalysisConfig):
     @property
     def simple(self):
         """Get the simple flag."""
-        return bool(self.get('simple', False))
+        simple = bool(self.get('simple', False))
+        if simple:
+            self.check_overwrite_keys('simple', 'line_limited')
+
+        return simple
 
     @property
     def line_limited(self):

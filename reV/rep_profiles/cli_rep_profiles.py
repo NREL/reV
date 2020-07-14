@@ -15,6 +15,7 @@ from reV.rep_profiles.rep_profiles import RepProfiles, AggregatedRepProfiles
 from rex.utilities.execution import SLURM
 from rex.utilities.cli_dtypes import STR, INT, STRLIST
 from rex.utilities.loggers import init_mult
+from rex.utilities.utilities import get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid RepProfiles config keys
+    """
+    click.echo(', '.join(get_class_properties(RepProfilesConfig)))
 
 
 @main.command()
@@ -127,8 +136,8 @@ def from_config(ctx, config_file, verbose):
             ctx.obj['VERBOSE'] = verbose
 
             ctx.invoke(slurm,
-                       alloc=config.execution_control.alloc,
-                       memory=config.execution_control.node_mem,
+                       alloc=config.execution_control.allocation,
+                       memory=config.execution_control.memory,
                        walltime=config.execution_control.walltime,
                        feature=config.execution_control.feature,
                        conda_env=config.execution_control.conda_env,

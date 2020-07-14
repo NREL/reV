@@ -5,7 +5,7 @@ reV QA/QC config
 import logging
 from warnings import warn
 
-from reV.utilities.exceptions import ConfigError, PipelineError
+from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
 
@@ -16,7 +16,6 @@ class QaQcConfig(AnalysisConfig):
     """QA/QC config."""
 
     NAME = 'QA-QC'
-
     REQUIREMENTS = ('modules',)
 
     def __init__(self, config):
@@ -28,20 +27,7 @@ class QaQcConfig(AnalysisConfig):
             or dictionary with pre-extracted config.
         """
         super().__init__(config)
-        self._preflight()
         self._modules = None
-
-    def _preflight(self):
-        """Check config for SAM input keys"""
-        missing = []
-        for req in self.REQUIREMENTS:
-            if self.get(req, None) is None:
-                missing.append(req)
-        if any(missing):
-            e = ('SAM analysis config missing the following '
-                 'keys: {}'.format(missing))
-            logger.error(e)
-            raise ConfigError(e)
 
     @property
     def modules(self):

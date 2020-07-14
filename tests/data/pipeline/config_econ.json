@@ -9,7 +9,6 @@
     "output_directory": "./outputs/"
   },
   "execution_control": {
-    "allocation": "rev",
     "nodes": 1,
     "option": "local",
     "sites_per_worker": 10

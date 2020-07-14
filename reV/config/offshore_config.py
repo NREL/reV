@@ -6,7 +6,6 @@ reV offshore wind aggregation config.
 """
 import logging
 
-from reV.utilities.exceptions import ConfigError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
 
@@ -29,33 +28,13 @@ class OffshoreConfig(AnalysisConfig):
             or dictionary with pre-extracted config.
         """
         super().__init__(config)
-        self._offshore_preflight()
-
-    def _offshore_preflight(self):
-        """Perform pre-flight checks on the SC agg config inputs"""
-        missing = []
-        for req in self.REQUIREMENTS:
-            if self.get(req, None) is None:
-                missing.append(req)
-        if any(missing):
-            e = ('SC offshore config missing the following '
-                 'keys: {}'.format(missing))
-            logger.error(e)
-            raise ConfigError(e)
 
     @property
-    def gen_fpaths(self):
-        """Get a list of generation data filepaths"""
-
-        fpaths = self['gen_fpath']
-
-        if fpaths == 'PIPELINE':
-            fpaths = Pipeline.parse_previous(
-                self.dirout, 'offshore', target='fpath',
-                target_module='generation')
-        if isinstance(fpaths, str):
-            fpaths = [fpaths]
-        return fpaths
+    def gen_fpath(self):
+        """
+        Base generation fpath
+        """
+        return self['gen_fpath']
 
     @property
     def offshore_fpath(self):
@@ -71,3 +50,22 @@ class OffshoreConfig(AnalysisConfig):
     def sam_files(self):
         """Get the sam files dict"""
         return self['sam_files']
+
+    def parse_gen_fpaths(self):
+        """
+        Get a list of generation data filepaths
+
+        Returns
+        -------
+        list
+        """
+        fpaths = self.gen_fpath
+        if fpaths == 'PIPELINE':
+            fpaths = Pipeline.parse_previous(
+                self.dirout, 'offshore', target='fpath',
+                target_module='generation')
+
+        if isinstance(fpaths, str):
+            fpaths = [fpaths]
+
+        return fpaths

@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 class SAMAnalysisConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
-
     REQUIREMENTS = ('project_points', 'sam_files', 'technology')
 
     def __init__(self, config):
@@ -40,22 +39,9 @@ class SAMAnalysisConfig(AnalysisConfig):
         self._pc = None
         self._default_timeout = 1800
         self._output_request = None
-        self._sam_preflight()
-
-    def _sam_preflight(self):
-        """Check config for SAM input keys"""
-        missing = []
-        for req in self.REQUIREMENTS:
-            if self.get(req, None) is None:
-                missing.append(req)
-        if any(missing):
-            e = ('SAM analysis config missing the following '
-                 'keys: {}'.format(missing))
-            logger.error(e)
-            raise ConfigError(e)
 
     @property
-    def tech(self):
+    def technology(self):
         """Get the tech property from the config.
 
         Returns
@@ -68,20 +54,19 @@ class SAMAnalysisConfig(AnalysisConfig):
         if self._tech is None:
             self._tech = self['technology'].lower()
             self._tech = self._tech.replace(' ', '').replace('_', '')
+
         return self._tech
 
     @property
-    def sam_config(self):
-        """Get the SAM configuration object.
+    def sam_files(self):
+        """
+        SAM config files
 
         Returns
         -------
-        sam_gen : reV.config.sam.SAMConfig
-            SAM config object. This object emulates a dictionary.
+        dict
         """
-        if self._sam_config is None:
-            self._sam_config = SAMConfig(self['sam_files'])
-        return self._sam_config
+        return self['sam_files']
 
     @property
     def timeout(self):
@@ -96,37 +81,16 @@ class SAMAnalysisConfig(AnalysisConfig):
         return self.get('timeout', self._default_timeout)
 
     @property
-    def points_control(self):
-        """Get the generation points control object.
+    def project_points(self):
+        """
+        project_points input
 
         Returns
         -------
-        points_control : reV.config.project_points.PointsControl
-            PointsControl object based on specified project points and
-            execution control option.
+        pp : ProjectPoints
+            ProjectPoints object
         """
-
-        if self._pc is None:
-            # make an instance of project points
-            pp = ProjectPoints(self['project_points'], self['sam_files'],
-                               self.tech)
-
-            if (self.execution_control.option == 'peregrine'
-                    or self.execution_control.option == 'eagle'):
-                # sites per split on peregrine or eagle is the number of sites
-                # in project points / number of nodes. This is for the initial
-                # division of the project sites between HPC nodes (jobs)
-                sites_per_worker = ceil(len(pp) / self.execution_control.nodes)
-
-            elif self.execution_control.option == 'local':
-                # sites per split on local is number of sites / # of processes
-                sites_per_worker = ceil(len(pp)
-                                        / self.execution_control.max_workers)
-
-            # make an instance of points control and set to protected attribute
-            self._pc = PointsControl(pp, sites_per_split=sites_per_worker)
-
-        return self._pc
+        return self['project_points']
 
     @property
     def output_request(self):
@@ -144,6 +108,50 @@ class SAMAnalysisConfig(AnalysisConfig):
             self._output_request = SAMOutputRequest(self._output_request)
 
         return self._output_request
+
+    def parse_sam_config(self):
+        """Get the SAM configuration object.
+
+        Returns
+        -------
+        sam_gen : reV.config.sam.SAMConfig
+            SAM config object. This object emulates a dictionary.
+        """
+        if self._sam_config is None:
+            self._sam_config = SAMConfig(self['sam_files'])
+
+        return self._sam_config
+
+    def parse_points_control(self):
+        """Get the generation points control object.
+
+        Returns
+        -------
+        points_control : reV.config.project_points.PointsControl
+            PointsControl object based on specified project points and
+            execution control option.
+        """
+        if self._pc is None:
+            # make an instance of project points
+            pp = ProjectPoints(self.project_points, self['sam_files'],
+                               self.technology)
+
+            if (self.execution_control.option == 'peregrine'
+                    or self.execution_control.option == 'eagle'):
+                # sites per split on peregrine or eagle is the number of sites
+                # in project points / number of nodes. This is for the initial
+                # division of the project sites between HPC nodes (jobs)
+                sites_per_worker = ceil(len(pp) / self.execution_control.nodes)
+
+            elif self.execution_control.option == 'local':
+                # sites per split on local is number of sites / # of processes
+                sites_per_worker = ceil(len(pp)
+                                        / self.execution_control.max_workers)
+
+            # make an instance of points control and set to protected attribute
+            self._pc = PointsControl(pp, sites_per_split=sites_per_worker)
+
+        return self._pc
 
 
 class GenConfig(SAMAnalysisConfig):
@@ -198,7 +206,18 @@ class GenConfig(SAMAnalysisConfig):
         return self._downscale
 
     @property
-    def res_files(self):
+    def resource_file(self):
+        """
+        get base resource_file
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
+        return self['resource_file']
+
+    def parse_res_files(self):
         """Get a list of the resource files with years filled in.
 
         Returns
@@ -210,7 +229,7 @@ class GenConfig(SAMAnalysisConfig):
         """
         if self._res_files is None:
             # get base filename, may have {} for year format
-            fname = self['resource_file']
+            fname = self.resource_file
             if '{}' in fname:
                 # need to make list of res files for each year
                 self._res_files = [fname.format(year) for year in self.years]
@@ -246,7 +265,56 @@ class EconConfig(SAMAnalysisConfig):
         self._site_data = None
 
     @property
-    def cf_files(self):
+    def cf_file(self):
+        """
+        base cf_file path
+
+        Returns
+        -------
+        str
+        """
+        return self['cf_file']
+
+    @property
+    def site_data(self):
+        """Get the site-specific data file.
+
+        Returns
+        -------
+        site_data : str | NoneType
+            Target path for site-specific data file.
+        """
+        self._site_data = self.get('site_data', self._site_data)
+        return self._site_data
+
+    @property
+    def dirout(self):
+        """Get the output directory, look for key "output_directory" in the
+        "directories" config group. Overwritten if append is True.
+
+        Returns
+        -------
+        dirout : str
+            Target path for reV output files.
+        """
+        self._dirout = super().dirout
+        if self.append:
+            self._dirout = os.path.dirname(self.parse_cf_files()[0])
+
+        return self._dirout
+
+    @property
+    def append(self):
+        """Get the flag to append econ results to cf_file inputs.
+
+        Returns
+        -------
+        append : bool
+            Flag to append econ results to gen results. Default is False.
+        """
+        return bool(self.get('append', False))
+
+    def parse_cf_files(self):
         """Get the capacity factor files (reV generation output data).
 
         Returns
@@ -258,7 +326,7 @@ class EconConfig(SAMAnalysisConfig):
 
         if self._cf_files is None:
             # get base filename, may have {} for year format
-            fname = self['cf_file']
+            fname = self.cf_file
             if '{}' in fname:
                 # need to make list of res files for each year
                 self._cf_files = [fname.format(year) for year in self.years]
@@ -287,42 +355,3 @@ class EconConfig(SAMAnalysisConfig):
                                           .format(year, self._cf_files))
 
         return self._cf_files
-
-    @property
-    def site_data(self):
-        """Get the site-specific data file.
-
-        Returns
-        -------
-        site_data : str | NoneType
-            Target path for site-specific data file.
-        """
-        self._site_data = self.get('site_data', self._site_data)
-        return self._site_data
-
-    @property
-    def dirout(self):
-        """Get the output directory, look for key "output_directory" in the
-        "directories" config group. Overwritten if append is True.
-
-        Returns
-        -------
-        dirout : str
-            Target path for reV output files.
-        """
-        self._dirout = super().dirout
-        if self.append:
-            self._dirout = os.path.dirname(self.cf_files[0])
-
-        return self._dirout
-
-    @property
-    def append(self):
-        """Get the flag to append econ results to cf_file inputs.
-
-        Returns
-        -------
-        append : bool
-            Flag to append econ results to gen results. Default is False.
-        """
-        return bool(self.get('append', False))

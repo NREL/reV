@@ -20,7 +20,7 @@ from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
 from rex.utilities.execution import SLURM, SubprocessManager
 from rex.utilities.loggers import init_mult
-from rex.utilities.utilities import parse_year
+from rex.utilities.utilities import parse_year, get_class_properties
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['VERBOSE'] = verbose
     ctx.obj['NAME'] = name
+
+
+@main.command()
+def valid_config_keys():
+    """
+    Echo the valid Econ config keys
+    """
+    click.echo(', '.join(get_class_properties(EconConfig)))
 
 
 @main.command()
@@ -71,7 +79,7 @@ def from_config(ctx, config_file, verbose):
                                             'reV.config', 'reV.utilities',
                                             'reV.SAM', 'rex.utilities'],
               verbose=verbose)
-
+    cf_files = config.parse_cf_files()
     # Initial log statements
     logger.info('Running reV Econ from config file: "{}"'
                 .format(config_file))
@@ -83,13 +91,13 @@ def from_config(ctx, config_file, verbose):
                 .format(pprint.pformat(config.get('sam_files', None),
                                        indent=4)))
     logger.debug('Submitting jobs for the following cf_files: {}'
-                 .format(config.cf_files))
+                 .format(cf_files))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
     # set config objects to be passed through invoke to direct methods
-    ctx.obj['POINTS'] = config['project_points']
-    ctx.obj['SAM_FILES'] = config.sam_config
+    ctx.obj['POINTS'] = config.project_points
+    ctx.obj['SAM_FILES'] = config.parse_sam_config()
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
@@ -99,12 +107,12 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['TIMEOUT'] = config.timeout
 
-    if len(config.years) == len(config.cf_files):
+    if len(config.years) == len(cf_files):
         for i, year in enumerate(config.years):
-            cf_file = config.cf_files[i]
+            cf_file = cf_files[i]
             submit_from_config(ctx, name, cf_file, year, config, verbose)
     else:
-        for i, cf_file in enumerate(config.cf_files):
+        for i, cf_file in enumerate(cf_files):
             year = parse_year(cf_file)
             if str(year) in [str(y) for y in config.years]:
                 submit_from_config(ctx, name, cf_file, year, config, verbose)
@@ -166,9 +174,9 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
         ctx.invoke(econ_slurm, nodes=config.execution_control.nodes,
-                   alloc=config.execution_control.alloc,
+                   alloc=config.execution_control.allocation,
                    walltime=config.execution_control.walltime,
-                   memory=config.execution_control.node_mem,
+                   memory=config.execution_control.memory,
                    feature=config.execution_control.feature,
                    module=config.execution_control.module,
                    conda_env=config.execution_control.conda_env,

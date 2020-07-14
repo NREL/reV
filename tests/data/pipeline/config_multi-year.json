@@ -4,7 +4,6 @@
     "output_directory": "./outputs/"
   },
   "execution_control": {
-    "allocation": "rev",
     "option": "local"
   },
   "groups": {
