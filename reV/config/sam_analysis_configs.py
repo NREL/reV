@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 class SAMAnalysisConfig(AnalysisConfig):
     """SAM-based analysis config (generation, lcoe, etc...)."""
-
     REQUIREMENTS = ('project_points', 'sam_files', 'technology')
 
     def __init__(self, config):
@@ -40,19 +39,6 @@ class SAMAnalysisConfig(AnalysisConfig):
         self._pc = None
         self._default_timeout = 1800
         self._output_request = None
-        self._sam_preflight()
-
-    def _sam_preflight(self):
-        """Check config for SAM input keys"""
-        missing = []
-        for req in self.REQUIREMENTS:
-            if self.get(req, None) is None:
-                missing.append(req)
-        if any(missing):
-            e = ('SAM analysis config missing the following '
-                 'keys: {}'.format(missing))
-            logger.error(e)
-            raise ConfigError(e)
 
     @property
     def technology(self):

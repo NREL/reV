@@ -18,6 +18,7 @@ TESTDATADIR = os.path.join(os.path.dirname(REVDIR), 'tests', 'data')
 
 class BaseConfig(dict):
     """Base class for configuration frameworks."""
+    REQUIREMENTS = ()
 
     def __init__(self, config, check_keys=True):
         """
@@ -40,7 +41,7 @@ class BaseConfig(dict):
         self._name = None
         self._parse_config(config)
 
-        self._base_preflight()
+        self._preflight()
 
         self._keys = self._get_properties()
         if check_keys:
@@ -109,14 +110,24 @@ class BaseConfig(dict):
             self._name = self.get('name', 'rev')
         return self._name
 
-    def _base_preflight(self):
-        """Run a base preflight check on the config."""
+    def _preflight(self):
+        """Run a preflight check on the config."""
         if 'project_control' in self:
             msg = ('config "project_control" block is no '
                    'longer used. All project control keys should be placed at '
                    'the top config level.')
             logger.error(msg)
             raise ConfigError(msg)
+
+        missing = []
+        for req in self.REQUIREMENTS:
+            if req not in self:
+                missing.append(req)
+
+        if any(missing):
+            e = '{} missing the following keys: {}'.format(self, missing)
+            logger.error(e)
+            raise ConfigError(e)
 
     @classmethod
     def _get_properties(cls):

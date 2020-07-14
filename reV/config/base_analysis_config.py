@@ -38,6 +38,8 @@ class AnalysisConfig(BaseConfig):
         self._dirout = self.config_dir
         self._logdir = './logs/'
 
+        self._preflight()
+
         if run_preflight:
             self._analysis_config_preflight()
 

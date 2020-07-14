@@ -8,7 +8,7 @@ Created on Mon Jan 28 11:43:27 2019
 """
 import logging
 
-from reV.utilities.exceptions import ConfigError, PipelineError
+from reV.utilities.exceptions import PipelineError
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.pipeline.pipeline import Pipeline
 
@@ -36,19 +36,6 @@ class RepProfilesConfig(AnalysisConfig):
         self._default_err_method = 'rmse'
         self._default_weight = 'gid_counts'
         self._default_n_profiles = 1
-
-        self._rep_profiles_preflight()
-
-    def _rep_profiles_preflight(self):
-        """Perform pre-flight checks on the rep profiles config inputs"""
-        missing = []
-        for req in self.REQUIREMENTS:
-            if self.get(req, None) is None:
-                missing.append(req)
-
-        if any(missing):
-            raise ConfigError('Rep profiles config missing the following '
-                              'keys: {}'.format(missing))
 
     @property
     def gen_fpath(self):

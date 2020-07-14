@@ -11,7 +11,6 @@ import logging
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.output_request import SAMOutputRequest
 from reV.pipeline.pipeline import Pipeline
-from reV.utilities.exceptions import ConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +19,7 @@ class CollectionConfig(AnalysisConfig):
     """File collection config."""
 
     NAME = 'collect'
+    REQUIREMENTS = ('dsets', 'file_prefixes')
 
     def __init__(self, config):
         """
@@ -36,16 +36,6 @@ class CollectionConfig(AnalysisConfig):
         self._file_prefixes = None
         self._ec = None
         self._coldir = self.dirout
-
-        self._collection_preflight()
-
-    def _collection_preflight(self):
-        """Run preflight checks for required input keys."""
-        for key in ('dsets', 'file_prefixes'):
-            if key not in self:
-                e = 'Collection config needs "{}" key!'.format(key)
-                logger.error(e)
-                raise ConfigError(e)
 
     @property
     def coldir(self):
