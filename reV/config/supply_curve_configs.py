@@ -261,9 +261,11 @@ class SupplyCurveConfig(AnalysisConfig):
     @property
     def simple(self):
         """Get the simple flag."""
-        self.check_overwrite_entries('simple', 'line_limited')
+        simple = bool(self.get('simple', False))
+        if simple:
+            self.check_overwrite_entries('simple', 'line_limited')
 
-        return bool(self.get('simple', False))
+        return simple
 
     @property
     def line_limited(self):

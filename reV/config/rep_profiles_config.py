@@ -130,8 +130,10 @@ class RepProfilesConfig(AnalysisConfig):
         """Flag to calculate the aggregate (weighted meanoid) profile for each
         supply curve point. This behavior is instead of finding the single
         profile per region closest to the meanoid."""
-        self.check_overwrite_entries('aggregate_profiles', 'reg_cols',
-                                     'rep_method', 'err_method', 'weight',
-                                     'n_profiles')
+        aggregate = bool(self.get('aggregate_profiles', False))
+        if aggregate:
+            self.check_overwrite_entries('aggregate_profiles', 'reg_cols',
+                                         'rep_method', 'err_method', 'weight',
+                                         'n_profiles')
 
-        return bool(self.get('aggregate_profiles', False))
+        return aggregate
