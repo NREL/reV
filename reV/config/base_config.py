@@ -172,7 +172,7 @@ class BaseConfig(dict):
                 overwrite.append(key)
 
         if overwrite:
-            msg = ("A value for {} was provided which overwrites: {}"
+            msg = ('A value for "{}" was provided which overwrites: "{}"'
                    .format(primary_key, ', '.join(overwrite)))
             logger.error(msg)
             raise ConfigError(msg)
