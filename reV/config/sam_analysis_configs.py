@@ -78,7 +78,7 @@ class SAMAnalysisConfig(AnalysisConfig):
 
         Returns
         -------
-        list
+        dict
         """
         return self['sam_files']
 

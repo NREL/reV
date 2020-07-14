@@ -97,7 +97,7 @@ def from_config(ctx, config_file, verbose):
     # set config objects to be passed through invoke to direct methods
     ctx.obj['TECH'] = config.technology
     ctx.obj['POINTS'] = config.project_points
-    ctx.obj['SAM_FILES'] = config.parse_sam_config()
+    ctx.obj['SAM_FILES'] = config.sam_files
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
