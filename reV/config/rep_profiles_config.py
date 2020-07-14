@@ -132,8 +132,8 @@ class RepProfilesConfig(AnalysisConfig):
         profile per region closest to the meanoid."""
         aggregate = bool(self.get('aggregate_profiles', False))
         if aggregate:
-            self.check_overwrite_entries('aggregate_profiles', 'reg_cols',
-                                         'rep_method', 'err_method', 'weight',
-                                         'n_profiles')
+            self.check_overwrite_keys('aggregate_profiles', 'reg_cols',
+                                      'rep_method', 'err_method', 'weight',
+                                      'n_profiles')
 
         return aggregate

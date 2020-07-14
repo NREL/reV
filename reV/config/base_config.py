@@ -155,7 +155,7 @@ class BaseConfig(dict):
                 logger.error(msg)
                 raise ConfigError(msg)
 
-    def check_overwrite_entries(self, primary_key, *overwrite_keys):
+    def check_overwrite_keys(self, primary_key, *overwrite_keys):
         """
         Check for overwrite keys and raise a ConfigError if present
 
@@ -168,7 +168,7 @@ class BaseConfig(dict):
         """
         overwrite = []
         for key in overwrite_keys:
-            if key in self._keys:
+            if key in self:
                 overwrite.append(key)
 
         if overwrite:
