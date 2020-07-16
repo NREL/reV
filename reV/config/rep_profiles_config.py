@@ -99,9 +99,10 @@ class RepProfilesConfig(AnalysisConfig):
     @property
     def reg_cols(self):
         """Get the region columns input arg."""
-        reg_cols = self['reg_cols']
+        reg_cols = self.get('reg_cols', None)
         if isinstance(reg_cols, str):
             reg_cols = [reg_cols]
+
         return reg_cols
 
     @property

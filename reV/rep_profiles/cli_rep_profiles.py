@@ -149,7 +149,7 @@ def from_config(ctx, config_file, verbose):
               help='Filepath to reV gen file.')
 @click.option('--rev_summary', '-r', type=click.Path(exists=True),
               required=True, help='Filepath to reV SC summary (agg) file.')
-@click.option('--reg_cols', '-rc', type=STRLIST,
+@click.option('--reg_cols', '-rc', type=STRLIST, default=None,
               help='List of column rev summary column labels to define '
               'regions to get rep profiles for.')
 @click.option('--cf_dset', '-cf', type=str, default='cf_profile',
