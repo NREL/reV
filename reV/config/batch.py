@@ -68,6 +68,6 @@ class BatchConfig(BaseConfig):
                                       'jobs: {}'.format(fpath))
 
     @property
-    def config_pipeline(self):
+    def pipeline_config(self):
         """Get the base pipeline config file with full file path."""
         return self['pipeline_config']

@@ -326,21 +326,21 @@ class BatchJob:
     def _run_pipelines(self):
         """Run the reV pipeline modules for each batch job."""
         for d in self.sub_dirs:
-            config_pipeline = os.path.join(
-                d, os.path.basename(self._config.config_pipeline))
-            if os.path.isfile(config_pipeline):
-                Pipeline.run(config_pipeline, monitor=False)
+            pipeline_config = os.path.join(
+                d, os.path.basename(self._config.pipeline_config))
+            if os.path.isfile(pipeline_config):
+                Pipeline.run(pipeline_config, monitor=False)
             else:
                 raise PipelineError('Could not find pipeline config to run: '
-                                    '"{}"'.format(config_pipeline))
+                                    '"{}"'.format(pipeline_config))
 
     def _cancel_all(self):
         """Cancel all reV pipeline modules for all batch jobs."""
         for d in self.sub_dirs:
-            config_pipeline = os.path.join(
-                d, os.path.basename(self._config.config_pipeline))
-            if os.path.isfile(config_pipeline):
-                Pipeline.cancel_all(config_pipeline)
+            pipeline_config = os.path.join(
+                d, os.path.basename(self._config.pipeline_config))
+            if os.path.isfile(pipeline_config):
+                Pipeline.cancel_all(pipeline_config)
 
     @classmethod
     def cancel_all(cls, config):
