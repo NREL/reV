@@ -19,7 +19,7 @@ class RepProfilesConfig(AnalysisConfig):
     """Representative Profiles config."""
 
     NAME = 'rep_profiles'
-    REQUIREMENTS = ('gen_fpath', 'rev_summary', 'reg_cols')
+    REQUIREMENTS = ('gen_fpath', 'rev_summary')
 
     def __init__(self, config):
         """
