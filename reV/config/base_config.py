@@ -172,7 +172,8 @@ class BaseConfig(dict):
                 overwrite.append(key)
 
         if overwrite:
-            msg = ('A value for "{}" was provided which overwrites: "{}"'
+            msg = ('A value for "{}" was provided which overwrites the '
+                   ' following key: "{}", please remove them from the config'
                    .format(primary_key, ', '.join(overwrite)))
             logger.error(msg)
             raise ConfigError(msg)
