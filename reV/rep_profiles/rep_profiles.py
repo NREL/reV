@@ -14,6 +14,7 @@ import numpy as np
 import os
 import pandas as pd
 from scipy import stats
+from warnings import warn
 
 
 from reV.handlers.outputs import Outputs
@@ -683,11 +684,12 @@ class RepProfilesBase(ABC):
             shape = res.get_dset_properties(cf_dset)[0]
 
         if len(rev_summary) > shape[1]:
-            e = ('reV SC summary table has {} sc points and CF dataset "{}" '
-                 'has {} profiles. There should never be more SC points than '
-                 'CF profiles.'.format(len(rev_summary), cf_dset, shape[1]))
-            logger.error(e)
-            raise FileInputError(e)
+            msg = ('WARNING: reV SC summary table has {} sc points and CF '
+                   'dataset "{}" has {} profiles. There should never be more '
+                   'SC points than CF profiles.'
+                   .format(len(rev_summary), cf_dset, shape[1]))
+            logger.warning(msg)
+            warn(msg)
 
     def _init_profiles(self):
         """Initialize the output rep profiles attribute."""

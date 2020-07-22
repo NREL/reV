@@ -1084,7 +1084,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                     offshore_meta_cols=offshore_meta_cols)
 
         if not any(summary):
-            e = ('Supply curve selfregation found no non-excluded SC points. '
+            e = ('Supply curve aggregation found no non-excluded SC points. '
                  'Please check your exclusions or subset SC GID selection.')
             logger.error(e)
             raise EmptySupplyCurvePointError(e)
