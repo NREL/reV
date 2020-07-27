@@ -10,7 +10,7 @@ import pprint
 import time
 from warnings import warn
 
-from rev.config.cli_project_points import _parse_lat_lons, _parse_regions
+from reV.config.cli_project_points import _parse_lat_lons, _parse_regions
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
@@ -323,11 +323,11 @@ def _parse_points(ctx):
     sam_files = ctx.obj['SAM_FILES']
     res_file = ctx.obj['RES_FILE']
     curtailment = ctx.obj['CURTAILMENT']
-    lat_lon_fpath = ctx.obj['LAT_LON_FPATH']
-    lat_lon_coords = ctx.obj['LAT_LON_COORDS']
-    regions = ctx.obj['REGIONS']
-    region = ctx.obj['REGION']
-    region_col = ctx.obj['REGION_COL']
+    lat_lon_fpath = ctx.obj.get('LAT_LON_FPATH', None)
+    lat_lon_coords = ctx.obj.get('LAT_LON_COORDS', None)
+    regions = ctx.obj.get('REGIONS', None)
+    region = ctx.obj.get('REGION', None)
+    region_col = ctx.obj.get('REGION_COL', 'state')
 
     i = 0
     if points is not None:

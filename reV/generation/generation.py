@@ -335,6 +335,7 @@ class Gen:
         else:
             raise TypeError('Output request must be str, list, or tuple but '
                             'received: {}'.format(type(req)))
+
         return output_request
 
     @staticmethod
@@ -362,6 +363,7 @@ class Gen:
         """Set the 5-minute time index if res_file is a multi-file directory"""
         with MultiFileResource(self._res_file) as mres:
             ti = mres.time_index
+
         self._time_index = self.handle_leap_ti(
             ti, drop_leap=self._drop_leap)
 
@@ -377,8 +379,8 @@ class Gen:
             from rex.utilities.downscale import make_time_index
             year = self.time_index.year[0]
             ti = make_time_index(year, ds_freq)
-            self._time_index = self.handle_leap_ti(
-                ti, drop_leap=self._drop_leap)
+            self._time_index = self.handle_leap_ti(ti,
+                                                   drop_leap=self._drop_leap)
             logger.info('reV solar generation running with temporal '
                         'downscaling frequency "{}" with final '
                         'time_index length {}'
@@ -827,6 +829,7 @@ class Gen:
 
         if self._year is None:
             self._year = int(self.time_index.year[0])
+
         return self._year
 
     @staticmethod
@@ -1052,6 +1055,7 @@ class Gen:
         out = {}
         for x in futures:
             out.update(x)
+
         return out
 
     def unpack_output(self, site_gid, site_output):
@@ -1086,6 +1090,7 @@ class Gen:
             if isinstance(value, (list, tuple, np.ndarray)):
                 if not isinstance(value, np.ndarray):
                     value = np.array(value)
+
                 self._out[var][:, i] = value.T
             elif value != 0:
                 self._out[var][i] = value
@@ -1113,8 +1118,7 @@ class Gen:
         global_site_index = self.project_points.sites.index(site_gid)
 
         if not out_index:
-            return global_site_index
-
+            output_index = global_site_index
         else:
             output_index = global_site_index - self.out_chunk[0]
             if output_index < 0:
@@ -1124,7 +1128,8 @@ class Gen:
                                  'index chunk of {}'
                                  .format(site_gid, global_site_index,
                                          self.out_chunk))
-            return output_index
+
+        return output_index
 
     def flush(self):
         """Flush generation data in self.out attribute to disk in .h5 format.
@@ -1469,6 +1474,7 @@ class Gen:
                 logger.debug('Running serial generation for: {}'.format(pc))
                 for pc_sub in pc:
                     gen.out = gen.run(pc_sub, **kwargs)
+
                 gen.flush()
             else:
                 logger.debug('Running parallel generation for: {}'.format(pc))

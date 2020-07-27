@@ -12,7 +12,7 @@ import pandas as pd
 import os
 import pytest
 
-from rex.utilities.exceptions import ResourceKeyError
+from rex.utilities.exceptions import ResourceRuntimeError
 
 from reV.config.base_analysis_config import AnalysisConfig
 from reV.config.rep_profiles_config import RepProfilesConfig
@@ -50,13 +50,9 @@ def test_clearsky():
         TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
     pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pvwattsv5',
                        res_file=res_file)
-    try:
+    with pytest.raises(ResourceRuntimeError):
         # Get the SAM resource object
         RevPySam.get_sam_res(res_file, pp, pp.tech)
-        assert False
-    except ResourceKeyError:
-        # Should look for clearsky_dni and not find it in RI data
-        assert True
 
 
 @pytest.mark.parametrize(('start', 'interval'),
