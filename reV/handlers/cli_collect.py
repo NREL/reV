@@ -339,4 +339,8 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
 
 
 if __name__ == '__main__':
-    main(obj={})
+    try:
+        main(obj={})
+    except Exception:
+        logger.exception('Error running reV Collection CLI')
+        raise

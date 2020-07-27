@@ -200,7 +200,7 @@ class ProjectPoints:
     h_list = ProjectPoints.h
     """
 
-    def __init__(self, points, sam_config, tech, res_file=None,
+    def __init__(self, points, sam_config, tech=None, res_file=None,
                  curtailment=None):
         """
         Parameters
@@ -214,10 +214,11 @@ class ProjectPoints:
             config file str. If it's a list, it is mapped to the sorted list
             of unique configs requested by points csv. Can also be a
             pre loaded SAMConfig object.
-        tech : str
+        tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed.
+            The string should be lower-cased with spaces and _ removed,
+            by default None
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
@@ -234,7 +235,7 @@ class ProjectPoints:
         self._df = self._parse_points(points, res_file=res_file)
         self._sam_config_obj = self._parse_sam_config(sam_config)
         self._check_points_config_mapping()
-        self._tech = tech
+        self._tech = str(tech)
         self._h = None
         self._curtailment = self._parse_curtailment(curtailment)
 
@@ -750,7 +751,7 @@ class ProjectPoints:
         return lat_lons
 
     @classmethod
-    def lat_lon_coords(cls, lat_lons, res_file, sam_config, tech,
+    def lat_lon_coords(cls, lat_lons, res_file, sam_config, tech=None,
                        curtailment=None):
         """
         Generate ProjectPoints for gids nearest to given latitude longitudes
@@ -767,10 +768,11 @@ class ProjectPoints:
             config file str. If it's a list, it is mapped to the sorted list
             of unique configs requested by points csv. Can also be a
             pre loaded SAMConfig object.
-        tech : str
+        tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed.
+            The string should be lower-cased with spaces and _ removed,
+            by default None
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
@@ -799,16 +801,30 @@ class ProjectPoints:
         with res_cls(res_file) as f:
             gids = f.lat_lon_gid(lat_lons)  # pylint: disable=no-member
 
+        if len(gids) != len(np.unique(gids)):
+            uniques, pos, counts = np.unique(gids, return_counts=True,
+                                             return_inverse=True)
+            duplicates = {}
+            for idx in np.where(counts > 1)[0]:
+                duplicate_lat_lons = lat_lons[np.where(pos == idx)[0]]
+                duplicates[uniques[idx]] = duplicate_lat_lons
+
+            msg = ('reV Cannot currently handle duplicate Resource gids! The '
+                   'given latitude and longitudes map to the same gids:\n{}'
+                   .format(duplicates))
+            logger.error(msg)
+            raise RuntimeError(msg)
+
         gids = gids.tolist()
         logger.debug('- Resource gids:\n{}'.format(gids))
 
-        pp = cls(gids, sam_config, tech, res_file=res_file,
+        pp = cls(gids, sam_config, tech=tech, res_file=res_file,
                  curtailment=curtailment)
 
         return pp
 
     @classmethod
-    def regions(cls, regions, res_file, sam_config, tech,
+    def regions(cls, regions, res_file, sam_config, tech=None,
                 curtailment=None):
         """
         Generate ProjectPoints for gids nearest to given latitude longitudes
@@ -825,10 +841,11 @@ class ProjectPoints:
             config file str. If it's a list, it is mapped to the sorted list
             of unique configs requested by points csv. Can also be a
             pre loaded SAMConfig object.
-        tech : str
+        tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed.
+            The string should be lower-cased with spaces and _ removed,
+            by default None
         curtailment : NoneType | dict | str | config.curtailment.Curtailment
             Inputs for curtailment parameters. If not None, curtailment inputs
             are expected. Can be:
@@ -859,7 +876,7 @@ class ProjectPoints:
                 logger.debug('- Resource gids:\n{}'.format(gids))
                 points.append(gids.tolist())
 
-        pp = cls(points, sam_config, tech, res_file=res_file,
+        pp = cls(points, sam_config, tech=tech, res_file=res_file,
                  curtailment=curtailment)
 
         return pp

@@ -3,6 +3,7 @@
 reV command line interface (CLI).
 """
 import click
+import logging
 
 from reV.batch.cli_batch import from_config as run_batch_from_config
 from reV.batch.cli_batch import valid_config_keys as batch_keys
@@ -31,6 +32,8 @@ from reV.qa_qc.cli_qa_qc import from_config as run_qa_qc_from_config
 from reV.qa_qc.cli_qa_qc import valid_config_keys as qa_qc_keys
 
 from rex.utilities.cli_dtypes import STR
+
+logger = logging.getLogger(__name__)
 
 
 @click.group()
@@ -302,4 +305,8 @@ def valid_qa_qc_keys(ctx):
 
 
 if __name__ == '__main__':
-    main(obj={})
+    try:
+        main(obj={})
+    except Exception:
+        logger.exception('Error running reV CLI')
+        raise

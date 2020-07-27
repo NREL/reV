@@ -350,5 +350,5 @@ if __name__ == '__main__':
     try:
         main(obj={})
     except Exception:
-        logger.exception('Error running reV rep profiles CLI.')
+        logger.exception('Error running reV Rep Profiles CLI.')
         raise

@@ -456,5 +456,5 @@ if __name__ == '__main__':
     try:
         main(obj={})
     except Exception:
-        logger.exception('Error running reV SC aggregation CLI.')
+        logger.exception('Error running reV SC Aggregation CLI.')
         raise

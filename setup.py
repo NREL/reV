@@ -70,7 +70,9 @@ setup(
                             "reV-offshore=reV.offshore.cli_offshore:main",
                             ("reV-rep-profiles=reV.rep_profiles."
                              "cli_rep_profiles:main"),
-                            "reV-QA-QC=reV.qa_qc.cli_qa_qc:main"
+                            "reV-QA-QC=reV.qa_qc.cli_qa_qc:main",
+                            ("reV-project-points=reV.config."
+                             "cli_project_points:main")
                             ],
     },
     include_package_data=True,
