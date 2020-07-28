@@ -14,6 +14,7 @@ Submodules
    reV.config.base_analysis_config
    reV.config.base_config
    reV.config.batch
+   reV.config.cli_project_points
    reV.config.collection
    reV.config.curtailment
    reV.config.execution
