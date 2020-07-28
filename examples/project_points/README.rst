@@ -112,7 +112,7 @@ of ways:
     regions = {'Providence': 'county', 'Kent': 'county'}
 
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
-    sam_files = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
+    sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
     display(pp.df)

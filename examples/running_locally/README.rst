@@ -1,167 +1,91 @@
-Running reV locally
-===================
+Run reV locally
+===============
 
 `reV Gen <https://nrel.github.io/reV/reV/reV.generation.generation.html#reV.generation.generation.Gen>`_
 and `reV Econ <https://nrel.github.io/reV/reV/reV.econ.econ.html#reV.econ.econ.Econ>`_
-use `Project Points <https://nrel.github.io/reV/reV/reV.config.project_points.html#reV.config.project_points.ProjectPoints>`_ to define which resource sites (`gids`) to run through
-`PySAM <https://pysam.readthedocs.io/en/latest/>`_ and how.
+can be run locally using resource .h5 files stored locally or available via
+`HSDS <https://github.com/nrel/hsds-examples>`_.
 
-At its most basic Project Points consists of the resource ``gid``s and the
-``SAM`` configuration file associated it. This can be definited in a variety
-of ways:
+reV Gen
+-------
 
-1) From a project points .csv and a single or dictionary of ``SAM``
-   configuration files:
+reV Generation using `PySAM <https://pysam.readthedocs.io/en/latest/>`_ to
+compute technologically specific capcity factor means and profiles. reV Gen
+uses ``SAM`` technology terms and input configuration files
 
-.. code-block:: python
+windpower
++++++++++
 
-    import os
-    from reV import TESTDATADIR
-    from reV.config.project_points import ProjectPoints
-
-    fpp = os.path.join(TESTDATADIR, 'project_points/pp_offshore.csv')
-    sam_files = {'onshore': os.path.join(
-                 TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
-                 'offshore': os.path.join(
-                 TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
-
-    pp = ProjectPoints(fpp, sam_files)
-    print(pp.df)
-
-                gid   config
-    0       2114919  onshore
-    1       2114920  onshore
-    2       2114921  onshore
-    3       2114922  onshore
-    4       2114923  onshore
-    ...         ...      ...
-    124402  2239321  onshore
-    124403  2239322  onshore
-    124404  2239323  onshore
-    124405  2239324  onshore
-    124406  2239325  onshore
-
-    [124407 rows x 2 columns]
-
-2) From a list or slice of gids and a single ``SAM`` configuration file:
+Compute wind capacity factors for a given set of latitude and longitude
+coordinates:
 
 .. code-block:: python
 
     import os
     from reV import TESTDATADIR
     from reV.config.project_points import ProjectPoints
+    from reV.generation.generation import Gen
 
-    sites = slice(0, 100)  # or
-    sites = [0, 5, 6, 9, 12]
-
-    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
-
-    pp = ProjectPoints(sites, sam_file)
-    print(pp.df)
-
-       gid                                             config
-    0    0  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    1    5  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    2    6  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    3    9  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    4   12  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-
-3) From a pair or pairs of latitude and longitude coordinates and a single
-   ``SAM`` configuration file (NOTE: access to the resource file to be used
-   for ``reV Gen`` or ``reV Econ`` is needed to find the associated resource
-   gids):
-
-.. code-block:: python
-
-    import os
-    from reV import TESTDATADIR
-    from reV.config.project_points import ProjectPoints
-
-    lat_lons = [41.77, -71.74]
-    lat_lons = np.array([[ 41.77, -71.74],
-                         [ 41.73, -71.7 ],
-                         [ 42.01, -71.7 ],
-                         [ 40.97, -71.74],
-                         [ 41.49, -71.78]])
+    lat_lons = np.array([[ 41.25, -71.66],
+                         [ 41.05, -71.74],
+                         [ 41.45, -71.66],
+                         [ 41.97, -71.78],
+                         [ 41.65, -71.74],
+                         [ 41.53, -71.7 ],
+                         [ 41.25, -71.7 ],
+                         [ 41.05, -71.78],
+                         [ 42.01, -71.74],
+                         [ 41.45, -71.78]])
 
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
-    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
+    sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
 
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_file)
-    print(pp.df)
+    gen = Gen.reV_run(tech='windpower', points=pp, sam_files=sam_file,
+                      res_file=res_file, max_workers=1, fout=None,
+                      output_request=('cf_mean', 'cf_profile'))
+    print(gen.out['cf_profile'])
 
-    WARNING: points are not in sequential order and will be sorted! The
-    original order is being preserved under column "points_order"
+    [[0.319 0.538 0.287 ... 0.496 0.579 0.486]
+     [0.382 0.75  0.474 ... 0.595 0.339 0.601]
+     [0.696 0.814 0.724 ... 0.66  0.466 0.677]
+     ...
+     [0.833 0.833 0.823 ... 0.833 0.833 0.833]
+     [0.782 0.833 0.833 ... 0.833 0.833 0.833]
+     [0.756 0.801 0.833 ... 0.833 0.833 0.833]]
 
-       gid                                             config  points_order
-    0   31  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             4
-    1   41  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             3
-    2   49  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             0
-    3   67  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             1
-    4   79  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             2
+pvwatts
++++++++
 
-4) A geographic region or regions and a single ``SAM`` configuration file
-   (NOTE: access to the resource file to be used for ``reV Gen`` or
-   ``reV Econ`` is needed to find the associated resource gids):
+NOTE: ``pvwattsv5`` and ``pvwattsv7`` are both available from reV.
+
+Compute pvcapacity factors for all resource gids in a Rhode Island:
 
 .. code-block:: python
 
     import os
     from reV import TESTDATADIR
     from reV.config.project_points import ProjectPoints
+    from reV.generation.generation import Gen
 
-    # Of form {region : region_column}
-    regions = {'Rhode Island': 'state'}  # or
-    regions = {'Providence': 'county', 'Kent': 'county'}
+    regions = {'Rhode Island': 'state'}
 
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
-    sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
+    sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
-    print(pp.df)
+    gen = Gen.reV_run(tech='pvwattsv5', points=pp, sam_files=sam_file,
+                      res_file=res_file, max_workers=1, fout=None,
+                      output_request=('cf_mean', 'cf_profile'))
+    print(gen.out['cf_mean'])
 
-        gid                                             config
-    0    13  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    1    14  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    2    18  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    3    19  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    4    29  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    5    32  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    6    33  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    7    38  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    8    40  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    9    48  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    10   49  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    11   52  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    12   53  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    13   55  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    14   67  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    15   69  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    16   71  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    17   77  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    18   78  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    19   82  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    20   83  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    21   94  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    22   96  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    23   17  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    24   25  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    25   26  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    26   36  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    27   44  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    28   59  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    29   68  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    30   87  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    31   90  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    32   98  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-
+    [0.183 0.166 0.177 0.175 0.167 0.183 0.176 0.175 0.176 0.177]
 
 Command Line Interface (CLI)
 ----------------------------
 
-Options 3 and 4 above can be run from the Command Line using the
-`reV-project-points <https://nrel.github.io/reV/reV/reV.config.cli_project_points.html#rev-project-points>`_
-CLI
+reV Gen can also be run from the command line and will output the results to
+a .h5 file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
 
 .. code-block:: bash
 
@@ -171,7 +95,7 @@ CLI
     res_file=${TESTDATADIR}/nsrdb/ri_100_nsrdb_2012.h5
     sam_file=${TESTDATADIR}/SAM/wind_gen_standard_losses_0.json
 
-    reV-project-points --fpath=${out_file} --res_file=${res_file} --sam_file=${sam_file} from-lat-lons --lat_lon_coords 41.77 -71.74
+    reV-Gen --fpath=${out_file} --res_file=${res_file} --sam_file=${sam_file} from-lat-lons --lat_lon_coords 41.77 -71.74
 
 .. code-block:: bash
 

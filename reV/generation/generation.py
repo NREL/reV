@@ -1046,7 +1046,20 @@ class Gen:
         out : dict
             Dictionary of generation results from SAM.
         """
-        return self._out
+        out = {}
+        for k, v in self._out.items():
+            if k in Gen.OUT_ATTRS:
+                scale_factor = Gen.OUT_ATTRS[k].get('scale_factor', 1)
+            else:
+                scale_factor = 1
+
+            if scale_factor != 1:
+                v = v.astype('float32')
+                v /= scale_factor
+
+            out[k] = v
+
+        return out
 
     @out.setter
     def out(self, result):
@@ -1195,7 +1208,7 @@ class Gen:
         """
 
         # handle output file request if file is specified and .out is not empty
-        if isinstance(self._fpath, str) and self.out:
+        if isinstance(self._fpath, str) and self._out:
             logger.info('Flushing outputs to disk, target file: "{}"'
                         .format(self._fpath))
 
@@ -1208,12 +1221,12 @@ class Gen:
                 # iterate through all output requests writing each as a dataset
                 for dset in self.output_request:
 
-                    if len(self.out[dset].shape) == 1:
+                    if len(self._out[dset].shape) == 1:
                         # write array of scalars
-                        f[dset, islice] = self.out[dset]
+                        f[dset, islice] = self._out[dset]
                     else:
                         # write 2D array of profiles
-                        f[dset, :, islice] = self.out[dset]
+                        f[dset, :, islice] = self._out[dset]
 
             logger.debug('Flushed generation output successfully to disk.')
 
@@ -1248,7 +1261,6 @@ class Gen:
             Output dictionary from the SAM reV_run function. Data is scaled
             within this function to the datatype specified in Gen.OUT_ATTRS.
         """
-
         # run generation method for specified technology
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,

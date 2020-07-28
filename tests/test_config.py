@@ -149,8 +149,7 @@ def test_sam_config_kw_replace():
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json'),
                  'offshore': os.path.join(
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
-    res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
-    df = pd.read_csv(fpp, index_col=0)
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
     pp = ProjectPoints(fpp, sam_files, 'windpower')
     pc = PointsControl(pp, sites_per_split=100)
 
