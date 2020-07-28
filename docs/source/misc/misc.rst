@@ -8,6 +8,7 @@ Examples
 ============
 .. toctree::
 
+   examples.project_points
    examples.single_module_execution
    examples.full_pipeline_execution
    examples.batched_execution

@@ -1,6 +1,7 @@
 reV Examples
 ============
-
+`Project Points <https://github.com/NREL/reV/tree/master/examples/project_points>`_
+`Running reV locally <https://github.com/NREL/reV/tree/master/examples/running_locally>`_
 `Eagle Node Requests <https://github.com/NREL/reV/tree/master/examples/eagle_node_requests>`_
 `Single-Module Execution <https://github.com/NREL/reV/tree/master/examples/single_module_execution>`_
 `Full Pipeline Execution <https://github.com/NREL/reV/tree/master/examples/full_pipeline_execution>`_

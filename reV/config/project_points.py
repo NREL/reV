@@ -191,13 +191,14 @@ class PointsControl:
 class ProjectPoints:
     """Class to manage site and SAM input configuration requests.
 
-    Notes
-    -----
-    config_id@site0, SAM_config_dict@site0 = ProjectPoints[0]
-    site_list_or_slice = ProjectPoints.sites
-    site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
-    ProjectPoints_sub = ProjectPoints.split(0, 10, project_points)
-    h_list = ProjectPoints.h
+    Examples
+    --------
+
+    >>> config_id_site0, SAM_config_dict_site0 = ProjectPoints[0]
+    >>> site_list_or_slice = ProjectPoints.sites
+    >>> site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
+    >>> ProjectPoints_sub = ProjectPoints.split(0, 10, project_points)
+    >>> h_list = ProjectPoints.h
     """
 
     def __init__(self, points, sam_config, tech=None, res_file=None,
