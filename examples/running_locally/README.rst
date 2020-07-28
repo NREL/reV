@@ -78,11 +78,11 @@ of ways:
     from reV.config.project_points import ProjectPoints
 
     lat_lons = [41.77, -71.74]
-    lat_lons = array([[ 41.61, -71.74],
-                      [ 41.53, -71.78],
-                      [ 41.13, -71.74],
-                      [ 41.57, -71.7 ],
-                      [ 41.89, -71.78]])
+    lat_lons = array([[ 41.77, -71.74],
+                      [ 41.73, -71.7 ],
+                      [ 42.01, -71.7 ],
+                      [ 40.97, -71.74],
+                      [ 41.49, -71.78]])
 
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
     sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
@@ -91,11 +91,11 @@ of ways:
     display(pp.df)
 
        gid                                             config
-    0   13  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    1   27  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    2   44  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    3   56  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    4   73  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
+    0   49  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
+    1   67  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
+    2   79  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
+    3   41  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
+    4   31  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
 
 4) A geographic region or regions and a single ``SAM`` configuration file
    (NOTE: access to the resource file to be used for ``reV Gen`` or

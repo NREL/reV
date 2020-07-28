@@ -310,7 +310,7 @@ class ProjectPoints:
             raise KeyError('Project points data must contain "gid" and '
                            '"config" column headers.')
 
-        return df
+        return df.sort_values('gid').reset_index(drop=True)
 
     @staticmethod
     def _parse_csv(fname):
@@ -378,6 +378,7 @@ class ProjectPoints:
                             .format(type(points)))
 
         df['config'] = None
+
         return df
 
     @property

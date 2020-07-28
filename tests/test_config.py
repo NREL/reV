@@ -198,7 +198,7 @@ def test_regions(counties):
     regions = {c: 'county' for c in counties}
     pp = ProjectPoints.regions(regions, res_file, sam_files)
 
-    assert sorted(baseline) == sorted(pp.sites)
+    assert sorted(baseline) == pp.sites
 
 
 @pytest.mark.parametrize('sites', [1, 2, 5, 10])
@@ -219,7 +219,7 @@ def test_coords(sites):
     lat_lons = meta.loc[gids, ['latitude', 'longitude']].values
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_files)
 
-    assert gids == pp.sites
+    assert sorted(gids) == pp.sites
 
 
 def test_duplicate_coords():
