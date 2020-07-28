@@ -235,7 +235,11 @@ def test_duplicate_coords():
     duplicates = meta.loc[[2, 3, 3, 4], ['latitude', 'longitude']].values
 
     with pytest.raises(RuntimeError):
-        pp = ProjectPoints.lat_lon_coords(duplicates, res_file, sam_files)
+        ProjectPoints.lat_lon_coords(duplicates, res_file, sam_files)
+
+    regions = {'Kent': 'county', 'Rhode Island': 'state'}
+    with pytest.raises(RuntimeError):
+        ProjectPoints.regions(regions, res_file, sam_files)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

@@ -833,6 +833,83 @@ class Gen:
         return self._year
 
     @staticmethod
+    def _pp_to_pc(points, points_range, sam_files, tech, sites_per_worker=None,
+                  res_file=None, curtailment=None):
+        """
+        Create ProjectControl from ProjectPoints
+
+        Parameters
+        ----------
+        points : slice | list | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
+        sam_files : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
+        tech : str
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
+        sites_per_worker : int
+            Number of sites to run in series on a worker. None defaults to the
+            resource file chunk size.
+        res_file : str
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
+
+        Returns
+        -------
+        pc : reV.config.project_points.PointsControl
+            PointsControl object instance.
+        """
+        if not isinstance(points, ProjectPoints):
+            # make Project Points instance
+            pp = ProjectPoints(points, sam_files, tech=tech,
+                               res_file=res_file, curtailment=curtailment)
+        else:
+            pp = ProjectPoints(points.df, sam_files, tech=tech,
+                               res_file=res_file, curtailment=curtailment)
+
+        #  make Points Control instance
+        pc = None
+        if points_range is not None:
+            # PointsControl is for just a subset of the project points...
+            # this is the case if generation is being initialized on one
+            # of many HPC nodes in a large project
+            pc = PointsControl.split(points_range[0], points_range[1], pp,
+                                     sites_per_split=sites_per_worker)
+        elif points_range is None and res_file is not None:
+            # PointsControl is for all of the project points
+            if os.path.isfile(res_file):
+                with Outputs(res_file, mode='r') as f:
+                    if 'gid' in f.meta:
+                        gid0 = f.meta['gid'].values[0]
+                        gid1 = f.meta['gid'].values[-1] + 1
+                        pc = PointsControl.split(
+                            gid0, gid1, pp,
+                            sites_per_split=sites_per_worker)
+
+        if pc is None:
+            # PointsControl is for all of the project points
+            pc = PointsControl(pp, sites_per_split=sites_per_worker)
+
+        return pc
+
+    @staticmethod
     def get_pc(points, points_range, sam_files, tech, sites_per_worker=None,
                res_file=None, curtailment=None):
         """Get a PointsControl instance.
@@ -890,33 +967,10 @@ class Gen:
         logger.debug('Sites per worker being set to {} for Gen/Econ '
                      'PointsControl.'.format(sites_per_worker))
 
-        if isinstance(points, (slice, list, str)):
-            # make Project Points instance
-            pp = ProjectPoints(points, sam_files, tech=tech, res_file=res_file,
-                               curtailment=curtailment)
-
-            #  make Points Control instance
-            pc = None
-            if points_range is not None:
-                # PointsControl is for just a subset of the project points...
-                # this is the case if generation is being initialized on one
-                # of many HPC nodes in a large project
-                pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                         sites_per_split=sites_per_worker)
-            elif points_range is None and res_file is not None:
-                # PointsControl is for all of the project points
-                if os.path.isfile(res_file):
-                    with Outputs(res_file, mode='r') as f:
-                        if 'gid' in f.meta:
-                            gid0 = f.meta['gid'].values[0]
-                            gid1 = f.meta['gid'].values[-1] + 1
-                            pc = PointsControl.split(
-                                gid0, gid1, pp,
-                                sites_per_split=sites_per_worker)
-
-            if pc is None:
-                # PointsControl is for all of the project points
-                pc = PointsControl(pp, sites_per_split=sites_per_worker)
+        if isinstance(points, (slice, list, str, ProjectPoints)):
+            pc = Gen._pp_to_pc(points, points_range, sam_files, tech,
+                               sites_per_worker=sites_per_worker,
+                               res_file=res_file, curtailment=curtailment)
 
         elif isinstance(points, PointsControl):
             # received a pre-intialized instance of pointscontrol

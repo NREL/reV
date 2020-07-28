@@ -3,11 +3,11 @@
 reV Project Points Configuration
 """
 import logging
-import pandas as pd
+from math import ceil
 import numpy as np
 import os
+import pandas as pd
 from warnings import warn
-from math import ceil
 
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 from reV.config.sam_config import SAMConfig
@@ -310,7 +310,17 @@ class ProjectPoints:
             raise KeyError('Project points data must contain "gid" and '
                            '"config" column headers.')
 
-        return df.sort_values('gid').reset_index(drop=True)
+        gids = df['gid'].values
+        if not np.array_equal(np.sort(gids), gids):
+            msg = ('WARNING: points are not in sequential order and will be '
+                   'sorted! The original order is being preserved under '
+                   'column "points_order"')
+            logger.warning(msg)
+            warn(msg)
+            df['points_order'] = df.index.values
+            df = df.sort_values('gid').reset_index(drop=True)
+
+        return df
 
     @staticmethod
     def _parse_csv(fname):
@@ -823,6 +833,12 @@ class ProjectPoints:
         pp = cls(gids, sam_config, tech=tech, res_file=res_file,
                  curtailment=curtailment)
 
+        if 'points_order' in pp.df:
+            lat_lons = lat_lons[pp.df['points_order'].values]
+
+        pp._df['latitude'] = lat_lons[:, 0]
+        pp._df['longitude'] = lat_lons[:, 1]
+
         return pp
 
     @classmethod
@@ -872,14 +888,29 @@ class ProjectPoints:
         logger.info('Extracting ProjectPoints for desired regions')
         points = []
         with res_cls(res_file) as f:
+            meta = f.meta
             for region, region_col in regions.items():
                 logger.debug('- {}: {}'.format(region_col, region))
                 # pylint: disable=no-member
                 gids = f.region_gids(region, region_col=region_col)
                 logger.debug('- Resource gids:\n{}'.format(gids))
+                if points:
+                    duplicates = np.intersect1d(gids, points).tolist()
+                    if duplicates:
+                        msg = ('reV Cannot currently handle duplicate '
+                               'Resource gids! The given regions containg the '
+                               'same gids:\n{}'.format(duplicates))
+                        logger.error(msg)
+                        raise RuntimeError(msg)
+
                 points.extend(gids.tolist())
 
         pp = cls(points, sam_config, tech=tech, res_file=res_file,
                  curtailment=curtailment)
+
+        meta = meta.loc[pp.sites]
+        cols = list(set(regions.values()))
+        for c in cols:
+            pp._df[c] = meta[c].values
 
         return pp

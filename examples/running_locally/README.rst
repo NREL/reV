@@ -1,5 +1,5 @@
-reV Project Points
-==================
+Running reV locally
+===================
 
 `reV Gen <https://nrel.github.io/reV/reV/reV.generation.generation.html#reV.generation.generation.Gen>`_
 and `reV Econ <https://nrel.github.io/reV/reV/reV.econ.econ.html#reV.econ.econ.Econ>`_
@@ -26,7 +26,7 @@ of ways:
                  TESTDATADIR, 'SAM/wind_gen_standard_losses_1.json')}
 
     pp = ProjectPoints(fpp, sam_files)
-    display(pp.df)
+    print(pp.df)
 
                 gid   config
     0       2114919  onshore
@@ -57,7 +57,7 @@ of ways:
     sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
 
     pp = ProjectPoints(sites, sam_file)
-    display(pp.df)
+    print(pp.df)
 
        gid                                             config
     0    0  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
@@ -78,24 +78,27 @@ of ways:
     from reV.config.project_points import ProjectPoints
 
     lat_lons = [41.77, -71.74]
-    lat_lons = array([[ 41.77, -71.74],
-                      [ 41.73, -71.7 ],
-                      [ 42.01, -71.7 ],
-                      [ 40.97, -71.74],
-                      [ 41.49, -71.78]])
+    lat_lons = np.array([[ 41.77, -71.74],
+                         [ 41.73, -71.7 ],
+                         [ 42.01, -71.7 ],
+                         [ 40.97, -71.74],
+                         [ 41.49, -71.78]])
 
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
     sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
 
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_file)
-    display(pp.df)
+    print(pp.df)
 
-       gid                                             config
-    0   49  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    1   67  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    2   79  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    3   41  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
-    4   31  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
+    WARNING: points are not in sequential order and will be sorted! The
+    original order is being preserved under column "points_order"
+
+       gid                                             config  points_order
+    0   31  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             4
+    1   41  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             3
+    2   49  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             0
+    3   67  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             1
+    4   79  /Users/mrossol/Git_Repos/reV/tests/data/SAM/na...             2
 
 4) A geographic region or regions and a single ``SAM`` configuration file
    (NOTE: access to the resource file to be used for ``reV Gen`` or
@@ -115,7 +118,7 @@ of ways:
     sam_file = os.path.join(TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
-    display(pp.df)
+    print(pp.df)
 
         gid                                             config
     0    13  /Users/mrossol/Git_Repos/reV/tests/data/SAM/wi...
