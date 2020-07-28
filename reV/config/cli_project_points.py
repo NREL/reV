@@ -6,7 +6,6 @@ import click
 import logging
 
 from reV.config.project_points import ProjectPoints
-from reV.utilities.cli_dtypes import SAMFILES
 from reV.utilities.exceptions import ProjectPointsValueError
 
 from rex.utilities.cli_dtypes import STR
@@ -107,29 +106,21 @@ def _parse_regions(regions, region, region_col):
 
 @click.group()
 @click.option('--fpath', '-f', type=click.Path(), required=True,
-              help='.csv file path to save project points to')
+              help='.csv file path to save project points to (required)')
 @click.option('--res_file', '-rf', required=True,
               help=('Filepath to single resource file, multi-h5 directory, '
-                    'or /h5_dir/prefix*suffix.'))
-@click.option('--tech', '-t', type=STR, default=None,
-              help='reV tech to analyze (required).')
-@click.option('--sam_files', '-sf', required=True, type=SAMFILES,
-              help='SAM config files (required) (str, dict, or list).')
-@click.option('--curtailment', '-curt', type=click.Path(exists=True),
-              default=None,
-              help=('JSON file with curtailment inputs parameters. '
-                    'Default is None (no curtailment).'))
+                    'or /h5_dir/prefix*suffix (required)'))
+@click.option('--sam_file', '-sf', required=True,
+              type=click.Path(exists=True), help='SAM config file (required)')
 @click.option('--verbose', '-v', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def main(ctx, fpath, res_file, tech, sam_files, curtailment, verbose):
+def main(ctx, fpath, res_file, sam_file, verbose):
     """reV ProjectPoints generator"""
     ctx.ensure_object(dict)
     ctx.obj['FPATH'] = fpath
     ctx.obj['RES_FILE'] = res_file
-    ctx.obj['TECH'] = tech
-    ctx.obj['SAM_FILES'] = sam_files
-    ctx.obj['CURTAILMENT'] = curtailment
+    ctx.obj['SAM_FILE'] = sam_file
     ctx.obj['VERBOSE'] = verbose
 
     if verbose:
@@ -155,9 +146,7 @@ def from_lat_lons(ctx, lat_lon_fpath, lat_lon_coords):
     logger.info('Creating ProjectPoints from {} and saving to {}'
                 .format(lat_lons, ctx.obj['FPATH']))
     pp = ProjectPoints.lat_lon_coords(lat_lons, ctx.obj['RES_FILE'],
-                                      ctx.obj['SAM_FILES'],
-                                      tech=ctx.obj['TECH'],
-                                      curtailment=ctx.obj['CURTAILMENT'])
+                                      ctx.obj['SAM_FILE'])
     pp.df.to_csv(ctx.obj['FPATH'])
 
 
@@ -176,9 +165,7 @@ def from_regions(ctx, regions, region, region_col):
     logger.info('Creating ProjectPoints from {} and saving to {}'
                 .format(regions, ctx.obj['FPATH']))
     pp = ProjectPoints.regions(regions, ctx.obj['RES_FILE'],
-                               ctx.obj['SAM_FILES'],
-                               tech=ctx.obj['TECH'],
-                               curtailment=ctx.obj['CURTAILMENT'])
+                               ctx.obj['SAM_FILE'])
     pp.df.to_csv(ctx.obj['FPATH'])
 
 
