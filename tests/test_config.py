@@ -7,11 +7,12 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-
-import pandas as pd
+import numpy as np
 import os
+import pandas as pd
 import pytest
 
+from rex import Resource
 from rex.utilities.exceptions import ResourceRuntimeError
 
 from reV.config.base_analysis_config import AnalysisConfig
@@ -46,9 +47,8 @@ def test_clearsky():
     Test Clearsky
     """
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
-    sam_config_dict = os.path.join(
-        TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
-    pp = ProjectPoints(slice(0, 10), sam_config_dict, 'pvwattsv5',
+    sam_files = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
+    pp = ProjectPoints(slice(0, 10), sam_files, 'pvwattsv5',
                        res_file=res_file)
     with pytest.raises(ResourceRuntimeError):
         # Get the SAM resource object
@@ -180,6 +180,62 @@ def test_sam_config_kw_replace():
         if 'offshore' in ipc.project_points.sam_configs:
             config = ipc.project_points.sam_configs['offshore']
             assert 'turb_generic_loss' in config
+
+
+@pytest.mark.parametrize('counties', [['Washington'], ['Providence', 'Kent']])
+def test_regions(counties):
+    """
+    Test ProjectPoint.regions class method
+    """
+    res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
+    sam_files = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
+
+    with Resource(res_file) as f:
+        meta = f.meta
+
+    baseline = meta.loc[meta['county'].isin(counties)].index.values.tolist()
+
+    regions = {c: 'county' for c in counties}
+    pp = ProjectPoints.regions(regions, res_file, sam_files)
+
+    assert sorted(baseline) == sorted(pp.sites)
+
+
+@pytest.mark.parametrize('sites', [1, 2, 5, 10])
+def test_coords(sites):
+    """
+    Test ProjectPoint.lat_lon_coords class method
+    """
+    res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
+    sam_files = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
+
+    with Resource(res_file) as f:
+        meta = f.meta
+
+    gids = np.random.choice(meta.index.values, sites, replace=False).tolist()
+    if not isinstance(gids, list):
+        gids = [gids]
+
+    lat_lons = meta.loc[gids, ['latitude', 'longitude']].values
+    pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_files)
+
+    assert gids == pp.sites
+
+
+def test_duplicate_coords():
+    """
+    Test ProjectPoint.lat_lon_coords duplicate coords error
+    """
+    res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
+    sam_files = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
+
+    with Resource(res_file) as f:
+        meta = f.meta
+
+    duplicates = meta.loc[[2, 3, 3, 4], ['latitude', 'longitude']].values
+
+    with pytest.raises(RuntimeError):
+        pp = ProjectPoints.lat_lon_coords(duplicates, res_file, sam_files)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

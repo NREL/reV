@@ -66,7 +66,7 @@ def _parse_regions(regions, region, region_col):
     ----------
     regions : str
         json string or file path to .json containing regions of
-        interest containing regions of interest
+        interest in the form {'region': 'region_column'}
     region : str
         Region to extract
     region_col : str
@@ -86,13 +86,13 @@ def _parse_regions(regions, region, region_col):
 
     if region is not None:
         if regions is None:
-            regions = {region_col: region}
+            regions = {region: region_col}
         else:
-            if region in regions.values():
+            if region in regions:
                 msg = ("Multiple values for {}: {} were provided!"
-                       .format(region_col, region))
+                       .format(region, region_col))
             else:
-                regions.update({region_col: region})
+                regions.update({region: region_col})
 
     if regions is None:
         msg = ("At least a single 'region' and 'region-col' must be "

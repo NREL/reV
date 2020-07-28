@@ -529,7 +529,7 @@ class ProjectPoints:
             List of sites belonging to this instance of ProjectPoints. The type
             is list if possible. Will be a slice only if slice stop is None.
         """
-        return list(self.df['gid'].values)
+        return self.df['gid'].values.tolist()
 
     @property
     def sites_as_slice(self):
@@ -832,7 +832,8 @@ class ProjectPoints:
         Parameters
         ----------
         regions : dict
-            Dictionary of region columns and regions to extract points for
+            Dictionary of regions to extract points for in the form:
+            {'region': 'region_column'}
         res_file : str
             Resource file, needed to fine nearest neighbors
         sam_config : dict | str | list | SAMConfig
@@ -869,12 +870,12 @@ class ProjectPoints:
         logger.info('Extracting ProjectPoints for desired regions')
         points = []
         with res_cls(res_file) as f:
-            for region_col, region in regions.items():
+            for region, region_col in regions.items():
                 logger.debug('- {}: {}'.format(region_col, region))
                 # pylint: disable=no-member
                 gids = f.region_gids(region, region_col=region_col)
                 logger.debug('- Resource gids:\n{}'.format(gids))
-                points.append(gids.tolist())
+                points.extend(gids.tolist())
 
         pp = cls(points, sam_config, tech=tech, res_file=res_file,
                  curtailment=curtailment)
