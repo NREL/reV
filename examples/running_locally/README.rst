@@ -37,8 +37,9 @@ coordinates:
                          [ 42.01, -71.74],
                          [ 41.45, -71.78]])
 
-    res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
-    sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_2012.h5')
+    sam_file = os.path.join(TESTDATADIR,
+                             'SAM/wind_gen_standard_losses_0.json')
 
     pp = ProjectPoints.lat_lon_coords(lat_lons, res_file, sam_file)
     gen = Gen.reV_run(tech='windpower', points=pp, sam_files=sam_file,
@@ -71,7 +72,7 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
     regions = {'Rhode Island': 'state'}
 
     res_file = os.path.join(TESTDATADIR, 'nsrdb/', 'ri_100_nsrdb_2012.h5')
-    sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13_cs.json')
+    sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
 
     pp = ProjectPoints.regions(regions, res_file, sam_file)
     gen = Gen.reV_run(tech='pvwattsv5', points=pp, sam_files=sam_file,
@@ -84,18 +85,19 @@ Compute pvcapacity factors for all resource gids in a Rhode Island:
 Command Line Interface (CLI)
 ----------------------------
 
-reV Gen can also be run from the command line and will output the results to
-a .h5 file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
+`reV-gen <https://nrel.github.io/reV/reV/reV.generation.cli_gen.html#rev-gen>`_
+can also be run from the command line and will output the results to an .h5
+file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
 
 .. code-block:: bash
 
     out_file='./project_points.csv'
 
     TESTDATADIR=reV/tests/data
-    res_file=${TESTDATADIR}/nsrdb/ri_100_nsrdb_2012.h5
+    res_file=${TESTDATADIR}/wtk/ri_100_wtk_2012.h5
     sam_file=${TESTDATADIR}/SAM/wind_gen_standard_losses_0.json
 
-    reV-Gen --fpath=${out_file} --res_file=${res_file} --sam_file=${sam_file} from-lat-lons --lat_lon_coords 41.77 -71.74
+    reV-gen --tech=windpower--fpath=${out_file} --res_file=${res_file} --sam_file=${sam_file} from-lat-lons --lat_lon_coords 41.77 -71.74
 
 .. code-block:: bash
 
@@ -103,6 +105,6 @@ a .h5 file that can be read with `rex.resource.Resource <https://nrel.github.io/
 
     TESTDATADIR=../tests/data
     res_file=${TESTDATADIR}/nsrdb/ri_100_nsrdb_2012.h5
-    sam_file=${TESTDATADIR}/SAM/wind_gen_standard_losses_0.json
+    sam_file=${TESTDATADIR}/SAM/naris_pv_1axis_inv13.json
 
     reV-project-points --fpath=${out_file} --res_file=${res_file} --sam_file=${sam_file} from-regions --region="Rhode Island" --region_col=state
