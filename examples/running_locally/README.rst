@@ -9,7 +9,7 @@ can be run locally using resource .h5 files stored locally or available via
 reV Gen
 -------
 
-reV Generation using `PySAM <https://pysam.readthedocs.io/en/latest/>`_ to
+reV Generation uses `PySAM <https://pysam.readthedocs.io/en/latest/>`_ to
 compute technologically specific capcity factor means and profiles. reV Gen
 uses ``SAM`` technology terms and input configuration files
 
@@ -89,6 +89,12 @@ Command Line Interface (CLI)
 can also be run from the command line and will output the results to an .h5
 file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/rex/rex.resource.html#rex.resource.Resource>`_.
 
+windpower
++++++++++
+
+Compute wind capacity factors for a given set of latitude and longitude
+coordinates:
+
 .. code-block:: bash
 
     out_file='./project_points.csv'
@@ -98,6 +104,13 @@ file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/re
     sam_file=${TESTDATADIR}/SAM/wind_gen_standard_losses_0.json
 
     reV-gen direct --tech=windpower --res_file=${res_file} --sam_files=${sam_file} --lat_lon_coords 41.77 -71.74 local
+
+pvwatts
++++++++
+
+NOTE: ``pvwattsv5`` and ``pvwattsv7`` are both available from reV.
+
+Compute pvcapacity factors for all resource gids in a Rhode Island:
 
 .. code-block:: bash
 

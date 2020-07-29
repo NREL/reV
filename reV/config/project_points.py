@@ -801,7 +801,7 @@ class ProjectPoints:
         """
         lat_lons = cls._parse_lat_lons(lat_lons)
 
-        multi_h5_res, _ = check_res_file(res_file)
+        multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
             res_cls = MultiFileResourceX
         else:
@@ -810,7 +810,7 @@ class ProjectPoints:
         logger.info('Converting latitude longitude coordinates into nearest '
                     'ProjectPoints')
         logger.debug('- (lat, lon) pairs:\n{}'.format(lat_lons))
-        with res_cls(res_file) as f:
+        with res_cls(res_file, hsds=hsds) as f:
             gids = f.lat_lon_gid(lat_lons)  # pylint: disable=no-member
 
         if len(gids) != len(np.unique(gids)):
@@ -879,7 +879,7 @@ class ProjectPoints:
             Initialized ProjectPoints object for points nearest to given
             lat_lons
         """
-        multi_h5_res, _ = check_res_file(res_file)
+        multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
             res_cls = MultiFileResourceX
         else:
@@ -887,7 +887,7 @@ class ProjectPoints:
 
         logger.info('Extracting ProjectPoints for desired regions')
         points = []
-        with res_cls(res_file) as f:
+        with res_cls(res_file, hsds=hsds) as f:
             meta = f.meta
             for region, region_col in regions.items():
                 logger.debug('- {}: {}'.format(region_col, region))
