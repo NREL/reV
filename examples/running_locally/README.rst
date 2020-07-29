@@ -97,7 +97,7 @@ file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/re
     res_file=${TESTDATADIR}/wtk/ri_100_wtk_2012.h5
     sam_file=${TESTDATADIR}/SAM/wind_gen_standard_losses_0.json
 
-    reV-gen --tech=windpower--fpath=${out_file} --res_file=${res_file} --sam_file=${sam_file} from-lat-lons --lat_lon_coords 41.77 -71.74
+    reV-gen direct --tech=windpower --res_file=${res_file} --sam_files=${sam_file} --lat_lon_coords 41.77 -71.74 local
 
 .. code-block:: bash
 
@@ -107,4 +107,4 @@ file that can be read with `rex.resource.Resource <https://nrel.github.io/rex/re
     res_file=${TESTDATADIR}/nsrdb/ri_100_nsrdb_2012.h5
     sam_file=${TESTDATADIR}/SAM/naris_pv_1axis_inv13.json
 
-    reV-project-points --fpath=${out_file} --res_file=${res_file} --sam_file=${sam_file} from-regions --region="Rhode Island" --region_col=state
+    reV-gen direct --tech=pvwattsv5 --res_file=${res_file} --sam_files=${sam_file} --region="Rhode Island" --region_col=state local
