@@ -3,18 +3,20 @@
 reV Project Points Configuration
 """
 import logging
-import pandas as pd
+from math import ceil
 import numpy as np
 import os
+import pandas as pd
 from warnings import warn
-from math import ceil
 
 from reV.utilities.exceptions import ConfigError, ConfigWarning
 from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
 
 from rex.resource import Resource, MultiFileResource
-from rex.utilities import check_res_file
+from rex.resource_extraction.resource_extraction import (ResourceX,
+                                                         MultiFileResourceX)
+from rex.utilities import check_res_file, parse_table
 
 logger = logging.getLogger(__name__)
 
@@ -189,21 +191,22 @@ class PointsControl:
 class ProjectPoints:
     """Class to manage site and SAM input configuration requests.
 
-    Notes
-    -----
-    config_id@site0, SAM_config_dict@site0 = ProjectPoints[0]
-    site_list_or_slice = ProjectPoints.sites
-    site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
-    ProjectPoints_sub = ProjectPoints.split(0, 10, project_points)
-    h_list = ProjectPoints.h
+    Examples
+    --------
+
+    >>> config_id_site0, SAM_config_dict_site0 = ProjectPoints[0]
+    >>> site_list_or_slice = ProjectPoints.sites
+    >>> site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
+    >>> ProjectPoints_sub = ProjectPoints.split(0, 10, project_points)
+    >>> h_list = ProjectPoints.h
     """
 
-    def __init__(self, points, sam_config, tech, res_file=None,
+    def __init__(self, points, sam_config, tech=None, res_file=None,
                  curtailment=None):
         """
         Parameters
         ----------
-        points : slice | str | pd.DataFrame | dict
+        points : slice | list | tuple | str | pd.DataFrame | dict
             Slice specifying project points, string pointing to a project
             points csv, or a dataframe containing the effective csv contents.
         sam_config : dict | str | list | SAMConfig
@@ -212,10 +215,11 @@ class ProjectPoints:
             config file str. If it's a list, it is mapped to the sorted list
             of unique configs requested by points csv. Can also be a
             pre loaded SAMConfig object.
-        tech : str
+        tech : str, optional
             SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
             solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed.
+            The string should be lower-cased with spaces and _ removed,
+            by default None
         res_file : str | NoneType
             Optional resource file to find maximum length of project points if
             points slice stop is None.
@@ -232,7 +236,7 @@ class ProjectPoints:
         self._df = self._parse_points(points, res_file=res_file)
         self._sam_config_obj = self._parse_sam_config(sam_config)
         self._check_points_config_mapping()
-        self._tech = tech
+        self._tech = str(tech)
         self._h = None
         self._curtailment = self._parse_curtailment(curtailment)
 
@@ -306,6 +310,16 @@ class ProjectPoints:
             raise KeyError('Project points data must contain "gid" and '
                            '"config" column headers.')
 
+        gids = df['gid'].values
+        if not np.array_equal(np.sort(gids), gids):
+            msg = ('WARNING: points are not in sequential order and will be '
+                   'sorted! The original order is being preserved under '
+                   'column "points_order"')
+            logger.warning(msg)
+            warn(msg)
+            df['points_order'] = df.index.values
+            df = df.sort_values('gid').reset_index(drop=True)
+
         return df
 
     @staticmethod
@@ -374,6 +388,7 @@ class ProjectPoints:
                             .format(type(points)))
 
         df['config'] = None
+
         return df
 
     @property
@@ -526,7 +541,7 @@ class ProjectPoints:
             List of sites belonging to this instance of ProjectPoints. The type
             is list if possible. Will be a slice only if slice stop is None.
         """
-        return list(self.df['gid'].values)
+        return self.df['gid'].values.tolist()
 
     @property
     def sites_as_slice(self):
@@ -721,3 +736,181 @@ class ProjectPoints:
                   curtailment=project_points.curtailment)
 
         return sub
+
+    @staticmethod
+    def _parse_lat_lons(lat_lons):
+        msg = ('Expecting a pair or multiple pairs of latitude and '
+               'longitude coordinates!')
+        if isinstance(lat_lons, str):
+            lat_lons = parse_table(lat_lons)
+            cols = [c for c in lat_lons if c.lower.startswith(('lat', 'lon'))]
+            lat_lons = lat_lons[sorted(cols)].values
+        elif isinstance(lat_lons, (list, tuple)):
+            lat_lons = np.array(lat_lons)
+        elif isinstance(lat_lons, (int, float)):
+            msg += ' Recieved a single coordinate value!'
+            logger.error(msg)
+            raise ValueError(msg)
+
+        if len(lat_lons.shape) == 1:
+            lat_lons = np.expand_dims(lat_lons, axis=0)
+
+        if lat_lons.shape[1] != 2:
+            msg += ' Received {} coordinate values!'.format(lat_lons.shape[1])
+            logger.error(msg)
+            raise ValueError(msg)
+
+        return lat_lons
+
+    @classmethod
+    def lat_lon_coords(cls, lat_lons, res_file, sam_config, tech=None,
+                       curtailment=None):
+        """
+        Generate ProjectPoints for gids nearest to given latitude longitudes
+
+        Parameters
+        ----------
+        lat_lons : str | tuple | list | ndarray
+            Pair or pairs of latitude longitude coordinates
+        res_file : str
+            Resource file, needed to fine nearest neighbors
+        sam_config : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
+        tech : str, optional
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed,
+            by default None
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
+
+        Returns
+        -------
+        pp : ProjectPoints
+            Initialized ProjectPoints object for points nearest to given
+            lat_lons
+        """
+        lat_lons = cls._parse_lat_lons(lat_lons)
+
+        multi_h5_res, _ = check_res_file(res_file)
+        if multi_h5_res:
+            res_cls = MultiFileResourceX
+        else:
+            res_cls = ResourceX
+
+        logger.info('Converting latitude longitude coordinates into nearest '
+                    'ProjectPoints')
+        logger.debug('- (lat, lon) pairs:\n{}'.format(lat_lons))
+        with res_cls(res_file) as f:
+            gids = f.lat_lon_gid(lat_lons)  # pylint: disable=no-member
+
+        if len(gids) != len(np.unique(gids)):
+            uniques, pos, counts = np.unique(gids, return_counts=True,
+                                             return_inverse=True)
+            duplicates = {}
+            for idx in np.where(counts > 1)[0]:
+                duplicate_lat_lons = lat_lons[np.where(pos == idx)[0]]
+                duplicates[uniques[idx]] = duplicate_lat_lons
+
+            msg = ('reV Cannot currently handle duplicate Resource gids! The '
+                   'given latitude and longitudes map to the same gids:\n{}'
+                   .format(duplicates))
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        gids = gids.tolist()
+        logger.debug('- Resource gids:\n{}'.format(gids))
+
+        pp = cls(gids, sam_config, tech=tech, res_file=res_file,
+                 curtailment=curtailment)
+
+        if 'points_order' in pp.df:
+            lat_lons = lat_lons[pp.df['points_order'].values]
+
+        pp._df['latitude'] = lat_lons[:, 0]
+        pp._df['longitude'] = lat_lons[:, 1]
+
+        return pp
+
+    @classmethod
+    def regions(cls, regions, res_file, sam_config, tech=None,
+                curtailment=None):
+        """
+        Generate ProjectPoints for gids nearest to given latitude longitudes
+
+        Parameters
+        ----------
+        regions : dict
+            Dictionary of regions to extract points for in the form:
+            {'region': 'region_column'}
+        res_file : str
+            Resource file, needed to fine nearest neighbors
+        sam_config : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
+        tech : str, optional
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed,
+            by default None
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
+
+        Returns
+        -------
+        pp : ProjectPoints
+            Initialized ProjectPoints object for points nearest to given
+            lat_lons
+        """
+        multi_h5_res, _ = check_res_file(res_file)
+        if multi_h5_res:
+            res_cls = MultiFileResourceX
+        else:
+            res_cls = ResourceX
+
+        logger.info('Extracting ProjectPoints for desired regions')
+        points = []
+        with res_cls(res_file) as f:
+            meta = f.meta
+            for region, region_col in regions.items():
+                logger.debug('- {}: {}'.format(region_col, region))
+                # pylint: disable=no-member
+                gids = f.region_gids(region, region_col=region_col)
+                logger.debug('- Resource gids:\n{}'.format(gids))
+                if points:
+                    duplicates = np.intersect1d(gids, points).tolist()
+                    if duplicates:
+                        msg = ('reV Cannot currently handle duplicate '
+                               'Resource gids! The given regions containg the '
+                               'same gids:\n{}'.format(duplicates))
+                        logger.error(msg)
+                        raise RuntimeError(msg)
+
+                points.extend(gids.tolist())
+
+        pp = cls(points, sam_config, tech=tech, res_file=res_file,
+                 curtailment=curtailment)
+
+        meta = meta.loc[pp.sites]
+        cols = list(set(regions.values()))
+        for c in cols:
+            pp._df[c] = meta[c].values
+
+        return pp

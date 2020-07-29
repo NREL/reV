@@ -134,7 +134,7 @@ class SAMAnalysisConfig(AnalysisConfig):
         if self._pc is None:
             # make an instance of project points
             pp = ProjectPoints(self.project_points, self['sam_files'],
-                               self.technology)
+                               tech=self.technology)
 
             if (self.execution_control.option == 'peregrine'
                     or self.execution_control.option == 'eagle'):

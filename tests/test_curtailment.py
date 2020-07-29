@@ -113,7 +113,7 @@ def test_curtailment_res_mean(year):
                       max_workers=1, sites_per_worker=50,
                       scale_outputs=True)
 
-    test = gen.out['ws_mean'] / 1000
+    test = gen.out['ws_mean']
 
     assert np.allclose(truth, test, rtol=0.001)
 

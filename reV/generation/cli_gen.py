@@ -10,11 +10,12 @@ import pprint
 import time
 from warnings import warn
 
+from reV.config.cli_project_points import _parse_lat_lons, _parse_regions
 from reV.config.project_points import ProjectPoints, PointsControl
 from reV.config.sam_analysis_configs import GenConfig
 from reV.generation.generation import Gen
 from reV.pipeline.status import Status
-from reV.utilities.exceptions import ConfigError
+from reV.utilities.exceptions import ConfigError, ProjectPointsValueError
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
@@ -169,16 +170,17 @@ def submit_from_config(ctx, name, year, config, i, verbose=False):
                 job_attrs={'hardware': 'local',
                            'fout': ctx.obj['FOUT'],
                            'dirout': config.dirout})
-            ctx.invoke(gen_local,
+            ctx.invoke(local,
                        max_workers=config.execution_control.max_workers,
-                       timeout=config.timeout, points_range=None,
+                       timeout=config.timeout,
+                       points_range=None,
                        verbose=verbose)
 
     elif config.execution_control.option in ('eagle', 'slurm'):
         if not parse_year(name, option='bool') and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
-        ctx.invoke(gen_slurm, nodes=config.execution_control.nodes,
+        ctx.invoke(slurm, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.allocation,
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.memory,
@@ -233,10 +235,23 @@ def make_fout(name, year):
 @click.option('--res_file', '-rf', required=True,
               help='Filepath to single resource file, multi-h5 directory, '
               'or /h5_dir/prefix*suffix.')
-@click.option('--points', '-p', default=slice(0, 100), type=PROJECTPOINTS,
+@click.option('--points', '-p', default=None, type=PROJECTPOINTS,
               help=('reV project points to analyze '
                     '(slice, list, or file string). '
                     'Default is slice(0, 100)'))
+@click.option('--lat_lon_fpath', '-llf', type=click.Path(exists=True),
+              default=None,
+              help=('File path to .csv or .json containing latitude, '
+                    'longitude coordinates of interest'))
+@click.option('--lat_lon_coords', '--llc', nargs=2,
+              type=click.Tuple([float, float]), default=None,
+              help='(lat, lon) coordinates of interest')
+@click.option('--regions', '-regs', type=STR, default=None,
+              help='File path to .json containing regions of interest')
+@click.option('--region', '-r', type=STR, default=None,
+              help='Region to extract')
+@click.option('--region_col', '-col', type=STR, default='state',
+              help='Meta column to search for region')
 @click.option('--sites_per_worker', '-spw', default=None, type=INT,
               help=('Number of sites to run in series on a single worker. '
                     'Default is the resource column chunk size.'))
@@ -263,8 +278,9 @@ def make_fout(name, year):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, tech, sam_files, res_file, points, sites_per_worker, fout,
-           dirout, logdir, output_request, mem_util_lim, curtailment,
+def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
+           lat_lon_coords, regions, region, region_col, sites_per_worker,
+           fout, dirout, logdir, output_request, mem_util_lim, curtailment,
            downscale, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
@@ -279,11 +295,83 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_worker, fout,
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
     ctx.obj['DOWNSCALE'] = downscale
+
+    ctx.obj['LAT_LON_FPATH'] = lat_lon_fpath
+    ctx.obj['LAT_LON_COORDS'] = lat_lon_coords
+    ctx.obj['REGIONS'] = regions
+    ctx.obj['REGION'] = region
+    ctx.obj['REGION_COL'] = region_col
+
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
 
+def _parse_points(ctx):
+    """
+    Parse project points from CLI inputs
+
+    Parameters
+    ----------
+    ctx : dict
+        CLI context object
+
+    Returns
+    -------
+    points : slice | list | string | ProjectPoints
+        ProjectPoints or points to initialize ProjectPoints
+    """
+    tech = ctx.obj['TECH']
+    points = ctx.obj['POINTS']
+    sam_files = ctx.obj['SAM_FILES']
+    res_file = ctx.obj['RES_FILE']
+    curtailment = ctx.obj['CURTAILMENT']
+    lat_lon_fpath = ctx.obj.get('LAT_LON_FPATH', None)
+    lat_lon_coords = ctx.obj.get('LAT_LON_COORDS', None)
+    regions = ctx.obj.get('REGIONS', None)
+    region = ctx.obj.get('REGION', None)
+    region_col = ctx.obj.get('REGION_COL', 'state')
+
+    i = 0
+    if points is not None:
+        i += 1
+
+    try:
+        lat_lons = _parse_lat_lons(lat_lon_fpath, lat_lon_coords)
+        points = ProjectPoints.lat_lon_coords(lat_lons, res_file,
+                                              sam_files, tech=tech,
+                                              curtailment=curtailment)
+        i += 1
+    except ProjectPointsValueError:
+        pass
+
+    try:
+        regions = _parse_regions(regions, region, region_col)
+        points = ProjectPoints.regions(regions, res_file, sam_files,
+                                       tech=tech,
+                                       curtailment=curtailment)
+        i += 1
+    except ProjectPointsValueError:
+        pass
+
+    msg = None
+    if i == 0:
+        msg = ("reV Gen requires one of 'points', 'lat-lon-fpath', "
+               "'lat-lon-coords', 'regions', or 'region' and region-col' "
+               "must be supplied to determine points to compute generation "
+               "for!")
+    elif i > 1:
+        msg = ("reV Gen can only produce a unique set of Project Points for "
+               "a single input value for ONE of 'points', 'lat-lon-fpath', "
+               "'lat-lon-coords', 'regions', or 'region' and region-col'")
+
+    if msg is not None:
+        logger.error(msg)
+        raise ProjectPointsValueError(msg)
+
+    return points
+
+
 @direct.command()
-@click.option('--max_workers', '-mw', type=INT,
+@click.option('--max_workers', '-mw', type=INT, default=None,
               help='Number of workers. Use 1 for serial, None for all cores.')
 @click.option('--timeout', '-to', type=INT, default=1800,
               help='Number of seconds to wait for parallel generation run '
@@ -294,7 +382,7 @@ def direct(ctx, tech, sam_files, res_file, points, sites_per_worker, fout,
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def gen_local(ctx, max_workers, timeout, points_range, verbose):
+def local(ctx, max_workers, timeout, points_range, verbose):
     """Run generation on local worker(s)."""
 
     name = ctx.obj['NAME']
@@ -326,6 +414,8 @@ def gen_local(ctx, max_workers, timeout, points_range, verbose):
                 'file: {}. Target output path is: {}'
                 .format(name, res_file, os.path.join(dirout, fout)))
     t0 = time.time()
+
+    points = _parse_points(ctx)
 
     # Execute the Generation module with smart data flushing.
     Gen.reV_run(tech=tech,
@@ -385,7 +475,7 @@ def get_node_pc(points, sam_files, tech, res_file, nodes):
 
     if isinstance(points, (str, slice, list, tuple)):
         # create points control via points
-        pp = ProjectPoints(points, sam_files, tech, res_file=res_file)
+        pp = ProjectPoints(points, sam_files, tech=tech, res_file=res_file)
         sites_per_node = ceil(len(pp) / nodes)
         pc = PointsControl(pp, sites_per_split=sites_per_node)
     else:
@@ -552,7 +642,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.generation.cli_gen '
-           '{arg_main} direct {arg_direct} gen-local {arg_loc}'
+           '{arg_main} direct {arg_direct} local {arg_loc}'
            .format(arg_main=arg_main,
                    arg_direct=arg_direct,
                    arg_loc=arg_loc))
@@ -581,8 +671,8 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def gen_slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
-              stdout_path, verbose):
+def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
+          stdout_path, verbose):
     """Run generation on HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -655,4 +745,8 @@ def gen_slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
 
 
 if __name__ == '__main__':
-    main(obj={})
+    try:
+        main(obj={})
+    except Exception:
+        logger.exception('Error running reV Generation CLI')
+        raise

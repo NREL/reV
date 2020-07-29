@@ -335,4 +335,8 @@ def multi_year_slurm(ctx, alloc, walltime, feature, memory, conda_env,
 
 
 if __name__ == '__main__':
-    main(obj={})
+    try:
+        main(obj={})
+    except Exception:
+        logger.exception('Error running reV Multi-Year CLI')
+        raise

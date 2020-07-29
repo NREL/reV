@@ -93,7 +93,7 @@ def test_pv_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
                       sam_files=sam_files, res_file=res_file,
                       max_workers=max_workers, sites_per_worker=3, fout=None)
-    gen_outs = list(gen.out['cf_mean'] / 1000)
+    gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
@@ -118,7 +118,7 @@ def test_pv_gen_csv1(f_rev1_out='project_outputs.h5',
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
                       sam_files=sam_files, res_file=res_file, fout=None)
-    gen_outs = list(gen.out['cf_mean'] / 1000)
+    gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
@@ -143,7 +143,7 @@ def test_pv_gen_csv2(f_rev1_out='project_outputs.h5',
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv5')
     gen = Gen.reV_run(tech='pvwattsv5', points=rev2_points,
                       sam_files=sam_files, res_file=res_file, fout=None)
-    gen_outs = list(gen.out['cf_mean'] / 1000)
+    gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
     with pv_results(rev1_outs) as pv:
@@ -241,7 +241,7 @@ def test_multi_file_nsrdb_2018():
     gen = Gen.reV_run(tech='pvwattsv5', points=points, sam_files=sam_files,
                       res_file=res_file, max_workers=max_workers,
                       sites_per_worker=3, fout=None)
-    gen_outs = list(gen.out['cf_mean'] / 1000)
+    gen_outs = list(gen.out['cf_mean'])
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.14
 
@@ -276,7 +276,7 @@ def test_pv_name_error():
 def test_pvwattsv7_baseline():
     """Test reV pvwattsv7 generation against baseline data"""
 
-    baseline_cf_mean = np.array([151, 151, 157])
+    baseline_cf_mean = np.array([151, 151, 157]) / 1000
 
     year = 2012
     rev2_points = slice(0, 3)
@@ -291,7 +291,7 @@ def test_pvwattsv7_baseline():
 
     msg = ('PVWattsv7 cf_mean results {} did not match baseline: {}'
            .format(gen.out['cf_mean'], baseline_cf_mean))
-    assert all(gen.out['cf_mean'] == baseline_cf_mean), msg
+    assert np.allclose(gen.out['cf_mean'], baseline_cf_mean), msg
 
 
 def test_pvwatts_v5_v7():

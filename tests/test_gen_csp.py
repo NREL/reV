@@ -6,7 +6,7 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-
+import numpy as np
 import os
 import pytest
 
@@ -31,7 +31,7 @@ def test_gen_csp():
     gen_profile = gen.out['gen_profile']
 
     assert cf_mean == 0.0
-    assert cf_profile.max() == 1.0
+    assert np.isclose(cf_profile.max(), 0.001)
     assert gen_profile.max() > 1e5
 
 

@@ -674,4 +674,8 @@ def launch_slurm(config, verbose):
 
 
 if __name__ == '__main__':
-    main(obj={})
+    try:
+        main(obj={})
+    except Exception:
+        logger.exception('Error running reV QA/QC CLI')
+        raise

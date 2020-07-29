@@ -130,6 +130,12 @@ class ExclusionLayerError(Exception):
     """
 
 
+class ProjectPointsValueError(Exception):
+    """
+    Error for bad ProjectPoints CLI values
+    """
+
+
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data

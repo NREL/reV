@@ -89,7 +89,7 @@ def test_wind_gen_slice(f_rev1_out, rev2_points, year, max_workers):
     pp = ProjectPoints(rev2_points, sam_files, 'windpower', res_file=res_file)
     gen = Gen.reV_run('windpower', rev2_points, sam_files, res_file,
                       max_workers=max_workers, sites_per_worker=3, fout=None)
-    gen_outs = list(gen.out['cf_mean'] / 1000)
+    gen_outs = list(gen.out['cf_mean'])
 
     # initialize the rev1 output hander
     with wind_results(rev1_outs) as wind:
@@ -119,9 +119,9 @@ def test_wind_gen_new_outputs(points=slice(0, 10), year=2012, max_workers=1):
     assert gen.out['cf_profile'].shape == (8760, 10)
     assert gen.out['monthly_energy'].shape == (12, 10)
 
-    assert gen.out['cf_mean'].dtype == np.uint16
-    assert gen.out['cf_profile'].dtype == np.uint16
-    assert gen.out['monthly_energy'].dtype == np.float32
+    assert gen._out['cf_mean'].dtype == np.uint16
+    assert gen._out['cf_profile'].dtype == np.uint16
+    assert gen._out['monthly_energy'].dtype == np.float32
 
 
 def test_windspeed_pass_through(rev2_points=slice(0, 10), year=2012,
@@ -140,8 +140,8 @@ def test_windspeed_pass_through(rev2_points=slice(0, 10), year=2012,
                       output_request=output_requests)
     assert 'windspeed' in gen.out
     assert gen.out['windspeed'].shape == (8760, 10)
-    assert gen.out['windspeed'].max() == 2597
-    assert gen.out['windspeed'].min() == 1
+    assert gen._out['windspeed'].max() == 2597
+    assert gen._out['windspeed'].min() == 1
 
 
 def test_multi_file_5min_wtk():
@@ -154,7 +154,7 @@ def test_multi_file_5min_wtk():
     gen = Gen.reV_run(tech='windpower', points=points, sam_files=sam_files,
                       res_file=res_file, max_workers=max_workers,
                       sites_per_worker=3, fout=None)
-    gen_outs = list(gen.out['cf_mean'] / 1000)
+    gen_outs = list(gen._out['cf_mean'])
     assert len(gen_outs) == 10
     assert np.mean(gen_outs) > 0.55
 

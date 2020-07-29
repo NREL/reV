@@ -164,7 +164,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
                 job_attrs={'hardware': 'local',
                            'fout': ctx.obj['FOUT'],
                            'dirout': config.dirout})
-            ctx.invoke(econ_local,
+            ctx.invoke(local,
                        max_workers=config.execution_control.max_workers,
                        timeout=config.timeout, points_range=None,
                        verbose=verbose)
@@ -173,7 +173,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
         if not parse_year(name, option='bool') and year:
             # Add year to name before submitting
             ctx.obj['NAME'] = '{}_{}'.format(name, str(year))
-        ctx.invoke(econ_slurm, nodes=config.execution_control.nodes,
+        ctx.invoke(slurm, nodes=config.execution_control.nodes,
                    alloc=config.execution_control.allocation,
                    walltime=config.execution_control.walltime,
                    memory=config.execution_control.memory,
@@ -237,7 +237,7 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
 
 
 @direct.command()
-@click.option('--max_workers', '-mw', type=INT,
+@click.option('--max_workers', '-mw', type=INT, default=None,
               help='Number of workers. Use 1 for serial, None for all cores.')
 @click.option('--timeout', '-to', type=INT, default=1800,
               help='Number of seconds to wait for econ parallel run '
@@ -248,7 +248,7 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def econ_local(ctx, max_workers, timeout, points_range, verbose):
+def local(ctx, max_workers, timeout, points_range, verbose):
     """Run econ on local worker(s)."""
 
     name = ctx.obj['NAME']
@@ -445,7 +445,7 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.econ.cli_econ '
-           '{arg_main} direct {arg_direct} econ-local {arg_loc}'
+           '{arg_main} direct {arg_direct} local {arg_loc}'
            .format(arg_main=arg_main,
                    arg_direct=arg_direct,
                    arg_loc=arg_loc))
@@ -474,8 +474,8 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
-               stdout_path, verbose):
+def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
+          stdout_path, verbose):
     """Run econ on HPC via SLURM job submission."""
 
     name = ctx.obj['NAME']
@@ -554,4 +554,8 @@ def econ_slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
 
 
 if __name__ == '__main__':
-    main(obj={})
+    try:
+        main(obj={})
+    except Exception:
+        logger.exception('Error running reV Econ CLI')
+        raise

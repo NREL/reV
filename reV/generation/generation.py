@@ -335,6 +335,7 @@ class Gen:
         else:
             raise TypeError('Output request must be str, list, or tuple but '
                             'received: {}'.format(type(req)))
+
         return output_request
 
     @staticmethod
@@ -362,6 +363,7 @@ class Gen:
         """Set the 5-minute time index if res_file is a multi-file directory"""
         with MultiFileResource(self._res_file) as mres:
             ti = mres.time_index
+
         self._time_index = self.handle_leap_ti(
             ti, drop_leap=self._drop_leap)
 
@@ -377,8 +379,8 @@ class Gen:
             from rex.utilities.downscale import make_time_index
             year = self.time_index.year[0]
             ti = make_time_index(year, ds_freq)
-            self._time_index = self.handle_leap_ti(
-                ti, drop_leap=self._drop_leap)
+            self._time_index = self.handle_leap_ti(ti,
+                                                   drop_leap=self._drop_leap)
             logger.info('reV solar generation running with temporal '
                         'downscaling frequency "{}" with final '
                         'time_index length {}'
@@ -827,7 +829,85 @@ class Gen:
 
         if self._year is None:
             self._year = int(self.time_index.year[0])
+
         return self._year
+
+    @staticmethod
+    def _pp_to_pc(points, points_range, sam_files, tech, sites_per_worker=None,
+                  res_file=None, curtailment=None):
+        """
+        Create ProjectControl from ProjectPoints
+
+        Parameters
+        ----------
+        points : slice | list | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
+        sam_files : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
+        tech : str
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
+        sites_per_worker : int
+            Number of sites to run in series on a worker. None defaults to the
+            resource file chunk size.
+        res_file : str
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
+        curtailment : NoneType | dict | str | config.curtailment.Curtailment
+            Inputs for curtailment parameters. If not None, curtailment inputs
+            are expected. Can be:
+                - Explicit namespace of curtailment variables (dict)
+                - Pointer to curtailment config json file with path (str)
+                - Instance of curtailment config object
+                  (config.curtailment.Curtailment)
+
+        Returns
+        -------
+        pc : reV.config.project_points.PointsControl
+            PointsControl object instance.
+        """
+        if not isinstance(points, ProjectPoints):
+            # make Project Points instance
+            pp = ProjectPoints(points, sam_files, tech=tech,
+                               res_file=res_file, curtailment=curtailment)
+        else:
+            pp = ProjectPoints(points.df, sam_files, tech=tech,
+                               res_file=res_file, curtailment=curtailment)
+
+        #  make Points Control instance
+        pc = None
+        if points_range is not None:
+            # PointsControl is for just a subset of the project points...
+            # this is the case if generation is being initialized on one
+            # of many HPC nodes in a large project
+            pc = PointsControl.split(points_range[0], points_range[1], pp,
+                                     sites_per_split=sites_per_worker)
+        elif points_range is None and res_file is not None:
+            # PointsControl is for all of the project points
+            if os.path.isfile(res_file):
+                with Outputs(res_file, mode='r') as f:
+                    if 'gid' in f.meta:
+                        gid0 = f.meta['gid'].values[0]
+                        gid1 = f.meta['gid'].values[-1] + 1
+                        pc = PointsControl.split(
+                            gid0, gid1, pp,
+                            sites_per_split=sites_per_worker)
+
+        if pc is None:
+            # PointsControl is for all of the project points
+            pc = PointsControl(pp, sites_per_split=sites_per_worker)
+
+        return pc
 
     @staticmethod
     def get_pc(points, points_range, sam_files, tech, sites_per_worker=None,
@@ -887,33 +967,10 @@ class Gen:
         logger.debug('Sites per worker being set to {} for Gen/Econ '
                      'PointsControl.'.format(sites_per_worker))
 
-        if isinstance(points, (slice, list, str)):
-            # make Project Points instance
-            pp = ProjectPoints(points, sam_files, tech=tech, res_file=res_file,
-                               curtailment=curtailment)
-
-            #  make Points Control instance
-            pc = None
-            if points_range is not None:
-                # PointsControl is for just a subset of the project points...
-                # this is the case if generation is being initialized on one
-                # of many HPC nodes in a large project
-                pc = PointsControl.split(points_range[0], points_range[1], pp,
-                                         sites_per_split=sites_per_worker)
-            elif points_range is None and res_file is not None:
-                # PointsControl is for all of the project points
-                if os.path.isfile(res_file):
-                    with Outputs(res_file, mode='r') as f:
-                        if 'gid' in f.meta:
-                            gid0 = f.meta['gid'].values[0]
-                            gid1 = f.meta['gid'].values[-1] + 1
-                            pc = PointsControl.split(
-                                gid0, gid1, pp,
-                                sites_per_split=sites_per_worker)
-
-            if pc is None:
-                # PointsControl is for all of the project points
-                pc = PointsControl(pp, sites_per_split=sites_per_worker)
+        if isinstance(points, (slice, list, str, ProjectPoints)):
+            pc = Gen._pp_to_pc(points, points_range, sam_files, tech,
+                               sites_per_worker=sites_per_worker,
+                               res_file=res_file, curtailment=curtailment)
 
         elif isinstance(points, PointsControl):
             # received a pre-intialized instance of pointscontrol
@@ -989,7 +1046,20 @@ class Gen:
         out : dict
             Dictionary of generation results from SAM.
         """
-        return self._out
+        out = {}
+        for k, v in self._out.items():
+            if k in Gen.OUT_ATTRS:
+                scale_factor = Gen.OUT_ATTRS[k].get('scale_factor', 1)
+            else:
+                scale_factor = 1
+
+            if scale_factor != 1:
+                v = v.astype('float32')
+                v /= scale_factor
+
+            out[k] = v
+
+        return out
 
     @out.setter
     def out(self, result):
@@ -1052,6 +1122,7 @@ class Gen:
         out = {}
         for x in futures:
             out.update(x)
+
         return out
 
     def unpack_output(self, site_gid, site_output):
@@ -1086,6 +1157,7 @@ class Gen:
             if isinstance(value, (list, tuple, np.ndarray)):
                 if not isinstance(value, np.ndarray):
                     value = np.array(value)
+
                 self._out[var][:, i] = value.T
             elif value != 0:
                 self._out[var][i] = value
@@ -1113,8 +1185,7 @@ class Gen:
         global_site_index = self.project_points.sites.index(site_gid)
 
         if not out_index:
-            return global_site_index
-
+            output_index = global_site_index
         else:
             output_index = global_site_index - self.out_chunk[0]
             if output_index < 0:
@@ -1124,7 +1195,8 @@ class Gen:
                                  'index chunk of {}'
                                  .format(site_gid, global_site_index,
                                          self.out_chunk))
-            return output_index
+
+        return output_index
 
     def flush(self):
         """Flush generation data in self.out attribute to disk in .h5 format.
@@ -1136,7 +1208,7 @@ class Gen:
         """
 
         # handle output file request if file is specified and .out is not empty
-        if isinstance(self._fpath, str) and self.out:
+        if isinstance(self._fpath, str) and self._out:
             logger.info('Flushing outputs to disk, target file: "{}"'
                         .format(self._fpath))
 
@@ -1149,12 +1221,12 @@ class Gen:
                 # iterate through all output requests writing each as a dataset
                 for dset in self.output_request:
 
-                    if len(self.out[dset].shape) == 1:
+                    if len(self._out[dset].shape) == 1:
                         # write array of scalars
-                        f[dset, islice] = self.out[dset]
+                        f[dset, islice] = self._out[dset]
                     else:
                         # write 2D array of profiles
-                        f[dset, :, islice] = self.out[dset]
+                        f[dset, :, islice] = self._out[dset]
 
             logger.debug('Flushed generation output successfully to disk.')
 
@@ -1189,7 +1261,6 @@ class Gen:
             Output dictionary from the SAM reV_run function. Data is scaled
             within this function to the datatype specified in Gen.OUT_ATTRS.
         """
-
         # run generation method for specified technology
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
@@ -1469,6 +1540,7 @@ class Gen:
                 logger.debug('Running serial generation for: {}'.format(pc))
                 for pc_sub in pc:
                     gen.out = gen.run(pc_sub, **kwargs)
+
                 gen.flush()
             else:
                 logger.debug('Running parallel generation for: {}'.format(pc))
