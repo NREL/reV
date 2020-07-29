@@ -894,14 +894,27 @@ class Gen:
                                      sites_per_split=sites_per_worker)
         elif points_range is None and res_file is not None:
             # PointsControl is for all of the project points
-            if os.path.isfile(res_file):
-                with Outputs(res_file, mode='r') as f:
+            try:
+                multi_h5_res, hsds = check_res_file(res_file)
+                if multi_h5_res:
+                    res_cls = MultiFileResource
+                    res_kwargs = {}
+                else:
+                    res_cls = Resource
+                    res_kwargs = {'hsds': hsds}
+
+                with res_cls(res_file, **res_kwargs) as f:
                     if 'gid' in f.meta:
                         gid0 = f.meta['gid'].values[0]
                         gid1 = f.meta['gid'].values[-1] + 1
                         pc = PointsControl.split(
-                            gid0, gid1, pp,
-                            sites_per_split=sites_per_worker)
+                            gid0, gid1, pp, sites_per_split=sites_per_worker)
+
+            except FileNotFoundError as ex:
+                msg = ('{} is invalid PointsControl will be created for all '
+                       'project points:\n{}'.format(res_file, ex))
+                logger.warning(msg)
+                warn(msg)
 
         if pc is None:
             # PointsControl is for all of the project points
