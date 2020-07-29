@@ -194,11 +194,19 @@ class ProjectPoints:
     Examples
     --------
 
-    >>> config_id_site0, SAM_config_dict_site0 = ProjectPoints[0]
-    >>> site_list_or_slice = ProjectPoints.sites
-    >>> site_list_or_slice = ProjectPoints.get_sites_from_config(config_id)
-    >>> ProjectPoints_sub = ProjectPoints.split(0, 10, project_points)
-    >>> h_list = ProjectPoints.h
+    >>> import os
+    >>> from reV import TESTDATADIR
+    >>> from reV.config.project_points import ProjectPoints
+    >>>
+    >>> points = slice(0, 100)
+    >>> sam_file = os.path.join(TESTDATADIR, 'SAM/naris_pv_1axis_inv13.json')
+    >>> pp = ProjectPoints(points, sam_file)
+    >>>
+    >>> config_id_site0, SAM_config_dict_site0 = pp[0]
+    >>> site_list_or_slice = pp.sites
+    >>> site_list_or_slice = pp.get_sites_from_config(config_id)
+    >>> ProjectPoints_sub = pp.split(0, 10, project_points)
+    >>> h_list = pp.h
     """
 
     def __init__(self, points, sam_config, tech=None, res_file=None,
@@ -804,13 +812,15 @@ class ProjectPoints:
         multi_h5_res, hsds = check_res_file(res_file)
         if multi_h5_res:
             res_cls = MultiFileResourceX
+            res_kwargs = {}
         else:
             res_cls = ResourceX
+            res_kwargs = {'hsds': hsds}
 
         logger.info('Converting latitude longitude coordinates into nearest '
                     'ProjectPoints')
         logger.debug('- (lat, lon) pairs:\n{}'.format(lat_lons))
-        with res_cls(res_file, hsds=hsds) as f:
+        with res_cls(res_file, **res_kwargs) as f:
             gids = f.lat_lon_gid(lat_lons)  # pylint: disable=no-member
 
         if len(gids) != len(np.unique(gids)):

@@ -898,10 +898,12 @@ class Gen:
                 multi_h5_res, hsds = check_res_file(res_file)
                 if multi_h5_res:
                     res_cls = MultiFileResource
+                    res_kwargs = {}
                 else:
                     res_cls = Resource
+                    res_kwargs = {'hsds': hsds}
 
-                with res_cls(res_file, hsds=hsds) as f:
+                with res_cls(res_file, **res_kwargs) as f:
                     if 'gid' in f.meta:
                         gid0 = f.meta['gid'].values[0]
                         gid1 = f.meta['gid'].values[-1] + 1
