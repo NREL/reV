@@ -38,7 +38,7 @@ def _parse_lat_lons(lat_lon_fpath, lat_lon_coords):
     if lat_lon_fpath is not None:
         lat_lons = lat_lon_fpath
 
-    if lat_lon_coords is not None:
+    if lat_lon_coords:
         if lat_lons is None:
             lat_lons = lat_lon_coords
         else:

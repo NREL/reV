@@ -333,23 +333,19 @@ def _parse_points(ctx):
     if points is not None:
         i += 1
 
-    try:
+    if lat_lon_fpath is not None or lat_lon_coords:
         lat_lons = _parse_lat_lons(lat_lon_fpath, lat_lon_coords)
         points = ProjectPoints.lat_lon_coords(lat_lons, res_file,
                                               sam_files, tech=tech,
                                               curtailment=curtailment)
         i += 1
-    except ProjectPointsValueError:
-        pass
 
-    try:
+    if region is not None or regions is not None:
         regions = _parse_regions(regions, region, region_col)
         points = ProjectPoints.regions(regions, res_file, sam_files,
                                        tech=tech,
                                        curtailment=curtailment)
         i += 1
-    except ProjectPointsValueError:
-        pass
 
     msg = None
     if i == 0:
