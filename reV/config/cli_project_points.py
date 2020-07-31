@@ -136,8 +136,7 @@ def main(ctx, fpath, res_file, sam_file, verbose):
               default=None,
               help=('File path to .csv or .json containing latitude, '
                     'longitude coordinates of interest'))
-@click.option('--lat_lon_coords', '--llc', nargs=2,
-              type=click.Tuple([float, float]), default=None,
+@click.option('--lat_lon_coords', '--llc', nargs=2, type=float, default=None,
               help='(lat, lon) coordinates of interest')
 @click.pass_context
 def from_lat_lons(ctx, lat_lon_fpath, lat_lon_coords):
