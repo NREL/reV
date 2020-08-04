@@ -13,8 +13,8 @@ import PySAM.Lcoefcr as PySamLCOE
 import PySAM.Singleowner as PySamSingleOwner
 
 
-DEFAULTSDIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-DEFAULTSDIR = os.path.join(os.path.dirname(DEFAULTSDIR), 'tests', 'data')
+DEFAULTSDIR = os.path.dirname(os.path.realpath(__file__))
+DEFAULTSDIR = os.path.join(DEFAULTSDIR, 'defaults')
 
 
 class DefaultPvwattsv5:
@@ -23,10 +23,9 @@ class DefaultPvwattsv5:
     @staticmethod
     def default():
         """Get the default PySAM pvwattsv5 object"""
-        res_file = os.path.join(
-            DEFAULTSDIR,
-            'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
-        config_file = os.path.join(DEFAULTSDIR, 'SAM/i_pvwattsv5.json')
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+        config_file = os.path.join(DEFAULTSDIR, 'i_pvwattsv5.json')
 
         with open(config_file, 'r') as f:
             config = json.load(f)
@@ -48,9 +47,8 @@ class DefaultPvwattsv7:
     @staticmethod
     def default():
         """Get the default PySAM pvwattsv7 object"""
-        res_file = os.path.join(
-            DEFAULTSDIR,
-            'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         obj = PySamPV7.default('PVWattsNone')
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
@@ -63,9 +61,8 @@ class DefaultTcsMoltenSalt:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        res_file = os.path.join(
-            DEFAULTSDIR,
-            'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         obj = PySamCSP.default('MSPTSingleOwner')
         obj.SolarResource.solar_resource_file = res_file
         obj.execute()
@@ -78,8 +75,7 @@ class DefaultWindPower:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        res_file = os.path.join(
-            DEFAULTSDIR, 'SAM/WY Southern-Flat Lands.csv')
+        res_file = os.path.join(DEFAULTSDIR, 'WY Southern-Flat Lands.csv')
         obj = PySamWindPower.default('WindPowerNone')
         obj.Resource .wind_resource_filename = res_file
         obj.execute()
@@ -92,9 +88,8 @@ class DefaultSwh:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        res_file = os.path.join(
-            DEFAULTSDIR,
-            'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         obj = PySamSWH.default('SolarWaterHeatingNone')
         obj.Weather.solar_resource_file = res_file
         obj.execute()
@@ -107,9 +102,8 @@ class DefaultTroughPhysicalProcessHeat:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        res_file = os.path.join(
-            DEFAULTSDIR,
-            'SAM/USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
+        res_file = os.path.join(DEFAULTSDIR,
+                                'USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv')
         obj = PySamTPPH.default('PhysicalTroughIPHNone')
         obj.Weather.file_name = res_file
         obj.execute()
@@ -122,7 +116,7 @@ class DefaultLinearFresnelDsgIph:
     @staticmethod
     def default():
         """Get the default PySAM object"""
-        res_file = os.path.join(DEFAULTSDIR, 'SAM/USA CA Daggett (TMY2).csv')
+        res_file = os.path.join(DEFAULTSDIR, 'USA CA Daggett (TMY2).csv')
         obj = PySamLDS.default('DSGLIPHNone')
         obj.Weather.file_name = res_file
         obj.execute()
