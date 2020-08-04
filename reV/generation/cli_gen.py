@@ -19,7 +19,7 @@ from reV.utilities.exceptions import ConfigError, ProjectPointsValueError
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
-from rex.utilities.execution import SLURM, SubprocessManager
+from rex.utilities.execution import SLURM
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import parse_year, get_class_properties
 
@@ -243,8 +243,7 @@ def make_fout(name, year):
               default=None,
               help=('File path to .csv or .json containing latitude, '
                     'longitude coordinates of interest'))
-@click.option('--lat_lon_coords', '--llc', nargs=2,
-              type=click.Tuple([float, float]), default=None,
+@click.option('--lat_lon_coords', '--llc', nargs=2, type=float, default=None,
               help='(lat, lon) coordinates of interest')
 @click.option('--regions', '-regs', type=STR, default=None,
               help='File path to .json containing regions of interest')
@@ -334,23 +333,19 @@ def _parse_points(ctx):
     if points is not None:
         i += 1
 
-    try:
+    if lat_lon_fpath is not None or lat_lon_coords:
         lat_lons = _parse_lat_lons(lat_lon_fpath, lat_lon_coords)
         points = ProjectPoints.lat_lon_coords(lat_lons, res_file,
                                               sam_files, tech=tech,
                                               curtailment=curtailment)
         i += 1
-    except ProjectPointsValueError:
-        pass
 
-    try:
+    if region is not None or regions is not None:
         regions = _parse_regions(regions, region, region_col)
         points = ProjectPoints.regions(regions, res_file, sam_files,
                                        tech=tech,
                                        curtailment=curtailment)
         i += 1
-    except ProjectPointsValueError:
-        pass
 
     msg = None
     if i == 0:
@@ -597,11 +592,11 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     """
 
     # mark a cli arg string for main() in this module
-    arg_main = ('-n {name} '.format(name=SubprocessManager.s(name)))
+    arg_main = ('-n {name} '.format(name=SLURM.s(name)))
 
     # make some strings only if specified
-    cstr = '-curt {} '.format(SubprocessManager.s(curtailment))
-    dstr = '-ds {} '.format(SubprocessManager.s(downscale))
+    cstr = '-curt {} '.format(SLURM.s(curtailment))
+    dstr = '-ds {} '.format(SLURM.s(downscale))
 
     # make a cli arg string for direct() in this module
     arg_direct = ('-t {tech} '
@@ -617,16 +612,16 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '{curt}'
                   '{ds}')
     arg_direct = arg_direct.format(
-        tech=SubprocessManager.s(tech),
-        points=SubprocessManager.s(points),
-        sam_files=SubprocessManager.s(sam_files),
-        res_file=SubprocessManager.s(res_file),
-        sites_per_worker=SubprocessManager.s(sites_per_worker),
-        fout=SubprocessManager.s(fout),
-        dirout=SubprocessManager.s(dirout),
-        logdir=SubprocessManager.s(logdir),
-        out_req=SubprocessManager.s(output_request),
-        mem=SubprocessManager.s(mem_util_lim),
+        tech=SLURM.s(tech),
+        points=SLURM.s(points),
+        sam_files=SLURM.s(sam_files),
+        res_file=SLURM.s(res_file),
+        sites_per_worker=SLURM.s(sites_per_worker),
+        fout=SLURM.s(fout),
+        dirout=SLURM.s(dirout),
+        logdir=SLURM.s(logdir),
+        out_req=SLURM.s(output_request),
+        mem=SLURM.s(mem_util_lim),
         curt=cstr if curtailment else '',
         ds=dstr if downscale else '')
 
@@ -634,9 +629,9 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     arg_loc = ('-mw {max_workers} '
                '-to {timeout} '
                '-pr {points_range} '
-               '{v}'.format(max_workers=SubprocessManager.s(max_workers),
-                            timeout=SubprocessManager.s(timeout),
-                            points_range=SubprocessManager.s(points_range),
+               '{v}'.format(max_workers=SLURM.s(max_workers),
+                            timeout=SLURM.s(timeout),
+                            points_range=SLURM.s(points_range),
                             v='-v' if verbose else ''))
 
     # Python command that will be executed on a node
