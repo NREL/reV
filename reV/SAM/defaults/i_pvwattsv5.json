@@ -1,0 +1,13 @@
+{
+  "adjust:constant": 0,
+  "array_type": 0,
+  "azimuth": 180,
+  "dc_ac_ratio": 1.2000000476837158,
+  "gcr": 0.4000000059604645,
+  "inv_eff": 96,
+  "losses": 14.075660705566406,
+  "module_type": 0,
+  "solar_resource_file": "./USA AZ Phoenix Sky Harbor Intl Ap (TMY3).csv",
+  "system_capacity": 4,
+  "tilt": 20
+}
