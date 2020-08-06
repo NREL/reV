@@ -65,7 +65,7 @@ def from_config(ctx, config_file, verbose):
     # take name from config if not default
     if config.name.lower() != 'rev':
         name = config.name
-        ctx.obj['NAME'] = config.name
+        ctx.obj['NAME'] = name
 
     # Enforce verbosity if logging level is specified in the config
     if config.log_level == logging.DEBUG:

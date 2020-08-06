@@ -355,8 +355,7 @@ def from_config(ctx, config_file, verbose):
     # take name from config if not default
     if config.name.lower() != 'rev':
         name = config.name
-
-    ctx.obj['NAME'] = name
+        ctx.obj['NAME'] = name
 
     # Enforce verbosity if logging level is specified in the config
     verbose = config.log_level == logging.DEBUG
@@ -649,7 +648,9 @@ def launch_slurm(config, verbose):
         node_cmd = '\n'.join(node_cmd)
         logger.info('Running reV QA-QC on SLURM with '
                     'node name "{}"'.format(config.name))
-        slurm = SLURM(node_cmd, alloc=config.execution_control.allocation,
+        slurm = SLURM(node_cmd,
+                      name=config.name,
+                      alloc=config.execution_control.allocation,
                       memory=config.execution_control.memory,
                       feature=config.execution_control.feature,
                       walltime=config.execution_control.walltime,
