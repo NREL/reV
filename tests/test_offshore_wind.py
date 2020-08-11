@@ -27,6 +27,10 @@ OFFSHORE_FPATH = os.path.join(TESTDATADIR, 'offshore/',
 POINTS = os.path.join(TESTDATADIR, 'offshore/project_points.csv')
 SAM_FILE = {'default': os.path.join(TESTDATADIR, 'offshore/6MW_offshore.json')}
 OUTPUT_FILE = os.path.join(TESTDATADIR, 'offshore/out.h5')
+TRANS_TABLE = os.path.join(TESTDATADIR,
+                           'trans_tables/ri_transmission_table.csv')
+OFFSHORE_TRANS_TABLE = os.path.join(TESTDATADIR, 'trans_tables/'
+                                    'ri_transmission_table_offshore.csv')
 
 # this is an archived version of the test_offshore_module()
 # output file (OUTPUT_FILE) used for input to test_sc_agg_offshore()
@@ -66,20 +70,8 @@ PURGE_OUT = True
 def sc_points():
     """Get the supply curve aggregation summary table"""
     sc_points = pd.read_csv(AGG_BASELINE)
+
     return sc_points
-
-
-@pytest.fixture
-def offshore_trans_table():
-    """Get the transmission mapping table"""
-    path1 = os.path.join(TESTDATADIR, 'trans_tables/ri_transmission_table.csv')
-    path2 = os.path.join(TESTDATADIR, 'trans_tables/'
-                         'ri_transmission_table_offshore.csv')
-    trans_table = pd.read_csv(path1)
-    trans_table_offshore = pd.read_csv(path2)
-    trans_table = trans_table.append(trans_table_offshore)
-    trans_table = trans_table.reset_index(drop=True)
-    return trans_table
 
 
 @pytest.fixture
@@ -88,6 +80,7 @@ def offshore():
     pytest.importorskip("ORCA")  # skip tests with this fixture if no ORCA
     obj = Offshore.run(GEN_FPATH, OFFSHORE_FPATH, POINTS, SAM_FILE,
                        fpath_out=OUTPUT_FILE, sub_dir=None)
+
     return obj
 
 
@@ -149,6 +142,7 @@ def test_offshore_module(offshore):
             raise ValueError('Could not find offshore farm gid {} resource '
                              'gids in meta source: {}'
                              .format(farm_gid, agg_gids))
+
         ws_mean = source_ws_data[gen_gids]
         lcoe_land = source_lcoe_data[gen_gids]
         cf_mean = source_mean_data[gen_gids]
@@ -206,8 +200,7 @@ def test_sc_agg_offshore():
 
     for sc_gid in s.index:
         if s.at[sc_gid, 'offshore']:
-            assert int(s.at[sc_gid, 'sc_point_gid']) > 1e7
-            assert int(s.at[sc_gid, 'sc_point_gid']) in offshore_gids
+            assert int(s.at[sc_gid, 'farm_gid']) in offshore_gids
             assert all(np.array(json.loads(s.at[sc_gid, 'res_gids'])) < 3e6)
             assert s.at[sc_gid, 'elevation'] == 0.0
             assert s.at[sc_gid, 'capacity'] == 600
@@ -215,14 +208,16 @@ def test_sc_agg_offshore():
         else:
             for res_gid in s.at[sc_gid, 'res_gids']:
                 assert res_gid not in offshore_gids
+
     for gid in offshore_gids:
-        assert gid in s['sc_point_gid'].values
+        assert gid in s['farm_gid'].values
 
 
-def test_offshore_sc_compute(sc_points, offshore_trans_table):
+def test_offshore_sc_compute(sc_points):
     """Run the full SC compute and validate offshore parameters"""
-    sc_full = SupplyCurve.full(sc_points, offshore_trans_table, fcr=0.1,
-                               transmission_costs=TRANS_COSTS_1)
+    sc_full = SupplyCurve.full(sc_points, TRANS_TABLE, fcr=0.1,
+                               transmission_costs=TRANS_COSTS_1,
+                               offshore_trans_table=OFFSHORE_TRANS_TABLE)
     baseline = pd.read_csv(SC_BASELINE)
 
     assert len(sc_full) == len(sc_points), 'Not all SC agg points were built!'
@@ -231,6 +226,7 @@ def test_offshore_sc_compute(sc_points, offshore_trans_table):
         msg = ('Offshore data column "{}" was not passed through to SC table'
                .format(col))
         assert col in sc_full, msg
+
     assert 'combined_cap_cost' in sc_full
 
     offshore_mask = (sc_full['offshore'] == 1)
@@ -263,6 +259,7 @@ def plot_map(offshore):
             plt.scatter(offshore.meta_source_offshore.iloc[ilocs]['longitude'],
                         offshore.meta_source_offshore.iloc[ilocs]['latitude'],
                         c=cs[ic], marker='s')
+
     plt.scatter(offshore.meta_out_offshore['longitude'],
                 offshore.meta_out_offshore['latitude'],
                 c='k', marker='x')

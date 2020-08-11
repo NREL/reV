@@ -1145,6 +1145,10 @@ class SupplyCurveExtent:
 
         self._cols_of_excl = None
         self._rows_of_excl = None
+        self._excl_row_slices = None
+        self._excl_col_slices = None
+        self._latitude = None
+        self._longitude = None
         self._points = None
 
     def __len__(self):
@@ -1266,6 +1270,44 @@ class SupplyCurveExtent:
         return self._cols_of_excl
 
     @property
+    def excl_row_slices(self):
+        """
+        List representing the supply curve points rows and which
+        exclusions rows belong to each supply curve row.
+
+        Returns
+        -------
+        _excl_row_slices : list
+            List representing the supply curve points rows. Each list entry
+            contains the exclusion row slice that are included in the sc
+            point.
+        """
+        if self._excl_row_slices is None:
+            self._excl_row_slices = self._excl_slices(self.excl_rows,
+                                                      self.resolution)
+
+        return self._excl_row_slices
+
+    @property
+    def excl_col_slices(self):
+        """
+        List representing the supply curve points cols and which
+        exclusions cols belong to each supply curve col.
+
+        Returns
+        -------
+        _excl_col_slices : list
+            List representing the supply curve points cols. Each list entry
+            contains the exclusion col slice that are included in the sc
+            point.
+        """
+        if self._excl_col_slices is None:
+            self._excl_col_slices = self._excl_slices(self.excl_cols,
+                                                      self.resolution)
+
+        return self._excl_col_slices
+
+    @property
     def n_rows(self):
         """Get the number of supply curve grid rows.
 
@@ -1288,6 +1330,58 @@ class SupplyCurveExtent:
         return int(np.ceil(self.exclusions.shape[1] / self.resolution))
 
     @property
+    def latitude(self):
+        """
+        Get supply curve point latitudes
+
+        Returns
+        -------
+        ndarray
+        """
+        if self._latitude is None:
+            lats = []
+            lons = []
+
+            sc_cols, sc_rows = np.meshgrid(np.arange(self.n_cols),
+                                           np.arange(self.n_rows))
+            for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
+                r = self.excl_row_slices[r]
+                c = self.excl_col_slices[c]
+                lats.append(self.exclusions['latitude', r, c].mean())
+                lons.append(self.exclusions['longitude', r, c].mean())
+
+            self._latitude = np.array(lats, dtype='float32')
+            self._longitude = np.array(lons, dtype='float32')
+
+        return self._latitude
+
+    @property
+    def longitude(self):
+        """
+        Get supply curve point longitudes
+
+        Returns
+        -------
+        ndarray
+        """
+        if self._longitude is None:
+            lats = []
+            lons = []
+
+            sc_cols, sc_rows = np.meshgrid(np.arange(self.n_cols),
+                                           np.arange(self.n_rows))
+            for r, c in zip(sc_rows.flatten(), sc_cols.flatten()):
+                r = self.excl_row_slices[r]
+                c = self.excl_col_slices[c]
+                lats.append(self.exclusions['latitude', r, c].mean())
+                lons.append(self.exclusions['longitude', r, c].mean())
+
+            self._latitude = np.array(lats, dtype='float32')
+            self._longitude = np.array(lons, dtype='float32')
+
+        return self._longitude
+
+    @property
     def points(self):
         """Get the summary dataframe of supply curve points.
 
@@ -1302,6 +1396,7 @@ class SupplyCurveExtent:
                                                  np.arange(self.n_rows))
             self._points = pd.DataFrame({'row_ind': sc_row_ind.flatten(),
                                          'col_ind': sc_col_ind.flatten()})
+
             self._points.index.name = 'gid'
 
         return self._points
@@ -1330,10 +1425,8 @@ class SupplyCurveExtent:
 
         sc_row_ind = self.points.loc[gid, 'row_ind']
         sc_col_ind = self.points.loc[gid, 'col_ind']
-        excl_rows = self.rows_of_excl[sc_row_ind]
-        excl_cols = self.cols_of_excl[sc_col_ind]
-        row_slice = slice(np.min(excl_rows), np.max(excl_rows) + 1)
-        col_slice = slice(np.min(excl_cols), np.max(excl_cols) + 1)
+        row_slice = self.excl_row_slices[sc_row_ind]
+        col_slice = self.excl_col_slices[sc_col_ind]
 
         return row_slice, col_slice
 
@@ -1394,9 +1487,8 @@ class SupplyCurveExtent:
             Two entry coordinate tuple: (latitude, longitude)
         """
 
-        excl_meta = self.get_excl_points('meta', gid)
-        lat = (excl_meta['latitude'].min() + excl_meta['latitude'].max()) / 2
-        lon = (excl_meta['longitude'].min() + excl_meta['longitude'].max()) / 2
+        lat = self.latitude[gid]
+        lon = self.longitude[gid]
 
         return (lat, lon)
 
@@ -1430,6 +1522,37 @@ class SupplyCurveExtent:
 
         return chunks
 
+    @staticmethod
+    def _excl_slices(arr, resolution):
+        """Split row or col ind into slices of excl rows or slices
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            1D array to be split into slices
+        resolution : int
+            Resolution of the sc points
+
+        Returns
+        -------
+        slices : list
+            List of arr slices, each with length equal to self.resolution
+            (except for the last array in the list which is the remainder).
+        """
+
+        slices = []
+        i = 0
+        while True:
+            if i == len(arr):
+                break
+            else:
+                s, e = arr[i:i + resolution][[0, -1]]
+                slices.append(slice(s, e + 1))
+
+            i = np.min((len(arr), i + resolution))
+
+        return slices
+
     def valid_sc_points(self, tm_dset):
         """
         Determine which sc_point_gids contain resource gids and are thus
@@ -1438,7 +1561,7 @@ class SupplyCurveExtent:
         Parameters
         ----------
         tm_dset : str
-            Techmpa dataset name
+            Techmap dataset name
 
         Returns
         -------

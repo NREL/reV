@@ -279,6 +279,14 @@ class SupplyCurveConfig(AnalysisConfig):
         return self.get('sort_on', self._default_sort_on)
 
     @property
+    def offshore_trans_table(self):
+        """
+        Get path to .csv containing offshore transmission table. If None,
+        exclude offshore supply curve points
+        """
+        return self.get('offshore_trans_table', None)
+
+    @property
     def wind_dirs(self):
         """Get the supply curve power-rose wind directions"""
         return self.get('wind_dirs', None)
@@ -292,6 +300,13 @@ class SupplyCurveConfig(AnalysisConfig):
     def downwind(self):
         """Get the flag to exclude downwind as well as upwind sites"""
         return self.get('downwind', False)
+
+    @property
+    def offshore_wind_dirs(self):
+        """
+        Get flag to execute competitive wind directions for offshore sites
+        """
+        return self.get('offshore_wind_dirs', False)
 
     @property
     def max_workers(self):
