@@ -135,6 +135,10 @@ class SupplyCurve:
             logger.debug('Adding Supply Curve Features table with columns: {}'
                          .format(sc_features.columns.values.tolist()))
 
+        if 'transmission_multiplier' in sc_points:
+            col = 'transmission_multiplier'
+            sc_points.loc[:, col] = sc_points.loc[:, col].fillna(1)
+
         logger.debug('Final supply curve points table has columns: {}'
                      .format(sc_points.columns.values.tolist()))
 
@@ -226,6 +230,9 @@ class SupplyCurve:
         if 'mean_lcoe_friction' in sc_points:
             sc_cols.append('mean_lcoe_friction')
 
+        if 'transmission_multiplier' in sc_points:
+            sc_cols.append('transmission_multiplier')
+
         merge_cols = SupplyCurve._get_merge_cols(sc_points.columns,
                                                  trans_table.columns)
         sc_points = sc_points.rename(columns=merge_cols)
@@ -246,11 +253,6 @@ class SupplyCurve:
                 offshore_table = offshore_table.loc[~missing]
 
             trans_table = pd.concat((trans_table, offshore_table))
-
-        if 'transmission_multiplier' in sc_points:
-            sc_cols.append('transmission_multiplier')
-            col = 'transmission_multiplier'
-            sc_points.loc[:, col] = sc_points.loc[:, col].fillna(1)
 
         sc_cols = sc_cols + merge_cols
         sc_points = sc_points[sc_cols].copy()
