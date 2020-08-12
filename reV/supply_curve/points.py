@@ -1382,6 +1382,17 @@ class SupplyCurveExtent:
         return self._longitude
 
     @property
+    def lat_lon(self):
+        """
+        2D array of lat, lon coordinates for all sc points
+
+        Returns
+        -------
+        ndarray
+        """
+        return np.dstack((self.latitude, self.longitude))[0]
+
+    @property
     def points(self):
         """Get the summary dataframe of supply curve points.
 

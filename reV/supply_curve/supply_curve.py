@@ -206,11 +206,13 @@ class SupplyCurve:
         ----------
         sc_points : pd.DataFrame
             Table of supply curve point summary
-        trans_table : pd.DataFrame
+        trans_table : pd.DataFrame | str
             Table mapping supply curve points to transmission features
-        offshore_table : str, optional
-            Path to offshore transmission table, if None offshore sc points
-            will not be included, by default None
+            (either str filepath to table file or pre-loaded dataframe).
+        offshore_table : str | pd.DataFrame, optional
+            Offshore transmission table (either str filepath or pre-loaded
+            dataframe), if None offshore sc points will not be included,
+            by default None
         sc_cols : tuple | list, optional
             List of column from sc_points to transfer into the trans table,
             by default ('capacity', 'sc_gid', 'mean_cf', 'mean_lcoe')
@@ -749,7 +751,7 @@ class SupplyCurve:
                   columns=('trans_gid', 'trans_capacity', 'trans_type',
                            'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
                   wind_dirs=None, n_dirs=2, downwind=False,
-                  offshore_wind_dirs=False):
+                  offshore_compete=False):
         """
         run full supply curve sorting
 
@@ -773,7 +775,7 @@ class SupplyCurve:
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors,
             by default False
-        offshore_wind_dirs : bool, default
+        offshore_compete : bool, default
             Flag as to whether offshore farms should be included during
             CompetitiveWindFarms, by default False
 
@@ -804,7 +806,7 @@ class SupplyCurve:
                 msg += " and downwind"
 
             msg += " onshore"
-            if offshore_wind_dirs:
+            if offshore_compete:
                 msg += " and offshore"
 
             msg += " windfarms"
@@ -812,7 +814,7 @@ class SupplyCurve:
             comp_wind_dirs = CompetitiveWindFarms(wind_dirs,
                                                   self._sc_points,
                                                   n_dirs=n_dirs,
-                                                  offshore=offshore_wind_dirs)
+                                                  offshore=offshore_compete)
 
         supply_curve = self._full_sort(trans_table,
                                        comp_wind_dirs=comp_wind_dirs,
@@ -831,7 +833,7 @@ class SupplyCurve:
                     columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                              'trans_cap_cost'),
                     wind_dirs=None, n_dirs=2, downwind=False,
-                    offshore_wind_dirs=False):
+                    offshore_compete=False):
         """
         Run simple supply curve sorting that does not take into account
         available capacity
@@ -855,7 +857,7 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
-        offshore_wind_dirs : bool, default
+        offshore_compete : bool, default
             Flag as to whether offshore farms should be included during
             CompetitiveWindFarms, by default False
 
@@ -887,7 +889,7 @@ class SupplyCurve:
                 CompetitiveWindFarms.run(wind_dirs,
                                          supply_curve,
                                          n_dirs=n_dirs,
-                                         offshore=offshore_wind_dirs,
+                                         offshore=offshore_compete,
                                          sort_on=sort_on,
                                          downwind=downwind)
 
@@ -906,7 +908,7 @@ class SupplyCurve:
              columns=('trans_gid', 'trans_capacity', 'trans_type',
                       'trans_cap_cost', 'dist_mi', 'lcot', 'total_lcoe'),
              max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
-             offshore_wind_dirs=False):
+             offshore_compete=False):
         """
         Run full supply curve taking into account available capacity of
         tranmission features when making connections.
@@ -951,7 +953,7 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
-        offshore_wind_dirs : bool, default
+        offshore_compete : bool, default
             Flag as to whether offshore farms should be included during
             CompetitiveWindFarms, by default False
 
@@ -968,7 +970,7 @@ class SupplyCurve:
         supply_curve = sc.full_sort(sort_on=sort_on, columns=columns,
                                     wind_dirs=wind_dirs, n_dirs=n_dirs,
                                     downwind=downwind,
-                                    offshore_wind_dirs=offshore_wind_dirs)
+                                    offshore_compete=offshore_compete)
 
         return supply_curve
 
@@ -979,7 +981,7 @@ class SupplyCurve:
                columns=('trans_gid', 'trans_type', 'lcot', 'total_lcoe',
                         'trans_cap_cost'),
                max_workers=None, wind_dirs=None, n_dirs=2, downwind=False,
-               offshore_wind_dirs=False):
+               offshore_compete=False):
         """
         Run simple supply curve by connecting to the cheapest tranmission
         feature.
@@ -1021,7 +1023,7 @@ class SupplyCurve:
             Number of prominent directions to use, by default 2
         downwind : bool, optional
             Flag to remove downwind neighbors as well as upwind neighbors
-        offshore_wind_dirs : bool, default
+        offshore_compete : bool, default
             Flag as to whether offshore farms should be included during
             CompetitiveWindFarms, by default False
 
@@ -1038,6 +1040,6 @@ class SupplyCurve:
         supply_curve = sc.simple_sort(sort_on=sort_on, columns=columns,
                                       wind_dirs=wind_dirs, n_dirs=n_dirs,
                                       downwind=downwind,
-                                      offshore_wind_dirs=offshore_wind_dirs)
+                                      offshore_compete=offshore_compete)
 
         return supply_curve

@@ -386,7 +386,7 @@ class OffshoreAggregation:
         """
         with SupplyCurveExtent(excl_fpath, resolution=resolution) as f:
             points = f.points
-            sc_lat_lons = np.dstack((f.latitude, f.longitude))[0]
+            sc_lat_lons = f.lat_lon
 
         tree = cKDTree(sc_lat_lons)  # pylint: disable=not-callable
         _, pos = tree.query(lat_lons)

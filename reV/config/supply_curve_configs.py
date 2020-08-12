@@ -302,11 +302,11 @@ class SupplyCurveConfig(AnalysisConfig):
         return self.get('downwind', False)
 
     @property
-    def offshore_wind_dirs(self):
+    def offshore_compete(self):
         """
         Get flag to execute competitive wind directions for offshore sites
         """
-        return self.get('offshore_wind_dirs', False)
+        return self.get('offshore_compete', False)
 
     @property
     def max_workers(self):
