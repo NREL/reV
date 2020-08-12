@@ -9,7 +9,7 @@ The full pipeline can be executed using the following CLI call:
 .. code-block:: bash
 
     rev -c ./config_pipeline.json pipeline
-
+    
 You can also use the ``--monitor`` flag to continuously monitor the pipeline and submit jobs for the next pipeline step when the current pipeline step is complete:
 
 .. code-block:: bash
@@ -25,6 +25,12 @@ The continuous monitoring can also be run in a ``nohup`` background process by a
 
 It's important to note that background monitoring will not capture the stdout/stderr, so you should set the ``log_file`` argument 
 in the pipeline config json file to log any important messages from the pipeline module. 
+
+Finally, if anything goes wrong you can cancel all the pipeline jobs using the ``--cancel`` flag:
+
+.. code-block:: bash
+
+    rev -c ./config_pipeline.json pipeline --cancel
  
 Pipeline Input Requirements
 ---------------------------
