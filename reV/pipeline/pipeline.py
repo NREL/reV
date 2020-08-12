@@ -125,11 +125,21 @@ class Pipeline:
 
         command, f_config = self._get_command_config(i)
         cmd = self._get_cmd(command, f_config, verbose=self.verbose)
+
         logger.info('reV pipeline submitting: "{}" for job "{}"'
                     .format(command, self._config.name))
         logger.debug('reV pipeline submitting subprocess call:\n\t"{}"'
                      .format(cmd))
-        SubprocessManager.submit(cmd)
+
+        try:
+            stderr = SubprocessManager.submit(cmd)[1]
+        except OSError as e:
+            logger.exception('Pipeline subprocess submission returned an '
+                             'error: \n{}'.format(e))
+            raise e
+
+        if stderr:
+            logger.warning('Subprocess received stderr: \n{}'.format(stderr))
 
     def _check_step_completed(self, i):
         """Check if a pipeline step has been completed.
