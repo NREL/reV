@@ -147,16 +147,22 @@ def valid_collect_keys(ctx):
 @click.option('--monitor', is_flag=True,
               help='Flag to monitor pipeline jobs continuously. '
               'Default is not to monitor (kick off jobs and exit).')
+@click.option('--background', is_flag=True,
+              help='Flag to monitor pipeline jobs continuously '
+              'in the background using the nohup command. Note that the '
+              'stdout/stderr will not be captured, but you can set a '
+              'pipeline log_file to capture logs.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def pipeline(ctx, cancel, monitor, verbose):
+def pipeline(ctx, cancel, monitor, background, verbose):
     """Execute multiple steps in a reV analysis pipeline."""
     if ctx.invoked_subcommand is None:
         config_file = ctx.obj['CONFIG_FILE']
         verbose = any([verbose, ctx.obj['VERBOSE']])
         ctx.invoke(run_pipeline_from_config, config_file=config_file,
-                   cancel=cancel, monitor=monitor, verbose=verbose)
+                   cancel=cancel, monitor=monitor, background=background,
+                   verbose=verbose)
 
 
 @pipeline.command()

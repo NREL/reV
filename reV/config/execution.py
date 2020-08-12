@@ -206,5 +206,5 @@ class SlurmConfig(HPCConfig):
         _hpc_walltime : int
             Requested single node job time in hours.
         """
-        self._hpc_walltime = int(self.get('walltime', self._hpc_walltime))
+        self._hpc_walltime = float(self.get('walltime', self._hpc_walltime))
         return self._hpc_walltime
