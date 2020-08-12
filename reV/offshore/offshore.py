@@ -153,14 +153,15 @@ class Offshore:
 
         with Outputs(gen_fpath, mode='r') as out:
             meta = out.meta
+
         if 'offshore' not in meta:
             e = ('Offshore module cannot run without "offshore" flag in meta '
                  'data of gen_fpath: {}'.format(gen_fpath))
             logger.error(e)
             raise KeyError(e)
 
-        onshore_mask = (meta['offshore'] == 0)
-        offshore_mask = (meta['offshore'] == 1)
+        onshore_mask = meta['offshore'] == 0
+        offshore_mask = meta['offshore'] == 1
 
         return meta, onshore_mask, offshore_mask
 
@@ -227,6 +228,7 @@ class Offshore:
         tree = cKDTree(self._farm_coords)  # pylint: disable=not-callable
         d, i = tree.query(self.meta_source_offshore[['latitude', 'longitude']])
 
+        d_lim = 0
         if len(self._farm_coords) > 1:
             d_lim, _ = tree.query(self._farm_coords, k=2)
             d_lim = 0.5 * np.median(d_lim[:, 1])

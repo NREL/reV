@@ -365,11 +365,39 @@ class OffshoreAggregation:
 
         return offshore_meta_cols
 
+    @staticmethod
+    def _nearest_sc_points(excl_fpath, resolution, lat_lons):
+        """
+        Get nearest sc_points to offshore farms
+
+        Parameters
+        ----------
+        excl_fpath : str
+            Filepath to exclusions h5 with techmap dataset.
+        resolution : int
+            SC resolution
+        lat_lons : ndarray
+            Offshore wind farm coordinates (lat, lon) pairs
+
+        Returns
+        -------
+        points : pandas.DataFrame
+            Nearest SC points (gid, row_ind, and col_ind)
+        """
+        with SupplyCurveExtent(excl_fpath, resolution=resolution) as f:
+            points = f.points
+            sc_lat_lons = f.lat_lon
+
+        tree = cKDTree(sc_lat_lons)  # pylint: disable=not-callable
+        _, pos = tree.query(lat_lons)
+
+        return points.loc[pos].reset_index()
+
     @classmethod
-    def run(cls, summary, handler, res_data, res_class_bins, cf_data,
-            lcoe_data, offshore_flag, offshore_capacity=600,
-            offshore_gid_counts=494, offshore_pixel_area=4,
-            offshore_meta_cols=None):
+    def run(cls, summary, handler, excl_fpath, res_data, res_class_bins,
+            cf_data, lcoe_data, offshore_flag, resolution=64,
+            offshore_capacity=600, offshore_gid_counts=494,
+            offshore_pixel_area=4, offshore_meta_cols=None):
         """Get the offshore supply curve point summary. Each offshore resource
         pixel will be summarized in its own supply curve point which will be
         added to the summary list.
@@ -380,6 +408,8 @@ class OffshoreAggregation:
             List of dictionaries, each being an onshore SC point summary.
         handler : SupplyCurveAggFileHandler
             Instantiated SupplyCurveAggFileHandler.
+        excl_fpath : str
+            Filepath to exclusions h5 with techmap dataset.
         res_data : np.ndarray | None
             Extracted resource data from res_class_dset
         res_class_bins : list
@@ -393,6 +423,8 @@ class OffshoreAggregation:
             data. If this is input as None, this method has been called
             without offshore data in error and summary will be passed
             through un manipulated.
+        resolution : int, optional
+            SC resolution, by default 64
         offshore_capacity : int | float
             Offshore resource pixel generation capacity in MW.
         offshore_gid_counts : int
@@ -422,6 +454,11 @@ class OffshoreAggregation:
         offshore_meta_cols = cls._parse_meta_cols(offshore_meta_cols,
                                                   handler.gen.meta)
 
+        gen_gids = list(range(len(offshore_flag)))
+        cols = ['latitude', 'longitude']
+        lat_lon = handler.gen.meta.loc[gen_gids, cols].values
+        sc_points = cls._nearest_sc_points(excl_fpath, resolution, lat_lon)
+
         for gen_gid, offshore in enumerate(offshore_flag):
             if offshore:
                 if 'offshore_res_gids' not in handler.gen.meta:
@@ -446,9 +483,10 @@ class OffshoreAggregation:
                 lcoe = cls._get_means(lcoe_data, gen_gid)
                 res = cls._get_means(res_data, gen_gid)
 
-                pointsum = {'sc_point_gid': farm_gid,
-                            'sc_row_ind': farm_gid,
-                            'sc_col_ind': farm_gid,
+                pointsum = {'sc_point_gid': sc_points.loc[gen_gid, 'gid'],
+                            'sc_row_ind': sc_points.loc[gen_gid, 'row_ind'],
+                            'sc_col_ind': sc_points.loc[gen_gid, 'col_ind'],
+                            'farm_gid': farm_gid,
                             'res_gids': res_gids,
                             'gen_gids': [gen_gid],
                             'gid_counts': [int(offshore_gid_counts)],
@@ -955,8 +993,9 @@ class SupplyCurveAggregation(AbstractAggregation):
 
             if offshore_flag is not None:
                 summary = OffshoreAggregation.run(
-                    summary, fh, res_data, res_class_bins, cf_data,
-                    lcoe_data, offshore_flag,
+                    summary, fh, self._excl_fpath, res_data, res_class_bins,
+                    cf_data, lcoe_data, offshore_flag,
+                    resolution=self._resolution,
                     offshore_capacity=offshore_capacity,
                     offshore_gid_counts=offshore_gid_counts,
                     offshore_pixel_area=offshore_pixel_area,

@@ -112,9 +112,11 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['SC_FEATURES'] = config.sc_features
         ctx.obj['TRANSMISSION_COSTS'] = config.transmission_costs
         ctx.obj['SORT_ON'] = config.sort_on
+        ctx.obj['OFFSHORE_TRANS_TABLE'] = config.offshore_trans_table
         ctx.obj['WIND_DIRS'] = config.wind_dirs
         ctx.obj['N_DIRS'] = config.n_dirs
         ctx.obj['DOWNWIND'] = config.downwind
+        ctx.obj['OFFSHORE_COMPETE'] = config.offshore_compete
         ctx.obj['MAX_WORKERS'] = config.max_workers
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
@@ -140,12 +142,15 @@ def from_config(ctx, config_file, verbose):
               help='Fixed charge rate used to compute LCOT')
 @click.option('--sc_features', '-scf', type=STR, default=None,
               help='Table containing additional supply curve features '
-              '(.csv or .json)')
+                   '(.csv or .json)')
 @click.option('--transmission_costs', '-tc', type=STR, default=None,
               help='Table or serialized dict of transmission cost inputs.')
 @click.option('--sort_on', '-so', type=str, default='total_lcoe',
               help='The supply curve table column label to sort on. '
               'This determines the ordering of the SC buildout algorithm.')
+@click.option('--offshore_trans_table', '-ott', type=STR, default=None,
+              help=('Path to offshore transmission table, if None offshore sc '
+                    'points will not be included, by default None'))
 @click.option('--wind_dirs', '-wd', type=click.Path(exists=True), default=None,
               help=('Path to .csv containing reVX.wind_dirs.wind_dirs.WindDirs'
                     ' output with the neighboring supply curve point gids and '
@@ -155,6 +160,9 @@ def from_config(ctx, config_file, verbose):
 @click.option('--downwind', '-dw', is_flag=True,
               help=('Flag to remove downwind neighbors as well as upwind '
                     'neighbors'))
+@click.option('--offshore_compete', '-oc', is_flag=True,
+              help=('Flag as to whether offshore farms should be included '
+                    'during CompetitiveWindFarms, by default False'))
 @click.option('--max_workers', '-mw', type=INT, default=None,
               help=('Number of workers to use to compute lcot, if > 1 run in '
                     'parallel. None uses all available cpus.'))
@@ -172,8 +180,9 @@ def from_config(ctx, config_file, verbose):
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
-           transmission_costs, sort_on, wind_dirs, n_dirs, downwind,
-           max_workers, out_dir, log_dir, simple, line_limited, verbose):
+           transmission_costs, sort_on, offshore_trans_table, wind_dirs,
+           n_dirs, downwind, offshore_compete, max_workers, out_dir, log_dir,
+           simple, line_limited, verbose):
     """reV Supply Curve CLI."""
     name = ctx.obj['NAME']
     ctx.obj['SC_POINTS'] = sc_points
@@ -182,10 +191,12 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
     ctx.obj['SC_FEATURES'] = sc_features
     ctx.obj['TRANSMISSION_COSTS'] = transmission_costs
     ctx.obj['SORT_ON'] = sort_on
+    ctx.obj['OFFSHORE_TRANS_TABLE'] = offshore_trans_table
     ctx.obj['WIND_DIRS'] = wind_dirs
     ctx.obj['N_DIRS'] = n_dirs
     ctx.obj['DOWNWIND'] = downwind
     ctx.obj['MAX_WORKERS'] = max_workers
+    ctx.obj['OFFSHORE_COMPETE'] = offshore_compete
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['SIMPLE'] = simple
@@ -201,6 +212,7 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
         if isinstance(transmission_costs, str):
             transmission_costs = dict_str_load(transmission_costs)
 
+        offshore_table = offshore_trans_table
         try:
             if simple:
                 out = SupplyCurve.simple(sc_points, trans_table,
@@ -209,7 +221,9 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
                                          transmission_costs=transmission_costs,
                                          sort_on=sort_on, wind_dirs=wind_dirs,
                                          n_dirs=n_dirs, downwind=downwind,
-                                         max_workers=max_workers)
+                                         max_workers=max_workers,
+                                         offshore_trans_table=offshore_table,
+                                         offshore_compete=offshore_compete)
             else:
                 out = SupplyCurve.full(sc_points, trans_table,
                                        fixed_charge_rate,
@@ -218,7 +232,9 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
                                        line_limited=line_limited,
                                        sort_on=sort_on, wind_dirs=wind_dirs,
                                        n_dirs=n_dirs, downwind=downwind,
-                                       max_workers=max_workers)
+                                       max_workers=max_workers,
+                                       offshore_trans_table=offshore_table,
+                                       offshore_compete=offshore_compete)
         except Exception as e:
             logger.exception('Supply curve compute failed. Received the '
                              'following error:\n{}'.format(e))
@@ -248,8 +264,9 @@ def direct(ctx, sc_points, trans_table, fixed_charge_rate, sc_features,
 
 
 def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
-                 transmission_costs, sort_on, wind_dirs, n_dirs, downwind,
-                 max_workers, out_dir, log_dir, simple, line_limited, verbose):
+                 transmission_costs, sort_on, offshore_trans_table, wind_dirs,
+                 n_dirs, downwind, offshore_compete, max_workers, out_dir,
+                 log_dir, simple, line_limited, verbose):
     """Get a CLI call command for the Supply Curve cli."""
 
     args = ('-sc {sc_points} '
@@ -258,6 +275,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-scf {sc_features} '
             '-tc {transmission_costs} '
             '-so {sort_on} '
+            '-ott {offshore_trans_table}'
             '-dirs {n_dirs} '
             '-mw {max_workers} '
             '-o {out_dir} '
@@ -270,6 +288,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
                        sc_features=SLURM.s(sc_features),
                        transmission_costs=SLURM.s(transmission_costs),
                        sort_on=SLURM.s(sort_on),
+                       offshore_trans_table=SLURM.s(offshore_trans_table),
                        n_dirs=SLURM.s(n_dirs),
                        max_workers=SLURM.s(max_workers),
                        out_dir=SLURM.s(out_dir),
@@ -281,6 +300,9 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
 
     if downwind:
         args += '-dw '
+
+    if offshore_compete:
+        args += '-oc'
 
     if simple:
         args += '-s '
@@ -325,9 +347,11 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
     simple = ctx.obj['SIMPLE']
     line_limited = ctx.obj['LINE_LIMITED']
     sort_on = ctx.obj['SORT_ON']
+    offshore_trans_table = ctx.obj['OFFSHORE_TRANS_TABLE']
     wind_dirs = ctx.obj['WIND_DIRS']
     n_dirs = ctx.obj['N_DIRS']
     downwind = ctx.obj['DOWNWIND']
+    offshore_compete = ctx.obj['OFFSHORE_COMPETE']
     max_workers = ctx.obj['MAX_WORKERS']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
@@ -337,9 +361,10 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
         stdout_path = os.path.join(log_dir, 'stdout/')
 
     cmd = get_node_cmd(name, sc_points, trans_table, fixed_charge_rate,
-                       sc_features, transmission_costs, sort_on, wind_dirs,
-                       n_dirs, downwind, max_workers, out_dir, log_dir, simple,
-                       line_limited, verbose)
+                       sc_features, transmission_costs, sort_on,
+                       offshore_trans_table, wind_dirs, n_dirs, downwind,
+                       offshore_compete, max_workers, out_dir, log_dir,
+                       simple, line_limited, verbose)
 
     status = Status.retrieve_job_status(out_dir, 'supply-curve', name)
     if status == 'successful':

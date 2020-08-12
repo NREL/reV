@@ -12,10 +12,11 @@
     "walltime": 4
   },
   "fixed_charge_rate": 0.096,
+  "offshore_trans_table": "./inputs/offshore_allconns.csv",
   "sc_features": null,
   "sc_points": "PIPELINE",
   "simple": false,
-  "trans_table": "./inputs/land_offshore_allconns.csv",
+  "trans_table": "./inputs/land_allconns.csv",
   "transmission_costs": {
     "available_capacity": 0.3,
     "center_tie_in_cost": 10,

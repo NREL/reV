@@ -144,8 +144,7 @@ class ExclusionLayers:
         layers : list
             List of exclusion layers
         """
-        layers = [ds for ds in self.h5
-                  if ds != 'meta']
+        layers = sorted([ds for ds in self.h5])
 
         return layers
 
