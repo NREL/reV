@@ -19,6 +19,7 @@ import logging
 from reV.pipeline.pipeline import Pipeline
 from reV.config.batch import BatchConfig
 from reV.utilities.exceptions import PipelineError
+from reV.pipeline.cli_pipeline import pipeline_monitor_background
 
 from rex.utilities import safe_json_load, parse_year
 
@@ -323,16 +324,30 @@ class BatchJob:
                             shutil.copy(os.path.join(dirpath, fn),
                                         os.path.join(new_path, fn))
 
-    def _run_pipelines(self):
-        """Run the reV pipeline modules for each batch job."""
+    def _run_pipelines(self, monitor_background=False, verbose=False):
+        """Run the reV pipeline modules for each batch job.
+
+        Parameters
+        ----------
+        monitor_background : bool
+            Flag to monitor all batch pipelines continuously
+            in the background using the nohup command. Note that the
+            stdout/stderr will not be captured, but you can set a
+            pipeline "log_file" to capture logs.
+        verbose : bool
+            Flag to turn on debug logging for the pipelines.
+        """
+
         for d in self.sub_dirs:
             pipeline_config = os.path.join(
                 d, os.path.basename(self._config.pipeline_config))
-            if os.path.isfile(pipeline_config):
-                Pipeline.run(pipeline_config, monitor=False)
-            else:
+            if not os.path.isfile(pipeline_config):
                 raise PipelineError('Could not find pipeline config to run: '
                                     '"{}"'.format(pipeline_config))
+            elif monitor_background:
+                pipeline_monitor_background(pipeline_config, verbose=verbose)
+            else:
+                Pipeline.run(pipeline_config, monitor=False, verbose=verbose)
 
     def _cancel_all(self):
         """Cancel all reV pipeline modules for all batch jobs."""
@@ -356,7 +371,8 @@ class BatchJob:
         b._cancel_all()
 
     @classmethod
-    def run(cls, config, dry_run=False):
+    def run(cls, config, dry_run=False, monitor_background=False,
+            verbose=False):
         """Run the reV batch job from a config file.
 
         Parameters
@@ -365,9 +381,17 @@ class BatchJob:
             File path to config json (str).
         dry_run : bool
             Flag to make job directories without running.
+        monitor_background : bool
+            Flag to monitor all batch pipelines continuously
+            in the background using the nohup command. Note that the
+            stdout/stderr will not be captured, but you can set a
+            pipeline "log_file" to capture logs.
+        verbose : bool
+            Flag to turn on debug logging for the pipelines.
         """
 
         b = cls(config)
         b._make_job_dirs()
         if not dry_run:
-            b._run_pipelines()
+            b._run_pipelines(monitor_background=monitor_background,
+                             verbose=verbose)
