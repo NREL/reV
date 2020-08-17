@@ -697,11 +697,13 @@ class ProjectPoints:
         Parameters
         ----------
         df2 : pd.DataFrame
-            Dataframe to be joined to the _df attribute. This likely contains
+            Dataframe to be joined to the self._df attribute (this instance
+            of project points dataframe). This likely contains
             site-specific inputs that are to be passed to parallel workers.
-        key : str | pd.DataFrame.index
-            Primary key of df2 to be joined to the _df attribute. Primary key
-            of the _df attribute is fixed as the gid column.
+        key : str
+            Primary key of df2 to be joined to the _df attribute (this
+            instance of the project points dataframe). Primary key
+            of the self._df attribute is fixed as the gid column.
         """
         # ensure df2 doesnt have any duplicate columns for suffix reasons.
         df2_cols = [c for c in df2.columns if c not in self._df or c == key]

@@ -288,7 +288,8 @@ class Econ(Gen):
         This ensures that only the relevant site's data will be passed through
         to parallel workers when points_control is iterated and split.
         """
-        self.project_points.join_df(self.site_data, key=self.site_data.index)
+        self.project_points.join_df(self.site_data,
+                                    key=self.site_data.index.name)
 
     @property
     def meta(self):
