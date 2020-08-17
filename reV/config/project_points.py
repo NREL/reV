@@ -399,6 +399,29 @@ class ProjectPoints:
 
         return df
 
+    def index(self, gid):
+        """Get the index location (iloc not loc) for a resource gid found in
+        the project points.
+
+        Parameters
+        ----------
+        gid : int
+            Resource GID found in the project points gid column.
+
+        Returns
+        -------
+        ind : int
+            Row index of gid in the project points dataframe.
+        """
+        if gid not in self._df['gid'].values:
+            e = ('Requested resource gid {} is not present in the project '
+                 'points dataframe. Cannot return row index.'.format(gid))
+            logger.error(e)
+            raise ConfigError(e)
+
+        ind = np.where(self._df['gid'] == gid)[0][0]
+        return ind
+
     @property
     def df(self):
         """Get the project points dataframe property.
@@ -710,12 +733,12 @@ class ProjectPoints:
         Parameters
         ----------
         i0 : int
-            Starting INDEX (not site number) (inclusive) of the site property
+            Starting INDEX (not resource gid) (inclusive) of the site property
             attribute to include in the split instance. This is not necessarily
             the same as the starting site number, for instance if ProjectPoints
             is sites 20:100, i0=0 i1=10 will result in sites 20:30.
         i1 : int
-            Ending INDEX (not site number) (exclusive) of the site property
+            Ending INDEX (not resource gid) (exclusive) of the site property
             attribute to include in the split instance. This is not necessarily
             the same as the final site number, for instance if ProjectPoints is
             sites 20:100, i0=0 i1=10 will result in sites 20:30.

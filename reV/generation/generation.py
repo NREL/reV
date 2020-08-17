@@ -906,9 +906,11 @@ class Gen:
                 with res_cls(res_file, **res_kwargs) as f:
                     if 'gid' in f.meta:
                         gid0 = f.meta['gid'].values[0]
-                        gid1 = f.meta['gid'].values[-1] + 1
+                        gid1 = f.meta['gid'].values[-1]
+                        i0 = pp.index(gid0)
+                        i1 = pp.index(gid1) + 1
                         pc = PointsControl.split(
-                            gid0, gid1, pp, sites_per_split=sites_per_worker)
+                            i0, i1, pp, sites_per_split=sites_per_worker)
 
             except FileNotFoundError as ex:
                 msg = ('{} is invalid PointsControl will be created for all '
