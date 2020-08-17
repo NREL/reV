@@ -227,6 +227,7 @@ class Econ(Gen):
         if inp is None or inp is False:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
+            site_data.index.name = 'gid'
         else:
             # explicit input, initialize df
             if isinstance(inp, str):
