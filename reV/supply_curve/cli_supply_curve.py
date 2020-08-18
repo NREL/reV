@@ -275,7 +275,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
             '-scf {sc_features} '
             '-tc {transmission_costs} '
             '-so {sort_on} '
-            '-ott {offshore_trans_table}'
+            '-ott {offshore_trans_table} '
             '-dirs {n_dirs} '
             '-mw {max_workers} '
             '-o {out_dir} '
