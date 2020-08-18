@@ -302,7 +302,7 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
         args += '-dw '
 
     if offshore_compete:
-        args += '-oc'
+        args += '-oc '
 
     if simple:
         args += '-s '
