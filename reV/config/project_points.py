@@ -399,6 +399,29 @@ class ProjectPoints:
 
         return df
 
+    def index(self, gid):
+        """Get the index location (iloc not loc) for a resource gid found in
+        the project points.
+
+        Parameters
+        ----------
+        gid : int
+            Resource GID found in the project points gid column.
+
+        Returns
+        -------
+        ind : int
+            Row index of gid in the project points dataframe.
+        """
+        if gid not in self._df['gid'].values:
+            e = ('Requested resource gid {} is not present in the project '
+                 'points dataframe. Cannot return row index.'.format(gid))
+            logger.error(e)
+            raise ConfigError(e)
+
+        ind = np.where(self._df['gid'] == gid)[0][0]
+        return ind
+
     @property
     def df(self):
         """Get the project points dataframe property.
@@ -674,11 +697,13 @@ class ProjectPoints:
         Parameters
         ----------
         df2 : pd.DataFrame
-            Dataframe to be joined to the _df attribute. This likely contains
+            Dataframe to be joined to the self._df attribute (this instance
+            of project points dataframe). This likely contains
             site-specific inputs that are to be passed to parallel workers.
-        key : str | pd.DataFrame.index
-            Primary key of df2 to be joined to the _df attribute. Primary key
-            of the _df attribute is fixed as the gid column.
+        key : str
+            Primary key of df2 to be joined to the _df attribute (this
+            instance of the project points dataframe). Primary key
+            of the self._df attribute is fixed as the gid column.
         """
         # ensure df2 doesnt have any duplicate columns for suffix reasons.
         df2_cols = [c for c in df2.columns if c not in self._df or c == key]
@@ -710,12 +735,12 @@ class ProjectPoints:
         Parameters
         ----------
         i0 : int
-            Starting INDEX (not site number) (inclusive) of the site property
+            Starting INDEX (not resource gid) (inclusive) of the site property
             attribute to include in the split instance. This is not necessarily
             the same as the starting site number, for instance if ProjectPoints
             is sites 20:100, i0=0 i1=10 will result in sites 20:30.
         i1 : int
-            Ending INDEX (not site number) (exclusive) of the site property
+            Ending INDEX (not resource gid) (exclusive) of the site property
             attribute to include in the split instance. This is not necessarily
             the same as the final site number, for instance if ProjectPoints is
             sites 20:100, i0=0 i1=10 will result in sites 20:30.

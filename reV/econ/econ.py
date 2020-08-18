@@ -227,6 +227,7 @@ class Econ(Gen):
         if inp is None or inp is False:
             # no input, just initialize dataframe with site gids as index
             site_data = pd.DataFrame(index=self.project_points.sites)
+            site_data.index.name = 'gid'
         else:
             # explicit input, initialize df
             if isinstance(inp, str):
@@ -288,7 +289,8 @@ class Econ(Gen):
         This ensures that only the relevant site's data will be passed through
         to parallel workers when points_control is iterated and split.
         """
-        self.project_points.join_df(self.site_data, key=self.site_data.index)
+        self.project_points.join_df(self.site_data,
+                                    key=self.site_data.index.name)
 
     @property
     def meta(self):

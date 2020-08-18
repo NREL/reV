@@ -135,6 +135,39 @@ def test_append_data(year):
     assert all([d in new_dsets for d in og_dsets])
 
 
+@pytest.mark.parametrize('node', (0, 1))
+def test_append_multi_node(node):
+    """Test econ multi node with append flag ON using a
+    real reV run from 8/17/2020"""
+
+    original_file = os.path.join(
+        TESTDATADIR, 'gen_out/pv_atb20_gen_1998_node0{}.h5'.format(node))
+    cf_file = os.path.join(
+        TESTDATADIR, 'gen_out/copy_pv_atb20_gen_1998_node0{}.h5'.format(node))
+    shutil.copy(original_file, cf_file)
+    sam_files = {'default': os.path.join(
+        TESTDATADIR, 'SAM/pv_tracking_atb2020.json')}
+    year = 1998
+    points = os.path.join(
+        TESTDATADIR, 'config/nsrdb_projpoints_atb2020_capcostmults_subset.csv')
+    site_data = os.path.join(
+        TESTDATADIR, 'config/nsrdb_sitedata_atb2020_capcostmults_subset.csv')
+    econ = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
+                        cf_year=year, output_request='lcoe_fcr',
+                        max_workers=1, sites_per_worker=25,
+                        points_range=None, append=True, site_data=site_data)
+
+    with Outputs(original_file) as out:
+        data_baseline = out['lcoe_fcr']
+    with Outputs(cf_file) as out:
+        data_test = out['lcoe_fcr']
+
+    if PURGE_OUT:
+        os.remove(cf_file)
+
+    assert np.allclose(data_baseline, data_test)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 
