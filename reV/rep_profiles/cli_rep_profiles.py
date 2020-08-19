@@ -234,40 +234,28 @@ def get_node_cmd(name, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
                  aggregate_profiles, verbose):
     """Get a CLI call command for the rep profiles cli."""
 
-    args = ('-g {gen_fpath} '
-            '-r {rev_summary} '
-            '-rc {reg_cols} '
-            '-cf {cf_dset} '
-            '-rm {rep_method} '
-            '-em {err_method} '
-            '-w {weight} '
-            '-np {n_profiles} '
-            '-od {out_dir} '
-            '-ld {log_dir} '
-            '-mw {max_workers} '
-            )
-
-    args = args.format(gen_fpath=SLURM.s(gen_fpath),
-                       rev_summary=SLURM.s(rev_summary),
-                       reg_cols=SLURM.s(reg_cols),
-                       cf_dset=SLURM.s(cf_dset),
-                       rep_method=SLURM.s(rep_method),
-                       err_method=SLURM.s(err_method),
-                       weight=SLURM.s(weight),
-                       n_profiles=SLURM.s(n_profiles),
-                       out_dir=SLURM.s(out_dir),
-                       log_dir=SLURM.s(log_dir),
-                       max_workers=SLURM.s(max_workers),
-                       )
+    args = ['-g {}'.format(SLURM.s(gen_fpath)),
+            '-r {}'.format(SLURM.s(rev_summary)),
+            '-rc {}'.format(SLURM.s(reg_cols)),
+            '-cf {}'.format(SLURM.s(cf_dset)),
+            '-rm {}'.format(SLURM.s(rep_method)),
+            '-em {}'.format(SLURM.s(err_method)),
+            '-w {}'.format(SLURM.s(weight)),
+            '-np {}'.format(SLURM.s(n_profiles)),
+            '-od {}'.format(SLURM.s(out_dir)),
+            '-ld {}'.format(SLURM.s(log_dir)),
+            '-mw {}'.format(SLURM.s(max_workers)),
+            ]
 
     if aggregate_profiles:
-        args += '-agg '
+        args.append('-agg')
 
     if verbose:
-        args += '-v '
+        args.append('-v')
 
     cmd = ('python -m reV.rep_profiles.cli_rep_profiles -n {} direct {}'
-           .format(SLURM.s(name), args))
+           .format(SLURM.s(name), ' '.join(args)))
+    logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd
 

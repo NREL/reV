@@ -18,7 +18,7 @@ from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
-from rex.utilities.execution import SLURM, SubprocessManager
+from rex.utilities.execution import SLURM
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import parse_year, get_class_properties
 
@@ -402,54 +402,43 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         appropriately formatted arguments based on input args:
             python -m reV.econ.cli_econ [args] direct [args] local [args]
     """
-
     # mark a cli arg string for main() in this module
-    arg_main = ('-n {name} '.format(name=SubprocessManager.s(name)))
-
-    s_site_data = '-sd {} '.format(SubprocessManager.s(site_data))
+    arg_main = '-n {}'.format(SLURM.s(name))
 
     # make a cli arg string for direct() in this module
-    arg_direct = ('-p {points} '
-                  '-sf {sam_files} '
-                  '-cf {cf_file} '
-                  '-cfy {cf_year} '
-                  '{site_data}'
-                  '-spw {sites_per_worker} '
-                  '-fo {fout} '
-                  '-do {dirout} '
-                  '-lo {logdir} '
-                  '-or {out_req} '
-                  '{append}')
-    arg_direct = arg_direct.format(
-        points=SubprocessManager.s(points),
-        sam_files=SubprocessManager.s(sam_files),
-        cf_file=SubprocessManager.s(cf_file),
-        cf_year=SubprocessManager.s(cf_year),
-        site_data=s_site_data if site_data else '',
-        sites_per_worker=SubprocessManager.s(sites_per_worker),
-        fout=SubprocessManager.s(fout),
-        dirout=SubprocessManager.s(dirout),
-        logdir=SubprocessManager.s(logdir),
-        out_req=SubprocessManager.s(output_request),
-        append='-ap ' if append else '')
+    arg_direct = [
+        '-p {}'.format(SLURM.s(points)),
+        '-sf {}'.format(SLURM.s(sam_files)),
+        '-cf {}'.format(SLURM.s(cf_file)),
+        '-cfy {}'.format(SLURM.s(cf_year)),
+        '-spw {}'.format(SLURM.s(sites_per_worker)),
+        '-fo {}'.format(SLURM.s(fout)),
+        '-do {}'.format(SLURM.s(dirout)),
+        '-lo {}'.format(SLURM.s(logdir)),
+        '-or {}'.format(SLURM.s(output_request))]
 
-    # make a cli arg string for local() in this module
-    arg_loc = ('-mw {max_workers} '
-               '-to {timeout} '
-               '-pr {points_range} '
-               '{v}'.format(max_workers=SubprocessManager.s(max_workers),
-                            timeout=SubprocessManager.s(timeout),
-                            points_range=SubprocessManager.s(points_range),
-                            v='-v ' if verbose else ''))
+    if site_data:
+        arg_direct.append('-sd {}'.format(SLURM.s(site_data)))
+
+    if append:
+        arg_direct.append('-ap')
+
+    arg_loc = ['-mw {}'.format(SLURM.s(max_workers)),
+               '-to {}'.format(SLURM.s(timeout)),
+               '-pr {}'.format(SLURM.s(points_range))]
+
+    if verbose:
+        arg_loc.append('-v')
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.econ.cli_econ '
            '{arg_main} direct {arg_direct} local {arg_loc}'
            .format(arg_main=arg_main,
-                   arg_direct=arg_direct,
-                   arg_loc=arg_loc))
+                   arg_direct=' '.join(arg_direct),
+                   arg_loc=' '.join(arg_loc)))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
+
     return cmd
 
 

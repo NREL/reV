@@ -313,56 +313,36 @@ def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
                  out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
-    args = ('-ef {excl_fpath} '
-            '-gf {gen_fpath} '
-            '-rf {res_fpath} '
-            '-tm {tm_dset} '
-            '-exd {excl_dict} '
-            '-cd {res_class_dset} '
-            '-cb {res_class_bins} '
-            '-cf {cf_dset} '
-            '-lc {lcoe_dset} '
-            '-d {data_layers} '
-            '-r {resolution} '
-            '-ea {excl_area} '
-            '-pd {power_density} '
-            '-afk {area_filter_kernel} '
-            '-ma {min_area} '
-            '-ff {friction_fpath} '
-            '-fd {friction_dset} '
-            '-o {out_dir} '
-            '-ld {log_dir} '
-            )
-
-    args = args.format(excl_fpath=SLURM.s(excl_fpath),
-                       gen_fpath=SLURM.s(gen_fpath),
-                       res_fpath=SLURM.s(res_fpath),
-                       tm_dset=SLURM.s(tm_dset),
-                       excl_dict=SLURM.s(excl_dict),
-                       res_class_dset=SLURM.s(res_class_dset),
-                       res_class_bins=SLURM.s(res_class_bins),
-                       cf_dset=SLURM.s(cf_dset),
-                       lcoe_dset=SLURM.s(lcoe_dset),
-                       data_layers=SLURM.s(data_layers),
-                       resolution=SLURM.s(resolution),
-                       excl_area=SLURM.s(excl_area),
-                       power_density=SLURM.s(power_density),
-                       area_filter_kernel=SLURM.s(area_filter_kernel),
-                       min_area=SLURM.s(min_area),
-                       friction_fpath=SLURM.s(friction_fpath),
-                       friction_dset=SLURM.s(friction_dset),
-                       out_dir=SLURM.s(out_dir),
-                       log_dir=SLURM.s(log_dir),
-                       )
+    args = ['-ef {}'.format(SLURM.s(excl_fpath)),
+            '-gf {}'.format(SLURM.s(gen_fpath)),
+            '-rf {}'.format(SLURM.s(res_fpath)),
+            '-tm {}'.format(SLURM.s(tm_dset)),
+            '-exd {}'.format(SLURM.s(excl_dict)),
+            '-cd {}'.format(SLURM.s(res_class_dset)),
+            '-cb {}'.format(SLURM.s(res_class_bins)),
+            '-cf {}'.format(SLURM.s(cf_dset)),
+            '-lc {}'.format(SLURM.s(lcoe_dset)),
+            '-d {}'.format(SLURM.s(data_layers)),
+            '-r {}'.format(SLURM.s(resolution)),
+            '-ea {}'.format(SLURM.s(excl_area)),
+            '-pd {}'.format(SLURM.s(power_density)),
+            '-afk {}'.format(SLURM.s(area_filter_kernel)),
+            '-ma {}'.format(SLURM.s(min_area)),
+            '-ff {}'.format(SLURM.s(friction_fpath)),
+            '-fd {}'.format(SLURM.s(friction_dset)),
+            '-o {}'.format(SLURM.s(out_dir)),
+            '-ld {}'.format(SLURM.s(log_dir)),
+            ]
 
     if check_excl_layers:
-        args += '-cl '
+        args.append('-cl')
 
     if verbose:
-        args += '-v '
+        args.append('-v')
 
     cmd = ('python -m reV.supply_curve.cli_sc_aggregation -n {} direct {}'
-           .format(SLURM.s(name), args))
+           .format(SLURM.s(name), ' '.join(args)))
+    logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd
 

@@ -525,6 +525,7 @@ def get_sc_cmd(name, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
 
     cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} supply-curve {}'
            .format(SLURM.s(name), args))
+    logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd
 
@@ -534,38 +535,26 @@ def get_excl_cmd(name, excl_fpath, out_dir, sub_dir, excl_dict,
                  log_file, verbose, terminal):
     """Build CLI call for exclusions."""
 
-    args = ('-excl {excl_fpath} '
-            '-o {out_dir} '
-            '-sd {sub_dir} '
-            '-exd {excl_dict} '
-            '-afk {area_filter_kernel} '
-            '-ma {min_area} '
-            '-plt {plot_type} '
-            '-cmap {cmap} '
-            '-step {plot_step} '
-            '-log {log_file} '
-            )
-
-    args = args.format(excl_fpath=SLURM.s(excl_fpath),
-                       out_dir=SLURM.s(out_dir),
-                       sub_dir=SLURM.s(sub_dir),
-                       excl_dict=SLURM.s(excl_dict),
-                       area_filter_kernel=SLURM.s(area_filter_kernel),
-                       min_area=SLURM.s(min_area),
-                       plot_type=SLURM.s(plot_type),
-                       cmap=SLURM.s(cmap),
-                       plot_step=SLURM.s(plot_step),
-                       log_file=SLURM.s(log_file),
-                       )
+    args = ['-excl {}'.format(SLURM.s(excl_fpath)),
+            '-o {}'.format(SLURM.s(out_dir)),
+            '-sd {}'.format(SLURM.s(sub_dir)),
+            '-exd {}'.format(SLURM.s(excl_dict)),
+            '-afk {}'.format(SLURM.s(area_filter_kernel)),
+            '-ma {}'.format(SLURM.s(min_area)),
+            '-plt {}'.format(SLURM.s(plot_type)),
+            '-cmap {}'.format(SLURM.s(cmap)),
+            '-step {}'.format(SLURM.s(plot_step)),
+            '-log {}'.format(SLURM.s(log_file)),
+            ]
 
     if verbose:
-        args += '-v '
+        args.append('-v')
 
     if terminal:
-        args += '-t '
+        args.append('-t')
 
     cmd = ('python -m reV.qa_qc.cli_qa_qc -n {} exclusions {}'
-           .format(SLURM.s(name), args))
+           .format(SLURM.s(name), ' '.join(args)))
 
     return cmd
 
