@@ -269,51 +269,39 @@ def get_node_cmd(name, sc_points, trans_table, fixed_charge_rate, sc_features,
                  log_dir, simple, line_limited, verbose):
     """Get a CLI call command for the Supply Curve cli."""
 
-    args = ('-sc {sc_points} '
-            '-tt {trans_table} '
-            '-fcr {fixed_charge_rate} '
-            '-scf {sc_features} '
-            '-tc {transmission_costs} '
-            '-so {sort_on} '
-            '-ott {offshore_trans_table} '
-            '-dirs {n_dirs} '
-            '-mw {max_workers} '
-            '-o {out_dir} '
-            '-ld {log_dir} '
-            )
-
-    args = args.format(sc_points=SLURM.s(sc_points),
-                       trans_table=SLURM.s(trans_table),
-                       fixed_charge_rate=SLURM.s(fixed_charge_rate),
-                       sc_features=SLURM.s(sc_features),
-                       transmission_costs=SLURM.s(transmission_costs),
-                       sort_on=SLURM.s(sort_on),
-                       offshore_trans_table=SLURM.s(offshore_trans_table),
-                       n_dirs=SLURM.s(n_dirs),
-                       max_workers=SLURM.s(max_workers),
-                       out_dir=SLURM.s(out_dir),
-                       log_dir=SLURM.s(log_dir),
-                       )
+    args = ['-sc {}'.format(SLURM.s(sc_points)),
+            '-tt {}'.format(SLURM.s(trans_table)),
+            '-fcr {}'.format(SLURM.s(fixed_charge_rate)),
+            '-scf {}'.format(SLURM.s(sc_features)),
+            '-tc {}'.format(SLURM.s(transmission_costs)),
+            '-so {}'.format(SLURM.s(sort_on)),
+            '-ott {}'.format(SLURM.s(offshore_trans_table)),
+            '-dirs {}'.format(SLURM.s(n_dirs)),
+            '-mw {}'.format(SLURM.s(max_workers)),
+            '-o {}'.format(SLURM.s(out_dir)),
+            '-ld {}'.format(SLURM.s(log_dir)),
+            ]
 
     if wind_dirs is not None:
-        args += '-wd {wind_dirs} '.format(wind_dirs=SLURM.s(wind_dirs))
+        args.append('-wd {}'.format(SLURM.s(wind_dirs)))
 
     if downwind:
-        args += '-dw '
+        args.append('-dw')
 
     if offshore_compete:
-        args += '-oc '
+        args.append('-oc')
 
     if simple:
-        args += '-s '
+        args.append('-s')
     elif line_limited:
-        args += '-ll '
+        args.append('-ll')
 
     if verbose:
-        args += '-v '
+        args.append('-v')
 
     cmd = ('python -m reV.supply_curve.cli_supply_curve -n {} direct {}'
-           .format(SLURM.s(name), args))
+           .format(SLURM.s(name), ' '.join(args)))
+    logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
 
     return cmd
 

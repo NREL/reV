@@ -251,22 +251,23 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
         desired groups
     """
     # make a cli arg string for direct() in this module
-    main_args = ('-n {name} '
-                 '{v}'
-                 .format(name=SLURM.s(name),
-                         v='-v ' if verbose else '',
-                         ))
+    main_args = ['-n {}'.format(SLURM.s(name))]
 
-    collect_args = '-gp {} '.format(SLURM.s(group_params))
+    if verbose:
+        main_args.append('-v')
+
+    direct_args = '-f {}'.format(SLURM.s(my_file))
+
+    collect_args = '-gp {}'.format(SLURM.s(group_params))
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
-
-    cmd = ('python -m reV.handlers.cli_multi_year {} direct -f {} '
+    cmd = ('python -m reV.handlers.cli_multi_year {} direct {} '
            'multi-year-groups {}'
-           .format(main_args, SLURM.s(my_file), collect_args))
+           .format(' '.join(main_args), direct_args, collect_args))
     logger.debug('Creating the following command line call:\n\t{}'
                  .format(cmd))
+
     return cmd
 
 

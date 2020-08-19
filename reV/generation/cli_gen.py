@@ -592,56 +592,44 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     """
 
     # mark a cli arg string for main() in this module
-    arg_main = ('-n {name} '.format(name=SLURM.s(name)))
-
-    # make some strings only if specified
-    cstr = '-curt {} '.format(SLURM.s(curtailment))
-    dstr = '-ds {} '.format(SLURM.s(downscale))
+    arg_main = '-n {}'.format(SLURM.s(name))
 
     # make a cli arg string for direct() in this module
-    arg_direct = ('-t {tech} '
-                  '-p {points} '
-                  '-sf {sam_files} '
-                  '-rf {res_file} '
-                  '-spw {sites_per_worker} '
-                  '-fo {fout} '
-                  '-do {dirout} '
-                  '-lo {logdir} '
-                  '-or {out_req} '
-                  '-mem {mem} '
-                  '{curt}'
-                  '{ds}')
-    arg_direct = arg_direct.format(
-        tech=SLURM.s(tech),
-        points=SLURM.s(points),
-        sam_files=SLURM.s(sam_files),
-        res_file=SLURM.s(res_file),
-        sites_per_worker=SLURM.s(sites_per_worker),
-        fout=SLURM.s(fout),
-        dirout=SLURM.s(dirout),
-        logdir=SLURM.s(logdir),
-        out_req=SLURM.s(output_request),
-        mem=SLURM.s(mem_util_lim),
-        curt=cstr if curtailment else '',
-        ds=dstr if downscale else '')
+    arg_direct = ['-t {}'.format(SLURM.s(tech)),
+                  '-p {}'.format(SLURM.s(points)),
+                  '-sf {}'.format(SLURM.s(sam_files)),
+                  '-rf {}'.format(SLURM.s(res_file)),
+                  '-spw {}'.format(SLURM.s(sites_per_worker)),
+                  '-fo {}'.format(SLURM.s(fout)),
+                  '-do {}'.format(SLURM.s(dirout)),
+                  '-lo {}'.format(SLURM.s(logdir)),
+                  '-or {}'.format(SLURM.s(output_request)),
+                  '-mem {}'.format(SLURM.s(mem_util_lim))]
+
+    # make some strings only if specified
+    if curtailment:
+        arg_direct.append('-curt {}'.format(SLURM.s(curtailment)))
+
+    if downscale:
+        arg_direct.append('-ds {}'.format(SLURM.s(downscale)))
 
     # make a cli arg string for local() in this module
-    arg_loc = ('-mw {max_workers} '
-               '-to {timeout} '
-               '-pr {points_range} '
-               '{v}'.format(max_workers=SLURM.s(max_workers),
-                            timeout=SLURM.s(timeout),
-                            points_range=SLURM.s(points_range),
-                            v='-v' if verbose else ''))
+    arg_loc = ['-mw {}'.format(SLURM.s(max_workers)),
+               '-to {}'.format(SLURM.s(timeout)),
+               '-pr {}'.format(SLURM.s(points_range))]
+
+    if verbose:
+        arg_loc.append('-v')
 
     # Python command that will be executed on a node
     # command strings after cli v7.0 use dashes instead of underscores
     cmd = ('python -m reV.generation.cli_gen '
            '{arg_main} direct {arg_direct} local {arg_loc}'
            .format(arg_main=arg_main,
-                   arg_direct=arg_direct,
-                   arg_loc=arg_loc))
+                   arg_direct=' '.join(arg_direct),
+                   arg_loc=' '.join(arg_loc)))
     logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
+
     return cmd
 
 

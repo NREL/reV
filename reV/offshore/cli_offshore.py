@@ -182,25 +182,20 @@ def get_node_cmd(name, gen_fpath, offshore_fpath, points, sam_files,
                  log_dir, verbose):
     """Get a CLI call command for the offshore aggregation cli."""
 
-    args = ('-gf {gen_fpath} '
-            '-of {offshore_fpath} '
-            '-pp {points} '
-            '-sf {sam_files} '
-            '-ld {log_dir} '
-            )
-
-    args = args.format(gen_fpath=SLURM.s(gen_fpath),
-                       offshore_fpath=SLURM.s(offshore_fpath),
-                       points=SLURM.s(points),
-                       sam_files=SLURM.s(sam_files),
-                       log_dir=SLURM.s(log_dir),
-                       )
+    args = ['-gf {}'.format(SLURM.s(gen_fpath)),
+            '-of {}'.format(SLURM.s(offshore_fpath)),
+            '-pp {}'.format(SLURM.s(points)),
+            '-sf {}'.format(SLURM.s(sam_files)),
+            '-ld {}'.format(SLURM.s(log_dir)),
+            ]
 
     if verbose:
-        args += '-v '
+        args.append('-v')
 
     cmd = ('python -m reV.offshore.cli_offshore -n {} direct {}'
-           .format(SLURM.s(name), args))
+           .format(SLURM.s(name), ' '.join(args)))
+    logger.debug('Creating the following command line call:\n\t{}'.format(cmd))
+
     return cmd
 
 
