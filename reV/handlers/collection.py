@@ -540,7 +540,7 @@ class Collector:
             DataFrame of combined meta from all files in self._h5_files.
             Duplicate GIDs are dropped and a warning is raised.
         """
-        del meta.index.name
+        meta.index.name = None
 
         meta_gids = meta['gid'].values
         gids = np.array(self.gids)
