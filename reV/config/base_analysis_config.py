@@ -73,9 +73,11 @@ class AnalysisConfig(BaseConfig):
             self._years = self.get('analysis_years', [None])
             if not isinstance(self._years, list):
                 self._years = [self._years]
-            else:
+
+            if self._years[0] is None:
                 warn('Analysis years may not have been specified, may default '
                      'to available years in inputs files.', ConfigWarning)
+
         return self._years
 
     @property
