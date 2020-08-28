@@ -207,7 +207,9 @@ class SummarizeH5:
         with Resource(self.h5_file, group=self._group) as f:
             meta = f.meta
             if 'gid' not in meta:
-                meta.index.name = 'gid'
+                if meta.index.name != 'gid':
+                    meta.index.name = 'gid'
+
                 meta = meta.reset_index()
 
             for ds_name in f.datasets:

@@ -742,15 +742,14 @@ class Gen:
         """
 
         if not self._multi_h5_res:
-            with Resource(self.res_file, hsds=self._hsds) as res:
-                meta = res.meta.iloc[self.project_points.sites, :]
-                meta.loc[:, 'gid'] = self.project_points.sites
-                meta.loc[:, 'reV_tech'] = self.project_points.tech
+            res_cls = Resource
         else:
-            with MultiFileResource(self.res_file) as mres:
-                meta = mres.meta.iloc[self.project_points.sites, :]
-                meta.loc[:, 'gid'] = self.project_points.sites
-                meta.loc[:, 'reV_tech'] = self.project_points.tech
+            res_cls = MultiFileResource
+
+        with res_cls(self.res_file, hsds=self._hsds) as res:
+            meta = res.meta.iloc[self.project_points.sites, :]
+            meta.loc[:, 'gid'] = self.project_points.sites
+            meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return meta
 
