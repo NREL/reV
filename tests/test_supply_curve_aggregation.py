@@ -43,6 +43,7 @@ def check_agg(agg_out, baseline_h5):
         for dset, test in agg_out.items():
             truth = f[dset]
             if dset == 'meta':
+                truth.index.name = None
                 for c in ['source_gids', 'gid_counts']:
                     test[c] = test[c].astype(str)
 
@@ -54,7 +55,7 @@ def check_agg(agg_out, baseline_h5):
 @pytest.mark.parametrize(('excl_dict', 'baseline_name'),
                          [(None, 'baseline_agg.h5'),
                          (EXCL_DICT, 'baseline_agg_excl.h5')])
-def test_aggregation_seriel(excl_dict, baseline_name):
+def test_aggregation_serial(excl_dict, baseline_name):
     """
     test aggregation run in seriel
     """
