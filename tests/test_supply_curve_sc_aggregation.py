@@ -179,10 +179,14 @@ def test_data_layer_methods():
             raise RuntimeError(e)
 
         # Check min/mean/max of the same data layer
+        n = s.loc[i, 'n_gids']
         slope_mean = s.loc[i, 'pct_slope_mean']
         slope_max = s.loc[i, 'pct_slope_max']
         slope_min = s.loc[i, 'pct_slope_min']
-        assert slope_min < slope_mean < slope_max
+        if n > 3:  # sc points with <= 3 90m pixels can have min == mean == max
+            assert slope_min < slope_mean < slope_max
+        else:
+            assert slope_min <= slope_mean <= slope_max
 
 
 def execute_pytest(capture='all', flags='-rapP'):
