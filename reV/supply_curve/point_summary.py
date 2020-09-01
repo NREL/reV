@@ -451,7 +451,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Scalar exclusion data for methods with exclusion-weighted
             aggregation methods. Shape must match input data.
         method : str
-            Aggregation method (mode, mean, sum, category)
+            Aggregation method (mode, mean, max, min, sum, category)
 
         Returns
         -------
