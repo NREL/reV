@@ -195,6 +195,7 @@ def test_bad_layer():
     with pytest.raises(ExclusionLayerError):
         with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict,
                                    check_layers=True) as f:
+            # pylint: disable=pointless-statement
             f.mask
 
     with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict,
@@ -273,6 +274,31 @@ def test_multiple_excl_fractions():
 
     assert np.allclose(test, truth)
     assert np.all(test[test > 0] >= 0.25)
+
+
+def test_inclusion_weights():
+    """
+    Test inclusion weights
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+
+    excl_dict = {'ri_smod': {'include_values': [1, ], 'weight': 0.5,
+                             'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        truth = f.mask
+
+    excl_dict = {'ri_smod': {'include_values': [2, 3], 'weight': 1.0,
+                             'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        truth += f.mask
+
+    excl_dict = {'ri_smod': {'inclusion_weights': {1: 0.5, 2: 1, 3: 1},
+                             'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        test = f.mask
+
+    assert np.allclose(test, truth)
+    assert np.all(test > 0)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
