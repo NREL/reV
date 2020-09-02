@@ -628,7 +628,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                                      .format(self._tm_dset,
                                              self._excl_fpath))
 
-    def _check_data_layers(self, methods=('mean', 'mode', 'sum', 'category')):
+    def _check_data_layers(self, methods=('mean', 'max', 'min',
+                           'mode', 'sum', 'category')):
         """Run pre-flight checks on requested aggregation data layers.
 
         Parameters

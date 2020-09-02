@@ -137,10 +137,14 @@ def test_aggregation_scalar_excl():
             assert counts == 2 * counts_half[j], msg
 
 
-def test_aggregation_category_layer():
-    """Test aggregation of data layers with category method"""
-    data_layers = {'pct_slope': {'dset': 'ri_srtm_slope',
-                                 'method': 'mean'},
+def test_data_layer_methods():
+    """Test aggregation of data layers with different methods"""
+    data_layers = {'pct_slope_mean': {'dset': 'ri_srtm_slope',
+                                      'method': 'mean'},
+                   'pct_slope_max': {'dset': 'ri_srtm_slope',
+                                     'method': 'max'},
+                   'pct_slope_min': {'dset': 'ri_srtm_slope',
+                                     'method': 'min'},
                    'reeds_region': {'dset': 'ri_reeds_regions',
                                     'method': 'category'},
                    'padus': {'dset': 'ri_padus',
@@ -153,6 +157,8 @@ def test_aggregation_category_layer():
                                        max_workers=1)
 
     for i in s.index.values:
+
+        # Check categorical data layers
         counts = s.loc[i, 'gid_counts']
         rr = s.loc[i, 'reeds_region']
         assert isinstance(rr, str)
@@ -171,6 +177,16 @@ def test_aggregation_category_layer():
             e = ('Categorical data layer aggregation failed:\n{}'
                  .format(s.loc[i]))
             raise RuntimeError(e)
+
+        # Check min/mean/max of the same data layer
+        n = s.loc[i, 'n_gids']
+        slope_mean = s.loc[i, 'pct_slope_mean']
+        slope_max = s.loc[i, 'pct_slope_max']
+        slope_min = s.loc[i, 'pct_slope_min']
+        if n > 3:  # sc points with <= 3 90m pixels can have min == mean == max
+            assert slope_min < slope_mean < slope_max
+        else:
+            assert slope_min <= slope_mean <= slope_max
 
 
 def execute_pytest(capture='all', flags='-rapP'):

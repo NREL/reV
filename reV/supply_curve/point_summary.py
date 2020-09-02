@@ -451,7 +451,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Scalar exclusion data for methods with exclusion-weighted
             aggregation methods. Shape must match input data.
         method : str
-            Aggregation method (mode, mean, sum, category)
+            Aggregation method (mode, mean, max, min, sum, category)
 
         Returns
         -------
@@ -473,6 +473,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                 data = stats.mode(data).mode[0]
             elif method.lower() == 'mean':
                 data = data.mean()
+            elif method.lower() == 'max':
+                data = data.max()
+            elif method.lower() == 'min':
+                data = data.min()
             elif method.lower() == 'sum':
                 data = data.sum()
             elif method.lower() == 'category':
