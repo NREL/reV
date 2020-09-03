@@ -157,11 +157,12 @@ def from_config(ctx, config_file, verbose):
               help='Dataset in the exclusions file that maps the exclusions '
               'to the resource being analyzed.')
 @click.option('--excl_dict', '-exd', type=STR, default=None,
-              help='String representation of a dictionary of exclusion '
-              'LayerMask arguments {layer: {kwarg: value}} where layer is a '
-              'dataset in excl_fpath and kwarg can be "inclusion_range", '
-              '"exclude_values", "include_values", "use_as_weights", '
-              '"exclude_nodata", and/or "weight".')
+              help=('String representation of a dictionary of exclusion '
+                    'LayerMask arguments {layer: {kwarg: value}} where layer '
+                    'is a dataset in excl_fpath and kwarg can be '
+                    '"inclusion_range", "exclude_values", "include_values", '
+                    '"inclusion_weights", "use_as_weights", "exclude_nodata", '
+                    'and/or "weight".'))
 @click.option('--check_excl_layers', '-cl', is_flag=True,
               help=('run a pre-flight check on each exclusion layer to '
                     'ensure they contain un-excluded values'))
