@@ -300,6 +300,14 @@ def test_inclusion_weights():
     assert np.allclose(test, truth)
     assert np.all(test > 0)
 
+    excl_dict = {'ri_smod': {'inclusion_weights': {1.0: 0.5, 2.0: 1, 3.0: 1},
+                             'exclude_nodata': True}}
+    with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
+        test = f.mask
+
+    assert np.allclose(test, truth)
+    assert np.all(test > 0)
+
 
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.

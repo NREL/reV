@@ -344,6 +344,9 @@ class LayerMask:
         """
         mask = None
         for value, weight in self._inclusion_weights.items():
+            if isinstance(value, str):
+                value = float(value)
+
             if mask is None:
                 mask = self._value_mask(data, [value], include=True) * weight
             else:
