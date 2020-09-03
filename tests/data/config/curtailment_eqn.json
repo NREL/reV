@@ -1,0 +1,10 @@
+{
+  "dawn_dusk": "nautical",
+  "equation": "temperature > ((5 / 7) * (wind_speed) + 10)",
+  "months": [
+    4,
+    5,
+    6,
+    7
+  ]
+}

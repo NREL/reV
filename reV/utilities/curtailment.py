@@ -46,14 +46,14 @@ def curtail(resource, curtailment, random_seed=0):
     curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and is nighttime
-    sza = SolarPosition(
+    solar_zenith_angle = SolarPosition(
         resource.time_index,
         resource.meta[['latitude', 'longitude']].values).zenith
-    mask = (sza > curtailment.dawn_dusk)
+    mask = (solar_zenith_angle > curtailment.dawn_dusk)
     curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and not raining
-    if curtailment.precipitation:
+    if curtailment.precipitation is not None:
         if 'precipitationrate' not in resource._res_arrays:
             warn('Curtailment has a precipitation threshold of "{}", but '
                  '"precipitationrate" was not found in the SAM resource '
@@ -68,15 +68,25 @@ def curtail(resource, curtailment, random_seed=0):
             curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and temperature is high
-    if curtailment.temperature:
+    if curtailment.temperature is not None:
         mask = (resource._res_arrays['temperature']
                 > curtailment.temperature)
         curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Curtail resource when curtailment is possible and not that windy
-    mask = (resource._res_arrays['windspeed']
-            < curtailment.wind_speed)
-    curtail_mult = np.where(mask, curtail_mult, 1)
+    if curtailment.wind_speed is not None:
+        mask = (resource._res_arrays['windspeed']
+                < curtailment.wind_speed)
+        curtail_mult = np.where(mask, curtail_mult, 1)
+
+    if curtailment.equation is not None:
+        # pylint: disable=W0123,W0612
+        wind_speed = resource._res_arrays['windspeed']
+        temperature = resource._res_arrays['temperature']
+        if 'precipitationrate' in resource._res_arrays:
+            precipitation_rate = resource._res_arrays['precipitationrate']
+        mask = eval(curtailment.equation)
+        curtail_mult = np.where(mask, curtail_mult, 1)
 
     # Apply probability mask when curtailment is possible.
     if curtailment.probability != 1:
