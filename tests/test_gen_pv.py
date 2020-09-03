@@ -317,6 +317,30 @@ def test_pvwatts_v5_v7():
     assert np.allclose(gen7.out['cf_mean'], gen5.out['cf_mean'], atol=3), msg
 
 
+def test_bifacial():
+    """Test pvwattsv7 with bifacial panel with albedo."""
+    year = 2012
+    rev2_points = slice(0, 1)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, max_workers=1,
+                      sites_per_worker=1, fout=None)
+
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv7_bifacial.json'
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen_bi = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                         sam_files=sam_files, res_file=res_file, max_workers=1,
+                         sites_per_worker=1, fout=None)
+
+    assert all(gen_bi.out['cf_mean'] > gen.out['cf_mean'])
+    assert np.isclose(gen.out['cf_mean'][0], 0.151, atol=0.005)
+    assert np.isclose(gen_bi.out['cf_mean'][0], 0.162, atol=0.005)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

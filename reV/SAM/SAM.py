@@ -96,6 +96,7 @@ class SamResourceRetriever:
         kwargs = {}
         # check for clearsky irradiation analysis for NSRDB
         kwargs['clearsky'] = project_points.sam_config_obj.clearsky
+        kwargs['bifacial'] = project_points.sam_config_obj.bifacial
         kwargs['tech'] = project_points.tech
         # Check for resource means:
         mean_keys = ['dni_mean', 'ghi_mean', 'dhi_mean']

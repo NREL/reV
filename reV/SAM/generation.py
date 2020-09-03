@@ -460,6 +460,7 @@ class Solar(Generation, ABC):
                    'air_temperature': 'tdry',
                    'dew_point': 'tdew',
                    'surface_pressure': 'pres',
+                   'surface_albedo': 'albedo',
                    }
 
         irrad_vars = ['dn', 'df', 'gh']
@@ -501,6 +502,9 @@ class Solar(Generation, ABC):
         resource['year'] = ti_8760.year
         resource['month'] = ti_8760.month
         resource['day'] = ti_8760.day
+
+        if 'albedo' in resource:
+            self['albedo'] = resource.pop('albedo')
 
         self['solar_resource_data'] = resource
 
