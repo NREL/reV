@@ -15,6 +15,13 @@
     "output_directory": "./"
   },
   "excl_dict": {
+    "smod": {
+      "inclusion_weights": {
+        "1": 0.5,
+        "2": 1,
+        "3": 1
+      }
+    },
     "srtm_slope": {
       "inclusion_range": [
         null,
