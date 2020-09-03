@@ -26,6 +26,7 @@ class SAMConfig(BaseConfig):
         """
         super().__init__(SAM_configs, check_keys=False)
         self._clearsky = None
+        self._bifacial = None
         self._icing = None
         self._inputs = None
 
@@ -50,6 +51,25 @@ class SAMConfig(BaseConfig):
                 warn('Solar analysis being performed on clearsky irradiance.',
                      ConfigWarning)
         return self._clearsky
+
+    @property
+    def bifacial(self):
+        """Get a boolean for whether bifacial solar analysis is being run.
+
+        Returns
+        -------
+        bifacial : bool
+            Flag set in the SAM config input with key "bifaciality" for solar
+            analysis to analyze bifacial PV panels. Will require albedo input.
+            Defaults to False (no bifacial panels is default).
+        """
+
+        if self._bifacial is None:
+            self._bifacial = False
+            for v in self.inputs.values():
+                self._bifacial = any((self._bifacial,
+                                      bool(v.get('bifaciality', False))))
+        return self._bifacial
 
     @property
     def icing(self):
