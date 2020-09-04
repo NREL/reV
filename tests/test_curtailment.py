@@ -228,6 +228,16 @@ def test_res_curtailment(year, site):
     return df, check_curtailment[:, site]
 
 
+def test_date_range():
+    """Test curtailment based on a date range vs. months list"""
+    year = 2012
+    cres_m = get_curtailment(year, curt_fn='curtailment.json')[0]
+    cres_dr = get_curtailment(year, curt_fn='curtailment_date_range.json')[0]
+    for df_res, site in cres_m:
+        gid = int(site.name)
+        assert np.allclose(df_res['windspeed'], cres_dr[gid]['windspeed'])
+
+
 def test_eqn_curtailment(plot=False):
     """Test equation-based curtailment strategies."""
     year = 2012

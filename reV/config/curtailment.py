@@ -77,14 +77,41 @@ class Curtailment(BaseConfig):
     @property
     def months(self):
         """Get the months during which curtailment is possible (inclusive).
+        This can be overridden by the date_range input.
 
         Returns
         -------
-        _months : tuple
+        months : tuple | None
             Tuple of month integers. These are the months during which
-            curtailment could be in effect. Default is April through July.
+            curtailment could be in effect. Default is None.
         """
-        return tuple(self.get('months', (4, 5, 6, 7)))
+        m = self.get('months', None)
+        if isinstance(m, list):
+            m = tuple(m)
+        return m
+
+    @property
+    def date_range(self):
+        """Get the date range tuple (start, end) over which curtailment is
+        possible (inclusive, exclusive) ("MMDD", "MMDD"). This overrides the
+        months input.
+
+        Returns
+        -------
+        date_range : tuple
+            Two-entry tuple of the starting date (inclusive) and ending date
+            (exclusive) over which curtailment is possible. Input format is a
+            zero-padded string: "MMDD".
+        """
+        dr = self.get('date_range', None)
+        if dr is not None:
+            msg = 'date_range input needs to be a tuple!'
+            assert isinstance(dr, (list, tuple)), msg
+            msg = 'date_range input needs to have two entries!'
+            assert len(dr) == 2, msg
+            dr = (str(int(dr[0])).zfill(4), str(int(dr[1])).zfill(4))
+
+        return dr
 
     @property
     def temperature(self):

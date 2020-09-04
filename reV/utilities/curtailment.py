@@ -5,12 +5,16 @@ Created on Fri Mar  1 13:47:30 2019
 
 @author: gbuster
 """
+import datetime
 import numpy as np
+import logging
 from warnings import warn
 
 from reV.utilities.exceptions import HandlerWarning
 
 from rex.utilities.solar_position import SolarPosition
+
+logger = logging.getLogger(__name__)
 
 
 def curtail(resource, curtailment, random_seed=0):
@@ -40,10 +44,29 @@ def curtail(resource, curtailment, random_seed=0):
     # start with curtailment everywhere
     curtail_mult = np.zeros(shape)
 
-    # Curtail resource when in curtailment months
-    mask = np.isin(resource.time_index.month, curtailment.months)
-    mask = np.tile(np.expand_dims(mask, axis=1), shape[1])
-    curtail_mult = np.where(mask, curtail_mult, 1)
+    if curtailment.date_range is not None:
+        year = resource.time_index.year[0]
+        d0 = datetime.datetime(month=int(curtailment.date_range[0][:2]),
+                               day=int(curtailment.date_range[0][2:]),
+                               year=year)
+        d1 = datetime.datetime(month=int(curtailment.date_range[1][:2]),
+                               day=int(curtailment.date_range[1][2:]),
+                               year=year)
+        mask = (resource.time_index >= d0) & (resource.time_index < d1)
+        mask = np.tile(np.expand_dims(mask, axis=1), shape[1])
+        curtail_mult = np.where(mask, curtail_mult, 1)
+
+    elif curtailment.months is not None:
+        # Curtail resource when in curtailment months
+        mask = np.isin(resource.time_index.month, curtailment.months)
+        mask = np.tile(np.expand_dims(mask, axis=1), shape[1])
+        curtail_mult = np.where(mask, curtail_mult, 1)
+
+    else:
+        msg = ('You must specify either months or date_range over '
+               'which curtailment is possible!')
+        logger.error(msg)
+        raise KeyError(msg)
 
     # Curtail resource when curtailment is possible and is nighttime
     solar_zenith_angle = SolarPosition(
