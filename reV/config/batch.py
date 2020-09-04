@@ -26,7 +26,7 @@ class BatchConfig(BaseConfig):
             raise ConfigError('Batch config can only take a str filepath, '
                               'but received a "{}".'.format(type(config)))
 
-        super().__init__(config)
+        super().__init__(config, perform_str_rep=False)
         self._pre_flight()
 
     def _pre_flight(self):
