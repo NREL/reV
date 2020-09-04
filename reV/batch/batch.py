@@ -93,7 +93,7 @@ class BatchJob:
         return arg_combs, file_sets, set_tags
 
     @staticmethod
-    def _tag_value(value):
+    def _fix_tag_w_year(value):
         """If one of the tag values looks like a year, add a zero for the tag.
 
         Parameters
@@ -139,12 +139,11 @@ class BatchJob:
         job_tag = []
 
         for arg, value in arg_comb.items():
-
             temp = arg.split('_')
             temp = ''.join([s[0] for s in temp])
 
             if isinstance(value, (int, float)):
-                temp += self._tag_value(value)
+                temp += self._fix_tag_w_year(value)
 
             else:
                 i = 0
@@ -167,6 +166,41 @@ class BatchJob:
 
         return job_tag
 
+    def _clean_arg_comb_tag(self, set_tag, arg_comb):
+        """Clean a dictionary of arg combinations for a single job by removing
+        any args that only have one value in the current set tag.
+
+        Parameters
+        ----------
+        set_tag : str
+            Optional set tag to prefix job tag.
+        arg_comb : dict
+            Key-value pairs for this argument combination.
+
+        Returns
+        -------
+        tag_arg_comb : str
+            Arg combinations just for making the job tags. This may not have
+            all the arg combinations for the actual job setup.
+        """
+
+        ignore_tags = []
+
+        for arg in arg_comb.keys():
+            all_values = []
+            for batch_set in self._config['sets']:
+                if (batch_set.get('set_tag', '') == set_tag
+                        and arg in batch_set['args']):
+                    all_values += batch_set['args'][arg]
+
+            if len(all_values) <= 1:
+                ignore_tags.append(arg)
+
+        tag_arg_comb = {k: v for k, v in arg_comb.items()
+                        if k not in ignore_tags}
+
+        return tag_arg_comb
+
     @property
     def job_tags(self):
         """Ordered list of job tags corresponding to unique arg/value combs.
@@ -180,8 +214,10 @@ class BatchJob:
         if self._job_tags is None:
             self._job_tags = []
             for i, arg_comb in enumerate(self.arg_combs):
+                tag_arg_comb = self._clean_arg_comb_tag(self._set_tags[i],
+                                                        arg_comb)
                 self._job_tags.append(self._make_job_tag(self._set_tags[i],
-                                                         arg_comb))
+                                                         tag_arg_comb))
         return self._job_tags
 
     @property
