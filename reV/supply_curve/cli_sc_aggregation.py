@@ -189,7 +189,11 @@ def from_config(ctx, config_file, verbose):
 @click.option('--power_density', '-pd', type=STRFLOAT, default=None,
               help='Power density in MW/km2 or filepath to variable power '
               'density csv file. None will attempt to infer a constant '
-              'power density from the generation meta data technology.')
+              'power density from the generation meta data technology. '
+              'Variable power density csvs must have "gid" and '
+              '"power_density" columns where gid is the resource gid '
+              '(typically wtk or nsrdb gid). and the power_density column '
+              'is in MW/km2.')
 @click.option('--area_filter_kernel', '-afk', type=STR, default='queen',
               help='Contiguous area filter kernel name ("queen", "rook").')
 @click.option('--min_area', '-ma', type=FLOAT, default=None,
