@@ -16,6 +16,7 @@ import os
 import shutil
 import itertools
 import logging
+from warnings import warn
 
 from reV.pipeline.pipeline import Pipeline
 from reV.config.batch import BatchConfig
@@ -43,6 +44,7 @@ class BatchJob:
 
         self._config = BatchConfig(config)
         self._base_dir = self._config.config_dir
+        os.chdir(self._base_dir)
 
         x = self._parse_config(self._config)
         self._arg_combs, self._file_sets, self._set_tags = x
@@ -208,7 +210,8 @@ class BatchJob:
         table = pd.DataFrame()
         for i, job_tag in enumerate(self.job_tags):
             job_info = {k: str(v) for k, v in self.arg_combs[i].items()}
-            job_info['set_tag'] = self._set_tags[i]
+            job_info['set_tag'] = str(self._set_tags[i])
+            job_info['files'] = str(self.file_sets[i])
             job_info = pd.DataFrame(job_info, index=[job_tag])
             table = table.append(job_info)
 
@@ -410,6 +413,37 @@ class BatchJob:
             if os.path.isfile(pipeline_config):
                 Pipeline.cancel_all(pipeline_config)
 
+    def _delete_all(self):
+        """Clear all of the batch sub job folders based on the job summary
+        csv file in the batch config directory."""
+
+        fp_job_table = os.path.join(self._base_dir, 'batch_jobs.csv')
+        if not os.path.exists(fp_job_table):
+            msg = ('Cannot delete batch jobs without jobs summary table: {}'
+                   .format(fp_job_table))
+            logger.error(msg)
+            raise FileNotFoundError(msg)
+
+        job_table = pd.read_csv(fp_job_table, index_col=0)
+
+        if job_table.index.name != 'job':
+            msg = ('Cannot delete batch jobs when the batch summary table '
+                   'does not have "job" as the index key')
+            logger.error(msg)
+            raise ValueError(msg)
+
+        for sub_dir in job_table.index:
+            job_dir = os.path.join(self._base_dir, sub_dir)
+            if os.path.exists(job_dir):
+                logger.info('Removing batch job directory: {}'.format(sub_dir))
+                shutil.rmtree(job_dir)
+            else:
+                w = 'Cannot find batch job directory: {}'.format(sub_dir)
+                logger.warning(w)
+                warn(w)
+
+        os.remove(fp_job_table)
+
     @classmethod
     def cancel_all(cls, config):
         """Cancel all reV pipeline modules for all batch jobs.
@@ -417,14 +451,27 @@ class BatchJob:
         Parameters
         ----------
         config : str
-            File path to config json (str).
+            File path to batch config json (str).
         """
 
         b = cls(config)
         b._cancel_all()
 
     @classmethod
-    def run(cls, config, dry_run=False, monitor_background=False,
+    def delete_all(cls, config):
+        """Delete all reV batch sub job folders based on the job summary csv
+        in the batch config directory.
+
+        Parameters
+        ----------
+        config : str
+            File path to batch config json (str).
+        """
+        b = cls(config)
+        b._delete_all()
+
+    @classmethod
+    def run(cls, config, dry_run=False, delete=False, monitor_background=False,
             verbose=False):
         """Run the reV batch job from a config file.
 
@@ -434,6 +481,9 @@ class BatchJob:
             File path to config json (str).
         dry_run : bool
             Flag to make job directories without running.
+        delete : bool
+            Flag to delete all batch job sub directories based on the job
+            summary csv in the batch config directory.
         monitor_background : bool
             Flag to monitor all batch pipelines continuously
             in the background using the nohup command. Note that the
@@ -444,7 +494,10 @@ class BatchJob:
         """
 
         b = cls(config)
-        b._make_job_dirs()
-        if not dry_run:
-            b._run_pipelines(monitor_background=monitor_background,
-                             verbose=verbose)
+        if delete:
+            b._delete_all()
+        else:
+            b._make_job_dirs()
+            if not dry_run:
+                b._run_pipelines(monitor_background=monitor_background,
+                                 verbose=verbose)

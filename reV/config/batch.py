@@ -27,6 +27,7 @@ class BatchConfig(BaseConfig):
                               'but received a "{}".'.format(type(config)))
 
         super().__init__(config, perform_str_rep=False)
+        os.chdir(self.config_dir)
         self._pre_flight()
 
     def _pre_flight(self):
