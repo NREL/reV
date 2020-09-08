@@ -67,18 +67,28 @@ class BatchJob:
             List of dictionaries representing the different arg/value
             combinations made available in the batch config json.
         file_sets : list
-            List of same length as arg_combs, representing the files to
-            manipulate for each arg comb.
+            List representing the files to manipulate for each arg comb
+            (same length as arg_combs).
         set_tags : list
-            List of strings of tags for each batch job set.
+            List of strings of tags for each batch job set
+            (same length as arg_combs).
         """
 
         arg_combs = []
         file_sets = []
         set_tags = []
+        sets = []
 
         # iterate through batch sets
         for s in config['sets']:
+            set_tag = s.get('set_tag', '')
+            if set_tag in sets:
+                msg = ('Found multiple sets with the same set_tag: "{}"'
+                       .format(set_tag))
+                logger.error(msg)
+                raise ValueError(msg)
+            else:
+                sets.append(set_tag)
 
             # iterate through combinations of arg values
             for comb in itertools.product(*list(s['args'].values())):
@@ -91,7 +101,7 @@ class BatchJob:
                 # append the unique dictionary representation to the attr
                 arg_combs.append(comb_dict)
                 file_sets.append(s['files'])
-                set_tags.append(s.get('set_tag', ''))
+                set_tags.append(set_tag)
 
         return arg_combs, file_sets, set_tags
 
