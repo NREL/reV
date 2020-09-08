@@ -9,6 +9,7 @@ Created on Mon Jun 10 13:49:53 2019
 
 @author: gbuster
 """
+import pandas as pd
 import copy
 import json
 import os
@@ -202,6 +203,20 @@ class BatchJob:
         return tag_arg_comb
 
     @property
+    def job_table(self):
+        """Get a dataframe summarizing the batch jobs."""
+        table = pd.DataFrame()
+        for i, job_tag in enumerate(self.job_tags):
+            job_info = {k: str(v) for k, v in self.arg_combs[i].items()}
+            job_info['set_tag'] = self._set_tags[i]
+            job_info = pd.DataFrame(job_info, index=[job_tag])
+            table = table.append(job_info)
+
+        table.index.name = 'job'
+
+        return table
+
+    @property
     def job_tags(self):
         """Ordered list of job tags corresponding to unique arg/value combs.
 
@@ -315,6 +330,8 @@ class BatchJob:
 
     def _make_job_dirs(self):
         """Copy job files from the batch config dir into sub job dirs."""
+
+        self.job_table.to_csv(os.path.join(self._base_dir, 'batch_jobs.csv'))
 
         # walk through current directory getting everything to copy
         for dirpath, _, filenames in os.walk(self._base_dir):
