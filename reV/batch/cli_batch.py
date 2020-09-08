@@ -40,6 +40,9 @@ def valid_config_keys():
               help='Flag to do a dry run (make batch dirs without running).')
 @click.option('--cancel', is_flag=True,
               help='Flag to cancel all jobs associated with a given pipeline.')
+@click.option('--delete', is_flag=True,
+              help='Flag to delete all batch job sub directories associated '
+              'with the batch_jobs.csv in the current batch config directory.')
 @click.option('--monitor-background', is_flag=True,
               help='Flag to monitor all batch pipelines continuously '
               'in the background using the nohup command. Note that the '
@@ -48,13 +51,15 @@ def valid_config_keys():
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def from_config(ctx, config_file, dry_run, cancel, monitor_background,
+def from_config(ctx, config_file, dry_run, cancel, delete, monitor_background,
                 verbose):
     """Run reV batch from a config file."""
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     if cancel:
         BatchJob.cancel_all(config_file)
+    elif delete:
+        BatchJob.delete_all(config_file)
     else:
         BatchJob.run(config_file, dry_run=dry_run,
                      monitor_background=monitor_background,
