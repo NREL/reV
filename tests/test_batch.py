@@ -22,6 +22,9 @@ def test_batch_job_setup():
     """Test the creation and deletion of a batch job directory.
     Does not test batch execution which will require slurm."""
 
+    # persisting the batch dir change can mess up downstream pytests.
+    previous_dir = os.getcwd()
+
     config = safe_json_load(FP_CONFIG)
 
     count_0 = len(os.listdir(BATCH_DIR))
@@ -86,6 +89,8 @@ def test_batch_job_setup():
     BatchJob.run(FP_CONFIG, delete=True)
     count_2 = len(os.listdir(BATCH_DIR))
     assert count_2 == count_0, 'Batch did not clear all job files!'
+
+    os.chdir(previous_dir)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
