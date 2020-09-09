@@ -123,12 +123,7 @@ class BatchJob:
 
         value = str(value).replace('.', '')
 
-        try:
-            match = parse_year('_' + value)
-        except RuntimeError:
-            match = False
-
-        if match:
+        if parse_year('_' + value, option='bool'):
             value += '0'
 
         return value
