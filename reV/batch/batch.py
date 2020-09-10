@@ -53,8 +53,8 @@ class BatchJob:
         x = self._parse_config(self._config)
         self._arg_combs, self._file_sets, self._set_tags = x
 
-        logger.debug('Batch job initialized with {} sub jobs.'
-                     .format(len(self._arg_combs)))
+        logger.info('Batch job initialized with {} sub jobs.'
+                    .format(len(self._arg_combs)))
 
     @staticmethod
     def _parse_config(config):
@@ -370,8 +370,8 @@ class BatchJob:
                         os.path.join(self._base_dir, tag + '/'))
 
                     if not os.path.exists(new_path):
-                        logger.debug('Making job sub directory for "{}".'
-                                     .format(tag))
+                        logger.info('Making job sub directory for job: "{}".'
+                                    .format(tag))
                         os.makedirs(new_path)
 
                     for fn in filenames:
@@ -379,23 +379,21 @@ class BatchJob:
                         if fn in mod_fnames and fn.endswith('.json'):
                             # modify json and dump to new path
                             logger.debug('Copying and modifying run json file '
-                                         '"{}" to: "{}"'
-                                         .format(fn, new_path))
+                                         '"{}" to job: "{}"'.format(fn, tag))
                             self._mod_json(os.path.join(dirpath, fn),
                                            os.path.join(new_path, fn),
                                            arg_comb)
 
                         else:
                             # straight copy of non-mod and non-json
-                            logger.debug('Copying run file "{}" to: "{}"'
-                                         .format(fn, new_path))
+                            logger.debug('Copying run file "{}" to job: "{}"'
+                                         .format(fn, tag))
                             try:
                                 shutil.copy(os.path.join(dirpath, fn),
                                             os.path.join(new_path, fn))
                             except Exception:
-                                msg = ('Could not copy {} to {}'
-                                       .format(os.path.join(dirpath, fn),
-                                               os.path.join(new_path, fn)))
+                                msg = ('Could not copy "{}" to job: "{}"'
+                                       .format(fn, tag))
                                 logger.warning(msg)
                                 warn(msg)
 
