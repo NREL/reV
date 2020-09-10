@@ -348,7 +348,6 @@ class BatchJob:
 
         table = self.job_table
         table.to_csv(os.path.join(self._base_dir, 'batch_jobs.csv'))
-        logger.info('Batch project contains {} jobs.'.format(len(table)))
         logger.debug('Batch jobs list: {}'
                      .format(sorted(table.index.values.tolist())))
         logger.info('Preparing batch job directories...')
@@ -375,6 +374,8 @@ class BatchJob:
                         os.path.join(self._base_dir, tag + '/'))
 
                     if not os.path.exists(new_path):
+                        logger.debug('Making new job directory: {}'
+                                     .format(new_path))
                         os.makedirs(new_path)
 
                     for fn in filenames:
@@ -389,16 +390,24 @@ class BatchJob:
 
                         else:
                             # straight copy of non-mod and non-json
-                            logger.debug('Copying run file "{}" to job: "{}"'
-                                         .format(fn, tag))
-                            try:
-                                shutil.copy(os.path.join(dirpath, fn),
-                                            os.path.join(new_path, fn))
-                            except Exception:
-                                msg = ('Could not copy "{}" to job: "{}"'
-                                       .format(fn, tag))
-                                logger.warning(msg)
-                                warn(msg)
+                            fp_source = os.path.join(dirpath, fn)
+                            fp_target = os.path.join(new_path, fn)
+
+                            modified = True
+                            if os.path.exists(fp_target):
+                                modified = (os.path.getmtime(fp_source)
+                                            > os.path.getmtime(fp_target))
+
+                            if modified:
+                                logger.debug('Copying run file "{}" to job: '
+                                             '"{}"'.format(fn, tag))
+                                try:
+                                    shutil.copy(fp_source, fp_target)
+                                except Exception:
+                                    msg = ('Could not copy "{}" to job: "{}"'
+                                           .format(fn, tag))
+                                    logger.warning(msg)
+                                    warn(msg)
 
         logger.info('Batch job directories ready for execution.')
 
