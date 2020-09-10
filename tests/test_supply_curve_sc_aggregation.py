@@ -172,7 +172,8 @@ def test_data_layer_methods():
                    'padus': {'dset': 'ri_padus',
                              'method': 'category'}}
 
-    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                       excl_dict=EXCL_DICT,
                                        res_class_dset=RES_CLASS_DSET,
                                        res_class_bins=RES_CLASS_BINS,
                                        data_layers=data_layers,
