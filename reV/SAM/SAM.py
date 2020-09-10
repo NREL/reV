@@ -13,9 +13,9 @@ import PySAM.GenericSystem as generic
 from reV.utilities.exceptions import (SAMInputWarning, SAMInputError,
                                       SAMExecutionError, ResourceError)
 
-from rex.resource import MultiFileResource
-from rex.renewable_resource import (WindResource, SolarResource, NSRDB,
-                                    MultiFileWTK, MultiFileNSRDB)
+from rex.multi_file_resource import (MultiFileResource, MultiFileNSRDB,
+                                     MultiFileWTK)
+from rex.renewable_resource import WindResource, SolarResource, NSRDB
 from rex.utilities.utilities import check_res_file
 
 

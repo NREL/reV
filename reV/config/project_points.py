@@ -13,7 +13,8 @@ from reV.utilities.exceptions import ConfigError, ConfigWarning
 from reV.config.sam_config import SAMConfig
 from reV.config.curtailment import Curtailment
 
-from rex.resource import Resource, MultiFileResource
+from rex.resource import Resource
+from rex.multi_file_resource import MultiFileResource
 from rex.resource_extraction.resource_extraction import (ResourceX,
                                                          MultiFileResourceX)
 from rex.utilities import check_res_file, parse_table

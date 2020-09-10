@@ -136,7 +136,8 @@ class AggFileHandler(AbstractAggFileHandler):
 
 
 class AbstractAggregation(ABC):
-    """Abstract supply points aggregation framework."""
+    """Abstract supply curve points aggregation framework based on only an
+    exclusion file and techmap."""
 
     def __init__(self, excl_fpath, tm_dset, excl_dict=None,
                  area_filter_kernel='queen', min_area=None,
@@ -463,7 +464,8 @@ class AbstractAggregation(ABC):
 
 
 class Aggregation(AbstractAggregation):
-    """Abstract supply points aggregation framework."""
+    """Concrete but generalized aggregation framework to aggregate ANY reV h5
+    file to a supply curve grid (based on an aggregated exclusion grid)."""
 
     def __init__(self, excl_fpath, h5_fpath, tm_dset, *agg_dset,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
