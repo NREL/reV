@@ -24,6 +24,7 @@ from reV.utilities.exceptions import PipelineError
 from reV.pipeline.cli_pipeline import pipeline_monitor_background
 
 from rex.utilities import safe_json_load, parse_year
+from rex.utilities.loggers import init_logger
 
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,9 @@ class BatchJob:
         self._config = BatchConfig(config)
         self._base_dir = self._config.config_dir
         os.chdir(self._base_dir)
+
+        if 'logging' in self._config:
+            init_logger('reV.batch', **self._config['logging'])
 
         x = self._parse_config(self._config)
         self._arg_combs, self._file_sets, self._set_tags = x
@@ -171,6 +175,9 @@ class BatchJob:
 
         if set_tag:
             job_tag = '{}_{}'.format(set_tag, job_tag)
+
+        if job_tag.endswith('_'):
+            job_tag = job_tag.rstrip('_')
 
         return job_tag
 
@@ -382,8 +389,15 @@ class BatchJob:
                             # straight copy of non-mod and non-json
                             logger.debug('Copying run file "{}" to: "{}"'
                                          .format(fn, new_path))
-                            shutil.copy(os.path.join(dirpath, fn),
-                                        os.path.join(new_path, fn))
+                            try:
+                                shutil.copy(os.path.join(dirpath, fn),
+                                            os.path.join(new_path, fn))
+                            except Exception:
+                                msg = ('Could not copy {} to {}'
+                                       .format(os.path.join(dirpath, fn),
+                                               os.path.join(new_path, fn)))
+                                logger.warning(msg)
+                                warn(msg)
 
     def _run_pipelines(self, monitor_background=False, verbose=False):
         """Run the reV pipeline modules for each batch job.
