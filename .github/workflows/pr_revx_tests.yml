@@ -1,0 +1,40 @@
+name: reVX Pytests
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout reV
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+        fetch-depth: 1
+        path: reV
+    - name: checkout reVX
+      uses: actions/checkout@v2
+      with:
+        repository: nrel/reVX
+        fetch-depth: 1
+        path: reVX
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    - name: Install reV dependencies
+      working-directory: ./reV
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install .
+    - name: Install reVX dependencies
+      working-directory: ./reVX
+      run: |
+        python -m pip install .
+    - name: Run reVX pytest
+      working-directory: ./reVX
+      run: |
+        python -m pip install pytest
+        python -m pytest -v
