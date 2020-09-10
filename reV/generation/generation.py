@@ -20,7 +20,8 @@ from reV.SAM.version_checker import PySamVersionChecker
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       ParallelExecutionWarning)
 
-from rex.resource import Resource, MultiFileResource
+from rex.resource import Resource
+from rex.multi_file_resource import MultiFileResource
 from rex.utilities.execution import SpawnProcessPool
 from rex.utilities.utilities import check_res_file
 

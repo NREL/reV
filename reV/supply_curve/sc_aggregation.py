@@ -27,6 +27,7 @@ from reV.utilities.exceptions import (EmptySupplyCurvePointError,
                                       InputWarning, SupplyCurveInputError)
 
 from rex.resource import Resource
+from rex.multi_file_resource import MultiFileResource
 from rex.utilities.execution import SpawnProcessPool
 
 logger = logging.getLogger(__name__)
@@ -37,11 +38,15 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
     Framework to handle aggregation summary context managers:
     - exclusions .h5 file
     - generation .h5 file
+    - econ .h5 file (optional)
+    - friction surface .h5 file (optional)
+    - variable power density .csv (optional)
     """
 
-    def __init__(self, excl_fpath, gen_fpath, data_layers=None,
-                 power_density=None, excl_dict=None, friction_fpath=None,
-                 friction_dset=None, area_filter_kernel='queen', min_area=None,
+    def __init__(self, excl_fpath, gen_fpath, econ_fpath=None,
+                 data_layers=None, power_density=None, excl_dict=None,
+                 friction_fpath=None, friction_dset=None,
+                 area_filter_kernel='queen', min_area=None,
                  check_excl_layers=False):
         """
         Parameters
@@ -50,6 +55,9 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
             Filepath to exclusions h5 with techmap dataset.
         gen_fpath : str
             Filepath to .h5 reV generation output results.
+        econ_fpath : str | None
+            Filepath to .h5 reV econ output results. This is optional and only
+            used if the lcoe_dset is not present in the gen_fpath file.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
@@ -65,7 +73,10 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
-            Must be paired with friction_dset.
+            Must be paired with friction_dset. The friction data must be the
+            same shape as the exclusions. Friction input creates a new output
+            "mean_lcoe_friction" which is the nominal LCOE multiplied by the
+            friction data.
         friction_dset : str | None
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
@@ -83,7 +94,7 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
                          min_area=min_area,
                          check_excl_layers=check_excl_layers)
 
-        self._gen = Resource(gen_fpath)
+        self._gen = self._open_gen_econ_resource(gen_fpath, econ_fpath)
         # pre-initialize any import attributes
         _ = self._gen.meta
 
@@ -100,6 +111,34 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
                      .format(self._friction_layer.shape, self._excl.shape))
                 logger.error(e)
                 raise FileInputError(e)
+
+    @staticmethod
+    def _open_gen_econ_resource(gen_fpath, econ_fpath):
+        """Open a rex resource file handler for the reV generation and
+        (optionally) the reV econ output(s).
+
+        Parameters
+        ----------
+        gen_fpath : str
+            Filepath to .h5 reV generation output results.
+        econ_fpath : str | None
+            Filepath to .h5 reV econ output results. This is optional and only
+            used if the lcoe_dset is not present in the gen_fpath file.
+
+        Returns
+        -------
+        handler : Resource | MultiFileResource
+            Open resource handler initialized with gen_fpath and
+            (optionally) econ_fpath.
+        """
+
+        if econ_fpath is None:
+            handler = Resource(gen_fpath)
+        else:
+            handler = MultiFileResource([gen_fpath, econ_fpath],
+                                        check_files=True)
+
+        return handler
 
     def _open_data_layers(self, data_layers):
         """Open data layer Exclusion h5 handlers.
@@ -517,8 +556,8 @@ class OffshoreAggregation:
 class SupplyCurveAggregation(AbstractAggregation):
     """Supply points aggregation framework."""
 
-    def __init__(self, excl_fpath, gen_fpath, tm_dset, excl_dict=None,
-                 area_filter_kernel='queen', min_area=None,
+    def __init__(self, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
+                 excl_dict=None, area_filter_kernel='queen', min_area=None,
                  check_excl_layers=False, resolution=64, excl_area=None,
                  gids=None, res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
@@ -534,6 +573,9 @@ class SupplyCurveAggregation(AbstractAggregation):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        econ_fpath : str | None
+            Filepath to .h5 reV econ output results. This is optional and only
+            used if the lcoe_dset is not present in the gen_fpath file.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         area_filter_kernel : str
@@ -575,7 +617,10 @@ class SupplyCurveAggregation(AbstractAggregation):
             and the power_density column is in MW/km2.
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
-            Must be paired with friction_dset.
+            Must be paired with friction_dset. The friction data must be the
+            same shape as the exclusions. Friction input creates a new output
+            "mean_lcoe_friction" which is the nominal LCOE multiplied by the
+            friction data.
         friction_dset : str | None
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
@@ -589,6 +634,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                          resolution=resolution, gids=gids)
 
         self._gen_fpath = gen_fpath
+        self._econ_fpath = econ_fpath
         self._res_class_dset = res_class_dset
         self._res_class_bins = self._convert_bins(res_class_bins)
         self._cf_dset = cf_dset
@@ -622,10 +668,15 @@ class SupplyCurveAggregation(AbstractAggregation):
 
     def _check_files(self):
         """Do a preflight check on input files"""
-        for fpath in (self._excl_fpath, self._gen_fpath):
+
+        check_exists = [self._excl_fpath, self._gen_fpath]
+        if self._econ_fpath is not None:
+            check_exists.append(self._econ_fpath)
+
+        for fpath in check_exists:
             if not os.path.exists(fpath):
-                raise FileNotFoundError('Could not find required input file: '
-                                        '{}'.format(fpath))
+                raise FileNotFoundError('Could not find input file: {}'
+                                        .format(fpath))
 
         with h5py.File(self._excl_fpath, 'r') as f:
             if self._tm_dset not in f:
@@ -670,16 +721,20 @@ class SupplyCurveAggregation(AbstractAggregation):
                             raise FileInputError(msg)
 
     @staticmethod
-    def _get_input_data(gen, gen_fpath, res_class_dset, res_class_bins,
-                        cf_dset, lcoe_dset):
+    def _get_input_data(gen, gen_fpath, econ_fpath, res_class_dset,
+                        res_class_bins, cf_dset, lcoe_dset):
         """Extract SC point agg input data args from higher level inputs.
 
         Parameters
         ----------
-        gen : reV.handlers.outputs.Outputs
-            reV outputs handler.
+        gen : Resource | MultiFileResource
+            Open rex resource handler initialized from gen_fpath and
+            (optionally) econ_fpath.
         gen_fpath : str
             Filepath to .h5 reV generation output results.
+        econ_fpath : str
+            Filepath to .h5 reV econ output results (optional argument if
+            lcoe_dset is not found in gen_fpath).
         res_class_dset : str | None
             Dataset in the generation file dictating resource classes.
             None if no resource classes.
@@ -720,8 +775,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         else:
             cf_data = None
             w = ('Could not find cf dataset "{}" in '
-                 'generation file: {}'
-                 .format(cf_dset, gen_fpath))
+                 'generation file: {}. Available datasets: {}'
+                 .format(cf_dset, gen_fpath, gen.datasets))
             logger.warning(w)
             warn(w, OutputWarning)
 
@@ -729,9 +784,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             lcoe_data = gen[lcoe_dset]
         else:
             lcoe_data = None
-            w = ('Could not find lcoe dataset "{}" in '
-                 'generation file: {}'
-                 .format(lcoe_dset, gen_fpath))
+            w = ('Could not find lcoe dataset "{}" in generation file: {} or '
+                 'econ file: {}. Available datasets: {}'
+                 .format(lcoe_dset, gen_fpath, econ_fpath, gen.datasets))
             logger.warning(w)
             warn(w, OutputWarning)
 
@@ -743,7 +798,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         return res_data, res_class_bins, cf_data, lcoe_data, offshore_flag
 
     @staticmethod
-    def run_serial(excl_fpath, gen_fpath, tm_dset, gen_index,
+    def run_serial(excl_fpath, gen_fpath, tm_dset, gen_index, econ_fpath=None,
                    excl_dict=None, area_filter_kernel='queen', min_area=None,
                    check_excl_layers=False, resolution=64, gids=None,
                    args=None, res_class_dset=None, res_class_bins=None,
@@ -765,6 +820,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             Array of generation gids with array index equal to resource gid.
             Array value is -1 if the resource index was not used in the
             generation run.
+        econ_fpath : str | None
+            Filepath to .h5 reV econ output results. This is optional and only
+            used if the lcoe_dset is not present in the gen_fpath file.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         area_filter_kernel : str
@@ -805,7 +863,10 @@ class SupplyCurveAggregation(AbstractAggregation):
             and the power_density column is in MW/km2.
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
-            Must be paired with friction_dset.
+            Must be paired with friction_dset. The friction data must be the
+            same shape as the exclusions. Friction input creates a new output
+            "mean_lcoe_friction" which is the nominal LCOE multiplied by the
+            friction data.
         friction_dset : str | None
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
@@ -828,7 +889,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                 gids = sc.valid_sc_points(tm_dset)
 
         # pre-extract handlers so they are not repeatedly initialized
-        file_kwargs = {'data_layers': data_layers,
+        file_kwargs = {'econ_fpath': econ_fpath,
+                       'data_layers': data_layers,
                        'power_density': power_density,
                        'excl_dict': excl_dict,
                        'area_filter_kernel': area_filter_kernel,
@@ -840,6 +902,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                        **file_kwargs) as fh:
             inputs = SupplyCurveAggregation._get_input_data(fh.gen,
                                                             gen_fpath,
+                                                            econ_fpath,
                                                             res_class_dset,
                                                             res_class_bins,
                                                             cf_dset,
@@ -924,6 +987,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         futures = []
         summary = []
         loggers = [__name__, 'reV.supply_curve.point_summary']
+
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
 
             # iterate through split executions, submitting each to worker
@@ -933,6 +997,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                     self.run_serial,
                     self._excl_fpath, self._gen_fpath,
                     self._tm_dset, self._gen_index,
+                    econ_fpath=self._econ_fpath,
                     excl_dict=self._excl_dict,
                     res_class_dset=self._res_class_dset,
                     res_class_bins=self._res_class_bins,
@@ -994,6 +1059,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                        **file_kwargs) as fh:
             inp = SupplyCurveAggregation._get_input_data(fh.gen,
                                                          self._gen_fpath,
+                                                         self._econ_fpath,
                                                          self._res_class_dset,
                                                          self._res_class_bins,
                                                          self._cf_dset,
@@ -1107,6 +1173,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             chk = self._check_excl_layers
             summary = self.run_serial(self._excl_fpath, self._gen_fpath,
                                       self._tm_dset, self._gen_index,
+                                      econ_fpath=self._econ_fpath,
                                       excl_dict=self._excl_dict,
                                       res_class_dset=self._res_class_dset,
                                       res_class_bins=self._res_class_bins,
@@ -1145,8 +1212,8 @@ class SupplyCurveAggregation(AbstractAggregation):
         return summary
 
     @classmethod
-    def summary(cls, excl_fpath, gen_fpath, tm_dset, excl_dict=None,
-                area_filter_kernel='queen', min_area=None,
+    def summary(cls, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
+                excl_dict=None, area_filter_kernel='queen', min_area=None,
                 check_excl_layers=False, resolution=64, gids=None,
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
@@ -1166,6 +1233,9 @@ class SupplyCurveAggregation(AbstractAggregation):
         tm_dset : str
             Dataset name in the techmap file containing the
             exclusions-to-resource mapping data.
+        econ_fpath : str | None
+            Filepath to .h5 reV econ output results. This is optional and only
+            used if the lcoe_dset is not present in the gen_fpath file.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         area_filter_kernel : str
@@ -1204,7 +1274,10 @@ class SupplyCurveAggregation(AbstractAggregation):
             and the power_density column is in MW/km2.
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
-            Must be paired with friction_dset.
+            Must be paired with friction_dset. The friction data must be the
+            same shape as the exclusions. Friction input creates a new output
+            "mean_lcoe_friction" which is the nominal LCOE multiplied by the
+            friction data.
         friction_dset : str | None
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
@@ -1237,14 +1310,23 @@ class SupplyCurveAggregation(AbstractAggregation):
             Summary of the SC points.
         """
 
-        agg = cls(excl_fpath, gen_fpath, tm_dset, excl_dict,
-                  res_class_dset=res_class_dset, res_class_bins=res_class_bins,
-                  cf_dset=cf_dset, lcoe_dset=lcoe_dset,
-                  data_layers=data_layers, resolution=resolution,
-                  power_density=power_density, gids=gids,
-                  friction_fpath=friction_fpath, friction_dset=friction_dset,
-                  area_filter_kernel=area_filter_kernel, min_area=min_area,
-                  check_excl_layers=check_excl_layers, excl_area=excl_area)
+        agg = cls(excl_fpath, gen_fpath, tm_dset,
+                  econ_fpath=econ_fpath,
+                  excl_dict=excl_dict,
+                  res_class_dset=res_class_dset,
+                  res_class_bins=res_class_bins,
+                  cf_dset=cf_dset,
+                  lcoe_dset=lcoe_dset,
+                  data_layers=data_layers,
+                  resolution=resolution,
+                  power_density=power_density,
+                  gids=gids,
+                  friction_fpath=friction_fpath,
+                  friction_dset=friction_dset,
+                  area_filter_kernel=area_filter_kernel,
+                  min_area=min_area,
+                  check_excl_layers=check_excl_layers,
+                  excl_area=excl_area)
 
         summary = agg.summarize(args=args,
                                 max_workers=max_workers,

@@ -106,8 +106,6 @@ def make_friction_file():
     shutil.copy(EXCL, FRICTION_FPATH)
     with h5py.File(FRICTION_FPATH, 'a') as f:
         f[FRICTION_DSET] = f['ri_srtm_slope']
-        attrs = dict(f[FRICTION_DSET].attrs)
-        print(attrs)
         shape = f[FRICTION_DSET].shape
         data = np.random.lognormal(mean=0.2, sigma=0.2, size=shape)
         data = data.astype(np.float32)
@@ -122,13 +120,10 @@ def make_friction_file():
 
         f[FRICTION_DSET][...] = data
         for d in f:
-            print(d, f[d].shape, f[d].dtype)
             if d not in [FRICTION_DSET, 'latitude', 'longitude']:
                 del f[d]
 
     with h5py.File(FRICTION_FPATH, 'r') as f:
-        for d in f:
-            print(d, f[d].shape, f[d].dtype)
         out = f[FRICTION_DSET][...]
 
     assert np.allclose(data, out)

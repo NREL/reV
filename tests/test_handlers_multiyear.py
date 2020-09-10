@@ -186,7 +186,6 @@ def test_update(dset, group):
     with MultiYear(my_out, mode='r', group=group) as my:
         dset_means = my.means(dset)
         dset_std = my.stdev(dset)
-        print(group, my.datasets)
 
     compare_arrays(my_means, dset_means, "2012 Means")
     compare_arrays(my_std, dset_std, "2012 STDEV")

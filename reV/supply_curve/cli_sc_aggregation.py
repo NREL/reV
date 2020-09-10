@@ -92,6 +92,7 @@ def from_config(ctx, config_file, verbose):
             ctx.invoke(direct,
                        excl_fpath=config.excl_fpath,
                        gen_fpath=config.gen_fpath,
+                       econ_fpath=config.econ_fpath,
                        res_fpath=config.res_fpath,
                        tm_dset=config.tm_dset,
                        excl_dict=config.excl_dict,
@@ -117,6 +118,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['NAME'] = name
         ctx.obj['EXCL_FPATH'] = config.excl_fpath
         ctx.obj['GEN_FPATH'] = config.gen_fpath
+        ctx.obj['ECON_FPATH'] = config.econ_fpath
         ctx.obj['RES_FPATH'] = config.res_fpath
         ctx.obj['TM_DSET'] = config.tm_dset
         ctx.obj['EXCL_DICT'] = config.excl_dict
@@ -147,10 +149,14 @@ def from_config(ctx, config_file, verbose):
 
 
 @main.group(invoke_without_command=True)
-@click.option('--excl_fpath', '-ef', type=STR, required=True,
+@click.option('--excl_fpath', '-exf', type=STR, required=True,
               help='Exclusions file (.h5).')
 @click.option('--gen_fpath', '-gf', type=STR, required=True,
               help='reV generation/econ output file.')
+@click.option('--econ_fpath', '-ef', type=STR, default=None,
+              help='reV econ output file (optional argument that can be '
+              'included if reV gen and econ data are being used from '
+              'different files.')
 @click.option('--res_fpath', '-rf', type=STR, default=None,
               help='Resource file, required if techmap dset is to be created.')
 @click.option('--tm_dset', '-tm', type=STR, required=True,
@@ -202,7 +208,9 @@ def from_config(ctx, config_file, verbose):
 @click.option('--friction_fpath', '-ff', type=STR, default=None,
               help='Optional h5 filepath to friction surface data. '
               'Must match the exclusion shape/resolution and be '
-              'paired with the --friction_dset input arg.')
+              'paired with the --friction_dset input arg. The friction data '
+              'creates a "mean_lcoe_friction" output which is the nominal '
+              'LCOE multiplied by the friction data.')
 @click.option('--friction_dset', '-fd', type=STR, default=None,
               help='Optional friction surface dataset in friction_fpath.')
 @click.option('--out_dir', '-o', type=STR, default='./',
@@ -212,15 +220,16 @@ def from_config(ctx, config_file, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
-           check_excl_layers, res_class_dset, res_class_bins, cf_dset,
-           lcoe_dset, data_layers, resolution, excl_area, power_density,
-           area_filter_kernel, min_area, friction_fpath, friction_dset,
-           out_dir, log_dir, verbose):
+def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
+           excl_dict, check_excl_layers, res_class_dset, res_class_bins,
+           cf_dset, lcoe_dset, data_layers, resolution, excl_area,
+           power_density, area_filter_kernel, min_area, friction_fpath,
+           friction_dset, out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
     name = ctx.obj['NAME']
     ctx.obj['EXCL_FPATH'] = excl_fpath
     ctx.obj['GEN_FPATH'] = gen_fpath
+    ctx.obj['ECON_FPATH'] = econ_fpath
     ctx.obj['RES_FPATH'] = res_fpath
     ctx.obj['TM_DSET'] = tm_dset
     ctx.obj['EXCL_DICT'] = excl_dict
@@ -265,6 +274,7 @@ def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
         try:
             summary = SupplyCurveAggregation.summary(
                 excl_fpath, gen_fpath, tm_dset,
+                econ_fpath=econ_fpath,
                 excl_dict=excl_dict,
                 res_class_dset=res_class_dset,
                 res_class_bins=res_class_bins,
@@ -311,15 +321,16 @@ def direct(ctx, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
         Status.make_job_file(out_dir, 'supply-curve-aggregation', name, status)
 
 
-def get_node_cmd(name, excl_fpath, gen_fpath, res_fpath, tm_dset, excl_dict,
-                 check_excl_layers, res_class_dset, res_class_bins, cf_dset,
-                 lcoe_dset, data_layers, resolution, excl_area, power_density,
-                 area_filter_kernel, min_area, friction_fpath, friction_dset,
-                 out_dir, log_dir, verbose):
+def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
+                 excl_dict, check_excl_layers, res_class_dset, res_class_bins,
+                 cf_dset, lcoe_dset, data_layers, resolution, excl_area,
+                 power_density, area_filter_kernel, min_area, friction_fpath,
+                 friction_dset, out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
-    args = ['-ef {}'.format(SLURM.s(excl_fpath)),
+    args = ['-exf {}'.format(SLURM.s(excl_fpath)),
             '-gf {}'.format(SLURM.s(gen_fpath)),
+            '-ef {}'.format(SLURM.s(econ_fpath)),
             '-rf {}'.format(SLURM.s(res_fpath)),
             '-tm {}'.format(SLURM.s(tm_dset)),
             '-exd {}'.format(SLURM.s(excl_dict)),
@@ -375,6 +386,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     name = ctx.obj['NAME']
     excl_fpath = ctx.obj['EXCL_FPATH']
     gen_fpath = ctx.obj['GEN_FPATH']
+    econ_fpath = ctx.obj['ECON_FPATH']
     res_fpath = ctx.obj['RES_FPATH']
     tm_dset = ctx.obj['TM_DSET']
     excl_dict = ctx.obj['EXCL_DICT']
@@ -398,7 +410,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     if stdout_path is None:
         stdout_path = os.path.join(log_dir, 'stdout/')
 
-    cmd = get_node_cmd(name, excl_fpath, gen_fpath, res_fpath,
+    cmd = get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath,
                        tm_dset, excl_dict, check_excl_layers,
                        res_class_dset, res_class_bins,
                        cf_dset, lcoe_dset, data_layers,

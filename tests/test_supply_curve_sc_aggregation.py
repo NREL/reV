@@ -15,6 +15,8 @@ from reV import TESTDATADIR
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_gen.h5')
+ONLY_GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_only_gen.h5')
+ONLY_ECON = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_only_econ.h5')
 AGG_BASELINE = os.path.join(TESTDATADIR, 'sc_out/baseline_agg_summary.csv')
 TM_DSET = 'techmap_nsrdb'
 RES_CLASS_DSET = 'ghi_mean-means'
@@ -100,6 +102,26 @@ def test_aggregation_summary():
         assert_frame_equal(s, s_baseline, check_dtype=False)
 
 
+def test_aggregation_gen_econ():
+    """Test the aggregation summary method with separate gen and econ
+    input files."""
+
+    s1 = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                        excl_dict=EXCL_DICT,
+                                        res_class_dset=RES_CLASS_DSET,
+                                        res_class_bins=RES_CLASS_BINS,
+                                        data_layers=DATA_LAYERS,
+                                        max_workers=1)
+    s2 = SupplyCurveAggregation.summary(EXCL, ONLY_GEN, TM_DSET,
+                                        econ_fpath=ONLY_ECON,
+                                        excl_dict=EXCL_DICT,
+                                        res_class_dset=RES_CLASS_DSET,
+                                        res_class_bins=RES_CLASS_BINS,
+                                        data_layers=DATA_LAYERS,
+                                        max_workers=1)
+    assert_frame_equal(s1, s2)
+
+
 def test_aggregation_scalar_excl():
     """Test the aggregation summary with exclusions of 0.5"""
 
@@ -150,7 +172,8 @@ def test_data_layer_methods():
                    'padus': {'dset': 'ri_padus',
                              'method': 'category'}}
 
-    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET, EXCL_DICT,
+    s = SupplyCurveAggregation.summary(EXCL, GEN, TM_DSET,
+                                       excl_dict=EXCL_DICT,
                                        res_class_dset=RES_CLASS_DSET,
                                        res_class_bins=RES_CLASS_BINS,
                                        data_layers=data_layers,

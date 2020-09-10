@@ -34,6 +34,7 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         super().__init__(config)
 
         self._default_res_fpath = None
+        self._default_econ_fpath = None
         self._default_res_class_dset = None
         self._default_res_class_bins = None
         self._default_cf_dset = 'cf_mean-means'
@@ -95,6 +96,35 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
             else:
                 logger.info('Supply curve aggregation using the following '
                             'pipeline input for gen_fpath: {}'.format(fpath))
+
+        return fpath
+
+    @property
+    def econ_fpath(self):
+        """Get the econ data filepath. This is an optional argument only used
+        if reV gen and econ outputs are being used from different files."""
+
+        fpath = self.get('econ_fpath', self._default_econ_fpath)
+
+        if fpath == 'PIPELINE':
+            target_modules = ['multi-year', 'collect', 'econ']
+            for target_module in target_modules:
+                try:
+                    fpath = Pipeline.parse_previous(
+                        self.dirout, 'supply-curve-aggregation',
+                        target='fpath',
+                        target_module=target_module)[0]
+                except KeyError:
+                    pass
+                else:
+                    break
+
+            if fpath == 'PIPELINE':
+                raise PipelineError('Could not parse econ_fpath from previous '
+                                    'pipeline jobs.')
+            else:
+                logger.info('Supply curve aggregation using the following '
+                            'pipeline input for econ_fpath: {}'.format(fpath))
 
         return fpath
 
