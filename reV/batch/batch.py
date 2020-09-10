@@ -346,7 +346,12 @@ class BatchJob:
     def _make_job_dirs(self):
         """Copy job files from the batch config dir into sub job dirs."""
 
-        self.job_table.to_csv(os.path.join(self._base_dir, 'batch_jobs.csv'))
+        table = self.job_table
+        table.to_csv(os.path.join(self._base_dir, 'batch_jobs.csv'))
+        logger.info('Batch project contains {} jobs.'.format(len(table)))
+        logger.debug('Batch jobs list: {}'
+                     .format(sorted(table.index.values.tolist())))
+        logger.info('Preparing batch job directories...')
 
         # walk through current directory getting everything to copy
         for dirpath, _, filenames in os.walk(self._base_dir):
@@ -370,8 +375,6 @@ class BatchJob:
                         os.path.join(self._base_dir, tag + '/'))
 
                     if not os.path.exists(new_path):
-                        logger.info('Making job sub directory for job: "{}".'
-                                    .format(tag))
                         os.makedirs(new_path)
 
                     for fn in filenames:
@@ -396,6 +399,8 @@ class BatchJob:
                                        .format(fn, tag))
                                 logger.warning(msg)
                                 warn(msg)
+
+        logger.info('Batch job directories ready for execution.')
 
     def _run_pipelines(self, monitor_background=False, verbose=False):
         """Run the reV pipeline modules for each batch job.
