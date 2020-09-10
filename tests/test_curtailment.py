@@ -17,16 +17,17 @@ from reV.utilities.curtailment import curtail
 from reV.generation.generation import Gen
 
 from rex.utilities.solar_position import SolarPosition
+from rex.utilities import safe_json_load
 
 
-def get_curtailment(year):
+def get_curtailment(year, curt_fn='curtailment.json'):
     """Get the curtailed and non-curtailed resource objects, and project points
     """
     res_file = os.path.join(TESTDATADIR, 'wtk/',
                             'ri_100_wtk_{}.h5'.format(year))
     sam_files = os.path.join(
         TESTDATADIR, 'SAM/wind_gen_standard_losses_0.json')
-    curtailment = os.path.join(TESTDATADIR, 'config/', 'curtailment.json')
+    curtailment = os.path.join(TESTDATADIR, 'config/', curt_fn)
     pp = ProjectPoints(slice(0, 100), sam_files, 'windpower',
                        curtailment=curtailment)
 
@@ -225,6 +226,49 @@ def test_res_curtailment(year, site):
         check_curtailment = check_curtailment[~drop_day, :]
 
     return df, check_curtailment[:, site]
+
+
+def test_date_range():
+    """Test curtailment based on a date range vs. months list"""
+    year = 2012
+    cres_m = get_curtailment(year, curt_fn='curtailment.json')[0]
+    cres_dr = get_curtailment(year, curt_fn='curtailment_date_range.json')[0]
+    for df_res, site in cres_m:
+        gid = int(site.name)
+        assert np.allclose(df_res['windspeed'], cres_dr[gid]['windspeed'])
+
+
+def test_eqn_curtailment(plot=False):
+    """Test equation-based curtailment strategies."""
+    year = 2012
+    curt_fn = 'curtailment_eqn.json'
+    curtailed, non_curtailed_res, pp = get_curtailment(year, curt_fn=curt_fn)
+    c_config = safe_json_load(os.path.join(TESTDATADIR, 'config/', curt_fn))
+    c_eqn = c_config['equation']
+
+    c_res = curtailed[0]
+    nc_res = non_curtailed_res[0]
+    c_mask = (c_res.windspeed == 0) & (nc_res.windspeed > 0)
+
+    temperature = nc_res['temperature'].values
+    wind_speed = nc_res['windspeed'].values
+
+    eval_mask = eval(c_eqn)
+
+    # All curtailed windspeeds should satisfy the eqn eval but maybe not the
+    # other way around due to dawn/dusk/sza
+    assert all(eval_mask[np.where(c_mask)[0]] == True)  # noqa: E712
+
+    if plot:
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        ax.scatter(nc_res.loc[c_mask, 'windspeed'],
+                   nc_res.loc[c_mask, 'temperature'])
+        ax.grid('on')
+        ax.set_xlim([0, 7])
+        ax.set_ylim([0, 30])
+        ax.set_legend(['Curtailed'])
+        plt.savefig('equation_based_curtailment.png')
 
 
 def execute_pytest(capture='all', flags='-rapP'):

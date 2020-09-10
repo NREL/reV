@@ -57,7 +57,10 @@ class SupplyCurveAggFileHandler(AbstractAggFileHandler):
         power_density : float | str | None
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
-            power density from the generation meta data technology
+            power density from the generation meta data technology.
+            Variable power density csvs must have "gid" and "power_density"
+            columns where gid is the resource gid (typically wtk or nsrdb gid)
+            and the power_density column is in MW/km2.
         excl_dict : dict | None
             Dictionary of exclusion LayerMask arugments {layer: {kwarg: value}}
         friction_fpath : str | None
@@ -566,7 +569,10 @@ class SupplyCurveAggregation(AbstractAggregation):
         power_density : float | str | None
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
-            power density from the generation meta data technology
+            power density from the generation meta data technology.
+            Variable power density csvs must have "gid" and "power_density"
+            columns where gid is the resource gid (typically wtk or nsrdb gid)
+            and the power_density column is in MW/km2.
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
             Must be paired with friction_dset.
@@ -793,7 +799,10 @@ class SupplyCurveAggregation(AbstractAggregation):
         power_density : float | str | None
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
-            power density from the generation meta data technology
+            power density from the generation meta data technology.
+            Variable power density csvs must have "gid" and "power_density"
+            columns where gid is the resource gid (typically wtk or nsrdb gid)
+            and the power_density column is in MW/km2.
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
             Must be paired with friction_dset.
@@ -1189,7 +1198,10 @@ class SupplyCurveAggregation(AbstractAggregation):
         power_density : float | str | None
             Power density in MW/km2 or filepath to variable power
             density file. None will attempt to infer a constant
-            power density from the generation meta data technology
+            power density from the generation meta data technology.
+            Variable power density csvs must have "gid" and "power_density"
+            columns where gid is the resource gid (typically wtk or nsrdb gid)
+            and the power_density column is in MW/km2.
         friction_fpath : str | None
             Filepath to friction surface data (cost based exclusions).
             Must be paired with friction_dset.

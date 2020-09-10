@@ -179,6 +179,9 @@ def valid_pipeline_keys(ctx):
               help='Flag to do a dry run (make batch dirs without running).')
 @click.option('--cancel', is_flag=True,
               help='Flag to cancel all jobs associated with a given batch.')
+@click.option('--delete', is_flag=True,
+              help='Flag to delete all batch job sub directories associated '
+              'with the batch_jobs.csv in the current batch config directory.')
 @click.option('--monitor-background', is_flag=True,
               help='Flag to monitor all batch pipelines continuously '
               'in the background using the nohup command. Note that the '
@@ -187,13 +190,13 @@ def valid_pipeline_keys(ctx):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def batch(ctx, dry_run, cancel, monitor_background, verbose):
+def batch(ctx, dry_run, cancel, delete, monitor_background, verbose):
     """Execute multiple steps in a reV analysis pipeline."""
     if ctx.invoked_subcommand is None:
         config_file = ctx.obj['CONFIG_FILE']
         verbose = any([verbose, ctx.obj['VERBOSE']])
         ctx.invoke(run_batch_from_config, config_file=config_file,
-                   dry_run=dry_run, cancel=cancel,
+                   dry_run=dry_run, cancel=cancel, delete=delete,
                    monitor_background=monitor_background,
                    verbose=verbose)
 

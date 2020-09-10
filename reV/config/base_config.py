@@ -20,7 +20,7 @@ class BaseConfig(dict):
     """Base class for configuration frameworks."""
     REQUIREMENTS = ()
 
-    def __init__(self, config, check_keys=True):
+    def __init__(self, config, check_keys=True, perform_str_rep=True):
         """
         Parameters
         ----------
@@ -29,9 +29,12 @@ class BaseConfig(dict):
             or dictionary with pre-extracted config.
         check_keys : bool, optional
             Flag to check config keys against Class properties, by default True
+        perform_str_rep : bool
+            Flag to perform string replacement for REVDIR, TESTDATADIR, and ./
         """
 
         # str_rep is a mapping of config strings to replace with real values
+        self._perform_str_rep = perform_str_rep
         self.str_rep = {'REVDIR': REVDIR,
                         'TESTDATADIR': TESTDATADIR,
                         }
@@ -199,7 +202,9 @@ class BaseConfig(dict):
                 config = json.loads(config)
 
         # Perform string replacement, save config to self instance
-        config = self.str_replace(config, self.str_rep)
+        if self._perform_str_rep:
+            config = self.str_replace(config, self.str_rep)
+
         self.set_self_dict(config)
 
     @staticmethod

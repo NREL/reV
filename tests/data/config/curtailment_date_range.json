@@ -1,0 +1,11 @@
+{
+  "date_range": [
+    401,
+    "0801"
+  ],
+  "dawn_dusk": "nautical",
+  "precipitation": null,
+  "probability": 1,
+  "temperature": 5,
+  "wind_speed": 5.0
+}

@@ -1,0 +1,64 @@
+{
+  "directories": {
+    "log_directory": "./",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=high",
+    "memory": 90,
+    "option": "eagle",
+    "walltime": 0.5
+  },
+  "groups": {
+    "wthh110_wtpp0": {
+      "dsets": [
+        "cf_mean"
+      ],
+      "source_dir": "./wthh110_wtpp0",
+      "source_files": null,
+      "source_prefix": "wthh110_wtpp0_gen"
+    },
+    "wthh110_wtpp1": {
+      "dsets": [
+        "cf_mean"
+      ],
+      "source_dir": "./wthh110_wtpp1",
+      "source_files": null,
+      "source_prefix": "wthh110_wtpp1_gen"
+    },
+    "wthh140_wtpp0": {
+      "dsets": [
+        "cf_mean"
+      ],
+      "source_dir": "./wthh140_wtpp0",
+      "source_files": null,
+      "source_prefix": "wthh140_wtpp0_gen"
+    },
+    "wthh140_wtpp1": {
+      "dsets": [
+        "cf_mean"
+      ],
+      "source_dir": "./wthh140_wtpp1",
+      "source_files": null,
+      "source_prefix": "wthh140_wtpp1_gen"
+    },
+    "wthh80_wtpp0": {
+      "dsets": [
+        "cf_mean"
+      ],
+      "source_dir": "./wthh80_wtpp0",
+      "source_files": null,
+      "source_prefix": "wthh80_wtpp0_gen"
+    },
+    "wthh80_wtpp1": {
+      "dsets": [
+        "cf_mean"
+      ],
+      "source_dir": "./wthh80_wtpp1",
+      "source_files": null,
+      "source_prefix": "wthh80_wtpp1_gen"
+    }
+  },
+  "log_level": "INFO"
+}

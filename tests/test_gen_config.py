@@ -13,6 +13,7 @@ import pytest
 import numpy as np
 from subprocess import Popen, PIPE
 import shlex
+import logging
 
 from reV.config.sam_analysis_configs import GenConfig
 from reV import TESTDATADIR
@@ -23,8 +24,8 @@ ATOL = 0.04
 PURGE_OUT = True
 
 
-@pytest.mark.parametrize('tech', ['pv', 'wind'])
-def test_gen_from_config(tech):
+@pytest.mark.parametrize('tech', ['pv', 'wind'])  # noqa: C901
+def test_gen_from_config(tech):  # noqa: C901
     """Gen PV CF profiles with write to disk and compare against rev1."""
 
     job_name = 'config_test_{}'.format(tech)
@@ -36,6 +37,7 @@ def test_gen_from_config(tech):
 
     config = os.path.join(TESTDATADIR,
                           'config/{}'.format(fconfig)).replace('\\', '/')
+    config_obj = GenConfig(config)
 
     cmd = 'python -m reV.cli -n "{}" -c {} generation'.format(job_name, config)
     cmd = shlex.split(cmd)
@@ -46,14 +48,14 @@ def test_gen_from_config(tech):
     stderr = stderr.decode('ascii').rstrip()
     stdout = stdout.decode('ascii').rstrip()
 
-    config_obj = GenConfig(config)
-
     if stderr:
         ferr = os.path.join(config_obj.dirout, 'test_config.e')
-        with open(ferr, 'w') as f:
-            f.write(stderr)
+        if os.path.exists(ferr):
+            with open(ferr, 'w') as f:
+                f.write(stderr)
 
     # get reV 2.0 generation profiles from disk
+    rev2_profiles = None
     flist = os.listdir(config_obj.dirout)
     for fname in flist:
         if job_name in fname and fname.endswith('.h5'):
@@ -69,6 +71,11 @@ def test_gen_from_config(tech):
                 assert monthly.shape == (12, 10)
 
             break
+
+    if rev2_profiles is None:
+        msg = ('reV gen from config failed for "{}"! Could not find '
+               'output file in flist: {}'.format(tech, flist))
+        raise RuntimeError(msg)
 
     # get reV 1.0 generation profiles
     rev1_profiles = get_r1_profiles(year=config_obj.years[0], tech=tech)
@@ -99,6 +106,7 @@ def get_r1_profiles(year=2012, tech='pv'):
 
     with Outputs(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
+
     return data
 
 
