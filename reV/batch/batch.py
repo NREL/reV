@@ -346,13 +346,17 @@ class BatchJob:
     def _make_job_dirs(self):
         """Copy job files from the batch config dir into sub job dirs."""
 
-        self.job_table.to_csv(os.path.join(self._base_dir, 'batch_jobs.csv'))
+        table = self.job_table
+        table.to_csv(os.path.join(self._base_dir, 'batch_jobs.csv'))
+        logger.debug('Batch jobs list: {}'
+                     .format(sorted(table.index.values.tolist())))
+        logger.info('Preparing batch job directories...')
 
         # walk through current directory getting everything to copy
-        for dirpath, _, filenames in os.walk(self._base_dir):
+        for source_dir, _, filenames in os.walk(self._base_dir):
 
             # do make additional copies of job sub directories.
-            skip = any([job_tag in dirpath for job_tag in self.job_tags])
+            skip = any([job_tag in source_dir for job_tag in self.job_tags])
 
             if not skip:
 
@@ -365,37 +369,74 @@ class BatchJob:
 
                     # Add the job tag to the directory path.
                     # This will copy config subdirs into the job subdirs
-                    new_path = dirpath.replace(
+                    destination_dir = source_dir.replace(
                         self._base_dir,
                         os.path.join(self._base_dir, tag + '/'))
 
-                    if not os.path.exists(new_path):
-                        logger.info('Making job sub directory for job: "{}".'
-                                    .format(tag))
-                        os.makedirs(new_path)
+                    if not os.path.exists(destination_dir):
+                        logger.debug('Making new job directory: {}'
+                                     .format(destination_dir))
+                        os.makedirs(destination_dir)
 
                     for fn in filenames:
+                        self._copy_batch_file(fn, source_dir, destination_dir,
+                                              tag, arg_comb, mod_fnames)
 
-                        if fn in mod_fnames and fn.endswith('.json'):
-                            # modify json and dump to new path
-                            logger.debug('Copying and modifying run json file '
-                                         '"{}" to job: "{}"'.format(fn, tag))
-                            self._mod_json(os.path.join(dirpath, fn),
-                                           os.path.join(new_path, fn),
-                                           arg_comb)
+        logger.info('Batch job directories ready for execution.')
 
-                        else:
-                            # straight copy of non-mod and non-json
-                            logger.debug('Copying run file "{}" to job: "{}"'
-                                         .format(fn, tag))
-                            try:
-                                shutil.copy(os.path.join(dirpath, fn),
-                                            os.path.join(new_path, fn))
-                            except Exception:
-                                msg = ('Could not copy "{}" to job: "{}"'
-                                       .format(fn, tag))
-                                logger.warning(msg)
-                                warn(msg)
+    def _copy_batch_file(self, fn, source_dir, destination_dir, job_name,
+                         arg_comb, mod_fnames):
+        """Copy a file in the batch directory into a job directory with
+        appropriate batch modifications (permutations) as defined by arg_comb.
+
+        Parameters
+        ----------
+        fn : str
+            Filename being copied.
+        source_dir : str
+            Directory that the file is sourced from (usually the base batch
+            project directory)
+        destination_dir : str
+            Directory that the file should be copied to (usually a job's
+            sub directory in source_dir)
+        job_name : str
+            Batch job name (for logging purposes)
+        arg_comb : dict
+            Dictionary representing one set of arg/value combinations to
+            implement in the fn if the fn is a .json file specified as one
+            of the batch permutation files to modify.
+        mod_fnames : list
+            List of filenames that need to be modified by the batch module.
+        """
+
+        if fn in mod_fnames and fn.endswith('.json'):
+            # modify json and dump to new path
+            logger.debug('Copying and modifying run json file '
+                         '"{}" to job: "{}"'.format(fn, job_name))
+            self._mod_json(os.path.join(source_dir, fn),
+                           os.path.join(destination_dir, fn),
+                           arg_comb)
+
+        else:
+            # straight copy of non-mod and non-json
+            fp_source = os.path.join(source_dir, fn)
+            fp_target = os.path.join(destination_dir, fn)
+
+            modified = True
+            if os.path.exists(fp_target):
+                modified = (os.path.getmtime(fp_source)
+                            > os.path.getmtime(fp_target))
+
+            if modified:
+                logger.debug('Copying run file "{}" to job: '
+                             '"{}"'.format(fn, job_name))
+                try:
+                    shutil.copy(fp_source, fp_target)
+                except Exception:
+                    msg = ('Could not copy "{}" to job: "{}"'
+                           .format(fn, job_name))
+                    logger.warning(msg)
+                    warn(msg)
 
     def _run_pipelines(self, monitor_background=False, verbose=False):
         """Run the reV pipeline modules for each batch job.
