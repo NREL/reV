@@ -54,7 +54,7 @@ setup(
     author_email="galen.maclaurin@nrel.gov",
     url="https://nrel.github.io/reV/",
     packages=find_packages(),
-    package_dir={"rev": "rev"},
+    package_dir={"reV": "reV"},
     entry_points={
         "console_scripts": ["reV=reV.cli:main",
                             "reV-batch=reV.batch.cli_batch:main",
@@ -75,6 +75,7 @@ setup(
                              "cli_project_points:main")
                             ],
     },
+    package_data={'reV': ['SAM/defaults/*.json', 'SAM/defaults/*.csv']},
     include_package_data=True,
     license="BSD 3-Clause",
     zip_safe=False,

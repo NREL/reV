@@ -6,13 +6,15 @@ Created on Fri Mar  1 13:47:30 2019
 @author: gbuster
 """
 import datetime
-import numpy as np
 import logging
+import numpy as np
+import pandas as pd
 from warnings import warn
 
 from reV.utilities.exceptions import HandlerWarning
 
 from rex.utilities.solar_position import SolarPosition
+from rex.utilities.utilities import check_tz
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +48,16 @@ def curtail(resource, curtailment, random_seed=0):
 
     if curtailment.date_range is not None:
         year = resource.time_index.year[0]
-        d0 = datetime.datetime(month=int(curtailment.date_range[0][:2]),
-                               day=int(curtailment.date_range[0][2:]),
-                               year=year)
-        d1 = datetime.datetime(month=int(curtailment.date_range[1][:2]),
-                               day=int(curtailment.date_range[1][2:]),
-                               year=year)
-        mask = (resource.time_index >= d0) & (resource.time_index < d1)
+        d0 = pd.to_datetime(datetime.datetime(
+            month=int(curtailment.date_range[0][:2]),
+            day=int(curtailment.date_range[0][2:]),
+            year=year), utc=True)
+        d1 = pd.to_datetime(datetime.datetime(
+            month=int(curtailment.date_range[1][:2]),
+            day=int(curtailment.date_range[1][2:]),
+            year=year), utc=True)
+        time_index = check_tz(resource.time_index)
+        mask = (time_index >= d0) & (time_index < d1)
         mask = np.tile(np.expand_dims(mask, axis=1), shape[1])
         curtail_mult = np.where(mask, curtail_mult, 1)
 
