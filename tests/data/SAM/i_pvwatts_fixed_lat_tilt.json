@@ -1,0 +1,12 @@
+{
+  "adjust:constant": 0,
+  "array_type": 0,
+  "azimuth": 180,
+  "dc_ac_ratio": 1.3,
+  "gcr": 0.4,
+  "inv_eff": 96,
+  "losses": 14.07566,
+  "module_type": 0,
+  "system_capacity": 20000,
+  "tilt": "latitude"
+}

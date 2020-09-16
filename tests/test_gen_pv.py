@@ -341,6 +341,24 @@ def test_bifacial():
     assert np.isclose(gen_bi.out['cf_mean'][0], 0.162, atol=0.005)
 
 
+def test_gen_input_mods():
+    """Test that the gen workers do not modify the top level input SAM config
+    """
+    year = 2012
+    rev2_points = slice(0, 5)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
+
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, max_workers=1,
+                      sites_per_worker=1, fout=None)
+    for i in range(5):
+        inputs = gen.project_points[i][1]
+        assert inputs['tilt'] == 'latitude'
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

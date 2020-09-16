@@ -2,6 +2,7 @@
 """
 reV Project Points Configuration
 """
+import copy
 import logging
 from math import ceil
 import numpy as np
@@ -274,7 +275,8 @@ class ProjectPoints:
             raise KeyError('Site {} not found in this instance of '
                            'ProjectPoints. Available sites include: {}'
                            .format(site, self.sites))
-        return config_id, self.sam_configs[config_id]
+
+        return config_id, copy.deepcopy(self.sam_configs[config_id])
 
     def __repr__(self):
         msg = ("{} for sites {} through {}"
