@@ -6,16 +6,22 @@ Created on Sep 8, 2020
 
 @author: gbuster
 """
+import pandas as pd
+from pandas.testing import assert_frame_equal
 import os
 import pytest
 
+from reV.config.batch import BatchCsv
 from reV.batch.batch import BatchJob
 from reV import TESTDATADIR
 
 from rex.utilities import safe_json_load
 
-BATCH_DIR = os.path.join(TESTDATADIR, 'batch/')
-FP_CONFIG = os.path.join(BATCH_DIR, 'config_batch.json')
+BATCH_DIR_0 = os.path.join(TESTDATADIR, 'batch_project_0/')
+FP_CONFIG_0 = os.path.join(BATCH_DIR_0, 'config_batch.json')
+
+BATCH_DIR_1 = os.path.join(TESTDATADIR, 'batch_project_1/')
+FP_CONFIG_1 = os.path.join(BATCH_DIR_1, 'config_batch.csv')
 
 
 def test_batch_job_setup():
@@ -25,15 +31,15 @@ def test_batch_job_setup():
     # persisting the batch dir change can mess up downstream pytests.
     previous_dir = os.getcwd()
 
-    config = safe_json_load(FP_CONFIG)
+    config = safe_json_load(FP_CONFIG_0)
 
-    count_0 = len(os.listdir(BATCH_DIR))
+    count_0 = len(os.listdir(BATCH_DIR_0))
 
     assert count_0 == 7, 'Unknown starting files detected!'
 
-    BatchJob.run(FP_CONFIG, dry_run=True)
+    BatchJob.run(FP_CONFIG_0, dry_run=True)
 
-    dir_list = os.listdir(BATCH_DIR)
+    dir_list = os.listdir(BATCH_DIR_0)
     set1_count = len([fn for fn in dir_list if fn.startswith('set1_')])
     set2_count = len([fn for fn in dir_list if fn.startswith('set2_')])
     assert set1_count == 6
@@ -47,11 +53,11 @@ def test_batch_job_setup():
     assert 'batch_jobs.csv' in dir_list
 
     args = config['sets'][0]['args']
-    job_dir = os.path.join(BATCH_DIR, 'set1_wthh140_wtpp1/')
+    job_dir = os.path.join(BATCH_DIR_0, 'set1_wthh140_wtpp1/')
     config_gen = safe_json_load(os.path.join(job_dir, 'config_gen.json'))
     config_col = safe_json_load(os.path.join(job_dir, 'config_collect.json'))
     turbine_base = safe_json_load(os.path.join(
-        BATCH_DIR, 'sam_configs/turbine.json'))
+        BATCH_DIR_0, 'sam_configs/turbine.json'))
     turbine = safe_json_load(os.path.join(
         job_dir, 'sam_configs/turbine.json'))
     assert config_gen['project_points'] == args['project_points'][0]
@@ -67,7 +73,7 @@ def test_batch_job_setup():
             == turbine_base['wind_turbine_rotor_diameter'])
 
     args = config['sets'][1]['args']
-    job_dir = os.path.join(BATCH_DIR, 'set2_wthh140/')
+    job_dir = os.path.join(BATCH_DIR_0, 'set2_wthh140/')
     config_gen = safe_json_load(os.path.join(job_dir, 'config_gen.json'))
     config_col = safe_json_load(os.path.join(job_dir, 'config_collect.json'))
     turbine = safe_json_load(os.path.join(job_dir, 'sam_configs/turbine.json'))
@@ -83,11 +89,62 @@ def test_batch_job_setup():
     assert (turbine['wind_turbine_rotor_diameter']
             == turbine_base['wind_turbine_rotor_diameter'])
 
-    count_1 = len(os.listdir(BATCH_DIR))
+    count_1 = len(os.listdir(BATCH_DIR_0))
     assert count_1 == 17, 'Batch generated unexpected files or directories!'
 
-    BatchJob.run(FP_CONFIG, delete=True)
-    count_2 = len(os.listdir(BATCH_DIR))
+    BatchJob.run(FP_CONFIG_0, delete=True)
+    count_2 = len(os.listdir(BATCH_DIR_0))
+    assert count_2 == count_0, 'Batch did not clear all job files!'
+
+    os.chdir(previous_dir)
+
+
+def test_batch_csv_config():
+    """Test the batch job csv parser."""
+    table = pd.read_csv(FP_CONFIG_1, index_col=0)
+    c = BatchCsv(FP_CONFIG_1)
+    assert 'logging' in c
+    assert 'pipeline_config' in c
+    assert 'sets' in c
+    sets = c['sets']
+    assert len(sets) == len(table)
+    for _, row in table.iterrows():
+        row = row.to_dict()
+        set_tag = row['set_tag']
+        found = False
+        for job_set in sets:
+            if job_set['set_tag'] == set_tag:
+                found = True
+                for k, v in row.items():
+                    if k not in ('set_tag', 'files'):
+                        assert [v] == job_set['args'][k]
+                break
+
+        assert found
+
+
+def test_batch_csv_setup():
+    """Test a batch project setup from csv config"""
+
+    previous_dir = os.getcwd()
+    config_table = pd.read_csv(FP_CONFIG_1, index_col=0)
+    count_0 = len(os.listdir(BATCH_DIR_1))
+    assert count_0 == 5, 'Unknown starting files detected!'
+
+    BatchJob.run(FP_CONFIG_1, dry_run=True)
+
+    dirs = os.listdir(BATCH_DIR_1)
+    count_1 = len(dirs)
+    assert (count_1 - count_0) == len(config_table) + 1
+    for job in config_table.index.values:
+        assert job in dirs
+
+    job_table = pd.read_csv(os.path.join(BATCH_DIR_1, 'batch_jobs.csv'),
+                            index_col=0)
+    assert_frame_equal(config_table, job_table)
+
+    BatchJob.run(FP_CONFIG_1, delete=True)
+    count_2 = len(os.listdir(BATCH_DIR_1))
     assert count_2 == count_0, 'Batch did not clear all job files!'
 
     os.chdir(previous_dir)

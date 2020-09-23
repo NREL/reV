@@ -35,7 +35,7 @@ def valid_config_keys():
 @main.command()
 @click.option('--config_file', '-c', required=True,
               type=click.Path(exists=True),
-              help='reV batch configuration json file.')
+              help='reV batch configuration json or csv file.')
 @click.option('--dry-run', is_flag=True,
               help='Flag to do a dry run (make batch dirs without running).')
 @click.option('--cancel', is_flag=True,
@@ -57,9 +57,9 @@ def from_config(ctx, config_file, dry_run, cancel, delete, monitor_background,
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     if cancel:
-        BatchJob.cancel_all(config_file)
+        BatchJob.cancel_all(config_file, verbose=verbose)
     elif delete:
-        BatchJob.delete_all(config_file)
+        BatchJob.delete_all(config_file, verbose=verbose)
     else:
         BatchJob.run(config_file, dry_run=dry_run,
                      monitor_background=monitor_background,
