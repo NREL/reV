@@ -892,6 +892,7 @@ class Gen:
             # of many HPC nodes in a large project
             pc = PointsControl.split(points_range[0], points_range[1], pp,
                                      sites_per_split=sites_per_worker)
+
         elif points_range is None and res_file is not None:
             # PointsControl is for all of the project points
             try:
@@ -907,10 +908,22 @@ class Gen:
                     if 'gid' in f.meta:
                         gid0 = f.meta['gid'].values[0]
                         gid1 = f.meta['gid'].values[-1]
-                        i0 = pp.index(gid0)
-                        i1 = pp.index(gid1) + 1
-                        pc = PointsControl.split(
-                            i0, i1, pp, sites_per_split=sites_per_worker)
+                        if (gid0 in pp.df.gid.values
+                                and gid1 in pp.df.gid.values):
+                            # this is the scenario where the meta is a subset
+                            # of the project points such as when econ is being
+                            # run off a single node in append mode with the
+                            # full generation project points.
+                            i0 = pp.index(gid0)
+                            i1 = pp.index(gid1) + 1
+                            pc = PointsControl.split(
+                                i0, i1, pp, sites_per_split=sites_per_worker)
+                        else:
+                            # this is the scenario where the project points
+                            # is a subset of the meta data like for
+                            # test problems.
+                            pc = PointsControl(
+                                pp, sites_per_split=sites_per_worker)
 
             except FileNotFoundError as ex:
                 msg = ('{} is invalid PointsControl will be created for all '
