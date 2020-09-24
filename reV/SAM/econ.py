@@ -160,23 +160,67 @@ class Economic(RevPySam):
         return site_df
 
     @staticmethod
-    def _get_gen_profile(site, site_df, cf_file, cf_year, inputs):
-        """Get the single-site generation time series and add to inputs dict.
+    def _get_cf_profiles(sites, cf_file, cf_year):
+        """Get the multi-site capacity factor time series profiles.
 
         Parameters
         ----------
-        site : int
-            Site gid.
-        site_df : pd.DataFrame
-            Dataframe of site-specific input variables. Row index corresponds
-            to site number/gid (via df.loc not df.iloc), column labels are the
-            variable keys that will be passed forward as SAM parameters.
+        sites : list
+            List of all site GID's to get gen profiles for.
         cf_file : str
             reV generation capacity factor output file with path.
         cf_year : int | str | None
             reV generation year to calculate econ for. Looks for cf_mean_{year}
             or cf_profile_{year}. None will default to a non-year-specific cf
             dataset (cf_mean, cf_profile).
+
+        Returns
+        -------
+        profiles : np.ndarray
+            2D array (time, n_sites) of all capacity factor profiles for all
+            the requested sites.
+        """
+
+        # Retrieve the generation profile for single owner input
+        with Outputs(cf_file) as cfh:
+
+            # get the index location of the site in question
+            site_gids = list(cfh.get_meta_arr('gid'))
+            isites = [site_gids.index(s) for s in sites]
+
+            # look for the cf_profile dataset
+            if 'cf_profile' in cfh.datasets:
+                profiles = cfh['cf_profile', :, isites]
+            elif 'cf_profile-{}'.format(cf_year) in cfh.datasets:
+                profiles = cfh['cf_profile-{}'.format(cf_year), :, isites]
+            elif 'cf_profile_{}'.format(cf_year) in cfh.datasets:
+                profiles = cfh['cf_profile_{}'.format(cf_year), :, isites]
+            else:
+                msg = ('Could not find cf_profile values for '
+                       'input to SingleOwner. Available datasets: {}'
+                       .format(cfh.datasets))
+                logger.error(msg)
+                raise KeyError(msg)
+
+        return profiles
+
+    @staticmethod
+    def _make_gen_profile(isite, site, profiles, site_df, inputs):
+        """Get the single-site generation time series and add to inputs dict.
+
+        Parameters
+        ----------
+        isite : int
+            Site index in the profiles array.
+        site : int
+            Site resource GID.
+        profiles : np.ndarray
+            2D array (time, n_sites) of all capacity factor profiles for all
+            the requested sites.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
         inputs : dict
             Dictionary of SAM input parameters.
 
@@ -187,30 +231,8 @@ class Economic(RevPySam):
             added.
         """
 
-        # get the system capacity
         sys_cap = Economic._parse_sys_cap(site, inputs, site_df)
-
-        # Retrieve the generation profile for single owner input
-        with Outputs(cf_file) as cfh:
-
-            # get the index location of the site in question
-            site_gids = list(cfh.meta['gid'])
-            isite = site_gids.index(site)
-
-            # look for the cf_profile dataset
-            if 'cf_profile' in cfh.datasets:
-                gen = cfh['cf_profile', :, isite] * sys_cap
-            elif 'cf_profile-{}'.format(cf_year) in cfh.datasets:
-                gen = (cfh['cf_profile-{}'.format(cf_year), :, isite]
-                       * sys_cap)
-            elif 'cf_profile_{}'.format(cf_year) in cfh.datasets:
-                gen = (cfh['cf_profile_{}'.format(cf_year), :, isite]
-                       * sys_cap)
-            else:
-                raise KeyError('Could not find cf_profile values for '
-                               'SingleOwner. Available datasets: {}'
-                               .format(cfh.datasets))
-        # add to input dict
+        gen = profiles[:, isite] * sys_cap
         inputs['gen'] = gen
 
         return inputs
@@ -562,7 +584,9 @@ class SingleOwner(Economic):
 
         out = {}
 
-        for site in points_control.sites:
+        profiles = cls._get_cf_profiles(points_control.sites, cf_file, cf_year)
+
+        for i, site in enumerate(points_control.sites):
             # get SAM inputs from project_points based on the current site
             _, inputs = points_control.project_points[site]
 
@@ -570,8 +594,8 @@ class SingleOwner(Economic):
             site_inputs = deepcopy(inputs)
 
             # set the generation profile as an input.
-            site_inputs = cls._get_gen_profile(site, site_df, cf_file, cf_year,
-                                               site_inputs)
+            site_inputs = cls._make_gen_profile(i, site, profiles, site_df,
+                                                site_inputs)
 
             out[site] = super().reV_run(site, site_df, site_inputs,
                                         output_request)
