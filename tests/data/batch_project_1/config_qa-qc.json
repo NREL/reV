@@ -1,0 +1,26 @@
+{
+  "directories": {
+    "log_directory": "./logs/",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=normal",
+    "option": "eagle",
+    "walltime": 4.0
+  },
+  "log_level": "INFO",
+  "modules": {
+    "supply-curve": {
+      "fpath": "PIPELINE",
+      "lcoe": "total_lcoe",
+      "plot_type": "plotly",
+      "sub_dir": "qa_supply_curve"
+    },
+    "supply-curve-aggregation": {
+      "fpath": "PIPELINE",
+      "plot_type": "plotly",
+      "sub_dir": "qa_supply_curve_aggregation"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "directories": {
+    "log_directories": "./logs",
+    "output_directory": "./"
+  },
+  "execution_control": {
+    "allocation": "rev",
+    "feature": "--qos=normal",
+    "memory": 179,
+    "nodes": 10,
+    "option": "eagle",
+    "walltime": 1.0
+  },
+  "fixed_charge_rate": 0.063,
+  "sc_features": "PLACEHOLDER",
+  "sc_points": "PIPELINE",
+  "simple": false,
+  "trans_table": "PLACEHOLDER",
+  "transmission_costs": {
+    "available_capacity": 1.0,
+    "center_tie_in_cost": 0,
+    "line_cost": 3667,
+    "line_tie_in_cost": 14000,
+    "sink_tie_in_cost": 14000,
+    "station_tie_in_cost": 0
+  }
+}

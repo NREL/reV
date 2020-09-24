@@ -33,12 +33,14 @@ logger = logging.getLogger(__name__)
 class BatchJob:
     """Framework for building a batched job suite."""
 
-    def __init__(self, config):
+    def __init__(self, config, verbose=False):
         """
         Parameters
         ----------
         config : str
-            File path to config json (str).
+            File path to config json or csv (str).
+        verbose : bool
+            Flag to turn on debug logging.
         """
 
         self._job_tags = None
@@ -48,7 +50,11 @@ class BatchJob:
         os.chdir(self._base_dir)
 
         if 'logging' in self._config:
-            init_logger('reV.batch', **self._config['logging'])
+            logging_kwargs = self._config.get('logging', {})
+            if verbose:
+                logging_kwargs['log_level'] = 'DEBUG'
+
+            init_logger('reV.batch', **logging_kwargs)
 
         x = self._parse_config(self._config)
         self._arg_combs, self._file_sets, self._set_tags = x
@@ -503,29 +509,33 @@ class BatchJob:
         os.remove(fp_job_table)
 
     @classmethod
-    def cancel_all(cls, config):
+    def cancel_all(cls, config, verbose=False):
         """Cancel all reV pipeline modules for all batch jobs.
 
         Parameters
         ----------
         config : str
-            File path to batch config json (str).
+            File path to batch config json or csv (str).
+        verbose : bool
+            Flag to turn on debug logging.
         """
 
-        b = cls(config)
+        b = cls(config, verbose=verbose)
         b._cancel_all()
 
     @classmethod
-    def delete_all(cls, config):
+    def delete_all(cls, config, verbose=False):
         """Delete all reV batch sub job folders based on the job summary csv
         in the batch config directory.
 
         Parameters
         ----------
         config : str
-            File path to batch config json (str).
+            File path to batch config json or csv (str).
+        verbose : bool
+            Flag to turn on debug logging.
         """
-        b = cls(config)
+        b = cls(config, verbose=verbose)
         b._delete_all()
 
     @classmethod
@@ -536,7 +546,7 @@ class BatchJob:
         Parameters
         ----------
         config : str
-            File path to config json (str).
+            File path to config json or csv (str).
         dry_run : bool
             Flag to make job directories without running.
         delete : bool
@@ -551,7 +561,7 @@ class BatchJob:
             Flag to turn on debug logging for the pipelines.
         """
 
-        b = cls(config)
+        b = cls(config, verbose=verbose)
         if delete:
             b._delete_all()
         else:
