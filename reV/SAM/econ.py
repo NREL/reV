@@ -190,17 +190,19 @@ class Economic(RevPySam):
 
             # look for the cf_profile dataset
             if 'cf_profile' in cfh.datasets:
-                profiles = cfh['cf_profile', :, isites]
+                dset = 'cf_profile'
             elif 'cf_profile-{}'.format(cf_year) in cfh.datasets:
-                profiles = cfh['cf_profile-{}'.format(cf_year), :, isites]
+                dset = 'cf_profile-{}'.format(cf_year)
             elif 'cf_profile_{}'.format(cf_year) in cfh.datasets:
-                profiles = cfh['cf_profile_{}'.format(cf_year), :, isites]
+                dset = 'cf_profile_{}'.format(cf_year)
             else:
                 msg = ('Could not find cf_profile values for '
                        'input to SingleOwner. Available datasets: {}'
                        .format(cfh.datasets))
                 logger.error(msg)
                 raise KeyError(msg)
+
+            profiles = cfh[dset, :, isites]
 
         return profiles
 
@@ -232,8 +234,7 @@ class Economic(RevPySam):
         """
 
         sys_cap = Economic._parse_sys_cap(site, inputs, site_df)
-        gen = profiles[:, isite] * sys_cap
-        inputs['gen'] = gen
+        inputs['gen'] = profiles[:, isite] * sys_cap
 
         return inputs
 
