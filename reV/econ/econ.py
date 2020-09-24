@@ -465,7 +465,7 @@ class Econ(Gen):
         # add site_df to project points dataframe
         econ.add_site_data_to_pp()
 
-        logger.info('Running parallel econ with smart data flushing '
+        logger.info('Running econ with smart data flushing '
                     'for: {}'.format(pc))
         logger.debug('The following project points were specified: "{}"'
                      .format(points))
