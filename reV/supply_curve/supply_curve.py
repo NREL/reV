@@ -160,12 +160,20 @@ class SupplyCurve:
         merge_cols : dict
             Columns to merge on
         """
+        sc_columns = [c for c in sc_columns if c.startswith('sc_')]
+        trans_columns = [c for c in trans_columns if c.startswith('sc_')]
         merge_cols = {}
         for c_val in ['row', 'col']:
             trans_col = [c for c in trans_columns if c_val in c]
             sc_col = [c for c in sc_columns if c_val in c]
             if trans_col and sc_col:
                 merge_cols[sc_col[0]] = trans_col[0]
+
+        if len(merge_cols) != 2:
+            msg = ('Did not find a unique set of sc row and column ids to '
+                   'merge on: {}'.format(merge_cols))
+            logger.error(msg)
+            raise RuntimeError(msg)
 
         return merge_cols
 
@@ -237,6 +245,8 @@ class SupplyCurve:
 
         merge_cols = SupplyCurve._get_merge_cols(sc_points.columns,
                                                  trans_table.columns)
+        logger.debug('Merging SC table and Trans Table on: {}'
+                     .format(merge_cols))
         sc_points = sc_points.rename(columns=merge_cols)
         merge_cols = list(merge_cols.values())
         if offshore_table is not None:
@@ -259,8 +269,6 @@ class SupplyCurve:
         sc_cols = sc_cols + merge_cols
         sc_points = sc_points[sc_cols].copy()
 
-        logger.debug('Merging SC table and Trans Table on columns: {}'
-                     .format(merge_cols))
         trans_table = trans_table.merge(sc_points, on=merge_cols, how='inner')
 
         return trans_table
