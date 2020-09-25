@@ -261,7 +261,7 @@ class SupplyCurve:
 
         logger.debug('Merging SC table and Trans Table on columns: {}'
                      .format(merge_cols))
-        trans_table = trans_table.merge(sc_points, on=merge_cols, how='left')
+        trans_table = trans_table.merge(sc_points, on=merge_cols, how='inner')
 
         return trans_table
 
@@ -377,9 +377,8 @@ class SupplyCurve:
                                                connectable=connectable,
                                                max_workers=max_workers)
 
-        gid_mask = ~pd.isna(trans_table['sc_gid'])
-        trans_table.loc[gid_mask, 'trans_cap_cost'] = cost
-        trans_table.loc[gid_mask, 'lcot'] = lcot
+        trans_table['trans_cap_cost'] = cost
+        trans_table['lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
                                      + trans_table['mean_lcoe'])
 
@@ -497,11 +496,9 @@ class SupplyCurve:
         if max_workers is None:
             max_workers = os.cpu_count()
 
-        gid_mask = ~pd.isna(trans_table['sc_gid'])
-
         logger.info('Computing LCOT costs for all possible connections...')
         if max_workers > 1:
-            groups = trans_table[gid_mask].groupby('sc_gid')
+            groups = trans_table.groupby('sc_gid')
             loggers = [__name__, 'reV.handlers.transmission']
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
@@ -531,7 +528,7 @@ class SupplyCurve:
             feature = TC(trans_table, line_limited=line_limited,
                          **trans_costs)
             cost = []
-            for _, row in trans_table[gid_mask].iterrows():
+            for _, row in trans_table.iterrows():
                 if connectable:
                     capacity = row['capacity']
                 else:
@@ -544,7 +541,7 @@ class SupplyCurve:
 
             cost = np.array(cost, dtype='float32')
 
-        cf_mean_arr = trans_table.loc[gid_mask, 'mean_cf'].values
+        cf_mean_arr = trans_table['mean_cf'].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
 
         logger.info('LCOT cost calculation is complete.')
