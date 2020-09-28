@@ -815,7 +815,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             h5_dsets_data = {}
             if not isinstance(h5_dsets, (list, tuple)):
                 e = ('Additional h5_dsets argument must be a list or tuple '
-                     'but received: {}'.format(type(h5_dsets)))
+                     'but received: {} {}'.format(type(h5_dsets), h5_dsets))
                 logger.error(e)
                 raise TypeError(e)
             else:

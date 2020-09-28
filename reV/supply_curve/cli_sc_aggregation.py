@@ -15,7 +15,8 @@ from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 
 from rex.utilities.execution import SLURM
-from rex.utilities.cli_dtypes import STR, INT, FLOAT, FLOATLIST, STRFLOAT
+from rex.utilities.cli_dtypes import (STR, INT, FLOAT, STRLIST, FLOATLIST,
+                                      STRFLOAT)
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import dict_str_load, get_class_properties
 
@@ -183,7 +184,7 @@ def from_config(ctx, config_file, verbose):
               help='Dataset containing capacity factor values to aggregate.')
 @click.option('--lcoe_dset', '-lc', type=STR, default='lcoe_fcr-means',
               help='Dataset containing lcoe values to aggregate.')
-@click.option('--h5_dsets', '-hd', type=STR, default=None,
+@click.option('--h5_dsets', '-hd', type=STRLIST, default=None,
               help='Additional datasets from the source gen/econ h5 files to '
               'aggregate.')
 @click.option('--data_layers', '-d', type=STR, default=None,
