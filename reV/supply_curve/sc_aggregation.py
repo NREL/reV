@@ -821,7 +821,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             else:
                 for dset in h5_dsets:
                     if dset not in gen.datasets:
-                        w = ('Could not find additiona h5_dset "{}" in '
+                        w = ('Could not find additional h5_dset "{}" in '
                              'generation file: {} or econ file: {}. '
                              'Available datasets: {}'
                              .format(dset, gen_fpath, econ_fpath,
@@ -1102,6 +1102,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         """
 
         file_kwargs = {'data_layers': self._data_layers,
+                       'econ_fpath': self._econ_fpath,
                        'power_density': self._power_density,
                        'excl_dict': self._excl_dict}
         with SupplyCurveAggFileHandler(self._excl_fpath, self._gen_fpath,
@@ -1118,15 +1119,16 @@ class SupplyCurveAggregation(AbstractAggregation):
             res, bins, cf, lcoe, offshore_flag, h5_dsets_data = inp
 
             if offshore_flag is not None:
-                summary = OffshoreAggregation.run(
-                    summary, fh, self._excl_fpath, res, bins,
-                    cf, lcoe, offshore_flag,
-                    h5_dsets_data=h5_dsets_data,
-                    resolution=self._resolution,
-                    offshore_capacity=offshore_capacity,
-                    offshore_gid_counts=offshore_gid_counts,
-                    offshore_pixel_area=offshore_pixel_area,
-                    offshore_meta_cols=offshore_meta_cols)
+                if any(offshore_flag):
+                    summary = OffshoreAggregation.run(
+                        summary, fh, self._excl_fpath, res, bins,
+                        cf, lcoe, offshore_flag,
+                        h5_dsets_data=h5_dsets_data,
+                        resolution=self._resolution,
+                        offshore_capacity=offshore_capacity,
+                        offshore_gid_counts=offshore_gid_counts,
+                        offshore_pixel_area=offshore_pixel_area,
+                        offshore_meta_cols=offshore_meta_cols)
 
         return summary
 
