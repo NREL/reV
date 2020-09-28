@@ -437,8 +437,8 @@ class OffshoreAggregation:
 
     @classmethod
     def run(cls, summary, handler, excl_fpath, res_data, res_class_bins,
-            cf_data, lcoe_data, offshore_flag, resolution=64,
-            offshore_capacity=600, offshore_gid_counts=494,
+            cf_data, lcoe_data, offshore_flag, h5_dsets_data=None,
+            resolution=64, offshore_capacity=600, offshore_gid_counts=494,
             offshore_pixel_area=4, offshore_meta_cols=None):
         """Get the offshore supply curve point summary. Each offshore resource
         pixel will be summarized in its own supply curve point which will be
@@ -465,6 +465,10 @@ class OffshoreAggregation:
             data. If this is input as None, this method has been called
             without offshore data in error and summary will be passed
             through un manipulated.
+        h5_dsets_data : dict | None
+            If additional h5_dsets are requested, this will be a dictionary
+            keyed by the h5 dataset names. The corresponding values will be
+            the extracted arrays from the h5 files.
         resolution : int, optional
             SC resolution, by default 64
         offshore_capacity : int | float
@@ -548,6 +552,11 @@ class OffshoreAggregation:
                 for label in offshore_meta_cols:
                     pointsum[label] = handler.gen.meta.loc[gen_gid, label]
 
+                if h5_dsets_data is not None:
+                    for dset, data in h5_dsets_data.items():
+                        label = 'mean_{}'.format(dset)
+                        pointsum[label] = cls._get_means(data, gen_gid)
+
                 summary.append(pointsum)
 
         return summary
@@ -561,7 +570,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                  check_excl_layers=False, resolution=64, excl_area=None,
                  gids=None, res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                 data_layers=None, power_density=None,
+                 h5_dsets=None, data_layers=None, power_density=None,
                  friction_fpath=None, friction_dset=None):
         """
         Parameters
@@ -604,6 +613,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name from f_gen containing capacity factor mean values.
         lcoe_dset : str
             Dataset name from f_gen containing LCOE mean values.
+        h5_dsets : list | None
+            Optional list of additional datasets from the source h5 gen/econ
+            files to aggregate.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
@@ -639,6 +651,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         self._res_class_bins = self._convert_bins(res_class_bins)
         self._cf_dset = cf_dset
         self._lcoe_dset = lcoe_dset
+        self._h5_dsets = h5_dsets
         self._power_density = power_density
         self._friction_fpath = friction_fpath
         self._friction_dset = friction_dset
@@ -722,7 +735,7 @@ class SupplyCurveAggregation(AbstractAggregation):
 
     @staticmethod
     def _get_input_data(gen, gen_fpath, econ_fpath, res_class_dset,
-                        res_class_bins, cf_dset, lcoe_dset):
+                        res_class_bins, cf_dset, lcoe_dset, h5_dsets):
         """Extract SC point agg input data args from higher level inputs.
 
         Parameters
@@ -745,6 +758,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name from f_gen containing capacity factor mean values.
         lcoe_dset : str
             Dataset name from f_gen containing LCOE mean values.
+        h5_dsets : list | None
+            Optional list of additional datasets from the source h5 gen/econ
+            files to aggregate.
 
         Returns
         -------
@@ -759,6 +775,10 @@ class SupplyCurveAggregation(AbstractAggregation):
         offshore_flags : np.ndarray | None
             Array of offshore boolean flags if available from wind generation
             data. None if offshore flag is not available.
+        h5_dsets_data : dict | None
+            If additional h5_dsets are requested, this will be a dictionary
+            keyed by the h5 dataset names. The corresponding values will be
+            the extracted arrays from the h5 files.
         """
 
         if res_class_dset is None:
@@ -790,12 +810,34 @@ class SupplyCurveAggregation(AbstractAggregation):
             logger.warning(w)
             warn(w, OutputWarning)
 
+        h5_dsets_data = None
+        if h5_dsets is not None:
+            h5_dsets_data = {}
+            if not isinstance(h5_dsets, (list, tuple)):
+                e = ('Additional h5_dsets argument must be a list or tuple '
+                     'but received: {}'.format(type(h5_dsets)))
+                logger.error(e)
+                raise TypeError(e)
+            else:
+                for dset in h5_dsets:
+                    if dset not in gen.datasets:
+                        w = ('Could not find additiona h5_dset "{}" in '
+                             'generation file: {} or econ file: {}. '
+                             'Available datasets: {}'
+                             .format(dset, gen_fpath, econ_fpath,
+                                     gen.datasets))
+                        logger.warning(w)
+                        warn(w, OutputWarning)
+                    else:
+                        h5_dsets_data[dset] = gen[dset]
+
         if 'offshore' in gen.meta:
             offshore_flag = gen.meta['offshore'].values
         else:
             offshore_flag = None
 
-        return res_data, res_class_bins, cf_data, lcoe_data, offshore_flag
+        return (res_data, res_class_bins, cf_data, lcoe_data, offshore_flag,
+                h5_dsets_data)
 
     @staticmethod
     def run_serial(excl_fpath, gen_fpath, tm_dset, gen_index, econ_fpath=None,
@@ -803,8 +845,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                    check_excl_layers=False, resolution=64, gids=None,
                    args=None, res_class_dset=None, res_class_bins=None,
                    cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                   data_layers=None, power_density=None, friction_fpath=None,
-                   friction_dset=None, excl_area=0.0081):
+                   h5_dsets=None, data_layers=None, power_density=None,
+                   friction_fpath=None, friction_dset=None, excl_area=0.0081):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -850,6 +892,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name from f_gen containing capacity factor mean values.
         lcoe_dset : str
             Dataset name from f_gen containing LCOE mean values.
+        h5_dsets : list | None
+            Optional list of additional datasets from the source h5 gen/econ
+            files to aggregate.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
@@ -906,7 +951,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                                                             res_class_dset,
                                                             res_class_bins,
                                                             cf_dset,
-                                                            lcoe_dset)
+                                                            lcoe_dset,
+                                                            h5_dsets)
 
             n_finished = 0
             for gid in gids:
@@ -922,6 +968,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                             res_class_bin=res_bin,
                             cf_dset=inputs[2],
                             lcoe_dset=inputs[3],
+                            h5_dsets=inputs[5],
                             data_layers=fh.data_layers,
                             resolution=resolution,
                             exclusion_shape=exclusion_shape,
@@ -1001,7 +1048,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                     excl_dict=self._excl_dict,
                     res_class_dset=self._res_class_dset,
                     res_class_bins=self._res_class_bins,
-                    cf_dset=self._cf_dset, lcoe_dset=self._lcoe_dset,
+                    cf_dset=self._cf_dset,
+                    lcoe_dset=self._lcoe_dset,
+                    h5_dsets=self._h5_dsets,
                     data_layers=self._data_layers,
                     resolution=self._resolution,
                     power_density=self._power_density,
@@ -1063,14 +1112,16 @@ class SupplyCurveAggregation(AbstractAggregation):
                                                          self._res_class_dset,
                                                          self._res_class_bins,
                                                          self._cf_dset,
-                                                         self._lcoe_dset)
+                                                         self._lcoe_dset,
+                                                         self._h5_dsets)
 
-            res_data, res_class_bins, cf_data, lcoe_data, offshore_flag = inp
+            res, bins, cf, lcoe, offshore_flag, h5_dsets_data = inp
 
             if offshore_flag is not None:
                 summary = OffshoreAggregation.run(
-                    summary, fh, self._excl_fpath, res_data, res_class_bins,
-                    cf_data, lcoe_data, offshore_flag,
+                    summary, fh, self._excl_fpath, res, bins,
+                    cf, lcoe, offshore_flag,
+                    h5_dsets_data=h5_dsets_data,
                     resolution=self._resolution,
                     offshore_capacity=offshore_capacity,
                     offshore_gid_counts=offshore_gid_counts,
@@ -1217,7 +1268,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 check_excl_layers=False, resolution=64, gids=None,
                 res_class_dset=None, res_class_bins=None,
                 cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                data_layers=None, power_density=None,
+                h5_dsets=None, data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
                 args=None, excl_area=None, max_workers=None,
                 offshore_capacity=600, offshore_gid_counts=494,
@@ -1261,6 +1312,9 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name from f_gen containing capacity factor mean values.
         lcoe_dset : str
             Dataset name from f_gen containing LCOE mean values.
+        h5_dsets : list | None
+            Optional list of additional datasets from the source h5 gen/econ
+            files to aggregate.
         data_layers : None | dict
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
@@ -1317,6 +1371,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                   res_class_bins=res_class_bins,
                   cf_dset=cf_dset,
                   lcoe_dset=lcoe_dset,
+                  h5_dsets=h5_dsets,
                   data_layers=data_layers,
                   resolution=resolution,
                   power_density=power_density,

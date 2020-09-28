@@ -101,6 +101,7 @@ def from_config(ctx, config_file, verbose):
                        res_class_bins=config.res_class_bins,
                        cf_dset=config.cf_dset,
                        lcoe_dset=config.lcoe_dset,
+                       h5_dsets=config.h5_dsets,
                        data_layers=config.data_layers,
                        resolution=config.resolution,
                        excl_area=config.excl_area,
@@ -127,6 +128,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['RES_CLASS_BINS'] = config.res_class_bins
         ctx.obj['CF_DSET'] = config.cf_dset
         ctx.obj['LCOE_DSET'] = config.lcoe_dset
+        ctx.obj['H5_DSETS'] = config.h5_dsets
         ctx.obj['DATA_LAYERS'] = config.data_layers
         ctx.obj['RESOLUTION'] = config.resolution
         ctx.obj['EXCL_AREA'] = config.excl_area
@@ -181,6 +183,9 @@ def from_config(ctx, config_file, verbose):
               help='Dataset containing capacity factor values to aggregate.')
 @click.option('--lcoe_dset', '-lc', type=STR, default='lcoe_fcr-means',
               help='Dataset containing lcoe values to aggregate.')
+@click.option('--h5_dsets', '-hd', type=STR, default=None,
+              help='Additional datasets from the source gen/econ h5 files to '
+              'aggregate.')
 @click.option('--data_layers', '-d', type=STR, default=None,
               help='String representation of a dictionary of additional data '
               'layers to include in the aggregation e.g. '
@@ -222,7 +227,7 @@ def from_config(ctx, config_file, verbose):
 @click.pass_context
 def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
            excl_dict, check_excl_layers, res_class_dset, res_class_bins,
-           cf_dset, lcoe_dset, data_layers, resolution, excl_area,
+           cf_dset, lcoe_dset, h5_dsets, data_layers, resolution, excl_area,
            power_density, area_filter_kernel, min_area, friction_fpath,
            friction_dset, out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
@@ -238,6 +243,7 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
     ctx.obj['RES_CLASS_BINS'] = res_class_bins
     ctx.obj['CF_DSET'] = cf_dset
     ctx.obj['LCOE_DSET'] = lcoe_dset
+    ctx.obj['H5_DSETS'] = h5_dsets
     ctx.obj['DATA_LAYERS'] = data_layers
     ctx.obj['RESOLUTION'] = resolution
     ctx.obj['EXCL_AREA'] = excl_area
@@ -280,6 +286,7 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                 res_class_bins=res_class_bins,
                 cf_dset=cf_dset,
                 lcoe_dset=lcoe_dset,
+                h5_dsets=h5_dsets,
                 data_layers=data_layers,
                 resolution=resolution,
                 excl_area=excl_area,
@@ -323,9 +330,9 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
 
 def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                  excl_dict, check_excl_layers, res_class_dset, res_class_bins,
-                 cf_dset, lcoe_dset, data_layers, resolution, excl_area,
-                 power_density, area_filter_kernel, min_area, friction_fpath,
-                 friction_dset, out_dir, log_dir, verbose):
+                 cf_dset, lcoe_dset, h5_dsets, data_layers, resolution,
+                 excl_area, power_density, area_filter_kernel, min_area,
+                 friction_fpath, friction_dset, out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ['-exf {}'.format(SLURM.s(excl_fpath)),
@@ -338,6 +345,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
             '-cb {}'.format(SLURM.s(res_class_bins)),
             '-cf {}'.format(SLURM.s(cf_dset)),
             '-lc {}'.format(SLURM.s(lcoe_dset)),
+            '-hd {}'.format(SLURM.s(h5_dsets)),
             '-d {}'.format(SLURM.s(data_layers)),
             '-r {}'.format(SLURM.s(resolution)),
             '-ea {}'.format(SLURM.s(excl_area)),
@@ -395,6 +403,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     res_class_bins = ctx.obj['RES_CLASS_BINS']
     cf_dset = ctx.obj['CF_DSET']
     lcoe_dset = ctx.obj['LCOE_DSET']
+    h5_dsets = ctx.obj['H5_DSETS']
     data_layers = ctx.obj['DATA_LAYERS']
     resolution = ctx.obj['RESOLUTION']
     excl_area = ctx.obj['EXCL_AREA']
@@ -413,7 +422,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     cmd = get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath,
                        tm_dset, excl_dict, check_excl_layers,
                        res_class_dset, res_class_bins,
-                       cf_dset, lcoe_dset, data_layers,
+                       cf_dset, lcoe_dset, h5_dsets, data_layers,
                        resolution, excl_area,
                        power_density, area_filter_kernel, min_area,
                        friction_fpath, friction_dset,

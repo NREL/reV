@@ -31,7 +31,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
     def __init__(self, gid, excl, gen, tm_dset, gen_index, excl_dict=None,
                  res_class_dset=None, res_class_bin=None, excl_area=0.0081,
                  power_density=None, cf_dset='cf_mean-means',
-                 lcoe_dset='lcoe_fcr-means', resolution=64,
+                 lcoe_dset='lcoe_fcr-means', h5_dsets=None, resolution=64,
                  exclusion_shape=None, close=False, offshore_flags=None,
                  friction_layer=None):
         """
@@ -72,6 +72,11 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         lcoe_dset : str | np.ndarray
             Dataset name from gen containing LCOE mean values.
             Can be pre-extracted generation output data in np.ndarray.
+        h5_dsets : None | list | dict
+            Optional list of dataset names to summarize from the gen/econ h5
+            files. Can also be pre-extracted data dictionary where keys are
+            the dataset names and values are the arrays of data from the
+            h5 files.
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
@@ -91,6 +96,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         self._res_class_bin = res_class_bin
         self._cf_dset = cf_dset
         self._lcoe_dset = lcoe_dset
+        self._h5_dsets = h5_dsets
         self._mean_res = None
         self._res_data = None
         self._gen_data = None
@@ -372,6 +378,55 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         return capacity
 
+    @property
+    def h5_dsets_data(self):
+        """Get any additional/supplemental h5 dataset data to summarize.
+
+        Returns
+        -------
+        h5_dsets_data : dict | None
+
+        """
+
+        _h5_dsets_data = None
+
+        if isinstance(self._h5_dsets, (list, tuple)):
+            _h5_dsets_data = {}
+            for dset in self._h5_dsets:
+                if dset in self.gen.datasets:
+                    _h5_dsets_data[dset] = self.gen[dset]
+
+        elif isinstance(self._h5_dsets, dict):
+            _h5_dsets_data = self._h5_dsets
+
+        elif self._h5_dsets is not None:
+            e = ('Cannot recognize h5_dsets input type, should be None, '
+                 'a list of dataset names, or a dictionary or '
+                 'pre-extracted data. Received: {} {}'
+                 .format(type(self._h5_dsets), self._h5_dsets))
+            logger.error(e)
+            raise TypeError(e)
+
+        return _h5_dsets_data
+
+    @property
+    def mean_h5_dsets_data(self):
+        """Get the mean supplemental h5 datasets data (optional)
+
+        Returns
+        -------
+        mean_h5_dsets_data : dict | None
+            Mean dataset values for the non-excluded data for the optional
+            h5_dsets input.
+        """
+        _mean_h5_dsets_data = None
+        if self.h5_dsets_data is not None:
+            _mean_h5_dsets_data = {}
+            for dset, arr in self.h5_dsets_data.items():
+                _mean_h5_dsets_data[dset] = self.exclusion_weighted_mean(arr)
+
+        return _mean_h5_dsets_data
+
     def agg_data_layers(self, summary, data_layers):
         """Perform additional data layer aggregation. If there is no valid data
         in the included area, the data layer will be taken from the full SC
@@ -526,6 +581,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             ARGS['mean_friction'] = self.mean_friction
             ARGS['mean_lcoe_friction'] = self.mean_lcoe_friction
 
+        if self._h5_dsets is not None:
+            for dset, data in self.mean_h5_dsets_data.items():
+                ARGS['mean_{}'.format(dset)] = data
+
         if args is None:
             args = list(ARGS.keys())
 
@@ -546,9 +605,9 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                   excl_dict=None, res_class_dset=None, res_class_bin=None,
                   excl_area=0.0081, power_density=None,
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                  resolution=64, exclusion_shape=None, close=False,
-                  offshore_flags=None, friction_layer=None, args=None,
-                  data_layers=None):
+                  h5_dsets=None, resolution=64, exclusion_shape=None,
+                  close=False, offshore_flags=None, friction_layer=None,
+                  args=None, data_layers=None):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -587,6 +646,11 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         lcoe_dset : str | np.ndarray
             Dataset name from gen containing LCOE mean values.
             Can be pre-extracted generation output data in np.ndarray.
+        h5_dsets : None | list | dict
+            Optional list of dataset names to summarize from the gen/econ h5
+            files. Can also be pre-extracted data dictionary where keys are
+            the dataset names and values are the arrays of data from the
+            h5 files.
         resolution : int | None
             SC resolution, must be input in combination with gid.
         exclusion_shape : tuple
@@ -616,7 +680,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         kwargs = {"excl_dict": excl_dict, "res_class_dset": res_class_dset,
                   "res_class_bin": res_class_bin, "excl_area": excl_area,
                   "power_density": power_density, "cf_dset": cf_dset,
-                  "lcoe_dset": lcoe_dset, "resolution": resolution,
+                  "lcoe_dset": lcoe_dset, "h5_dsets": h5_dsets,
+                  "resolution": resolution,
                   "exclusion_shape": exclusion_shape, "close": close,
                   "offshore_flags": offshore_flags,
                   'friction_layer': friction_layer}
