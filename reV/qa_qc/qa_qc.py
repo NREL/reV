@@ -40,7 +40,7 @@ class QaQc:
         -------
         str
         """
-        return self.out_dir
+        return self._out_dir
 
     @staticmethod
     def _scatter_plot(summary_csv, out_root, plot_type='plotly',
