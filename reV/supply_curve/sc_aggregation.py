@@ -1232,6 +1232,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       res_class_bins=self._res_class_bins,
                                       cf_dset=self._cf_dset,
                                       lcoe_dset=self._lcoe_dset,
+                                      h5_dsets=self._h5_dsets,
                                       data_layers=self._data_layers,
                                       resolution=self._resolution,
                                       power_density=self._power_density,
