@@ -424,12 +424,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                     if not data.size:
                         data = None
                         excl_mult = None
-                        w = ('Data layer "{}" has no valid data for '
-                             'SC point gid {} at ({}, {})!'
-                             .format(name, self._gid, self.latitude,
-                                     self.longitude))
-                        logger.warning(w)
-                        warn(w, OutputWarning)
+                        m = ('Data layer "{}" has no valid data for '
+                             'SC point gid {}!'
+                             .format(name, self._gid))
+                        logger.debug(m)
 
                 data = self._agg_data_layer_method(data, excl_mult,
                                                    attrs['method'])

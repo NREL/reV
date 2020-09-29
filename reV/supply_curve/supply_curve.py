@@ -160,12 +160,20 @@ class SupplyCurve:
         merge_cols : dict
             Columns to merge on
         """
+        sc_columns = [c for c in sc_columns if c.startswith('sc_')]
+        trans_columns = [c for c in trans_columns if c.startswith('sc_')]
         merge_cols = {}
         for c_val in ['row', 'col']:
             trans_col = [c for c in trans_columns if c_val in c]
             sc_col = [c for c in sc_columns if c_val in c]
             if trans_col and sc_col:
                 merge_cols[sc_col[0]] = trans_col[0]
+
+        if len(merge_cols) != 2:
+            msg = ('Did not find a unique set of sc row and column ids to '
+                   'merge on: {}'.format(merge_cols))
+            logger.error(msg)
+            raise RuntimeError(msg)
 
         return merge_cols
 
@@ -237,6 +245,8 @@ class SupplyCurve:
 
         merge_cols = SupplyCurve._get_merge_cols(sc_points.columns,
                                                  trans_table.columns)
+        logger.debug('Merging SC table and Trans Table on: {}'
+                     .format(merge_cols))
         sc_points = sc_points.rename(columns=merge_cols)
         merge_cols = list(merge_cols.values())
         if offshore_table is not None:
@@ -259,9 +269,7 @@ class SupplyCurve:
         sc_cols = sc_cols + merge_cols
         sc_points = sc_points[sc_cols].copy()
 
-        logger.debug('Merging SC table and Trans Table on columns: {}'
-                     .format(merge_cols))
-        trans_table = trans_table.merge(sc_points, on=merge_cols, how='left')
+        trans_table = trans_table.merge(sc_points, on=merge_cols, how='inner')
 
         return trans_table
 
@@ -377,9 +385,8 @@ class SupplyCurve:
                                                connectable=connectable,
                                                max_workers=max_workers)
 
-        gid_mask = ~pd.isna(trans_table['sc_gid'])
-        trans_table.loc[gid_mask, 'trans_cap_cost'] = cost
-        trans_table.loc[gid_mask, 'lcot'] = lcot
+        trans_table['trans_cap_cost'] = cost
+        trans_table['lcot'] = lcot
         trans_table['total_lcoe'] = (trans_table['lcot']
                                      + trans_table['mean_lcoe'])
 
@@ -497,11 +504,9 @@ class SupplyCurve:
         if max_workers is None:
             max_workers = os.cpu_count()
 
-        gid_mask = ~pd.isna(trans_table['sc_gid'])
-
         logger.info('Computing LCOT costs for all possible connections...')
         if max_workers > 1:
-            groups = trans_table[gid_mask].groupby('sc_gid')
+            groups = trans_table.groupby('sc_gid')
             loggers = [__name__, 'reV.handlers.transmission']
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
@@ -531,7 +536,7 @@ class SupplyCurve:
             feature = TC(trans_table, line_limited=line_limited,
                          **trans_costs)
             cost = []
-            for _, row in trans_table[gid_mask].iterrows():
+            for _, row in trans_table.iterrows():
                 if connectable:
                     capacity = row['capacity']
                 else:
@@ -544,7 +549,7 @@ class SupplyCurve:
 
             cost = np.array(cost, dtype='float32')
 
-        cf_mean_arr = trans_table.loc[gid_mask, 'mean_cf'].values
+        cf_mean_arr = trans_table['mean_cf'].values
         lcot = (cost * fcr) / (cf_mean_arr * 8760)
 
         logger.info('LCOT cost calculation is complete.')
