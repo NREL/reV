@@ -173,6 +173,11 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         return self.get('lcoe_dset', self._default_lcoe_dset)
 
     @property
+    def h5_dsets(self):
+        """Get additional datasets to aggregate from the gen or econ files."""
+        return self.get('h5_dsets', None)
+
+    @property
     def data_layers(self):
         """Get the data layers dict"""
         return self.get('data_layers', self._default_data_layers)

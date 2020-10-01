@@ -424,7 +424,7 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
                    .format(self._gid))
             raise EmptySupplyCurvePointError(msg)
 
-    def exclusion_weighted_mean(self, arr):
+    def exclusion_weighted_mean(self, arr, drop_nan=True):
         """
         Calc the exclusions-weighted mean value of an array of resource data.
 
@@ -432,22 +432,37 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         ----------
         arr : np.ndarray
             Array of resource data.
+        drop_nan : bool
+            Flag to drop nan values from the mean calculation (only works for
+            1D arr input, profiles should not have NaN's)
 
         Returns
         -------
-        mean : float
+        mean : float | np.ndarray
             Mean of arr masked by the binary exclusions then weighted by
-            the non-zero exclusions.
+            the non-zero exclusions. This will be a 1D numpy array if the
+            input data is a 2D numpy array (averaged along axis=1)
         """
+
         if len(arr.shape) == 2:
             x = arr[:, self._gids[self.bool_mask]]
-            ax = 1
+            excl = self.excl_data_flat[self.bool_mask]
+            x *= excl
+            mean = x.sum(axis=1) / excl.sum()
+
         else:
             x = arr[self._gids[self.bool_mask]]
-            ax = 0
+            excl = self.excl_data_flat[self.bool_mask]
 
-        x *= self.excl_data_flat[self.bool_mask]
-        mean = x.sum(axis=ax) / self.excl_data_flat[self.bool_mask].sum()
+            if np.isnan(x).all():
+                return np.nan
+            elif drop_nan and np.isnan(x).any():
+                nan_mask = np.isnan(x)
+                x = x[~nan_mask]
+                excl = excl[~nan_mask]
+
+            x *= excl
+            mean = x.sum() / excl.sum()
 
         return mean
 

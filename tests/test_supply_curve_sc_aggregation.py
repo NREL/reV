@@ -6,6 +6,7 @@ Created on Wed Jun 19 15:37:05 2019
 """
 import json
 import os
+import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import pytest
@@ -120,6 +121,30 @@ def test_aggregation_gen_econ():
                                         data_layers=DATA_LAYERS,
                                         max_workers=1)
     assert_frame_equal(s1, s2)
+
+
+def test_aggregation_extra_dsets():
+    """Test aggregation with extra datasets to aggregate."""
+    h5_dsets = ['lcoe_fcr-2012', 'lcoe_fcr-2013', 'lcoe_fcr-stdev']
+    s = SupplyCurveAggregation.summary(EXCL, ONLY_GEN, TM_DSET,
+                                       h5_dsets=h5_dsets,
+                                       econ_fpath=ONLY_ECON,
+                                       excl_dict=EXCL_DICT,
+                                       res_class_dset=RES_CLASS_DSET,
+                                       res_class_bins=RES_CLASS_BINS,
+                                       data_layers=DATA_LAYERS,
+                                       max_workers=1)
+
+    for dset in h5_dsets:
+        assert 'mean_{}'.format(dset) in s.columns
+
+    check = s['mean_lcoe_fcr-2012'] == s['mean_lcoe']
+    assert not any(check)
+    check = s['mean_lcoe_fcr-2013'] == s['mean_lcoe']
+    assert not any(check)
+
+    avg = (s['mean_lcoe_fcr-2012'] + s['mean_lcoe_fcr-2013']) / 2
+    assert np.allclose(avg.values, s['mean_lcoe'].values)
 
 
 def test_aggregation_scalar_excl():

@@ -744,10 +744,12 @@ class Gen:
 
         if not self._multi_h5_res:
             res_cls = Resource
+            kwargs = {'hsds': self._hsds}
         else:
             res_cls = MultiFileResource
+            kwargs = {}
 
-        with res_cls(self.res_file, hsds=self._hsds) as res:
+        with res_cls(self.res_file, **kwargs) as res:
             meta = res.meta.iloc[self.project_points.sites, :]
             meta.loc[:, 'gid'] = self.project_points.sites
             meta.loc[:, 'reV_tech'] = self.project_points.tech
