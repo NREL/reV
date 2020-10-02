@@ -234,8 +234,9 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
 
     cmd = get_node_cmd(name, gen_fpath, offshore_fpath, project_points,
                        sam_files, log_dir, verbose)
-
+    slurm_manager = SLURM()
     status = Status.retrieve_job_status(out_dir, 'offshore', name)
+
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -243,21 +244,24 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
     else:
         logger.info('Running reV offshore aggregation on SLURM with '
                     'node name "{}"'.format(name))
-        slurm = SLURM(cmd, alloc=alloc, memory=memory,
-                      walltime=walltime, feature=feature,
-                      name=name, stdout_path=stdout_path, conda_env=conda_env,
-                      module=module)
-        if slurm.id:
+        out = slurm_manager.sbatch(cmd,
+                                   alloc=alloc,
+                                   memory=memory,
+                                   walltime=walltime,
+                                   feature=feature,
+                                   name=name,
+                                   stdout_path=stdout_path,
+                                   conda_env=conda_env,
+                                   module=module)
+        if out:
             msg = ('Kicked off reV offshore job "{}" '
                    '(SLURM jobid #{}).'
-                   .format(name, slurm.id))
+                   .format(name, out))
             Status.add_job(
                 out_dir, 'offshore', name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'fout': '{}.csv'.format(name), 'dirout': out_dir})
-        else:
-            msg = ('Was unable to kick off reV offshore job "{}". Please see '
-                   'the stdout error messages'.format(name))
+
     click.echo(msg)
     logger.info(msg)
 

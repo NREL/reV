@@ -76,8 +76,9 @@ class Pipeline:
     def _cancel_all_jobs(self):
         """Cancel all jobs in this pipeline via SLURM scancel."""
         status = self._get_status_obj()
+        s = SLURM()
         for job_id in status.job_ids:
-            SLURM.scancel(job_id)
+            s.scancel(job_id)
 
     def _main(self):
         """Iterate through run list submitting steps while monitoring status"""
@@ -218,7 +219,8 @@ class Pipeline:
             reV job status object.
         """
 
-        status = Status(self._config.dirout, name=self._config.name)
+        status = Status(self._config.dirout, name=self._config.name,
+                        hardware=self._config.hardware)
         return status
 
     def _get_module_return_code(self, status, module):

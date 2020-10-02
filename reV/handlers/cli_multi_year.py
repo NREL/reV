@@ -303,6 +303,7 @@ def multi_year_slurm(ctx, alloc, walltime, feature, memory, conda_env,
     my_file = ctx.obj['MY_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    slurm_manager = SLURM()
     status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
                                         name)
     if status == 'successful':
@@ -315,22 +316,20 @@ def multi_year_slurm(ctx, alloc, walltime, feature, memory, conda_env,
                     .format(name, my_file))
         # create and submit the SLURM job
         slurm_cmd = get_slurm_cmd(name, my_file, group_params, verbose=verbose)
-        slurm = SLURM(slurm_cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      feature=feature, name=name, stdout_path=stdout_path,
-                      conda_env=conda_env, module=module)
-        if slurm.id:
+        out = slurm_manager.sbatch(slurm_cmd, alloc=alloc, memory=memory,
+                                   walltime=walltime, feature=feature,
+                                   name=name, stdout_path=stdout_path,
+                                   conda_env=conda_env, module=module)
+        if out:
             msg = ('Kicked off reV multi-year collection job "{}" '
-                   '(SLURM jobid #{}).'.format(name, slurm.id))
+                   '(SLURM jobid #{}).'.format(name, out))
             # add job to reV status file.
             Status.add_job(
                 os.path.dirname(my_file), 'multi-year', name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'fout': os.path.basename(my_file),
                            'dirout': os.path.dirname(my_file)})
-        else:
-            msg = ('Was unable to kick off reV collection job "{}". '
-                   'Please see the stdout error messages'
-                   .format(name))
+
     click.echo(msg)
     logger.info(msg)
 

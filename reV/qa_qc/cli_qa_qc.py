@@ -628,6 +628,7 @@ def launch_slurm(config, verbose):
                 logger.error(msg)
                 raise ValueError(msg)
 
+    slurm_manager = SLURM()
     status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
@@ -637,27 +638,24 @@ def launch_slurm(config, verbose):
         node_cmd = '\n'.join(node_cmd)
         logger.info('Running reV QA-QC on SLURM with '
                     'node name "{}"'.format(config.name))
-        slurm = SLURM(node_cmd,
-                      name=config.name,
-                      alloc=config.execution_control.allocation,
-                      memory=config.execution_control.memory,
-                      feature=config.execution_control.feature,
-                      walltime=config.execution_control.walltime,
-                      conda_env=config.execution_control.conda_env,
-                      module=config.execution_control.module,
-                      stdout_path=stdout_path)
-        if slurm.id:
+        out = slurm_manager.sbatch(
+            node_cmd,
+            name=config.name,
+            alloc=config.execution_control.allocation,
+            memory=config.execution_control.memory,
+            feature=config.execution_control.feature,
+            walltime=config.execution_control.walltime,
+            conda_env=config.execution_control.conda_env,
+            module=config.execution_control.module,
+            stdout_path=stdout_path)[0]
+        if out:
             msg = ('Kicked off reV QA-QC job "{}" '
                    '(SLURM jobid #{}).'
-                   .format(config.name, slurm.id))
+                   .format(config.name, out))
             Status.add_job(
                 out_dir, 'qa-qc', config.name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'dirout': out_dir})
-        else:
-            msg = ('Was unable to kick off reV QA-QC job "{}". '
-                   'Please see the stdout error messages'
-                   .format(config.name))
 
     click.echo(msg)
     logger.info(msg)

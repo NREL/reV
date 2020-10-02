@@ -302,9 +302,10 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, log_dir=log_dir,
                        purge_chunks=purge_chunks, verbose=verbose)
-
+    slurm_manager = SLURM()
     status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
                                         name)
+
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
@@ -313,23 +314,25 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         logger.info('Running reV collection on SLURM with node name "{}", '
                     'collecting data to "{}" from "{}" with file prefix "{}".'
                     .format(name, h5_file, h5_dir, file_prefix))
-        # create and submit the SLURM job
-        slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      feature=feature, name=name, conda_env=conda_env,
-                      module=module, stdout_path=stdout_path)
-        if slurm.id:
+        out = slurm_manager.sbatch(cmd,
+                                   alloc=alloc,
+                                   memory=memory,
+                                   walltime=walltime,
+                                   feature=feature,
+                                   name=name,
+                                   stdout_path=stdout_path,
+                                   conda_env=conda_env,
+                                   module=module)
+        if out:
             msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}).'
-                   .format(name, slurm.id))
+                   .format(name, out))
             # add job to reV status file.
             Status.add_job(
                 os.path.dirname(h5_file), 'collect', name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'fout': os.path.basename(h5_file),
                            'dirout': os.path.dirname(h5_file)})
-        else:
-            msg = ('Was unable to kick off reV collection job "{}". '
-                   'Please see the stdout error messages'
-                   .format(name))
+
     click.echo(msg)
     logger.info(msg)
 

@@ -11,7 +11,7 @@ from warnings import warn
 import shutil
 
 from rex.utilities import safe_json_load
-from rex.utilities.execution import SLURM, PBS
+from rex.utilities.execution import SLURM, SubprocessManager
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class Status(dict):
 
     FROZEN_STATUS = ('successful', 'failed')
 
-    def __init__(self, status_dir, name=None):
+    def __init__(self, status_dir, name=None, hardware='eagle'):
         """
         Parameters
         ----------
@@ -30,8 +30,13 @@ class Status(dict):
         name : str | None
             Optional job name for status. Will look for the file
             "{name}_status.json" in the status_dir.
+        hardware : str
+            Name of hardware that this pipeline is being run on: eagle, local.
+            Defaults to "eagle". This specifies how job are queried for status.
         """
 
+        self._subprocess_manager = None
+        self._hardware = hardware.lower()
         self._status_dir = status_dir
         self._fpath = self._parse_fpath(status_dir, name)
         self.data = self._load(self._fpath)
@@ -119,38 +124,13 @@ class Status(dict):
                                  self.data[x]['pipeline_index'])
             self.data = {k: self.data[k] for k in sorted_keys}
 
-    @staticmethod
-    def _get_check_method(hardware='eagle'):
-        """Get a method to check job status on the specified hardware.
-
-        Parameters
-        ----------
-        hardware : str
-            Hardware specification that determines how jobs are monitored.
-            Options are found in the options dictionary below.
-        """
-        options = {'eagle': SLURM.check_status,
-                   'slurm': SLURM.check_status,
-                   'peregrine': PBS.check_status,
-                   'pbs': PBS.check_status,
-                   'local': None}
-        try:
-            method = options[hardware]
-        except KeyError:
-            raise KeyError('Could not check job on the requested hardware: '
-                           '"{}".'.format(hardware))
-        return method
-
-    @staticmethod
-    def _get_job_status(job_id, hardware='local'):
+    def _get_job_status(self, job_id):
         """Get the job status using pre-defined hardware-specific methods.
 
         Parameters
         ----------
         job_id : str | int
             SLURM or PBS job submission id.
-        hardware : str
-            Hardware option: eagle | peregrine | slurm | pbs
 
         Returns
         -------
@@ -158,12 +138,21 @@ class Status(dict):
             Job status from qstat/squeue. None if no job found.
         """
         status = None
+        options = {'eagle': self.subprocess_manager.check_status,
+                   'local': None}
         if job_id:
-            method = Status._get_check_method(hardware=hardware)
+            try:
+                method = options[self.hardware]
+            except KeyError:
+                msg = ('Could not check job on the requested hardware: '
+                       '"{}".'.format(self.hardware))
+                logger.error(msg)
+                raise KeyError(msg)
             if method is None:
                 status = None
             else:
-                status = method(job_id)
+                status = method(job_id=job_id)
+
         return status
 
     def _check_all_job_files(self, status_dir):
@@ -211,7 +200,7 @@ class Status(dict):
                 break
         return status
 
-    def _update_job_status(self, module, job_name, hardware='local'):
+    def _update_job_status(self, module, job_name):
         """Update HPC job and respective job status to the status obj instance.
 
         Parameters
@@ -220,8 +209,6 @@ class Status(dict):
             reV module that the job belongs to.
         job_name : str
             Unique job name identification.
-        hardware : str
-            Hardware option: eagle | peregrine | slurm | pbs
         """
 
         # look for completion file.
@@ -239,11 +226,9 @@ class Status(dict):
                 # init defaults in case job/module not in status file yet
                 previous = self.data[module][job_name].get('job_status', None)
                 job_id = self.data[module][job_name].get('job_id', None)
-                hardware = self.data[module][job_name].get('hardware',
-                                                           hardware)
 
                 # get job status from hardware
-                current = self._get_job_status(job_id, hardware=hardware)
+                current = self._get_job_status(job_id)
 
                 # No current status and job was not successful: failed!
                 if current is None and previous != 'successful':
@@ -257,6 +242,22 @@ class Status(dict):
             # job does not yet exist
             else:
                 self.data[module][job_name] = {}
+
+    @property
+    def subprocess_manager(self):
+        """Get the subprocess manager object based on the hardware spec."""
+
+        if self._subprocess_manager is None and self._hardware == 'eagle':
+            self._subprocess_manager = SLURM()
+        if self._subprocess_manager is None and self._hardware == 'local':
+            self._subprocess_manager = SubprocessManager
+        elif self._subprocess_manager is None:
+            msg = ('Cannot recognize requested hardware: {}'
+                   .format(self._hardware))
+            logger.error(msg)
+            raise ValueError(msg)
+
+        return self._subprocess_manager
 
     def _set_job_status(self, module, job_name, status):
         """Set an updated job status to the object instance.
@@ -321,8 +322,8 @@ class Status(dict):
 
     @property
     def hardware(self):
-        """Get list of job hardware."""
-        return self._get_attr_list(self.data, key='hardware')
+        """Get the hardware for this pipeline."""
+        return self._hardware
 
     @staticmethod
     def update_dict(d, u):
@@ -403,9 +404,11 @@ class Status(dict):
         if 'hardware' in job_attrs:
             if job_attrs['hardware'] in ('eagle', 'peregrine', 'slurm', 'pbs'):
                 if 'job_id' not in job_attrs:
-                    warn('Key "job_id" should be in kwargs for "{}" if '
-                         'adding job from an HPC node.'
-                         .format(job_name))
+                    msg = ('Key "job_id" should be in kwargs for "{}" if '
+                           'adding job from an HPC node.'
+                           .format(job_name))
+                    logger.warning(msg)
+                    warn(msg)
 
         # check to see if job exists yet
         exists = obj.job_exists(status_dir, job_name)

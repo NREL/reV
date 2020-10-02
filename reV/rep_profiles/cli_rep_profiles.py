@@ -305,6 +305,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                        out_dir, log_dir, max_workers, aggregate_profiles,
                        verbose)
 
+    slurm_manager = SLURM()
     status = Status.retrieve_job_status(out_dir, 'rep-profiles', name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
@@ -313,22 +314,19 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     else:
         logger.info('Running reV SC rep profiles on SLURM with '
                     'node name "{}"'.format(name))
-        slurm = SLURM(cmd, alloc=alloc, memory=memory,
-                      walltime=walltime, feature=feature,
-                      name=name, stdout_path=stdout_path,
-                      conda_env=conda_env, module=module)
-        if slurm.id:
+        out = slurm_manager.sbatch(cmd, alloc=alloc, memory=memory,
+                                   walltime=walltime, feature=feature,
+                                   name=name, stdout_path=stdout_path,
+                                   conda_env=conda_env, module=module)
+        if out:
             msg = ('Kicked off reV rep profiles job "{}" '
                    '(SLURM jobid #{}).'
-                   .format(name, slurm.id))
+                   .format(name, out))
             Status.add_job(
                 out_dir, 'rep-profiles', name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'fout': '{}.h5'.format(name), 'dirout': out_dir})
-        else:
-            msg = ('Was unable to kick off reV rep profiles job "{}". '
-                   'Please see the stdout error messages'
-                   .format(name))
+
     click.echo(msg)
     logger.info(msg)
 

@@ -680,6 +680,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                                      'reV.config', 'reV.utilities', 'reV.SAM'],
               verbose=False)
 
+    slurm_manager = SLURM()
     pc = get_node_pc(points, sam_files, tech, res_file, nodes)
 
     for i, split in enumerate(pc):
@@ -706,22 +707,23 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                         'for {} (points range: {}).'
                         .format(node_name, pc, split.split_range))
             # create and submit the SLURM job
-            slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                          feature=feature, name=node_name,
-                          stdout_path=stdout_path, conda_env=conda_env,
-                          module=module)
-            if slurm.id:
+            out = slurm_manager.sbatch(cmd,
+                                       alloc=alloc,
+                                       memory=memory,
+                                       walltime=walltime,
+                                       feature=feature,
+                                       name=node_name,
+                                       stdout_path=stdout_path,
+                                       conda_env=conda_env,
+                                       module=module)[0]
+            if out:
                 msg = ('Kicked off reV generation job "{}" (SLURM jobid #{}).'
-                       .format(node_name, slurm.id))
+                       .format(node_name, out))
                 # add job to reV status file.
                 Status.add_job(
                     dirout, 'generation', node_name, replace=True,
-                    job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                    job_attrs={'job_id': out, 'hardware': 'eagle',
                                'fout': fout_node, 'dirout': dirout})
-            else:
-                msg = ('Was unable to kick off reV generation job "{}". '
-                       'Please see the stdout error messages'
-                       .format(node_name))
 
         click.echo(msg)
         logger.info(msg)

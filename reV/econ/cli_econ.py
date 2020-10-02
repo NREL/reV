@@ -489,6 +489,8 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                                      'rex.utilities'],
               verbose=False)
 
+    slurm_manager = SLURM()
+
     if append:
         pc = [None]
     else:
@@ -521,22 +523,23 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                         '{} (points range: {}).'
                         .format(node_name, pc, points_range))
             # create and submit the SLURM job
-            slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                          feature=feature, name=node_name,
-                          stdout_path=stdout_path, conda_env=conda_env,
-                          module=module)
-            if slurm.id:
+            out = slurm_manager.sbatch(cmd,
+                                       alloc=alloc,
+                                       memory=memory,
+                                       walltime=walltime,
+                                       feature=feature,
+                                       name=node_name,
+                                       stdout_path=stdout_path,
+                                       conda_env=conda_env,
+                                       module=module)
+            if out:
                 msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}).'
-                       .format(node_name, slurm.id))
+                       .format(node_name, out))
                 # add job to reV status file.
                 Status.add_job(
                     dirout, 'econ', node_name, replace=True,
-                    job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                    job_attrs={'job_id': out, 'hardware': 'eagle',
                                'fout': fout_node, 'dirout': dirout})
-            else:
-                msg = ('Was unable to kick off reV econ job "{}". '
-                       'Please see the stdout error messages'
-                       .format(node_name))
 
         click.echo(msg)
         logger.info(msg)

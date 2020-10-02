@@ -354,6 +354,7 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
                        offshore_compete, max_workers, out_dir, log_dir,
                        simple, line_limited, verbose)
 
+    slurm_manager = SLURM()
     status = Status.retrieve_job_status(out_dir, 'supply-curve', name)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
@@ -363,20 +364,18 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
         logger.info('Running reV Supply Curve on SLURM with '
                     'node name "{}"'.format(name))
         logger.debug('\t{}'.format(cmd))
-        slurm = SLURM(cmd, alloc=alloc, memory=memory,
-                      walltime=walltime, feature=feature,
-                      name=name, stdout_path=stdout_path,
-                      conda_env=conda_env, module=module)
-        if slurm.id:
+        out = slurm_manager.sbatch(cmd, alloc=alloc, memory=memory,
+                                   walltime=walltime, feature=feature,
+                                   name=name, stdout_path=stdout_path,
+                                   conda_env=conda_env, module=module)
+        if out:
             msg = ('Kicked off reV SC job "{}" (SLURM jobid #{}).'
-                   .format(name, slurm.id))
+                   .format(name, out))
             Status.add_job(
                 out_dir, 'supply-curve', name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'fout': '{}.csv'.format(name), 'dirout': out_dir})
-        else:
-            msg = ('Was unable to kick off reV SC job "{}". Please see the '
-                   'stdout error messages'.format(name))
+
     click.echo(msg)
     logger.info(msg)
 
