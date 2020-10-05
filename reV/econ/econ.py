@@ -317,9 +317,9 @@ class Econ(Gen):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        pc = super().get_pc(points, points_range, sam_files, tech,
-                            sites_per_worker=sites_per_worker,
-                            res_file=cf_file)
+        pc = Gen.get_pc(points, points_range, sam_files, tech,
+                        sites_per_worker=sites_per_worker,
+                        res_file=cf_file)
 
         if append and cf_file is not None:
             try:
