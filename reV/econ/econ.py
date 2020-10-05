@@ -561,7 +561,8 @@ class Econ(Gen):
 
         # get a points control instance
         pc = cls.get_pc(points, points_range, sam_files, tech='econ',
-                        sites_per_worker=sites_per_worker, res_file=cf_file)
+                        sites_per_worker=sites_per_worker, cf_file=cf_file,
+                        append=append)
 
         # make a Gen class instance to operate with
         econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
