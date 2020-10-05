@@ -9,6 +9,7 @@ import pandas as pd
 import pprint
 from warnings import warn
 
+from reV.config.project_points import PointsControl
 from reV.generation.generation import Gen
 from reV.handlers.outputs import Outputs
 from reV.SAM.econ import LCOE as SAM_LCOE
@@ -16,6 +17,10 @@ from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
                                       OffshoreWindInputWarning)
+
+from rex.resource import Resource
+from rex.multi_file_resource import MultiFileResource
+from rex.utilities.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +158,205 @@ class Econ(Gen):
         mode = 'a' if append else 'w'
         self._init_h5(mode=mode)
 
+    @property
+    def cf_file(self):
+        """Get the capacity factor output filename and path.
+
+        Returns
+        -------
+        cf_file : str
+            reV generation capacity factor output file with path.
+        """
+        return self._cf_file
+
+    @property
+    def site_data(self):
+        """Get the site-specific dataframe.
+
+        Returns
+        -------
+        _site_data : pd.DataFrame
+            Site-specific data for econ calculation. Rows match sites,
+            columns are variables.
+        """
+        return self._site_data
+
+    @property
+    def meta(self):
+        """Get meta data from the source capacity factors file.
+
+        Returns
+        -------
+        _meta : pd.DataFrame
+            Meta data from capacity factor outputs file.
+        """
+        if self._meta is None and self.cf_file is not None:
+            with Outputs(self.cf_file) as cfh:
+                # only take meta that belongs to this project's site list
+                self._meta = cfh.meta[
+                    cfh.meta['gid'].isin(self.points_control.sites)]
+
+            if 'offshore' in self._meta:
+                if self._meta['offshore'].sum() > 1:
+                    w = ('Found offshore sites in econ meta data. '
+                         'This functionality has been deprecated. '
+                         'Please run the reV offshore module to '
+                         'calculate offshore wind lcoe.')
+                    warn(w, OffshoreWindInputWarning)
+                    logger.warning(w)
+
+        elif self._meta is None and self.cf_file is None:
+            self._meta = pd.DataFrame({'gid': self.points_control.sites})
+
+        return self._meta
+
+    @property
+    def time_index(self):
+        """Get the generation resource time index data."""
+        if self._time_index is None:
+            with Outputs(self.cf_file) as cfh:
+                if 'time_index' in cfh.datasets:
+                    self._time_index = cfh.time_index
+
+        return self._time_index
+
+    @staticmethod
+    def _econ_append_pc(pp, cf_file, sites_per_worker=None):
+        """
+        Generate ProjectControls for econ append
+
+        Parameters
+        ----------
+        pp : reV.config.project_points.ProjectPoints
+            ProjectPoints to adjust gids for
+        cf_file : str
+            reV generation capacity factor output file with path.
+        sites_per_worker : int
+            Number of sites to run in series on a worker. None defaults to the
+            resource file chunk size.
+
+        Returns
+        -------
+        pc : reV.config.project_points.PointsControl
+            PointsControl object instance.
+        """
+        multi_h5_res, hsds = check_res_file(cf_file)
+        if multi_h5_res:
+            res_cls = MultiFileResource
+            res_kwargs = {}
+        else:
+            res_cls = Resource
+            res_kwargs = {'hsds': hsds}
+
+        with res_cls(cf_file, **res_kwargs) as f:
+            gid0 = f.meta['gid'].values[0]
+            gid1 = f.meta['gid'].values[-1]
+
+        i0 = pp.index(gid0)
+        i1 = pp.index(gid1) + 1
+        pc = PointsControl.split(i0, i1, pp, sites_per_split=sites_per_worker)
+
+        return pc
+
+    @staticmethod
+    def get_pc(points, points_range, sam_files, cf_file,
+               sites_per_worker=None, append=False):
+        """
+        Get a PointsControl instance.
+
+        Parameters
+        ----------
+        points : slice | list | str | reV.config.project_points.PointsControl
+            Slice specifying project points, or string pointing to a project
+            points csv, or a fully instantiated PointsControl object.
+        points_range : list | None
+            Optional two-entry list specifying the index range of the sites to
+            analyze. To be taken from the reV.config.PointsControl.split_range
+            property.
+        sam_files : dict | str | list | SAMConfig
+            SAM input configuration ID(s) and file path(s). Keys are the SAM
+            config ID(s), top level value is the SAM path. Can also be a single
+            config file str. If it's a list, it is mapped to the sorted list
+            of unique configs requested by points csv. Can also be a
+            pre loaded SAMConfig object.
+        cf_file : str
+            reV generation capacity factor output file with path.
+        sites_per_worker : int
+            Number of sites to run in series on a worker. None defaults to the
+            resource file chunk size.
+        append : bool
+            Flag to append econ datasets to source cf_file. This has priority
+            over the fout and dirout inputs.
+
+        Returns
+        -------
+        pc : reV.config.project_points.PointsControl
+            PointsControl object instance.
+        """
+        pc = Gen.get_pc(points, points_range, sam_files, 'econ',
+                        sites_per_worker=sites_per_worker,
+                        res_file=cf_file)
+
+        if append:
+            pc = Econ._econ_append_pc(pc.project_points, cf_file,
+                                      sites_per_worker=sites_per_worker)
+
+        return pc
+
+    @staticmethod
+    def run(pc, econ_fun, output_request, **kwargs):
+        """Run the SAM econ calculation.
+
+        Parameters
+        ----------
+        pc : reV.config.project_points.PointsControl
+            Iterable points control object from reV config module.
+            Must have project_points with df property with all relevant
+            site-specific inputs and a 'gid' column. By passing site-specific
+            inputs in this dataframe, which was split using points_control,
+            only the data relevant to the current sites is passed.
+        econ_fun : method
+            reV_run() method from one of the econ modules (SingleOwner,
+            SAM_LCOE, WindBos).
+        output_request : str | list | tuple
+            Economic output variable(s) requested from SAM.
+        kwargs : dict
+            Additional input parameters for the SAM run module.
+
+        Returns
+        -------
+        out : dict
+            Output dictionary from the SAM reV_run function. Data is scaled
+            within this function to the datatype specified in Econ.OUT_ATTRS.
+        """
+
+        # make sure output request is a list
+        if isinstance(output_request, str):
+            output_request = [output_request]
+
+        # Extract the site df from the project points df.
+        site_df = pc.project_points.df
+
+        # check that there is a gid column
+        if 'gid' not in site_df:
+            warn('Econ input "site_df" (in project_points.df) does not have '
+                 'a label corresponding to site gid. This may cause an '
+                 'incorrect interpretation of site id.')
+        else:
+            # extract site df from project points df and set gid as index
+            site_df = site_df.set_index('gid', drop=True)
+
+        # SAM execute econ analysis based on output request
+        try:
+            out = econ_fun(pc, site_df, output_request=output_request,
+                           **kwargs)
+        except Exception as e:
+            out = {}
+            logger.exception('Worker failed for PC: {}'.format(pc))
+            raise e
+
+        return out
+
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
 
@@ -260,29 +464,6 @@ class Econ(Gen):
 
         return site_data
 
-    @property
-    def cf_file(self):
-        """Get the capacity factor output filename and path.
-
-        Returns
-        -------
-        cf_file : str
-            reV generation capacity factor output file with path.
-        """
-        return self._cf_file
-
-    @property
-    def site_data(self):
-        """Get the site-specific dataframe.
-
-        Returns
-        -------
-        _site_data : pd.DataFrame
-            Site-specific data for econ calculation. Rows match sites,
-            columns are variables.
-        """
-        return self._site_data
-
     def add_site_data_to_pp(self):
         """Add the site df (site-specific inputs) to project points dataframe.
 
@@ -292,95 +473,8 @@ class Econ(Gen):
         self.project_points.join_df(self.site_data,
                                     key=self.site_data.index.name)
 
-    @property
-    def meta(self):
-        """Get meta data from the source capacity factors file.
-
-        Returns
-        -------
-        _meta : pd.DataFrame
-            Meta data from capacity factor outputs file.
-        """
-        if self._meta is None and self.cf_file is not None:
-            with Outputs(self.cf_file) as cfh:
-                # only take meta that belongs to this project's site list
-                self._meta = cfh.meta[
-                    cfh.meta['gid'].isin(self.points_control.sites)]
-
-            if 'offshore' in self._meta:
-                if self._meta['offshore'].sum() > 1:
-                    w = ('Found offshore sites in econ meta data. '
-                         'This functionality has been deprecated. '
-                         'Please run the reV offshore module to '
-                         'calculate offshore wind lcoe.')
-                    warn(w, OffshoreWindInputWarning)
-                    logger.warning(w)
-
-        elif self._meta is None and self.cf_file is None:
-            self._meta = pd.DataFrame({'gid': self.points_control.sites})
-
-        return self._meta
-
-    @property
-    def time_index(self):
-        """Get the generation resource time index data."""
-        if self._time_index is None:
-            with Outputs(self.cf_file) as cfh:
-                if 'time_index' in cfh.datasets:
-                    self._time_index = cfh.time_index
-
-        return self._time_index
-
-    @staticmethod
-    def run(pc, econ_fun, output_request, **kwargs):
-        """Run the SAM econ calculation.
-
-        Parameters
-        ----------
-        pc : reV.config.project_points.PointsControl
-            Iterable points control object from reV config module.
-            Must have project_points with df property with all relevant
-            site-specific inputs and a 'gid' column. By passing site-specific
-            inputs in this dataframe, which was split using points_control,
-            only the data relevant to the current sites is passed.
-        econ_fun : method
-            reV_run() method from one of the econ modules (SingleOwner,
-            SAM_LCOE, WindBos).
-        output_request : str | list | tuple
-            Economic output variable(s) requested from SAM.
-        kwargs : dict
-            Additional input parameters for the SAM run module.
-        """
-
-        # make sure output request is a list
-        if isinstance(output_request, str):
-            output_request = [output_request]
-
-        # Extract the site df from the project points df.
-        site_df = pc.project_points.df
-
-        # check that there is a gid column
-        if 'gid' not in site_df:
-            warn('Econ input "site_df" (in project_points.df) does not have '
-                 'a label corresponding to site gid. This may cause an '
-                 'incorrect interpretation of site id.')
-        else:
-            # extract site df from project points df and set gid as index
-            site_df = site_df.set_index('gid', drop=True)
-
-        # SAM execute econ analysis based on output request
-        try:
-            out = econ_fun(pc, site_df, output_request=output_request,
-                           **kwargs)
-        except Exception as e:
-            out = {}
-            logger.exception('Worker failed for PC: {}'.format(pc))
-            raise e
-
-        return out
-
     @classmethod
-    def reV_run(cls, points=None, sam_files=None, cf_file=None,
+    def reV_run(cls, points, sam_files, cf_file,
                 cf_year=None, site_data=None, output_request=('lcoe_fcr',),
                 max_workers=1, sites_per_worker=100,
                 pool_size=(os.cpu_count() * 2),
@@ -442,8 +536,8 @@ class Econ(Gen):
         """
 
         # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_files, tech='econ',
-                        sites_per_worker=sites_per_worker, res_file=cf_file)
+        pc = cls.get_pc(points, points_range, sam_files, cf_file,
+                        sites_per_worker=sites_per_worker, append=append)
 
         # make a Gen class instance to operate with
         econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,

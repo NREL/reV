@@ -286,274 +286,6 @@ class Gen:
         self._init_fpath()
         self._init_h5()
 
-    def _parse_output_request(self, req):
-        """Set the output variables requested from generation.
-
-        Parameters
-        ----------
-        req : list | tuple
-            Output variables requested from SAM.
-
-        Returns
-        -------
-        output_request : list
-            Output variables requested from SAM.
-        """
-
-        output_request = self._output_request_type_check(req)
-        output_request = self._add_out_reqs(output_request)
-
-        for request in output_request:
-            if request not in self.OUT_ATTRS:
-                msg = ('User output request "{}" not recognized. '
-                       'Will attempt to extract from PySAM.'.format(request))
-                logger.warning(msg)
-                warn(msg, OutputWarning)
-
-        return list(set(output_request))
-
-    @staticmethod
-    def _output_request_type_check(req):
-        """Output request type check and ensure list for manipulation.
-
-        Parameters
-        ----------
-        req : list | tuple | str
-            Output request of variable type.
-
-        Returns
-        -------
-        output_request : list
-            Output request.
-        """
-
-        if isinstance(req, list):
-            output_request = req
-        elif isinstance(req, tuple):
-            output_request = list(req)
-        elif isinstance(req, str):
-            output_request = [req]
-        else:
-            raise TypeError('Output request must be str, list, or tuple but '
-                            'received: {}'.format(type(req)))
-
-        return output_request
-
-    @staticmethod
-    def _add_out_reqs(output_request):
-        """Add additional output requests as needed.
-
-        Parameters
-        ----------
-        output_request : list
-            Output variables requested from SAM.
-
-        Returns
-        -------
-        output_request : list
-            Output variable list with cf_mean and resource mean out vars.
-        """
-
-        if 'cf_mean' not in output_request:
-            # ensure that cf_mean is requested from output
-            output_request.append('cf_mean')
-
-        return output_request
-
-    def _set_high_res_ti(self):
-        """Set the 5-minute time index if res_file is a multi-file directory"""
-        with MultiFileResource(self._res_file) as mres:
-            ti = mres.time_index
-
-        self._time_index = self.handle_leap_ti(
-            ti, drop_leap=self._drop_leap)
-
-    def _set_downscaled_ti(self, ds_freq):
-        """Set the downscaled time index based on a requested frequency.
-
-        Parameters
-        ----------
-        frequency : str
-            String in the Pandas frequency format, e.g. '5min'.
-        """
-        if ds_freq is not None:
-            from rex.utilities.downscale import make_time_index
-            year = self.time_index.year[0]
-            ti = make_time_index(year, ds_freq)
-            self._time_index = self.handle_leap_ti(ti,
-                                                   drop_leap=self._drop_leap)
-            logger.info('reV solar generation running with temporal '
-                        'downscaling frequency "{}" with final '
-                        'time_index length {}'
-                        .format(ds_freq, len(self._time_index)))
-
-    def _get_data_shape(self, dset, n_sites):
-        """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
-
-        Parameters
-        ----------
-        dset : str
-            Variable name to get shape for.
-        n_sites : int
-            Number of sites for this data shape.
-
-        Returns
-        -------
-        shape : tuple
-            1D or 2D shape tuple for dset.
-        """
-
-        if dset in self.OUT_ATTRS:
-            if self.OUT_ATTRS[dset]['type'] == 'array':
-                data_shape = (len(self.time_index), n_sites)
-            else:
-                data_shape = (n_sites, )
-
-        else:
-            if self._sam_obj_default is None:
-                init_obj = self._sam_module()
-                self._sam_obj_default = init_obj.default
-
-            try:
-                out_data = getattr(self._sam_obj_default.Outputs, dset)
-            except AttributeError as e:
-                msg = ('Could not get data shape for dset "{}" '
-                       'from object "{}". '
-                       'Received the following error: "{}"'
-                       .format(dset, self._sam_obj_default, e))
-                logger.error(msg)
-                raise ExecutionError(msg)
-            else:
-                if isinstance(out_data, (int, float, str)):
-                    data_shape = (n_sites, )
-                elif len(out_data) % len(self.time_index) == 0:
-                    data_shape = (len(self.time_index), n_sites)
-                else:
-                    data_shape = (len(out_data), n_sites)
-
-        return data_shape
-
-    def _init_fpath(self):
-        """Combine directory and filename, ensure .h5 ext., make out dirs."""
-
-        if self._fout is not None:
-
-            # ensure output file is an h5
-            if not self._fout .endswith('.h5'):
-                self._fout += '.h5'
-
-            # ensure year is in fout
-            if str(self.year) not in self._fout:
-                self._fout = self._fout.replace('.h5',
-                                                '_{}.h5'.format(self.year))
-
-            # create and use optional output dir
-            if self._dirout:
-                if not os.path.exists(self._dirout):
-                    os.makedirs(self._dirout)
-
-                # Add output dir to fout string
-                self._fpath = os.path.join(self._dirout, self._fout)
-            else:
-                self._fpath = self._fout
-
-    def _init_h5(self, mode='w'):
-        """Initialize the single h5 output file with all output requests.
-
-        Parameters
-        ----------
-        mode : str
-            Mode to instantiate h5py.File instance
-        """
-
-        if self._fpath is not None:
-
-            if 'w' in mode:
-                logger.info('Initializing full output file: "{}" with mode: {}'
-                            .format(self._fpath, mode))
-            elif 'a' in mode:
-                logger.info('Appending data to output file: "{}" with mode: {}'
-                            .format(self._fpath, mode))
-
-            attrs = {d: {} for d in self.output_request}
-            chunks = {}
-            dtypes = {}
-            shapes = {}
-
-            # flag to write time index if profiles are being output
-            write_ti = False
-
-            for dset in self.output_request:
-
-                tmp = 'other'
-                if dset in self.OUT_ATTRS:
-                    tmp = dset
-
-                attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
-                                                               'unknown')
-                attrs[dset]['scale_factor'] = \
-                    self.OUT_ATTRS[tmp].get('scale_factor', 1)
-                chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)
-                dtypes[dset] = self.OUT_ATTRS[tmp].get('dtype', 'float32')
-                shapes[dset] = self._get_data_shape(dset, len(self.meta))
-                if len(shapes[dset]) > 1:
-                    write_ti = True
-
-            # only write time index if profiles were found in output request
-            if write_ti:
-                ti = self.time_index
-            else:
-                ti = None
-
-            Outputs.init_h5(self._fpath, self.output_request, shapes, attrs,
-                            chunks, dtypes, self.meta, time_index=ti,
-                            configs=self.sam_metas, run_attrs=self.run_attrs,
-                            mode=mode)
-
-    def _init_out_arrays(self, index_0=0):
-        """Initialize output arrays based on the number of sites that can be
-        stored in memory safely.
-
-        Parameters
-        ----------
-        index_0 : int
-            This is the site list index (not gid) for the first site in the
-            output data. If a node cannot process all sites in-memory at once,
-            this is used to segment the sites in the current output chunk.
-        """
-
-        self._out = {}
-        self._finished_sites = []
-
-        # Output chunk is the index range (inclusive) of this set of site outs
-        self._out_chunk = (index_0, np.min((index_0 + self.site_limit,
-                                            len(self.project_points) - 1)))
-        self._out_n_sites = int(self.out_chunk[1] - self.out_chunk[0]) + 1
-
-        logger.info('Initializing in-memory outputs for {} sites with gids '
-                    '{} through {} inclusive (site list index {} through {})'
-                    .format(self._out_n_sites,
-                            self.project_points.sites[self.out_chunk[0]],
-                            self.project_points.sites[self.out_chunk[1]],
-                            self.out_chunk[0], self.out_chunk[1]))
-
-        for request in self.output_request:
-            dtype = 'float32'
-            if request in self.OUT_ATTRS:
-                dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
-
-            shape = self._get_data_shape(request, self._out_n_sites)
-
-            # initialize the output request as an array of zeros
-            self._out[request] = np.zeros(shape, dtype=dtype)
-
-    def _check_sam_version_inputs(self):
-        """Check the PySAM version and input keys. Fix where necessary."""
-        for key, parameters in self.project_points.sam_configs.items():
-            updated = PySamVersionChecker.run(self.tech, parameters)
-            sam_obj = self._points_control._project_points._sam_config_obj
-            sam_obj._inputs[key] = updated
-
     @property
     def output_request(self):
         """Get the output variables requested from generation.
@@ -768,6 +500,153 @@ class Gen:
         """
         return self._run_attrs
 
+    @property
+    def time_index(self):
+        """Get the generation resource time index data.
+
+        Returns
+        -------
+        _time_index : pandas.DatetimeIndex
+            Time-series datetime index
+        """
+
+        if self._time_index is None:
+            with Resource(self.res_file, hsds=self._hsds) as res:
+                self._time_index = self.handle_leap_ti(
+                    res.time_index, drop_leap=self._drop_leap)
+
+        return self._time_index
+
+    @property
+    def year(self):
+        """Get the generation resource year.
+
+        Returns
+        -------
+        _year : int
+            Year of the time-series datetime index.
+        """
+
+        if self._year is None:
+            self._year = int(self.time_index.year[0])
+
+        return self._year
+
+    @property
+    def out(self):
+        """Get the generation output results.
+
+        Returns
+        -------
+        out : dict
+            Dictionary of generation results from SAM.
+        """
+        out = {}
+        for k, v in self._out.items():
+            if k in Gen.OUT_ATTRS:
+                scale_factor = Gen.OUT_ATTRS[k].get('scale_factor', 1)
+            else:
+                scale_factor = 1
+
+            if scale_factor != 1:
+                v = v.astype('float32')
+                v /= scale_factor
+
+            out[k] = v
+
+        return out
+
+    @out.setter
+    def out(self, result):
+        """Set the output attribute, unpack futures, clear output from mem.
+
+        Parameters
+        ----------
+        result : list | dict | None
+            Generation results to set to output dictionary. Use cases:
+             - List input is interpreted as a futures list, which is unpacked
+               before setting to the output dict.
+             - Dictionary input is interpreted as an already unpacked result.
+             - None is interpreted as a signal to clear the output dictionary.
+        """
+        if isinstance(result, list):
+            # unpack futures list to dictionary first
+            result = self.unpack_futures(result)
+
+        if isinstance(result, dict):
+
+            # iterate through dict where sites are keys and values are
+            # corresponding results
+            for site_gid, site_output in result.items():
+
+                # check that the sites are stored sequentially then add to
+                # the finished site list
+                if self._finished_sites:
+                    if int(site_gid) < np.max(self._finished_sites):
+                        raise Exception('Site results are non sequential!')
+
+                # unpack site output object
+                self.unpack_output(site_gid, site_output)
+
+                # add site gid to the finished list after outputs are unpacked
+                self._finished_sites.append(site_gid)
+
+        elif isinstance(result, type(None)):
+            self._out.clear()
+            self._finished_sites.clear()
+        else:
+            raise TypeError('Did not recognize the type of generation output. '
+                            'Tried to set output type "{}", but requires '
+                            'list, dict or None.'.format(type(result)))
+
+    @staticmethod
+    def _output_request_type_check(req):
+        """Output request type check and ensure list for manipulation.
+
+        Parameters
+        ----------
+        req : list | tuple | str
+            Output request of variable type.
+
+        Returns
+        -------
+        output_request : list
+            Output request.
+        """
+
+        if isinstance(req, list):
+            output_request = req
+        elif isinstance(req, tuple):
+            output_request = list(req)
+        elif isinstance(req, str):
+            output_request = [req]
+        else:
+            raise TypeError('Output request must be str, list, or tuple but '
+                            'received: {}'.format(type(req)))
+
+        return output_request
+
+    @staticmethod
+    def _add_out_reqs(output_request):
+        """Add additional output requests as needed.
+
+        Parameters
+        ----------
+        output_request : list
+            Output variables requested from SAM.
+
+        Returns
+        -------
+        output_request : list
+            Output variable list with cf_mean and resource mean out vars.
+        """
+
+        if 'cf_mean' not in output_request:
+            # ensure that cf_mean is requested from output
+            output_request.append('cf_mean')
+
+        return output_request
+
     @staticmethod
     def handle_leap_ti(ti, drop_leap=False):
         """Handle a time index for a leap year by dropping a day.
@@ -801,38 +680,6 @@ class Gen:
                              '365: {}'.format(ti))
 
         return ti
-
-    @property
-    def time_index(self):
-        """Get the generation resource time index data.
-
-        Returns
-        -------
-        _time_index : pandas.DatetimeIndex
-            Time-series datetime index
-        """
-
-        if self._time_index is None:
-            with Resource(self.res_file, hsds=self._hsds) as res:
-                self._time_index = self.handle_leap_ti(
-                    res.time_index, drop_leap=self._drop_leap)
-
-        return self._time_index
-
-    @property
-    def year(self):
-        """Get the generation resource year.
-
-        Returns
-        -------
-        _year : int
-            Year of the time-series datetime index.
-        """
-
-        if self._year is None:
-            self._year = int(self.time_index.year[0])
-
-        return self._year
 
     @staticmethod
     def _pp_to_pc(points, points_range, sam_files, tech, sites_per_worker=None,
@@ -887,53 +734,13 @@ class Gen:
                                res_file=res_file, curtailment=curtailment)
 
         #  make Points Control instance
-        pc = None
         if points_range is not None:
             # PointsControl is for just a subset of the project points...
             # this is the case if generation is being initialized on one
             # of many HPC nodes in a large project
             pc = PointsControl.split(points_range[0], points_range[1], pp,
                                      sites_per_split=sites_per_worker)
-
-        elif points_range is None and res_file is not None:
-            # PointsControl is for all of the project points
-            try:
-                multi_h5_res, hsds = check_res_file(res_file)
-                if multi_h5_res:
-                    res_cls = MultiFileResource
-                    res_kwargs = {}
-                else:
-                    res_cls = Resource
-                    res_kwargs = {'hsds': hsds}
-
-                with res_cls(res_file, **res_kwargs) as f:
-                    if 'gid' in f.meta:
-                        gid0 = f.meta['gid'].values[0]
-                        gid1 = f.meta['gid'].values[-1]
-                        if (gid0 in pp.df.gid.values
-                                and gid1 in pp.df.gid.values):
-                            # this is the scenario where the meta is a subset
-                            # of the project points such as when econ is being
-                            # run off a single node in append mode with the
-                            # full generation project points.
-                            i0 = pp.index(gid0)
-                            i1 = pp.index(gid1) + 1
-                            pc = PointsControl.split(
-                                i0, i1, pp, sites_per_split=sites_per_worker)
-                        else:
-                            # this is the scenario where the project points
-                            # is a subset of the meta data like for
-                            # test problems.
-                            pc = PointsControl(
-                                pp, sites_per_split=sites_per_worker)
-
-            except FileNotFoundError as ex:
-                msg = ('{} is invalid PointsControl will be created for all '
-                       'project points:\n{}'.format(res_file, ex))
-                logger.warning(msg)
-                warn(msg)
-
-        if pc is None:
+        else:
             # PointsControl is for all of the project points
             pc = PointsControl(pp, sites_per_split=sites_per_worker)
 
@@ -1067,73 +874,6 @@ class Gen:
 
         return sites_per_worker
 
-    @property
-    def out(self):
-        """Get the generation output results.
-
-        Returns
-        -------
-        out : dict
-            Dictionary of generation results from SAM.
-        """
-        out = {}
-        for k, v in self._out.items():
-            if k in Gen.OUT_ATTRS:
-                scale_factor = Gen.OUT_ATTRS[k].get('scale_factor', 1)
-            else:
-                scale_factor = 1
-
-            if scale_factor != 1:
-                v = v.astype('float32')
-                v /= scale_factor
-
-            out[k] = v
-
-        return out
-
-    @out.setter
-    def out(self, result):
-        """Set the output attribute, unpack futures, clear output from mem.
-
-        Parameters
-        ----------
-        result : list | dict | None
-            Generation results to set to output dictionary. Use cases:
-             - List input is interpreted as a futures list, which is unpacked
-               before setting to the output dict.
-             - Dictionary input is interpreted as an already unpacked result.
-             - None is interpreted as a signal to clear the output dictionary.
-        """
-        if isinstance(result, list):
-            # unpack futures list to dictionary first
-            result = self.unpack_futures(result)
-
-        if isinstance(result, dict):
-
-            # iterate through dict where sites are keys and values are
-            # corresponding results
-            for site_gid, site_output in result.items():
-
-                # check that the sites are stored sequentially then add to
-                # the finished site list
-                if self._finished_sites:
-                    if int(site_gid) < np.max(self._finished_sites):
-                        raise Exception('Site results are non sequential!')
-
-                # unpack site output object
-                self.unpack_output(site_gid, site_output)
-
-                # add site gid to the finished list after outputs are unpacked
-                self._finished_sites.append(site_gid)
-
-        elif isinstance(result, type(None)):
-            self._out.clear()
-            self._finished_sites.clear()
-        else:
-            raise TypeError('Did not recognize the type of generation output. '
-                            'Tried to set output type "{}", but requires '
-                            'list, dict or None.'.format(type(result)))
-
     @staticmethod
     def unpack_futures(futures):
         """Combine list of futures results into their native dict format/type.
@@ -1154,6 +894,293 @@ class Gen:
             out.update(x)
 
         return out
+
+    @staticmethod
+    def run(points_control, tech=None, res_file=None, output_request=None,
+            scale_outputs=True, downscale=None):
+        """Run a SAM generation analysis based on the points_control iterator.
+
+        Parameters
+        ----------
+        points_control : reV.config.PointsControl
+            A PointsControl instance dictating what sites and configs are run.
+        tech : str
+            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
+            solarwaterheat, troughphysicalheat, lineardirectsteam)
+            The string should be lower-cased with spaces and _ removed.
+        res_file : str
+            Filepath to single resource file, multi-h5 directory,
+            or /h5_dir/prefix*suffix
+        output_request : list | tuple
+            Output variables requested from SAM.
+        scale_outputs : bool
+            Flag to scale outputs in-place immediately upon Gen returning data.
+        downscale : NoneType | str
+            Option for NSRDB resource downscaling to higher temporal
+            resolution. Expects a string in the Pandas frequency format,
+            e.g. '5min'.
+
+        Returns
+        -------
+        out : dict
+            Output dictionary from the SAM reV_run function. Data is scaled
+            within this function to the datatype specified in Gen.OUT_ATTRS.
+        """
+        # run generation method for specified technology
+        try:
+            out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
+                                            output_request=output_request,
+                                            downscale=downscale)
+        except Exception as e:
+            out = {}
+            logger.exception('Worker failed for PC: {}'.format(points_control))
+            raise e
+
+        if scale_outputs:
+            # dtype convert in-place so no float data is stored unnecessarily
+            for site, site_output in out.items():
+                for k in site_output.keys():
+                    # iterate through variable names in each site's output dict
+                    if k in Gen.OUT_ATTRS:
+                        # get dtype and scale for output variable name
+                        dtype = Gen.OUT_ATTRS[k].get('dtype', 'float32')
+                        scale_factor = Gen.OUT_ATTRS[k].get('scale_factor', 1)
+
+                        # apply scale factor and dtype
+                        out[site][k] *= scale_factor
+                        if np.issubdtype(dtype, np.integer):
+                            # round after scaling if integer dtype
+                            out[site][k] = np.round(out[site][k])
+
+                        if isinstance(out[site][k], np.ndarray):
+                            # simple astype for arrays
+                            out[site][k] = out[site][k].astype(dtype)
+                        else:
+                            # use numpy array conversion for scalar values
+                            out[site][k] = np.array([out[site][k]],
+                                                    dtype=dtype)[0]
+
+        return out
+
+    def _parse_output_request(self, req):
+        """Set the output variables requested from generation.
+
+        Parameters
+        ----------
+        req : list | tuple
+            Output variables requested from SAM.
+
+        Returns
+        -------
+        output_request : list
+            Output variables requested from SAM.
+        """
+
+        output_request = self._output_request_type_check(req)
+        output_request = self._add_out_reqs(output_request)
+
+        for request in output_request:
+            if request not in self.OUT_ATTRS:
+                msg = ('User output request "{}" not recognized. '
+                       'Will attempt to extract from PySAM.'.format(request))
+                logger.warning(msg)
+                warn(msg, OutputWarning)
+
+        return list(set(output_request))
+
+    def _set_high_res_ti(self):
+        """Set the 5-minute time index if res_file is a multi-file directory"""
+        with MultiFileResource(self._res_file) as mres:
+            ti = mres.time_index
+
+        self._time_index = self.handle_leap_ti(
+            ti, drop_leap=self._drop_leap)
+
+    def _set_downscaled_ti(self, ds_freq):
+        """Set the downscaled time index based on a requested frequency.
+
+        Parameters
+        ----------
+        frequency : str
+            String in the Pandas frequency format, e.g. '5min'.
+        """
+        if ds_freq is not None:
+            from rex.utilities.downscale import make_time_index
+            year = self.time_index.year[0]
+            ti = make_time_index(year, ds_freq)
+            self._time_index = self.handle_leap_ti(ti,
+                                                   drop_leap=self._drop_leap)
+            logger.info('reV solar generation running with temporal '
+                        'downscaling frequency "{}" with final '
+                        'time_index length {}'
+                        .format(ds_freq, len(self._time_index)))
+
+    def _get_data_shape(self, dset, n_sites):
+        """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
+
+        Parameters
+        ----------
+        dset : str
+            Variable name to get shape for.
+        n_sites : int
+            Number of sites for this data shape.
+
+        Returns
+        -------
+        shape : tuple
+            1D or 2D shape tuple for dset.
+        """
+
+        if dset in self.OUT_ATTRS:
+            if self.OUT_ATTRS[dset]['type'] == 'array':
+                data_shape = (len(self.time_index), n_sites)
+            else:
+                data_shape = (n_sites, )
+
+        else:
+            if self._sam_obj_default is None:
+                init_obj = self._sam_module()
+                self._sam_obj_default = init_obj.default
+
+            try:
+                out_data = getattr(self._sam_obj_default.Outputs, dset)
+            except AttributeError as e:
+                msg = ('Could not get data shape for dset "{}" '
+                       'from object "{}". '
+                       'Received the following error: "{}"'
+                       .format(dset, self._sam_obj_default, e))
+                logger.error(msg)
+                raise ExecutionError(msg)
+            else:
+                if isinstance(out_data, (int, float, str)):
+                    data_shape = (n_sites, )
+                elif len(out_data) % len(self.time_index) == 0:
+                    data_shape = (len(self.time_index), n_sites)
+                else:
+                    data_shape = (len(out_data), n_sites)
+
+        return data_shape
+
+    def _init_fpath(self):
+        """Combine directory and filename, ensure .h5 ext., make out dirs."""
+
+        if self._fout is not None:
+
+            # ensure output file is an h5
+            if not self._fout .endswith('.h5'):
+                self._fout += '.h5'
+
+            # ensure year is in fout
+            if str(self.year) not in self._fout:
+                self._fout = self._fout.replace('.h5',
+                                                '_{}.h5'.format(self.year))
+
+            # create and use optional output dir
+            if self._dirout:
+                if not os.path.exists(self._dirout):
+                    os.makedirs(self._dirout)
+
+                # Add output dir to fout string
+                self._fpath = os.path.join(self._dirout, self._fout)
+            else:
+                self._fpath = self._fout
+
+    def _init_h5(self, mode='w'):
+        """Initialize the single h5 output file with all output requests.
+
+        Parameters
+        ----------
+        mode : str
+            Mode to instantiate h5py.File instance
+        """
+
+        if self._fpath is not None:
+
+            if 'w' in mode:
+                logger.info('Initializing full output file: "{}" with mode: {}'
+                            .format(self._fpath, mode))
+            elif 'a' in mode:
+                logger.info('Appending data to output file: "{}" with mode: {}'
+                            .format(self._fpath, mode))
+
+            attrs = {d: {} for d in self.output_request}
+            chunks = {}
+            dtypes = {}
+            shapes = {}
+
+            # flag to write time index if profiles are being output
+            write_ti = False
+
+            for dset in self.output_request:
+
+                tmp = 'other'
+                if dset in self.OUT_ATTRS:
+                    tmp = dset
+
+                attrs[dset]['units'] = self.OUT_ATTRS[tmp].get('units',
+                                                               'unknown')
+                attrs[dset]['scale_factor'] = \
+                    self.OUT_ATTRS[tmp].get('scale_factor', 1)
+                chunks[dset] = self.OUT_ATTRS[tmp].get('chunks', None)
+                dtypes[dset] = self.OUT_ATTRS[tmp].get('dtype', 'float32')
+                shapes[dset] = self._get_data_shape(dset, len(self.meta))
+                if len(shapes[dset]) > 1:
+                    write_ti = True
+
+            # only write time index if profiles were found in output request
+            if write_ti:
+                ti = self.time_index
+            else:
+                ti = None
+
+            Outputs.init_h5(self._fpath, self.output_request, shapes, attrs,
+                            chunks, dtypes, self.meta, time_index=ti,
+                            configs=self.sam_metas, run_attrs=self.run_attrs,
+                            mode=mode)
+
+    def _init_out_arrays(self, index_0=0):
+        """Initialize output arrays based on the number of sites that can be
+        stored in memory safely.
+
+        Parameters
+        ----------
+        index_0 : int
+            This is the site list index (not gid) for the first site in the
+            output data. If a node cannot process all sites in-memory at once,
+            this is used to segment the sites in the current output chunk.
+        """
+
+        self._out = {}
+        self._finished_sites = []
+
+        # Output chunk is the index range (inclusive) of this set of site outs
+        self._out_chunk = (index_0, np.min((index_0 + self.site_limit,
+                                            len(self.project_points) - 1)))
+        self._out_n_sites = int(self.out_chunk[1] - self.out_chunk[0]) + 1
+
+        logger.info('Initializing in-memory outputs for {} sites with gids '
+                    '{} through {} inclusive (site list index {} through {})'
+                    .format(self._out_n_sites,
+                            self.project_points.sites[self.out_chunk[0]],
+                            self.project_points.sites[self.out_chunk[1]],
+                            self.out_chunk[0], self.out_chunk[1]))
+
+        for request in self.output_request:
+            dtype = 'float32'
+            if request in self.OUT_ATTRS:
+                dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
+
+            shape = self._get_data_shape(request, self._out_n_sites)
+
+            # initialize the output request as an array of zeros
+            self._out[request] = np.zeros(shape, dtype=dtype)
+
+    def _check_sam_version_inputs(self):
+        """Check the PySAM version and input keys. Fix where necessary."""
+        for key, parameters in self.project_points.sam_configs.items():
+            updated = PySamVersionChecker.run(self.tech, parameters)
+            sam_obj = self._points_control._project_points._sam_config_obj
+            sam_obj._inputs[key] = updated
 
     def unpack_output(self, site_gid, site_output):
         """Unpack a SAM SiteOutput object to the output attribute.
@@ -1259,73 +1286,6 @@ class Gen:
                         f[dset, :, islice] = self._out[dset]
 
             logger.debug('Flushed generation output successfully to disk.')
-
-    @staticmethod
-    def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, downscale=None):
-        """Run a SAM generation analysis based on the points_control iterator.
-
-        Parameters
-        ----------
-        points_control : reV.config.PointsControl
-            A PointsControl instance dictating what sites and configs are run.
-        tech : str
-            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed.
-        res_file : str
-            Filepath to single resource file, multi-h5 directory,
-            or /h5_dir/prefix*suffix
-        output_request : list | tuple
-            Output variables requested from SAM.
-        scale_outputs : bool
-            Flag to scale outputs in-place immediately upon Gen returning data.
-        downscale : NoneType | str
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
-
-        Returns
-        -------
-        out : dict
-            Output dictionary from the SAM reV_run function. Data is scaled
-            within this function to the datatype specified in Gen.OUT_ATTRS.
-        """
-        # run generation method for specified technology
-        try:
-            out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
-                                            output_request=output_request,
-                                            downscale=downscale)
-        except Exception as e:
-            out = {}
-            logger.exception('Worker failed for PC: {}'.format(points_control))
-            raise e
-
-        if scale_outputs:
-            # dtype convert in-place so no float data is stored unnecessarily
-            for site, site_output in out.items():
-                for k in site_output.keys():
-                    # iterate through variable names in each site's output dict
-                    if k in Gen.OUT_ATTRS:
-                        # get dtype and scale for output variable name
-                        dtype = Gen.OUT_ATTRS[k].get('dtype', 'float32')
-                        scale_factor = Gen.OUT_ATTRS[k].get('scale_factor', 1)
-
-                        # apply scale factor and dtype
-                        out[site][k] *= scale_factor
-                        if np.issubdtype(dtype, np.integer):
-                            # round after scaling if integer dtype
-                            out[site][k] = np.round(out[site][k])
-
-                        if isinstance(out[site][k], np.ndarray):
-                            # simple astype for arrays
-                            out[site][k] = out[site][k].astype(dtype)
-                        else:
-                            # use numpy array conversion for scalar values
-                            out[site][k] = np.array([out[site][k]],
-                                                    dtype=dtype)[0]
-
-        return out
 
     def _pre_split_pc(self, pool_size=(os.cpu_count() * 2)):
         """Pre-split project control iterator into sub chunks to further

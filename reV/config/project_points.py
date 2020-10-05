@@ -423,6 +423,7 @@ class ProjectPoints:
             raise ConfigError(e)
 
         ind = np.where(self._df['gid'] == gid)[0][0]
+
         return ind
 
     @property
