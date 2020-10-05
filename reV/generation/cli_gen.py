@@ -675,12 +675,16 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
     downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    # initialize an info logger on the year level
-    init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
-                                     'reV.config', 'reV.utilities', 'reV.SAM'],
-              verbose=False)
+    # initialize a logger on the year level
+    log_modules = [__name__, 'reV.generation.generation', 'reV.config',
+                   'reV.utilities', 'reV.SAM']
+    init_mult(name, logdir, modules=log_modules, verbose=verbose)
 
-    slurm_manager = SLURM()
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
+
     pc = get_node_pc(points, sam_files, tech, res_file, nodes)
 
     for i, split in enumerate(pc):
@@ -697,7 +701,10 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                            curtailment=curtailment,
                            downscale=downscale, verbose=verbose)
 
-        status = Status.retrieve_job_status(dirout, 'generation', node_name)
+        status = Status.retrieve_job_status(dirout, 'generation', node_name,
+                                            hardware='eagle',
+                                            subprocess_manager=slurm_manager)
+
         if status == 'successful':
             msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'

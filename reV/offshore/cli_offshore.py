@@ -234,8 +234,14 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
 
     cmd = get_node_cmd(name, gen_fpath, offshore_fpath, project_points,
                        sam_files, log_dir, verbose)
-    slurm_manager = SLURM()
-    status = Status.retrieve_job_status(out_dir, 'offshore', name)
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
+
+    status = Status.retrieve_job_status(out_dir, 'offshore', name,
+                                        hardware='eagle',
+                                        subprocess_manager=slurm_manager)
 
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '

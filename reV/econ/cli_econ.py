@@ -483,13 +483,15 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
     append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    # initialize an info logger on the year level
-    init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
-                                     'reV.utilities', 'reV.SAM',
-                                     'rex.utilities'],
-              verbose=False)
+    # initialize a logger on the year level
+    log_modules = [__name__, 'reV.econ.econ', 'reV.config', 'reV.utilities',
+                   'reV.SAM', 'rex.utilities']
+    init_mult(name, logdir, modules=log_modules, verbose=verbose)
 
-    slurm_manager = SLURM()
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
 
     if append:
         pc = [None]
@@ -512,7 +514,9 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                            output_request=output_request, append=append,
                            verbose=verbose)
 
-        status = Status.retrieve_job_status(dirout, 'econ', node_name)
+        status = Status.retrieve_job_status(dirout, 'econ', node_name,
+                                            hardware='eagle',
+                                            subprocess_manager=slurm_manager)
 
         if status == 'successful':
             msg = ('Job "{}" is successful in status json found in "{}", '

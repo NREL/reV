@@ -303,9 +303,14 @@ def multi_year_slurm(ctx, alloc, walltime, feature, memory, conda_env,
     my_file = ctx.obj['MY_FILE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    slurm_manager = SLURM()
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
+
     status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
-                                        name)
+                                        name, hardware='eagle',
+                                        subprocess_manager=slurm_manager)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'

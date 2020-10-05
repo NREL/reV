@@ -629,7 +629,9 @@ def launch_slurm(config, verbose):
                 raise ValueError(msg)
 
     slurm_manager = SLURM()
-    status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name)
+    status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name,
+                                        hardware='eagle',
+                                        subprocess_manager=slurm_manager)
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'

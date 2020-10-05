@@ -299,12 +299,18 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     purge_chunks = ctx.obj['PURGE_CHUNKS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
+
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, log_dir=log_dir,
                        purge_chunks=purge_chunks, verbose=verbose)
-    slurm_manager = SLURM()
+
     status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
-                                        name)
+                                        name, hardware='eagle',
+                                        subprocess_manager=slurm_manager)
 
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '

@@ -22,7 +22,8 @@ class Status(dict):
 
     FROZEN_STATUS = ('successful', 'failed')
 
-    def __init__(self, status_dir, name=None, hardware='eagle'):
+    def __init__(self, status_dir, name=None, hardware='eagle',
+                 subprocess_manager=None):
         """
         Parameters
         ----------
@@ -34,9 +35,13 @@ class Status(dict):
         hardware : str
             Name of hardware that this pipeline is being run on: eagle, local.
             Defaults to "eagle". This specifies how job are queried for status.
+        subprocess_manager : None | SLURM
+            Optional initialized subprocess manager to use to check job
+            statuses. This can be input with cached queue data to avoid
+            constantly querying the HPC.
         """
 
-        self._subprocess_manager = None
+        self._subprocess_manager = subprocess_manager
         self._hardware = hardware.lower()
         self._status_dir = status_dir
         self._fpath = self._parse_fpath(status_dir, name)
@@ -199,6 +204,7 @@ class Status(dict):
                 status = safe_json_load(os.path.join(status_dir, fname))
                 os.remove(os.path.join(status_dir, fname))
                 break
+
         return status
 
     def _update_job_status(self, module, job_name):
@@ -465,7 +471,8 @@ class Status(dict):
         return exists
 
     @classmethod
-    def retrieve_job_status(cls, status_dir, module, job_name):
+    def retrieve_job_status(cls, status_dir, module, job_name,
+                            hardware='eagle', subprocess_manager=None):
         """Update and retrieve job status.
 
         Parameters
@@ -476,6 +483,13 @@ class Status(dict):
             reV module that the job belongs to.
         job_name : str
             Unique job name identification.
+        hardware : str
+            Name of hardware that this pipeline is being run on: eagle, local.
+            Defaults to "eagle". This specifies how job are queried for status.
+        subprocess_manager : None | SLURM
+            Optional initialized subprocess manager to use to check job
+            statuses. This can be input with cached queue data to avoid
+            constantly querying the HPC.
 
         Returns
         -------
@@ -485,7 +499,8 @@ class Status(dict):
         if job_name.endswith('.h5'):
             job_name = job_name.replace('.h5', '')
 
-        obj = cls(status_dir)
+        obj = cls(status_dir, hardware=hardware,
+                  subprocess_manager=subprocess_manager)
         obj._update_job_status(module, job_name)
 
         try:

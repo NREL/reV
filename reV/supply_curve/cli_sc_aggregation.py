@@ -429,9 +429,15 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        friction_fpath, friction_dset,
                        out_dir, log_dir, verbose)
 
-    slurm_manager = SLURM()
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
+
     status = Status.retrieve_job_status(out_dir, 'supply-curve-aggregation',
-                                        name)
+                                        name, hardware='eagle',
+                                        subprocess_manager=slurm_manager)
+
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
