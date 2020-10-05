@@ -16,8 +16,7 @@ from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
 from reV.SAM.windbos import WindBos
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
-                                      OffshoreWindInputWarning,
-                                      ProjectControlFileError)
+                                      OffshoreWindInputWarning)
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -241,46 +240,27 @@ class Econ(Gen):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        try:
-            multi_h5_res, hsds = check_res_file(cf_file)
-            if multi_h5_res:
-                res_cls = MultiFileResource
-                res_kwargs = {}
-            else:
-                res_cls = Resource
-                res_kwargs = {'hsds': hsds}
+        multi_h5_res, hsds = check_res_file(cf_file)
+        if multi_h5_res:
+            res_cls = MultiFileResource
+            res_kwargs = {}
+        else:
+            res_cls = Resource
+            res_kwargs = {'hsds': hsds}
 
-            with res_cls(cf_file, **res_kwargs) as f:
-                if 'gid' in f.meta:
-                    gid0 = f.meta['gid'].values[0]
-                    gid1 = f.meta['gid'].values[-1]
-                    if (gid0 in pp.df.gid.values
-                            and gid1 in pp.df.gid.values):
-                        # this is the scenario where the meta is a subset
-                        # of the project points such as when econ is being
-                        # run off a single node in append mode with the
-                        # full generation project points.
-                        i0 = pp.index(gid0)
-                        i1 = pp.index(gid1) + 1
-                        pc = PointsControl.split(
-                            i0, i1, pp, sites_per_split=sites_per_worker)
-                    else:
-                        # this is the scenario where the project points
-                        # is a subset of the meta data like for
-                        # test problems.
-                        pc = PointsControl(
-                            pp, sites_per_split=sites_per_worker)
+        with res_cls(cf_file, **res_kwargs) as f:
+            gid0 = f.meta['gid'].values[0]
+            gid1 = f.meta['gid'].values[-1]
 
-        except FileNotFoundError as ex:
-            msg = ('{} is invalid PointsControl can not be adjusted!\n{}'
-                   .format(cf_file, ex))
-            raise ProjectControlFileError(msg)
+        i0 = pp.index(gid0)
+        i1 = pp.index(gid1) + 1
+        pc = PointsControl.split(i0, i1, pp, sites_per_split=sites_per_worker)
 
         return pc
 
     @staticmethod
-    def get_pc(points, points_range, sam_files, tech, sites_per_worker=None,
-               cf_file=None, append=False):
+    def get_pc(points, points_range, sam_files, cf_file,
+               sites_per_worker=None, append=False):
         """
         Get a PointsControl instance.
 
@@ -299,15 +279,11 @@ class Econ(Gen):
             config file str. If it's a list, it is mapped to the sorted list
             of unique configs requested by points csv. Can also be a
             pre loaded SAMConfig object.
-        tech : str
-            SAM technology to analyze (pvwattsv7, windpower, tcsmoltensalt,
-            solarwaterheat, troughphysicalheat, lineardirectsteam)
-            The string should be lower-cased with spaces and _ removed.
+        cf_file : str
+            reV generation capacity factor output file with path.
         sites_per_worker : int
             Number of sites to run in series on a worker. None defaults to the
             resource file chunk size.
-        cf_file : str
-            reV generation capacity factor output file with path.
         append : bool
             Flag to append econ datasets to source cf_file. This has priority
             over the fout and dirout inputs.
@@ -317,19 +293,13 @@ class Econ(Gen):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        pc = Gen.get_pc(points, points_range, sam_files, tech,
+        pc = Gen.get_pc(points, points_range, sam_files, 'econ',
                         sites_per_worker=sites_per_worker,
                         res_file=cf_file)
 
-        if append and cf_file is not None:
-            try:
-                pc = Econ._econ_append_pc(pc.project_points, cf_file,
-                                          sites_per_worker=sites_per_worker)
-            except Exception:
-                msg = ("Failed to adjust ProjectControl for Econ in append "
-                       "mode!")
-                logger.exception(msg)
-                raise
+        if append:
+            pc = Econ._econ_append_pc(pc.project_points, cf_file,
+                                      sites_per_worker=sites_per_worker)
 
         return pc
 
@@ -352,6 +322,12 @@ class Econ(Gen):
             Economic output variable(s) requested from SAM.
         kwargs : dict
             Additional input parameters for the SAM run module.
+
+        Returns
+        -------
+        out : dict
+            Output dictionary from the SAM reV_run function. Data is scaled
+            within this function to the datatype specified in Econ.OUT_ATTRS.
         """
 
         # make sure output request is a list
@@ -498,7 +474,7 @@ class Econ(Gen):
                                     key=self.site_data.index.name)
 
     @classmethod
-    def reV_run(cls, points=None, sam_files=None, cf_file=None,
+    def reV_run(cls, points, sam_files, cf_file,
                 cf_year=None, site_data=None, output_request=('lcoe_fcr',),
                 max_workers=1, sites_per_worker=100,
                 pool_size=(os.cpu_count() * 2),
@@ -560,9 +536,8 @@ class Econ(Gen):
         """
 
         # get a points control instance
-        pc = cls.get_pc(points, points_range, sam_files, tech='econ',
-                        sites_per_worker=sites_per_worker, cf_file=cf_file,
-                        append=append)
+        pc = cls.get_pc(points, points_range, sam_files, cf_file,
+                        sites_per_worker=sites_per_worker, append=append)
 
         # make a Gen class instance to operate with
         econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,

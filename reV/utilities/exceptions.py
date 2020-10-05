@@ -136,12 +136,6 @@ class ProjectPointsValueError(Exception):
     """
 
 
-class ProjectControlFileError(Exception):
-    """
-    Error for inability to generate ProjectControl from generation file
-    """
-
-
 class OutputWarning(Warning):
     """
     Warning for suspect output files or data
