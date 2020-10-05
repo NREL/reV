@@ -11,7 +11,8 @@ from warnings import warn
 import shutil
 
 from rex.utilities import safe_json_load
-from rex.utilities.execution import SLURM, SubprocessManager
+from rex.utilities.hpc import SLURM
+from rex.utilities.execution import SubprocessManager
 
 logger = logging.getLogger(__name__)
 

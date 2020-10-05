@@ -12,7 +12,7 @@ from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.pipeline.status import Status
 from reV.rep_profiles.rep_profiles import RepProfiles, AggregatedRepProfiles
 
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.cli_dtypes import STR, INT, STRLIST
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import get_class_properties

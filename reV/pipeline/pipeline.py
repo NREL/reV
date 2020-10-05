@@ -14,7 +14,8 @@ from reV.pipeline.status import Status
 from reV.utilities.exceptions import ExecutionError
 
 from rex.utilities import safe_json_load
-from rex.utilities.execution import SubprocessManager, SLURM
+from rex.utilities.execution import SubprocessManager
+from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger
 
 logger = logging.getLogger(__name__)

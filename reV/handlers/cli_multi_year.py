@@ -14,7 +14,7 @@ from reV.pipeline.status import Status
 
 from rex.utilities.cli_dtypes import STR, STRLIST, PATHLIST, INT
 from rex.utilities.loggers import init_mult
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.utilities import get_class_properties
 
 logger = logging.getLogger(__name__)

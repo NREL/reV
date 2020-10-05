@@ -14,7 +14,7 @@ from reV.pipeline.status import Status
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.cli_dtypes import (STR, INT, FLOAT, STRLIST, FLOATLIST,
                                       STRFLOAT)
 from rex.utilities.loggers import init_mult

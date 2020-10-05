@@ -18,7 +18,7 @@ from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import parse_year, get_class_properties
 

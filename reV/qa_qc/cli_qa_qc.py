@@ -9,7 +9,7 @@ import os
 import pprint
 
 from rex.utilities.cli_dtypes import STR, STRLIST, INT, FLOAT
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger, init_mult
 from rex.utilities.utilities import dict_str_load, get_class_properties
 
