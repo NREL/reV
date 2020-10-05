@@ -323,8 +323,8 @@ class Econ(Gen):
 
         if append and cf_file is not None:
             try:
-                pc = pc._econ_append_pc(pc.project_points, cf_file,
-                                        sites_per_worker=sites_per_worker)
+                pc = Econ._econ_append_pc(pc.project_points, cf_file,
+                                          sites_per_worker=sites_per_worker)
             except Exception:
                 msg = ("Failed to adjust ProjectControl for Econ in append "
                        "mode!")
