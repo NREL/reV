@@ -80,6 +80,7 @@ class Pipeline:
         s = SLURM()
         for job_id in status.job_ids:
             s.scancel(job_id)
+        logger.info('Pipeline job "{}" cancelled.'.format(self._config.name))
 
     def _main(self):
         """Iterate through run list submitting steps while monitoring status"""
@@ -358,6 +359,7 @@ class Pipeline:
                .format(f_config, command))
         if verbose:
             cmd += ' -v'
+
         return cmd
 
     @staticmethod

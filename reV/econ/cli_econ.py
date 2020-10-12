@@ -522,6 +522,9 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
             msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'
                    .format(node_name, dirout))
+        elif 'fail' not in str(status).lower() and status is not None:
+            msg = ('Job "{}" was found with status "{}", not resubmitting'
+                   .format(node_name, status))
         else:
             logger.info('Running reV econ on SLURM with node name "{}" for '
                         '{} (points range: {}).'

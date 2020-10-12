@@ -243,8 +243,8 @@ class BatchJob:
 
         Returns
         -------
-        _job_tags : list
-            List of job tags corresponding to the unique arg/value
+        job_tags : list
+            List of job tag strings corresponding to the unique arg/value
             combinations.
         """
         if self._job_tags is None:

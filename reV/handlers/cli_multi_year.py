@@ -311,10 +311,14 @@ def multi_year_slurm(ctx, alloc, walltime, feature, memory, conda_env,
     status = Status.retrieve_job_status(os.path.dirname(my_file), 'multi-year',
                                         name, hardware='eagle',
                                         subprocess_manager=slurm_manager)
+
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
                .format(name, os.path.dirname(my_file)))
+    elif 'fail' not in str(status).lower() and status is not None:
+        msg = ('Job "{}" was found with status "{}", not resubmitting'
+               .format(name, status))
     else:
         logger.info('Running reV multi-year collection on SLURM with node '
                     ' name "{}", collecting into "{}".'

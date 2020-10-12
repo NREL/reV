@@ -362,10 +362,14 @@ def slurm(ctx, alloc, memory, walltime, feature, module, conda_env,
     status = Status.retrieve_job_status(out_dir, 'supply-curve', name,
                                         hardware='eagle',
                                         subprocess_manager=slurm_manager)
+
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
                .format(name, out_dir))
+    elif 'fail' not in str(status).lower() and status is not None:
+        msg = ('Job "{}" was found with status "{}", not resubmitting'
+               .format(name, status))
     else:
         logger.info('Running reV Supply Curve on SLURM with '
                     'node name "{}"'.format(name))
