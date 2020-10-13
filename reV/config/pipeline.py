@@ -99,6 +99,20 @@ class PipelineConfig(AnalysisConfig):
         return self['pipeline']
 
     @property
+    def hardware(self):
+        """Get argument specifying which hardware the pipeline is being run on.
+
+        Defaults to "eagle" (most common use of the reV pipeline)
+
+        Returns
+        -------
+        hardware : str
+            Name of hardware that this pipeline is being run on.
+            Defaults to "eagle".
+        """
+        return self.get('hardware', 'eagle')
+
+    @property
     def status_file(self):
         """Get status file path.
 

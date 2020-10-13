@@ -18,7 +18,7 @@ from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import parse_year, get_class_properties
 
@@ -483,11 +483,15 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
     append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
-    # initialize an info logger on the year level
-    init_mult(name, logdir, modules=[__name__, 'reV.econ.econ', 'reV.config',
-                                     'reV.utilities', 'reV.SAM',
-                                     'rex.utilities'],
-              verbose=False)
+    # initialize a logger on the year level
+    log_modules = [__name__, 'reV.econ.econ', 'reV.config', 'reV.utilities',
+                   'reV.SAM', 'rex.utilities']
+    init_mult(name, logdir, modules=log_modules, verbose=verbose)
+
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
 
     if append:
         pc = [None]
@@ -510,33 +514,39 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                            output_request=output_request, append=append,
                            verbose=verbose)
 
-        status = Status.retrieve_job_status(dirout, 'econ', node_name)
+        status = Status.retrieve_job_status(dirout, 'econ', node_name,
+                                            hardware='eagle',
+                                            subprocess_manager=slurm_manager)
 
         if status == 'successful':
             msg = ('Job "{}" is successful in status json found in "{}", '
                    'not re-running.'
                    .format(node_name, dirout))
+        elif 'fail' not in str(status).lower() and status is not None:
+            msg = ('Job "{}" was found with status "{}", not resubmitting'
+                   .format(node_name, status))
         else:
             logger.info('Running reV econ on SLURM with node name "{}" for '
                         '{} (points range: {}).'
                         .format(node_name, pc, points_range))
             # create and submit the SLURM job
-            slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                          feature=feature, name=node_name,
-                          stdout_path=stdout_path, conda_env=conda_env,
-                          module=module)
-            if slurm.id:
+            out = slurm_manager.sbatch(cmd,
+                                       alloc=alloc,
+                                       memory=memory,
+                                       walltime=walltime,
+                                       feature=feature,
+                                       name=node_name,
+                                       stdout_path=stdout_path,
+                                       conda_env=conda_env,
+                                       module=module)
+            if out:
                 msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}).'
-                       .format(node_name, slurm.id))
+                       .format(node_name, out))
                 # add job to reV status file.
                 Status.add_job(
                     dirout, 'econ', node_name, replace=True,
-                    job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                    job_attrs={'job_id': out, 'hardware': 'eagle',
                                'fout': fout_node, 'dirout': dirout})
-            else:
-                msg = ('Was unable to kick off reV econ job "{}". '
-                       'Please see the stdout error messages'
-                       .format(node_name))
 
         click.echo(msg)
         logger.info(msg)

@@ -19,7 +19,7 @@ import time
 
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger
 from reV.generation.cli_gen import get_node_cmd
 

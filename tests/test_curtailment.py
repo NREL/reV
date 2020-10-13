@@ -32,7 +32,6 @@ def get_curtailment(year, curt_fn='curtailment.json'):
                        curtailment=curtailment)
 
     resource = RevPySam.get_sam_res(res_file, pp, 'windpower')
-    print(resource.time_index)
     non_curtailed_res = deepcopy(resource)
 
     out = curtail(resource, pp.curtailment, random_seed=0)

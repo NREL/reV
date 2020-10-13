@@ -9,7 +9,7 @@ import os
 import pprint
 
 from rex.utilities.cli_dtypes import STR, STRLIST, INT, FLOAT
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_logger, init_mult
 from rex.utilities.utilities import dict_str_load, get_class_properties
 
@@ -559,19 +559,27 @@ def get_excl_cmd(name, excl_fpath, out_dir, sub_dir, excl_dict,
     return cmd
 
 
-def launch_slurm(config, verbose):
-    """
-    Launch slurm QA/QC job
+def get_multiple_cmds(config, out_dir, log_file, verbose):
+    """Get a command string for multiple QA steps based on the module config
 
     Parameters
     ----------
-    config : dict
-        'reV QA/QC configuration dictionary'
-    """
+    config : QaQcConfig
+        QAQC top level config containing multiple module configs.
+    out_dir : str
+        Top level project output directory. QAQC modules may be output to sub
+        directories in this out_dir.
+    log_file : str | None
+        Log file specification or None for logging to stdout.
+    verbose : bool
+        Flag for debug logging (default is info logging).
 
-    out_dir = config.dirout
-    log_file = os.path.join(config.logdir, config.name + '.log')
-    stdout_path = os.path.join(config.logdir, 'stdout/')
+    Returns
+    -------
+    node_cmd : str
+        reV command line string for all requested QAQC modules. Split by
+        line-breaks.
+    """
 
     node_cmd = []
     terminal = False
@@ -628,36 +636,58 @@ def launch_slurm(config, verbose):
                 logger.error(msg)
                 raise ValueError(msg)
 
-    status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name)
+    node_cmd = '\n'.join(node_cmd)
+    return node_cmd
+
+
+def launch_slurm(config, verbose):
+    """
+    Launch slurm QA/QC job
+
+    Parameters
+    ----------
+    config : dict
+        'reV QA/QC configuration dictionary'
+    """
+
+    out_dir = config.dirout
+    log_file = os.path.join(config.logdir, config.name + '.log')
+    stdout_path = os.path.join(config.logdir, 'stdout/')
+    node_cmd = get_multiple_cmds(config, out_dir, log_file, verbose)
+
+    slurm_manager = SLURM()
+    status = Status.retrieve_job_status(out_dir, 'qa-qc', config.name,
+                                        hardware='eagle',
+                                        subprocess_manager=slurm_manager)
+
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
                .format(config.name, out_dir))
+    elif 'fail' not in str(status).lower() and status is not None:
+        msg = ('Job "{}" was found with status "{}", not resubmitting'
+               .format(config.name, status))
     else:
-        node_cmd = '\n'.join(node_cmd)
         logger.info('Running reV QA-QC on SLURM with '
                     'node name "{}"'.format(config.name))
-        slurm = SLURM(node_cmd,
-                      name=config.name,
-                      alloc=config.execution_control.allocation,
-                      memory=config.execution_control.memory,
-                      feature=config.execution_control.feature,
-                      walltime=config.execution_control.walltime,
-                      conda_env=config.execution_control.conda_env,
-                      module=config.execution_control.module,
-                      stdout_path=stdout_path)
-        if slurm.id:
+        out = slurm_manager.sbatch(
+            node_cmd,
+            name=config.name,
+            alloc=config.execution_control.allocation,
+            memory=config.execution_control.memory,
+            feature=config.execution_control.feature,
+            walltime=config.execution_control.walltime,
+            conda_env=config.execution_control.conda_env,
+            module=config.execution_control.module,
+            stdout_path=stdout_path)[0]
+        if out:
             msg = ('Kicked off reV QA-QC job "{}" '
                    '(SLURM jobid #{}).'
-                   .format(config.name, slurm.id))
+                   .format(config.name, out))
             Status.add_job(
                 out_dir, 'qa-qc', config.name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'dirout': out_dir})
-        else:
-            msg = ('Was unable to kick off reV QA-QC job "{}". '
-                   'Please see the stdout error messages'
-                   .format(config.name))
 
     click.echo(msg)
     logger.info(msg)

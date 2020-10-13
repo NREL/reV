@@ -13,7 +13,7 @@ from reV.handlers.collection import Collector
 from reV.pipeline.status import Status
 
 from rex.utilities.cli_dtypes import STR, STRLIST, INT
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.loggers import init_mult
 from rex.utilities.utilities import get_class_properties
 
@@ -299,37 +299,49 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
     purge_chunks = ctx.obj['PURGE_CHUNKS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
+
     cmd = get_node_cmd(name, h5_file, h5_dir, project_points, dsets,
                        file_prefix=file_prefix, log_dir=log_dir,
                        purge_chunks=purge_chunks, verbose=verbose)
 
     status = Status.retrieve_job_status(os.path.dirname(h5_file), 'collect',
-                                        name)
+                                        name, hardware='eagle',
+                                        subprocess_manager=slurm_manager)
+
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
                .format(name, os.path.dirname(h5_file)))
+    elif 'fail' not in str(status).lower() and status is not None:
+        msg = ('Job "{}" was found with status "{}", not resubmitting'
+               .format(name, status))
     else:
         logger.info('Running reV collection on SLURM with node name "{}", '
                     'collecting data to "{}" from "{}" with file prefix "{}".'
                     .format(name, h5_file, h5_dir, file_prefix))
-        # create and submit the SLURM job
-        slurm = SLURM(cmd, alloc=alloc, memory=memory, walltime=walltime,
-                      feature=feature, name=name, conda_env=conda_env,
-                      module=module, stdout_path=stdout_path)
-        if slurm.id:
+        out = slurm_manager.sbatch(cmd,
+                                   alloc=alloc,
+                                   memory=memory,
+                                   walltime=walltime,
+                                   feature=feature,
+                                   name=name,
+                                   stdout_path=stdout_path,
+                                   conda_env=conda_env,
+                                   module=module)
+        if out:
             msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}).'
-                   .format(name, slurm.id))
+                   .format(name, out))
             # add job to reV status file.
             Status.add_job(
                 os.path.dirname(h5_file), 'collect', name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'fout': os.path.basename(h5_file),
                            'dirout': os.path.dirname(h5_file)})
-        else:
-            msg = ('Was unable to kick off reV collection job "{}". '
-                   'Please see the stdout error messages'
-                   .format(name))
+
     click.echo(msg)
     logger.info(msg)
 

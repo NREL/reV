@@ -14,7 +14,7 @@ from reV.pipeline.status import Status
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 
-from rex.utilities.execution import SLURM
+from rex.utilities.hpc import SLURM
 from rex.utilities.cli_dtypes import (STR, INT, FLOAT, STRLIST, FLOATLIST,
                                       STRFLOAT)
 from rex.utilities.loggers import init_mult
@@ -429,31 +429,38 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        friction_fpath, friction_dset,
                        out_dir, log_dir, verbose)
 
+    slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
+    if slurm_manager is None:
+        slurm_manager = SLURM()
+        ctx.obj['SLURM_MANAGER'] = slurm_manager
+
     status = Status.retrieve_job_status(out_dir, 'supply-curve-aggregation',
-                                        name)
+                                        name, hardware='eagle',
+                                        subprocess_manager=slurm_manager)
+
     if status == 'successful':
         msg = ('Job "{}" is successful in status json found in "{}", '
                'not re-running.'
                .format(name, out_dir))
+    elif 'fail' not in str(status).lower() and status is not None:
+        msg = ('Job "{}" was found with status "{}", not resubmitting'
+               .format(name, status))
     else:
         logger.info('Running reV SC aggregation on SLURM with '
                     'node name "{}"'.format(name))
-        slurm = SLURM(cmd, alloc=alloc, memory=memory,
-                      walltime=walltime, feature=feature,
-                      name=name, stdout_path=stdout_path,
-                      conda_env=conda_env, module=module)
-        if slurm.id:
+        out = slurm_manager.sbatch(cmd, alloc=alloc, memory=memory,
+                                   walltime=walltime, feature=feature,
+                                   name=name, stdout_path=stdout_path,
+                                   conda_env=conda_env, module=module)
+        if out:
             msg = ('Kicked off reV SC aggregation job "{}" '
                    '(SLURM jobid #{}).'
-                   .format(name, slurm.id))
+                   .format(name, out))
             Status.add_job(
                 out_dir, 'supply-curve-aggregation', name, replace=True,
-                job_attrs={'job_id': slurm.id, 'hardware': 'eagle',
+                job_attrs={'job_id': out, 'hardware': 'eagle',
                            'fout': '{}.csv'.format(name), 'dirout': out_dir})
-        else:
-            msg = ('Was unable to kick off reV SC job "{}". '
-                   'Please see the stdout error messages'
-                   .format(name))
+
     click.echo(msg)
     logger.info(msg)
 
