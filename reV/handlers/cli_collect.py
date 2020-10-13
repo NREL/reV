@@ -331,7 +331,7 @@ def collect_slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
                                    name=name,
                                    stdout_path=stdout_path,
                                    conda_env=conda_env,
-                                   module=module)
+                                   module=module)[0]
         if out:
             msg = ('Kicked off reV collection job "{}" (SLURM jobid #{}).'
                    .format(name, out))

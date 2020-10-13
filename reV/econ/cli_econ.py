@@ -538,7 +538,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                                        name=node_name,
                                        stdout_path=stdout_path,
                                        conda_env=conda_env,
-                                       module=module)
+                                       module=module)[0]
             if out:
                 msg = ('Kicked off reV econ job "{}" (SLURM jobid #{}).'
                        .format(node_name, out))

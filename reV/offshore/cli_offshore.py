@@ -261,7 +261,7 @@ def slurm(ctx, alloc, feature, memory, walltime, module, conda_env,
                                    name=name,
                                    stdout_path=stdout_path,
                                    conda_env=conda_env,
-                                   module=module)
+                                   module=module)[0]
         if out:
             msg = ('Kicked off reV offshore job "{}" '
                    '(SLURM jobid #{}).'

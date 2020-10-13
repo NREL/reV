@@ -327,7 +327,7 @@ def slurm(ctx, alloc, memory, walltime, feature, conda_env, module,
         out = slurm_manager.sbatch(cmd, alloc=alloc, memory=memory,
                                    walltime=walltime, feature=feature,
                                    name=name, stdout_path=stdout_path,
-                                   conda_env=conda_env, module=module)
+                                   conda_env=conda_env, module=module)[0]
         if out:
             msg = ('Kicked off reV rep profiles job "{}" '
                    '(SLURM jobid #{}).'
