@@ -12,17 +12,14 @@ import numpy as np
 from reV.generation.generation import Gen
 from reV import TESTDATADIR
 
-pytest.importorskip("nsrdb")
-from nsrdb.utilities.statistics import mae_perc
 
-
-def test_gen_downscaling():
-    """Test reV generation with resource downscaled to 5 minutes."""
+def test_time_index_step():
+    """Test reV time_index_step option to upscale resource"""
     # get full file paths.
     baseline = os.path.join(TESTDATADIR, 'gen_out',
-                            'gen_profiles_5min_2017.h5')
+                            'gen_profiles_hr_2017.h5')
     sam_files = os.path.join(TESTDATADIR, 'SAM',
-                             'naris_pv_1axis_inv13_5min.json')
+                             'naris_pv_1axis_inv13_hr.json')
     res_file = os.path.join(TESTDATADIR, 'nsrdb', 'nsrdb_surfrad_2017.h5')
 
     # run reV 2.0 generation
@@ -40,9 +37,7 @@ def test_gen_downscaling():
         with h5py.File(baseline, 'r') as f:
             baseline = f['cf_profile'][...].astype(np.int32)
 
-        x = mae_perc(gen_outs, baseline)
-        msg = 'Mean absolute error is {}% from the baseline data'.format(x)
-        assert x < 1, msg
+        assert np.allclose(gen_outs, baseline)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

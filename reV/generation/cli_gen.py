@@ -108,14 +108,6 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['MEM_UTIL_LIM'] = \
         config.execution_control.mememory_utilization_limit
 
-    # get downscale request and raise exception if not NSRDB
-    ctx.obj['DOWNSCALE'] = config.downscale
-    if config.downscale is not None and 'pv' not in config.technology.lower():
-        raise ConfigError('User requested downscaling for a non-solar '
-                          'technology. reV does not have this capability at '
-                          'the current time. Please contact a developer for '
-                          'more information on this feature.')
-
     ctx.obj['CURTAILMENT'] = None
     if config.curtailment is not None:
         # pass through the curtailment file, not the curtailment object
@@ -271,16 +263,13 @@ def make_fout(name, year):
               default=None,
               help=('JSON file with curtailment inputs parameters. '
                     'Default is None (no curtailment).'))
-@click.option('-ds', '--downscale', type=STR, default=None,
-              help=('Option to request temporal downscaling for NSRDB '
-                    'resource data. Example request: "5min".'))
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
            lat_lon_coords, regions, region, region_col, sites_per_worker,
            fout, dirout, logdir, output_request, mem_util_lim, curtailment,
-           downscale, verbose):
+           verbose):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
@@ -293,7 +282,6 @@ def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
     ctx.obj['OUTPUT_REQUEST'] = output_request
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
-    ctx.obj['DOWNSCALE'] = downscale
 
     ctx.obj['LAT_LON_FPATH'] = lat_lon_fpath
     ctx.obj['LAT_LON_COORDS'] = lat_lon_coords
@@ -392,7 +380,6 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     output_request = ctx.obj['OUTPUT_REQUEST']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
-    downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -419,7 +406,6 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                 res_file=res_file,
                 output_request=output_request,
                 curtailment=curtailment,
-                downscale=downscale,
                 max_workers=max_workers,
                 sites_per_worker=sites_per_worker,
                 points_range=points_range,
@@ -534,7 +520,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  fout='reV.h5', dirout='./out/gen_out',
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  mem_util_lim=0.4, timeout=1800, curtailment=None,
-                 downscale=None, verbose=False):
+                 verbose=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -576,10 +562,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     curtailment : NoneType | str
         Pointer to a file containing curtailment input parameters or None if
         no curtailment.
-    downscale : NoneType | str
-        Option for NSRDB resource downscaling to higher temporal
-        resolution. Expects a string in the Pandas frequency format,
-        e.g. '5min'.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -609,9 +591,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     # make some strings only if specified
     if curtailment:
         arg_direct.append('-curt {}'.format(SLURM.s(curtailment)))
-
-    if downscale:
-        arg_direct.append('-ds {}'.format(SLURM.s(downscale)))
 
     # make a cli arg string for local() in this module
     arg_loc = ['-mw {}'.format(SLURM.s(max_workers)),
@@ -672,7 +651,6 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     timeout = ctx.obj['TIMEOUT']
     curtailment = ctx.obj['CURTAILMENT']
-    downscale = ctx.obj['DOWNSCALE']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize a logger on the year level
@@ -699,7 +677,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                            output_request=output_request,
                            mem_util_lim=mem_util_lim, timeout=timeout,
                            curtailment=curtailment,
-                           downscale=downscale, verbose=verbose)
+                           verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'generation', node_name,
                                             hardware='eagle',

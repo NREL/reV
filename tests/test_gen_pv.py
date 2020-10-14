@@ -252,6 +252,7 @@ def get_r1_profiles(year=2012):
                         'pv_{}_0.h5'.format(year))
     with Outputs(rev1) as cf:
         data = cf['cf_profile'][...] / 10000
+
     return data
 
 

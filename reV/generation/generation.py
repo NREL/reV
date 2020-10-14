@@ -205,7 +205,7 @@ class Gen:
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  fout=None, dirout='./gen_out', drop_leap=False,
-                 mem_util_lim=0.4, downscale=None):
+                 mem_util_lim=0.4):
         """
         Parameters
         ----------
@@ -227,10 +227,6 @@ class Gen:
             Memory utilization limit (fractional). This sets how many site
             results will be stored in-memory at any given time before flushing
             to disk.
-        downscale : NoneType | str
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
         """
 
         self._points_control = points_control
@@ -240,6 +236,7 @@ class Gen:
         self._fout = fout
         self._dirout = dirout
         self._fpath = None
+        self._meta = None
         self._time_index = None
         self._year = None
         self._sam_obj_default = None
@@ -254,17 +251,11 @@ class Gen:
                            'dirout': str(dirout),
                            'drop_leap': str(drop_leap),
                            'mem_util_lim': mem_util_lim,
-                           'downscale': str(downscale),
                            'sam_module': self._sam_module.MODULE}
 
         self._output_request = self._parse_output_request(output_request)
 
         self._multi_h5_res, self._hsds = check_res_file(res_file)
-        if self._multi_h5_res:
-            self._set_high_res_ti()
-
-        if downscale is not None:
-            self._set_downscaled_ti(downscale)
 
         if self.tech not in self.OPTIONS:
             msg = ('Requested technology "{}" is not available. '
@@ -473,20 +464,20 @@ class Gen:
             does not indicate the site number if the project points are
             non-sequential or do not start from 0, so a 'gid' column is added.
         """
+        if self._meta is None:
+            if not self._multi_h5_res:
+                res_cls = Resource
+                kwargs = {'hsds': self._hsds}
+            else:
+                res_cls = MultiFileResource
+                kwargs = {}
 
-        if not self._multi_h5_res:
-            res_cls = Resource
-            kwargs = {'hsds': self._hsds}
-        else:
-            res_cls = MultiFileResource
-            kwargs = {}
+            with res_cls(self.res_file, **kwargs) as res:
+                self._meta = res.meta.iloc[self.project_points.sites, :]
+                self._meta.loc[:, 'gid'] = self.project_points.sites
+                self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
-        with res_cls(self.res_file, **kwargs) as res:
-            meta = res.meta.iloc[self.project_points.sites, :]
-            meta.loc[:, 'gid'] = self.project_points.sites
-            meta.loc[:, 'reV_tech'] = self.project_points.tech
-
-        return meta
+        return self._meta
 
     @property
     def run_attrs(self):
@@ -509,11 +500,32 @@ class Gen:
         _time_index : pandas.DatetimeIndex
             Time-series datetime index
         """
-
         if self._time_index is None:
-            with Resource(self.res_file, hsds=self._hsds) as res:
-                self._time_index = self.handle_leap_ti(
-                    res.time_index, drop_leap=self._drop_leap)
+            if not self._multi_h5_res:
+                res_cls = Resource
+                kwargs = {'hsds': self._hsds}
+            else:
+                res_cls = MultiFileResource
+                kwargs = {}
+
+            with res_cls(self.res_file, **kwargs) as res:
+                time_index = res.time_index
+
+            downscale = self.project_points.sam_config_obj.downscale
+            step = self.project_points.sam_config_obj.time_index_step
+            if downscale is not None:
+                from rex.utilities.downscale import make_time_index
+                year = time_index.year[0]
+                time_index = make_time_index(year, downscale)
+                logger.info('reV solar generation running with temporal '
+                            'downscaling frequency "{}" with final '
+                            'time_index length {}'
+                            .format(downscale, len(time_index)))
+            elif step is not None:
+                time_index = time_index[::2]
+
+            self._time_index = self.handle_leap_ti(time_index,
+                                                   drop_leap=self._drop_leap)
 
         return self._time_index
 
@@ -897,7 +909,7 @@ class Gen:
 
     @staticmethod
     def run(points_control, tech=None, res_file=None, output_request=None,
-            scale_outputs=True, downscale=None):
+            scale_outputs=True):
         """Run a SAM generation analysis based on the points_control iterator.
 
         Parameters
@@ -915,10 +927,6 @@ class Gen:
             Output variables requested from SAM.
         scale_outputs : bool
             Flag to scale outputs in-place immediately upon Gen returning data.
-        downscale : NoneType | str
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
 
         Returns
         -------
@@ -929,8 +937,7 @@ class Gen:
         # run generation method for specified technology
         try:
             out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
-                                            output_request=output_request,
-                                            downscale=downscale)
+                                            output_request=output_request)
         except Exception as e:
             out = {}
             logger.exception('Worker failed for PC: {}'.format(points_control))
@@ -987,33 +994,6 @@ class Gen:
                 warn(msg, OutputWarning)
 
         return list(set(output_request))
-
-    def _set_high_res_ti(self):
-        """Set the 5-minute time index if res_file is a multi-file directory"""
-        with MultiFileResource(self._res_file) as mres:
-            ti = mres.time_index
-
-        self._time_index = self.handle_leap_ti(
-            ti, drop_leap=self._drop_leap)
-
-    def _set_downscaled_ti(self, ds_freq):
-        """Set the downscaled time index based on a requested frequency.
-
-        Parameters
-        ----------
-        frequency : str
-            String in the Pandas frequency format, e.g. '5min'.
-        """
-        if ds_freq is not None:
-            from rex.utilities.downscale import make_time_index
-            year = self.time_index.year[0]
-            ti = make_time_index(year, ds_freq)
-            self._time_index = self.handle_leap_ti(ti,
-                                                   drop_leap=self._drop_leap)
-            logger.info('reV solar generation running with temporal '
-                        'downscaling frequency "{}" with final '
-                        'time_index length {}'
-                        .format(ds_freq, len(self._time_index)))
 
     def _get_data_shape(self, dset, n_sites):
         """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
@@ -1430,7 +1410,7 @@ class Gen:
     @classmethod
     def reV_run(cls, tech, points, sam_files, res_file,
                 output_request=('cf_mean',), curtailment=None,
-                downscale=None, max_workers=1, sites_per_worker=None,
+                max_workers=1, sites_per_worker=None,
                 pool_size=(os.cpu_count() * 2), timeout=1800,
                 points_range=None, fout=None,
                 dirout='./gen_out', mem_util_lim=0.4, scale_outputs=True):
@@ -1463,10 +1443,6 @@ class Gen:
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
-        downscale : NoneType | str
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
         max_workers : int
             Number of local workers to run on.
         sites_per_worker : int | None
@@ -1507,14 +1483,12 @@ class Gen:
 
         # make a Gen class instance to operate with
         gen = cls(pc, res_file, output_request=output_request, fout=fout,
-                  dirout=dirout, mem_util_lim=mem_util_lim,
-                  downscale=downscale)
+                  dirout=dirout, mem_util_lim=mem_util_lim,)
 
         kwargs = {'tech': gen.tech,
                   'res_file': gen.res_file,
                   'output_request': gen.output_request,
-                  'scale_outputs': scale_outputs,
-                  'downscale': downscale}
+                  'scale_outputs': scale_outputs}
 
         logger.info('Running reV generation for: {}'.format(pc))
         logger.debug('The following project points were specified: "{}"'

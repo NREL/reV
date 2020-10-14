@@ -64,8 +64,7 @@ class SamResourceRetriever:
         return res_handler
 
     @staticmethod
-    def _make_solar_kwargs(res_handler, project_points, output_request,
-                           downscale=None):
+    def _make_solar_kwargs(res_handler, project_points, output_request):
         """Make kwargs dict for Solar | NSRDB resource handler initialization.
 
         Parameters
@@ -77,10 +76,6 @@ class SamResourceRetriever:
             specific set of sites.
         output_request : list
             Outputs to retrieve from SAM.
-        downscale : NoneType | str
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
 
         Returns
         -------
@@ -103,6 +98,7 @@ class SamResourceRetriever:
         if any([x in output_request for x in mean_keys]):
             kwargs['means'] = True
 
+        downscale = project_points.sam_config_obj.downscale
         # check for downscaling request
         if downscale is not None:
             # make sure that downscaling is only requested for NSRDB resource
@@ -192,7 +188,7 @@ class SamResourceRetriever:
 
     @classmethod
     def get(cls, res_file, project_points, module,
-            output_request=('cf_mean', ), downscale=None):
+            output_request=('cf_mean', )):
         """Get the SAM resource iterator object (single year, single file).
 
         Parameters
@@ -210,10 +206,6 @@ class SamResourceRetriever:
             the NSRDB handler will be used.
         output_request : list | tuple, optional
             Outputs to retrieve from SAM, by default ('cf_mean', )
-        downscale : NoneType | str, optional
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min', by default None
 
         Returns
         -------
@@ -225,8 +217,7 @@ class SamResourceRetriever:
 
         if res_handler in (SolarResource, NSRDB):
             kwargs, args, res_handler = cls._make_solar_kwargs(
-                res_handler, project_points, output_request,
-                downscale=downscale)
+                res_handler, project_points, output_request)
 
         elif res_handler == WindResource:
             kwargs, args, res_handler = cls._make_wind_kwargs(
@@ -239,6 +230,9 @@ class SamResourceRetriever:
                                                                  res_file)
         else:
             kwargs['hsds'] = hsds
+
+        kwargs['time_index_step'] = \
+            project_points.sam_config_obj.time_index_step
 
         res = res_handler.preload_SAM(res_file, *args, **kwargs)
 
