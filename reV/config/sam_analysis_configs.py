@@ -169,7 +169,6 @@ class GenConfig(SAMAnalysisConfig):
         """
         super().__init__(config)
         self._curtailment = None
-        self._downscale = None
         self._res_files = None
         self._resource_5min = None
 
@@ -191,29 +190,13 @@ class GenConfig(SAMAnalysisConfig):
         return self._curtailment
 
     @property
-    def downscale(self):
-        """Get the resource downscale request (nsrdb only!).
-
-        Returns
-        -------
-        downscale : NoneType | str
-            Returns None if no downscaling is requested. Otherwise, expects a
-            downscale variable in the Pandas frequency format, e.g. '5min'.
-        """
-
-        if self._downscale is None:
-            self._downscale = self.get('downscale', self._downscale)
-        return self._downscale
-
-    @property
     def resource_file(self):
         """
         get base resource_file
 
         Returns
         -------
-        [type]
-            [description]
+        str
         """
         return self['resource_file']
 

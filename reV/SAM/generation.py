@@ -273,7 +273,7 @@ class Generation(RevPySam, ABC):
 
     @classmethod
     def reV_run(cls, points_control, res_file, output_request=('cf_mean',),
-                downscale=None, drop_leap=False):
+                drop_leap=False):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -285,10 +285,6 @@ class Generation(RevPySam, ABC):
             Resource file with full path.
         output_request : list | tuple
             Outputs to retrieve from SAM.
-        downscale : NoneType | str
-            Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
         drop_leap : bool
             Drops February 29th from the resource data. If False, December
             31st is dropped from leap years.
@@ -307,7 +303,6 @@ class Generation(RevPySam, ABC):
         resources = RevPySam.get_sam_res(res_file,
                                          points_control.project_points,
                                          points_control.project_points.tech,
-                                         downscale=downscale,
                                          output_request=output_request)
 
         # run resource through curtailment filter if applicable
