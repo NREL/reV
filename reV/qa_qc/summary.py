@@ -147,7 +147,7 @@ class SummarizeH5:
                 sites = \
                     np.array_split(sites,
                                    int(np.ceil(len(sites) / process_size)))
-                loggers = [__name__]
+                loggers = [__name__, 'reV']
                 with SpawnProcessPool(max_workers=max_workers,
                                       loggers=loggers) as ex:
                     futures = []
