@@ -507,7 +507,7 @@ class SupplyCurve:
         logger.info('Computing LCOT costs for all possible connections...')
         if max_workers > 1:
             groups = trans_table.groupby('sc_gid')
-            loggers = [__name__, 'reV.handlers.transmission']
+            loggers = [__name__, 'reV.handlers.transmission', 'reV']
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
                 futures = []

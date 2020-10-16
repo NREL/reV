@@ -752,7 +752,7 @@ class Offshore:
         """Run offshore gen aggregation and ORCA econ compute in parallel."""
 
         futures = {}
-        loggers = __name__
+        loggers = [__name__, 'reV']
         with SpawnProcessPool(max_workers=self._max_workers,
                               loggers=loggers) as exe:
 

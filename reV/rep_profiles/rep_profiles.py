@@ -998,7 +998,7 @@ class RepProfiles(RepProfilesBase):
         for iter_chunk in iter_chunks:
             logger.debug('Starting process pool...')
             futures = {}
-            loggers = __name__
+            loggers = [__name__, 'reV']
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
                 for i in iter_chunk:
@@ -1221,7 +1221,7 @@ class AggregatedRepProfiles(RepProfilesBase):
         for iter_chunk in iter_chunks:
             logger.debug('Starting process pool...')
             futures = {}
-            loggers = __name__
+            loggers = [__name__, 'reV']
             with SpawnProcessPool(max_workers=max_workers,
                                   loggers=loggers) as exe:
                 for i in iter_chunk:

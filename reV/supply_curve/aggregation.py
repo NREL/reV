@@ -325,7 +325,7 @@ class AbstractAggregation(ABC):
         n_finished = 0
         futures = []
         output = []
-        loggers = [__name__, 'reV.supply_curve.points']
+        loggers = [__name__, 'reV.supply_curve.points', 'reV']
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
 
             # iterate through split executions, submitting each to worker
@@ -719,7 +719,7 @@ class Aggregation(AbstractAggregation):
         futures = []
         dsets = self._agg_dsets + ('meta', )
         agg_out = {ds: [] for ds in dsets}
-        loggers = [__name__, 'reV.supply_curve.points']
+        loggers = [__name__, 'reV.supply_curve.points', 'reV']
         with SpawnProcessPool(max_workers=max_workers, loggers=loggers) as exe:
             # iterate through split executions, submitting each to worker
             for gid_set in chunks:
