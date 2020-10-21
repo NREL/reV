@@ -18,7 +18,8 @@ from reV.SAM.generation import (Pvwattsv5, Pvwattsv7, TcsMoltenSalt, WindPower,
                                 LinearDirectSteam)
 from reV.SAM.version_checker import PySamVersionChecker
 from reV.utilities.exceptions import (OutputWarning, ExecutionError,
-                                      ParallelExecutionWarning)
+                                      ParallelExecutionWarning,
+                                      ProjectPointsValueError)
 
 from rex.resource import Resource
 from rex.multi_file_resource import MultiFileResource
@@ -476,9 +477,20 @@ class Gen:
                 kwargs = {}
 
             with res_cls(self.res_file, **kwargs) as res:
-                self._meta = res.meta.iloc[self.project_points.sites, :]
-                self._meta.loc[:, 'gid'] = self.project_points.sites
-                self._meta.loc[:, 'reV_tech'] = self.project_points.tech
+                res_meta = res.meta
+
+            if np.max(self.project_points.sites) > len(res_meta):
+                msg = ('ProjectPoints has a max site gid of {} which is '
+                       'out of bounds for the meta data of size {} from '
+                       'resource file: {}'
+                       .format(np.max(self.project_points.sites),
+                               res_meta.shape, self.res_file))
+                logger.error(msg)
+                raise ProjectPointsValueError(msg)
+
+            self._meta = res_meta.iloc[self.project_points.sites, :]
+            self._meta.loc[:, 'gid'] = self.project_points.sites
+            self._meta.loc[:, 'reV_tech'] = self.project_points.tech
 
         return self._meta
 

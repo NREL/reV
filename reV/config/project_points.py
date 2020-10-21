@@ -567,14 +567,28 @@ class ProjectPoints:
             raise ConfigError(msg)
 
     @property
-    def sites(self):
-        """Get the sites belonging to this instance of ProjectPoints.
+    def gids(self):
+        """Get the list of gids (resource file index values) belonging to this
+        instance of ProjectPoints. This is an alias of self.sites.
 
         Returns
         -------
-        _sites : list | slice
-            List of sites belonging to this instance of ProjectPoints. The type
-            is list if possible. Will be a slice only if slice stop is None.
+        gids : list
+            List of integer gids (resource file index values) belonging to this
+            instance of ProjectPoints. This is an alias of self.sites.
+        """
+        return self.sites
+
+    @property
+    def sites(self):
+        """Get the list of sites (resource file gids) belonging to this
+        instance of ProjectPoints.
+
+        Returns
+        -------
+        sites : list
+            List of integer sites (resource file gids) belonging to this
+            instance of ProjectPoints.
         """
         return self.df['gid'].values.tolist()
 
