@@ -284,15 +284,23 @@ def test_pvwattsv7_baseline():
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
 
+    output_request = ('cf_mean', 'cf_profile', 'dni_mean', 'dhi_mean',
+                      'ghi_mean', 'ac', 'dc')
+
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
     gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
                       sam_files=sam_files, res_file=res_file, max_workers=1,
-                      sites_per_worker=1, fout=None)
+                      sites_per_worker=1, fout=None,
+                      output_request=output_request)
 
     msg = ('PVWattsv7 cf_mean results {} did not match baseline: {}'
            .format(gen.out['cf_mean'], baseline_cf_mean))
     assert np.allclose(gen.out['cf_mean'], baseline_cf_mean), msg
+
+    for req in output_request:
+        assert req in gen.out
+        assert (gen.out[req] != 0).sum() > 0
 
 
 def test_pvwatts_v5_v7():
