@@ -559,6 +559,18 @@ class Pvwatts(Solar, ABC):
 
     def gen_profile(self):
         """Get AC inverter power generation profile (orig timezone) in kW.
+        This is an alias of the "ac" SAM output variable.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of hourly AC inverter power generation in kW.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        return self.ac
+
+    def ac(self):
+        """Get AC inverter power generation profile (orig timezone) in kW.
 
         Returns
         -------
@@ -567,6 +579,17 @@ class Pvwatts(Solar, ABC):
             Datatype is float32 and array length is 8760*time_interval.
         """
         return np.array(self['ac'], dtype=np.float32) / 1000
+
+    def dc(self):
+        """Get DC array power generation profile (orig timezone) in kW.
+
+        Returns
+        -------
+        output : np.ndarray
+            1D array of hourly DC array power generation in kW.
+            Datatype is float32 and array length is 8760*time_interval.
+        """
+        return np.array(self['dc'], dtype=np.float32) / 1000
 
     @property
     def default(self):
@@ -588,6 +611,8 @@ class Pvwatts(Solar, ABC):
                              'annual_energy': self.annual_energy,
                              'energy_yield': self.energy_yield,
                              'gen_profile': self.gen_profile,
+                             'ac': self.ac,
+                             'dc': self.dc,
                              }
 
         super().collect_outputs(output_lookup=output_lookup)
