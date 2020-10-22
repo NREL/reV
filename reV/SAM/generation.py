@@ -106,7 +106,8 @@ class Generation(RevPySam, ABC):
 
             if 'dhi_mean' in out_req_nomeans:
                 out_req_nomeans.remove('dhi_mean')
-                res_mean = {}
+                if res_mean is None:
+                    res_mean = {}
                 res_mean['dhi_mean'] = resource['mean_dhi', idx] / 1000 * 24
 
             if 'ghi_mean' in out_req_nomeans:
@@ -572,7 +573,7 @@ class Pvwatts(Solar, ABC):
             1D array of hourly AC inverter power generation in kW.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return self.ac
+        return self.ac()
 
     def ac(self):
         """Get AC inverter power generation profile (orig timezone) in kW.
