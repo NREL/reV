@@ -104,6 +104,11 @@ class Generation(RevPySam, ABC):
                 res_mean = {}
                 res_mean['dni_mean'] = resource['mean_dni', idx] / 1000 * 24
 
+            if 'dhi_mean' in out_req_nomeans:
+                out_req_nomeans.remove('dhi_mean')
+                res_mean = {}
+                res_mean['dhi_mean'] = resource['mean_dhi', idx] / 1000 * 24
+
             if 'ghi_mean' in out_req_nomeans:
                 out_req_nomeans.remove('ghi_mean')
                 if res_mean is None:
