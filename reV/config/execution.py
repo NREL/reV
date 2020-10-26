@@ -78,7 +78,7 @@ class BaseExecutionConfig(BaseConfig):
         return self._sites_per_worker
 
     @property
-    def mememory_utilization_limit(self):
+    def memory_utilization_limit(self):
         """Get the node memory utilization limit property. Key in the config
         json is "memory_utilization_limit".
 

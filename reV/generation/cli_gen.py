@@ -106,7 +106,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['MEM_UTIL_LIM'] = \
-        config.execution_control.mememory_utilization_limit
+        config.execution_control.memory_utilization_limit
 
     ctx.obj['CURTAILMENT'] = None
     if config.curtailment is not None:
