@@ -142,11 +142,11 @@ class SAMConfig(BaseConfig):
             self._downscale = ds_list[0]
             ds_list = list({str(x) for x in ds_list})
 
-        if len(ds_list) > 1:
-            msg = ('Expecting a single unique value for "downscale" but '
-                   'received: {}'.format(self._downscale))
-            logger.error(msg)
-            raise SAMInputError(msg)
+            if len(ds_list) > 1:
+                msg = ('Expecting a single unique value for "downscale" but '
+                       'received: {}'.format(ds_list))
+                logger.error(msg)
+                raise SAMInputError(msg)
 
         if isinstance(self._downscale, str):
             self._downscale = {'frequency': self._downscale}
