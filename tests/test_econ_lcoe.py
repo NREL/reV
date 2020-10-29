@@ -12,6 +12,7 @@ import os
 import h5py
 import pytest
 import numpy as np
+import pandas as pd
 import shutil
 from pandas.testing import assert_frame_equal
 
@@ -153,19 +154,27 @@ def test_append_multi_node(node):
     site_data = os.path.join(
         TESTDATADIR, 'config/nsrdb_sitedata_atb2020_capcostmults_subset.csv')
     econ = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
-                        cf_year=year, output_request='lcoe_fcr',
+                        cf_year=year,
+                        output_request=('lcoe_fcr', 'capital_cost'),
                         max_workers=1, sites_per_worker=25,
                         points_range=None, append=True, site_data=site_data)
 
     with Outputs(original_file) as out:
         data_baseline = out['lcoe_fcr']
     with Outputs(cf_file) as out:
+        meta = out.meta
         data_test = out['lcoe_fcr']
+        test_cap_cost = out['capital_cost']
 
     if PURGE_OUT:
         os.remove(cf_file)
 
     assert np.allclose(data_baseline, data_test)
+
+    site_data = pd.read_csv(site_data)
+    sd_cap_cost = site_data.loc[site_data.gid.isin(meta.gid), 'capital_cost']
+    assert np.allclose(test_cap_cost, sd_cap_cost)
+    assert np.allclose(econ.out['capital_cost'], sd_cap_cost)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

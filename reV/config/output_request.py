@@ -7,8 +7,12 @@ Created on Mon Jul  8 09:37:23 2019
 
 @author: gbuster
 """
+import logging
 from warnings import warn
 from reV.utilities.exceptions import ConfigWarning
+
+
+logger = logging.getLogger(__name__)
 
 
 class OutputRequest(list):
@@ -35,16 +39,18 @@ class OutputRequest(list):
                 self.append(request)
             elif request in self.CORRECTIONS.keys():
                 self.append(self.CORRECTIONS[request])
-                warn('Correcting output request "{}" to "{}".'
-                     .format(request, self.CORRECTIONS[request]),
-                     ConfigWarning)
+                msg = ('Correcting output request "{}" to "{}".'
+                       .format(request, self.CORRECTIONS[request]))
+                logger.warning(msg)
+                warn(msg, ConfigWarning)
             else:
                 self.append(request)
-                warn('Did not recognize requested output variable "{}". '
-                     'Passing forward, but this may cause a downstream '
-                     'error. Available known output variables are: {}'
-                     .format(request, list(set(self.CORRECTIONS.values()))),
-                     ConfigWarning)
+                logger.debug('Did not recognize requested output variable '
+                             '"{}". Passing forward, but this may cause a '
+                             'downstream error. Available known output '
+                             'variables are: {}'
+                             .format(request,
+                                     list(set(self.CORRECTIONS.values()))))
 
 
 class SAMOutputRequest(OutputRequest):
@@ -85,4 +91,7 @@ class SAMOutputRequest(OutputRequest):
                    'turbine': 'turbine_cost',
                    'sales_tax': 'sales_tax_cost',
                    'bos': 'bos_cost',
+                   'albedo': 'surface_albedo',
+                   'ac_power': 'ac',
+                   'dc_power': 'dc',
                    }
