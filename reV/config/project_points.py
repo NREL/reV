@@ -256,7 +256,7 @@ class ProjectPoints:
         Parameters
         ----------
         site : int | str
-            Site number of interest.
+            Site number (gid) of interest (typically the resource gid).
 
         Returns
         -------
@@ -515,6 +515,24 @@ class ProjectPoints:
         """
 
         return self.sam_config_obj.inputs
+
+    @property
+    def all_sam_input_keys(self):
+        """Get a list of unique input keys from all SAM technology configs.
+
+        Returns
+        -------
+        all_sam_input_keys : list
+            List of unique strings where each string is a input key for the
+            SAM technology configs. For example, "gcr" or "losses" for PVWatts
+            or "wind_turbine_hub_ht" for windpower.
+        """
+        keys = []
+        for sam_config in self.sam_configs.values():
+            keys += list(sam_config.keys())
+
+        keys = list(set(keys))
+        return keys
 
     def _check_points_config_mapping(self):
         """

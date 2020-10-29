@@ -13,6 +13,7 @@ import h5py
 import pytest
 import numpy as np
 
+from reV.utilities.exceptions import ExecutionError
 from reV.generation.generation import Gen
 from reV.config.project_points import ProjectPoints
 from reV import TESTDATADIR
@@ -341,10 +342,13 @@ def test_bifacial():
     sam_files = TESTDATADIR + '/SAM/i_pvwattsv7_bifacial.json'
     # run reV 2.0 generation
     pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    output_request = ('cf_mean', 'cf_profile', 'surface_albedo')
     gen_bi = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
                          sam_files=sam_files, res_file=res_file, max_workers=1,
-                         sites_per_worker=1, fout=None)
+                         sites_per_worker=1, fout=None,
+                         output_request=output_request)
 
+    assert 'surface_albedo' in gen_bi.out
     assert all(gen_bi.out['cf_mean'] > gen.out['cf_mean'])
     assert np.isclose(gen.out['cf_mean'][0], 0.151, atol=0.005)
     assert np.isclose(gen_bi.out['cf_mean'][0], 0.162, atol=0.005)
@@ -366,6 +370,32 @@ def test_gen_input_mods():
     for i in range(5):
         inputs = gen.project_points[i][1]
         assert inputs['tilt'] == 'latitude'
+
+
+def test_gen_input_pass_through():
+    """Test the ability for reV gen to pass through inputs from the sam config.
+    """
+    output_request = ('cf_mean', 'gcr', 'azimuth')
+    year = 2012
+    rev2_points = slice(0, 2)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, max_workers=1,
+                      sites_per_worker=1, fout=None,
+                      output_request=output_request)
+    assert 'gcr' in gen.out
+    assert 'azimuth' in gen.out
+
+    output_request = ('cf_mean', 'gcr', 'azimuth', 'tilt')
+    with pytest.raises(ExecutionError):
+        gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                          sam_files=sam_files, res_file=res_file,
+                          max_workers=1,
+                          sites_per_worker=1, fout=None,
+                          output_request=output_request)
 
 
 def execute_pytest(capture='all', flags='-rapP'):

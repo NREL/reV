@@ -259,6 +259,7 @@ class Gen:
         self._sam_module = self.OPTIONS[self.tech]
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
+        self._pass_through_input_keys = None
 
         self._run_attrs = {'points_control': str(points_control),
                            'res_file': res_file,
@@ -270,7 +271,6 @@ class Gen:
                            'sam_module': self._sam_module.MODULE}
 
         self._output_request = self._parse_output_request(output_request)
-
         self._multi_h5_res, self._hsds = check_res_file(res_file)
 
         if self.tech not in self.OPTIONS:
@@ -286,12 +286,12 @@ class Gen:
         self._finished_sites = []
         self._out_n_sites = 0
         self._out_chunk = ()
-        self._init_out_arrays()
         self._check_sam_version_inputs()
 
         # initialize output file
         self._init_fpath()
         self._init_h5()
+        self._init_out_arrays()
 
     @property
     def output_request(self):
@@ -996,6 +996,42 @@ class Gen:
 
         return out
 
+    def _parse_pass_through_inputs(self):
+        """Look for keys in the output_request that are present in the SAM
+        input configs, remove them from the output_request list, and store
+        them in a pass through list.
+        """
+        if self._pass_through_input_keys is None:
+            self._pass_through_input_keys = []
+            for req in self.output_request:
+                if req in self.project_points.all_sam_input_keys:
+                    self._pass_through_input_keys.append(req)
+
+            if any(self._pass_through_input_keys):
+                logger.debug('Passing through inputs: {}'
+                             .format(self._pass_through_input_keys))
+                self._output_request = [r for r in self._output_request
+                                        if r not in
+                                        self._pass_through_input_keys]
+                self._output_request = tuple(self._output_request)
+
+    def _pass_through_inputs(self):
+        """Pass inputs that are part of the output_request through to the
+        output arrays.
+
+        This should be run during every instance of _init_out_arrays()
+        """
+        self._parse_pass_through_inputs()
+
+        i0 = self.out_chunk[0]
+        i1 = self.out_chunk[1] + 1
+        gids = self.project_points.sites[i0:i1]
+
+        for req in self._pass_through_input_keys:
+            for i, gid in enumerate(gids):
+                config = self.project_points[gid][1]
+                self._out[req][i] = config[req]
+
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
 
@@ -1017,8 +1053,7 @@ class Gen:
             if request not in self.OUT_ATTRS:
                 msg = ('User output request "{}" not recognized. '
                        'Will attempt to extract from PySAM.'.format(request))
-                logger.warning(msg)
-                warn(msg, OutputWarning)
+                logger.debug(msg)
 
         return list(set(output_request))
 
@@ -1043,6 +1078,15 @@ class Gen:
                 data_shape = (len(self.time_index), n_sites)
             else:
                 data_shape = (n_sites, )
+
+        elif dset in self.project_points.all_sam_input_keys:
+            data_shape = (n_sites, )
+            data = list(self.project_points.sam_configs.values())[0][dset]
+            if isinstance(data, (list, tuple, np.ndarray, str)):
+                msg = ('Cannot pass through non-scalar SAM input key "{}" '
+                       'as an output_request!'.format(dset))
+                logger.error(msg)
+                raise ExecutionError(msg)
 
         else:
             if self._sam_obj_default is None:
@@ -1178,9 +1222,12 @@ class Gen:
                 dtype = self.OUT_ATTRS[request].get('dtype', 'float32')
 
             shape = self._get_data_shape(request, self._out_n_sites)
-
             # initialize the output request as an array of zeros
             self._out[request] = np.zeros(shape, dtype=dtype)
+
+        # Write inputs that are included as part of the
+        # output_request to the output arrays.
+        self._pass_through_inputs()
 
     def _check_sam_version_inputs(self):
         """Check the PySAM version and input keys. Fix where necessary."""
@@ -1283,14 +1330,13 @@ class Gen:
             with Outputs(self._fpath, mode='a') as f:
 
                 # iterate through all output requests writing each as a dataset
-                for dset in self.output_request:
-
-                    if len(self._out[dset].shape) == 1:
+                for dset, arr in self._out.values():
+                    if len(arr.shape) == 1:
                         # write array of scalars
-                        f[dset, islice] = self._out[dset]
+                        f[dset, islice] = arr
                     else:
                         # write 2D array of profiles
-                        f[dset, :, islice] = self._out[dset]
+                        f[dset, :, islice] = arr
 
             logger.debug('Flushed generation output successfully to disk.')
 
