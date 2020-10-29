@@ -1330,7 +1330,7 @@ class Gen:
             with Outputs(self._fpath, mode='a') as f:
 
                 # iterate through all output requests writing each as a dataset
-                for dset, arr in self._out.values():
+                for dset, arr in self._out.items():
                     if len(arr.shape) == 1:
                         # write array of scalars
                         f[dset, islice] = arr
