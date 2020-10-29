@@ -529,8 +529,10 @@ class Econ(Gen):
         if self._pass_through_input_keys is None:
             self._pass_through_input_keys = []
             for req in self.output_request:
-                if (req in self.project_points.all_sam_input_keys
-                        or req in self._site_data):
+                is_input = (req in self.project_points.all_sam_input_keys
+                            or req in self._site_data)
+                is_output = req in self.OUT_ATTRS or req in self.OPTIONS
+                if is_input and not is_output:
                     self._pass_through_input_keys.append(req)
 
             if any(self._pass_through_input_keys):
