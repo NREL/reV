@@ -128,7 +128,6 @@ class Econ(Gen):
         self._sam_module = None
         self._sam_obj_default = None
         self.mem_util_lim = mem_util_lim
-        self._pass_through_input_keys = None
 
         self._site_data = self._parse_site_data(site_data)
         self._output_request = self._parse_output_request(output_request)
@@ -517,61 +516,6 @@ class Econ(Gen):
             data_shape = super()._get_data_shape(dset, n_sites)
 
         return data_shape
-
-    def _parse_pass_through_inputs(self):
-        """Look for keys in the output_request that are present in the SAM
-        input configs, remove them from the output_request list, and store
-        them in a pass through list.
-
-        This Econ pass through function will also look for the keys in the
-        output_request that are present in the site_data input dataframe.
-        """
-        if self._pass_through_input_keys is None:
-            self._pass_through_input_keys = []
-            for req in self.output_request:
-                is_input = (req in self.project_points.all_sam_input_keys
-                            or req in self._site_data)
-                is_output = req in self.OUT_ATTRS or req in self.OPTIONS
-                if is_input and not is_output:
-                    self._pass_through_input_keys.append(req)
-
-            if any(self._pass_through_input_keys):
-                logger.debug('Passing through inputs: {}'
-                             .format(self._pass_through_input_keys))
-                self._output_request = [r for r in self._output_request
-                                        if r not in
-                                        self._pass_through_input_keys]
-                self._output_request = tuple(self._output_request)
-
-    def _pass_through_inputs(self):
-        """Pass inputs that are part of the output_request through to the
-        output arrays.
-
-        This should be run during every instance of _init_out_arrays()
-
-        This Econ pass through function will also look for the keys in the
-        output_request that are present in the site_data input dataframe.
-        """
-        self._parse_pass_through_inputs()
-
-        i0 = self.out_chunk[0]
-        i1 = self.out_chunk[1] + 1
-        gids = self.project_points.sites[i0:i1]
-
-        for req in self._pass_through_input_keys:
-            if req in self.project_points.all_sam_input_keys:
-                for i, gid in enumerate(gids):
-                    config = self.project_points[gid][1]
-                    self._out[req][i] = config[req]
-
-            # allow for site data to overwrite the sam input values
-            if req in self._site_data:
-                for i, gid in enumerate(gids):
-                    if gid not in self._site_data.index.values:
-                        logger.debug('Could not find input key "{}" for site '
-                                     'gid {}'.format(req, gid))
-                    else:
-                        self._out[req][i] = self._site_data.loc[gid, req]
 
     @classmethod
     def reV_run(cls, points, sam_files, cf_file,

@@ -673,6 +673,8 @@ class RevPySam(Sam):
         for req in self.output_request:
             if req in output_lookup:
                 self.outputs[req] = output_lookup[req]()
+            elif req in self.parameters:
+                self.outputs[req] = self.parameters[req]
             else:
                 try:
                     self.outputs[req] = getattr(self.pysam.Outputs, req)

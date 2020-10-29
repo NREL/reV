@@ -259,7 +259,6 @@ class Gen:
         self._sam_module = self.OPTIONS[self.tech]
         self._drop_leap = drop_leap
         self.mem_util_lim = mem_util_lim
-        self._pass_through_input_keys = None
 
         self._run_attrs = {'points_control': str(points_control),
                            'res_file': res_file,
@@ -996,44 +995,6 @@ class Gen:
 
         return out
 
-    def _parse_pass_through_inputs(self):
-        """Look for keys in the output_request that are present in the SAM
-        input configs, remove them from the output_request list, and store
-        them in a pass through list.
-        """
-        if self._pass_through_input_keys is None:
-            self._pass_through_input_keys = []
-            for req in self.output_request:
-                is_input = req in self.project_points.all_sam_input_keys
-                is_output = req in self.OUT_ATTRS
-                if is_input and not is_output:
-                    self._pass_through_input_keys.append(req)
-
-            if any(self._pass_through_input_keys):
-                logger.debug('Passing through inputs: {}'
-                             .format(self._pass_through_input_keys))
-                self._output_request = [r for r in self._output_request
-                                        if r not in
-                                        self._pass_through_input_keys]
-                self._output_request = tuple(self._output_request)
-
-    def _pass_through_inputs(self):
-        """Pass inputs that are part of the output_request through to the
-        output arrays.
-
-        This should be run during every instance of _init_out_arrays()
-        """
-        self._parse_pass_through_inputs()
-
-        i0 = self.out_chunk[0]
-        i1 = self.out_chunk[1] + 1
-        gids = self.project_points.sites[i0:i1]
-
-        for req in self._pass_through_input_keys:
-            for i, gid in enumerate(gids):
-                config = self.project_points[gid][1]
-                self._out[req][i] = config[req]
-
     def _parse_output_request(self, req):
         """Set the output variables requested from generation.
 
@@ -1226,10 +1187,6 @@ class Gen:
             shape = self._get_data_shape(request, self._out_n_sites)
             # initialize the output request as an array of zeros
             self._out[request] = np.zeros(shape, dtype=dtype)
-
-        # Write inputs that are included as part of the
-        # output_request to the output arrays.
-        self._pass_through_inputs()
 
     def _check_sam_version_inputs(self):
         """Check the PySAM version and input keys. Fix where necessary."""
