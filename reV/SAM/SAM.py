@@ -3,6 +3,7 @@
 
 Wraps the NREL-PySAM library with additional reV features.
 """
+import json
 import logging
 import numpy as np
 import os
@@ -419,18 +420,22 @@ class Sam:
             raise SAMExecutionError(msg)
 
     @staticmethod
-    def _filter_inputs(key):
-        """Perform any necessary filtering of input keys for PySAM.
+    def _filter_inputs(key, value):
+        """Perform any necessary filtering of input keys and values for PySAM.
 
         Parameters
         ----------
         key : str
             SAM input key.
+        value : str | int | float | list | np.ndarray
+            Input value associated with key.
 
         Returns
         -------
         key : str
             Filtered SAM input key.
+        value : str | int | float | list | np.ndarray
+            Filtered Input value associated with key.
         """
 
         if '.' in key:
@@ -439,7 +444,10 @@ class Sam:
         if ':constant' in key and 'adjust:' in key:
             key = key.replace('adjust:', '')
 
-        return key
+        if isinstance(value, str) and '[' in value and ']' in value:
+            value = json.loads(value)
+
+        return key, value
 
     def assign_inputs(self, inputs, raise_warning=False):
         """Assign a flat dictionary of inputs to the PySAM object.
@@ -453,7 +461,7 @@ class Sam:
             are not found in the PySAM object.
         """
         for k, v in inputs.items():
-            k = self._filter_inputs(k)
+            k, v = self._filter_inputs(k, v)
             if k in self.input_list:
                 self[k] = v
             elif raise_warning:
