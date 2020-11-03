@@ -130,7 +130,9 @@ class SAMConfig(BaseConfig):
         dict | None
             Option for NSRDB resource downscaling to higher temporal
             resolution. The config expects a str entry in the Pandas
-            frequency format, e.g. '5min' or a dict of downscaling kwargs.
+            frequency format, e.g. '5min' or a dict of downscaling kwargs
+            such as {'frequency': '5min', 'variability_kwargs':
+            {'var_frac': 0.05, 'distribution': 'uniform'}}.
             A str entry will be converted to a kwarg dict for the output
             of this property e.g. '5min' -> {'frequency': '5min'}
         """
