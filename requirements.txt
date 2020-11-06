@@ -1,5 +1,5 @@
 click>=7.0
-h5py>=2.9.0
+h5py>=3.1.0
 numpy>=1.16
 pandas>=1.0
 packaging>=20.3

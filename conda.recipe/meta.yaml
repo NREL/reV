@@ -16,7 +16,7 @@ requirements:
     - pip
     - setuptools
     - click
-    - h5py
+    - h5py>=3.1.0
     - numpy>=1.16
     - pandas
     - packaging
@@ -30,7 +30,7 @@ requirements:
     - python
     - pip
     - click
-    - h5py
+    - h5py>=3.1.0
     - {{ pin_compatible('numpy') }}
     - pandas
     - packaging
