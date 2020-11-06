@@ -884,21 +884,25 @@ class ProjectPoints:
         with res_cls(res_file, **res_kwargs) as f:
             gids = f.lat_lon_gid(lat_lons)  # pylint: disable=no-member
 
-        if len(gids) != len(np.unique(gids)):
-            uniques, pos, counts = np.unique(gids, return_counts=True,
-                                             return_inverse=True)
-            duplicates = {}
-            for idx in np.where(counts > 1)[0]:
-                duplicate_lat_lons = lat_lons[np.where(pos == idx)[0]]
-                duplicates[uniques[idx]] = duplicate_lat_lons
+        if isinstance(gids, int):
+            gids = [gids]
+        else:
+            if len(gids) != len(np.unique(gids)):
+                uniques, pos, counts = np.unique(gids, return_counts=True,
+                                                 return_inverse=True)
+                duplicates = {}
+                for idx in np.where(counts > 1)[0]:
+                    duplicate_lat_lons = lat_lons[np.where(pos == idx)[0]]
+                    duplicates[uniques[idx]] = duplicate_lat_lons
 
-            msg = ('reV Cannot currently handle duplicate Resource gids! The '
-                   'given latitude and longitudes map to the same gids:\n{}'
-                   .format(duplicates))
-            logger.error(msg)
-            raise RuntimeError(msg)
+                msg = ('reV Cannot currently handle duplicate Resource gids! '
+                       'The given latitude and longitudes map to the same '
+                       'gids:\n{}'.format(duplicates))
+                logger.error(msg)
+                raise RuntimeError(msg)
 
-        gids = gids.tolist()
+            gids = gids.tolist()
+
         logger.debug('- Resource gids:\n{}'.format(gids))
 
         pp = cls(gids, sam_config, tech=tech, res_file=res_file,
