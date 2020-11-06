@@ -6,6 +6,7 @@ Created on Sep 8, 2020
 
 @author: gbuster
 """
+import json
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import os
@@ -142,6 +143,16 @@ def test_batch_csv_setup():
     job_table = pd.read_csv(os.path.join(BATCH_DIR_1, 'batch_jobs.csv'),
                             index_col=0)
     assert_frame_equal(config_table, job_table)
+
+    # test that the dict was input properly
+    fp_agg = os.path.join(BATCH_DIR_1, 'blanket_cf0_sd0/',
+                          'config_aggregation.json')
+    with open(fp_agg, 'r') as f:
+        config_agg = json.load(f)
+    arg = config_agg['data_layers']['big_brown_bat']
+    assert isinstance(arg, dict)
+    assert arg['dset'] == 'big_brown_bat'
+    assert arg['method'] == 'sum'
 
     BatchJob.run(FP_CONFIG_1, delete=True)
     count_2 = len(os.listdir(BATCH_DIR_1))

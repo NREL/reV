@@ -296,14 +296,40 @@ class BatchJob:
         return sub_dirs
 
     @staticmethod
+    def _clean_arg(arg):
+        """Perform any cleaning steps required before writing an arg to a json
+
+        Cleaning steps:
+            1. Convert stringified dictionary to python dictionary object
+
+        Parameters
+        ----------
+        arg : str | int | float | dict
+            Value to be written to a batch job json file
+
+        Returns
+        -------
+        arg : str | int | float | dict
+            Cleaned value ready to be written to a batch job json file.
+        """
+
+        if isinstance(arg, str):
+            if '{' in arg and '}' in arg:
+                arg = json.loads(arg.replace("'", '"'))
+
+        return arg
+
+    @staticmethod
     def _mod_dict(inp, arg_mods):
         """Recursively modify key/value pairs in a dictionary.
 
         Parameters
         ----------
         inp : dict | list | str | int | float
-            Input arg to modify. Should be a dict first, the recusive call
-            can input nested values as dict/list/str etc...
+            Input to modify such as a loaded json reV config to modify with
+            batch. Can also be nested data from a recursive call. Should be a
+            dict first, the recusive call can input nested values as
+            dict/list/str etc...
         arg_mods : dict
             Key/value pairs to insert in the inp.
 
@@ -318,7 +344,7 @@ class BatchJob:
         if isinstance(inp, dict):
             for k, v in inp.items():
                 if k in arg_mods:
-                    out[k] = arg_mods[k]
+                    out[k] = BatchJob._clean_arg(arg_mods[k])
                 elif isinstance(v, (list, dict)):
                     out[k] = BatchJob._mod_dict(v, arg_mods)
 

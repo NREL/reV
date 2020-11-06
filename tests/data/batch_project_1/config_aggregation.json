@@ -5,10 +5,7 @@
       "dset": "2016_30m_cdls_rev90m",
       "method": "category"
     },
-    "big_brown_bat": {
-      "dset": "big_brown_bat",
-      "method": "sum"
-    },
+    "big_brown_bat": "placeholder",
     "braz_freetailed_bat": {
       "dset": "braz_freetailed_bat",
       "method": "sum"
