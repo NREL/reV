@@ -789,7 +789,7 @@ class ExclusionMask:
                     else:
                         mask = np.minimum(mask, layer_mask)
 
-            mask = self._force_include(mask, force_include)
+            mask = self._force_include(mask, force_include, ds_slice)
 
             if self._min_area is not None:
                 mask = self._area_filter(mask, min_area=self._min_area,
