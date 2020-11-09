@@ -19,7 +19,8 @@ class LayerMask:
     """
     def __init__(self, layer, inclusion_range=(None, None),
                  exclude_values=None, include_values=None,
-                 inclusion_weights=None, use_as_weights=False, weight=1.0,
+                 inclusion_weights=None, force_include_values=None,
+                 use_as_weights=False, weight=1.0,
                  exclude_nodata=False, nodata_value=None):
         """
         Parameters
@@ -36,6 +37,8 @@ class LayerMask:
             Note: Only supply inclusions OR exclusions
         inclusions_weights : dict
             Include given values with given weights
+        force_include_values : list
+            Force the inclusion of the given values
         use_as_weights : bool
             Use layer as final inclusion weights
         weight : float
@@ -50,8 +53,14 @@ class LayerMask:
         self._layer = layer
         self._inclusion_range = inclusion_range
         self._exclude_values = exclude_values
-        self._include_values = include_values
         self._inclusion_weights = inclusion_weights
+        if force_include_values is not None:
+            self._include_values = force_include_values
+            self._force_include = True
+        else:
+            self._include_values = include_values
+            self._force_include = False
+
         self._as_weights = use_as_weights
         self._exclude_nodata = exclude_nodata
         self.nodata_value = nodata_value
@@ -147,6 +156,17 @@ class LayerMask:
         _inclusion_weights : dict
         """
         return self._inclusion_weights
+
+    @property
+    def force_include(self):
+        """
+        Flag to force include mask
+
+        Returns
+        -------
+        _force_include : bool
+        """
+        return self._force_include
 
     @property
     def mask_type(self):
@@ -306,7 +326,7 @@ class LayerMask:
         mask : ndarray
             Boolean mask of which values to include (True is include)
         """
-        mask = self._value_mask(data, self._exclude_values, include=False)
+        mask = self._value_mask(data, self.exclude_values, include=False)
 
         return mask
 
@@ -324,7 +344,7 @@ class LayerMask:
         mask : ndarray
             Boolean mask of which values to include (True is include)
         """
-        mask = self._value_mask(data, self._include_values, include=True)
+        mask = self._value_mask(data, self.include_values, include=True)
 
         return mask
 
@@ -343,7 +363,7 @@ class LayerMask:
             Percentage of value to include
         """
         mask = None
-        for value, weight in self._inclusion_weights.items():
+        for value, weight in self.inclusion_weights.items():
             if isinstance(value, str):
                 value = float(value)
 
@@ -519,7 +539,7 @@ class ExclusionMask:
 
         Returns
         -------
-        mask : ndarray
+        ndarray
         """
         mask = self[...]
         return mask
@@ -632,6 +652,26 @@ class ExclusionMask:
 
         return mask
 
+    @staticmethod
+    def _force_include(mask, layers):
+        """
+        Apply force inclusion layers
+
+        Parameters
+        ----------
+        mask : ndarray | None
+            Mask to apply force inclusion layers to
+        layers : list
+            List of force inclusion layers
+        """
+        for layer_mask in layers:
+            if mask is None:
+                mask = layer_mask
+            else:
+                mask = np.maximum(mask, layer_mask)
+
+        return mask
+
     def _increase_mask_slice(self, ds_slice, n=1):
         """Increase the mask slice, e.g. from 64x64 to 192x192, to help the
         contiguous area filter be more accurate.
@@ -736,14 +776,19 @@ class ExclusionMask:
             ds_slice, sub_slice = self._increase_mask_slice(ds_slice, n=1)
 
         if self.layers:
+            force_include = []
             for layer in self.layers:
                 layer_slice = (layer.layer, ) + ds_slice
                 layer_mask = layer[self.excl_h5[layer_slice]]
-
-                if mask is None:
-                    mask = layer_mask
+                if layer.force_include:
+                    force_include.append(layer_mask)
                 else:
-                    mask = np.minimum(mask, layer_mask)
+                    if mask is None:
+                        mask = layer_mask
+                    else:
+                        mask = np.minimum(mask, layer_mask)
+
+            mask = self._force_include(mask, force_include)
 
             if self._min_area is not None:
                 mask = self._area_filter(mask, min_area=self._min_area,
