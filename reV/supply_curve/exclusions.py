@@ -652,26 +652,6 @@ class ExclusionMask:
 
         return mask
 
-    @staticmethod
-    def _force_include(mask, layers):
-        """
-        Apply force inclusion layers
-
-        Parameters
-        ----------
-        mask : ndarray | None
-            Mask to apply force inclusion layers to
-        layers : list
-            List of force inclusion layers
-        """
-        for layer_mask in layers:
-            if mask is None:
-                mask = layer_mask
-            else:
-                mask = np.maximum(mask, layer_mask)
-
-        return mask
-
     def _increase_mask_slice(self, ds_slice, n=1):
         """Increase the mask slice, e.g. from 64x64 to 192x192, to help the
         contiguous area filter be more accurate.
@@ -750,6 +730,27 @@ class ExclusionMask:
 
         return mask
 
+    def _force_include(self, mask, layers, ds_slice):
+        """
+        Apply force inclusion layers
+
+        Parameters
+        ----------
+        mask : ndarray | None
+            Mask to apply force inclusion layers to
+        layers : list
+            List of force inclusion layers
+        """
+        for layer in layers:
+            layer_slice = (layer.layer, ) + ds_slice
+            layer_mask = layer[self.excl_h5[layer_slice]]
+            if mask is None:
+                mask = layer_mask
+            else:
+                mask = np.maximum(mask, layer_mask)
+
+        return mask
+
     def _generate_mask(self, *ds_slice):
         """
         Generate multiplicative inclusion mask from exclusion layers.
@@ -778,11 +779,11 @@ class ExclusionMask:
         if self.layers:
             force_include = []
             for layer in self.layers:
-                layer_slice = (layer.layer, ) + ds_slice
-                layer_mask = layer[self.excl_h5[layer_slice]]
                 if layer.force_include:
-                    force_include.append(layer_mask)
+                    force_include.append(layer)
                 else:
+                    layer_slice = (layer.layer, ) + ds_slice
+                    layer_mask = layer[self.excl_h5[layer_slice]]
                     if mask is None:
                         mask = layer_mask
                     else:
