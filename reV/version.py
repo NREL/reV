@@ -2,4 +2,4 @@
 reV Version number
 """
 
-__version__ = "0.4.30"
+__version__ = "0.4.31"

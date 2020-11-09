@@ -16,7 +16,7 @@ requirements:
     - pip
     - setuptools
     - click
-    - h5py
+    - h5py>=3.1.0
     - numpy>=1.16
     - pandas
     - packaging
@@ -24,13 +24,13 @@ requirements:
     - plotly
     - psutil
     - scipy
-    - NREL-rex>=0.2.27
+    - NREL-rex>=0.2.287
     - NREL-PySAM>=2.1.4
   run:
     - python
     - pip
     - click
-    - h5py
+    - h5py>=3.1.0
     - {{ pin_compatible('numpy') }}
     - pandas
     - packaging
@@ -38,7 +38,7 @@ requirements:
     - plotly
     - psutil
     - scipy
-    - NREL-rex>=0.2.27
+    - NREL-rex>=0.2.28
     - NREL-PySAM>=2.1.4
 
 about:
