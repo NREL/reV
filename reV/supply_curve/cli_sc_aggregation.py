@@ -170,8 +170,8 @@ def from_config(ctx, config_file, verbose):
                     'LayerMask arguments {layer: {kwarg: value}} where layer '
                     'is a dataset in excl_fpath and kwarg can be '
                     '"inclusion_range", "exclude_values", "include_values", '
-                    '"inclusion_weights", "use_as_weights", "exclude_nodata", '
-                    'and/or "weight".'))
+                    '"inclusion_weights", "force_inclusion_values", '
+                    '"use_as_weights", "exclude_nodata", and/or "weight".'))
 @click.option('--check_excl_layers', '-cl', is_flag=True,
               help=('run a pre-flight check on each exclusion layer to '
                     'ensure they contain un-excluded values'))

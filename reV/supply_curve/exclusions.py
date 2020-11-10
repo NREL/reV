@@ -740,6 +740,10 @@ class ExclusionMask:
             Mask to apply force inclusion layers to
         layers : list
             List of force inclusion layers
+        ds_slice : int | slice | list | ndarray
+            What to extract from ds, each arg is for a sequential axis.
+            For example, (slice(0, 64), slice(0, 64)) will extract a 64x64
+            exclusions mask.
         """
         for layer in layers:
             layer_slice = (layer.layer, ) + ds_slice
