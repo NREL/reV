@@ -10,7 +10,7 @@ import pprint
 from warnings import warn
 
 from reV.config.project_points import PointsControl
-from reV.generation.generation import Gen
+from reV.generation.base import BaseGen
 from reV.handlers.outputs import Outputs
 from reV.SAM.econ import LCOE as SAM_LCOE
 from reV.SAM.econ import SingleOwner
@@ -24,8 +24,8 @@ from rex.utilities.utilities import check_res_file
 logger = logging.getLogger(__name__)
 
 
-class Econ(Gen):
-    """Base econ class"""
+class Econ(BaseGen):
+    """reV econ analysis class to run SAM simulations"""
 
     # Mapping of reV econ output strings to SAM econ modules
     OPTIONS = {'lcoe_fcr': SAM_LCOE,
@@ -83,7 +83,7 @@ class Econ(Gen):
                               'type': 'scalar'},
                  }
 
-    def __init__(self, points_control, cf_file, cf_year, site_data=None,
+    def __init__(self, points_control, cf_file, year, site_data=None,
                  output_request=('lcoe_fcr',), fout=None, dirout='./econ_out',
                  append=False, mem_util_lim=0.4):
         """Initialize an econ instance.
@@ -94,15 +94,15 @@ class Econ(Gen):
             Project points control instance for site and SAM config spec.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str | None
+        year : int | str | None
             reV generation year to calculate econ for. Looks for cf_mean_{year}
             or cf_profile_{year}. None will default to a non-year-specific cf
             dataset (cf_mean, cf_profile).
         site_data : str | pd.DataFrame | None
-            Site-specific data for econ calculation. Str points to csv,
-            DataFrame is pre-extracted data. Rows match sites, columns are
-            variables. Input as None if the only site data required is present
-            in the cf_file.
+            Site-specific input data for SAM calculation. String should be a
+            filepath that points to a csv, DataFrame is pre-extracted data.
+            Rows match sites, columns are input keys. Need a "gid" column.
+            Input as None if no site-specific data.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
         fout : str | None
@@ -114,38 +114,14 @@ class Econ(Gen):
             Flag to append econ datasets to source cf_file. This has priority
             over the fout and dirout inputs.
         """
-        self._points_control = points_control
+
+        super().__init__(points_control, output_request, site_data=site_data,
+                         fout=fout, dirout=dirout, mem_util_lim=mem_util_lim)
+
         self._cf_file = cf_file
-        self._year = cf_year
-        self._site_limit = None
-        self._site_mem = None
-        self._fout = fout
-        self._dirout = dirout
-        self._fpath = None
-        self._time_index = None
-        self._meta = None
-        self._fun = None
-        self._sam_module = None
-        self._sam_obj_default = None
-        self.mem_util_lim = mem_util_lim
-
-        self._site_data = self._parse_site_data(site_data)
-        self._output_request = self._parse_output_request(output_request)
-
-        self._run_attrs = {'points_control': str(points_control),
-                           'cf_file': cf_file,
-                           'site_data': str(site_data),
-                           'output_request': output_request,
-                           'fout': str(fout),
-                           'dirout': str(dirout),
-                           'mem_util_lim': mem_util_lim,
-                           'sam_module': self._sam_module.MODULE}
-
-        # pre-initialize output arrays to store results when available.
-        self._out = {}
-        self._finished_sites = []
-        self._out_n_sites = 0
-        self._out_chunk = ()
+        self._year = year
+        self._run_attrs['cf_file'] = cf_file
+        self._run_attrs['sam_module'] = self._sam_module.MODULE
 
         # initialize output file or append econ data to gen file
         if append:
@@ -167,29 +143,6 @@ class Econ(Gen):
             reV generation capacity factor output file with path.
         """
         return self._cf_file
-
-    @property
-    def cf_year(self):
-        """Get the analysis year.
-
-        Returns
-        -------
-        cf_year : int | str
-            reV generation year to analyze.
-        """
-        return self._year
-
-    @property
-    def site_data(self):
-        """Get the site-specific dataframe.
-
-        Returns
-        -------
-        _site_data : pd.DataFrame
-            Site-specific data for econ calculation. Rows match sites,
-            columns are variables.
-        """
-        return self._site_data
 
     @property
     def meta(self):
@@ -268,8 +221,8 @@ class Econ(Gen):
 
         return pc
 
-    @staticmethod
-    def get_pc(points, points_range, sam_files, cf_file,
+    @classmethod
+    def get_pc(cls, points, points_range, sam_files, cf_file,
                sites_per_worker=None, append=False):
         """
         Get a PointsControl instance.
@@ -303,13 +256,13 @@ class Econ(Gen):
         pc : reV.config.project_points.PointsControl
             PointsControl object instance.
         """
-        pc = Gen.get_pc(points, points_range, sam_files, 'econ',
-                        sites_per_worker=sites_per_worker,
-                        res_file=cf_file)
+        pc = super().get_pc(points, points_range, sam_files, 'econ',
+                            sites_per_worker=sites_per_worker,
+                            res_file=cf_file)
 
         if append:
-            pc = Econ._econ_append_pc(pc.project_points, cf_file,
-                                      sites_per_worker=sites_per_worker)
+            pc = cls._econ_append_pc(pc.project_points, cf_file,
+                                     sites_per_worker=sites_per_worker)
 
         return pc
 
@@ -420,68 +373,6 @@ class Econ(Gen):
 
         return list(set(output_request))
 
-    def _parse_site_data(self, inp):
-        """Parse site-specific data from input arg
-
-        Parameters
-        ----------
-        inp : str | pd.DataFrame | None
-            Site data in .csv or pre-extracted dataframe format. None signifies
-            that there is no extra site-specific data and that everything will
-            be taken from the cf_file (generation outputs).
-
-        Returns
-        -------
-        site_data : pd.DataFrame
-            Site-specific data for econ calculation. Rows correspond to sites,
-            columns are variables.
-        """
-
-        if inp is None or inp is False:
-            # no input, just initialize dataframe with site gids as index
-            site_data = pd.DataFrame(index=self.project_points.sites)
-            site_data.index.name = 'gid'
-        else:
-            # explicit input, initialize df
-            if isinstance(inp, str):
-                if inp.endswith('.csv'):
-                    site_data = pd.read_csv(inp)
-            elif isinstance(inp, pd.DataFrame):
-                site_data = inp
-            else:
-                # site data was not able to be set. Raise error.
-                raise Exception('Site data input must be .csv or '
-                                'dataframe, but received: {}'.format(inp))
-
-            if 'gid' not in site_data and site_data.index.name != 'gid':
-                # require gid as column label or index
-                raise KeyError('Site data input must have "gid" column '
-                               'to match reV site gid.')
-
-            if site_data.index.name != 'gid':
-                # make gid the dataframe index if not already
-                site_data = site_data.set_index('gid', drop=True)
-
-        if 'offshore' in site_data:
-            if site_data['offshore'].sum() > 1:
-                w = ('Found offshore sites in econ site data input. '
-                     'This functionality has been deprecated. '
-                     'Please run the reV offshore module to '
-                     'calculate offshore wind lcoe.')
-                warn(w, OffshoreWindInputWarning)
-                logger.warning(w)
-
-        return site_data
-
-    def add_site_data_to_pp(self):
-        """Add the site df (site-specific inputs) to project points dataframe.
-
-        This ensures that only the relevant site's data will be passed through
-        to parallel workers when points_control is iterated and split.
-        """
-        self.project_points.join_df(self.site_data,
-                                    key=self.site_data.index.name)
-
     def _get_data_shape(self, dset, n_sites):
         """Get the output array shape based on OUT_ATTRS or PySAM.Outputs.
 
@@ -519,7 +410,7 @@ class Econ(Gen):
 
     @classmethod
     def reV_run(cls, points, sam_files, cf_file,
-                cf_year=None, site_data=None, output_request=('lcoe_fcr',),
+                year=None, site_data=None, output_request=('lcoe_fcr',),
                 max_workers=1, sites_per_worker=100,
                 pool_size=(os.cpu_count() * 2),
                 timeout=1800, points_range=None, fout=None,
@@ -539,15 +430,15 @@ class Econ(Gen):
             to the sorted list of unique configs requested by points csv.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str | None
+        year : int | str | None
             reV generation year to calculate econ for. Looks for cf_mean_{year}
             or cf_profile_{year}. None will default to a non-year-specific cf
             dataset (cf_mean, cf_profile).
         site_data : str | pd.DataFrame | None
-            Site-specific data for econ calculation. Str points to csv,
-            DataFrame is pre-extracted data. Rows match sites, columns are
-            variables. Input as None if the only site data required is present
-            in the cf_file.
+            Site-specific input data for SAM calculation. String should be a
+            filepath that points to a csv, DataFrame is pre-extracted data.
+            Rows match sites, columns are input keys. Need a "gid" column.
+            Input as None if no site-specific data.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
         max_workers : int
@@ -583,8 +474,8 @@ class Econ(Gen):
         pc = cls.get_pc(points, points_range, sam_files, cf_file,
                         sites_per_worker=sites_per_worker, append=append)
 
-        # make a Gen class instance to operate with
-        econ = cls(pc, cf_file, cf_year=cf_year, site_data=site_data,
+        # make a class instance to operate with
+        econ = cls(pc, cf_file, year=year, site_data=site_data,
                    output_request=output_request, fout=fout, dirout=dirout,
                    append=append)
 
@@ -598,10 +489,7 @@ class Econ(Gen):
         # make a kwarg dict
         kwargs = {'output_request': econ.output_request,
                   'cf_file': econ.cf_file,
-                  'cf_year': econ.cf_year}
-
-        # add site_df to project points dataframe
-        econ.add_site_data_to_pp()
+                  'year': econ.year}
 
         logger.info('Running econ with smart data flushing '
                     'for: {}'.format(pc))

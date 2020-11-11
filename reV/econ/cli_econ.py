@@ -137,7 +137,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
 
     # set the year-specific variables
     ctx.obj['CF_FILE'] = cf_file
-    ctx.obj['CF_YEAR'] = year
+    ctx.obj['YEAR'] = year
 
     # check to make sure that the year matches the resource file
     if str(year) not in cf_file:
@@ -189,7 +189,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
               help='SAM config files (required) (str, dict, or list).')
 @click.option('--cf_file', '-cf', default=None, type=click.Path(exists=True),
               help='Single generation results file (str).')
-@click.option('--cf_year', '-cfy', default=None, type=INT,
+@click.option('--year', '-y', default=None, type=INT,
               help='Year of generation results to analyze (if multiple years '
               'in cf_file). Default is None (use the only cf_mean dataset in '
               'cf_file).')
@@ -217,7 +217,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
-def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
+def direct(ctx, sam_files, cf_file, year, points, site_data,
            sites_per_worker, fout, dirout, logdir, output_request,
            append, verbose):
     """Run reV gen directly w/o a config file."""
@@ -225,7 +225,7 @@ def direct(ctx, sam_files, cf_file, cf_year, points, site_data,
     ctx.obj['POINTS'] = points
     ctx.obj['SAM_FILES'] = sam_files
     ctx.obj['CF_FILE'] = cf_file
-    ctx.obj['CF_YEAR'] = cf_year
+    ctx.obj['YEAR'] = year
     ctx.obj['SITE_DATA'] = site_data
     ctx.obj['SITES_PER_WORKER'] = sites_per_worker
     ctx.obj['FOUT'] = fout
@@ -255,7 +255,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     points = ctx.obj['POINTS']
     sam_files = ctx.obj['SAM_FILES']
     cf_file = ctx.obj['CF_FILE']
-    cf_year = ctx.obj['CF_YEAR']
+    year = ctx.obj['YEAR']
     site_data = ctx.obj['SITE_DATA']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     fout = ctx.obj['FOUT']
@@ -288,7 +288,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     Econ.reV_run(points=points,
                  sam_files=sam_files,
                  cf_file=cf_file,
-                 cf_year=cf_year,
+                 year=year,
                  site_data=site_data,
                  output_request=output_request,
                  max_workers=max_workers,
@@ -345,7 +345,7 @@ def get_node_pc(points, sam_files, nodes):
     return pc
 
 
-def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
+def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
                  points=slice(0, 100), points_range=None,
                  sites_per_worker=None, max_workers=None, timeout=1800,
                  fout='reV.h5', dirout='./out/econ_out',
@@ -364,8 +364,8 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         of unique configs requested by points csv.
     cf_file : str
         reV generation results file name + path.
-    cf_year : int | str
-        reV generation year to calculate econ for. cf_year='my' will look
+    year : int | str
+        reV generation year to calculate econ for. year='my' will look
         for the multi-year mean generation results.
     site_data : str | None
         Site-specific data for econ calculation.
@@ -410,7 +410,7 @@ def get_node_cmd(name, sam_files, cf_file, cf_year=None, site_data=None,
         '-p {}'.format(SLURM.s(points)),
         '-sf {}'.format(SLURM.s(sam_files)),
         '-cf {}'.format(SLURM.s(cf_file)),
-        '-cfy {}'.format(SLURM.s(cf_year)),
+        '-y {}'.format(SLURM.s(year)),
         '-spw {}'.format(SLURM.s(sites_per_worker)),
         '-fo {}'.format(SLURM.s(fout)),
         '-do {}'.format(SLURM.s(dirout)),
@@ -471,7 +471,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
     points = ctx.obj['POINTS']
     sam_files = ctx.obj['SAM_FILES']
     cf_file = ctx.obj['CF_FILE']
-    cf_year = ctx.obj['CF_YEAR']
+    year = ctx.obj['YEAR']
     site_data = ctx.obj['SITE_DATA']
     sites_per_worker = ctx.obj['SITES_PER_WORKER']
     max_workers = ctx.obj['MAX_WORKERS']
@@ -504,7 +504,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
         node_name = node_name.replace('gen', 'econ')
 
         points_range = split.split_range if split is not None else None
-        cmd = get_node_cmd(node_name, sam_files, cf_file, cf_year=cf_year,
+        cmd = get_node_cmd(node_name, sam_files, cf_file, year=year,
                            site_data=site_data, points=points,
                            points_range=points_range,
                            sites_per_worker=sites_per_worker,
