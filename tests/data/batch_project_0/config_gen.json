@@ -20,7 +20,7 @@
     "cf_mean"
   ],
   "project_points": "placeholder",
-  "resource_file": "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5",
+  "resource_file": "placeholder",
   "sam_files": {
     "turbine": "./sam_configs/turbine.json"
   },
