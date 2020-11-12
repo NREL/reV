@@ -376,7 +376,7 @@ def test_gen_input_mods():
 def test_gen_input_pass_through():
     """Test the ability for reV gen to pass through inputs from the sam config.
     """
-    output_request = ('cf_mean', 'gcr', 'azimuth', 'tilt')
+    output_request = ('cf_mean', 'gcr', 'azimuth')
     year = 2012
     rev2_points = slice(0, 2)
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
