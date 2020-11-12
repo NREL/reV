@@ -176,7 +176,7 @@ class Econ(BaseGen):
     @property
     def time_index(self):
         """Get the generation resource time index data."""
-        if self._time_index is None:
+        if self._time_index is None and self.cf_file is not None:
             with Outputs(self.cf_file) as cfh:
                 if 'time_index' in cfh.datasets:
                     self._time_index = cfh.time_index

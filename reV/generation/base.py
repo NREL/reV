@@ -315,7 +315,7 @@ class BaseGen(ABC):
             Year of the time-series datetime index.
         """
 
-        if self._year is None:
+        if self._year is None and self.time_index is not None:
             self._year = int(self.time_index.year[0])
 
         return self._year

@@ -198,7 +198,7 @@ def test_rev_run_gen_econ(points=slice(0, 10), year=2012, max_workers=1):
                  'project_return_aftertax_npv', 'total_installed_cost',
                  'turbine_cost', 'sales_tax_cost', 'bos_cost')
     e = Econ.reV_run(points=points, sam_files=sam_files, cf_file=cf_file,
-                     cf_year=year, site_data=None, output_request=econ_outs,
+                     year=year, site_data=None, output_request=econ_outs,
                      max_workers=max_workers, sites_per_worker=3, fout=None)
 
     for k in econ_outs:
@@ -223,7 +223,7 @@ def test_rev_run_bos(points=slice(0, 5), max_workers=1):
     econ_outs = ('total_installed_cost', 'turbine_cost', 'sales_tax_cost',
                  'bos_cost')
     e = Econ.reV_run(points=points, sam_files=sam_files, cf_file=None,
-                     cf_year=None, site_data=site_data,
+                     year=None, site_data=site_data,
                      output_request=econ_outs,
                      max_workers=max_workers, sites_per_worker=3, fout=None)
 
