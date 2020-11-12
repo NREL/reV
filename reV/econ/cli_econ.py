@@ -197,7 +197,10 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
               help=('reV project points to analyze (slice, list, or file '
                     'string). Default is slice(0, 100)'))
 @click.option('--site_data', '-sd', default=None, type=click.Path(exists=True),
-              help='Site-specific data file for econ calculation.')
+              help='Site-specific data file for econ calculation. Input '
+              'should be a filepath that points to a csv. Rows match sites, '
+              'columns are input keys. Needs a "gid" column. Input as None '
+              'if no site-specific data.')
 @click.option('--sites_per_worker', '-spw', default=None, type=INT,
               help=('Number of sites to run in series on a single worker. '
                     'Default is the resource column chunk size.'))

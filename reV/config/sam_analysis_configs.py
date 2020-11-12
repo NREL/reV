@@ -39,6 +39,7 @@ class SAMAnalysisConfig(AnalysisConfig):
         self._pc = None
         self._default_timeout = 1800
         self._output_request = None
+        self._site_data = None
 
     @property
     def technology(self):
@@ -108,6 +109,18 @@ class SAMAnalysisConfig(AnalysisConfig):
             self._output_request = SAMOutputRequest(self._output_request)
 
         return self._output_request
+
+    @property
+    def site_data(self):
+        """Get the site-specific SAM inputs data file.
+
+        Returns
+        -------
+        site_data : str | NoneType
+            Target path for site-specific SAM inputs data file.
+        """
+        self._site_data = self.get('site_data', self._site_data)
+        return self._site_data
 
     def parse_sam_config(self):
         """Get the SAM configuration object.
@@ -245,7 +258,6 @@ class EconConfig(SAMAnalysisConfig):
         """
         super().__init__(config)
         self._cf_files = None
-        self._site_data = None
 
     @property
     def cf_file(self):
@@ -257,18 +269,6 @@ class EconConfig(SAMAnalysisConfig):
         str
         """
         return self['cf_file']
-
-    @property
-    def site_data(self):
-        """Get the site-specific data file.
-
-        Returns
-        -------
-        site_data : str | NoneType
-            Target path for site-specific data file.
-        """
-        self._site_data = self.get('site_data', self._site_data)
-        return self._site_data
 
     @property
     def dirout(self):
