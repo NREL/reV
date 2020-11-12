@@ -78,13 +78,14 @@ def test_PV_lat_tilt(res, site_index):
             # iterate through requested sites.
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                sim = Pvwattsv5(resource=res_df, meta=meta, parameters=inputs,
+                sim = Pvwattsv5(resource=res_df, meta=meta,
+                                sam_sys_inputs=inputs,
                                 output_request=('cf_mean',))
             break
         else:
             pass
 
-    assert sim.parameters['tilt'] == meta['latitude']
+    assert sim.sam_sys_inputs['tilt'] == meta['latitude']
 
 
 @pytest.mark.parametrize('dt', ('1h', '30min', '5min'))
@@ -103,11 +104,11 @@ def test_pysam_version_checker_pv():
     pv_config = {'gcr': 0.4, 'system_capacity': 1}
 
     with pytest.warns(None) as record:
-        parameters = PySamVersionChecker.run('pvwattsv5', pv_config)
+        sam_sys_inputs = PySamVersionChecker.run('pvwattsv5', pv_config)
 
     assert not any(record)
-    assert 'gcr' in parameters
-    assert 'system_capacity' in parameters
+    assert 'gcr' in sam_sys_inputs
+    assert 'system_capacity' in sam_sys_inputs
 
 
 def test_pysam_version_checker_wind():
@@ -121,11 +122,11 @@ def test_pysam_version_checker_wind():
 
     if pysam_version > version.parse('2.1.0'):
         with pytest.warns(PySAMVersionWarning) as record:
-            parameters = PySamVersionChecker.run('windpower', wind_config)
+            sam_sys_inputs = PySamVersionChecker.run('windpower', wind_config)
 
         assert 'old SAM v1 keys' in str(record[0].message)
-        assert 'turb_generic_loss' in parameters
-        assert 'system_capacity' in parameters
+        assert 'turb_generic_loss' in sam_sys_inputs
+        assert 'system_capacity' in sam_sys_inputs
         assert 'wind_farm_losses_percent'
 
 

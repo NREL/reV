@@ -460,6 +460,7 @@ class Sam:
             Flag to raise a warning for inputs that are not set because they
             are not found in the PySAM object.
         """
+
         for k, v in inputs.items():
             k, v = self._filter_inputs(k, v)
             if k in self.input_list:
@@ -644,9 +645,13 @@ class RevPySam(Sam):
             Optional set of site-specific SAM system inputs to complement the
             site-agnostic inputs.
         """
+
         if site_sys_inputs is not None:
             for k, v in site_sys_inputs.items():
-                if k in self.sam_sys_inputs and not np.isnan(v):
+                if isinstance(v, float):
+                    if ~np.isnan(v):
+                        self.sam_sys_inputs[k] = v
+                else:
                     self.sam_sys_inputs[k] = v
 
     @staticmethod

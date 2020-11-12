@@ -47,6 +47,7 @@ class Economic(RevPySam):
             self.output_request = (output_request,)
 
         super().__init__(meta=None, sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
                          output_request=output_request)
 
     @staticmethod
@@ -141,6 +142,7 @@ class Economic(RevPySam):
 
             # add aey to site-specific inputs
             site_df.loc[site, 'annual_energy'] = aey
+
         return site_df
 
     @staticmethod
