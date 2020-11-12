@@ -40,30 +40,14 @@ class Economic(RevPySam):
         """
 
         self._site = None
-        self.parameters = parameters
 
         if isinstance(output_request, (list, tuple)):
             self.output_request = output_request
         else:
             self.output_request = (output_request,)
 
-        self._parse_site_parameters(site_parameters)
-
         super().__init__(meta=None, parameters=parameters,
                          output_request=output_request)
-
-    def _parse_site_parameters(self, site_parameters):
-        """Parse site-specific parameters and add to parameter dict.
-
-        Parameters
-        ----------
-        site_parameters : dict
-            Optional set of site-specific parameters to complement the
-            site-agnostic 'parameters' input arg.
-        """
-        self._site_parameters = site_parameters
-        if self._site_parameters is not None:
-            self.parameters.update(self._site_parameters)
 
     @staticmethod
     def _parse_sys_cap(site, inputs, site_df):

@@ -401,9 +401,14 @@ class Gen(BaseGen):
             Output dictionary from the SAM reV_run function. Data is scaled
             within this function to the datatype specified in Gen.OUT_ATTRS.
         """
+
+        # Extract the site df from the project points df.
+        site_df = points_control.project_points.df
+        site_df = site_df.set_index('gid', drop=True)
+
         # run generation method for specified technology
         try:
-            out = Gen.OPTIONS[tech].reV_run(points_control, res_file,
+            out = Gen.OPTIONS[tech].reV_run(points_control, res_file, site_df,
                                             output_request=output_request)
         except Exception as e:
             out = {}

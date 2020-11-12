@@ -488,7 +488,7 @@ class RevPySam(Sam):
                       'windpower': WindResource,
                       }
 
-    def __init__(self, meta, parameters, output_request):
+    def __init__(self, meta, parameters, output_request, site_parameters=None):
         """Initialize a SAM object.
 
         Parameters
@@ -501,6 +501,9 @@ class RevPySam(Sam):
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
+        site_parameters : dict
+            Optional set of site-specific parameters to complement the
+            site-agnostic 'parameters' input arg.
         """
 
         super().__init__()
@@ -510,7 +513,10 @@ class RevPySam(Sam):
         self.time_interval = 1
         self.outputs = {}
         self.parameters = parameters
+        self.site_parameters = site_parameters
         self.output_request = output_request
+
+        self._parse_site_parameters(site_parameters)
 
     @property
     def meta(self):
@@ -628,6 +634,20 @@ class RevPySam(Sam):
                 time_interval += 1
 
         return int(time_interval)
+
+    def _parse_site_parameters(self, site_parameters):
+        """Parse site-specific parameters and add to parameter dict.
+
+        Parameters
+        ----------
+        site_parameters : dict
+            Optional set of site-specific parameters to complement the
+            site-agnostic 'parameters' input arg.
+        """
+        if site_parameters is not None:
+            for k, v in site_parameters.items():
+                if k in self.parameters and not np.isnan(v):
+                    self.parameters[k] = v
 
     @staticmethod
     def _is_arr_like(val):

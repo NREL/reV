@@ -299,15 +299,7 @@ class Econ(BaseGen):
 
         # Extract the site df from the project points df.
         site_df = pc.project_points.df
-
-        # check that there is a gid column
-        if 'gid' not in site_df:
-            warn('Econ input "site_df" (in project_points.df) does not have '
-                 'a label corresponding to site gid. This may cause an '
-                 'incorrect interpretation of site id.')
-        else:
-            # extract site df from project points df and set gid as index
-            site_df = site_df.set_index('gid', drop=True)
+        site_df = site_df.set_index('gid', drop=True)
 
         # SAM execute econ analysis based on output request
         try:

@@ -11,6 +11,7 @@ Created on Thu Nov 29 09:54:51 2018
 import os
 import h5py
 import pytest
+import pandas as pd
 import numpy as np
 
 from reV.utilities.exceptions import ExecutionError
@@ -375,7 +376,7 @@ def test_gen_input_mods():
 def test_gen_input_pass_through():
     """Test the ability for reV gen to pass through inputs from the sam config.
     """
-    output_request = ('cf_mean', 'gcr', 'azimuth')
+    output_request = ('cf_mean', 'gcr', 'azimuth', 'tilt')
     year = 2012
     rev2_points = slice(0, 2)
     res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
@@ -396,6 +397,33 @@ def test_gen_input_pass_through():
                           max_workers=1,
                           sites_per_worker=1, fout=None,
                           output_request=output_request)
+
+
+def test_gen_pv_site_data():
+    """Test site specific SAM input config via site_data arg"""
+    output_request = ('cf_mean', 'gcr', 'azimuth', 'losses')
+    year = 2012
+    rev2_points = slice(0, 5)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwatts_fixed_lat_tilt.json'
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    baseline = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                           sam_files=sam_files, res_file=res_file,
+                           max_workers=1, sites_per_worker=1, fout=None,
+                           output_request=output_request)
+
+    site_data = pd.DataFrame({'gid': np.arange(2),
+                              'losses': np.ones(2)})
+    test = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                       sam_files=sam_files, res_file=res_file,
+                       max_workers=1, sites_per_worker=1, fout=None,
+                       output_request=output_request, site_data=site_data)
+
+    assert all(test.out['cf_mean'][0:2] > baseline.out['cf_mean'][0:2])
+    assert np.allclose(test.out['cf_mean'][2:], baseline.out['cf_mean'][2:])
+    assert np.allclose(test.out['losses'][0:2], np.ones(2))
+    assert np.allclose(test.out['losses'][2:], 14.07566 * np.ones(3))
 
 
 def execute_pytest(capture='all', flags='-rapP'):
