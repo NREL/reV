@@ -24,17 +24,17 @@ class Economic(RevPySam):
     """Base class for SAM economic models."""
     MODULE = None
 
-    def __init__(self, parameters=None, site_parameters=None,
+    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
                  output_request='lcoe_fcr'):
         """Initialize a SAM economic model object.
 
         Parameters
         ----------
-        parameters : dict | ParametersManager()
-            Site-agnostic SAM model input parameters.
-        site_parameters : dict
-            Optional set of site-specific parameters to complement the
-            site-agnostic 'parameters' input arg.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list | tuple | str
             Requested SAM output(s) (e.g., 'ppa_price', 'lcoe_fcr').
         """
@@ -46,7 +46,7 @@ class Economic(RevPySam):
         else:
             self.output_request = (output_request,)
 
-        super().__init__(meta=None, parameters=parameters,
+        super().__init__(meta=None, sam_sys_inputs=sam_sys_inputs,
                          output_request=output_request)
 
     @staticmethod
@@ -304,7 +304,7 @@ class Economic(RevPySam):
             to site number/gid (via df.loc not df.iloc), column labels are the
             variable keys that will be passed forward as SAM parameters.
         inputs : dict
-            Dictionary of SAM input parameters.
+            Dictionary of SAM system input parameters.
         output_request : list | tuple | str
             Requested SAM output(s) (e.g., 'ppa_price', 'lcoe_fcr').
 
@@ -315,8 +315,8 @@ class Economic(RevPySam):
         """
 
         # Create SAM econ instance and calculate requested output.
-        sim = cls(parameters=inputs,
-                  site_parameters=dict(site_df.loc[site, :]),
+        sim = cls(sam_sys_inputs=inputs,
+                  site_sys_inputs=dict(site_df.loc[site, :]),
                   output_request=output_request)
         sim._site = site
 
@@ -334,10 +334,10 @@ class LCOE(Economic):
     MODULE = 'lcoefcr'
     PYSAM = PySamLCOE
 
-    def __init__(self, parameters=None, site_parameters=None,
+    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
                  output_request=('lcoe_fcr',)):
         """Initialize a SAM LCOE economic model object."""
-        super().__init__(parameters, site_parameters=site_parameters,
+        super().__init__(sam_sys_inputs, site_sys_inputs=site_sys_inputs,
                          output_request=output_request)
 
     @staticmethod
@@ -465,16 +465,16 @@ class SingleOwner(Economic):
     MODULE = 'singleowner'
     PYSAM = PySamSingleOwner
 
-    def __init__(self, parameters=None, site_parameters=None,
+    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
                  output_request=('ppa_price',)):
         """Initialize a SAM single owner economic model object.
         """
-        super().__init__(parameters, site_parameters=site_parameters,
+        super().__init__(sam_sys_inputs, site_sys_inputs=site_sys_inputs,
                          output_request=output_request)
 
         # run balance of system cost model if required
-        self.parameters, self.windbos_outputs = \
-            self._windbos(self.parameters)
+        self.sam_sys_inputs, self.windbos_outputs = \
+            self._windbos(self.sam_sys_inputs)
 
     @staticmethod
     def _windbos(inputs):
