@@ -111,13 +111,13 @@ class Generation(RevPySam, ABC):
         return res_mean, out_req_nomeans
 
     @staticmethod
-    def tz_check(parameters, meta):
+    def tz_check(sam_sys_inputs, meta):
         """Check timezone input and use json config tz if not in resource meta.
 
         Parameters
         ----------
-        parameters : dict
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
         meta : pd.DataFrame
             1D table with resource meta data.
 
@@ -132,10 +132,10 @@ class Generation(RevPySam, ABC):
 
         if meta is not None:
             if 'timezone' not in meta:
-                if 'tz' in parameters:
-                    meta['timezone'] = int(parameters['tz'])
-                elif 'timezone' in parameters:
-                    meta['timezone'] = int(parameters['timezone'])
+                if 'tz' in sam_sys_inputs:
+                    meta['timezone'] = int(sam_sys_inputs['tz'])
+                elif 'timezone' in sam_sys_inputs:
+                    meta['timezone'] = int(sam_sys_inputs['timezone'])
                 else:
                     msg = ('Need timezone input to run SAM gen. Not found in '
                            'resource meta or technology json input config.')
@@ -171,7 +171,7 @@ class Generation(RevPySam, ABC):
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return self.gen_profile() / self.parameters['system_capacity']
+        return self.gen_profile() / self.sam_sys_inputs['system_capacity']
 
     def annual_energy(self):
         """Get annual energy generation value in kWh from SAM.
@@ -252,8 +252,8 @@ class Generation(RevPySam, ABC):
         self.outputs_to_utc_arr()
 
         if lcoe_out_req is not None:
-            self.parameters['annual_energy'] = self.annual_energy()
-            lcoe = LCOE(self.parameters, output_request=(lcoe_out_req,))
+            self.sam_sys_inputs['annual_energy'] = self.annual_energy()
+            lcoe = LCOE(self.sam_sys_inputs, output_request=(lcoe_out_req,))
             lcoe.assign_inputs()
             lcoe.execute()
             lcoe.collect_outputs()
@@ -261,8 +261,8 @@ class Generation(RevPySam, ABC):
             self.outputs.update(lcoe.outputs)
 
         elif so_out_req is not None:
-            self.parameters['gen'] = self.gen_profile()
-            so = SingleOwner(self.parameters, output_request=(so_out_req,))
+            self.sam_sys_inputs['gen'] = self.gen_profile()
+            so = SingleOwner(self.sam_sys_inputs, output_request=(so_out_req,))
             so.assign_inputs()
             so.execute()
             so.collect_outputs()
@@ -270,8 +270,8 @@ class Generation(RevPySam, ABC):
             self.outputs.update(so.outputs)
 
     @classmethod
-    def reV_run(cls, points_control, res_file, output_request=('cf_mean',),
-                drop_leap=False):
+    def reV_run(cls, points_control, res_file, site_df,
+                output_request=('cf_mean',), drop_leap=False):
         """Execute SAM generation based on a reV points control instance.
 
         Parameters
@@ -281,6 +281,10 @@ class Generation(RevPySam, ABC):
             config info.
         res_file : str
             Resource file with full path.
+        site_df : pd.DataFrame
+            Dataframe of site-specific input variables. Row index corresponds
+            to site number/gid (via df.loc not df.iloc), column labels are the
+            variable keys that will be passed forward as SAM parameters.
         output_request : list | tuple
             Outputs to retrieve from SAM.
         drop_leap : bool
@@ -325,8 +329,9 @@ class Generation(RevPySam, ABC):
                                                           out_req_cleaned)
 
             # iterate through requested sites.
-            sim = cls(resource=res_df, meta=meta, parameters=inputs,
-                      output_request=out_req_cleaned)
+            sim = cls(resource=res_df, meta=meta, sam_sys_inputs=inputs,
+                      output_request=out_req_cleaned,
+                      site_sys_inputs=dict(site_df.loc[site, :]))
             sim._gen_exec()
 
             # collect outputs to dictout
@@ -345,8 +350,8 @@ class Solar(Generation, ABC):
     """Base Class for Solar generation from SAM
     """
 
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=False):
+    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
+                 site_sys_inputs=None, output_request=None, drop_leap=False):
         """Initialize a SAM solar object.
 
         Parameters
@@ -355,8 +360,11 @@ class Solar(Generation, ABC):
             2D table with resource data. Available columns must have solar_vars
         meta : pd.DataFrame
             1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
@@ -370,11 +378,12 @@ class Solar(Generation, ABC):
         if drop_leap:
             resource = self.drop_leap(resource)
 
-        parameters = self.set_latitude_tilt_az(parameters, meta)
-        meta = self.tz_check(parameters, meta)
+        sam_sys_inputs = self.set_latitude_tilt_az(sam_sys_inputs, meta)
+        meta = self.tz_check(sam_sys_inputs, meta)
 
         # don't pass resource to base class, set in set_nsrdb instead.
-        super().__init__(meta, parameters, output_request)
+        super().__init__(meta, sam_sys_inputs, output_request,
+                         site_sys_inputs=site_sys_inputs)
 
         # Set the site number using resource
         if isinstance(resource, pd.DataFrame):
@@ -385,51 +394,53 @@ class Solar(Generation, ABC):
         if resource is not None and meta is not None:
             self.set_nsrdb(resource)
 
-    def set_latitude_tilt_az(self, parameters, meta):
+    def set_latitude_tilt_az(self, sam_sys_inputs, meta):
         """Check if tilt is specified as latitude and set tilt=lat, az=180 or 0
 
         Parameters
         ----------
-        parameters : dict
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
         meta : pd.DataFrame
             1D table with resource meta data.
 
         Returns
         -------
-        parameters : dict
-            SAM model input parameters. If for a pv simulation the "tilt"
-            parameter was originally not present or set to 'lat' or 'latitude',
-            the tilt will be set to the absolute value of the latitude found
-            in meta and the azimuth will be 180 if lat>0, 0 if lat<0.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+            If for a pv simulation the "tilt" parameter was originally not
+            present or set to 'lat' or 'latitude', the tilt will be set to
+            the absolute value of the latitude found in meta and the azimuth
+            will be 180 if lat>0, 0 if lat<0.
         """
 
         set_tilt = False
         if 'pv' in self.MODULE:  # pylint: disable=unsupported-membership-test
-            if parameters is not None and meta is not None:
-                if 'tilt' not in parameters:
+            if sam_sys_inputs is not None and meta is not None:
+                if 'tilt' not in sam_sys_inputs:
                     warn('No tilt specified, setting at latitude.',
                          SAMInputWarning)
                     set_tilt = True
                 else:
-                    if (parameters['tilt'] == 'lat'
-                            or parameters['tilt'] == 'latitude'):
+                    if (sam_sys_inputs['tilt'] == 'lat'
+                            or sam_sys_inputs['tilt'] == 'latitude'):
                         set_tilt = True
 
         if set_tilt:
             # set tilt to abs(latitude)
-            parameters['tilt'] = np.abs(meta['latitude'])
+            sam_sys_inputs['tilt'] = np.abs(meta['latitude'])
             if meta['latitude'] > 0:
                 # above the equator, az = 180
-                parameters['azimuth'] = 180
+                sam_sys_inputs['azimuth'] = 180
             else:
                 # below the equator, az = 0
-                parameters['azimuth'] = 0
+                sam_sys_inputs['azimuth'] = 0
 
             logger.debug('Tilt specified at "latitude", setting tilt to: {}, '
                          'azimuth to: {}'
-                         .format(parameters['tilt'], parameters['azimuth']))
-        return parameters
+                         .format(sam_sys_inputs['tilt'],
+                                 sam_sys_inputs['azimuth']))
+        return sam_sys_inputs
 
     def set_nsrdb(self, resource):
         """Set NSRDB resource data arrays.
@@ -508,8 +519,8 @@ class Pvwatts(Solar, ABC):
     MODULE = 'pvwattsv7'
     PYSAM = PySamPV7
 
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
+                 site_sys_inputs=None, output_request=None):
         """Initialize a SAM solar PV object.
 
         Parameters
@@ -518,14 +529,19 @@ class Pvwatts(Solar, ABC):
             2D table with resource data. Available columns must have solar_vars
         meta : pd.DataFrame
             1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
         """
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
+        super().__init__(resource=resource, meta=meta,
+                         sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
                          output_request=output_request)
 
     def cf_mean(self):
@@ -553,7 +569,7 @@ class Pvwatts(Solar, ABC):
             Datatype is float32 and array length is 8760*time_interval.
             PV CF is calculated as AC power / DC nameplate.
         """
-        return self.gen_profile() / self.parameters['system_capacity']
+        return self.gen_profile() / self.sam_sys_inputs['system_capacity']
 
     def gen_profile(self):
         """Get AC inverter power generation profile (orig timezone) in kW.
@@ -664,11 +680,13 @@ class TcsMoltenSalt(Solar):
     MODULE = 'tcsmolten_salt'
     PYSAM = PySamCSP
 
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None):
+    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
+                 site_sys_inputs=None, output_request=None):
         """Initialize a SAM concentrated solar power (CSP) object.
         """
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
+        super().__init__(resource=resource, meta=meta,
+                         sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
                          output_request=output_request)
 
     def cf_profile(self):
@@ -681,7 +699,8 @@ class TcsMoltenSalt(Solar):
             1D numpy array of capacity factor profile.
             Datatype is float32 and array length is 8760*time_interval.
         """
-        return np.abs(self.gen_profile() / self.parameters['system_capacity'])
+        x = np.abs(self.gen_profile() / self.sam_sys_inputs['system_capacity'])
+        return x
 
     @property
     def default(self):
@@ -700,8 +719,8 @@ class TcsMoltenSalt(Solar):
 
 class SolarThermal(Solar, ABC):
     """ Base class for solar thermal """
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=False):
+    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
+                 site_sys_inputs=None, output_request=None, drop_leap=False):
         """Initialize a SAM solar thermal object
 
         Parameters
@@ -710,8 +729,11 @@ class SolarThermal(Solar, ABC):
             2D table with resource data. Available columns must have solar_vars
         meta : pd.DataFrame
             1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
@@ -724,7 +746,9 @@ class SolarThermal(Solar, ABC):
             2nd, etc.
         """
         self._drop_leap = drop_leap
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
+        super().__init__(resource=resource, meta=meta,
+                         sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
                          output_request=output_request, drop_leap=False)
 
     def set_nsrdb(self, resource):
@@ -833,8 +857,8 @@ class SolarWaterHeat(SolarThermal):
     MODULE = 'solarwaterheat'
     PYSAM = PySamSWH
 
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=False):
+    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
+                 site_sys_inputs=None, output_request=None, drop_leap=False):
         """Initialize a SAM solar water heater object.
 
         Parameters
@@ -843,8 +867,11 @@ class SolarWaterHeat(SolarThermal):
             2D table with resource data. Available columns must have solar_vars
         meta : pd.DataFrame
             1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
@@ -857,7 +884,9 @@ class SolarWaterHeat(SolarThermal):
             2nd, etc.
         """
         self._pysam_weather_tag = 'solar_resource_file'
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
+        super().__init__(resource=resource, meta=meta,
+                         sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
                          output_request=output_request, drop_leap=drop_leap)
 
     @property
@@ -881,8 +910,8 @@ class LinearDirectSteam(SolarThermal):
     MODULE = 'lineardirectsteam'
     PYSAM = PySamLDS
 
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=False):
+    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
+                 site_sys_inputs=None, output_request=None, drop_leap=False):
         """Initialize a SAM process heat linear Fresnel direct steam object.
 
         Parameters
@@ -891,8 +920,11 @@ class LinearDirectSteam(SolarThermal):
             2D table with resource data. Available columns must have solar_vars
         meta : pd.DataFrame
             1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
@@ -905,7 +937,9 @@ class LinearDirectSteam(SolarThermal):
             2nd, etc.
         """
         self._pysam_weather_tag = 'file_name'
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
+        super().__init__(resource=resource, meta=meta,
+                         sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
                          output_request=output_request, drop_leap=drop_leap)
 
     def cf_mean(self):
@@ -944,8 +978,8 @@ class TroughPhysicalHeat(SolarThermal):
     MODULE = 'troughphysicalheat'
     PYSAM = PySamTPPH
 
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=False):
+    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
+                 site_sys_inputs=None, output_request=None, drop_leap=False):
         """Initialize a SAM trough physical process heat object.
 
         Parameters
@@ -954,8 +988,11 @@ class TroughPhysicalHeat(SolarThermal):
             2D table with resource data. Available columns must have solar_vars
         meta : pd.DataFrame
             1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
@@ -968,7 +1005,9 @@ class TroughPhysicalHeat(SolarThermal):
             2nd, etc.
         """
         self._pysam_weather_tag = 'file_name'
-        super().__init__(resource=resource, meta=meta, parameters=parameters,
+        super().__init__(resource=resource, meta=meta,
+                         sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
                          output_request=output_request, drop_leap=drop_leap)
 
     def cf_mean(self):
@@ -1006,8 +1045,8 @@ class WindPower(Generation):
     MODULE = 'windpower'
     PYSAM = PySamWindPower
 
-    def __init__(self, resource=None, meta=None, parameters=None,
-                 output_request=None, drop_leap=False):
+    def __init__(self, resource=None, meta=None, sam_sys_inputs=None,
+                 site_sys_inputs=None, output_request=None, drop_leap=False):
         """Initialize a SAM wind object.
 
         Parameters
@@ -1016,8 +1055,11 @@ class WindPower(Generation):
             2D table with resource data. Available columns must have wind_vars
         meta : pd.DataFrame
             1D table with resource meta data.
-        parameters : dict
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
@@ -1031,10 +1073,11 @@ class WindPower(Generation):
         if drop_leap:
             resource = self.drop_leap(resource)
 
-        meta = self.tz_check(parameters, meta)
+        meta = self.tz_check(sam_sys_inputs, meta)
 
         # don't pass resource to base class, set in set_wtk instead.
-        super().__init__(meta, parameters, output_request)
+        super().__init__(meta, sam_sys_inputs, output_request,
+                         site_sys_inputs=site_sys_inputs)
 
         # Set the site number using resource
         if isinstance(resource, pd.DataFrame):
@@ -1063,7 +1106,7 @@ class WindPower(Generation):
         self.time_interval = self.get_time_interval(resource.index.values)
 
         data_dict['fields'] = [1, 2, 3, 4]
-        data_dict['heights'] = 4 * [self.parameters['wind_turbine_hub_ht']]
+        data_dict['heights'] = 4 * [self.sam_sys_inputs['wind_turbine_hub_ht']]
 
         if 'rh' in resource:
             # set relative humidity for icing.

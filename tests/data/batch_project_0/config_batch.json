@@ -3,8 +3,14 @@
   "sets": [
     {
       "args": {
+        "big_brown_bat": [
+          "{'dset': 'big_brown_bat', 'method': 'sum'}"
+        ],
         "project_points": [
           "./project_points.csv"
+        ],
+        "resource_file": [
+          "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5"
         ],
         "wind_turbine_hub_ht": [
           80,
@@ -342,6 +348,7 @@
       },
       "files": [
         "./sam_configs/turbine.json",
+        "./config_aggregation.json",
         "./config_collect.json",
         "./config_gen.json"
       ],
@@ -349,8 +356,14 @@
     },
     {
       "args": {
+        "big_brown_bat": [
+          "{'dset': 'big_brown_bat', 'method': 'sum'}"
+        ],
         "project_points": [
           "./project_points_test.csv"
+        ],
+        "resource_file": [
+          "/datasets/WIND/conus/v1.0.0/wtk_conus_{}.h5"
         ],
         "wind_turbine_hub_ht": [
           80,
@@ -360,6 +373,7 @@
       },
       "files": [
         "./sam_configs/turbine.json",
+        "./config_aggregation.json",
         "./config_collect.json",
         "./config_gen.json"
       ],

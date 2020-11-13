@@ -92,6 +92,8 @@ def from_config(ctx, config_file, verbose):
     logger.info('The following SAM configs are available to this run:\n{}'
                 .format(pprint.pformat(config.get('sam_files', None),
                                        indent=4)))
+    logger.info('The following is being used for site specific input data: '
+                '"{}"'.format(config.site_data))
     logger.debug('The full configuration input is as follows:\n{}'
                  .format(pprint.pformat(config, indent=4)))
 
@@ -102,6 +104,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
+    ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['TIMEOUT'] = config.timeout
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
@@ -256,6 +259,11 @@ def make_fout(name, year):
 @click.option('-or', '--output_request', type=STRLIST, default=['cf_mean'],
               help=('List of requested output variable names. '
                     'Default is ["cf_mean"].'))
+@click.option('--site_data', '-sd', default=None, type=click.Path(exists=True),
+              help='Site-specific data file for gen calculation. Input '
+              'should be a filepath that points to a csv. Rows match sites, '
+              'columns are input keys. Needs a "gid" column. Input as None '
+              'if no site-specific data.')
 @click.option('-mem', '--mem_util_lim', type=float, default=0.4,
               help='Fractional node memory utilization limit. Default is 0.4 '
               'to account for numpy memory spikes and memory bloat.')
@@ -268,8 +276,8 @@ def make_fout(name, year):
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
            lat_lon_coords, regions, region, region_col, sites_per_worker,
-           fout, dirout, logdir, output_request, mem_util_lim, curtailment,
-           verbose):
+           fout, dirout, logdir, output_request, site_data, mem_util_lim,
+           curtailment, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
@@ -280,6 +288,7 @@ def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
     ctx.obj['DIROUT'] = dirout
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
+    ctx.obj['SITE_DATA'] = site_data
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
 
@@ -378,6 +387,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    site_data = ctx.obj['SITE_DATA']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
     verbose = any([verbose, ctx.obj['VERBOSE']])
@@ -404,6 +414,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                 points=points,
                 sam_files=sam_files,
                 res_file=res_file,
+                site_data=site_data,
                 output_request=output_request,
                 curtailment=curtailment,
                 max_workers=max_workers,
@@ -519,8 +530,8 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  points_range=None, sites_per_worker=None, max_workers=None,
                  fout='reV.h5', dirout='./out/gen_out',
                  logdir='./out/log_gen', output_request=('cf_mean',),
-                 mem_util_lim=0.4, timeout=1800, curtailment=None,
-                 verbose=False):
+                 site_data=None, mem_util_lim=0.4, timeout=1800,
+                 curtailment=None, verbose=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -554,6 +565,10 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
         Target directory to save log files.
     output_request : list | tuple
         Output variables requested from SAM.
+    site_data : str | None
+        Site-specific input data for SAM calculation. String should be a
+        filepath that points to a csv, Rows match sites, columns are input
+        keys. Need a "gid" column.  Input as None if no site-specific data.
     mem_util_lim : float
         Memory utilization limit (fractional).
     timeout : int | float
@@ -586,6 +601,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-do {}'.format(SLURM.s(dirout)),
                   '-lo {}'.format(SLURM.s(logdir)),
                   '-or {}'.format(SLURM.s(output_request)),
+                  '-sd {}'.format(SLURM.s(site_data)),
                   '-mem {}'.format(SLURM.s(mem_util_lim))]
 
     # make some strings only if specified
@@ -647,6 +663,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    site_data = ctx.obj['SITE_DATA']
     max_workers = ctx.obj['MAX_WORKERS']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     timeout = ctx.obj['TIMEOUT']
@@ -675,6 +692,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                            max_workers=max_workers, fout=fout_node,
                            dirout=dirout, logdir=logdir,
                            output_request=output_request,
+                           site_data=site_data,
                            mem_util_lim=mem_util_lim, timeout=timeout,
                            curtailment=curtailment,
                            verbose=verbose)

@@ -35,8 +35,7 @@ def test_batch_job_setup():
     config = safe_json_load(FP_CONFIG_0)
 
     count_0 = len(os.listdir(BATCH_DIR_0))
-
-    assert count_0 == 7, 'Unknown starting files detected!'
+    assert count_0 == 8, 'Unknown starting files detected!'
 
     BatchJob.run(FP_CONFIG_0, dry_run=True)
 
@@ -77,9 +76,15 @@ def test_batch_job_setup():
     job_dir = os.path.join(BATCH_DIR_0, 'set2_wthh140/')
     config_gen = safe_json_load(os.path.join(job_dir, 'config_gen.json'))
     config_col = safe_json_load(os.path.join(job_dir, 'config_collect.json'))
+    config_agg = safe_json_load(
+        os.path.join(job_dir, 'config_aggregation.json'))
     turbine = safe_json_load(os.path.join(job_dir, 'sam_configs/turbine.json'))
     assert config_gen['project_points'] == args['project_points'][0]
+    assert config_gen['resource_file'] == args['resource_file'][0]
     assert config_col['project_points'] == args['project_points'][0]
+    assert isinstance(config_agg['data_layers']['big_brown_bat'], dict)
+    assert (config_agg['data_layers']['big_brown_bat']
+            == json.loads(args['big_brown_bat'][0].replace("'", '"')))
     assert turbine['wind_turbine_hub_ht'] == args['wind_turbine_hub_ht'][2]
     assert (turbine['wind_turbine_powercurve_powerout']
             == turbine_base['wind_turbine_powercurve_powerout'])
@@ -91,7 +96,7 @@ def test_batch_job_setup():
             == turbine_base['wind_turbine_rotor_diameter'])
 
     count_1 = len(os.listdir(BATCH_DIR_0))
-    assert count_1 == 17, 'Batch generated unexpected files or directories!'
+    assert count_1 == 18, 'Batch generated unexpected files or directories!'
 
     BatchJob.run(FP_CONFIG_0, delete=True)
     count_2 = len(os.listdir(BATCH_DIR_0))

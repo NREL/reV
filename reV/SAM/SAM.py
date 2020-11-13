@@ -460,13 +460,14 @@ class Sam:
             Flag to raise a warning for inputs that are not set because they
             are not found in the PySAM object.
         """
+
         for k, v in inputs.items():
             k, v = self._filter_inputs(k, v)
-            if k in self.input_list:
+            if k in self.input_list and v is not None:
                 self[k] = v
             elif raise_warning:
-                wmsg = ('Not setting input "{}". Not found in PySAM inputs.'
-                        .format(k))
+                wmsg = ('Not setting input "{}" to: {}.'
+                        .format(k, v))
                 warn(wmsg, SAMInputWarning)
                 logger.warning(wmsg)
 
@@ -488,29 +489,35 @@ class RevPySam(Sam):
                       'windpower': WindResource,
                       }
 
-    def __init__(self, meta, parameters, output_request):
+    def __init__(self, meta, sam_sys_inputs, output_request,
+                 site_sys_inputs=None):
         """Initialize a SAM object.
 
         Parameters
         ----------
         meta : pd.DataFrame
             1D table with resource meta data.
-        parameters : dict or ParametersManager()
-            SAM model input parameters.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
         output_request : list
             Requested SAM outputs (e.g., 'cf_mean', 'annual_energy',
             'cf_profile', 'gen_profile', 'energy_yield', 'ppa_price',
             'lcoe_fcr').
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         """
 
         super().__init__()
         self._meta = meta
         self._site = None
-        self.outputs = None
         self.time_interval = 1
         self.outputs = {}
-        self.parameters = parameters
+        self.sam_sys_inputs = sam_sys_inputs
+        self.site_sys_inputs = site_sys_inputs
         self.output_request = output_request
+
+        self._parse_site_sys_inputs(site_sys_inputs)
 
     @property
     def meta(self):
@@ -629,6 +636,23 @@ class RevPySam(Sam):
 
         return int(time_interval)
 
+    def _parse_site_sys_inputs(self, site_sys_inputs):
+        """Parse site-specific parameters and add to parameter dict.
+
+        Parameters
+        ----------
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
+        """
+
+        if site_sys_inputs is not None:
+            for k, v in site_sys_inputs.items():
+                if isinstance(v, float) and np.isnan(v):
+                    pass
+                else:
+                    self.sam_sys_inputs[k] = v
+
     @staticmethod
     def _is_arr_like(val):
         """Returns true if SAM data is array-like. False if scalar."""
@@ -681,8 +705,8 @@ class RevPySam(Sam):
         for req in self.output_request:
             if req in output_lookup:
                 self.outputs[req] = output_lookup[req]()
-            elif req in self.parameters:
-                self.outputs[req] = self.parameters[req]
+            elif req in self.sam_sys_inputs:
+                self.outputs[req] = self.sam_sys_inputs[req]
             else:
                 try:
                     self.outputs[req] = getattr(self.pysam.Outputs, req)
@@ -696,5 +720,5 @@ class RevPySam(Sam):
             raise SAMExecutionError(msg)
 
     def assign_inputs(self):
-        """Assign the self.parameters attribute to the PySAM object."""
-        super().assign_inputs(self.parameters)
+        """Assign the self.sam_sys_inputs attribute to the PySAM object."""
+        super().assign_inputs(self.sam_sys_inputs)

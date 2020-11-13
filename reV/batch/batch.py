@@ -314,8 +314,14 @@ class BatchJob:
         """
 
         if isinstance(arg, str):
-            if '{' in arg and '}' in arg:
-                arg = json.loads(arg.replace("'", '"'))
+            if '{' in arg and '}' in arg and ("'" in arg or '"' in arg):
+                arg = arg.replace("'", '"')
+                try:
+                    arg = json.loads(arg)
+                except json.decoder.JSONDecodeError as e:
+                    msg = 'Could not load json string: {}'.format(arg)
+                    logger.exception(msg)
+                    raise e
 
         return arg
 

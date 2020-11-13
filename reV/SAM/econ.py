@@ -24,46 +24,31 @@ class Economic(RevPySam):
     """Base class for SAM economic models."""
     MODULE = None
 
-    def __init__(self, parameters=None, site_parameters=None,
+    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
                  output_request='lcoe_fcr'):
         """Initialize a SAM economic model object.
 
         Parameters
         ----------
-        parameters : dict | ParametersManager()
-            Site-agnostic SAM model input parameters.
-        site_parameters : dict
-            Optional set of site-specific parameters to complement the
-            site-agnostic 'parameters' input arg.
+        sam_sys_inputs : dict
+            Site-agnostic SAM system model inputs arguments.
+        site_sys_inputs : dict
+            Optional set of site-specific SAM system inputs to complement the
+            site-agnostic inputs.
         output_request : list | tuple | str
             Requested SAM output(s) (e.g., 'ppa_price', 'lcoe_fcr').
         """
 
         self._site = None
-        self.parameters = parameters
 
         if isinstance(output_request, (list, tuple)):
             self.output_request = output_request
         else:
             self.output_request = (output_request,)
 
-        self._parse_site_parameters(site_parameters)
-
-        super().__init__(meta=None, parameters=parameters,
+        super().__init__(meta=None, sam_sys_inputs=sam_sys_inputs,
+                         site_sys_inputs=site_sys_inputs,
                          output_request=output_request)
-
-    def _parse_site_parameters(self, site_parameters):
-        """Parse site-specific parameters and add to parameter dict.
-
-        Parameters
-        ----------
-        site_parameters : dict
-            Optional set of site-specific parameters to complement the
-            site-agnostic 'parameters' input arg.
-        """
-        self._site_parameters = site_parameters
-        if self._site_parameters is not None:
-            self.parameters.update(self._site_parameters)
 
     @staticmethod
     def _parse_sys_cap(site, inputs, site_df):
@@ -157,10 +142,11 @@ class Economic(RevPySam):
 
             # add aey to site-specific inputs
             site_df.loc[site, 'annual_energy'] = aey
+
         return site_df
 
     @staticmethod
-    def _get_cf_profiles(sites, cf_file, cf_year):
+    def _get_cf_profiles(sites, cf_file, year):
         """Get the multi-site capacity factor time series profiles.
 
         Parameters
@@ -169,7 +155,7 @@ class Economic(RevPySam):
             List of all site GID's to get gen profiles for.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str | None
+        year : int | str | None
             reV generation year to calculate econ for. Looks for cf_mean_{year}
             or cf_profile_{year}. None will default to a non-year-specific cf
             dataset (cf_mean, cf_profile).
@@ -191,10 +177,10 @@ class Economic(RevPySam):
             # look for the cf_profile dataset
             if 'cf_profile' in cfh.datasets:
                 dset = 'cf_profile'
-            elif 'cf_profile-{}'.format(cf_year) in cfh.datasets:
-                dset = 'cf_profile-{}'.format(cf_year)
-            elif 'cf_profile_{}'.format(cf_year) in cfh.datasets:
-                dset = 'cf_profile_{}'.format(cf_year)
+            elif 'cf_profile-{}'.format(year) in cfh.datasets:
+                dset = 'cf_profile-{}'.format(year)
+            elif 'cf_profile_{}'.format(year) in cfh.datasets:
+                dset = 'cf_profile_{}'.format(year)
             else:
                 msg = ('Could not find cf_profile values for '
                        'input to SingleOwner. Available datasets: {}'
@@ -320,7 +306,7 @@ class Economic(RevPySam):
             to site number/gid (via df.loc not df.iloc), column labels are the
             variable keys that will be passed forward as SAM parameters.
         inputs : dict
-            Dictionary of SAM input parameters.
+            Dictionary of SAM system input parameters.
         output_request : list | tuple | str
             Requested SAM output(s) (e.g., 'ppa_price', 'lcoe_fcr').
 
@@ -331,8 +317,8 @@ class Economic(RevPySam):
         """
 
         # Create SAM econ instance and calculate requested output.
-        sim = cls(parameters=inputs,
-                  site_parameters=dict(site_df.loc[site, :]),
+        sim = cls(sam_sys_inputs=inputs,
+                  site_sys_inputs=dict(site_df.loc[site, :]),
                   output_request=output_request)
         sim._site = site
 
@@ -350,14 +336,14 @@ class LCOE(Economic):
     MODULE = 'lcoefcr'
     PYSAM = PySamLCOE
 
-    def __init__(self, parameters=None, site_parameters=None,
+    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
                  output_request=('lcoe_fcr',)):
         """Initialize a SAM LCOE economic model object."""
-        super().__init__(parameters, site_parameters=site_parameters,
+        super().__init__(sam_sys_inputs, site_sys_inputs=site_sys_inputs,
                          output_request=output_request)
 
     @staticmethod
-    def _parse_lcoe_inputs(site_df, cf_file, cf_year):
+    def _parse_lcoe_inputs(site_df, cf_file, year):
         """Parse for non-site-specific LCOE inputs.
 
         Parameters
@@ -368,7 +354,7 @@ class LCOE(Economic):
             variable keys that will be passed forward as SAM parameters.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str | None
+        year : int | str | None
             reV generation year to calculate econ for. Looks for cf_mean_{year}
             or cf_profile_{year}. None will default to a non-year-specific cf
             dataset (cf_mean, cf_profile).
@@ -403,10 +389,10 @@ class LCOE(Economic):
         with Outputs(cf_file) as cfh:
             if 'cf_mean' in cfh.datasets:
                 cf_arr = cfh['cf_mean']
-            elif 'cf_mean-{}'.format(cf_year) in cfh.datasets:
-                cf_arr = cfh['cf_mean-{}'.format(cf_year)]
-            elif 'cf_mean_{}'.format(cf_year) in cfh.datasets:
-                cf_arr = cfh['cf_mean_{}'.format(cf_year)]
+            elif 'cf_mean-{}'.format(year) in cfh.datasets:
+                cf_arr = cfh['cf_mean-{}'.format(year)]
+            elif 'cf_mean_{}'.format(year) in cfh.datasets:
+                cf_arr = cfh['cf_mean_{}'.format(year)]
             elif 'cf' in cfh.datasets:
                 cf_arr = cfh['cf']
             else:
@@ -428,7 +414,7 @@ class LCOE(Economic):
         return self._default
 
     @classmethod
-    def reV_run(cls, points_control, site_df, cf_file, cf_year,
+    def reV_run(cls, points_control, site_df, cf_file, year,
                 output_request=('lcoe_fcr',)):
         """Execute SAM LCOE simulations based on a reV points control instance.
 
@@ -443,7 +429,7 @@ class LCOE(Economic):
             variable keys that will be passed forward as SAM parameters.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str | None
+        year : int | str | None
             reV generation year to calculate econ for. Looks for cf_mean_{year}
             or cf_profile_{year}. None will default to a non-year-specific cf
             dataset (cf_mean, cf_profile).
@@ -461,7 +447,7 @@ class LCOE(Economic):
         out = {}
 
         site_gids, calc_aey, cf_arr = cls._parse_lcoe_inputs(site_df, cf_file,
-                                                             cf_year)
+                                                             year)
 
         for site in points_control.sites:
             # get SAM inputs from project_points based on the current site
@@ -481,16 +467,16 @@ class SingleOwner(Economic):
     MODULE = 'singleowner'
     PYSAM = PySamSingleOwner
 
-    def __init__(self, parameters=None, site_parameters=None,
+    def __init__(self, sam_sys_inputs=None, site_sys_inputs=None,
                  output_request=('ppa_price',)):
         """Initialize a SAM single owner economic model object.
         """
-        super().__init__(parameters, site_parameters=site_parameters,
+        super().__init__(sam_sys_inputs, site_sys_inputs=site_sys_inputs,
                          output_request=output_request)
 
         # run balance of system cost model if required
-        self.parameters, self.windbos_outputs = \
-            self._windbos(self.parameters)
+        self.sam_sys_inputs, self.windbos_outputs = \
+            self._windbos(self.sam_sys_inputs)
 
     @staticmethod
     def _windbos(inputs):
@@ -553,7 +539,7 @@ class SingleOwner(Economic):
         self.outputs.update(windbos_results)
 
     @classmethod
-    def reV_run(cls, points_control, site_df, cf_file, cf_year,
+    def reV_run(cls, points_control, site_df, cf_file, year,
                 output_request=('ppa_price',)):
         """Execute SAM SingleOwner simulations based on reV points control.
 
@@ -568,7 +554,7 @@ class SingleOwner(Economic):
             variable keys that will be passed forward as SAM parameters.
         cf_file : str
             reV generation capacity factor output file with path.
-        cf_year : int | str | None
+        year : int | str | None
             reV generation year to calculate econ for. Looks for cf_mean_{year}
             or cf_profile_{year}. None will default to a non-year-specific cf
             dataset (cf_mean, cf_profile).
@@ -585,7 +571,7 @@ class SingleOwner(Economic):
 
         out = {}
 
-        profiles = cls._get_cf_profiles(points_control.sites, cf_file, cf_year)
+        profiles = cls._get_cf_profiles(points_control.sites, cf_file, year)
 
         for i, site in enumerate(points_control.sites):
             # get SAM inputs from project_points based on the current site
