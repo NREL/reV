@@ -601,8 +601,10 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                   '-do {}'.format(SLURM.s(dirout)),
                   '-lo {}'.format(SLURM.s(logdir)),
                   '-or {}'.format(SLURM.s(output_request)),
-                  '-sd {}'.format(SLURM.s(site_data)),
                   '-mem {}'.format(SLURM.s(mem_util_lim))]
+
+    if site_data:
+        arg_direct.append('-sd {}'.format(SLURM.s(site_data)))
 
     # make some strings only if specified
     if curtailment:
