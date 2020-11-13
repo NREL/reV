@@ -463,11 +463,11 @@ class Sam:
 
         for k, v in inputs.items():
             k, v = self._filter_inputs(k, v)
-            if k in self.input_list:
+            if k in self.input_list and v is not None:
                 self[k] = v
             elif raise_warning:
-                wmsg = ('Not setting input "{}". Not found in PySAM inputs.'
-                        .format(k))
+                wmsg = ('Not setting input "{}" to: {}.'
+                        .format(k, v))
                 warn(wmsg, SAMInputWarning)
                 logger.warning(wmsg)
 
@@ -648,9 +648,8 @@ class RevPySam(Sam):
 
         if site_sys_inputs is not None:
             for k, v in site_sys_inputs.items():
-                if isinstance(v, float):
-                    if ~np.isnan(v):
-                        self.sam_sys_inputs[k] = v
+                if isinstance(v, float) and np.isnan(v):
+                    pass
                 else:
                     self.sam_sys_inputs[k] = v
 
