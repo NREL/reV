@@ -21,24 +21,27 @@ Batching Config Description
 How to Run
 ----------
 
-Before submitting batch jobs, it is sometimes useful to perform a "dry-run" which will create all of the batch sub directories without submitting jobs to SLURM:
+Before submitting batch jobs, it is sometimes useful to perform a "dry-run"
+which will create all of the batch sub directories without submitting jobs to
+SLURM:
 
 .. code-block:: bash
 
-    rev -c "../config_batch.json" batch --dry-run
-    
-Once you are happy with the dry-run, or if you are confident in your job setup, you can submit all batch jobs using the following CLI call:
+    reV -c "../config_batch.json" batch --dry-run
+
+Once you are happy with the dry-run, or if you are confident in your job setup,
+you can submit all batch jobs using the following CLI call:
 
 .. code-block:: bash
 
-    rev -c "../config_batch.json" batch
+    reV -c "../config_batch.json" batch
 
 If anything goes wrong, you can cancel all batch jobs using the command:
 
 .. code-block:: bash
 
-    rev -c "../config_batch.json" batch --cancel
-    
+    reV -c "../config_batch.json" batch --cancel
+
 New sub directories will be created in the folder with the batch config file
 for each sub job. All job files in the same directory (and sub directories) as
 the batch config file will be copied into the job folders. The reV pipeline
@@ -47,12 +50,16 @@ can be issues repeatedly to clean up the sub directory status ``.jsons``,
 kick off the next step in the pipeline, or to rerun failed jobs. See the reV
 pipeline execution example for more details on how the pipeline works.
 
-You can also have the batch module submit pipeline monitoring background processes using the ``--monitor-background`` flag as shown below. 
-Please note that the stdout/stderr of the background processes will not be captured, so it's important to set the ``log_file`` argument in the pipeline config. 
+You can also have the batch module submit pipeline monitoring background
+processes using the ``--monitor-background`` flag as shown below.
+
+Please note that the stdout/stderr of the background processes will not be
+captured, so it's important to set the ``log_file`` argument in the pipeline
+config.
 
 .. code-block:: bash
 
-    rev -c "../config_batch.json" batch --monitor-background
+    reV -c "../config_batch.json" batch --monitor-background
 
 All of the batch jobs can be collected into a single file using the multi-year
 collection utility. This utility is not part of the batch pipeline and needs to
@@ -62,4 +69,4 @@ command:
 
 .. code-block:: bash
 
-    rev -c "../config_multi-year.json" multi-year
+    reV -c "../config_multi-year.json" multi-year

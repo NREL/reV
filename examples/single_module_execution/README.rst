@@ -7,7 +7,7 @@ The any module can be executed using the following CLI call:
 
 .. code-block:: bash
 
-    rev -c "/scratch/gbuster/rev/module_config.json" {module}
+    reV -c "/scratch/gbuster/rev/module_config.json" {module}
 
 By default, a ``rev_status.json`` file will be created in the output directory.
 Each node utilized in a job will additionally generate their own status jsons
