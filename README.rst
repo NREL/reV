@@ -60,14 +60,14 @@ or
 
     source activate /shared-projects/rev/modulefiles/conda_env
 
-or module:
+.. or module:
 
-.. code-block:: bash
+.. .. code-block:: bash
 
-    module use /shared-projects/rev/modulefiles
-    module load reV
+..     module use /shared-projects/rev/modulefiles
+..     module load reV
 
-**NOTE: Loading the reV module can take several minutes**
+.. **NOTE: Loading the reV module can take several minutes**
 
 Launching a run
 ---------------
