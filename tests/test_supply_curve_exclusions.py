@@ -282,17 +282,17 @@ def test_inclusion_weights():
     """
     excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
 
-    excl_dict = {'ri_smod': {'include_values': [1, ], 'weight': 0.5,
+    excl_dict = {'ri_smod': {'include_values': [1, ], 'weight': 1,
                              'exclude_nodata': True}}
     with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
         truth = f.mask
 
-    excl_dict = {'ri_smod': {'include_values': [2, 3], 'weight': 1.0,
+    excl_dict = {'ri_smod': {'include_values': [2, 3], 'weight': 0.5,
                              'exclude_nodata': True}}
     with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
         truth += f.mask
 
-    excl_dict = {'ri_smod': {'inclusion_weights': {1: 0.5, 2: 1, 3: 1},
+    excl_dict = {'ri_smod': {'inclusion_weights': {1: 1, 2: 0.5, 3: 0.5},
                              'exclude_nodata': True}}
     with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
         test = f.mask
@@ -300,7 +300,7 @@ def test_inclusion_weights():
     assert np.allclose(test, truth)
     assert np.all(test > 0)
 
-    excl_dict = {'ri_smod': {'inclusion_weights': {1.0: 0.5, 2.0: 1, 3.0: 1},
+    excl_dict = {'ri_smod': {'inclusion_weights': {1.0: 1, 2.0: 0.5, 3.0: 0.5},
                              'exclude_nodata': True}}
     with ExclusionMaskFromDict(excl_h5, layers_dict=excl_dict) as f:
         test = f.mask
