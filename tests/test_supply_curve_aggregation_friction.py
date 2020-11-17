@@ -58,9 +58,9 @@ def test_friction_mask():
     assert x == 10.0, 'Friction for region should be 10.0, but is {}'.format(x)
 
     x = FRICTION[slice(354, 360), slice(456, 460)].mean()
-    diff = (x - 1.2275390625) / x
+    diff = (x - 1.22769) / x
     m = 'Friction for region should be 1.228, but is {}'.format(x)
-    assert diff < 0.00001, m
+    assert diff < 0.0001, m
 
 
 @pytest.mark.parametrize('gid', [100, 114, 130, 181])
@@ -84,15 +84,18 @@ def test_agg_friction(gid):
         row_slice, col_slice = EXTENT.get_excl_slices(gid)
 
         test_e = EXCL[row_slice, col_slice]
+        print(test_e.dtype)
         test_f = FRICTION[row_slice, col_slice]
+        print(test_f.dtype)
         x = test_e * test_f
         x = x.flatten()
         x = x[(x != 0)]
+        print(x.dtype)
         mean_friction = x.mean()
 
         m = ('SC point gid {} does not match mean friction hand calc'
              .format(gid))
-        assert s['mean_friction'].values[0] == mean_friction, m
+        assert np.isclose(s['mean_friction'].values[0], mean_friction), m
         m = ('SC point gid {} does not match mean LCOE with friction hand calc'
              .format(gid))
         assert np.allclose(s['mean_lcoe_friction'],
