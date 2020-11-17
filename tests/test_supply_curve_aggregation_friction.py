@@ -58,9 +58,9 @@ def test_friction_mask():
     assert x == 10.0, 'Friction for region should be 10.0, but is {}'.format(x)
 
     x = FRICTION[slice(354, 360), slice(456, 460)].mean()
-    diff = (x - 1.2275390625) / x
+    diff = (x - 1.22769) / x
     m = 'Friction for region should be 1.228, but is {}'.format(x)
-    assert diff < 0.00001, m
+    assert diff < 0.0001, m
 
 
 @pytest.mark.parametrize('gid', [100, 114, 130, 181])

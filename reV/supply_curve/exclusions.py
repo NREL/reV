@@ -213,7 +213,7 @@ class LayerMask:
 
             data = func(data)
 
-        data = data.astype('float16') * self._weight
+        data = data.astype('float32') * self._weight
 
         return data
 
@@ -367,7 +367,7 @@ class LayerMask:
             if isinstance(value, str):
                 value = float(value)
 
-            weight = np.array([weight], dtype='float16')
+            weight = np.array([weight], dtype='float32')
 
             if mask is None:
                 mask = self._value_mask(data, [value], include=True) * weight
@@ -728,7 +728,7 @@ class ExclusionMask:
         mask : ndarray
             Array of ones slices down by ds_slice
         """
-        mask = np.ones(self.shape, dtype='float16')[ds_slice]
+        mask = np.ones(self.shape, dtype='float32')[ds_slice]
 
         return mask
 
@@ -753,7 +753,7 @@ class ExclusionMask:
             if mask is None:
                 mask = layer_mask
             else:
-                mask = np.maximum(mask, layer_mask, dtype='float16')
+                mask = np.maximum(mask, layer_mask, dtype='float32')
 
         return mask
 
@@ -793,7 +793,7 @@ class ExclusionMask:
                     if mask is None:
                         mask = layer_mask
                     else:
-                        mask = np.minimum(mask, layer_mask, dtype='float16')
+                        mask = np.minimum(mask, layer_mask, dtype='float32')
 
             mask = self._force_include(mask, force_include, ds_slice)
 
