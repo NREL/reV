@@ -222,8 +222,8 @@ class BaseConfig(dict):
                 if os.path.exists(f) is False:
                     raise IOError('File does not exist: {}'.format(f))
 
-    @staticmethod
-    def str_replace(d, strrep):
+    @classmethod
+    def str_replace(cls, d, strrep):
         """Perform a deep string replacement in d.
 
         Parameters
@@ -243,12 +243,12 @@ class BaseConfig(dict):
         if isinstance(d, dict):
             # go through dict keys and values
             for key, val in d.items():
-                d[key] = BaseConfig.str_replace(val, strrep)
+                d[key] = cls.str_replace(val, strrep)
 
         elif isinstance(d, list):
             # if the value is also a list, iterate through
             for i, entry in enumerate(d):
-                d[i] = BaseConfig.str_replace(entry, strrep)
+                d[i] = cls.str_replace(entry, strrep)
 
         elif isinstance(d, str):
             # if val is a str, check to see if str replacements apply

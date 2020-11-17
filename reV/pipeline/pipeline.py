@@ -271,7 +271,7 @@ class Pipeline:
 
         return_code = self._parse_code_array(arr)
 
-        status = Pipeline.RETURN_CODES[return_code]
+        status = self.RETURN_CODES[return_code]
         fail_str = ''
         if check_failed and status != 'failed':
             fail_str = ', but some jobs have failed'
@@ -333,8 +333,8 @@ class Pipeline:
         key_pair = list(self._run_list[i].items())[0]
         return key_pair
 
-    @staticmethod
-    def _get_cmd(command, f_config, verbose=False):
+    @classmethod
+    def _get_cmd(cls, command, f_config, verbose=False):
         """Get the python cli call string based on the command and config arg.
 
         Parameters
@@ -351,10 +351,10 @@ class Pipeline:
         cmd : str
             Python reV CLI call string.
         """
-        if command not in Pipeline.COMMANDS:
+        if command not in cls.COMMANDS:
             raise KeyError('Could not recongize command "{}". '
                            'Available commands are: {}'
-                           .format(command, Pipeline.COMMANDS))
+                           .format(command, cls.COMMANDS))
         cmd = ('python -m reV.cli -c {} {}'
                .format(f_config, command))
         if verbose:
@@ -422,8 +422,9 @@ class Pipeline:
                            'for "{}"'.format(option))
         return out
 
-    @staticmethod
-    def parse_previous(status_dir, module, target='fpath', target_module=None):
+    @classmethod
+    def parse_previous(cls, status_dir, module, target='fpath',
+                       target_module=None):
         """Parse output file paths from the previous pipeline step.
 
         Parameters
@@ -463,15 +464,15 @@ class Pipeline:
                  'parse data from {0}.'.format(module))
 
         if target_module is None:
-            module_status = Pipeline._get_module_status(status, i0)
-            job_statuses = Pipeline._get_job_status(module_status)
+            module_status = cls._get_module_status(status, i0)
+            job_statuses = cls._get_job_status(module_status)
         else:
             if target_module not in status.data:
                 raise KeyError('Target module "{}" not found in pipeline '
                                'status dictionary.'.format(target_module))
             else:
                 module_status = status.data[target_module]
-                job_statuses = Pipeline._get_job_status(module_status)
+                job_statuses = cls._get_job_status(module_status)
 
         out = []
         if target == 'fpath':

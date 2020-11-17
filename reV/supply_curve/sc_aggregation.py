@@ -839,14 +839,15 @@ class SupplyCurveAggregation(AbstractAggregation):
         return (res_data, res_class_bins, cf_data, lcoe_data, offshore_flag,
                 h5_dsets_data)
 
-    @staticmethod
-    def run_serial(excl_fpath, gen_fpath, tm_dset, gen_index, econ_fpath=None,
-                   excl_dict=None, area_filter_kernel='queen', min_area=None,
-                   check_excl_layers=False, resolution=64, gids=None,
-                   args=None, res_class_dset=None, res_class_bins=None,
-                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
-                   h5_dsets=None, data_layers=None, power_density=None,
-                   friction_fpath=None, friction_dset=None, excl_area=0.0081):
+    @classmethod
+    def run_serial(cls, excl_fpath, gen_fpath, tm_dset, gen_index,
+                   econ_fpath=None, excl_dict=None, area_filter_kernel='queen',
+                   min_area=None, check_excl_layers=False, resolution=64,
+                   gids=None, args=None, res_class_dset=None,
+                   res_class_bins=None, cf_dset='cf_mean-means',
+                   lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
+                   power_density=None, friction_fpath=None, friction_dset=None,
+                   excl_area=0.0081):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -945,14 +946,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                        'check_excl_layers': check_excl_layers}
         with SupplyCurveAggFileHandler(excl_fpath, gen_fpath,
                                        **file_kwargs) as fh:
-            inputs = SupplyCurveAggregation._get_input_data(fh.gen,
-                                                            gen_fpath,
-                                                            econ_fpath,
-                                                            res_class_dset,
-                                                            res_class_bins,
-                                                            cf_dset,
-                                                            lcoe_dset,
-                                                            h5_dsets)
+            inputs = cls._get_input_data(fh.gen, gen_fpath, econ_fpath,
+                                         res_class_dset, res_class_bins,
+                                         cf_dset, lcoe_dset, h5_dsets)
 
             n_finished = 0
             for gid in gids:
@@ -1106,14 +1102,10 @@ class SupplyCurveAggregation(AbstractAggregation):
                        'excl_dict': self._excl_dict}
         with SupplyCurveAggFileHandler(self._excl_fpath, self._gen_fpath,
                                        **file_kwargs) as fh:
-            inp = SupplyCurveAggregation._get_input_data(fh.gen,
-                                                         self._gen_fpath,
-                                                         self._econ_fpath,
-                                                         self._res_class_dset,
-                                                         self._res_class_bins,
-                                                         self._cf_dset,
-                                                         self._lcoe_dset,
-                                                         self._h5_dsets)
+            inp = self._get_input_data(fh.gen, self._gen_fpath,
+                                       self._econ_fpath, self._res_class_dset,
+                                       self._res_class_bins, self._cf_dset,
+                                       self._lcoe_dset, self._h5_dsets)
 
             res, bins, cf, lcoe, offshore_flag, h5_dsets_data = inp
 

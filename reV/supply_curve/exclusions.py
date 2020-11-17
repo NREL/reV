@@ -618,8 +618,8 @@ class ExclusionMask:
 
         return nodata
 
-    @staticmethod
-    def _area_filter(mask, min_area=1, kernel='queen', excl_area=0.0081):
+    @classmethod
+    def _area_filter(cls, mask, min_area=1, kernel='queen', excl_area=0.0081):
         """
         Ensure the contiguous area of included pixels is greater than
         prescribed minimum in sq-km
@@ -640,7 +640,7 @@ class ExclusionMask:
         mask : ndarray
             Updated inclusion mask
         """
-        s = ExclusionMask.FILTER_KERNELS[kernel]
+        s = cls.FILTER_KERNELS[kernel]
         labels, _ = ndimage.label(mask > 0, structure=s)
         l, c = np.unique(labels, return_counts=True)
 

@@ -494,8 +494,9 @@ class Offshore:
             new_fpath = os.path.join(new_dir, fn)
             shutil.move(self._gen_fpath, new_fpath)
 
-    @staticmethod
-    def _get_farm_data(gen_fpath, meta, system_inputs, site_data, site_gid=0):
+    @classmethod
+    def _get_farm_data(cls, gen_fpath, meta, system_inputs, site_data,
+                       site_gid=0):
         """Get the offshore farm aggregated cf data and calculate LCOE.
 
         Parameters
@@ -524,7 +525,7 @@ class Offshore:
             LCOE value with units: $/MWh.
         """
 
-        gen_data = Offshore._get_farm_gen_data(gen_fpath, meta)
+        gen_data = cls._get_farm_gen_data(gen_fpath, meta)
         cf = gen_data['cf_mean'].mean()
 
         if cf > 1:
@@ -534,8 +535,8 @@ class Offshore:
             logger.warning(m)
             warn(m, OffshoreWindInputWarning)
 
-        lcoe = Offshore._run_orca(cf, system_inputs, site_data,
-                                  site_gid=site_gid)
+        lcoe = cls._run_orca(cf, system_inputs, site_data,
+                             site_gid=site_gid)
         gen_data['lcoe_fcr'] = lcoe
 
         return gen_data

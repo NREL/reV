@@ -15,31 +15,19 @@ requirements:
     - python
     - pip
     - setuptools
-    - click
-    - h5py>=2.10.0,!=3.0.0
-    - numpy>=1.16
-    - pandas
+    - NREL-rex>=0.2.30
+    - NREL-PySAM>=2.1.4
     - packaging
     - plotting
     - plotly
-    - psutil
-    - scipy
-    - NREL-rex>=0.2.29
-    - NREL-PySAM>=2.1.4
   run:
     - python
     - pip
-    - click
-    - h5py>=2.10.0,!=3.0.0
-    - {{ pin_compatible('numpy') }}
-    - pandas
+    - NREL-rex>=0.2.30
+    - NREL-PySAM>=2.1.4
     - packaging
     - plotting
     - plotly
-    - psutil
-    - scipy
-    - NREL-rex>=0.2.29
-    - NREL-PySAM>=2.1.4
 
 about:
   home: "https://github.com/NREL/reV"

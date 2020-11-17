@@ -203,8 +203,8 @@ class SupplyCurve:
 
         return trans_table
 
-    @staticmethod
-    def _merge_sc_trans_tables(sc_points, trans_table,
+    @classmethod
+    def _merge_sc_trans_tables(cls, sc_points, trans_table,
                                offshore_table=None,
                                sc_cols=('capacity', 'sc_gid', 'mean_cf',
                                         'mean_lcoe')):
@@ -232,7 +232,7 @@ class SupplyCurve:
             This is performed by merging left with trans_table, so there may be
             rows with nan sc_gid.
         """
-        trans_table = SupplyCurve._parse_trans_table(trans_table)
+        trans_table = cls._parse_trans_table(trans_table)
 
         if isinstance(sc_cols, tuple):
             sc_cols = list(sc_cols)
@@ -243,14 +243,14 @@ class SupplyCurve:
         if 'transmission_multiplier' in sc_points:
             sc_cols.append('transmission_multiplier')
 
-        merge_cols = SupplyCurve._get_merge_cols(sc_points.columns,
-                                                 trans_table.columns)
+        merge_cols = cls._get_merge_cols(sc_points.columns,
+                                         trans_table.columns)
         logger.debug('Merging SC table and Trans Table on: {}'
                      .format(merge_cols))
         sc_points = sc_points.rename(columns=merge_cols)
         merge_cols = list(merge_cols.values())
         if offshore_table is not None:
-            offshore_table = SupplyCurve._parse_trans_table(offshore_table)
+            offshore_table = cls._parse_trans_table(offshore_table)
             offshore_cols = merge_cols + ['farm_gid']
             offshore_table = offshore_table.merge(sc_points[offshore_cols],
                                                   on='farm_gid', how='left')
@@ -344,8 +344,8 @@ class SupplyCurve:
 
         return trans_table
 
-    @staticmethod
-    def _add_trans_lcot(trans_table, fcr, trans_costs=None,
+    @classmethod
+    def _add_trans_lcot(cls, trans_table, fcr, trans_costs=None,
                         line_limited=False, connectable=True,
                         max_workers=None):
         """Compute LCOT for possible connections and add to the trans_table
@@ -376,14 +376,14 @@ class SupplyCurve:
             and total_lcoe.
         """
 
-        trans_table = SupplyCurve._feature_capacity(trans_table,
-                                                    trans_costs=trans_costs)
+        trans_table = cls._feature_capacity(trans_table,
+                                            trans_costs=trans_costs)
         trans_table = trans_table.sort_values('sc_gid')
-        lcot, cost = SupplyCurve._compute_lcot(trans_table, fcr,
-                                               trans_costs=trans_costs,
-                                               line_limited=line_limited,
-                                               connectable=connectable,
-                                               max_workers=max_workers)
+        lcot, cost = cls._compute_lcot(trans_table, fcr,
+                                       trans_costs=trans_costs,
+                                       line_limited=line_limited,
+                                       connectable=connectable,
+                                       max_workers=max_workers)
 
         trans_table['trans_cap_cost'] = cost
         trans_table['lcot'] = lcot

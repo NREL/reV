@@ -48,8 +48,8 @@ class ORCA_LCOE:
         # make a site-specific data structure
         self.orca_data_struct = ORCAData(self.site_data)
 
-    @staticmethod
-    def _parse_site_data(system_inputs, site_data, site_gid=0):
+    @classmethod
+    def _parse_site_data(cls, system_inputs, site_data, site_gid=0):
         """Parse the site-specific inputs for ORCA.
 
         Parameters
@@ -76,7 +76,7 @@ class ORCA_LCOE:
             site_data = pd.DataFrame(site_data, index=(0,))
 
         # rename any SAM kwargs to match ORCA requirements
-        site_data = site_data.rename(index=str, columns=ORCA_LCOE.ARG_MAP)
+        site_data = site_data.rename(index=str, columns=cls.ARG_MAP)
 
         for c in site_data.columns:
             if c in system_inputs:

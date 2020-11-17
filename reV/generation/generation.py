@@ -374,8 +374,8 @@ class Gen(BaseGen):
 
         return output_request
 
-    @staticmethod
-    def run(points_control, tech=None, res_file=None, output_request=None,
+    @classmethod
+    def run(cls, points_control, tech=None, res_file=None, output_request=None,
             scale_outputs=True):
         """Run a SAM generation analysis based on the points_control iterator.
 
@@ -408,7 +408,7 @@ class Gen(BaseGen):
 
         # run generation method for specified technology
         try:
-            out = Gen.OPTIONS[tech].reV_run(points_control, res_file, site_df,
+            out = cls.OPTIONS[tech].reV_run(points_control, res_file, site_df,
                                             output_request=output_request)
         except Exception as e:
             out = {}
@@ -420,10 +420,10 @@ class Gen(BaseGen):
             for site, site_output in out.items():
                 for k in site_output.keys():
                     # iterate through variable names in each site's output dict
-                    if k in Gen.OUT_ATTRS:
+                    if k in cls.OUT_ATTRS:
                         # get dtype and scale for output variable name
-                        dtype = Gen.OUT_ATTRS[k].get('dtype', 'float32')
-                        scale_factor = Gen.OUT_ATTRS[k].get('scale_factor', 1)
+                        dtype = cls.OUT_ATTRS[k].get('dtype', 'float32')
+                        scale_factor = cls.OUT_ATTRS[k].get('scale_factor', 1)
 
                         # apply scale factor and dtype
                         out[site][k] *= scale_factor
@@ -541,7 +541,7 @@ class Gen(BaseGen):
         """
 
         # get a points control instance
-        pc = Gen.get_pc(points, points_range, sam_files, tech,
+        pc = cls.get_pc(points, points_range, sam_files, tech,
                         sites_per_worker=sites_per_worker, res_file=res_file,
                         curtailment=curtailment)
 

@@ -223,7 +223,7 @@ class Status(dict):
 
         # Update status data dict recursively if job file was found
         if current is not None:
-            self.data = Status.update_dict(self.data, current)
+            self.data = self.update_dict(self.data, current)
 
         # check job status via hardware if job file not found.
         elif module in self.data:
@@ -289,8 +289,8 @@ class Status(dict):
 
         self.data[module][job_name]['job_status'] = status
 
-    @staticmethod
-    def _get_attr_list(inp, key='job_id'):
+    @classmethod
+    def _get_attr_list(cls, inp, key='job_id'):
         """Get all job attribute values from the status data dict.
 
         Parameters
@@ -313,7 +313,7 @@ class Status(dict):
                 out = inp[key]
             else:
                 for v in inp.values():
-                    temp = Status._get_attr_list(v, key=key)
+                    temp = cls._get_attr_list(v, key=key)
 
                     if isinstance(temp, list):
                         if any(temp):
@@ -332,8 +332,8 @@ class Status(dict):
         """Get the hardware for this pipeline."""
         return self._hardware
 
-    @staticmethod
-    def update_dict(d, u):
+    @classmethod
+    def update_dict(cls, d, u):
         """Update a dictionary recursively.
 
         Parameters
@@ -353,7 +353,7 @@ class Status(dict):
 
         for k, v in u.items():
             if isinstance(v, dict):
-                d[k] = Status.update_dict(d.get(k, {}), v)
+                d[k] = cls.update_dict(d.get(k, {}), v)
             else:
                 d[k] = v
         return d

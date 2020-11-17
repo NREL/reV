@@ -325,8 +325,8 @@ class BatchJob:
 
         return arg
 
-    @staticmethod
-    def _mod_dict(inp, arg_mods):
+    @classmethod
+    def _mod_dict(cls, inp, arg_mods):
         """Recursively modify key/value pairs in a dictionary.
 
         Parameters
@@ -350,18 +350,18 @@ class BatchJob:
         if isinstance(inp, dict):
             for k, v in inp.items():
                 if k in arg_mods:
-                    out[k] = BatchJob._clean_arg(arg_mods[k])
+                    out[k] = cls._clean_arg(arg_mods[k])
                 elif isinstance(v, (list, dict)):
-                    out[k] = BatchJob._mod_dict(v, arg_mods)
+                    out[k] = cls._mod_dict(v, arg_mods)
 
         elif isinstance(inp, list):
             for i, entry in enumerate(inp):
-                out[i] = BatchJob._mod_dict(entry, arg_mods)
+                out[i] = cls._mod_dict(entry, arg_mods)
 
         return out
 
-    @staticmethod
-    def _mod_json(fpath, fpath_out, arg_mods):
+    @classmethod
+    def _mod_json(cls, fpath, fpath_out, arg_mods):
         """Import and modify the contents of a json. Dump to new file.
 
         Parameters
@@ -376,7 +376,7 @@ class BatchJob:
         """
 
         data = safe_json_load(fpath)
-        data = BatchJob._mod_dict(data, arg_mods)
+        data = cls._mod_dict(data, arg_mods)
 
         with open(fpath_out, 'w') as f:
             json.dump(data, f, indent=4, separators=(',', ': '))
