@@ -163,8 +163,8 @@ class CompetitiveWindFarms:
 
         return table
 
-    @staticmethod
-    def _parse_wind_dirs(wind_dirs):
+    @classmethod
+    def _parse_wind_dirs(cls, wind_dirs):
         """
         Parse prominent direction neighbors
 
@@ -180,7 +180,7 @@ class CompetitiveWindFarms:
             Neighboring supply curve point gids and power-rose value at each
             cardinal direction for each sc point gid
         """
-        wind_dirs = CompetitiveWindFarms._parse_table(wind_dirs)
+        wind_dirs = cls._parse_table(wind_dirs)
 
         wind_dirs = wind_dirs.set_index('sc_point_gid')
         columns = [c for c in wind_dirs if c.endswith(('_gid', '_pr'))]
@@ -188,8 +188,8 @@ class CompetitiveWindFarms:
 
         return wind_dirs
 
-    @staticmethod
-    def _parse_sc_points(sc_points, offshore=False):
+    @classmethod
+    def _parse_sc_points(cls, sc_points, offshore=False):
         """
         Parse supply curve point summary table into sc_gid to sc_point_gid
         mapping and vis-versa.
@@ -211,7 +211,7 @@ class CompetitiveWindFarms:
         mask : ndarray
             Mask array to mask excluded sc_point_gids
         """
-        sc_points = CompetitiveWindFarms._parse_table(sc_points)
+        sc_points = cls._parse_table(sc_points)
         if 'offshore' in sc_points and not offshore:
             logger.debug('Not including offshore supply curve points in '
                          'CompetitiveWindFarm')

@@ -153,8 +153,8 @@ class RepresentativeMethods:
 
         return arr
 
-    @staticmethod
-    def mbe(profiles, baseline, i_profile=0):
+    @classmethod
+    def mbe(cls, profiles, baseline, i_profile=0):
         """Calculate the mean bias error of profiles vs. a baseline profile.
 
         Parameters
@@ -177,12 +177,12 @@ class RepresentativeMethods:
         """
         diff = profiles - baseline.reshape((len(baseline), 1))
         mbe = diff.mean(axis=0)
-        i_rep = RepresentativeMethods.nargmin(mbe, i_profile)
+        i_rep = cls.nargmin(mbe, i_profile)
 
         return profiles[:, i_rep], i_rep
 
-    @staticmethod
-    def mae(profiles, baseline, i_profile=0):
+    @classmethod
+    def mae(cls, profiles, baseline, i_profile=0):
         """Calculate the mean absolute error of profiles vs. a baseline profile
 
         Parameters
@@ -205,12 +205,12 @@ class RepresentativeMethods:
         """
         diff = profiles - baseline.reshape((len(baseline), 1))
         mae = np.abs(diff).mean(axis=0)
-        i_rep = RepresentativeMethods.nargmin(mae, i_profile)
+        i_rep = cls.nargmin(mae, i_profile)
 
         return profiles[:, i_rep], i_rep
 
-    @staticmethod
-    def rmse(profiles, baseline, i_profile=0):
+    @classmethod
+    def rmse(cls, profiles, baseline, i_profile=0):
         """Calculate the RMSE of profiles vs. a baseline profile
 
         Parameters
@@ -234,7 +234,7 @@ class RepresentativeMethods:
         rmse = profiles - baseline.reshape((len(baseline), 1))
         rmse **= 2
         rmse = np.sqrt(np.mean(rmse, axis=0))
-        i_rep = RepresentativeMethods.nargmin(rmse, i_profile)
+        i_rep = cls.nargmin(rmse, i_profile)
 
         return profiles[:, i_rep], i_rep
 

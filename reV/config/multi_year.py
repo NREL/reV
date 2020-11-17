@@ -44,7 +44,7 @@ class MultiYearConfig(AnalysisConfig):
     def group_names(self):
         """
         Returns
-        -------
+        -------s
         group_names : list
             List of group names
         """

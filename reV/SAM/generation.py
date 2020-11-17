@@ -34,8 +34,8 @@ logger = logging.getLogger(__name__)
 class Generation(RevPySam, ABC):
     """Base class for SAM generation simulations."""
 
-    @staticmethod
-    def _get_res(res_df, output_request):
+    @classmethod
+    def _get_res(cls, res_df, output_request):
         """Get the resource arrays and pass through for output (single site).
 
         Parameters
@@ -62,7 +62,7 @@ class Generation(RevPySam, ABC):
                 res_reqs.append(req)
                 if res_out is None:
                     res_out = {}
-                res_out[req] = Generation.ensure_res_len(res_df[req].values)
+                res_out[req] = cls.ensure_res_len(res_df[req].values)
         for req in res_reqs:
             out_req_cleaned.remove(req)
 

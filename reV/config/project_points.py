@@ -60,8 +60,8 @@ class PointsControl:
 
             last_site = i1
 
-            new = PointsControl.split(i0, i1, self.project_points,
-                                      sites_per_split=self.sites_per_split)
+            new = self.split(i0, i1, self.project_points,
+                             sites_per_split=self.sites_per_split)
             new._split_range = [i0, i1]
             self._iter_list.append(new)
 
@@ -287,8 +287,8 @@ class ProjectPoints:
         """Length of this object is the number of sites."""
         return len(self.sites)
 
-    @staticmethod
-    def _parse_points(points, res_file=None):
+    @classmethod
+    def _parse_points(cls, points, res_file=None):
         """Generate the project points df from inputs
 
         Parameters
@@ -306,11 +306,11 @@ class ProjectPoints:
             DataFrame mapping sites (gids) to SAM technology (config)
         """
         if isinstance(points, str):
-            df = ProjectPoints._parse_csv(points)
+            df = cls._parse_csv(points)
         elif isinstance(points, dict):
             df = pd.DataFrame(points)
         elif isinstance(points, (slice, list, tuple)):
-            df = ProjectPoints._parse_sites(points, res_file=res_file)
+            df = cls._parse_sites(points, res_file=res_file)
         elif isinstance(points, pd.DataFrame):
             df = points
         else:

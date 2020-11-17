@@ -93,8 +93,9 @@ class Economic(RevPySam):
 
         return sys_cap
 
-    @staticmethod
-    def _get_annual_energy(site, site_df, site_gids, cf_arr, inputs, calc_aey):
+    @classmethod
+    def _get_annual_energy(cls, site, site_df, site_gids, cf_arr, inputs,
+                           calc_aey):
         """Get the single-site cf and annual energy and add to site_df.
 
         Parameters
@@ -135,7 +136,7 @@ class Economic(RevPySam):
         # calculate the annual energy yield if not input;
         if calc_aey:
             # get the system capacity
-            sys_cap = Economic._parse_sys_cap(site, inputs, site_df)
+            sys_cap = cls._parse_sys_cap(site, inputs, site_df)
 
             # Calc annual energy, mult by 8760 to convert kW to kWh
             aey = sys_cap * cf * 8760
@@ -192,8 +193,8 @@ class Economic(RevPySam):
 
         return profiles
 
-    @staticmethod
-    def _make_gen_profile(isite, site, profiles, site_df, inputs):
+    @classmethod
+    def _make_gen_profile(cls, isite, site, profiles, site_df, inputs):
         """Get the single-site generation time series and add to inputs dict.
 
         Parameters
@@ -219,7 +220,7 @@ class Economic(RevPySam):
             added.
         """
 
-        sys_cap = Economic._parse_sys_cap(site, inputs, site_df)
+        sys_cap = cls._parse_sys_cap(site, inputs, site_df)
         inputs['gen'] = profiles[:, isite] * sys_cap
 
         return inputs

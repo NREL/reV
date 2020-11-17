@@ -605,8 +605,8 @@ class RevPySam(Sam):
 
         return series
 
-    @staticmethod
-    def get_time_interval(time_index):
+    @classmethod
+    def get_time_interval(cls, time_index):
         """Get the time interval.
 
         Parameters
@@ -622,7 +622,7 @@ class RevPySam(Sam):
             So if the timestep is 0.5 hours, time_interval is 2.
         """
 
-        time_index = RevPySam.make_datetime(time_index)
+        time_index = cls.make_datetime(time_index)
         x = time_index.dt.hour.diff()
         time_interval = 0
 
@@ -666,10 +666,10 @@ class RevPySam(Sam):
             else:
                 return True
 
-    @staticmethod
-    def _is_hourly(val):
+    @classmethod
+    def _is_hourly(cls, val):
         """Returns true if SAM data is hourly or sub-hourly. False otherise."""
-        if not RevPySam._is_arr_like(val):
+        if not cls._is_arr_like(val):
             return False
         else:
             L = len(val)

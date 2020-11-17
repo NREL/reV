@@ -267,9 +267,9 @@ class TechMapping:
 
         return lats, lons, ind_all
 
-    @staticmethod
-    def map_resource_gids(gids, excl_fpath, res_fpath, distance_upper_bound,
-                          map_chunk, margin=0.1):
+    @classmethod
+    def map_resource_gids(cls, gids, excl_fpath, res_fpath,
+                          distance_upper_bound, map_chunk, margin=0.1):
         """Map exclusion gids to the resource meta.
 
         Parameters
@@ -307,7 +307,7 @@ class TechMapping:
         coord_labels = ['latitude', 'longitude']
 
         with SupplyCurveExtent(excl_fpath, resolution=map_chunk) as sc:
-            coords_out, lat_range, lon_range = TechMapping._unpack_coords(
+            coords_out, lat_range, lon_range = cls._unpack_coords(
                 gids, sc, excl_fpath, coord_labels=coord_labels)
 
         with Resource(res_fpath, str_decode=False) as res:
