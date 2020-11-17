@@ -84,15 +84,18 @@ def test_agg_friction(gid):
         row_slice, col_slice = EXTENT.get_excl_slices(gid)
 
         test_e = EXCL[row_slice, col_slice]
+        print(test_e.dtype)
         test_f = FRICTION[row_slice, col_slice]
+        print(test_f.dtype)
         x = test_e * test_f
         x = x.flatten()
         x = x[(x != 0)]
+        print(x.dtype)
         mean_friction = x.mean()
 
         m = ('SC point gid {} does not match mean friction hand calc'
              .format(gid))
-        assert s['mean_friction'].values[0] == mean_friction, m
+        assert np.isclose(s['mean_friction'].values[0], mean_friction), m
         m = ('SC point gid {} does not match mean LCOE with friction hand calc'
              .format(gid))
         assert np.allclose(s['mean_lcoe_friction'],
