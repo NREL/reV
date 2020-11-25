@@ -426,6 +426,32 @@ def test_gen_pv_site_data():
     assert np.allclose(test.out['losses'][2:], 14.07566 * np.ones(3))
 
 
+def test_clipping():
+    """Test reV pvwattsv7 generation against baseline data"""
+    year = 2012
+    rev2_points = slice(0, 3)
+    res_file = TESTDATADIR + '/nsrdb/ri_100_nsrdb_{}.h5'.format(year)
+    sam_files = TESTDATADIR + '/SAM/i_pvwattsv7.json'
+
+    output_request = ('ac', 'dc', 'clipped_power')
+
+    # run reV 2.0 generation
+    pp = ProjectPoints(rev2_points, sam_files, 'pvwattsv7', res_file=res_file)
+    gen = Gen.reV_run(tech='pvwattsv7', points=rev2_points,
+                      sam_files=sam_files, res_file=res_file, max_workers=1,
+                      sites_per_worker=1, fout=None,
+                      output_request=output_request)
+
+    ac = gen.out['ac']
+    dc = gen.out['dc']
+    clipped = gen.out['clipped_power']
+
+    mask = ac < ac.max()
+    dc_ac = dc[~mask] - ac[~mask]
+    assert all(clipped[mask] == 0)
+    assert np.allclose(clipped[~mask], dc_ac)
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

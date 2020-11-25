@@ -94,4 +94,7 @@ class SAMOutputRequest(OutputRequest):
                    'albedo': 'surface_albedo',
                    'ac_power': 'ac',
                    'dc_power': 'dc',
+                   'clipping': 'clipped_power',
+                   'clipped': 'clipped_power',
+                   'clip': 'clipped_power'
                    }

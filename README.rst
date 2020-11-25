@@ -23,6 +23,9 @@ reV
 .. image:: https://anaconda.org/nrel/nrel-rev/badges/license.svg
     :target: https://anaconda.org/nrel/nrel-rev
 
+.. image:: https://codecov.io/gh/nrel/reV/branch/master/graph/badge.svg?token=U4ZU9F0K0Z
+    :target: https://codecov.io/gh/nrel/reV
+
 The Renewable Energy Potential (reV) Model
 
 .. inclusion-intro
