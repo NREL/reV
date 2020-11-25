@@ -1,7 +1,10 @@
 name: Codecov
+
 on:
-  pull_request:
-    types: [opened, edited, synchronize]
+  push:
+    branches:
+      - master
+
 jobs:
   run:
     runs-on: ${{ matrix.os }}
@@ -14,9 +17,6 @@ jobs:
       PYTHON: '3.7'
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: ${{ github.event.pull_request.head.ref }}
-        fetch-depth: 1
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
