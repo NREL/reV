@@ -620,7 +620,7 @@ class Pvwatts(Solar, ABC):
         ac = self.ac()
         dc = self.dc()
 
-        return np.where(ac < np.max(ac), 0, dc - ac)
+        return np.where(ac < ac.max(), 0, dc - ac)
 
     @property
     def default(self):
