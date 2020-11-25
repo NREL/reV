@@ -28,12 +28,9 @@ jobs:
         python -m pip install pytest
         python -m pip install pytest-cov
         python -m pip install .
-    - name: Test with pytest
+    - name: Run pytest and Generate coverage report
       run: |
-        python -m pytest -v
-    - name: Generate coverage report
-      run: |
-        python -m  pytest --cov=./ --cov-report=xml:coverage.xml
+        python -m pytest -v --cov=./ --cov-report=xml:coverage.xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
