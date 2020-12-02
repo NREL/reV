@@ -189,6 +189,9 @@ class ExclusionLayers:
         if chunks is None:
             chunks = self.h5['latitude'].chunks
 
+        if isinstance(chunks, dict):
+            chunks = tuple(chunks.get('dims', None))
+
         return chunks
 
     @property
