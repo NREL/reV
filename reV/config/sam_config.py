@@ -127,25 +127,33 @@ class SAMConfig(BaseConfig):
 
         Returns
         -------
-        str | None
+        dict | None
             Option for NSRDB resource downscaling to higher temporal
-            resolution. Expects a string in the Pandas frequency format,
-            e.g. '5min'.
+            resolution. The config expects a str entry in the Pandas
+            frequency format, e.g. '5min' or a dict of downscaling kwargs
+            such as {'frequency': '5min', 'variability_kwargs':
+            {'var_frac': 0.05, 'distribution': 'uniform'}}.
+            A str entry will be converted to a kwarg dict for the output
+            of this property e.g. '5min' -> {'frequency': '5min'}
         """
         if self._downscale is None:
-            downscale = []
+            ds_list = []
             for v in self.inputs.values():
-                downscale.append(v.get('downscale', None))
+                ds_list.append(v.get('downscale', None))
 
-            self._downscale = list(set(downscale))
+            self._downscale = ds_list[0]
+            ds_list = list({str(x) for x in ds_list})
 
-        if len(self._downscale) > 1:
-            msg = ('Expecting a single unique value for "downscale" but '
-                   'received: {}'.format(self._downscale))
-            logger.error(msg)
-            raise SAMInputError(msg)
+            if len(ds_list) > 1:
+                msg = ('Expecting a single unique value for "downscale" but '
+                       'received: {}'.format(ds_list))
+                logger.error(msg)
+                raise SAMInputError(msg)
 
-        return self._downscale[0]
+        if isinstance(self._downscale, str):
+            self._downscale = {'frequency': self._downscale}
+
+        return self._downscale
 
     @property
     def inputs(self):
