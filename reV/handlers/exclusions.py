@@ -165,6 +165,22 @@ class ExclusionLayers:
         return tuple(shape)
 
     @property
+    def chunks(self):
+        """
+        Exclusion layers chunks default chunk size
+
+        Returns
+        -------
+        chunks : tuple | None
+            Chunk size of exclusion layers
+        """
+        chunks = self.h5.attrs.get('chunks', None)
+        if chunks is None:
+            chunks = self.h5['latitude'].chunks
+
+        return chunks
+
+    @property
     def latitude(self):
         """
         Latitude coordinates array
