@@ -116,6 +116,17 @@ class ExclusionLayers:
         return json.loads(self.h5.attrs['profile'])
 
     @property
+    def crs(self):
+        """
+        GeoTiff projection crs
+
+        Returns
+        -------
+        str
+        """
+        return self.profile['crs']
+
+    @property
     def pixel_area(self):
         """Get pixel area in km2 from the transform profile of the excl file.
 
