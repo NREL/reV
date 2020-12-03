@@ -116,6 +116,17 @@ class ExclusionLayers:
         return json.loads(self.h5.attrs['profile'])
 
     @property
+    def crs(self):
+        """
+        GeoTiff projection crs
+
+        Returns
+        -------
+        str
+        """
+        return self.profile['crs']
+
+    @property
     def pixel_area(self):
         """Get pixel area in km2 from the transform profile of the excl file.
 
@@ -163,6 +174,25 @@ class ExclusionLayers:
             shape = self.h5['latitude'].shape
 
         return tuple(shape)
+
+    @property
+    def chunks(self):
+        """
+        Exclusion layers chunks default chunk size
+
+        Returns
+        -------
+        chunks : tuple | None
+            Chunk size of exclusion layers
+        """
+        chunks = self.h5.attrs.get('chunks', None)
+        if chunks is None:
+            chunks = self.h5['latitude'].chunks
+
+        if isinstance(chunks, dict):
+            chunks = tuple(chunks.get('dims', None))
+
+        return chunks
 
     @property
     def latitude(self):
