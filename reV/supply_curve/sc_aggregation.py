@@ -1212,6 +1212,9 @@ class SupplyCurveAggregation(AbstractAggregation):
         summary : list
             List of dictionaries, each being an SC point summary.
         """
+        if max_workers is None:
+            max_workers = os.cpu_count()
+
         if max_workers == 1:
             afk = self._area_filter_kernel
             chk = self._check_excl_layers
