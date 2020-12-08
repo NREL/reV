@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 class Pipeline:
     """reV pipeline execution framework."""
 
+    CMD_BASE = 'python -m reV.cli -c {fp_config} {command}'
+
     COMMANDS = ('generation',
                 'econ',
                 'offshore',
@@ -107,7 +109,7 @@ class Pipeline:
 
                     if return_code == 2:
                         module, f_config = self._get_command_config(i)
-                        raise ExecutionError('reV pipeline failed at step '
+                        raise ExecutionError('Pipeline failed at step '
                                              '{} "{}" {}'
                                              .format(i, module, f_config))
 
@@ -129,9 +131,9 @@ class Pipeline:
         command, f_config = self._get_command_config(i)
         cmd = self._get_cmd(command, f_config, verbose=self.verbose)
 
-        logger.info('reV pipeline submitting: "{}" for job "{}"'
+        logger.info('Pipeline submitting: "{}" for job "{}"'
                     .format(command, self._config.name))
-        logger.debug('reV pipeline submitting subprocess call:\n\t"{}"'
+        logger.debug('Pipeline submitting subprocess call:\n\t"{}"'
                      .format(cmd))
 
         try:
@@ -275,7 +277,7 @@ class Pipeline:
         fail_str = ''
         if check_failed and status != 'failed':
             fail_str = ', but some jobs have failed'
-        logger.info('reV "{}" for job "{}" is {}{}.'
+        logger.info('Module "{}" for job "{}" is {}{}.'
                     .format(module, self._config.name, status, fail_str))
 
         return return_code
@@ -355,8 +357,7 @@ class Pipeline:
             raise KeyError('Could not recongize command "{}". '
                            'Available commands are: {}'
                            .format(command, cls.COMMANDS))
-        cmd = ('python -m reV.cli -c {} {}'
-               .format(f_config, command))
+        cmd = cls.CMD_BASE.format(fp_config=f_config, command=command)
         if verbose:
             cmd += ' -v'
 
@@ -446,7 +447,7 @@ class Pipeline:
         """
 
         status = Status(status_dir)
-        msg = ('Could not parse data regarding "{}" from reV status file in '
+        msg = ('Could not parse data regarding "{}" from status file in '
                '"{}".'.format(module, status_dir))
         if module in status.data:
             if 'pipeline_index' in status.data[module]:
