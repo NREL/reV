@@ -418,7 +418,7 @@ class Status(dict):
                     warn(msg)
 
         # check to see if job exists yet
-        exists = obj.job_exists(status_dir, job_name)
+        exists = obj.job_exists(status_dir, job_name, module_name=module)
 
         # job exists and user has requested forced replacement
         if replace and exists:
@@ -440,7 +440,7 @@ class Status(dict):
             obj._dump()
 
     @classmethod
-    def job_exists(cls, status_dir, job_name):
+    def job_exists(cls, status_dir, job_name, module_name=None):
         """Check whether a job exists and return a bool.
 
         Parameters
@@ -449,6 +449,8 @@ class Status(dict):
             Directory containing json status file.
         job_name : str
             Unique job name identification.
+        module_name : str
+            reV module that the job belongs to.
 
         Returns
         -------
@@ -461,7 +463,10 @@ class Status(dict):
         obj = cls(status_dir)
         exists = False
         if obj.data:
-            for jobs in obj.data.values():
+            module_jobs = obj.data.values()
+            if module_name is not None:
+                module_jobs = [obj.data[module_name]]
+            for jobs in module_jobs:
                 if jobs:
                     for name in jobs.keys():
                         if name == job_name:
