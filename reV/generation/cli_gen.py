@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 Generation CLI entry points.
 """
@@ -17,6 +18,7 @@ from reV.generation.generation import Gen
 from reV.pipeline.status import Status
 from reV.utilities.exceptions import ConfigError, ProjectPointsValueError
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
+from reV import __version__
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
 from rex.utilities.hpc import SLURM
@@ -37,6 +39,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

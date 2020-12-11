@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 Multi-year means CLI entry points.
 """
@@ -11,6 +12,7 @@ import time
 from reV.config.multi_year import MultiYearConfig
 from reV.handlers.multi_year import MultiYear
 from reV.pipeline.status import Status
+from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, STRLIST, PATHLIST, INT
 from rex.utilities.loggers import init_mult
@@ -31,6 +33,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

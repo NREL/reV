@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 QA/QC CLI entry points.
 """
@@ -18,6 +19,7 @@ from reV.pipeline.status import Status
 from reV.qa_qc.qa_qc import QaQc
 from reV.qa_qc.summary import (SummarizeH5, SummarizeSupplyCurve,
                                SupplyCurvePlot, ExclusionsMask)
+from reV import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

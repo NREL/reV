@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 reV offshore wind farm aggregation module command line interface (CLI).
 
@@ -18,6 +19,7 @@ from reV.config.offshore_config import OffshoreConfig
 from reV.pipeline.status import Status
 from reV.offshore.offshore import Offshore
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
+from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, INT
 from rex.utilities.loggers import init_mult
@@ -38,6 +40,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

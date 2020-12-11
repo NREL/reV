@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 reV Representative Profiles command line interface (cli).
 """
@@ -11,6 +12,7 @@ import time
 from reV.config.rep_profiles_config import RepProfilesConfig
 from reV.pipeline.status import Status
 from reV.rep_profiles.rep_profiles import RepProfiles, AggregatedRepProfiles
+from reV import __version__
 
 from rex.utilities.hpc import SLURM
 from rex.utilities.cli_dtypes import STR, INT, STRLIST
@@ -31,6 +33,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

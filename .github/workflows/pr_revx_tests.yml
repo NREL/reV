@@ -8,12 +8,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: checkout reV
+    - name: checkout rex
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 1
-        path: reV
+        path: rex
     - name: checkout reVX
       uses: actions/checkout@v2
       with:
@@ -21,20 +21,25 @@ jobs:
         fetch-depth: 1
         path: reVX
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        python-version: '3.8'
-    - name: Install reV dependencies
-      working-directory: ./reV
+        auto-update-conda: true
+        python-version: 3.8
+    - name: Install rex dependencies
+      working-directory: ./rex
+      shell: bash -l {0}
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install .
+        conda install pip
+        pip install -e .
     - name: Install reVX dependencies
       working-directory: ./reVX
+      shell: bash -l {0}
       run: |
-        python -m pip install .
+        conda install rtree
+        pip install -e .
     - name: Run reVX pytest
       working-directory: ./reVX
+      shell: bash -l {0}
       run: |
-        python -m pip install pytest
-        python -m pytest -v
+        conda install pytest
+        pytest -v

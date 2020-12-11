@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 File collection CLI entry points.
 """
@@ -11,6 +12,7 @@ import time
 from reV.config.collection import CollectionConfig
 from reV.handlers.collection import Collector
 from reV.pipeline.status import Status
+from reV import __version__
 
 from rex.utilities.cli_dtypes import STR, STRLIST, INT
 from rex.utilities.hpc import SLURM
@@ -31,6 +33,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

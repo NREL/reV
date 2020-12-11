@@ -30,6 +30,7 @@ from reV.supply_curve.cli_supply_curve import from_config as run_sc_from_config
 from reV.supply_curve.cli_supply_curve import valid_config_keys as sc_keys
 from reV.qa_qc.cli_qa_qc import from_config as run_qa_qc_from_config
 from reV.qa_qc.cli_qa_qc import valid_config_keys as qa_qc_keys
+from reV import __version__
 
 from rex.utilities.cli_dtypes import STR
 
@@ -51,6 +52,14 @@ def main(ctx, name, config_file, verbose):
     ctx.obj['NAME'] = name
     ctx.obj['CONFIG_FILE'] = config_file
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.group(invoke_without_command=True)

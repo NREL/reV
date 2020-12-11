@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 reV Supply Curve Aggregation command line interface (cli).
 """
@@ -13,6 +14,7 @@ from reV.config.supply_curve_configs import SupplyCurveAggregationConfig
 from reV.pipeline.status import Status
 from reV.supply_curve.tech_mapping import TechMapping
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
+from reV import __version__
 
 from rex.utilities.hpc import SLURM
 from rex.utilities.cli_dtypes import (STR, INT, FLOAT, STRLIST, FLOATLIST,
@@ -34,6 +36,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

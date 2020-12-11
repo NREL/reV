@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 Pipeline CLI entry points.
 """
@@ -6,6 +7,7 @@ import click
 
 from reV.config.pipeline import PipelineConfig
 from reV.pipeline.pipeline import Pipeline
+from reV import __version__
 
 from rex.utilities.cli_dtypes import STR
 from rex.utilities.utilities import get_class_properties
@@ -23,6 +25,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['NAME'] = name
     ctx.obj['VERBOSE'] = verbose
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

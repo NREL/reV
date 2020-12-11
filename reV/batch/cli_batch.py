@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 Batch Job CLI entry points.
 """
@@ -9,6 +10,7 @@ from rex.utilities.utilities import get_class_properties
 
 from reV.batch.batch import BatchJob
 from reV.config.batch import BatchConfig
+from reV import __version__
 
 
 @click.group()
@@ -22,6 +24,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['VERBOSE'] = verbose
     ctx.obj['NAME'] = name
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()

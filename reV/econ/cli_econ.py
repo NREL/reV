@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 Econ CLI entry points.
 """
@@ -16,6 +17,7 @@ from reV.econ.econ import Econ
 from reV.generation.cli_gen import get_node_name_fout, make_fout
 from reV.pipeline.status import Status
 from reV.utilities.cli_dtypes import SAMFILES, PROJECTPOINTS
+from reV import __version__
 
 from rex.utilities.cli_dtypes import INT, STR, INTLIST, STRLIST
 from rex.utilities.hpc import SLURM
@@ -36,6 +38,14 @@ def main(ctx, name, verbose):
     ctx.ensure_object(dict)
     ctx.obj['VERBOSE'] = verbose
     ctx.obj['NAME'] = name
+
+
+@main.command()
+def version():
+    """
+    print version
+    """
+    click.echo(__version__)
 
 
 @main.command()
