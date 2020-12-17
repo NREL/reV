@@ -249,11 +249,34 @@ class SupplyCurve:
                      .format(merge_cols))
         sc_points = sc_points.rename(columns=merge_cols)
         merge_cols = list(merge_cols.values())
+
         if offshore_table is not None:
+            logger.info('Merging in offshore transmission table on primary '
+                        'key "farm_gid": {}'.format(offshore_table))
             offshore_table = cls._parse_trans_table(offshore_table)
-            offshore_cols = merge_cols + ['farm_gid']
-            offshore_table = offshore_table.merge(sc_points[offshore_cols],
-                                                  on='farm_gid', how='left')
+            logger.debug('Offshore transmission table has columns: {}'
+                         .format(list(offshore_table.columns)))
+            logger.debug('Merging offshore transmission table with supply '
+                         'curve point summary table that has columns: {}'
+                         .format(list(sc_points.columns)))
+            sc_offshore_cols = merge_cols + ['farm_gid', 'sc_point_gid']
+
+            column_diff = list(set(offshore_table.columns)
+                               - set(sc_points[sc_offshore_cols]))
+            offshore_cols = column_diff + ['farm_gid']
+            ignore_cols = list(set(offshore_table.columns)
+                               - set(offshore_cols))
+            logger.debug('Offshore transmission table has column diff: {}'
+                         .format(column_diff))
+            logger.debug('Keeping offshore trans table columns: {}'
+                         .format(offshore_cols))
+            logger.debug('Dropping offshore trans table columns: {}'
+                         .format(ignore_cols))
+
+            offshore_table = offshore_table[offshore_cols].merge(
+                sc_points[sc_offshore_cols], on='farm_gid', how='left')
+            logger.debug('Offshore transmission table merged with sc points '
+                         'has columns: {}'.format(offshore_table.columns))
 
             if np.any(offshore_table[merge_cols].isnull().values):
                 missing = offshore_table['sc_point_gid'].isnull().values
@@ -264,7 +287,11 @@ class SupplyCurve:
                 warn(msg)
                 offshore_table = offshore_table.loc[~missing]
 
+            logger.debug('Concatenating offshore transmission table to '
+                         'onshore transmission table...')
             trans_table = pd.concat((trans_table, offshore_table))
+            logger.debug('Concatenated transmission table:\n{}'
+                         .format(trans_table))
 
         sc_cols = sc_cols + merge_cols
         sc_points = sc_points[sc_cols].copy()
