@@ -39,53 +39,20 @@ class Econ(BaseGen):
                'turbine_cost': WindBos,
                'sales_tax_cost': WindBos,
                'bos_cost': WindBos,
+               'fixed_charge_rate': SAM_LCOE,
+               'capital_cost': SAM_LCOE,
+               'fixed_operating_cost': SAM_LCOE,
+               'variable_operating_cost': SAM_LCOE,
                }
 
     # Mapping of reV econ outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
-    OUT_ATTRS = {'other': {'scale_factor': 1, 'units': 'unknown',
-                           'dtype': 'float32', 'chunks': None},
-                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                 'project_return_aftertax_npv': {'scale_factor': 1,
-                                                 'units': 'dol',
-                                                 'dtype': 'float32',
-                                                 'chunks': None,
-                                                 'type': 'scalar'},
-                 'lcoe_real': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                 'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 'flip_actual_irr': {'scale_factor': 1, 'units': 'perc',
-                                     'dtype': 'float32', 'chunks': None,
-                                     'type': 'scalar'},
-                 'gross_revenue': {'scale_factor': 1, 'units': 'dollars',
-                                   'dtype': 'float32', 'chunks': None,
-                                   'type': 'scalar'},
-                 'total_installed_cost': {'scale_factor': 1,
-                                          'units': 'dollars',
-                                          'dtype': 'float32', 'chunks': None,
-                                          'type': 'scalar'},
-                 'turbine_cost': {'scale_factor': 1, 'units': 'dollars',
-                                  'dtype': 'float32', 'chunks': None,
-                                  'type': 'scalar'},
-                 'sales_tax_cost': {'scale_factor': 1, 'units': 'dollars',
-                                    'dtype': 'float32', 'chunks': None,
-                                    'type': 'scalar'},
-                 'bos_cost': {'scale_factor': 1, 'units': 'dollars',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 }
+    OUT_ATTRS = BaseGen.ECON_ATTRS
 
     def __init__(self, points_control, cf_file, year, site_data=None,
-                 output_request=('lcoe_fcr',), fout=None, dirout='./econ_out',
-                 append=False, mem_util_lim=0.4):
+                 output_request=('lcoe_fcr',), pass_through_lcoe_args=False,
+                 fout=None, dirout='./econ_out', append=False,
+                 mem_util_lim=0.4):
         """Initialize an econ instance.
 
         Parameters
@@ -105,6 +72,13 @@ class Econ(BaseGen):
             Input as None if no site-specific data.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
+        pass_through_lcoe_args : bool
+            Flag to pass through the SAM arguments used for the lcoe_fcr
+            calculator into the reV output. These variables include:
+            (fixed_charge_rate, capital_cost, fixed_operating_cost,
+            variable_operating_cost). This can be used to re-calculate LCOE
+            in downstream reV modules to compute economies-of-scale capital
+            cost reductions.
         fout : str | None
             Optional .h5 output file specification.
         dirout : str | None
@@ -116,6 +90,7 @@ class Econ(BaseGen):
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
+                         pass_through_lcoe_args=pass_through_lcoe_args,
                          fout=fout, dirout=dirout, mem_util_lim=mem_util_lim)
 
         self._cf_file = cf_file
@@ -312,13 +287,20 @@ class Econ(BaseGen):
 
         return out
 
-    def _parse_output_request(self, req):
+    def _parse_output_request(self, req, pass_through_lcoe_args):
         """Set the output variables requested from generation.
 
         Parameters
         ----------
         req : str| list | tuple
             Output variables requested from SAM.
+        pass_through_lcoe_args : bool
+            Flag to pass through the SAM arguments used for the lcoe_fcr
+            calculator into the reV output. These variables include:
+            (fixed_charge_rate, capital_cost, fixed_operating_cost,
+            variable_operating_cost). This can be used to re-calculate LCOE
+            in downstream reV modules to compute economies-of-scale capital
+            cost reductions.
 
         Returns
         -------
@@ -327,6 +309,9 @@ class Econ(BaseGen):
         """
 
         output_request = self._output_request_type_check(req)
+
+        if pass_through_lcoe_args:
+            output_request += list(self.LCOE_ARGS)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
@@ -403,8 +388,8 @@ class Econ(BaseGen):
     @classmethod
     def reV_run(cls, points, sam_files, cf_file,
                 year=None, site_data=None, output_request=('lcoe_fcr',),
-                max_workers=1, sites_per_worker=100,
-                pool_size=(os.cpu_count() * 2),
+                pass_through_lcoe_args=False, max_workers=1,
+                sites_per_worker=100, pool_size=(os.cpu_count() * 2),
                 timeout=1800, points_range=None, fout=None,
                 dirout='./econ_out', append=False):
         """Execute a parallel reV econ run with smart data flushing.
@@ -433,6 +418,13 @@ class Econ(BaseGen):
             Input as None if no site-specific data.
         output_request : str | list | tuple
             Economic output variable(s) requested from SAM.
+        pass_through_lcoe_args : bool
+            Flag to pass through the SAM arguments used for the lcoe_fcr
+            calculator into the reV output. These variables include:
+            (fixed_charge_rate, capital_cost, fixed_operating_cost,
+            variable_operating_cost). This can be used to re-calculate LCOE
+            in downstream reV modules to compute economies-of-scale capital
+            cost reductions.
         max_workers : int
             Number of local workers to run on.
         sites_per_worker : int
@@ -467,8 +459,13 @@ class Econ(BaseGen):
                         sites_per_worker=sites_per_worker, append=append)
 
         # make a class instance to operate with
-        econ = cls(pc, cf_file, year=year, site_data=site_data,
-                   output_request=output_request, fout=fout, dirout=dirout,
+        econ = cls(pc, cf_file,
+                   year=year,
+                   site_data=site_data,
+                   output_request=output_request,
+                   pass_through_lcoe_args=pass_through_lcoe_args,
+                   fout=fout,
+                   dirout=dirout,
                    append=append)
 
         diff = list(set(pc.sites) - set(econ.meta['gid'].values))

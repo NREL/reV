@@ -34,8 +34,74 @@ class BaseGen(ABC):
     # Mapping of reV generation / econ outputs to scale factors and units.
     OUT_ATTRS = {}
 
+    # Mapping of reV econ outputs to scale factors and units.
+    # Type is scalar or array and corresponds to the SAM single-site output
+    # This is the OUT_ATTRS class attr for Econ but should also be accessible
+    # to rev generation
+    ECON_ATTRS = {'other': {'scale_factor': 1, 'units': 'unknown',
+                            'dtype': 'float32', 'chunks': None},
+                  'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
+                               'dtype': 'float32', 'chunks': None,
+                               'type': 'scalar'},
+                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
+                                'dtype': 'float32', 'chunks': None,
+                                'type': 'scalar'},
+                  'project_return_aftertax_npv': {'scale_factor': 1,
+                                                  'units': 'dol',
+                                                  'dtype': 'float32',
+                                                  'chunks': None,
+                                                  'type': 'scalar'},
+                  'lcoe_real': {'scale_factor': 1, 'units': 'dol/MWh',
+                                'dtype': 'float32', 'chunks': None,
+                                'type': 'scalar'},
+                  'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
+                               'dtype': 'float32', 'chunks': None,
+                               'type': 'scalar'},
+                  'flip_actual_irr': {'scale_factor': 1, 'units': 'perc',
+                                      'dtype': 'float32', 'chunks': None,
+                                      'type': 'scalar'},
+                  'gross_revenue': {'scale_factor': 1, 'units': 'dollars',
+                                    'dtype': 'float32', 'chunks': None,
+                                    'type': 'scalar'},
+                  'total_installed_cost': {'scale_factor': 1,
+                                           'units': 'dollars',
+                                           'dtype': 'float32', 'chunks': None,
+                                           'type': 'scalar'},
+                  'turbine_cost': {'scale_factor': 1, 'units': 'dollars',
+                                   'dtype': 'float32', 'chunks': None,
+                                   'type': 'scalar'},
+                  'sales_tax_cost': {'scale_factor': 1, 'units': 'dollars',
+                                     'dtype': 'float32', 'chunks': None,
+                                     'type': 'scalar'},
+                  'bos_cost': {'scale_factor': 1, 'units': 'dollars',
+                               'dtype': 'float32', 'chunks': None,
+                               'type': 'scalar'},
+
+                  # LCOE input args
+                  'fixed_charge_rate': {'scale_factor': 1, 'units': 'unitless',
+                                        'dtype': 'float32', 'chunks': None,
+                                        'type': 'scalar'},
+                  'capital_cost': {'scale_factor': 1, 'units': 'dollars',
+                                   'dtype': 'float32', 'chunks': None,
+                                   'type': 'scalar'},
+                  'fixed_operating_cost': {'scale_factor': 1,
+                                           'units': 'dollars',
+                                           'dtype': 'float32', 'chunks': None,
+                                           'type': 'scalar'},
+                  'variable_operating_cost': {'scale_factor': 1,
+                                              'units': 'dol/kWh',
+                                              'dtype': 'float32',
+                                              'chunks': None,
+                                              'type': 'scalar'},
+                  }
+
+    # SAM argument names used to calculate LCOE
+    LCOE_ARGS = ('fixed_charge_rate', 'capital_cost', 'fixed_operating_cost',
+                 'variable_operating_cost')
+
     def __init__(self, points_control, output_request, site_data=None,
-                 fout=None, dirout='./', drop_leap=False, mem_util_lim=0.4):
+                 pass_through_lcoe_args=False, fout=None, dirout='./',
+                 drop_leap=False, mem_util_lim=0.4):
         """
         Parameters
         ----------
@@ -48,6 +114,13 @@ class BaseGen(ABC):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
+        pass_through_lcoe_args : bool
+            Flag to pass through the SAM arguments used for the lcoe_fcr
+            calculator into the reV output. These variables include:
+            (fixed_charge_rate, capital_cost, fixed_operating_cost,
+            variable_operating_cost). This can be used to re-calculate LCOE
+            in downstream reV modules to compute economies-of-scale capital
+            cost reductions.
         fout : str | None
             Optional .h5 output file specification.
         dirout : str | None
@@ -86,7 +159,8 @@ class BaseGen(ABC):
 
         self._site_data = self._parse_site_data(site_data)
         self.add_site_data_to_pp(self._site_data)
-        self._output_request = self._parse_output_request(output_request)
+        self._output_request = self._parse_output_request(
+            output_request, pass_through_lcoe_args)
 
         # pre-initialize output arrays to store results when available.
         self._out = {}
@@ -831,7 +905,7 @@ class BaseGen(ABC):
                        'Received the following error: "{}"'
                        .format(dset, self._sam_obj_default, e))
                 logger.error(msg)
-                raise ExecutionError(msg)
+                raise ExecutionError(msg) from e
             else:
                 if isinstance(out_data, (int, float, str)):
                     data_shape = (n_sites, )

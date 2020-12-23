@@ -103,18 +103,7 @@ class Gen(BaseGen):
                  'poa': {'scale_factor': 1, 'units': 'W/m2',
                          'dtype': 'float32', 'chunks': (None, 100),
                          'type': 'array'},
-                 'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                 'lcoe_real': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                 'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
+
                  # Solar water heater
                  'T_amb': {'scale_factor': 1, 'units': 'C',
                            'dtype': 'int16', 'chunks': None,
@@ -155,6 +144,7 @@ class Gen(BaseGen):
                  'solar_fraction': {'scale_factor': 1, 'units': 'None',
                                     'dtype': 'float32', 'chunks': None,
                                     'type': 'scalar'},
+
                  # Linear Fresnel
                  'q_dot_to_heat_sink': {'scale_factor': 1, 'units': 'MWt',
                                         'dtype': 'float32', 'chunks': None,
@@ -213,8 +203,11 @@ class Gen(BaseGen):
                                          'type': 'scalar'},
                  }
 
+    OUT_ATTRS.update(BaseGen.ECON_ATTRS)
+
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
-                 site_data=None, fout=None, dirout='./gen_out',
+                 pass_through_lcoe_args=False, site_data=None,
+                 fout=None, dirout='./gen_out',
                  drop_leap=False, mem_util_lim=0.4):
         """
         Parameters
@@ -226,6 +219,13 @@ class Gen(BaseGen):
             or /h5_dir/prefix*suffix
         output_request : list | tuple
             Output variables requested from SAM.
+        pass_through_lcoe_args : bool
+            Flag to pass through the SAM arguments used for the lcoe_fcr
+            calculator into the reV output. These variables include:
+            (fixed_charge_rate, capital_cost, fixed_operating_cost,
+            variable_operating_cost). This can be used to re-calculate LCOE
+            in downstream reV modules to compute economies-of-scale capital
+            cost reductions.
         site_data : str | pd.DataFrame | None
             Site-specific input data for SAM calculation. String should be a
             filepath that points to a csv, DataFrame is pre-extracted data.
@@ -245,6 +245,7 @@ class Gen(BaseGen):
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
+                         pass_through_lcoe_args=pass_through_lcoe_args,
                          fout=fout, dirout=dirout, drop_leap=drop_leap,
                          mem_util_lim=mem_util_lim)
 
@@ -357,27 +358,6 @@ class Gen(BaseGen):
 
         return self._time_index
 
-    @staticmethod
-    def _add_out_reqs(output_request):
-        """Add additional output requests as needed.
-
-        Parameters
-        ----------
-        output_request : list
-            Output variables requested from SAM.
-
-        Returns
-        -------
-        output_request : list
-            Output variable list with cf_mean and resource mean out vars.
-        """
-
-        if 'cf_mean' not in output_request:
-            # ensure that cf_mean is requested from output
-            output_request.append('cf_mean')
-
-        return output_request
-
     @classmethod
     def run(cls, points_control, tech=None, res_file=None, output_request=None,
             scale_outputs=True):
@@ -445,13 +425,20 @@ class Gen(BaseGen):
 
         return out
 
-    def _parse_output_request(self, req):
+    def _parse_output_request(self, req, pass_through_lcoe_args):
         """Set the output variables requested from generation.
 
         Parameters
         ----------
         req : list | tuple
             Output variables requested from SAM.
+        pass_through_lcoe_args : bool
+            Flag to pass through the SAM arguments used for the lcoe_fcr
+            calculator into the reV output. These variables include:
+            (fixed_charge_rate, capital_cost, fixed_operating_cost,
+            variable_operating_cost). This can be used to re-calculate LCOE
+            in downstream reV modules to compute economies-of-scale capital
+            cost reductions.
 
         Returns
         -------
@@ -460,7 +447,13 @@ class Gen(BaseGen):
         """
 
         output_request = self._output_request_type_check(req)
-        output_request = self._add_out_reqs(output_request)
+
+        # ensure that cf_mean is requested from output
+        if 'cf_mean' not in output_request:
+            output_request.append('cf_mean')
+
+        if pass_through_lcoe_args:
+            output_request += list(self.LCOE_ARGS)
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
@@ -473,6 +466,7 @@ class Gen(BaseGen):
     @classmethod
     def reV_run(cls, tech, points, sam_files, res_file,
                 output_request=('cf_mean',), site_data=None, curtailment=None,
+                pass_through_lcoe_args=False,
                 max_workers=1, sites_per_worker=None,
                 pool_size=(os.cpu_count() * 2), timeout=1800,
                 points_range=None, fout=None,
@@ -511,6 +505,13 @@ class Gen(BaseGen):
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
+        pass_through_lcoe_args : bool
+            Flag to pass through the SAM arguments used for the lcoe_fcr
+            calculator into the reV output. These variables include:
+            (fixed_charge_rate, capital_cost, fixed_operating_cost,
+            variable_operating_cost). This can be used to re-calculate LCOE
+            in downstream reV modules to compute economies-of-scale capital
+            cost reductions.
         max_workers : int
             Number of local workers to run on.
         sites_per_worker : int | None
@@ -550,8 +551,12 @@ class Gen(BaseGen):
                         curtailment=curtailment)
 
         # make a Gen class instance to operate with
-        gen = cls(pc, res_file, output_request=output_request,
-                  site_data=site_data, fout=fout, dirout=dirout,
+        gen = cls(pc, res_file,
+                  output_request=output_request,
+                  site_data=site_data,
+                  pass_through_lcoe_args=pass_through_lcoe_args,
+                  fout=fout,
+                  dirout=dirout,
                   mem_util_lim=mem_util_lim)
 
         kwargs = {'tech': gen.tech,
