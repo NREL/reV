@@ -111,6 +111,21 @@ class SAMAnalysisConfig(AnalysisConfig):
         return self._output_request
 
     @property
+    def pass_through_lcoe_args(self):
+        """Get the flag to determine whether or not to pass through LCOE
+        input arguements to the reV output. Default is False (dont pass
+        through extra args).
+
+        Returns
+        -------
+        pass_through_lcoe_args : bool
+            Flag to determine whether or not to pass through LCOE
+            input arguements to the reV output. Default is False (dont pass
+            through extra args).
+        """
+        return self.get('pass_through_lcoe_args', False)
+
+    @property
     def site_data(self):
         """Get the site-specific SAM inputs data file.
 

@@ -110,6 +110,7 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['APPEND'] = config.append
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
+    ctx.obj['PASS_THROUGH_LCOE_ARGS'] = config.pass_through_lcoe_args
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
     ctx.obj['MAX_WORKERS'] = config.execution_control.max_workers
     ctx.obj['TIMEOUT'] = config.timeout
@@ -221,6 +222,13 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
 @click.option('-or', '--output_request', type=STRLIST, default=['lcoe_fcr'],
               help=('Requested output variable name(s). '
                     'Default is ["lcoe_fcr"].'))
+@click.option('-ptla', '--pass_through_lcoe_args', is_flag=True,
+              help='Flag to pass through the SAM arguments used for the '
+              'lcoe_fcr calculator into the reV output. These variables '
+              'include: (fixed_charge_rate, capital_cost, '
+              'fixed_operating_cost, variable_operating_cost). This can be '
+              'used to re-calculate LCOE in downstream reV modules to compute '
+              'economies-of-scale capital cost reductions.')
 @click.option('-ap', '--append', is_flag=True,
               help='Flag to append econ datasets to source cf_file. This has '
               'priority over fout and dirout inputs.')
@@ -229,7 +237,7 @@ def submit_from_config(ctx, name, cf_file, year, config, verbose):
 @click.pass_context
 def direct(ctx, sam_files, cf_file, year, points, site_data,
            sites_per_worker, fout, dirout, logdir, output_request,
-           append, verbose):
+           pass_through_lcoe_args, append, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.ensure_object(dict)
     ctx.obj['POINTS'] = points
@@ -242,6 +250,7 @@ def direct(ctx, sam_files, cf_file, year, points, site_data,
     ctx.obj['DIROUT'] = dirout
     ctx.obj['LOGDIR'] = logdir
     ctx.obj['OUTPUT_REQUEST'] = output_request
+    ctx.obj['PASS_THROUGH_LCOE_ARGS'] = pass_through_lcoe_args
     ctx.obj['APPEND'] = append
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
@@ -272,6 +281,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    pass_through_lcoe_args = ctx.obj['PASS_THROUGH_LCOE_ARGS']
     append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
@@ -299,6 +309,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                  year=year,
                  site_data=site_data,
                  output_request=output_request,
+                 pass_through_lcoe_args=pass_through_lcoe_args,
                  max_workers=max_workers,
                  timeout=timeout,
                  sites_per_worker=sites_per_worker,
@@ -358,7 +369,7 @@ def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
                  sites_per_worker=None, max_workers=None, timeout=1800,
                  fout='reV.h5', dirout='./out/econ_out',
                  logdir='./out/log_econ', output_request='lcoe_fcr',
-                 append=False, verbose=False):
+                 pass_through_lcoe_args=False, append=False, verbose=False):
     """Made a reV econ direct-local command line interface call string.
 
     Parameters
@@ -397,6 +408,13 @@ def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
         Target directory to save log files.
     output_request : list | tuple
         Output variable requested from SAM.
+    pass_through_lcoe_args : bool
+        Flag to pass through the SAM arguments used for the lcoe_fcr
+        calculator into the reV output. These variables include:
+        (fixed_charge_rate, capital_cost, fixed_operating_cost,
+        variable_operating_cost). This can be used to re-calculate LCOE
+        in downstream reV modules to compute economies-of-scale capital
+        cost reductions.
     append : bool
         Flag to append econ datasets to source cf_file. This has priority
         over the fout and dirout inputs.
@@ -430,6 +448,9 @@ def get_node_cmd(name, sam_files, cf_file, year=None, site_data=None,
 
     if append:
         arg_direct.append('-ap')
+
+    if pass_through_lcoe_args:
+        arg_direct.append('-ptla')
 
     arg_loc = ['-mw {}'.format(SLURM.s(max_workers)),
                '-to {}'.format(SLURM.s(timeout)),
@@ -488,6 +509,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
     dirout = ctx.obj['DIROUT']
     logdir = ctx.obj['LOGDIR']
     output_request = ctx.obj['OUTPUT_REQUEST']
+    pass_through_lcoe_args = ctx.obj['PASS_THROUGH_LCOE_ARGS']
     append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
@@ -515,6 +537,7 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
                            fout=fout_node,
                            dirout=dirout, logdir=logdir,
                            output_request=output_request, append=append,
+                           pass_through_lcoe_args=pass_through_lcoe_args,
                            verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'econ', node_name,
