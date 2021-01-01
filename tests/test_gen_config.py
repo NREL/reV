@@ -7,14 +7,14 @@ Created on Thu Nov 29 09:54:51 2018
 
 @author: gbuster
 """
-
+from click.testing import CliRunner
+import numpy as np
 import os
 import pytest
-import numpy as np
-from subprocess import Popen, PIPE
-import shlex
-import logging
+import tempfile
+import traceback
 
+from reV.cli import main
 from reV.config.sam_analysis_configs import GenConfig
 from reV import TESTDATADIR
 from reV.handlers.outputs import Outputs
@@ -24,8 +24,16 @@ ATOL = 0.04
 PURGE_OUT = True
 
 
+@pytest.fixture(scope="module")
+def runner():
+    """
+    cli runner
+    """
+    return CliRunner()
+
+
 @pytest.mark.parametrize('tech', ['pv', 'wind'])  # noqa: C901
-def test_gen_from_config(tech):  # noqa: C901
+def test_gen_from_config(runner, tech):  # noqa: C901
     """Gen PV CF profiles with write to disk and compare against rev1."""
 
     job_name = 'config_test_{}'.format(tech)
@@ -39,20 +47,12 @@ def test_gen_from_config(tech):  # noqa: C901
                           'config/{}'.format(fconfig)).replace('\\', '/')
     config_obj = GenConfig(config)
 
-    cmd = 'python -m reV.cli -n "{}" -c {} generation'.format(job_name, config)
-    cmd = shlex.split(cmd)
-
-    # use subprocess to submit command and get piped o/e
-    process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate()
-    stderr = stderr.decode('ascii').rstrip()
-    stdout = stdout.decode('ascii').rstrip()
-
-    if stderr:
-        ferr = os.path.join(config_obj.dirout, 'test_config.e')
-        if os.path.exists(ferr):
-            with open(ferr, 'w') as f:
-                f.write(stderr)
+    result = runner.invoke(main, ['-n', job_name,
+                                  '-c', config,
+                                  'generation'])
+    msg = ('Failed with error {}'
+           .format(traceback.print_exception(*result.exc_info)))
+    assert result.exit_code == 0, msg
 
     # get reV 2.0 generation profiles from disk
     rev2_profiles = None

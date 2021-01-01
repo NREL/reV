@@ -81,9 +81,7 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV.config',
-                                            'reV.utilities', 'rex.utilities'],
-              verbose=verbose)
+    init_mult(name, config.logdir, modules=['reV', 'rex'], verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV offshore aggregation from config '

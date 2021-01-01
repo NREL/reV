@@ -71,8 +71,7 @@ def summarize(ctx, out_dir, log_file, verbose):
     else:
         log_level = 'INFO'
 
-    ctx.obj['LOGGER'] = init_logger('reV.qa_qc', log_file=log_file,
-                                    log_level=log_level)
+    init_logger('reV', log_file=log_file, log_level=log_level)
 
 
 @summarize.command()
@@ -214,7 +213,7 @@ def reV_h5(ctx, h5_file, out_dir, sub_dir, dsets, group, process_size,
     else:
         log_level = 'INFO'
 
-    init_logger('reV.qa_qc', log_file=log_file, log_level=log_level)
+    init_logger('reV', log_file=log_file, log_level=log_level)
 
     qa_dir = out_dir
     if sub_dir is not None:
@@ -267,7 +266,7 @@ def supply_curve(ctx, sc_table, out_dir, sub_dir, columns, plot_type, cmap,
     else:
         log_level = 'INFO'
 
-    init_logger('reV.qa_qc', log_file=log_file, log_level=log_level)
+    init_logger('reV', log_file=log_file, log_level=log_level)
 
     qa_dir = out_dir
     if sub_dir is not None:
@@ -329,7 +328,7 @@ def exclusions(ctx, excl_fpath, out_dir, sub_dir, excl_dict,
     else:
         log_level = 'INFO'
 
-    init_logger('reV.qa_qc', log_file=log_file, log_level=log_level)
+    init_logger('reV', log_file=log_file, log_level=log_level)
 
     qa_dir = out_dir
     if sub_dir is not None:
@@ -371,10 +370,7 @@ def from_config(ctx, config_file, verbose):
     verbose = config.log_level == logging.DEBUG
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV.config',
-                                            'reV.utilities', 'reV.qa_qc',
-                                            'rex.utilities'],
-              verbose=verbose)
+    init_mult(name, config.logdir, modules=['reV', 'rex'], verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve from config '
