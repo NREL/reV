@@ -112,6 +112,41 @@ class EconomiesOfScale:
         out = eval(str(self._eqn), globals(), kwargs)
         return out
 
+    @staticmethod
+    def _get_prioritized_keys(input_dict, key_list):
+        """Get data from an input dictionary based on an ordered (prioritized)
+        list of retrieval keys. If no keys are found in the input_dict, an
+        error will be raised.
+
+        Parameters
+        ----------
+        input_dict : dict
+            Dictionary of data
+        key_list : list | tuple
+            Ordered (prioritized) list of retrieval keys.
+
+        Returns
+        -------
+        out : object
+            Data retrieved from input_dict using the first key in key_list
+            found in the input_dict.
+        """
+
+        out = None
+        for key in key_list:
+            if key in input_dict:
+                out = input_dict[key]
+                break
+
+        if out is None:
+            e = ('Could not find requested key list ({}) in the input '
+                 'dictionary keys: {}'
+                 .format(key_list, list(input_dict.keys())))
+            logger.error(e)
+            raise KeyError(e)
+
+        return out
+
     @property
     def capital_cost_scalar(self):
         """Evaluated output of the EconomiesOfScale equation. Should be
@@ -134,7 +169,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Unscaled (raw) capital_cost found in the data input arg.
         """
-        return self._data['capital_cost']
+        key_list = ['capital_cost', 'mean_capital_cost']
+        return self._get_prioritized_keys(self._data, key_list)
 
     @property
     def scaled_capital_cost(self):
@@ -160,7 +196,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed charge rate from input data arg
         """
-        return self._data['fcr']
+        key_list = ['fixed_charge_rate', 'mean_fixed_charge_rate']
+        return self._get_prioritized_keys(self._data, key_list)
 
     @property
     def foc(self):
@@ -171,7 +208,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed operating cost from input data arg
         """
-        return self._data['foc']
+        key_list = ['fixed_operating_cost', 'mean_fixed_operating_cost']
+        return self._get_prioritized_keys(self._data, key_list)
 
     @property
     def voc(self):
@@ -182,22 +220,37 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Variable operating cost from input data arg
         """
-        return self._data['voc']
+        key_list = ['variable_operating_cost', 'mean_variable_operating_cost']
+        return self._get_prioritized_keys(self._data, key_list)
 
     @property
     def aep(self):
-        """Annual energy production from input data arg
+        """Annual energy production from input data arg. If a valid key is not
+        found in the input data, aep is calculated as:
+
+        AEP = (System Capacity (MW) * mean capacity factor
+               * 8,760 hours/year * 1,000 kWh/MWh)
 
         Returns
         -------
         out : float | np.ndarray
             Annual energy production from input data arg
         """
-        return self._data['aep']
+
+        try:
+            key_list = ['aep', 'annual_energy_production', 'mean_aep',
+                        'mean_annual_energy_production']
+            aep = self._get_prioritized_keys(self._data, key_list)
+        except KeyError:
+            aep = self._data['capacity'] * self._data['mean_cf'] * 8760 * 1000
+
+        return aep
 
     @property
     def raw_lcoe(self):
         """LCOE calculated with the unscaled (raw) capital cost
+
+        LCOE = (FCR * raw_capital_cost + FOC) / AEP + VOC
 
         Returns
         -------
@@ -212,6 +265,8 @@ class EconomiesOfScale:
     def scaled_lcoe(self):
         """LCOE calculated with the scaled capital cost based on the
         EconomiesOfScale input equation.
+
+        LCOE = (FCR * scaled_capital_cost + FOC) / AEP + VOC
 
         Returns
         -------
