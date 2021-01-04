@@ -209,7 +209,7 @@ def direct(ctx, gen_fpath, rev_summary, reg_cols, cf_dset, rep_method,
 
     if ctx.invoked_subcommand is None:
         t0 = time.time()
-        init_mult(name, log_dir, modules=[__name__, 'reV.rep_profiles'],
+        init_mult(name, log_dir, modules=['reV', 'rex'],
                   verbose=verbose)
 
         fn_out = '{}.h5'.format(name)

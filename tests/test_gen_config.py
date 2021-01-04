@@ -11,9 +11,9 @@ from click.testing import CliRunner
 import numpy as np
 import os
 import pytest
-import tempfile
 import traceback
 
+from rex.utilities.loggers import LOGGERS
 from reV.cli import main
 from reV.config.sam_analysis_configs import GenConfig
 from reV import TESTDATADIR
@@ -30,6 +30,22 @@ def runner():
     cli runner
     """
     return CliRunner()
+
+
+def get_r1_profiles(year=2012, tech='pv'):
+    """Get the first 100 reV 1.0 ri generation profiles."""
+
+    if tech == 'pv':
+        rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
+                            'pv_{}_0.h5'.format(year))
+    elif tech == 'wind':
+        rev1 = os.path.join(TESTDATADIR, 'ri_wind', 'profile_outputs',
+                            'wind_{}_0.h5'.format(year))
+
+    with Outputs(rev1) as cf:
+        data = cf['cf_profile'][...] / 10000
+
+    return data
 
 
 @pytest.mark.parametrize('tech', ['pv', 'wind'])  # noqa: C901
@@ -93,21 +109,7 @@ def test_gen_from_config(runner, tech):  # noqa: C901
            .format(tech))
     assert result is True, msg
 
-
-def get_r1_profiles(year=2012, tech='pv'):
-    """Get the first 100 reV 1.0 ri generation profiles."""
-
-    if tech == 'pv':
-        rev1 = os.path.join(TESTDATADIR, 'ri_pv', 'profile_outputs',
-                            'pv_{}_0.h5'.format(year))
-    elif tech == 'wind':
-        rev1 = os.path.join(TESTDATADIR, 'ri_wind', 'profile_outputs',
-                            'wind_{}_0.h5'.format(year))
-
-    with Outputs(rev1) as cf:
-        data = cf['cf_profile'][...] / 10000
-
-    return data
+    LOGGERS.clear()
 
 
 def execute_pytest(capture='all', flags='-rapP'):

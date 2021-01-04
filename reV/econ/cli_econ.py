@@ -280,9 +280,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
         dirout = os.path.dirname(cf_file)
 
     # initialize loggers for multiple modules
-    log_modules = [__name__, 'reV.econ.econ', 'reV.generation', 'reV.config',
-                   'reV.utilities', 'reV.SAM', 'reV.handlers', 'rex.utilities']
-    init_mult(name, logdir, modules=log_modules,
+    init_mult(name, logdir, modules=['reV', 'rex'],
               verbose=verbose, node=True)
 
     for key, val in ctx.obj.items():
@@ -492,11 +490,6 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, module, conda_env,
     output_request = ctx.obj['OUTPUT_REQUEST']
     append = ctx.obj['APPEND']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-
-    # initialize a logger on the year level
-    log_modules = [__name__, 'reV.econ.econ', 'reV.config', 'reV.utilities',
-                   'reV.SAM', 'rex.utilities']
-    init_mult(name, logdir, modules=log_modules, verbose=verbose)
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:

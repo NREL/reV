@@ -162,8 +162,7 @@ def direct(ctx, gen_fpath, offshore_fpath, points, sam_files,
 
     if ctx.invoked_subcommand is None:
         t0 = time.time()
-        init_mult(name, log_dir, modules=[__name__, 'reV.offshore',
-                                          'reV.handlers', 'rex'],
+        init_mult(name, log_dir, modules=['reV', 'rex'],
                   verbose=verbose, node=True)
 
         fpath_out = gen_fpath.replace('.h5', '_offshore.h5')
