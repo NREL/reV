@@ -3,13 +3,21 @@ repos:
     rev: v2.3.0
     hooks:
     -   id: check-json
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
     -   id: check-merge-conflict
     -   id: check-symlinks
-    -   id: flake8
     -   id: mixed-line-ending
+    -   id: sort-simple-yaml
+    -   id: requirements-txt-fixer
     -   id: pretty-format-json
         args: [--autofix]
--   repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v2.3.1
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.4
+    hooks:
+    -   id: flake8
+-   repo: https://github.com/PyCQA/pylint
+    rev: pylint-2.6.0
     hooks:
     -   id: pylint
