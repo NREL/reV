@@ -78,9 +78,7 @@ def from_config(ctx, config_file, verbose):
         verbose = True
 
     # initialize loggers
-    init_mult(name, config.logdir, modules=[__name__, 'reV.config',
-                                            'reV.utilities', 'rex.utilities'],
-              verbose=verbose)
+    init_mult(name, config.logdir, modules=['reV', 'rex'], verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV supply curve aggregation from config '
@@ -269,7 +267,7 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
 
     if ctx.invoked_subcommand is None:
         t0 = time.time()
-        init_mult(name, log_dir, modules=[__name__, 'reV.supply_curve'],
+        init_mult(name, log_dir, modules=['reV', 'rex'],
                   verbose=verbose)
 
         with h5py.File(excl_fpath, mode='r') as f:

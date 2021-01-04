@@ -86,11 +86,7 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir,
-              modules=[__name__, 'reV.generation.generation',
-                       'reV.config', 'reV.utilities', 'reV.SAM',
-                       'rex.utilities'],
-              verbose=verbose)
+    init_mult(name, config.logdir, modules=['reV', 'rex'], verbose=verbose)
 
     # Initial log statements
     logger.info('Running reV Generation from config file: "{}"'
@@ -403,9 +399,7 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
-    init_mult(name, logdir, modules=[__name__, 'reV.generation.generation',
-                                     'reV.config', 'reV.utilities', 'reV.SAM',
-                                     'rex.utilities'],
+    init_mult(name, logdir, modules=['reV', 'rex'],
               verbose=verbose, node=True)
 
     for key, val in ctx.obj.items():
@@ -681,11 +675,6 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
     timeout = ctx.obj['TIMEOUT']
     curtailment = ctx.obj['CURTAILMENT']
     verbose = any([verbose, ctx.obj['VERBOSE']])
-
-    # initialize a logger on the year level
-    log_modules = [__name__, 'reV.generation.generation', 'reV.config',
-                   'reV.utilities', 'reV.SAM']
-    init_mult(name, logdir, modules=log_modules, verbose=verbose)
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
     if slurm_manager is None:

@@ -11,6 +11,7 @@ import pytest
 import numpy as np
 import shutil
 
+from rex.utilities.loggers import LOGGERS
 from reV import TESTDATADIR
 from reV.pipeline.pipeline import Pipeline
 
@@ -41,6 +42,8 @@ def test_pipeline_local():
     if PURGE_OUT:
         shutil.rmtree(log_dir)
         shutil.rmtree(out_dir)
+
+    LOGGERS.clear()
 
 
 def execute_pytest(capture='all', flags='-rapP'):

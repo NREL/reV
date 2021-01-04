@@ -42,4 +42,4 @@ jobs:
       shell: bash -l {0}
       run: |
         conda install pytest
-        pytest -v
+        pytest -v --disable-warnings
