@@ -99,6 +99,7 @@ def test_gen_from_config(runner, tech):  # noqa: C901
 
     result = np.allclose(rev1_profiles, rev2_profiles, rtol=RTOL, atol=ATOL)
 
+    LOGGERS.clear()
     if result and PURGE_OUT:
         # remove output files if test passes.
         flist = os.listdir(config_obj.dirout)
@@ -108,8 +109,6 @@ def test_gen_from_config(runner, tech):  # noqa: C901
     msg = ('reV generation from config input failed for "{}" module!'
            .format(tech))
     assert result is True, msg
-
-    LOGGERS.clear()
 
 
 def execute_pytest(capture='all', flags='-rapP'):
