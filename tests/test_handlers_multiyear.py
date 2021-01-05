@@ -2,25 +2,24 @@
 """
 pytests for MultiYear collection and computation
 """
+import h5py
 import numpy as np
 import os
+import shutil
 import pytest
+import tempfile
 
 from reV.handlers.outputs import Outputs
 from reV.handlers.multi_year import MultiYear
 from reV import TESTDATADIR
 
+from rex import Resource
 from rex.utilities.loggers import init_logger
 
-TEMP_DIR = os.path.join(TESTDATADIR, 'ri_gen_collect')
 H5_DIR = os.path.join(TESTDATADIR, 'gen_out')
 YEARS = [2012, 2013]
 H5_FILES = [os.path.join(H5_DIR, 'gen_ri_pv_{}_x000.h5'.format(year))
             for year in YEARS]
-PURGE_OUT = True
-
-if not os.path.exists(TEMP_DIR):
-    os.makedirs(TEMP_DIR)
 
 logger = init_logger('reV.handlers.multi_year', log_level='DEBUG')
 
@@ -107,28 +106,64 @@ def test_my_collection(dset, group):
     group : str | NoneType
         group to collect datasets into
     """
-    my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
-    my_dsets = ['meta', ]
-    my_dsets.extend(['{}-{}'.format(dset, year) for year in YEARS])
-    if 'profile' in dset:
-        MultiYear.collect_profiles(my_out, H5_FILES, dset, group=group)
-        my_dsets.extend(["time_index-{}".format(year) for year in YEARS])
-    else:
-        MultiYear.collect_means(my_out, H5_FILES, dset, group=group)
-        my_dsets.extend(["{}-{}".format(dset, val)
-                         for val in ['means', 'stdev']])
+    with tempfile.TemporaryDirectory() as temp:
+        my_out = os.path.join(temp, "{}-MY.h5".format(dset))
+        my_dsets = ['meta', ]
+        my_dsets.extend(['{}-{}'.format(dset, year) for year in YEARS])
+        if 'profile' in dset:
+            MultiYear.collect_profiles(my_out, H5_FILES, dset, group=group)
+            my_dsets.extend(["time_index-{}".format(year) for year in YEARS])
+        else:
+            MultiYear.collect_means(my_out, H5_FILES, dset, group=group)
+            my_dsets.extend(["{}-{}".format(dset, val)
+                             for val in ['means', 'stdev']])
 
-    if group is not None:
-        my_dsets = ['{}/{}'.format(group, ds) for ds in my_dsets]
+        if group is not None:
+            my_dsets = ['{}/{}'.format(group, ds) for ds in my_dsets]
 
-    with Outputs(my_out, mode='r') as f:
-        out_dsets = f.datasets
+        with Outputs(my_out, mode='r') as f:
+            out_dsets = f.datasets
 
-    msg = "Missing datasets after collection"
-    assert np.in1d(my_dsets, out_dsets).all(), msg
+        msg = "Missing datasets after collection"
+        assert np.in1d(my_dsets, out_dsets).all(), msg
 
-    if PURGE_OUT:
-        os.remove(my_out)
+
+def test_pass_through():
+    """Test multi year collection with pass through of some datasets."""
+    dsets = ['cf_mean']
+    pass_through_dsets = ['pass_through_1', 'pass_through_2']
+    with tempfile.TemporaryDirectory() as temp:
+        my_out = os.path.join(temp, "myfile.h5")
+        temp_h5_files = [os.path.join(temp, os.path.basename(fp))
+                         for fp in H5_FILES]
+        for fp, fp_temp in zip(H5_FILES, temp_h5_files):
+            shutil.copy(fp, fp_temp)
+
+        for fp in temp_h5_files:
+            for i, dset in enumerate(pass_through_dsets):
+                with h5py.File(fp, 'a') as f:
+                    arr = np.arange(f['meta'].shape[0]) * (i + 1)
+                    f.create_dataset(dset, f['meta'].shape, data=arr)
+                    print(dset, arr)
+
+        for dset in dsets:
+            MultiYear.collect_means(my_out, temp_h5_files, dset)
+        for dset in pass_through_dsets:
+            MultiYear.pass_through(my_out, temp_h5_files, dset)
+
+        with Resource(my_out) as res:
+            assert 'cf_mean-2012' in res.dsets
+            assert 'cf_mean-2013' in res.dsets
+            assert 'cf_mean-means' in res.dsets
+            assert 'cf_mean-stdev' in res.dsets
+            assert 'pass_through_1' in res.dsets
+            assert 'pass_through_2' in res.dsets
+            assert 'pass_through_1-means' not in res.dsets
+            assert 'pass_through_2-means' not in res.dsets
+            assert np.allclose(res['pass_through_1'],
+                               1 * np.arange(len(res.meta)))
+            assert np.allclose(res['pass_through_2'],
+                               2 * np.arange(len(res.meta)))
 
 
 @pytest.mark.parametrize(('dset', 'group'), [
@@ -147,20 +182,18 @@ def test_my_means(dset, group):
     """
     my_means = manual_means(H5_FILES, dset)
 
-    my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
-    with MultiYear(my_out, mode='w', group=group) as my:
-        my.collect(H5_FILES, dset)
-        dset_means = my.means(dset)
+    with tempfile.TemporaryDirectory() as temp:
+        my_out = os.path.join(temp, "{}-MY.h5".format(dset))
+        with MultiYear(my_out, mode='w', group=group) as my:
+            my.collect(H5_FILES, dset)
+            dset_means = my.means(dset)
 
-    compare_arrays(my_means, dset_means, "Computed Means")
+        compare_arrays(my_means, dset_means, "Computed Means")
 
-    with MultiYear(my_out, mode='r', group=group) as my:
-        dset_means = my.means(dset)
+        with MultiYear(my_out, mode='r', group=group) as my:
+            dset_means = my.means(dset)
 
-    compare_arrays(my_means, dset_means, "Saved Means")
-
-    if PURGE_OUT:
-        os.remove(my_out)
+        compare_arrays(my_means, dset_means, "Saved Means")
 
 
 @pytest.mark.parametrize(('dset', 'group'), [
@@ -177,33 +210,31 @@ def test_update(dset, group):
     group : str | NoneType
         group to collect datasets into
     """
-    my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
-    # Collect 2012 and compute 'means'
-    files = H5_FILES[:1]
-    MultiYear.collect_means(my_out, files, dset, group=group)
-    my_means = manual_means(files, dset)
-    my_std = manual_stdev(files, dset)
-    with MultiYear(my_out, mode='r', group=group) as my:
-        dset_means = my.means(dset)
-        dset_std = my.stdev(dset)
+    with tempfile.TemporaryDirectory() as temp:
+        my_out = os.path.join(temp, "{}-MY.h5".format(dset))
+        # Collect 2012 and compute 'means'
+        files = H5_FILES[:1]
+        MultiYear.collect_means(my_out, files, dset, group=group)
+        my_means = manual_means(files, dset)
+        my_std = manual_stdev(files, dset)
+        with MultiYear(my_out, mode='r', group=group) as my:
+            dset_means = my.means(dset)
+            dset_std = my.stdev(dset)
 
-    compare_arrays(my_means, dset_means, "2012 Means")
-    compare_arrays(my_std, dset_std, "2012 STDEV")
+        compare_arrays(my_means, dset_means, "2012 Means")
+        compare_arrays(my_std, dset_std, "2012 STDEV")
 
-    # Add 2013
-    files = H5_FILES
-    MultiYear.collect_means(my_out, files, dset, group=group)
-    my_means = manual_means(files, dset)
-    my_std = manual_stdev(files, dset)
-    with MultiYear(my_out, mode='r', group=group) as my:
-        dset_means = my.means(dset)
-        dset_std = my.stdev(dset)
+        # Add 2013
+        files = H5_FILES
+        MultiYear.collect_means(my_out, files, dset, group=group)
+        my_means = manual_means(files, dset)
+        my_std = manual_stdev(files, dset)
+        with MultiYear(my_out, mode='r', group=group) as my:
+            dset_means = my.means(dset)
+            dset_std = my.stdev(dset)
 
-    compare_arrays(my_means, dset_means, "Updated Means")
-    compare_arrays(my_std, dset_std, "Updated STDEV")
-
-    if PURGE_OUT:
-        os.remove(my_out)
+        compare_arrays(my_means, dset_means, "Updated Means")
+        compare_arrays(my_std, dset_std, "Updated STDEV")
 
 
 @pytest.mark.parametrize(('dset', 'group'), [
@@ -222,20 +253,18 @@ def test_my_stdev(dset, group):
     """
     my_std = manual_stdev(H5_FILES, dset)
 
-    my_out = os.path.join(TEMP_DIR, "{}-MY.h5".format(dset))
-    with MultiYear(my_out, mode='w', group=group) as my:
-        my.collect(H5_FILES, dset)
-        dset_std = my.stdev(dset)
+    with tempfile.TemporaryDirectory() as temp:
+        my_out = os.path.join(temp, "{}-MY.h5".format(dset))
+        with MultiYear(my_out, mode='w', group=group) as my:
+            my.collect(H5_FILES, dset)
+            dset_std = my.stdev(dset)
 
-    compare_arrays(my_std, dset_std, "Computed STDEV")
+        compare_arrays(my_std, dset_std, "Computed STDEV")
 
-    with MultiYear(my_out, mode='r', group=group) as my:
-        dset_std = my.stdev(dset)
+        with MultiYear(my_out, mode='r', group=group) as my:
+            dset_std = my.stdev(dset)
 
-    compare_arrays(my_std, dset_std, "Saved STDEV")
-
-    if PURGE_OUT:
-        os.remove(my_out)
+        compare_arrays(my_std, dset_std, "Saved STDEV")
 
 
 def execute_pytest(capture='all', flags='-rapP'):
