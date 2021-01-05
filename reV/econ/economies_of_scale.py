@@ -15,7 +15,18 @@ logger = logging.getLogger(__name__)
 
 class EconomiesOfScale:
     """Class to calculate economies of scale where power plant capital cost is
-    reduced for larger power plants."""
+    reduced for larger power plants.
+
+    Units
+    -----
+    capacity_factor : unitless
+    capacity : MW
+    annual_energy_production : kWh
+    fixed_charge_rate : unitless
+    fixed_operating_cost : $ (per year)
+    variable_operating_cost : $/kWh (per year)
+    lcoe : $/MWh
+    """
 
     def __init__(self, eqn, data):
         """
@@ -38,7 +49,9 @@ class EconomiesOfScale:
 
     def _preflight(self):
         """Run checks to validate EconomiesOfScale equation and input data."""
-        check_eval_str(self._eqn)
+
+        if self._eqn is not None:
+            check_eval_str(str(self._eqn))
 
         if isinstance(self._data, pd.DataFrame):
             self._data = {k: self._data[k].values.flatten()
@@ -88,13 +101,16 @@ class EconomiesOfScale:
             the equation string. This will return an empty list if the equation
             has no variables.
         """
-        delimiters = ('*', '/', '+', '-', ' ', '(', ')', '[', ']')
-        regex_pattern = '|'.join(map(re.escape, delimiters))
-        var_names = [sub for sub in re.split(regex_pattern, str(self._eqn))
-                     if sub
-                     and not self.is_num(sub)
-                     and not self.is_method(sub)]
-        var_names = sorted(list(set(var_names)))
+        var_names = []
+        if self._eqn is not None:
+            delimiters = ('*', '/', '+', '-', ' ', '(', ')', '[', ']')
+            regex_pattern = '|'.join(map(re.escape, delimiters))
+            var_names = [sub for sub in re.split(regex_pattern, str(self._eqn))
+                         if sub
+                         and not self.is_num(sub)
+                         and not self.is_method(sub)]
+            var_names = sorted(list(set(var_names)))
+
         return var_names
 
     def _evaluate(self):
@@ -107,9 +123,12 @@ class EconomiesOfScale:
             Evaluated output of the EconomiesOfScale equation. Should be
             numeric scalars to apply directly to the capital cost.
         """
-        kwargs = {k: self._data[k] for k in self.vars}
-        # pylint: disable=eval-used
-        out = eval(str(self._eqn), globals(), kwargs)
+        out = 1
+        if self._eqn is not None:
+            kwargs = {k: self._data[k] for k in self.vars}
+            # pylint: disable=eval-used
+            out = eval(str(self._eqn), globals(), kwargs)
+
         return out
 
     @staticmethod
@@ -184,7 +203,7 @@ class EconomiesOfScale:
             EconomiesOfScale equation.
         """
         cc = copy.deepcopy(self.raw_capital_cost)
-        cc *= self.capital_cost_scalar()
+        cc *= self.capital_cost_scalar
         return cc
 
     @property
@@ -196,7 +215,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed charge rate from input data arg
         """
-        key_list = ['fixed_charge_rate', 'mean_fixed_charge_rate']
+        key_list = ['fixed_charge_rate', 'mean_fixed_charge_rate',
+                    'fcr', 'mean_fcr']
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -208,7 +228,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Fixed operating cost from input data arg
         """
-        key_list = ['fixed_operating_cost', 'mean_fixed_operating_cost']
+        key_list = ['fixed_operating_cost', 'mean_fixed_operating_cost',
+                    'foc', 'mean_foc']
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -220,7 +241,8 @@ class EconomiesOfScale:
         out : float | np.ndarray
             Variable operating cost from input data arg
         """
-        key_list = ['variable_operating_cost', 'mean_variable_operating_cost']
+        key_list = ['variable_operating_cost', 'mean_variable_operating_cost',
+                    'voc', 'mean_voc']
         return self._get_prioritized_keys(self._data, key_list)
 
     @property
@@ -237,12 +259,15 @@ class EconomiesOfScale:
             Annual energy production from input data arg
         """
 
-        try:
-            key_list = ['aep', 'annual_energy_production', 'mean_aep',
-                        'mean_annual_energy_production']
+        key_list = ['aep', 'annual_energy_production', 'mean_aep',
+                    'mean_annual_energy_production']
+        if any([k in self._data for k in key_list]):
             aep = self._get_prioritized_keys(self._data, key_list)
-        except KeyError:
-            aep = self._data['capacity'] * self._data['mean_cf'] * 8760 * 1000
+        else:
+            cap = self._get_prioritized_keys(self._data, ['capacity'])
+            cf = self._get_prioritized_keys(
+                self._data, ['mean_cf', 'capacity_factor'])
+            aep = cap * cf * 8760 * 1000
 
         return aep
 
@@ -259,6 +284,7 @@ class EconomiesOfScale:
         """
         lcoe = ((self.fcr * self.raw_capital_cost + self.foc) / self.aep
                 + self.voc)
+        lcoe *= 1000  # convert $/kWh to $/MWh
         return lcoe
 
     @property
@@ -276,4 +302,5 @@ class EconomiesOfScale:
         """
         lcoe = ((self.fcr * self.scaled_capital_cost + self.foc) / self.aep
                 + self.voc)
+        lcoe *= 1000  # convert $/kWh to $/MWh
         return lcoe
