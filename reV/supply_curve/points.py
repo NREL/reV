@@ -339,15 +339,15 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
     @property
     def n_gids(self):
         """
-        Get the total number of resource/generation gids that were at
-        not excluded.
+        Get the total number of not fully excluded pixels associated with the
+        available resource/generation gids at the given sc gid.
 
         Returns
         -------
         n_gids : list
-            List of exclusion pixels in each resource/generation gid.
         """
-        n_gids = np.sum(self.excl_data_flat > 0)
+        mask = self._gids != -1
+        n_gids = np.sum(self._excl_data_flat[mask] > 0)
 
         return n_gids
 
@@ -477,15 +477,24 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Array of wind direction data.
         Returns
         -------
-        mean_wind_dirs : np.ndarray
+        mean_wind_dirs : np.ndarray | float
             Mean wind direction of arr masked by the binary exclusions
         """
-        x = np.radians(arr[:, self._gids[self.bool_mask]])
         excl = self.excl_data_flat[self.bool_mask]
-        x *= excl
+        gids = self._gids[self.bool_mask]
+        if len(arr.shape) == 2:
+            arr_slice = (slice(None), gids)
+            ax = 1
 
-        mean_wind_dirs = np.degrees(np.arctan2(np.mean(np.sin(x), axis=1),
-                                               np.mean(np.cos(x), axis=1)))
+        else:
+            arr_slice = gids
+            ax = 0
+
+        angle = np.radians(arr[arr_slice], dtype=np.float32)
+        sin = np.mean(np.sin(angle) * excl, axis=ax)
+        cos = np.mean(np.cos(angle) * excl, axis=ax)
+
+        mean_wind_dirs = np.degrees(np.arctan2(sin, cos))
 
         return mean_wind_dirs
 
@@ -833,13 +842,14 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
 
     @property
     def gid_counts(self):
-        """Get the number of exclusion pixels in each resource/generation gid
-        corresponding to this sc point.
+        """Get the sum of the inclusion values in each resource/generation gid
+        corresponding to this sc point. The sum of the gid counts can be less
+        than the value provided by n_gids if fractional exclusion/inclusions
+        are provided.
 
         Returns
         -------
         gid_counts : list
-            List of exclusion pixels in each resource/generation gid.
         """
         gid_counts = [self.excl_data_flat[(self._h5_gids == gid)].sum()
                       for gid in self.h5_gid_set]
