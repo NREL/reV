@@ -77,7 +77,7 @@ class MultiYearGroup:
     """
     def __init__(self, name, out_dir, source_files="PIPELINE",
                  source_dir=None, source_prefix=None,
-                 dsets=('cf_mean',)):
+                 dsets=('cf_mean',), pass_through_lcoe_args=False):
         """
         Parameters
         ----------
@@ -95,6 +95,11 @@ class MultiYearGroup:
             File prefix to search for in source directory
         dsets : list | tuple
             List of datasets to collect
+        pass_through_lcoe_args : bool
+            Get the flag to determine whether or not to pass through LCOE
+            input arguements to the reV multi year output. Default is False
+            (dont pass through extra args). This only works if
+            pass_through_lcoe_args was true in the previous reV econ step.
         """
         self._name = name
         self._dirout = out_dir
@@ -102,6 +107,7 @@ class MultiYearGroup:
         self._source_dir = source_dir
         self._source_prefix = source_prefix
         self._dsets = SAMOutputRequest(dsets)
+        self._pass_through_lcoe_args = pass_through_lcoe_args
 
     @property
     def name(self):
@@ -160,6 +166,19 @@ class MultiYearGroup:
             Datasets to collect
         """
         return self._dsets
+
+    @property
+    def pass_through_lcoe_args(self):
+        """Get the flag to determine whether or not to pass through LCOE
+        input arguements to the reV multi year output. Default is False (dont
+        pass through extra args). This only works if pass_through_lcoe_args
+        was true in the previous reV econ step.
+
+        Returns
+        -------
+        bool
+        """
+        return self._pass_through_lcoe_args
 
     @classmethod
     def factory(cls, out_dir, groups_dict):

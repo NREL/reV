@@ -86,7 +86,7 @@ class MultiYear(Outputs):
             self._create_dset(dset_out, time_index.shape, time_index.dtype,
                               data=time_index)
 
-    def _copy_dset(self, source_h5, dset, meta=None):
+    def _copy_dset(self, source_h5, dset, meta=None, pass_through=False):
         """
         Copy dset_in from source_h5 to multiyear .h5
 
@@ -98,8 +98,15 @@ class MultiYear(Outputs):
             Dataset to copy
         meta : pandas.DataFrame
             If provided confirm that source meta matches given meta
+        pass_through : bool
+            Flag to just pass through dataset without name modifications
+            (no differences between years, no means or stdevs)
         """
-        dset_out = self._create_dset_name(source_h5, dset)
+        if pass_through:
+            dset_out = dset
+        else:
+            dset_out = self._create_dset_name(source_h5, dset)
+
         if dset_out not in self.datasets:
             logger.debug("- Collecting {} from {}"
                          .format(dset, os.path.basename(source_h5)))
@@ -117,7 +124,7 @@ class MultiYear(Outputs):
             self._create_dset(dset_out, ds_data.shape, ds_dtype,
                               chunks=ds_chunks, attrs=ds_attrs, data=ds_data)
 
-    def collect(self, source_files, dset, profiles=False):
+    def collect(self, source_files, dset, profiles=False, pass_through=False):
         """
         Collect dataset dset from given list of h5 files
 
@@ -131,6 +138,9 @@ class MultiYear(Outputs):
         profiles : bool
             Boolean flag to indicate if profiles are being collected
             If True also collect time_index
+        pass_through : bool
+            Flag to just pass through dataset without name modifications
+            (no differences between years, no means or stdevs)
         """
         with Outputs(source_files[0], mode='r') as f_in:
             meta = f_in.h5['meta'][...]
@@ -145,7 +155,8 @@ class MultiYear(Outputs):
             if profiles:
                 self._copy_time_index(year_h5)
 
-            self._copy_dset(year_h5, dset, meta=meta)
+            self._copy_dset(year_h5, dset, meta=meta,
+                            pass_through=pass_through)
 
     def _get_source_dsets(self, dset_out):
         """
@@ -347,6 +358,29 @@ class MultiYear(Outputs):
             shape, _, _ = f.get_dset_properties(dset)
 
         return len(shape) == 2
+
+    @classmethod
+    def pass_through(cls, my_file, source_files, dset, group=None):
+        """
+        Pass through a dataset that is identical in all source files to a
+        dataset of the same name in the output multi-year file.
+
+        Parameters
+        ----------
+        my_file : str
+            Path to multi-year .h5 file
+        source_files : list
+            List of .h5 files to collect datasets from
+        dset : str
+            Dataset to pass through (will also be the name of the output
+            dataset in my_file)
+        group : str
+            Group to collect datasets into
+        """
+        logger.info('Passing through {} into {}.'
+                    .format(dset, my_file))
+        with cls(my_file, mode='a', group=group) as my:
+            my.collect(source_files, dset, pass_through=True)
 
     @classmethod
     def collect_means(cls, my_file, source_files, dset, group=None):

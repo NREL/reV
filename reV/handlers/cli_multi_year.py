@@ -11,6 +11,7 @@ import time
 
 from reV.config.multi_year import MultiYearConfig
 from reV.handlers.multi_year import MultiYear
+from reV.generation.base import BaseGen
 from reV.pipeline.status import Status
 from reV import __version__
 
@@ -222,6 +223,11 @@ def multi_year_groups(ctx, group_params, verbose):
             else:
                 MultiYear.collect_means(my_file, group['source_files'],
                                         dset, group=group['group'])
+
+        if group.get('pass_through_lcoe_args', False):
+            for dset in BaseGen.LCOE_ARGS:
+                MultiYear.pass_through(my_file, group['source_files'],
+                                       dset, group=group['group'])
 
         runtime = (time.time() - t0) / 60
         logger.info('- {} collection completed in: {:.2f} min.'

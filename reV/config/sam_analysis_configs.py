@@ -118,10 +118,7 @@ class SAMAnalysisConfig(AnalysisConfig):
 
         Returns
         -------
-        pass_through_lcoe_args : bool
-            Flag to determine whether or not to pass through LCOE
-            input arguements to the reV output. Default is False (dont pass
-            through extra args).
+        bool
         """
         return self.get('pass_through_lcoe_args', False)
 
