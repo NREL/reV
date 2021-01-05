@@ -602,12 +602,12 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         return summary
 
     @staticmethod
-    def economies_of_scale(lcoe_scale_eqn, summary):
+    def economies_of_scale(cap_cost_scale, summary):
         """Apply economies of scale to this point summary
 
         Parameters
         ----------
-        lcoe_scale_eqn : str
+        cap_cost_scale : str
             LCOE scaling equation to implement "economies of scale".
             Equation must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
@@ -623,7 +623,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Dictionary of summary outputs for this sc point.
         """
 
-        eos = EconomiesOfScale(lcoe_scale_eqn, summary)
+        eos = EconomiesOfScale(cap_cost_scale, summary)
         summary['mean_lcoe'] = eos.scaled_lcoe
         summary['raw_lcoe'] = eos.raw_lcoe
 
@@ -636,7 +636,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                   h5_dsets=None, resolution=64, exclusion_shape=None,
                   close=False, offshore_flags=None, friction_layer=None,
-                  args=None, data_layers=None, lcoe_scale_eqn=None):
+                  args=None, data_layers=None, cap_cost_scale=None):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -700,7 +700,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
             and "fpath", by default None
-        lcoe_scale_eqn : str | None
+        cap_cost_scale : str | None
             Optional LCOE scaling equation to implement "economies of scale".
             Equations must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
@@ -734,7 +734,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             if data_layers is not None:
                 summary = point.agg_data_layers(summary, data_layers)
 
-            if lcoe_scale_eqn is not None:
-                summary = point.economies_of_scale(lcoe_scale_eqn, summary)
+            if cap_cost_scale is not None:
+                summary = point.economies_of_scale(cap_cost_scale, summary)
 
         return summary

@@ -572,7 +572,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                  gids=None, res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                  h5_dsets=None, data_layers=None, power_density=None,
-                 friction_fpath=None, friction_dset=None, lcoe_scale_eqn=None):
+                 friction_fpath=None, friction_dset=None, cap_cost_scale=None):
         """
         Parameters
         ----------
@@ -638,7 +638,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
             exclusions.
-        lcoe_scale_eqn : str | None
+        cap_cost_scale : str | None
             Optional LCOE scaling equation to implement "economies of scale".
             Equations must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
@@ -660,7 +660,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         self._cf_dset = cf_dset
         self._lcoe_dset = lcoe_dset
         self._h5_dsets = h5_dsets
-        self._lcoe_scale_eqn = lcoe_scale_eqn
+        self._cap_cost_scale = cap_cost_scale
         self._power_density = power_density
         self._friction_fpath = friction_fpath
         self._friction_dset = friction_dset
@@ -668,9 +668,9 @@ class SupplyCurveAggregation(AbstractAggregation):
 
         logger.debug('Resource class bins: {}'.format(self._res_class_bins))
 
-        if self._lcoe_scale_eqn is not None and self._h5_dsets is not None:
+        if self._cap_cost_scale is not None and self._h5_dsets is not None:
             self._h5_dsets = list(self._h5_dsets) + list(BaseGen.LCOE_ARGS)
-        elif self._lcoe_scale_eqn is not None and self._h5_dsets is None:
+        elif self._cap_cost_scale is not None and self._h5_dsets is None:
             self._h5_dsets = list(BaseGen.LCOE_ARGS)
 
         if self._power_density is None:
@@ -861,7 +861,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                    power_density=None, friction_fpath=None, friction_dset=None,
-                   excl_area=0.0081, lcoe_scale_eqn=None):
+                   excl_area=0.0081, cap_cost_scale=None):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -933,7 +933,7 @@ class SupplyCurveAggregation(AbstractAggregation):
             exclusions.
         excl_area : float
             Area of an exclusion cell (square km).
-        lcoe_scale_eqn : str | None
+        cap_cost_scale : str | None
             Optional LCOE scaling equation to implement "economies of scale".
             Equations must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
@@ -996,7 +996,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                             close=False,
                             offshore_flags=inputs[4],
                             friction_layer=fh.friction_layer,
-                            lcoe_scale_eqn=lcoe_scale_eqn)
+                            cap_cost_scale=cap_cost_scale)
 
                     except EmptySupplyCurvePointError:
                         pass
@@ -1077,7 +1077,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                     min_area=self._min_area,
                     gids=gid_set, args=args, excl_area=excl_area,
                     check_excl_layers=self._check_excl_layers,
-                    lcoe_scale_eqn=self._lcoe_scale_eqn))
+                    cap_cost_scale=self._cap_cost_scale))
 
             # gather results
             for future in as_completed(futures):
@@ -1260,7 +1260,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       gids=self._gids, args=args,
                                       excl_area=self._excl_area,
                                       check_excl_layers=chk,
-                                      lcoe_scale_eqn=self._lcoe_scale_eqn)
+                                      cap_cost_scale=self._cap_cost_scale)
         else:
             summary = self.run_parallel(args=args, excl_area=self._excl_area,
                                         max_workers=max_workers)
@@ -1292,7 +1292,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                 h5_dsets=None, data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
                 args=None, excl_area=None, max_workers=None,
-                lcoe_scale_eqn=None, offshore_capacity=600,
+                cap_cost_scale=None, offshore_capacity=600,
                 offshore_gid_counts=494, offshore_pixel_area=4,
                 offshore_meta_cols=None):
         """Get the supply curve points aggregation summary.
@@ -1367,7 +1367,7 @@ class SupplyCurveAggregation(AbstractAggregation):
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
-        lcoe_scale_eqn : str | None
+        cap_cost_scale : str | None
             Optional LCOE scaling equation to implement "economies of scale".
             Equations must be in python string format and return a scalar
             value to multiply the capital cost by. Independent variables in
@@ -1411,7 +1411,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                   min_area=min_area,
                   check_excl_layers=check_excl_layers,
                   excl_area=excl_area,
-                  lcoe_scale_eqn=lcoe_scale_eqn)
+                  cap_cost_scale=cap_cost_scale)
 
         summary = agg.summarize(args=args,
                                 max_workers=max_workers,
