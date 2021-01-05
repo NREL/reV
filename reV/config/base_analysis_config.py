@@ -131,13 +131,14 @@ class AnalysisConfig(BaseConfig):
                 try:
                     # Try setting the attribute to the appropriate exec option
                     self._ec = ec_config_types[ec['option'].lower()](ec)
-                except KeyError:
+                except KeyError as exc:
                     # Option not found
-                    raise ConfigError('Execution control option not '
-                                      'recognized: "{}". '
-                                      'Available options are: {}.'
-                                      .format(ec['option'].lower(),
-                                              list(ec_config_types.keys())))
+                    msg = ('Execution control option not '
+                           'recognized: "{}". '
+                           'Available options are: {}.'
+                           .format(ec['option'].lower(),
+                                   list(ec_config_types.keys())))
+                    raise ConfigError(msg) from exc
             else:
                 # option not specified, default to a base execution (local)
                 warn('Execution control option not specified. '

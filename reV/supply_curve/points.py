@@ -134,9 +134,10 @@ class AbstractSupplyCurvePoint(ABC):
             loc = np.where(arr == gid)
             row = loc[0][0]
             col = loc[1][0]
-        except IndexError:
-            raise IndexError('Gid {} out of bounds for extent shape {} and '
-                             'resolution {}.'.format(gid, shape, resolution))
+        except IndexError as exc:
+            msg = ('Gid {} out of bounds for extent shape {} and '
+                   'resolution {}.'.format(gid, shape, resolution))
+            raise IndexError(msg) from exc
 
         if row + 1 != nrows:
             row_slice = slice(row * resolution, (row + 1) * resolution)
@@ -465,6 +466,28 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             mean = x.sum() / excl.sum()
 
         return mean
+
+    def mean_wind_dirs(self, arr):
+        """
+        Calc the mean wind directions at every time-step
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            Array of wind direction data.
+        Returns
+        -------
+        mean_wind_dirs : np.ndarray
+            Mean wind direction of arr masked by the binary exclusions
+        """
+        x = np.radians(arr[:, self._gids[self.bool_mask]])
+        excl = self.excl_data_flat[self.bool_mask]
+        x *= excl
+
+        mean_wind_dirs = np.degrees(np.arctan2(np.mean(np.sin(x), axis=1),
+                                               np.mean(np.cos(x), axis=1)))
+
+        return mean_wind_dirs
 
     def aggregate(self, arr):
         """
@@ -910,8 +933,11 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                 agg_method = point.exclusion_weighted_mean
             elif agg_method.lower().startswith(('sum', 'agg')):
                 agg_method = point.aggregate
+            elif 'wind_dir' in agg_method.lower():
+                agg_method = point.mean_wind_dirs
             else:
-                msg = 'Aggregation method must be either mean or sum/aggregate'
+                msg = ('Aggregation method must be either mean, '
+                       'sum/aggregate, or wind_dir')
                 logger.error(msg)
                 raise ValueError(msg)
 
