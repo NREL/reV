@@ -119,6 +119,7 @@ def from_config(ctx, config_file, verbose):
                        min_area=config.min_area,
                        friction_fpath=config.friction_fpath,
                        friction_dset=config.friction_dset,
+                       cap_cost_scale=config.cap_cost_scale,
                        out_dir=config.dirout,
                        log_dir=config.logdir,
                        verbose=verbose)
@@ -146,6 +147,7 @@ def from_config(ctx, config_file, verbose):
         ctx.obj['MIN_AREA'] = config.min_area
         ctx.obj['FRICTION_FPATH'] = config.friction_fpath
         ctx.obj['FRICTION_DSET'] = config.friction_dset
+        ctx.obj['CAP_COST_SCALE'] = config.cap_cost_scale
         ctx.obj['OUT_DIR'] = config.dirout
         ctx.obj['LOG_DIR'] = config.logdir
         ctx.obj['VERBOSE'] = verbose
@@ -227,6 +229,13 @@ def from_config(ctx, config_file, verbose):
               'LCOE multiplied by the friction data.')
 @click.option('--friction_dset', '-fd', type=STR, default=None,
               help='Optional friction surface dataset in friction_fpath.')
+@click.option('--cap_cost_scale', '-cs', type=STR, default=None,
+              help='Optional LCOE scaling equation to implement "economies '
+              'of scale". Equations must be in python string format and '
+              'return a scalar value to multiply the capital cost by. '
+              'Independent variables in the equation should match the names '
+              'of the columns in the reV supply curve aggregation table. '
+              'This will not affect offshore wind LCOE.')
 @click.option('--out_dir', '-o', type=STR, default='./',
               help='Directory to save aggregation summary output.')
 @click.option('--log_dir', '-ld', type=STR, default='./logs/',
@@ -238,8 +247,9 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
            excl_dict, check_excl_layers, res_class_dset, res_class_bins,
            cf_dset, lcoe_dset, h5_dsets, data_layers, resolution, excl_area,
            power_density, area_filter_kernel, min_area, friction_fpath,
-           friction_dset, out_dir, log_dir, verbose):
+           friction_dset, cap_cost_scale, out_dir, log_dir, verbose):
     """reV Supply Curve Aggregation Summary CLI."""
+
     name = ctx.obj['NAME']
     ctx.obj['EXCL_FPATH'] = excl_fpath
     ctx.obj['GEN_FPATH'] = gen_fpath
@@ -261,6 +271,7 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
     ctx.obj['MIN_AREA'] = min_area
     ctx.obj['FRICTION_FPATH'] = friction_fpath
     ctx.obj['FRICTION_DSET'] = friction_dset
+    ctx.obj['CAP_COST_SCALE'] = cap_cost_scale
     ctx.obj['OUT_DIR'] = out_dir
     ctx.obj['LOG_DIR'] = log_dir
     ctx.obj['VERBOSE'] = verbose
@@ -304,7 +315,8 @@ def direct(ctx, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                 min_area=min_area,
                 friction_fpath=friction_fpath,
                 friction_dset=friction_dset,
-                check_excl_layers=check_excl_layers)
+                check_excl_layers=check_excl_layers,
+                cap_cost_scale=cap_cost_scale)
 
         except Exception as e:
             logger.exception('Supply curve Aggregation failed. Received the '
@@ -341,7 +353,8 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
                  excl_dict, check_excl_layers, res_class_dset, res_class_bins,
                  cf_dset, lcoe_dset, h5_dsets, data_layers, resolution,
                  excl_area, power_density, area_filter_kernel, min_area,
-                 friction_fpath, friction_dset, out_dir, log_dir, verbose):
+                 friction_fpath, friction_dset, cap_cost_scale,
+                 out_dir, log_dir, verbose):
     """Get a CLI call command for the SC aggregation cli."""
 
     args = ['-exf {}'.format(SLURM.s(excl_fpath)),
@@ -363,6 +376,7 @@ def get_node_cmd(name, excl_fpath, gen_fpath, econ_fpath, res_fpath, tm_dset,
             '-ma {}'.format(SLURM.s(min_area)),
             '-ff {}'.format(SLURM.s(friction_fpath)),
             '-fd {}'.format(SLURM.s(friction_dset)),
+            '-cs {}'.format(SLURM.s(cap_cost_scale)),
             '-o {}'.format(SLURM.s(out_dir)),
             '-ld {}'.format(SLURM.s(log_dir)),
             ]
@@ -421,6 +435,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
     min_area = ctx.obj['MIN_AREA']
     friction_fpath = ctx.obj['FRICTION_FPATH']
     friction_dset = ctx.obj['FRICTION_DSET']
+    cap_cost_scale = ctx.obj['CAP_COST_SCALE']
     out_dir = ctx.obj['OUT_DIR']
     log_dir = ctx.obj['LOG_DIR']
     verbose = ctx.obj['VERBOSE']
@@ -434,7 +449,7 @@ def slurm(ctx, alloc, walltime, feature, memory, module, conda_env,
                        cf_dset, lcoe_dset, h5_dsets, data_layers,
                        resolution, excl_area,
                        power_density, area_filter_kernel, min_area,
-                       friction_fpath, friction_dset,
+                       friction_fpath, friction_dset, cap_cost_scale,
                        out_dir, log_dir, verbose)
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)

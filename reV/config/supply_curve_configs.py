@@ -224,6 +224,17 @@ class SupplyCurveAggregationConfig(AnalysisConfig):
         """Get the check_excl_layers flag."""
         return self.get('check_excl_layers', False)
 
+    @property
+    def cap_cost_scale(self):
+        """Optional LCOE scaling equation to implement "economies of scale".
+        Equations must be in python string format and return a scalar
+        value to multiply the capital cost by. Independent variables in
+        the equation should match the names of the columns in the reV
+        supply curve aggregation table. This will not affect offshore
+        wind LCOE.
+        """
+        return self.get('cap_cost_scale', None)
+
 
 class SupplyCurveConfig(AnalysisConfig):
     """SC config."""
