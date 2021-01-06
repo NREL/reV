@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jun 19 15:37:05 2019
-
+Test Variable Power Density
 @author: gbuster
 """
 import pandas as pd
