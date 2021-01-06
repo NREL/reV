@@ -495,6 +495,8 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         cos = np.mean(np.cos(angle) * excl, axis=ax)
 
         mean_wind_dirs = np.degrees(np.arctan2(sin, cos))
+        mask = mean_wind_dirs < 0
+        mean_wind_dirs[mask] += 360
 
         return mean_wind_dirs
 

@@ -108,6 +108,9 @@ def compute_mean_wind_dirs(res_path, dset, gids, fracs):
     cos = np.mean(np.cos(wind_dirs) * fracs, axis=1)
     mean_wind_dirs = np.degrees(np.arctan2(sin, cos))
 
+    mask = mean_wind_dirs < 0
+    mean_wind_dirs[mask] += 360
+
     return mean_wind_dirs
 
 
