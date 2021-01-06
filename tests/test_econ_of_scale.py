@@ -43,13 +43,17 @@ def test_pass_through_lcoe_args():
     res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
     sam_files = TESTDATADIR + '/SAM/i_windpower_lcoe.json'
 
-    output_request = ('cf_mean', 'lcoe_fcr')
+    output_request = ('cf_mean',
+                      'lcoe_fcr',
+                      'capital_cost',
+                      'fixed_charge_rate',
+                      'variable_operating_cost',
+                      'fixed_operating_cost')
 
     # run reV 2.0 generation
     gen = Gen.reV_run(tech='windpower', points=rev2_points,
                       sam_files=sam_files, res_file=res_file, max_workers=1,
                       sites_per_worker=1, fout=None,
-                      pass_through_lcoe_args=True,
                       output_request=output_request)
 
     checks = [x in gen.out for x in Gen.LCOE_ARGS]

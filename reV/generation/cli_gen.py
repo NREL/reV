@@ -110,7 +110,6 @@ def from_config(ctx, config_file, verbose):
     ctx.obj['DIROUT'] = config.dirout
     ctx.obj['LOGDIR'] = config.logdir
     ctx.obj['OUTPUT_REQUEST'] = config.output_request
-    ctx.obj['PASS_THROUGH_LCOE_ARGS'] = config.pass_through_lcoe_args
     ctx.obj['SITE_DATA'] = config.site_data
     ctx.obj['TIMEOUT'] = config.timeout
     ctx.obj['SITES_PER_WORKER'] = config.execution_control.sites_per_worker
@@ -278,20 +277,13 @@ def make_fout(name, year):
               default=None,
               help=('JSON file with curtailment inputs parameters. '
                     'Default is None (no curtailment).'))
-@click.option('-ptla', '--pass_through_lcoe_args', is_flag=True,
-              help='Flag to pass through the SAM arguments used for the '
-              'lcoe_fcr calculator into the reV output. These variables '
-              'include: (fixed_charge_rate, capital_cost, '
-              'fixed_operating_cost, variable_operating_cost). This can be '
-              'used to re-calculate LCOE in downstream reV modules to compute '
-              'economies-of-scale capital cost reductions.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
 def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
            lat_lon_coords, regions, region, region_col, sites_per_worker,
            fout, dirout, logdir, output_request, site_data, mem_util_lim,
-           curtailment, pass_through_lcoe_args, verbose):
+           curtailment, verbose):
     """Run reV gen directly w/o a config file."""
     ctx.obj['TECH'] = tech
     ctx.obj['POINTS'] = points
@@ -305,7 +297,6 @@ def direct(ctx, tech, sam_files, res_file, points, lat_lon_fpath,
     ctx.obj['SITE_DATA'] = site_data
     ctx.obj['MEM_UTIL_LIM'] = mem_util_lim
     ctx.obj['CURTAILMENT'] = curtailment
-    ctx.obj['PASS_THROUGH_LCOE_ARGS'] = pass_through_lcoe_args
 
     ctx.obj['LAT_LON_FPATH'] = lat_lon_fpath
     ctx.obj['LAT_LON_COORDS'] = lat_lon_coords
@@ -405,7 +396,6 @@ def local(ctx, max_workers, timeout, points_range, verbose):
     site_data = ctx.obj['SITE_DATA']
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     curtailment = ctx.obj['CURTAILMENT']
-    pass_through_lcoe_args = ctx.obj['PASS_THROUGH_LCOE_ARGS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     # initialize loggers for multiple modules
@@ -431,7 +421,6 @@ def local(ctx, max_workers, timeout, points_range, verbose):
                 site_data=site_data,
                 output_request=output_request,
                 curtailment=curtailment,
-                pass_through_lcoe_args=pass_through_lcoe_args,
                 max_workers=max_workers,
                 sites_per_worker=sites_per_worker,
                 points_range=points_range,
@@ -546,8 +535,7 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
                  fout='reV.h5', dirout='./out/gen_out',
                  logdir='./out/log_gen', output_request=('cf_mean',),
                  site_data=None, mem_util_lim=0.4, timeout=1800,
-                 curtailment=None, pass_through_lcoe_args=False,
-                 verbose=False):
+                 curtailment=None, verbose=False):
     """Make a reV geneneration direct-local CLI call string.
 
     Parameters
@@ -593,13 +581,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     curtailment : NoneType | str
         Pointer to a file containing curtailment input parameters or None if
         no curtailment.
-    pass_through_lcoe_args : bool
-        Flag to pass through the SAM arguments used for the lcoe_fcr
-        calculator into the reV output. These variables include:
-        (fixed_charge_rate, capital_cost, fixed_operating_cost,
-        variable_operating_cost). This can be used to re-calculate LCOE
-        in downstream reV modules to compute economies-of-scale capital
-        cost reductions.
     verbose : bool
         Flag to turn on debug logging. Default is False.
 
@@ -631,9 +612,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
 
     if curtailment:
         arg_direct.append('-curt {}'.format(SLURM.s(curtailment)))
-
-    if pass_through_lcoe_args:
-        arg_direct.append('-ptla')
 
     # make a cli arg string for local() in this module
     arg_loc = ['-mw {}'.format(SLURM.s(max_workers)),
@@ -695,7 +673,6 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
     mem_util_lim = ctx.obj['MEM_UTIL_LIM']
     timeout = ctx.obj['TIMEOUT']
     curtailment = ctx.obj['CURTAILMENT']
-    pass_through_lcoe_args = ctx.obj['PASS_THROUGH_LCOE_ARGS']
     verbose = any([verbose, ctx.obj['VERBOSE']])
 
     slurm_manager = ctx.obj.get('SLURM_MANAGER', None)
@@ -718,7 +695,6 @@ def slurm(ctx, nodes, alloc, memory, walltime, feature, conda_env, module,
                            site_data=site_data,
                            mem_util_lim=mem_util_lim, timeout=timeout,
                            curtailment=curtailment,
-                           pass_through_lcoe_args=pass_through_lcoe_args,
                            verbose=verbose)
 
         status = Status.retrieve_job_status(dirout, 'generation', node_name,

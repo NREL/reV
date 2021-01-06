@@ -206,8 +206,7 @@ class Gen(BaseGen):
     OUT_ATTRS.update(BaseGen.ECON_ATTRS)
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
-                 pass_through_lcoe_args=False, site_data=None,
-                 fout=None, dirout='./gen_out',
+                 site_data=None, fout=None, dirout='./gen_out',
                  drop_leap=False, mem_util_lim=0.4):
         """
         Parameters
@@ -219,13 +218,6 @@ class Gen(BaseGen):
             or /h5_dir/prefix*suffix
         output_request : list | tuple
             Output variables requested from SAM.
-        pass_through_lcoe_args : bool
-            Flag to pass through the SAM arguments used for the lcoe_fcr
-            calculator into the reV output. These variables include:
-            (fixed_charge_rate, capital_cost, fixed_operating_cost,
-            variable_operating_cost). This can be used to re-calculate LCOE
-            in downstream reV modules to compute economies-of-scale capital
-            cost reductions.
         site_data : str | pd.DataFrame | None
             Site-specific input data for SAM calculation. String should be a
             filepath that points to a csv, DataFrame is pre-extracted data.
@@ -245,7 +237,6 @@ class Gen(BaseGen):
         """
 
         super().__init__(points_control, output_request, site_data=site_data,
-                         pass_through_lcoe_args=pass_through_lcoe_args,
                          fout=fout, dirout=dirout, drop_leap=drop_leap,
                          mem_util_lim=mem_util_lim)
 
@@ -425,20 +416,13 @@ class Gen(BaseGen):
 
         return out
 
-    def _parse_output_request(self, req, pass_through_lcoe_args):
+    def _parse_output_request(self, req):
         """Set the output variables requested from generation.
 
         Parameters
         ----------
         req : list | tuple
             Output variables requested from SAM.
-        pass_through_lcoe_args : bool
-            Flag to pass through the SAM arguments used for the lcoe_fcr
-            calculator into the reV output. These variables include:
-            (fixed_charge_rate, capital_cost, fixed_operating_cost,
-            variable_operating_cost). This can be used to re-calculate LCOE
-            in downstream reV modules to compute economies-of-scale capital
-            cost reductions.
 
         Returns
         -------
@@ -452,9 +436,6 @@ class Gen(BaseGen):
         if 'cf_mean' not in output_request:
             output_request.append('cf_mean')
 
-        if pass_through_lcoe_args:
-            output_request += list(self.LCOE_ARGS)
-
         for request in output_request:
             if request not in self.OUT_ATTRS:
                 msg = ('User output request "{}" not recognized. '
@@ -466,7 +447,6 @@ class Gen(BaseGen):
     @classmethod
     def reV_run(cls, tech, points, sam_files, res_file,
                 output_request=('cf_mean',), site_data=None, curtailment=None,
-                pass_through_lcoe_args=False,
                 max_workers=1, sites_per_worker=None,
                 pool_size=(os.cpu_count() * 2), timeout=1800,
                 points_range=None, fout=None,
@@ -505,13 +485,6 @@ class Gen(BaseGen):
                 - Pointer to curtailment config json file with path (str)
                 - Instance of curtailment config object
                   (config.curtailment.Curtailment)
-        pass_through_lcoe_args : bool
-            Flag to pass through the SAM arguments used for the lcoe_fcr
-            calculator into the reV output. These variables include:
-            (fixed_charge_rate, capital_cost, fixed_operating_cost,
-            variable_operating_cost). This can be used to re-calculate LCOE
-            in downstream reV modules to compute economies-of-scale capital
-            cost reductions.
         max_workers : int
             Number of local workers to run on.
         sites_per_worker : int | None
@@ -554,7 +527,6 @@ class Gen(BaseGen):
         gen = cls(pc, res_file,
                   output_request=output_request,
                   site_data=site_data,
-                  pass_through_lcoe_args=pass_through_lcoe_args,
                   fout=fout,
                   dirout=dirout,
                   mem_util_lim=mem_util_lim)

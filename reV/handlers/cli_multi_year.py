@@ -242,11 +242,6 @@ def multi_year_groups(ctx, group_params, verbose):
                 MultiYear.pass_through(my_file, group['source_files'],
                                        dset, group=group['group'])
 
-        if group.get('pass_through_lcoe_args', False):
-            for dset in BaseGen.LCOE_ARGS:
-                MultiYear.pass_through(my_file, group['source_files'],
-                                       dset, group=group['group'])
-
         runtime = (time.time() - t0) / 60
         logger.info('- {} collection completed in: {:.2f} min.'
                     .format(group_name, runtime))

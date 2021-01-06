@@ -78,8 +78,7 @@ class MultiYearGroup:
     """
     def __init__(self, name, out_dir, source_files=None,
                  source_dir=None, source_prefix=None,
-                 dsets=('cf_mean',), pass_through_dsets=None,
-                 pass_through_lcoe_args=False):
+                 dsets=('cf_mean',), pass_through_dsets=None):
         """
         Parameters
         ----------
@@ -106,11 +105,6 @@ class MultiYearGroup:
             files (e.g. input datasets that don't vary from year to year) that
             should be copied to the output multi-year file once without a
             year suffix or means/stdev calculation
-        pass_through_lcoe_args : bool
-            Get the flag to determine whether or not to pass through LCOE
-            input arguements to the reV multi year output. Default is False
-            (dont pass through extra args). This only works if
-            pass_through_lcoe_args was true in the previous reV econ step.
         """
         self._name = name
         self._dirout = out_dir
@@ -119,7 +113,6 @@ class MultiYearGroup:
         self._source_prefix = source_prefix
         self._dsets = SAMOutputRequest(dsets)
         self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
-        self._pass_through_lcoe_args = pass_through_lcoe_args
 
     @property
     def name(self):
@@ -196,19 +189,6 @@ class MultiYearGroup:
         list | tuple | None
         """
         return self._pass_through_dsets
-
-    @property
-    def pass_through_lcoe_args(self):
-        """Get the flag to determine whether or not to pass through LCOE
-        input arguements to the reV multi year output. Default is False (dont
-        pass through extra args). This only works if pass_through_lcoe_args
-        was true in the previous reV econ step.
-
-        Returns
-        -------
-        bool
-        """
-        return self._pass_through_lcoe_args
 
     def _dict_rep(self):
         """Get a dictionary representation of this multi year collection group

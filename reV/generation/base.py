@@ -100,8 +100,7 @@ class BaseGen(ABC):
                  'variable_operating_cost')
 
     def __init__(self, points_control, output_request, site_data=None,
-                 pass_through_lcoe_args=False, fout=None, dirout='./',
-                 drop_leap=False, mem_util_lim=0.4):
+                 fout=None, dirout='./', drop_leap=False, mem_util_lim=0.4):
         """
         Parameters
         ----------
@@ -114,13 +113,6 @@ class BaseGen(ABC):
             filepath that points to a csv, DataFrame is pre-extracted data.
             Rows match sites, columns are input keys. Need a "gid" column.
             Input as None if no site-specific data.
-        pass_through_lcoe_args : bool
-            Flag to pass through the SAM arguments used for the lcoe_fcr
-            calculator into the reV output. These variables include:
-            (fixed_charge_rate, capital_cost, fixed_operating_cost,
-            variable_operating_cost). This can be used to re-calculate LCOE
-            in downstream reV modules to compute economies-of-scale capital
-            cost reductions.
         fout : str | None
             Optional .h5 output file specification.
         dirout : str | None
@@ -159,8 +151,7 @@ class BaseGen(ABC):
 
         self._site_data = self._parse_site_data(site_data)
         self.add_site_data_to_pp(self._site_data)
-        self._output_request = self._parse_output_request(
-            output_request, pass_through_lcoe_args)
+        self._output_request = self._parse_output_request(output_request)
 
         # pre-initialize output arrays to store results when available.
         self._out = {}
