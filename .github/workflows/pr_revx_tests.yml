@@ -1,8 +1,6 @@
 name: reVX Pytests
 
-on:
-  pull_request:
-    types: [opened, edited, synchronize]
+on: pull_request
 
 jobs:
   build:

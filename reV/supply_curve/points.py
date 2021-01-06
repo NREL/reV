@@ -134,9 +134,10 @@ class AbstractSupplyCurvePoint(ABC):
             loc = np.where(arr == gid)
             row = loc[0][0]
             col = loc[1][0]
-        except IndexError:
-            raise IndexError('Gid {} out of bounds for extent shape {} and '
-                             'resolution {}.'.format(gid, shape, resolution))
+        except IndexError as exc:
+            msg = ('Gid {} out of bounds for extent shape {} and '
+                   'resolution {}.'.format(gid, shape, resolution))
+            raise IndexError(msg) from exc
 
         if row + 1 != nrows:
             row_slice = slice(row * resolution, (row + 1) * resolution)
@@ -338,15 +339,15 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
     @property
     def n_gids(self):
         """
-        Get the total number of resource/generation gids that were at
-        not excluded.
+        Get the total number of not fully excluded pixels associated with the
+        available resource/generation gids at the given sc gid.
 
         Returns
         -------
         n_gids : list
-            List of exclusion pixels in each resource/generation gid.
         """
-        n_gids = np.sum(self.excl_data_flat > 0)
+        mask = self._gids != -1
+        n_gids = np.sum(self._excl_data_flat[mask] > 0)
 
         return n_gids
 
@@ -465,6 +466,39 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             mean = x.sum() / excl.sum()
 
         return mean
+
+    def mean_wind_dirs(self, arr):
+        """
+        Calc the mean wind directions at every time-step
+
+        Parameters
+        ----------
+        arr : np.ndarray
+            Array of wind direction data.
+        Returns
+        -------
+        mean_wind_dirs : np.ndarray | float
+            Mean wind direction of arr masked by the binary exclusions
+        """
+        excl = self.excl_data_flat[self.bool_mask]
+        gids = self._gids[self.bool_mask]
+        if len(arr.shape) == 2:
+            arr_slice = (slice(None), gids)
+            ax = 1
+
+        else:
+            arr_slice = gids
+            ax = 0
+
+        angle = np.radians(arr[arr_slice], dtype=np.float32)
+        sin = np.mean(np.sin(angle) * excl, axis=ax)
+        cos = np.mean(np.cos(angle) * excl, axis=ax)
+
+        mean_wind_dirs = np.degrees(np.arctan2(sin, cos))
+        mask = mean_wind_dirs < 0
+        mean_wind_dirs[mask] += 360
+
+        return mean_wind_dirs
 
     def aggregate(self, arr):
         """
@@ -810,13 +844,14 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
 
     @property
     def gid_counts(self):
-        """Get the number of exclusion pixels in each resource/generation gid
-        corresponding to this sc point.
+        """Get the sum of the inclusion values in each resource/generation gid
+        corresponding to this sc point. The sum of the gid counts can be less
+        than the value provided by n_gids if fractional exclusion/inclusions
+        are provided.
 
         Returns
         -------
         gid_counts : list
-            List of exclusion pixels in each resource/generation gid.
         """
         gid_counts = [self.excl_data_flat[(self._h5_gids == gid)].sum()
                       for gid in self.h5_gid_set]
@@ -910,8 +945,11 @@ class AggregationSupplyCurvePoint(SupplyCurvePoint):
                 agg_method = point.exclusion_weighted_mean
             elif agg_method.lower().startswith(('sum', 'agg')):
                 agg_method = point.aggregate
+            elif 'wind_dir' in agg_method.lower():
+                agg_method = point.mean_wind_dirs
             else:
-                msg = 'Aggregation method must be either mean or sum/aggregate'
+                msg = ('Aggregation method must be either mean, '
+                       'sum/aggregate, or wind_dir')
                 logger.error(msg)
                 raise ValueError(msg)
 

@@ -45,6 +45,30 @@ def test_sc_summarize():
     test = SummarizeSupplyCurve(SC_TABLE).supply_curve_summary()
     baseline = os.path.join(SUMMARY_DIR,
                             'sc_full_out_1_summary.csv')
-    baseline = pd.read_csv(baseline, index_col=0)
+
+    if os.path.exists(baseline):
+        baseline = pd.read_csv(baseline, index_col=0)
+    else:
+        test.to_csv(baseline)
 
     assert_frame_equal(test, baseline, check_dtype=False)
+
+
+def execute_pytest(capture='all', flags='-rapP'):
+    """Execute module as pytest with detailed summary report.
+
+    Parameters
+    ----------
+    capture : str
+        Log or stdout/stderr capture option. ex: log (only logger),
+        all (includes stdout/stderr)
+    flags : str
+        Which tests to show logs and results for.
+    """
+
+    fname = os.path.basename(__file__)
+    pytest.main(['-q', '--show-capture={}'.format(capture), fname, flags])
+
+
+if __name__ == '__main__':
+    execute_pytest()

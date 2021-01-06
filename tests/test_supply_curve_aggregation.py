@@ -79,6 +79,68 @@ def test_aggregation_parallel(excl_dict, baseline_name):
     check_agg(agg_out, baseline_h5)
 
 
+@pytest.mark.parametrize('excl_dict', [None, EXCL_DICT])
+def test_gid_counts(excl_dict):
+    """
+    test counting of exclusion gids during aggregation
+    """
+    agg_out = Aggregation.run(EXCL, GEN, TM_DSET, *AGG_DSET,
+                              excl_dict=excl_dict, max_workers=None,
+                              chunk_point_len=10)
+
+    for i, row in agg_out['meta'].iterrows():
+        n_gids = row['n_gids']
+        gid_counts = np.sum(row['gid_counts'])
+
+        msg = ('For sc_gid {}: the sum of gid_counts ({}), does not match '
+               'n_gids ({})'.format(i, n_gids, gid_counts))
+        assert n_gids == gid_counts, msg
+
+
+def compute_mean_wind_dirs(res_path, dset, gids, fracs):
+    """
+    Compute mean wind directions for given dset and gids
+    """
+    with Resource(res_path) as f:
+        wind_dirs = np.radians(f[dset, :, gids])
+
+    sin = np.mean(np.sin(wind_dirs) * fracs, axis=1)
+    cos = np.mean(np.cos(wind_dirs) * fracs, axis=1)
+    mean_wind_dirs = np.degrees(np.arctan2(sin, cos))
+
+    mask = mean_wind_dirs < 0
+    mean_wind_dirs[mask] += 360
+
+    return mean_wind_dirs
+
+
+@pytest.mark.parametrize('excl_dict', [None, EXCL_DICT])
+def test_mean_wind_dirs(excl_dict):
+    """
+    Test mean wind direction aggregation
+    """
+    RES = os.path.join(TESTDATADIR, 'wtk/wind_dirs_2012.h5')
+    DSET = 'winddirection_100m'
+    agg_out = Aggregation.run(EXCL, RES, TM_DSET, DSET,
+                              agg_method='wind_dir',
+                              excl_dict=excl_dict, max_workers=None,
+                              chunk_point_len=10)
+
+    mean_wind_dirs = agg_out['winddirection_100m']
+    out_meta = agg_out['meta']
+    for i, row in out_meta.iterrows():
+        test = mean_wind_dirs[:, i]
+
+        gids = row['source_gids']
+        fracs = row['gid_counts'] / row['n_gids']
+
+        truth = compute_mean_wind_dirs(RES, DSET, gids, fracs)
+
+        msg = ('mean wind directions do now match for sc_gid {}'
+               .format(i))
+        assert np.allclose(truth, test, rtol=RTOL, atol=ATOL), msg
+
+
 def execute_pytest(capture='all', flags='-rapP'):
     """Execute module as pytest with detailed summary report.
 

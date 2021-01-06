@@ -37,7 +37,11 @@ def test_competitive_wind_dirs(downwind):
         baseline = os.path.join(TESTDATADIR, 'comp_wind_farms',
                                 'sc_points_upwind.csv')
 
-    baseline = pd.read_csv(baseline)
+    if not os.path.exists(baseline):
+        sc_points.to_csv(baseline, index=False)
+    else:
+        baseline = pd.read_csv(baseline)
+
     assert_frame_equal(sc_points, baseline, check_dtype=False)
 
 
@@ -57,7 +61,11 @@ def test_sc_full_wind_dirs(downwind):
         baseline = os.path.join(TESTDATADIR, 'comp_wind_farms',
                                 'sc_full_upwind.csv')
 
-    baseline = pd.read_csv(baseline)
+    if not os.path.exists(baseline):
+        sc_out.to_csv(baseline, index=False)
+    else:
+        baseline = pd.read_csv(baseline)
+
     assert_frame_equal(sc_out, baseline, check_dtype=False)
 
 
@@ -77,7 +85,11 @@ def test_sc_simple_wind_dirs(downwind):
         baseline = os.path.join(TESTDATADIR, 'comp_wind_farms',
                                 'sc_simple_upwind.csv')
 
-    baseline = pd.read_csv(baseline)
+    if not os.path.exists(baseline):
+        sc_out.to_csv(baseline, index=False)
+    else:
+        baseline = pd.read_csv(baseline)
+
     assert_frame_equal(sc_out, baseline, check_dtype=False)
 
 
