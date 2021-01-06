@@ -1,0 +1,201 @@
+{
+  "ac": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kW"
+  },
+  "air_temperature": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "int16",
+    "scale_factor": 10,
+    "type": "array",
+    "units": "Celsius"
+  },
+  "annual_energy": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kWh"
+  },
+  "cf_mean": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "scalar",
+    "units": "unitless"
+  },
+  "cf_profile": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "array",
+    "units": "unitless"
+  },
+  "clipped_power": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kW"
+  },
+  "dc": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kW"
+  },
+  "dhi": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint16",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "dhi_mean": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "scalar",
+    "units": "kWh/m2/day"
+  },
+  "dni": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint16",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "dni_mean": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "scalar",
+    "units": "kWh/m2/day"
+  },
+  "energy_yield": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kWh/kW"
+  },
+  "gen_profile": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kW"
+  },
+  "ghi": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint16",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "ghi_mean": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "scalar",
+    "units": "kWh/m2/day"
+  },
+  "poa": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "pressure": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint16",
+    "scale_factor": 10,
+    "type": "array",
+    "units": "atm"
+  },
+  "surface_albedo": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint8",
+    "scale_factor": 100,
+    "type": "array",
+    "units": "unitless"
+  },
+  "temperature": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "int16",
+    "scale_factor": 100,
+    "type": "array",
+    "units": "Celsius"
+  },
+  "wind_speed": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint16",
+    "scale_factor": 100,
+    "type": "array",
+    "units": "m/s"
+  },
+  "windspeed": {
+    "chunks": [
+      null,
+      100
+    ],
+    "dtype": "uint16",
+    "scale_factor": 100,
+    "type": "array",
+    "units": "m/s"
+  },
+  "ws_mean": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1000,
+    "type": "scalar",
+    "units": "m/s"
+  }
+}

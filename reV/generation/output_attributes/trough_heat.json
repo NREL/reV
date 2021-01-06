@@ -1,0 +1,58 @@
+{
+  "T_field_cold_in": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "C"
+  },
+  "T_field_hot_out": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "C"
+  },
+  "annual_gross_energy": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kWh"
+  },
+  "dni_costh": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "m_dot_field_delivered": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kg/s"
+  },
+  "m_dot_field_recirc": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kg/s"
+  },
+  "q_dot_htf_sf_out": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "MWt"
+  },
+  "qinc_costh": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "MWt"
+  }
+}

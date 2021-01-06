@@ -1,0 +1,65 @@
+{
+  "W_dot_heat_sink_pump": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "MWe"
+  },
+  "annual_field_energy": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kWh"
+  },
+  "annual_thermal_consumption": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kWh"
+  },
+  "gen": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kW"
+  },
+  "m_dot_field": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kg/s"
+  },
+  "m_dot_loop": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kg/s"
+  },
+  "q_dot_rec_inc": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "MWt"
+  },
+  "q_dot_sf_out": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "MWt"
+  },
+  "q_dot_to_heat_sink": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "MWt"
+  }
+}

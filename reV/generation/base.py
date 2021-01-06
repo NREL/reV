@@ -3,12 +3,14 @@
 reV base gen and econ module.
 """
 from abc import ABC, abstractmethod
+import copy
 from concurrent.futures import TimeoutError
 import logging
 import pandas as pd
 import numpy as np
 import os
 import psutil
+import json
 import sys
 from warnings import warn
 
@@ -25,6 +27,20 @@ from rex.utilities.execution import SpawnProcessPool
 logger = logging.getLogger(__name__)
 
 
+ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
+ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
+with open(os.path.join(ATTR_DIR, 'other.json'), 'r') as f:
+    OTHER_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'lcoe_fcr.json'), 'r') as f:
+    LCOE_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'single_owner.json'), 'r') as f:
+    SO_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'windbos.json'), 'r') as f:
+    BOS_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json'), 'r') as f:
+    LCOE_IN_ATTRS = json.load(f)
+
+
 class BaseGen(ABC):
     """Base class for reV gen and econ classes to run SAM simulations."""
 
@@ -32,68 +48,17 @@ class BaseGen(ABC):
     OPTIONS = {}
 
     # Mapping of reV generation / econ outputs to scale factors and units.
-    OUT_ATTRS = {}
+    OUT_ATTRS = copy.deepcopy(OTHER_ATTRS)
 
     # Mapping of reV econ outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
     # This is the OUT_ATTRS class attr for Econ but should also be accessible
     # to rev generation
-    ECON_ATTRS = {'other': {'scale_factor': 1, 'units': 'unknown',
-                            'dtype': 'float32', 'chunks': None},
-                  'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                  'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                                'dtype': 'float32', 'chunks': None,
-                                'type': 'scalar'},
-                  'project_return_aftertax_npv': {'scale_factor': 1,
-                                                  'units': 'dol',
-                                                  'dtype': 'float32',
-                                                  'chunks': None,
-                                                  'type': 'scalar'},
-                  'lcoe_real': {'scale_factor': 1, 'units': 'dol/MWh',
-                                'dtype': 'float32', 'chunks': None,
-                                'type': 'scalar'},
-                  'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                  'flip_actual_irr': {'scale_factor': 1, 'units': 'perc',
-                                      'dtype': 'float32', 'chunks': None,
-                                      'type': 'scalar'},
-                  'gross_revenue': {'scale_factor': 1, 'units': 'dollars',
-                                    'dtype': 'float32', 'chunks': None,
-                                    'type': 'scalar'},
-                  'total_installed_cost': {'scale_factor': 1,
-                                           'units': 'dollars',
-                                           'dtype': 'float32', 'chunks': None,
-                                           'type': 'scalar'},
-                  'turbine_cost': {'scale_factor': 1, 'units': 'dollars',
-                                   'dtype': 'float32', 'chunks': None,
-                                   'type': 'scalar'},
-                  'sales_tax_cost': {'scale_factor': 1, 'units': 'dollars',
-                                     'dtype': 'float32', 'chunks': None,
-                                     'type': 'scalar'},
-                  'bos_cost': {'scale_factor': 1, 'units': 'dollars',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-
-                  # LCOE input args
-                  'fixed_charge_rate': {'scale_factor': 1, 'units': 'unitless',
-                                        'dtype': 'float32', 'chunks': None,
-                                        'type': 'scalar'},
-                  'capital_cost': {'scale_factor': 1, 'units': 'dollars',
-                                   'dtype': 'float32', 'chunks': None,
-                                   'type': 'scalar'},
-                  'fixed_operating_cost': {'scale_factor': 1,
-                                           'units': 'dollars',
-                                           'dtype': 'float32', 'chunks': None,
-                                           'type': 'scalar'},
-                  'variable_operating_cost': {'scale_factor': 1,
-                                              'units': 'dol/kWh',
-                                              'dtype': 'float32',
-                                              'chunks': None,
-                                              'type': 'scalar'},
-                  }
+    ECON_ATTRS = copy.deepcopy(OTHER_ATTRS)
+    ECON_ATTRS.update(LCOE_ATTRS)
+    ECON_ATTRS.update(SO_ATTRS)
+    ECON_ATTRS.update(BOS_ATTRS)
+    ECON_ATTRS.update(LCOE_IN_ATTRS)
 
     # SAM argument names used to calculate LCOE
     LCOE_ARGS = ('fixed_charge_rate', 'capital_cost', 'fixed_operating_cost',

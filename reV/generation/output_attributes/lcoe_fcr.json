@@ -1,0 +1,9 @@
+{
+  "lcoe_fcr": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dol/MWh"
+  }
+}

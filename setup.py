@@ -75,7 +75,8 @@ setup(
                              "cli_project_points:main")
                             ],
     },
-    package_data={'reV': ['SAM/defaults/*.json', 'SAM/defaults/*.csv']},
+    package_data={'reV': ['SAM/defaults/*.json', 'SAM/defaults/*.csv',
+                          'generation/output_attributes/*.json']},
     include_package_data=True,
     license="BSD 3-Clause",
     zip_safe=False,
