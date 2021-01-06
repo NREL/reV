@@ -230,16 +230,16 @@ class Generation(RevPySam, ABC):
 
         lcoe_out_reqs = None
         so_out_reqs = None
+        lcoe_vars = ('lcoe_fcr', 'fixed_charge_rate', 'capital_cost',
+                     'fixed_operating_cost', 'variable_operating_cost')
+        so_vars = ('ppa_price', 'lcoe_real', 'lcoe_nom',
+                   'project_return_aftertax_npv', 'flip_actual_irr',
+                   'gross_revenue')
         if 'lcoe_fcr' in self.output_request:
-            lcoe_vars = ('lcoe_fcr', 'fixed_charge_rate', 'capital_cost',
-                         'fixed_operating_cost', 'variable_operating_cost')
             lcoe_out_reqs = [r for r in self.output_request if r in lcoe_vars]
             self.output_request = [r for r in self.output_request
                                    if r not in lcoe_out_reqs]
-        else:
-            so_vars = ('ppa_price', 'lcoe_real', 'lcoe_nom',
-                       'project_return_aftertax_npv', 'flip_actual_irr',
-                       'gross_revenue')
+        elif any([x in self.output_request for x in so_vars]):
             so_out_reqs = [r for r in self.output_request if r in so_vars]
             self.output_request = [r for r in self.output_request
                                    if r not in so_out_reqs]
