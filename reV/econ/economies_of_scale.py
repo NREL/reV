@@ -8,6 +8,7 @@ import copy
 import re
 import pandas as pd
 
+from reV.econ.utilities import lcoe_fcr
 from rex.utilities.utilities import check_eval_str
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class EconomiesOfScale:
     annual_energy_production : kWh
     fixed_charge_rate : unitless
     fixed_operating_cost : $ (per year)
-    variable_operating_cost : $/kWh (per year)
+    variable_operating_cost : $/kWh
     lcoe : $/MWh
     """
 
@@ -282,10 +283,8 @@ class EconomiesOfScale:
         lcoe : float | np.ndarray
             LCOE calculated with the unscaled (raw) capital cost
         """
-        lcoe = ((self.fcr * self.raw_capital_cost + self.foc) / self.aep
-                + self.voc)
-        lcoe *= 1000  # convert $/kWh to $/MWh
-        return lcoe
+        return lcoe_fcr(self.fcr, self.raw_capital_cost, self.foc,
+                        self.aep, self.voc)
 
     @property
     def scaled_lcoe(self):
@@ -300,7 +299,5 @@ class EconomiesOfScale:
             LCOE calculated with the scaled capital cost based on the
             EconomiesOfScale input equation.
         """
-        lcoe = ((self.fcr * self.scaled_capital_cost + self.foc) / self.aep
-                + self.voc)
-        lcoe *= 1000  # convert $/kWh to $/MWh
-        return lcoe
+        return lcoe_fcr(self.fcr, self.scaled_capital_cost, self.foc,
+                        self.aep, self.voc)
