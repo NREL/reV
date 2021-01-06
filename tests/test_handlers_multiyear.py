@@ -8,7 +8,11 @@ import os
 import shutil
 import pytest
 import tempfile
+import json
+from click.testing import CliRunner
+import traceback
 
+from reV.handlers.cli_multi_year import main
 from reV.handlers.outputs import Outputs
 from reV.handlers.multi_year import MultiYear
 from reV import TESTDATADIR
@@ -22,6 +26,12 @@ H5_FILES = [os.path.join(H5_DIR, 'gen_ri_pv_{}_x000.h5'.format(year))
             for year in YEARS]
 
 logger = init_logger('reV.handlers.multi_year', log_level='DEBUG')
+
+
+@pytest.fixture(scope="module")
+def runner():
+    """cli runner"""
+    return CliRunner()
 
 
 def manual_means(h5_files, dset):
@@ -128,28 +138,43 @@ def test_my_collection(dset, group):
         assert np.in1d(my_dsets, out_dsets).all(), msg
 
 
-def test_pass_through():
-    """Test multi year collection with pass through of some datasets."""
-    dsets = ['cf_mean']
-    pass_through_dsets = ['pass_through_1', 'pass_through_2']
+def test_cli(runner):
+    """Test multi year collection cli with pass through of some datasets."""
+
     with tempfile.TemporaryDirectory() as temp:
-        my_out = os.path.join(temp, "myfile.h5")
+        config = {"directories": {"log_directory": temp,
+                                  "output_directory": temp},
+                  "execution_control": {"option": "local"},
+                  "groups": {"none": {"dsets": ["cf_mean"],
+                                      "pass_through_dsets": ['pass_through_1',
+                                                             'pass_through_2'],
+                                      "source_dir": temp,
+                                      "source_prefix": "gen_ri_pv"}},
+                  "name": "my_test",
+                  "log_level": "INFO"}
+
+        my_out = os.path.join(temp, "{}.h5".format(config['name']))
         temp_h5_files = [os.path.join(temp, os.path.basename(fp))
                          for fp in H5_FILES]
         for fp, fp_temp in zip(H5_FILES, temp_h5_files):
             shutil.copy(fp, fp_temp)
 
+        pass_through_dsets = config['groups']['none']['pass_through_dsets']
         for fp in temp_h5_files:
             for i, dset in enumerate(pass_through_dsets):
                 with h5py.File(fp, 'a') as f:
-                    arr = np.arange(f['meta'].shape[0]) * (i + 1)
-                    f.create_dataset(dset, f['meta'].shape, data=arr)
-                    print(dset, arr)
+                    shape = f['meta'].shape
+                    arr = np.arange(shape[0]) * (i + 1)
+                    f.create_dataset(dset, shape, data=arr)
 
-        for dset in dsets:
-            MultiYear.collect_means(my_out, temp_h5_files, dset)
-        for dset in pass_through_dsets:
-            MultiYear.pass_through(my_out, temp_h5_files, dset)
+        fp_config = os.path.join(temp, 'config.json')
+        with open(fp_config, 'w') as f:
+            json.dump(config, f)
+
+        result = runner.invoke(main, ['from-config', '-c', fp_config])
+        msg = ('Failed with error {}'
+               .format(traceback.print_exception(*result.exc_info)))
+        assert result.exit_code == 0, msg
 
         with Resource(my_out) as res:
             assert 'cf_mean-2012' in res.dsets
