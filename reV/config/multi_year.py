@@ -58,7 +58,7 @@ class MultiYearConfig(AnalysisConfig):
     @property
     def group_params(self):
         """Dictionary of all groups and their respective parameters:
-        {group_name1: {source_files: [], dsets: []}}
+        {group_name1: {group: None, source_files: [], dsets: []}}
 
         Returns
         -------

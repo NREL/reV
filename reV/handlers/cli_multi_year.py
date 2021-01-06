@@ -11,7 +11,6 @@ import time
 
 from reV.config.multi_year import MultiYearConfig
 from reV.handlers.multi_year import MultiYear
-from reV.generation.base import BaseGen
 from reV.pipeline.status import Status
 from reV import __version__
 
@@ -132,19 +131,19 @@ def direct(ctx, my_file, verbose):
 
 @direct.command()
 @click.option('--group', '-g', type=STR, default=None,
-              help=('Group to collect into. Useful for collecting multiple '
-                    'scenarios into a single file.'))
+              help='Group to collect into. Useful for collecting multiple '
+              'scenarios into a single file.')
 @click.option('--source_files', '-sf', required=True, type=PATHLIST,
               help='List of files to collect from.')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
-              help=('Dataset names to be collected. If means, multi-year '
-                    'means will be computed.'))
+              help='Dataset names to be collected. If means, multi-year '
+              'means will be computed.')
 @click.option('--pass_through_dsets', '-pt', default=None, type=STRLIST,
-              help=('Optional list of datasets that are identical in the '
-                    'multi-year files (e.g. input datasets that dont vary '
-                    'from year to year) that should be copied to the output '
-                    'multi-year file once without a year suffix or '
-                    'means/stdev calculation'))
+              help='Optional list of datasets that are identical in the '
+              'multi-year files (e.g. input datasets that dont vary '
+              'from year to year) that should be copied to the output '
+              'multi-year file once without a year suffix or '
+              'means/stdev calculation')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
@@ -198,9 +197,9 @@ def multi_year(ctx, group, source_files, dsets, pass_through_dsets, verbose):
 
 @direct.command()
 @click.option('--group_params', '-gp', required=True, type=str,
-              help=('Stringified dictionary of collection groups and their '
-                    'parameters, e.g.: '
-                    '{group1: {group: null, source_files: [], dsets: []}}'))
+              help='Stringified dictionary of collection groups and their '
+              'parameters, e.g.: '
+              '{group1: {group: null, source_files: [], dsets: []}}')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -306,8 +305,8 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 @click.option('--walltime', '-wt', default=4.0, type=float,
               help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
-              help=('Additional flags for SLURM job. Format is "--qos=high" '
-                    'or "--depend=[state:job_id]". Default is None.'))
+              help='Additional flags for SLURM job. Format is "--qos=high" '
+              'or "--depend=[state:job_id]". Default is None.')
 @click.option('--memory', '-mem', default=None, type=INT,
               help='SLURM node memory request in GB. Default is None')
 @click.option('--conda_env', '-env', default=None, type=STR,
@@ -317,9 +316,9 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('--group_params', '-gp', required=True, type=str,
-              help=('Stringified dictionary of collection groups and their '
-                    'parameters, e.g.: '
-                    '{group1: {group: null, source_files: [], dsets: []}}'))
+              help='Stringified dictionary of collection groups and their '
+              'parameters, e.g.: '
+              '{group1: {group: null, source_files: [], dsets: []}}')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
