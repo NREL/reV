@@ -228,41 +228,42 @@ class Generation(RevPySam, ABC):
     def _gen_exec(self):
         """Run SAM generation with possibility for follow on econ analysis."""
 
-        lcoe_out_req = None
-        so_out_req = None
+        lcoe_out_reqs = None
+        so_out_reqs = None
+        lcoe_vars = ('lcoe_fcr', 'fixed_charge_rate', 'capital_cost',
+                     'fixed_operating_cost', 'variable_operating_cost')
+        so_vars = ('ppa_price', 'lcoe_real', 'lcoe_nom',
+                   'project_return_aftertax_npv', 'flip_actual_irr',
+                   'gross_revenue')
         if 'lcoe_fcr' in self.output_request:
-            lcoe_out_req = self.output_request.pop(
-                self.output_request.index('lcoe_fcr'))
-        else:
-            so_reqs = ('ppa_price', 'lcoe_real', 'lcoe_nom')
-            reqs = [r for r in so_reqs if r in self.output_request]
-            if len(reqs) > 1:
-                raise KeyError('Cannot request more than one single owner '
-                               'output in Generation module. Found the '
-                               'following {} single owner output requests in '
-                               'the generation run: {}'
-                               .format(len(reqs), reqs))
-            elif len(reqs) == 1:
-                so_out_req = self.output_request.pop(
-                    self.output_request.index(reqs[0]))
+            lcoe_out_reqs = [r for r in self.output_request if r in lcoe_vars]
+            self.output_request = [r for r in self.output_request
+                                   if r not in lcoe_out_reqs]
+        elif any([x in self.output_request for x in so_vars]):
+            so_out_reqs = [r for r in self.output_request if r in so_vars]
+            self.output_request = [r for r in self.output_request
+                                   if r not in so_out_reqs]
 
+        # Execute the SAM generation compute module (pvwattsv7, windpower, etc)
         self.assign_inputs()
         self.execute()
         self.collect_outputs()
         self.outputs_to_utc_arr()
 
-        if lcoe_out_req is not None:
+        # Execute a follow-on SAM econ compute module
+        # (lcoe_fcr, singleowner, etc)
+        if lcoe_out_reqs is not None:
             self.sam_sys_inputs['annual_energy'] = self.annual_energy()
-            lcoe = LCOE(self.sam_sys_inputs, output_request=(lcoe_out_req,))
+            lcoe = LCOE(self.sam_sys_inputs, output_request=lcoe_out_reqs)
             lcoe.assign_inputs()
             lcoe.execute()
             lcoe.collect_outputs()
             lcoe.outputs_to_utc_arr()
             self.outputs.update(lcoe.outputs)
 
-        elif so_out_req is not None:
+        elif so_out_reqs is not None:
             self.sam_sys_inputs['gen'] = self.gen_profile()
-            so = SingleOwner(self.sam_sys_inputs, output_request=(so_out_req,))
+            so = SingleOwner(self.sam_sys_inputs, output_request=so_out_reqs)
             so.assign_inputs()
             so.execute()
             so.collect_outputs()

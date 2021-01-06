@@ -79,8 +79,7 @@ def from_config(ctx, config_file, verbose):
         os.makedirs(config.dirout)
 
     # initialize loggers.
-    init_mult(name, config.logdir,
-              modules=[__name__, 'reV.handlers.multi_year'],
+    init_mult(name, config.logdir, modules=[__name__, 'reV'],
               verbose=verbose)
 
     # Initial log statements
@@ -131,17 +130,23 @@ def direct(ctx, my_file, verbose):
 
 @direct.command()
 @click.option('--group', '-g', type=STR, default=None,
-              help=('Group to collect into. Useful for collecting multiple '
-                    'scenarios into a single file.'))
+              help='Group to collect into. Useful for collecting multiple '
+              'scenarios into a single file.')
 @click.option('--source_files', '-sf', required=True, type=PATHLIST,
               help='List of files to collect from.')
 @click.option('--dsets', '-ds', required=True, type=STRLIST,
-              help=('Dataset names to be collected. If means, multi-year '
-                    'means will be computed.'))
+              help='Dataset names to be collected. If means, multi-year '
+              'means will be computed.')
+@click.option('--pass_through_dsets', '-pt', default=None, type=STRLIST,
+              help='Optional list of datasets that are identical in the '
+              'multi-year files (e.g. input datasets that dont vary '
+              'from year to year) that should be copied to the output '
+              'multi-year file once without a year suffix or '
+              'means/stdev calculation')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging.')
 @click.pass_context
-def multi_year(ctx, group, source_files, dsets, verbose):
+def multi_year(ctx, group, source_files, dsets, pass_through_dsets, verbose):
     """Run multi year collection and means on local worker."""
 
     name = ctx.obj['NAME']
@@ -170,6 +175,11 @@ def multi_year(ctx, group, source_files, dsets, verbose):
             MultiYear.collect_means(my_file, source_files, dset,
                                     group=group)
 
+    if pass_through_dsets is not None:
+        for dset in pass_through_dsets:
+            MultiYear.pass_through(my_file, source_files, dset,
+                                   group=group)
+
     runtime = (time.time() - t0) / 60
     logger.info('Multi-year collection completed in: {:.2f} min.'
                 .format(runtime))
@@ -186,8 +196,9 @@ def multi_year(ctx, group, source_files, dsets, verbose):
 
 @direct.command()
 @click.option('--group_params', '-gp', required=True, type=str,
-              help=('List of groups and their parameters'
-                    '(group, source_files, dsets) to collect'))
+              help='Stringified dictionary of collection groups and their '
+              'parameters, e.g.: '
+              '{group1: {group: null, source_files: [], dsets: []}}')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context
@@ -210,6 +221,7 @@ def multi_year_groups(ctx, group_params, verbose):
                 'Target output path is: {}'
                 .format(name, my_file))
     ts = time.time()
+
     for group_name, group in json.loads(group_params).items():
         logger.info('- Collecting datasets "{}" from "{}" into "{}/"'
                     .format(group['dsets'], group['source_files'],
@@ -222,6 +234,11 @@ def multi_year_groups(ctx, group_params, verbose):
             else:
                 MultiYear.collect_means(my_file, group['source_files'],
                                         dset, group=group['group'])
+
+        if group.get('pass_through_dsets', None) is not None:
+            for dset in group['pass_through_dsets']:
+                MultiYear.pass_through(my_file, group['source_files'],
+                                       dset, group=group['group'])
 
         runtime = (time.time() - t0) / 60
         logger.info('- {} collection completed in: {:.2f} min.'
@@ -287,8 +304,8 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 @click.option('--walltime', '-wt', default=4.0, type=float,
               help='SLURM walltime request in hours. Default is 1.0')
 @click.option('--feature', '-l', default=None, type=STR,
-              help=('Additional flags for SLURM job. Format is "--qos=high" '
-                    'or "--depend=[state:job_id]". Default is None.'))
+              help='Additional flags for SLURM job. Format is "--qos=high" '
+              'or "--depend=[state:job_id]". Default is None.')
 @click.option('--memory', '-mem', default=None, type=INT,
               help='SLURM node memory request in GB. Default is None')
 @click.option('--conda_env', '-env', default=None, type=STR,
@@ -298,8 +315,9 @@ def get_slurm_cmd(name, my_file, group_params, verbose=False):
 @click.option('--stdout_path', '-sout', default='./out/stdout', type=str,
               help='Subprocess standard output path. Default is ./out/stdout')
 @click.option('--group_params', '-gp', required=True, type=str,
-              help=('List of groups and their parameters'
-                    '(group, source_files, dsets) to collect'))
+              help='Stringified dictionary of collection groups and their '
+              'parameters, e.g.: '
+              '{group1: {group: null, source_files: [], dsets: []}}')
 @click.option('-v', '--verbose', is_flag=True,
               help='Flag to turn on debug logging. Default is not verbose.')
 @click.pass_context

@@ -2,10 +2,12 @@
 """
 reV generation module.
 """
+import copy
 import logging
 import numpy as np
 import os
 import pprint
+import json
 
 from reV.generation.base import BaseGen
 from reV.utilities.exceptions import ProjectPointsValueError
@@ -18,6 +20,19 @@ from rex.multi_file_resource import MultiFileResource
 from rex.utilities.utilities import check_res_file
 
 logger = logging.getLogger(__name__)
+
+ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
+ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
+with open(os.path.join(ATTR_DIR, 'other.json'), 'r') as f:
+    OTHER_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'generation.json'), 'r') as f:
+    GEN_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'linear_fresnel.json'), 'r') as f:
+    LIN_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'solar_water_heat.json'), 'r') as f:
+    SWH_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'trough_heat.json'), 'r') as f:
+    TPPH_ATTRS = json.load(f)
 
 
 class Gen(BaseGen):
@@ -35,183 +50,12 @@ class Gen(BaseGen):
 
     # Mapping of reV generation outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
-    OUT_ATTRS = {'other': {'scale_factor': 1, 'units': 'unknown',
-                           'dtype': 'float32', 'chunks': None},
-                 'cf_mean': {'scale_factor': 1000, 'units': 'unitless',
-                             'dtype': 'uint16', 'chunks': None,
-                             'type': 'scalar'},
-                 'cf_profile': {'scale_factor': 1000, 'units': 'unitless',
-                                'dtype': 'uint16', 'chunks': (None, 100),
-                                'type': 'array'},
-                 'dni': {'scale_factor': 1, 'units': 'W/m2',
-                         'dtype': 'uint16', 'chunks': (None, 100),
-                         'type': 'array'},
-                 'dhi': {'scale_factor': 1, 'units': 'W/m2',
-                         'dtype': 'uint16', 'chunks': (None, 100),
-                         'type': 'array'},
-                 'ghi': {'scale_factor': 1, 'units': 'W/m2',
-                         'dtype': 'uint16', 'chunks': (None, 100),
-                         'type': 'array'},
-                 'dni_mean': {'scale_factor': 1000, 'units': 'kWh/m2/day',
-                              'dtype': 'uint16', 'chunks': None,
-                              'type': 'scalar'},
-                 'dhi_mean': {'scale_factor': 1000, 'units': 'kWh/m2/day',
-                              'dtype': 'uint16', 'chunks': None,
-                              'type': 'scalar'},
-                 'ghi_mean': {'scale_factor': 1000, 'units': 'kWh/m2/day',
-                              'dtype': 'uint16', 'chunks': None,
-                              'type': 'scalar'},
-                 'air_temperature': {'scale_factor': 10, 'units': 'Celsius',
-                                     'dtype': 'int16', 'chunks': (None, 100),
-                                     'type': 'array'},
-                 'surface_albedo': {'scale_factor': 100, 'units': 'unitless',
-                                    'dtype': 'uint8', 'chunks': (None, 100),
-                                    'type': 'array'},
-                 'wind_speed': {'scale_factor': 100, 'units': 'm/s',
-                                'dtype': 'uint16', 'chunks': (None, 100),
-                                'type': 'array'},
-                 'windspeed': {'scale_factor': 100, 'units': 'm/s',
-                               'dtype': 'uint16', 'chunks': (None, 100),
-                               'type': 'array'},
-                 'temperature': {'scale_factor': 100, 'units': 'Celsius',
-                                 'dtype': 'int16', 'chunks': (None, 100),
-                                 'type': 'array'},
-                 'pressure': {'scale_factor': 10, 'units': 'atm',
-                              'dtype': 'uint16', 'chunks': (None, 100),
-                              'type': 'array'},
-                 'ws_mean': {'scale_factor': 1000, 'units': 'm/s',
-                             'dtype': 'uint16', 'chunks': None,
-                             'type': 'scalar'},
-                 'annual_energy': {'scale_factor': 1, 'units': 'kWh',
-                                   'dtype': 'float32', 'chunks': None,
-                                   'type': 'scalar'},
-                 'energy_yield': {'scale_factor': 1, 'units': 'kWh/kW',
-                                  'dtype': 'float32', 'chunks': None,
-                                  'type': 'scalar'},
-                 'gen_profile': {'scale_factor': 1, 'units': 'kW',
-                                 'dtype': 'float32', 'chunks': (None, 100),
-                                 'type': 'array'},
-                 'ac': {'scale_factor': 1, 'units': 'kW',
-                        'dtype': 'float32', 'chunks': (None, 100),
-                        'type': 'array'},
-                 'dc': {'scale_factor': 1, 'units': 'kW',
-                        'dtype': 'float32', 'chunks': (None, 100),
-                        'type': 'array'},
-                 'clipped_power': {'scale_factor': 1, 'units': 'kW',
-                                   'dtype': 'float32', 'chunks': (None, 100),
-                                   'type': 'array'},
-                 'poa': {'scale_factor': 1, 'units': 'W/m2',
-                         'dtype': 'float32', 'chunks': (None, 100),
-                         'type': 'array'},
-                 'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                 'lcoe_real': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                 'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 # Solar water heater
-                 'T_amb': {'scale_factor': 1, 'units': 'C',
-                           'dtype': 'int16', 'chunks': None,
-                           'type': 'array'},
-                 'T_cold': {'scale_factor': 1, 'units': 'C',
-                            'dtype': 'float32', 'chunks': None,
-                            'type': 'array'},
-                 'T_deliv': {'scale_factor': 1, 'units': 'C',
-                             'dtype': 'float32', 'chunks': None,
-                             'type': 'array'},
-                 'T_hot': {'scale_factor': 1, 'units': 'C',
-                           'dtype': 'float32', 'chunks': None,
-                           'type': 'array'},
-                 'T_tank': {'scale_factor': 1, 'units': 'C',
-                            'dtype': 'float32', 'chunks': None,
-                            'type': 'array'},
-                 'draw': {'scale_factor': 1, 'units': 'kg/hr',
-                          'dtype': 'float32', 'chunks': None,
-                          'type': 'array'},
-                 'beam': {'scale_factor': 1, 'units': 'W/m2',
-                          'dtype': 'uint16', 'chunks': None,
-                          'type': 'array'},
-                 'diffuse': {'scale_factor': 1, 'units': 'W/m2',
-                             'dtype': 'uint16', 'chunks': None,
-                             'type': 'array'},
-                 'I_incident': {'scale_factor': 1, 'units': 'W/m2',
-                                'dtype': 'float32', 'chunks': None,
-                                'type': 'array'},
-                 'I_transmitted': {'scale_factor': 1, 'units': 'W/m2',
-                                   'dtype': 'float32', 'chunks': None,
-                                   'type': 'array'},
-                 'Q_deliv': {'scale_factor': 1, 'units': 'kW',
-                             'dtype': 'float32', 'chunks': None,
-                             'type': 'array'},
-                 'annual_Q_deliv': {'scale_factor': 1, 'units': 'kWh',
-                                    'dtype': 'float32', 'chunks': None,
-                                    'type': 'scalar'},
-                 'solar_fraction': {'scale_factor': 1, 'units': 'None',
-                                    'dtype': 'float32', 'chunks': None,
-                                    'type': 'scalar'},
-                 # Linear Fresnel
-                 'q_dot_to_heat_sink': {'scale_factor': 1, 'units': 'MWt',
-                                        'dtype': 'float32', 'chunks': None,
-                                        'type': 'array'},
-                 'gen': {'scale_factor': 1, 'units': 'kW',
-                         'dtype': 'float32', 'chunks': None,
-                         'type': 'array'},
-                 'm_dot_field': {'scale_factor': 1, 'units': 'kg/s',
-                                 'dtype': 'float32', 'chunks': None,
-                                 'type': 'array'},
-                 'q_dot_sf_out': {'scale_factor': 1, 'units': 'MWt',
-                                  'dtype': 'float32', 'chunks': None,
-                                  'type': 'array'},
-                 'W_dot_heat_sink_pump': {'scale_factor': 1, 'units': 'MWe',
-                                          'dtype': 'float32', 'chunks': None,
-                                          'type': 'array'},
-                 'm_dot_loop': {'scale_factor': 1, 'units': 'kg/s',
-                                'dtype': 'float32', 'chunks': None,
-                                'type': 'array'},
-                 'q_dot_rec_inc': {'scale_factor': 1, 'units': 'MWt',
-                                   'dtype': 'float32', 'chunks': None,
-                                   'type': 'array'},
-                 'annual_field_energy': {'scale_factor': 1, 'units': 'kWh',
-                                         'dtype': 'float32', 'chunks': None,
-                                         'type': 'scalar'},
-                 'annual_thermal_consumption': {'scale_factor': 1,
-                                                'units': 'kWh',
-                                                'dtype': 'float32',
-                                                'chunks': None,
-                                                'type': 'scalar'},
-
-                 # Trough physical process heat
-                 'T_field_cold_in': {'scale_factor': 1, 'units': 'C',
-                                     'dtype': 'float32', 'chunks': None,
-                                     'type': 'array'},
-                 'T_field_hot_out': {'scale_factor': 1, 'units': 'C',
-                                     'dtype': 'float32', 'chunks': None,
-                                     'type': 'array'},
-                 'm_dot_field_delivered': {'scale_factor': 1, 'units': 'kg/s',
-                                           'dtype': 'float32', 'chunks': None,
-                                           'type': 'array'},
-                 'm_dot_field_recirc': {'scale_factor': 1, 'units': 'kg/s',
-                                        'dtype': 'float32', 'chunks': None,
-                                        'type': 'array'},
-                 'q_dot_htf_sf_out': {'scale_factor': 1, 'units': 'MWt',
-                                      'dtype': 'float32', 'chunks': None,
-                                      'type': 'array'},
-                 'qinc_costh': {'scale_factor': 1, 'units': 'MWt',
-                                'dtype': 'float32', 'chunks': None,
-                                'type': 'array'},
-                 'dni_costh': {'scale_factor': 1, 'units': 'W/m2',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'array'},
-                 'annual_gross_energy': {'scale_factor': 1, 'units': 'kWh',
-                                         'dtype': 'float32', 'chunks': None,
-                                         'type': 'scalar'},
-                 }
+    OUT_ATTRS = copy.deepcopy(OTHER_ATTRS)
+    OUT_ATTRS.update(GEN_ATTRS)
+    OUT_ATTRS.update(LIN_ATTRS)
+    OUT_ATTRS.update(SWH_ATTRS)
+    OUT_ATTRS.update(TPPH_ATTRS)
+    OUT_ATTRS.update(BaseGen.ECON_ATTRS)
 
     def __init__(self, points_control, res_file, output_request=('cf_mean',),
                  site_data=None, fout=None, dirout='./gen_out',
@@ -357,27 +201,6 @@ class Gen(BaseGen):
 
         return self._time_index
 
-    @staticmethod
-    def _add_out_reqs(output_request):
-        """Add additional output requests as needed.
-
-        Parameters
-        ----------
-        output_request : list
-            Output variables requested from SAM.
-
-        Returns
-        -------
-        output_request : list
-            Output variable list with cf_mean and resource mean out vars.
-        """
-
-        if 'cf_mean' not in output_request:
-            # ensure that cf_mean is requested from output
-            output_request.append('cf_mean')
-
-        return output_request
-
     @classmethod
     def run(cls, points_control, tech=None, res_file=None, output_request=None,
             scale_outputs=True):
@@ -460,7 +283,10 @@ class Gen(BaseGen):
         """
 
         output_request = self._output_request_type_check(req)
-        output_request = self._add_out_reqs(output_request)
+
+        # ensure that cf_mean is requested from output
+        if 'cf_mean' not in output_request:
+            output_request.append('cf_mean')
 
         for request in output_request:
             if request not in self.OUT_ATTRS:
@@ -550,8 +376,11 @@ class Gen(BaseGen):
                         curtailment=curtailment)
 
         # make a Gen class instance to operate with
-        gen = cls(pc, res_file, output_request=output_request,
-                  site_data=site_data, fout=fout, dirout=dirout,
+        gen = cls(pc, res_file,
+                  output_request=output_request,
+                  site_data=site_data,
+                  fout=fout,
+                  dirout=dirout,
                   mem_util_lim=mem_util_lim)
 
         kwargs = {'tech': gen.tech,

@@ -10,6 +10,8 @@ from reV.config.output_request import SAMOutputRequest
 from reV.pipeline.pipeline import Pipeline
 from reV.utilities.exceptions import ConfigError
 
+from rex.utilities.utilities import get_class_properties
+
 logger = logging.getLogger(__name__)
 
 
@@ -49,24 +51,23 @@ class MultiYearConfig(AnalysisConfig):
             List of group names
         """
         if self._groups is None:
-            self._groups = MultiYearGroup.factory(self.dirout, self['groups'])
+            self._groups = MultiYearGroup._factory(self.dirout, self['groups'])
 
         return list(self._groups)
 
     @property
     def group_params(self):
-        """
+        """Dictionary of all groups and their respective parameters:
+        {group_name1: {group: None, source_files: [], dsets: []}}
+
         Returns
         -------
-        group_params : dict
-            Dictionary of group parameters: name, source_files, dsets
+        dict
         """
         group_params = {}
         for name in self.group_names:
             group = self._groups[name]
-            group_params[name] = {'group': group.name,
-                                  'dsets': group.dsets,
-                                  'source_files': group.source_files}
+            group_params[name] = group._dict_rep()
 
         return group_params
 
@@ -75,9 +76,9 @@ class MultiYearGroup:
     """
     Handle group parameters for MultiYearConfig
     """
-    def __init__(self, name, out_dir, source_files="PIPELINE",
+    def __init__(self, name, out_dir, source_files=None,
                  source_dir=None, source_prefix=None,
-                 dsets=('cf_mean',)):
+                 dsets=('cf_mean',), pass_through_dsets=None):
         """
         Parameters
         ----------
@@ -86,15 +87,24 @@ class MultiYearGroup:
         out_dir : str
             Output directory, used for Pipeline handling
         source_files : str | list | NoneType
-            List of source files
-            If "PIPELINE" extract from collection status file
+            Explicit list of source files - either use this OR
+            source_dir + source_prefix
+            If this arg is "PIPELINE", determine source_files from
+            the status file of the previous pipeline step.
             If None, use source_dir and source_prefix
         source_dir : str | NoneType
             Directory to extract source files from
+            (must be paired with source_prefix)
         source_prefix : str | NoneType
             File prefix to search for in source directory
+            (must be paired with source_dir)
         dsets : list | tuple
             List of datasets to collect
+        pass_through_dsets : list | tuple | None
+            Optional list of datasets that are identical in the multi-year
+            files (e.g. input datasets that don't vary from year to year) that
+            should be copied to the output multi-year file once without a
+            year suffix or means/stdev calculation
         """
         self._name = name
         self._dirout = out_dir
@@ -102,6 +112,9 @@ class MultiYearGroup:
         self._source_dir = source_dir
         self._source_prefix = source_prefix
         self._dsets = SAMOutputRequest(dsets)
+        self._pass_through_dsets = None
+        if pass_through_dsets is not None:
+            self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
 
     @property
     def name(self):
@@ -130,8 +143,9 @@ class MultiYearGroup:
                                                        'multi-year',
                                                        target='fpath')
             else:
-                raise ConfigError("source_files must be a list, tuple, "
-                                  "or 'PIPELINE'")
+                e = "source_files must be a list, tuple, or 'PIPELINE'"
+                logger.error(e)
+                raise ConfigError(e)
         else:
             if self._source_dir and self._source_prefix:
                 source_files = []
@@ -141,13 +155,17 @@ class MultiYearGroup:
                         source_files.append(os.path.join(self._source_dir,
                                                          file))
             else:
-                raise ConfigError("source_files or both source_dir and "
-                                  "source_prefix must be provided")
+                e = ("source_files or both source_dir and "
+                     "source_prefix must be provided")
+                logger.error(e)
+                raise ConfigError(e)
 
         if not any(source_files):
-            raise FileNotFoundError('Could not find any source files for '
-                                    'multi-year collection group: "{}"'
-                                    .format(self.name))
+            e = ('Could not find any source files for '
+                 'multi-year collection group: "{}"'
+                 .format(self.name))
+            logger.error(e)
+            raise FileNotFoundError(e)
 
         return source_files
 
@@ -161,8 +179,33 @@ class MultiYearGroup:
         """
         return self._dsets
 
+    @property
+    def pass_through_dsets(self):
+        """Optional list of datasets that are identical in the multi-year
+        files (e.g. input datasets that don't vary from year to year) that
+        should be copied to the output multi-year file once without a
+        year suffix or means/stdev calculation
+
+        Returns
+        -------
+        list | tuple | None
+        """
+        return self._pass_through_dsets
+
+    def _dict_rep(self):
+        """Get a dictionary representation of this multi year collection group
+
+        Returns
+        -------
+        dict
+        """
+        props = get_class_properties(self.__class__)
+        out = {k: getattr(self, k) for k in props}
+        out['group'] = self.name
+        return out
+
     @classmethod
-    def factory(cls, out_dir, groups_dict):
+    def _factory(cls, out_dir, groups_dict):
         """
         Generate dictionary of MultiYearGroup objects for all groups in groups
 

@@ -39,49 +39,15 @@ class Econ(BaseGen):
                'turbine_cost': WindBos,
                'sales_tax_cost': WindBos,
                'bos_cost': WindBos,
+               'fixed_charge_rate': SAM_LCOE,
+               'capital_cost': SAM_LCOE,
+               'fixed_operating_cost': SAM_LCOE,
+               'variable_operating_cost': SAM_LCOE,
                }
 
     # Mapping of reV econ outputs to scale factors and units.
     # Type is scalar or array and corresponds to the SAM single-site output
-    OUT_ATTRS = {'other': {'scale_factor': 1, 'units': 'unknown',
-                           'dtype': 'float32', 'chunks': None},
-                 'lcoe_fcr': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 'ppa_price': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                 'project_return_aftertax_npv': {'scale_factor': 1,
-                                                 'units': 'dol',
-                                                 'dtype': 'float32',
-                                                 'chunks': None,
-                                                 'type': 'scalar'},
-                 'lcoe_real': {'scale_factor': 1, 'units': 'dol/MWh',
-                               'dtype': 'float32', 'chunks': None,
-                               'type': 'scalar'},
-                 'lcoe_nom': {'scale_factor': 1, 'units': 'dol/MWh',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 'flip_actual_irr': {'scale_factor': 1, 'units': 'perc',
-                                     'dtype': 'float32', 'chunks': None,
-                                     'type': 'scalar'},
-                 'gross_revenue': {'scale_factor': 1, 'units': 'dollars',
-                                   'dtype': 'float32', 'chunks': None,
-                                   'type': 'scalar'},
-                 'total_installed_cost': {'scale_factor': 1,
-                                          'units': 'dollars',
-                                          'dtype': 'float32', 'chunks': None,
-                                          'type': 'scalar'},
-                 'turbine_cost': {'scale_factor': 1, 'units': 'dollars',
-                                  'dtype': 'float32', 'chunks': None,
-                                  'type': 'scalar'},
-                 'sales_tax_cost': {'scale_factor': 1, 'units': 'dollars',
-                                    'dtype': 'float32', 'chunks': None,
-                                    'type': 'scalar'},
-                 'bos_cost': {'scale_factor': 1, 'units': 'dollars',
-                              'dtype': 'float32', 'chunks': None,
-                              'type': 'scalar'},
-                 }
+    OUT_ATTRS = BaseGen.ECON_ATTRS
 
     def __init__(self, points_control, cf_file, year, site_data=None,
                  output_request=('lcoe_fcr',), fout=None, dirout='./econ_out',
@@ -467,8 +433,12 @@ class Econ(BaseGen):
                         sites_per_worker=sites_per_worker, append=append)
 
         # make a class instance to operate with
-        econ = cls(pc, cf_file, year=year, site_data=site_data,
-                   output_request=output_request, fout=fout, dirout=dirout,
+        econ = cls(pc, cf_file,
+                   year=year,
+                   site_data=site_data,
+                   output_request=output_request,
+                   fout=fout,
+                   dirout=dirout,
                    append=append)
 
         diff = list(set(pc.sites) - set(econ.meta['gid'].values))

@@ -1,0 +1,44 @@
+{
+  "flip_actual_irr": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "perc"
+  },
+  "gross_revenue": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dollars"
+  },
+  "lcoe_nom": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dol/MWh"
+  },
+  "lcoe_real": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dol/MWh"
+  },
+  "ppa_price": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dol/MWh"
+  },
+  "project_return_aftertax_npv": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dol"
+  }
+}

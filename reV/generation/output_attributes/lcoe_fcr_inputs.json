@@ -1,0 +1,30 @@
+{
+  "capital_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dollars"
+  },
+  "fixed_charge_rate": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "unitless"
+  },
+  "fixed_operating_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dollars"
+  },
+  "variable_operating_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dol/kWh"
+  }
+}

@@ -11,6 +11,7 @@ import pandas as pd
 from scipy import stats
 from warnings import warn
 
+from reV.econ.economies_of_scale import EconomiesOfScale
 from reV.handlers.exclusions import ExclusionLayers
 from reV.supply_curve.points import GenerationSupplyCurvePoint
 from reV.utilities.exceptions import (EmptySupplyCurvePointError,
@@ -545,7 +546,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         return data
 
-    def point_summary(self, args=None, data_layers=None):
+    def point_summary(self, args=None):
         """
         Get a summary dictionary of a single supply curve point.
 
@@ -554,11 +555,13 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
         args : tuple | list | None
             List of summary arguments to include. None defaults to all
             available args defined in the class attr.
-        data_layers : None | dict
-            Aggregation data layers. Must be a dictionary keyed by data label
-            name. Each value must be another dictionary with "dset", "method",
-            and "fpath".
+
+        Returns
+        -------
+        summary : dict
+            Dictionary of summary outputs for this sc point.
         """
+
         ARGS = {'res_gids': self.res_gid_set,
                 'gen_gids': self.gen_gid_set,
                 'gid_counts': self.gid_counts,
@@ -596,7 +599,33 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                 warn('Cannot find "{}" as an available SC self summary '
                      'output', OutputWarning)
 
-        summary = self.agg_data_layers(summary, data_layers)
+        return summary
+
+    @staticmethod
+    def economies_of_scale(cap_cost_scale, summary):
+        """Apply economies of scale to this point summary
+
+        Parameters
+        ----------
+        cap_cost_scale : str
+            LCOE scaling equation to implement "economies of scale".
+            Equation must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the names of the columns in the reV
+            supply curve aggregation table. This will not affect offshore
+            wind LCOE.
+        summary : dict
+            Dictionary of summary outputs for this sc point.
+
+        Returns
+        -------
+        summary : dict
+            Dictionary of summary outputs for this sc point.
+        """
+
+        eos = EconomiesOfScale(cap_cost_scale, summary)
+        summary['mean_lcoe'] = eos.scaled_lcoe
+        summary['raw_lcoe'] = eos.raw_lcoe
 
         return summary
 
@@ -607,7 +636,7 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                   cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                   h5_dsets=None, resolution=64, exclusion_shape=None,
                   close=False, offshore_flags=None, friction_layer=None,
-                  args=None, data_layers=None):
+                  args=None, data_layers=None, cap_cost_scale=None):
         """Get a summary dictionary of a single supply curve point.
 
         Parameters
@@ -671,22 +700,41 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
             Aggregation data layers. Must be a dictionary keyed by data label
             name. Each value must be another dictionary with "dset", "method",
             and "fpath", by default None
+        cap_cost_scale : str | None
+            Optional LCOE scaling equation to implement "economies of scale".
+            Equations must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the names of the columns in the reV
+            supply curve aggregation table. This will not affect offshore
+            wind LCOE.
 
         Returns
         -------
         summary : dict
             Dictionary of summary outputs for this sc point.
         """
-        kwargs = {"excl_dict": excl_dict, "res_class_dset": res_class_dset,
-                  "res_class_bin": res_class_bin, "excl_area": excl_area,
-                  "power_density": power_density, "cf_dset": cf_dset,
-                  "lcoe_dset": lcoe_dset, "h5_dsets": h5_dsets,
+        kwargs = {"excl_dict": excl_dict,
+                  "res_class_dset": res_class_dset,
+                  "res_class_bin": res_class_bin,
+                  "excl_area": excl_area,
+                  "power_density": power_density,
+                  "cf_dset": cf_dset,
+                  "lcoe_dset": lcoe_dset,
+                  "h5_dsets": h5_dsets,
                   "resolution": resolution,
-                  "exclusion_shape": exclusion_shape, "close": close,
+                  "exclusion_shape": exclusion_shape,
+                  "close": close,
                   "offshore_flags": offshore_flags,
                   'friction_layer': friction_layer}
+
         with cls(gid, excl_fpath, gen_fpath, tm_dset, gen_index,
                  **kwargs) as point:
-            summary = point.point_summary(args=args, data_layers=data_layers)
+            summary = point.point_summary(args=args)
+
+            if data_layers is not None:
+                summary = point.agg_data_layers(summary, data_layers)
+
+            if cap_cost_scale is not None:
+                summary = point.economies_of_scale(cap_cost_scale, summary)
 
         return summary

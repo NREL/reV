@@ -610,7 +610,6 @@ def get_node_cmd(name, tech, sam_files, res_file, points=slice(0, 100),
     if site_data:
         arg_direct.append('-sd {}'.format(SLURM.s(site_data)))
 
-    # make some strings only if specified
     if curtailment:
         arg_direct.append('-curt {}'.format(SLURM.s(curtailment)))
 

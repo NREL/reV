@@ -1,0 +1,93 @@
+{
+  "I_incident": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "I_transmitted": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "Q_deliv": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kW"
+  },
+  "T_amb": {
+    "chunks": null,
+    "dtype": "int16",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "C"
+  },
+  "T_cold": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "C"
+  },
+  "T_deliv": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "C"
+  },
+  "T_hot": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "C"
+  },
+  "T_tank": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "C"
+  },
+  "annual_Q_deliv": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "kWh"
+  },
+  "beam": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "diffuse": {
+    "chunks": null,
+    "dtype": "uint16",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "W/m2"
+  },
+  "draw": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "array",
+    "units": "kg/hr"
+  },
+  "solar_fraction": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "None"
+  }
+}

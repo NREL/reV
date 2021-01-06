@@ -1,0 +1,30 @@
+{
+  "bos_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dollars"
+  },
+  "sales_tax_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dollars"
+  },
+  "total_installed_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dollars"
+  },
+  "turbine_cost": {
+    "chunks": null,
+    "dtype": "float32",
+    "scale_factor": 1,
+    "type": "scalar",
+    "units": "dollars"
+  }
+}

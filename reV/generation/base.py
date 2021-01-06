@@ -3,12 +3,14 @@
 reV base gen and econ module.
 """
 from abc import ABC, abstractmethod
+import copy
 from concurrent.futures import TimeoutError
 import logging
 import pandas as pd
 import numpy as np
 import os
 import psutil
+import json
 import sys
 from warnings import warn
 
@@ -25,6 +27,20 @@ from rex.utilities.execution import SpawnProcessPool
 logger = logging.getLogger(__name__)
 
 
+ATTR_DIR = os.path.dirname(os.path.realpath(__file__))
+ATTR_DIR = os.path.join(ATTR_DIR, 'output_attributes')
+with open(os.path.join(ATTR_DIR, 'other.json'), 'r') as f:
+    OTHER_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'lcoe_fcr.json'), 'r') as f:
+    LCOE_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'single_owner.json'), 'r') as f:
+    SO_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'windbos.json'), 'r') as f:
+    BOS_ATTRS = json.load(f)
+with open(os.path.join(ATTR_DIR, 'lcoe_fcr_inputs.json'), 'r') as f:
+    LCOE_IN_ATTRS = json.load(f)
+
+
 class BaseGen(ABC):
     """Base class for reV gen and econ classes to run SAM simulations."""
 
@@ -32,7 +48,21 @@ class BaseGen(ABC):
     OPTIONS = {}
 
     # Mapping of reV generation / econ outputs to scale factors and units.
-    OUT_ATTRS = {}
+    OUT_ATTRS = copy.deepcopy(OTHER_ATTRS)
+
+    # Mapping of reV econ outputs to scale factors and units.
+    # Type is scalar or array and corresponds to the SAM single-site output
+    # This is the OUT_ATTRS class attr for Econ but should also be accessible
+    # to rev generation
+    ECON_ATTRS = copy.deepcopy(OTHER_ATTRS)
+    ECON_ATTRS.update(LCOE_ATTRS)
+    ECON_ATTRS.update(SO_ATTRS)
+    ECON_ATTRS.update(BOS_ATTRS)
+    ECON_ATTRS.update(LCOE_IN_ATTRS)
+
+    # SAM argument names used to calculate LCOE
+    LCOE_ARGS = ('fixed_charge_rate', 'capital_cost', 'fixed_operating_cost',
+                 'variable_operating_cost')
 
     def __init__(self, points_control, output_request, site_data=None,
                  fout=None, dirout='./', drop_leap=False, mem_util_lim=0.4):
@@ -831,7 +861,7 @@ class BaseGen(ABC):
                        'Received the following error: "{}"'
                        .format(dset, self._sam_obj_default, e))
                 logger.error(msg)
-                raise ExecutionError(msg)
+                raise ExecutionError(msg) from e
             else:
                 if isinstance(out_data, (int, float, str)):
                     data_shape = (n_sites, )

@@ -14,6 +14,7 @@ import pandas as pd
 from scipy.spatial import cKDTree
 from warnings import warn
 
+from reV.generation.base import BaseGen
 from reV.handlers.exclusions import ExclusionLayers
 from reV.offshore.offshore import Offshore as OffshoreClass
 from reV.supply_curve.aggregation import (AbstractAggFileHandler,
@@ -571,7 +572,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                  gids=None, res_class_dset=None, res_class_bins=None,
                  cf_dset='cf_mean-means', lcoe_dset='lcoe_fcr-means',
                  h5_dsets=None, data_layers=None, power_density=None,
-                 friction_fpath=None, friction_dset=None):
+                 friction_fpath=None, friction_dset=None, cap_cost_scale=None):
         """
         Parameters
         ----------
@@ -637,6 +638,13 @@ class SupplyCurveAggregation(AbstractAggregation):
             Dataset name in friction_fpath for the friction surface data.
             Must be paired with friction_fpath. Must be same shape as
             exclusions.
+        cap_cost_scale : str | None
+            Optional LCOE scaling equation to implement "economies of scale".
+            Equations must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the names of the columns in the reV
+            supply curve aggregation table. This will not affect offshore
+            wind LCOE.
         """
 
         super().__init__(excl_fpath, tm_dset, excl_dict=excl_dict,
@@ -652,12 +660,19 @@ class SupplyCurveAggregation(AbstractAggregation):
         self._cf_dset = cf_dset
         self._lcoe_dset = lcoe_dset
         self._h5_dsets = h5_dsets
+        self._cap_cost_scale = cap_cost_scale
         self._power_density = power_density
         self._friction_fpath = friction_fpath
         self._friction_dset = friction_dset
         self._data_layers = data_layers
 
         logger.debug('Resource class bins: {}'.format(self._res_class_bins))
+
+        if self._cap_cost_scale is not None:
+            if self._h5_dsets is None:
+                self._h5_dsets = []
+            self._h5_dsets += list(BaseGen.LCOE_ARGS)
+            self._h5_dsets = list(set(self._h5_dsets))
 
         if self._power_density is None:
             msg = ('Supply curve aggregation power density not specified. '
@@ -847,7 +862,7 @@ class SupplyCurveAggregation(AbstractAggregation):
                    res_class_bins=None, cf_dset='cf_mean-means',
                    lcoe_dset='lcoe_fcr-means', h5_dsets=None, data_layers=None,
                    power_density=None, friction_fpath=None, friction_dset=None,
-                   excl_area=0.0081):
+                   excl_area=0.0081, cap_cost_scale=None):
         """Standalone method to create agg summary - can be parallelized.
 
         Parameters
@@ -919,6 +934,13 @@ class SupplyCurveAggregation(AbstractAggregation):
             exclusions.
         excl_area : float
             Area of an exclusion cell (square km).
+        cap_cost_scale : str | None
+            Optional LCOE scaling equation to implement "economies of scale".
+            Equations must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the names of the columns in the reV
+            supply curve aggregation table. This will not affect offshore
+            wind LCOE.
 
         Returns
         -------
@@ -974,7 +996,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                             excl_area=excl_area,
                             close=False,
                             offshore_flags=inputs[4],
-                            friction_layer=fh.friction_layer)
+                            friction_layer=fh.friction_layer,
+                            cap_cost_scale=cap_cost_scale)
 
                     except EmptySupplyCurvePointError:
                         pass
@@ -1054,7 +1077,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                     area_filter_kernel=self._area_filter_kernel,
                     min_area=self._min_area,
                     gids=gid_set, args=args, excl_area=excl_area,
-                    check_excl_layers=self._check_excl_layers))
+                    check_excl_layers=self._check_excl_layers,
+                    cap_cost_scale=self._cap_cost_scale))
 
             # gather results
             for future in as_completed(futures):
@@ -1236,7 +1260,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                                       min_area=self._min_area,
                                       gids=self._gids, args=args,
                                       excl_area=self._excl_area,
-                                      check_excl_layers=chk)
+                                      check_excl_layers=chk,
+                                      cap_cost_scale=self._cap_cost_scale)
         else:
             summary = self.run_parallel(args=args, excl_area=self._excl_area,
                                         max_workers=max_workers)
@@ -1268,8 +1293,9 @@ class SupplyCurveAggregation(AbstractAggregation):
                 h5_dsets=None, data_layers=None, power_density=None,
                 friction_fpath=None, friction_dset=None,
                 args=None, excl_area=None, max_workers=None,
-                offshore_capacity=600, offshore_gid_counts=494,
-                offshore_pixel_area=4, offshore_meta_cols=None):
+                cap_cost_scale=None, offshore_capacity=600,
+                offshore_gid_counts=494, offshore_pixel_area=4,
+                offshore_meta_cols=None):
         """Get the supply curve points aggregation summary.
 
         Parameters
@@ -1342,6 +1368,13 @@ class SupplyCurveAggregation(AbstractAggregation):
         max_workers : int | None
             Number of cores to run summary on. None is all
             available cpus.
+        cap_cost_scale : str | None
+            Optional LCOE scaling equation to implement "economies of scale".
+            Equations must be in python string format and return a scalar
+            value to multiply the capital cost by. Independent variables in
+            the equation should match the names of the columns in the reV
+            supply curve aggregation table. This will not affect offshore
+            wind LCOE.
         offshore_capacity : int | float
             Offshore resource pixel generation capacity in MW.
         offshore_gid_counts : int
@@ -1378,7 +1411,8 @@ class SupplyCurveAggregation(AbstractAggregation):
                   area_filter_kernel=area_filter_kernel,
                   min_area=min_area,
                   check_excl_layers=check_excl_layers,
-                  excl_area=excl_area)
+                  excl_area=excl_area,
+                  cap_cost_scale=cap_cost_scale)
 
         summary = agg.summarize(args=args,
                                 max_workers=max_workers,
