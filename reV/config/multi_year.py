@@ -112,7 +112,9 @@ class MultiYearGroup:
         self._source_dir = source_dir
         self._source_prefix = source_prefix
         self._dsets = SAMOutputRequest(dsets)
-        self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
+        self._pass_through_dsets = None
+        if pass_through_dsets is not None:
+            self._pass_through_dsets = SAMOutputRequest(pass_through_dsets)
 
     @property
     def name(self):
