@@ -40,8 +40,8 @@ def test_pass_through_lcoe_args():
     input to the reV output."""
     year = 2012
     rev2_points = slice(0, 3)
-    res_file = TESTDATADIR + '/wtk/ri_100_wtk_{}.h5'.format(year)
-    sam_files = TESTDATADIR + '/SAM/i_windpower_lcoe.json'
+    res_file = os.path.join(TESTDATADIR, 'wtk/ri_100_wtk_{}.h5'.format(year))
+    sam_files = os.path.join(TESTDATADIR, 'SAM/i_windpower_lcoe.json')
 
     output_request = ('cf_mean',
                       'lcoe_fcr',

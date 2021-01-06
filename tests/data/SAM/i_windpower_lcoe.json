@@ -78,7 +78,6 @@
     1848,
     1848
   ],
-  "wind_resource_filename": "./data/SAM/WY Southern-Flat Lands.csv",
   "wind_resource_model_choice": 0,
   "wind_resource_shear": 0.14000000059604645,
   "wind_resource_turbulence_coeff": 0.10000000149011612,
