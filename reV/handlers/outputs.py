@@ -56,7 +56,7 @@ class Outputs(Resource):
     def __len__(self):
         _len = 0
         if 'meta' in self.datasets:
-            _len = super().__len__()
+            _len = self.h5['meta'].shape[0]
 
         return _len
 
@@ -250,7 +250,7 @@ class Outputs(Resource):
                 except Exception as ex:
                     msg = ('Cannot create group {}: {}'
                            .format(group, ex))
-                    raise HandlerRuntimeError(msg)
+                    raise HandlerRuntimeError(msg) from ex
 
         return group
 
