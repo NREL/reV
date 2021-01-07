@@ -47,8 +47,8 @@ reV command line tools
 - `reV-batch <https://nrel.github.io/reV/reV/reV.batch.cli_batch.html#rev-batch>`_
 - `reV-QA-QC <https://nrel.github.io/reV/reV/reV.qa_qc.cli_qa_qc.html#rev-qa-qc>`_
 
-Using Eagle Env / Module
-========================
+Using Eagle Env
+===============
 
 If you would like to run reV on Eagle (NREL's HPC) you can use a pre-compiled
 conda env:
@@ -124,22 +124,18 @@ Option 2: Clone repo (recommended for developers)
     1) enter github username
     2) enter github password
 
-2. Install reV environment and modules (using conda)
-    1) cd into reV repo cloned above
-    2) cd into ``bin/$OS/``
-    3) run the command: ``conda env create -f rev.yml``. If conda can't find
-       any packages, try removing them from the yml file.
+2. Create ``reV`` environment and install package
 
-    4) run the command: ``conda activate rev``
-    5) prior to running ``pip`` below, make sure branch is correct (install
+    1) Create a conda env: ``conda create -n rev``
+    2) Run the command: ``conda activate rev``
+    3) cd into the repo cloned in .1
+    5) prior to running ``pip`` below, make sure the branch is correct (install
        from master!)
-
-    6) cd back to the reV repo (where setup.py is located)
-    7) install pre-commit: ``pre-commit install``
-    8) run ``pip install .`` (or ``pip install -e .`` if running a dev branch
+    6) Install ``rex`` and its dependencies by running:
+       ``pip install .`` (or ``pip install -e .`` if running a dev branch
        or working on the source code)
 
-3. Check that rev was installed successfully
+3. Check that ``reV`` was installed successfully
     1) From any directory, run the following commands. This should return the
        help pages for the CLI's.
 

@@ -8,7 +8,7 @@ Usage on Eagle
 ==============
 
 .. include:: ../../../README.rst
-   :start-after: Using Eagle Env / Module
+   :start-after: Using Eagle Env
    :end-before: Installing reV
 
 Command Line Tools
@@ -16,4 +16,4 @@ Command Line Tools
 
 .. include:: ../../../README.rst
    :start-after: reV command line tools
-   :end-before: Using Eagle Env / Module
+   :end-before: Using Eagle Env
