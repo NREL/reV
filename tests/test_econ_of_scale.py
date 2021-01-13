@@ -154,7 +154,9 @@ def test_sc_agg_econ_scale():
         with h5py.File(gen_temp, 'a') as res:
             for k, v in data.items():
                 arr = np.full(res['meta'].shape, v)
-                res.create_dataset(k, res['meta'].shape, data=arr)
+                res.create_dataset(k, res['meta'].shape, data=arr,
+                                   dtype=np.float32)
+                res[k].attrs['scale_factor'] = 1.0
 
         eqn = '2 * capacity ** -0.3'
         s = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
