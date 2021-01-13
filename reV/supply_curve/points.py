@@ -446,13 +446,13 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
         """
 
         if len(arr.shape) == 2:
-            x = arr[:, self._gids[self.bool_mask]]
+            x = arr[:, self._gids[self.bool_mask]].astype('float32')
             excl = self.excl_data_flat[self.bool_mask]
             x *= excl
             mean = x.sum(axis=1) / excl.sum()
 
         else:
-            x = arr[self._gids[self.bool_mask]]
+            x = arr[self._gids[self.bool_mask]].astype('float32')
             excl = self.excl_data_flat[self.bool_mask]
 
             if np.isnan(x).all():
@@ -515,10 +515,10 @@ class SupplyCurvePoint(AbstractSupplyCurvePoint):
             Sum of arr masked by the binary exclusions
         """
         if len(arr.shape) == 2:
-            x = arr[:, self._gids[self.bool_mask]]
+            x = arr[:, self._gids[self.bool_mask]].astype('float32')
             ax = 1
         else:
-            x = arr[self._gids[self.bool_mask]]
+            x = arr[self._gids[self.bool_mask]].astype('float32')
             ax = 0
 
         x *= self.excl_data_flat[self.bool_mask]
