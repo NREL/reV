@@ -3,12 +3,34 @@
 pytests for resource handlers
 """
 import h5py
+import json
 import numpy as np
 import os
+import pandas as pd
+from pandas.testing import assert_frame_equal
 import pytest
 
 from reV import TESTDATADIR
 from reV.handlers.exclusions import ExclusionLayers
+
+
+def check_crs(truth, test):
+    """
+    Compare crs'
+    """
+    truth = dict(i.split("=")
+                 for i in truth.split(' '))
+    truth = pd.DataFrame(truth, index=[0, ])
+    truth = truth.apply(pd.to_numeric, errors='ignore')
+
+    test = dict(i.split("=")
+                for i in test.split(' '))
+    test = pd.DataFrame(test, index=[0, ])
+    test = test.apply(pd.to_numeric, errors='ignore')
+
+    cols = list(set(truth.columns) & set(test.columns))
+    assert_frame_equal(truth[cols], test[cols],
+                       check_dtype=False, check_exact=False)
 
 
 @pytest.mark.parametrize(('layer', 'ds_slice'), [
@@ -47,6 +69,58 @@ def test_extraction(layer, ds_slice):
             test = f[keys]
 
     assert np.allclose(truth, test)
+
+
+def test_profile():
+    """
+    Test profile extraction
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with h5py.File(excl_h5, mode='r') as f:
+        truth = json.loads(f.attrs['profile'])
+
+    with ExclusionLayers(excl_h5) as excl:
+        test = excl.profile
+
+        assert truth['transform'] == test['transform']
+        check_crs(truth['crs'], test['crs'])
+        for layer in excl.layers:
+            test = excl.get_layer_profile(layer)
+            if test is not None:
+                assert truth['transform'] == test['transform']
+                check_crs(truth['crs'], test['crs'])
+
+
+def test_crs():
+    """
+    Test crs extraction
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with h5py.File(excl_h5, mode='r') as f:
+        truth = json.loads(f.attrs['profile'])['crs']
+
+    with ExclusionLayers(excl_h5) as excl:
+        test = excl.crs
+
+        check_crs(truth, test)
+        for layer in excl.layers:
+            test = excl.get_layer_crs(layer)
+            if test is not None:
+                check_crs(truth, test)
+
+
+def test_shape():
+    """
+    Test shape attr extraction
+    """
+    excl_h5 = os.path.join(TESTDATADIR, 'ri_exclusions', 'ri_exclusions.h5')
+    with h5py.File(excl_h5, mode='r') as f:
+        truth = f.attrs['shape']
+
+    with ExclusionLayers(excl_h5) as excl:
+        test = excl.shape
+
+        assert np.allclose(truth, test)
 
 
 def execute_pytest(capture='all', flags='-rapP'):
