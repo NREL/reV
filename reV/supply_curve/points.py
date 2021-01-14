@@ -1079,9 +1079,10 @@ class GenerationSupplyCurvePoint(AggregationSupplyCurvePoint):
             Mean of flat_arr masked by the binary exclusions then weighted by
             the non-zero exclusions.
         """
-        x = flat_arr[self._gen_gids[self.bool_mask]]
-        x *= self.excl_data_flat[self.bool_mask]
-        mean = x.sum() / self.excl_data_flat[self.bool_mask].sum()
+        x = flat_arr[self._gen_gids[self.bool_mask]].astype('float32')
+        excl = self.excl_data_flat[self.bool_mask]
+        x *= excl
+        mean = x.sum() / excl.sum()
 
         return mean
 
