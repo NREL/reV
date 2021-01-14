@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 Aggregation tests
 """
@@ -47,7 +48,7 @@ def check_agg(agg_out, baseline_h5):
                 for c in ['source_gids', 'gid_counts']:
                     test[c] = test[c].astype(str)
 
-                assert_frame_equal(truth, test, check_dtype=False)
+                assert_frame_equal(truth, test, check_dtype=False, rtol=0.0001)
             else:
                 assert np.allclose(truth, test, rtol=RTOL, atol=ATOL)
 

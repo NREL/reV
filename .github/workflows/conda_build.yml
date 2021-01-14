@@ -19,7 +19,6 @@ jobs:
       env:
         ANACONDA_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
       run: |
-        conda install --yes --quiet conda-build conda-verify
-        conda install --yes --quiet anaconda-client
+        conda install --yes --quiet conda-build conda-verify anaconda-client
         conda build conda.recipe/ --channel=nrel
         anaconda -t $ANACONDA_TOKEN upload -u nrel $(conda build conda.recipe/ --channel=nrel --output)

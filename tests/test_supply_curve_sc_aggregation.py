@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=all
 """
 Created on Wed Jun 19 15:37:05 2019
 
@@ -100,7 +101,7 @@ def test_aggregation_summary():
 
         s_baseline = pd.read_csv(AGG_BASELINE, index_col=0)
 
-        assert_frame_equal(s, s_baseline, check_dtype=False)
+        assert_frame_equal(s, s_baseline, check_dtype=False, rtol=0.0001)
 
 
 def test_aggregation_gen_econ():

@@ -2,7 +2,6 @@
 """
 Exclusion layers handler
 """
-import h5py
 import logging
 import json
 import numpy as np
@@ -10,7 +9,7 @@ import numpy as np
 from reV.utilities.exceptions import HandlerKeyError
 
 from rex.utilities.parse_keys import parse_keys
-from rex.resource import ResourceDataset
+from rex.resource import Resource
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +29,7 @@ class ExclusionLayers:
             behind HSDS
         """
         self.h5_file = h5_file
-        if hsds:
-            import h5pyd
-            self._h5 = h5pyd.File(self.h5_file, 'r')
-        else:
-            self._h5 = h5py.File(self.h5_file, 'r')
+        self._h5 = Resource(h5_file, hsds=hsds)
 
         self._iarr = None
 
@@ -80,8 +75,7 @@ class ExclusionLayers:
 
         Returns
         -------
-        h5 : h5py.File | h5py.Group
-            Open h5py File or Group instance
+        h5 : rex.Resource
         """
         return self._h5
 
@@ -111,7 +105,6 @@ class ExclusionLayers:
         Returns
         -------
         profile : dict
-            Generic GeoTiff profile for exclusions in .h5 file
         """
         return json.loads(self.h5.attrs['profile'])
 
@@ -153,9 +146,8 @@ class ExclusionLayers:
         Returns
         -------
         layers : list
-            List of exclusion layers
         """
-        layers = sorted([ds for ds in self.h5])
+        layers = self.h5.datasets
 
         return layers
 
@@ -167,7 +159,6 @@ class ExclusionLayers:
         Returns
         -------
         shape : tuple
-            Shape of exclusion array (latitude, longitude)
         """
         shape = self.h5.attrs.get('shape', None)
         if shape is None:
@@ -227,12 +218,36 @@ class ExclusionLayers:
 
         Returns
         -------
-        profile : dict
+        profile : dict | None
             GeoTiff profile for single exclusion layer
         """
-        profile = json.loads(self.h5[layer].attrs['profile'])
+        profile = self.h5.get_attrs(dset=layer).get('profile', None)
+        if profile is not None:
+            profile = json.loads(profile)
 
         return profile
+
+    def get_layer_crs(self, layer):
+        """
+        Get crs for a specific exclusion layer
+
+        Parameters
+        ----------
+        layer : str
+            Layer to get profile for
+
+        Returns
+        -------
+        crs : str | None
+            GeoTiff projection crs
+        """
+        profile = self.get_layer_profile(layer)
+        if profile is not None:
+            crs = profile['crs']
+        else:
+            crs = None
+
+        return crs
 
     def get_layer_values(self, layer):
         """
@@ -248,7 +263,7 @@ class ExclusionLayers:
         values : ndarray
             GeoTiff values for single exclusion layer
         """
-        values = self.h5[layer][...]
+        values = self.h5[layer]
 
         return values
 
@@ -266,7 +281,7 @@ class ExclusionLayers:
         description : str
             Description of layer
         """
-        description = self.h5[layer].attrs['description']
+        description = self.h5.get_attrs(dset=layer).get('description', None)
 
         return description
 
@@ -309,7 +324,9 @@ class ExclusionLayers:
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        lat = ResourceDataset.extract(self.h5['latitude'], ds_slice)
+        ds_slice = ('latitude', ) + ds_slice
+
+        lat = self.h5[ds_slice]
 
         return lat
 
@@ -333,9 +350,11 @@ class ExclusionLayers:
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        lat = ResourceDataset.extract(self.h5['longitude'], ds_slice)
+        ds_slice = ('longitude', ) + ds_slice
 
-        return lat
+        lon = self.h5[ds_slice]
+
+        return lon
 
     def _get_layer(self, layer_name, *ds_slice):
         """
@@ -359,11 +378,12 @@ class ExclusionLayers:
             logger.error(msg)
             raise HandlerKeyError(msg)
 
-        if len(self.h5[layer_name].shape) == 3:
-            slices = (0, ) + ds_slice
+        shape = self.h5.get_dset_properties(layer_name)[0]
+        if len(shape) == 3:
+            ds_slice = (layer_name, 0) + ds_slice
         else:
-            slices = ds_slice
+            ds_slice = (layer_name, ) + ds_slice
 
-        layer_data = ResourceDataset.extract(self.h5[layer_name], slices)
+        layer_data = self.h5[ds_slice]
 
         return layer_data

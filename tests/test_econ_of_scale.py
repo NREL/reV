@@ -2,18 +2,17 @@
 """
 PyTest file for reV LCOE economies of scale
 """
+import h5py
 import numpy as np
 import pytest
 import os
 import shutil
 import tempfile
-import h5py
 
 from reV.generation.generation import Gen
 from reV.econ.economies_of_scale import EconomiesOfScale
 from reV.supply_curve.sc_aggregation import SupplyCurveAggregation
 from reV import TESTDATADIR
-
 
 EXCL = os.path.join(TESTDATADIR, 'ri_exclusions/ri_exclusions.h5')
 GEN = os.path.join(TESTDATADIR, 'gen_out/ri_my_pv_gen.h5')
@@ -155,6 +154,7 @@ def test_sc_agg_econ_scale():
             for k, v in data.items():
                 arr = np.full(res['meta'].shape, v)
                 res.create_dataset(k, res['meta'].shape, data=arr)
+                res[k].attrs['scale_factor'] = 1.0
 
         eqn = '2 * capacity ** -0.3'
         s = SupplyCurveAggregation.summary(EXCL, gen_temp, TM_DSET,
