@@ -92,10 +92,12 @@ def test_gid_counts(excl_dict):
     for i, row in agg_out['meta'].iterrows():
         n_gids = row['n_gids']
         gid_counts = np.sum(row['gid_counts'])
+        area = row['area_sq_km']
 
         msg = ('For sc_gid {}: the sum of gid_counts ({}), does not match '
                'n_gids ({})'.format(i, n_gids, gid_counts))
         assert n_gids == gid_counts, msg
+        assert area <= n_gids * 0.0081
 
 
 def compute_mean_wind_dirs(res_path, dset, gids, fracs):
