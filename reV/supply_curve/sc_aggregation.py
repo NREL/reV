@@ -564,8 +564,92 @@ class OffshoreAggregation:
 
 
 class SupplyCurveAggregation(AbstractAggregation):
-    """Supply points aggregation framework."""
+    """
+    Supply points aggregation framework.
 
+    Examples
+    --------
+    Standard outputs, all values are post-excluded values associated with the
+    given supply curve point/gid:
+
+    sc_gid : int
+        Unique supply curve gid.
+    res_gids : list
+        Stringified list of resource gids.
+        point
+    gen_gids : list
+        Stringified list of generation gids.
+        point.
+    gid_counts : list
+        Stringified list of the sum of inclusion scalar values where 1 is
+        included, 0 is excluded, and 0.7 is included with 70 percent of
+        available land. Each value is assocaited with the corresponding
+        gid in the gen_gids and res_gids lists.
+    n_gids : int
+        Total number of inclusion pixels. This is boolean sum and considers
+        partial inclusions to be included (e.g. 1).
+    mean_cf : float
+        Mean capacity factor.
+    mean_lcoe : float
+        Mean LCOE
+    mean_res : float
+        Mean resource, the resource dataset to average is provided by the user
+        in 'res_class_dset'.
+    capacity : float
+        Total capacity, by default in MW, but this is dependant on the supplied
+        'power_density'.
+    area_sq_km : float
+        Total included area in km, assumes a 90m exclusion grid.
+    latitude : float
+        Latitude coordinate, in degrees.
+    longitude : float
+        Longitude coordinate, in degrees.
+    country : str
+        Country.
+    state : str
+        State.
+    county : str
+        County.
+    elevation : float
+        Mean elevation.
+    timezone : int
+        UTC offset of local timezone.
+    sc_point_gid : int
+        Spatially deterministic supply curve point gid.
+    sc_row_ind : int
+        Row index of the supply curve point in the exclusion grid.
+    sc_col_ind : int
+        Column index of the supply curve point in the exclusion grid.
+    res_class : int
+        Resource class for the supply curve gid. Each supply curve point
+        (sc_point_gid) can have multiple resource classes associated with it,
+        resulting in multiple supply curve gids associated with the same
+        spatially deterministic supply curve point.
+
+
+    Optional outputs:
+
+    mean_friction : float
+        Mean of the friction data provided in 'friction_fpath' and
+        'friction_dset'.
+    mean_lcoe_friction : float
+        Mean of the nominal LCOE multiplied by the friction data provided in
+        'friction_fpath' and 'friction_dset'.
+    mean_{dset} : float
+        Mean input h5 dataset(s) provided by the user in 'h5_dsets'.
+    data_layers : float | int | str | dict
+        Requested data layer aggregations, each data layer must be the same
+        shape as the exclusion layers.
+        - mode: int | str
+        - mean : float
+        - min : float | int
+        - max : float | int
+        - sum : float
+        - category : dict
+            Dictionary mapping the unique values in the data_layer to the
+            sum of inclusion scalar values associated with all pixels with that
+            unique value.
+    """
     def __init__(self, excl_fpath, gen_fpath, tm_dset, econ_fpath=None,
                  excl_dict=None, area_filter_kernel='queen', min_area=None,
                  check_excl_layers=False, resolution=64, excl_area=None,

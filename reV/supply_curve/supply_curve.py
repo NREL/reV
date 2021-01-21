@@ -24,6 +24,30 @@ logger = logging.getLogger(__name__)
 class SupplyCurve:
     """
     Class to handle LCOT calcuation and SupplyCurve sorting
+
+    Examples
+    --------
+    Standard outputs in addition to the values provided in sc_points,
+    produced by `SupplyCurveAggregation <https://nrel.github.io/reV/reV/reV.
+    supply_curve.sc_aggregation.html#reV.supply_curve.sc_aggregation.
+    SupplyCurveAggregation>`_:
+
+    transmission_multiplier : int | float
+        @ngrue
+    trans_gid : int
+        Unique transmission feature identifier that was connected to.
+    trans_capacity : float
+        Total capacity of the transmission feature that was connected to
+    trans_type : str
+        Tranmission feature type that was connected to
+    trans_cap_cost : float
+        Capital cost of transmission feature that was connected to.
+    dist_mi : float
+        Distance in miles from supply curve point to transmission connection
+    lcot : float
+        Levelized cost of connecting to transmission
+    total_lcoe : float
+        total lcoe of supply curve point = mean_lcoe + lcot
     """
     def __init__(self, sc_points, trans_table, fcr, sc_features=None,
                  transmission_costs=None, line_limited=False,
