@@ -6,12 +6,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: checkout rex
+    - name: checkout reV
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.ref }}
         fetch-depth: 1
-        path: rex
+        path: reV
     - name: checkout reVX
       uses: actions/checkout@v2
       with:
@@ -23,8 +23,8 @@ jobs:
       with:
         auto-update-conda: true
         python-version: 3.8
-    - name: Install rex dependencies
-      working-directory: ./rex
+    - name: Install reV dependencies
+      working-directory: ./reV
       shell: bash -l {0}
       run: |
         conda install pip
@@ -33,7 +33,7 @@ jobs:
       working-directory: ./reVX
       shell: bash -l {0}
       run: |
-        conda install rtree
+        conda install rtree geopandas
         pip install -e .
     - name: Run reVX pytest
       working-directory: ./reVX
