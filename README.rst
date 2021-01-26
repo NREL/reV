@@ -55,13 +55,13 @@ conda env:
 
 .. code-block:: bash
 
-    conda activate /shared-projects/rev/modulefiles/conda_env
+    conda activate /shared-projects/rev/modulefiles/conda_env/
 
 or
 
 .. code-block:: bash
 
-    source activate /shared-projects/rev/modulefiles/conda_env
+    source activate /shared-projects/rev/modulefiles/conda_env/
 
 .. or module:
 
