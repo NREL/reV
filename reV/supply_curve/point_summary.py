@@ -469,10 +469,10 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
             if method == 'category':
                 data = method_func['category'](data, excl_mult)
-            elif method == 'mode':
-                data = method_func['mode'](data)
-            else:
+            elif method in ['mean', 'sum']:
                 data = data * excl_mult
+                data = method_func[method](data)
+            else:
                 data = method_func[method](data)
 
         return data
