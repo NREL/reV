@@ -113,55 +113,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         self._apply_exclusions()
 
-    def _apply_exclusions(self):
-        """Apply exclusions by masking the generation and resource gid arrays.
-        This removes all res/gen entries that are masked by the exclusions or
-        resource bin."""
-
-        # exclusions mask is False where excluded
-        exclude = (self.excl_data == 0).flatten()
-        exclude = self._resource_exclusion(exclude)
-
-        self._gen_gids[exclude] = -1
-        self._res_gids[exclude] = -1
-
-        # ensure that excluded pixels (including resource exclusions!)
-        # has an exclusions multiplier of 0
-        self._excl_data[exclude.reshape(self._excl_data.shape)] = 0.0
-        self._excl_data_flat = self._excl_data.flatten()
-
-        if (self._gen_gids != -1).sum() == 0:
-            msg = ('Supply curve point gid {} is completely excluded for res '
-                   'bin: {}'.format(self._gid, self._res_class_bin))
-            raise EmptySupplyCurvePointError(msg)
-
-    def _resource_exclusion(self, boolean_exclude):
-        """Include the resource exclusion into a pre-existing bool exclusion.
-
-        Parameters
-        ----------
-        boolean_exclude : np.ndarray
-            Boolean exclusion array (True is exclude).
-
-        Returns
-        -------
-        boolean_exclude : np.ndarray
-            Same as input but includes additional exclusions for resource
-            outside of current resource class bin.
-        """
-
-        if (self._res_class_dset is not None
-                and self._res_class_bin is not None):
-
-            rex = ((self.res_data[self._gen_gids]
-                    < np.min(self._res_class_bin))
-                   | (self.res_data[self._gen_gids]
-                      >= np.max(self._res_class_bin)))
-
-            boolean_exclude = (boolean_exclude | rex)
-
-        return boolean_exclude
-
     @property
     def res_data(self):
         """Get the resource data array.
@@ -428,6 +379,153 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
 
         return _mean_h5_dsets_data
 
+    @staticmethod
+    def _mode(data):
+        """
+        Compute the mode of the data vector and return a single value
+
+        Parameters
+        ----------
+        data : ndarray
+            data layer vector to compute mode for
+
+        Returns
+        -------
+        float | int
+            Mode of data
+        """
+        return stats.mode(data).mode[0]
+
+    @staticmethod
+    def _categorize(data, excl_mult):
+        """
+        Extract the sum of inclusion scalar values (where 1 is
+        included, 0 is excluded, and 0.7 is included with 70 percent of
+        available land) for each unique (categorical value) in data
+
+        Parameters
+        ----------
+        data : ndarray
+            Vector of categorical values
+        excl_mult : ndarray
+            Vector of inclusion values
+
+        Returns
+        -------
+        str
+            Jsonified string of the dictionary mapping categorical values to
+            total inclusions
+        """
+        data = {category: float(excl_mult[(data == category)].sum())
+                for category in np.unique(data)}
+        data = jsonify_dict(data)
+
+        return data
+
+    @classmethod
+    def _agg_data_layer_method(cls, data, excl_mult, method):
+        """Aggregate the data array using specified method.
+
+        Parameters
+        ----------
+        data : np.ndarray | None
+            Data array that will be flattened and operated on using method.
+            This must be the included data. Exclusions should be applied
+            before this method.
+        excl_mult : np.ndarray | None
+            Scalar exclusion data for methods with exclusion-weighted
+            aggregation methods. Shape must match input data.
+        method : str
+            Aggregation method (mode, mean, max, min, sum, category)
+
+        Returns
+        -------
+        data : float | int | str | None
+            Result of applying method to data.
+        """
+        method_func = {'mode': cls._mode,
+                       'mean': np.mean,
+                       'max': np.max,
+                       'min': np.min,
+                       'sum': np.sum,
+                       'category': cls._categorize}
+
+        if data is not None:
+            method = method.lower()
+            if method not in method_func:
+                e = ('Cannot recognize data layer agg method: '
+                     '"{}". Can only {}'.format(method, list(method_func)))
+                logger.error(e)
+                raise ValueError(e)
+
+            if len(data.shape) > 1:
+                data = data.flatten()
+
+            if data.shape != excl_mult.shape:
+                e = ('Cannot aggregate data with shape that doesnt '
+                     'match excl mult!')
+                logger.error(e)
+                raise DataShapeError(e)
+
+            if method == 'category':
+                data = method_func['category'](data, excl_mult)
+            elif method in ['mean', 'sum']:
+                data = data * excl_mult
+                data = method_func[method](data)
+            else:
+                data = method_func[method](data)
+
+        return data
+
+    def _apply_exclusions(self):
+        """Apply exclusions by masking the generation and resource gid arrays.
+        This removes all res/gen entries that are masked by the exclusions or
+        resource bin."""
+
+        # exclusions mask is False where excluded
+        exclude = (self.excl_data == 0).flatten()
+        exclude = self._resource_exclusion(exclude)
+
+        self._gen_gids[exclude] = -1
+        self._res_gids[exclude] = -1
+
+        # ensure that excluded pixels (including resource exclusions!)
+        # has an exclusions multiplier of 0
+        self._excl_data[exclude.reshape(self._excl_data.shape)] = 0.0
+        self._excl_data_flat = self._excl_data.flatten()
+
+        if (self._gen_gids != -1).sum() == 0:
+            msg = ('Supply curve point gid {} is completely excluded for res '
+                   'bin: {}'.format(self._gid, self._res_class_bin))
+            raise EmptySupplyCurvePointError(msg)
+
+    def _resource_exclusion(self, boolean_exclude):
+        """Include the resource exclusion into a pre-existing bool exclusion.
+
+        Parameters
+        ----------
+        boolean_exclude : np.ndarray
+            Boolean exclusion array (True is exclude).
+
+        Returns
+        -------
+        boolean_exclude : np.ndarray
+            Same as input but includes additional exclusions for resource
+            outside of current resource class bin.
+        """
+
+        if (self._res_class_dset is not None
+                and self._res_class_bin is not None):
+
+            rex = ((self.res_data[self._gen_gids]
+                    < np.min(self._res_class_bin))
+                   | (self.res_data[self._gen_gids]
+                      >= np.max(self._res_class_bin)))
+
+            boolean_exclude = (boolean_exclude | rex)
+
+        return boolean_exclude
+
     def agg_data_layers(self, summary, data_layers):
         """Perform additional data layer aggregation. If there is no valid data
         in the included area, the data layer will be taken from the full SC
@@ -490,61 +588,6 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                 summary[name] = data
 
         return summary
-
-    @staticmethod
-    def _agg_data_layer_method(data, excl_mult, method):
-        """Aggregate the data array using specified method.
-
-        Parameters
-        ----------
-        data : np.ndarray | None
-            Data array that will be flattened and operated on using method.
-            This must be the included data. Exclusions should be applied
-            before this method.
-        excl_mult : np.ndarray | None
-            Scalar exclusion data for methods with exclusion-weighted
-            aggregation methods. Shape must match input data.
-        method : str
-            Aggregation method (mode, mean, max, min, sum, category)
-
-        Returns
-        -------
-        data : float | int | str | None
-            Result of applying method to data.
-        """
-        if data is not None:
-
-            if data.shape != excl_mult.shape:
-                e = ('Cannot aggregate data with shape that doesnt '
-                     'match excl mult!')
-                logger.error(e)
-                raise DataShapeError(e)
-
-            if len(data.shape) > 1:
-                data = data.flatten()
-
-            if method.lower() == 'mode':
-                data = stats.mode(data).mode[0]
-            elif method.lower() == 'mean':
-                data = data.mean()
-            elif method.lower() == 'max':
-                data = data.max()
-            elif method.lower() == 'min':
-                data = data.min()
-            elif method.lower() == 'sum':
-                data = data.sum()
-            elif method.lower() == 'category':
-                data = {category: float(excl_mult[(data == category)].sum())
-                        for category in np.unique(data)}
-                data = jsonify_dict(data)
-            else:
-                e = ('Cannot recognize data layer agg method: '
-                     '"{}". Can only do mean, mode, sum, or category.'
-                     .format(method))
-                logger.error(e)
-                raise ValueError(e)
-
-        return data
 
     def point_summary(self, args=None):
         """
