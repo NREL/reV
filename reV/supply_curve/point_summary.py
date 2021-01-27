@@ -451,7 +451,8 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                        'category': cls._categorize}
 
         if data is not None:
-            if method.lower() not in method_func:
+            method = method.lower()
+            if method not in method_func:
                 e = ('Cannot recognize data layer agg method: '
                      '"{}". Can only {}'.format(method, list(method_func)))
                 logger.error(e)
@@ -466,11 +467,13 @@ class SupplyCurvePointSummary(GenerationSupplyCurvePoint):
                 logger.error(e)
                 raise DataShapeError(e)
 
-            if method.lower() == 'category':
+            if method == 'category':
                 data = method_func['category'](data, excl_mult)
+            elif method == 'mode':
+                data = method_func['mode'](data)
             else:
                 data = data * excl_mult
-                data = method_func[method.lower()](data)
+                data = method_func[method](data)
 
         return data
 
