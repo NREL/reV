@@ -33,21 +33,30 @@ class SupplyCurve:
     SupplyCurveAggregation>`_:
 
     transmission_multiplier : int | float
-        @ngrue
+        Transmission cost multiplier that scales the line cost but not the
+        tie-in cost in the calculation of LCOT.
     trans_gid : int
-        Unique transmission feature identifier that was connected to.
+        Unique transmission feature identifier that each supply curve point
+        was connected to.
     trans_capacity : float
-        Total capacity of the transmission feature that was connected to
+        Total capacity (not available capacity) of the transmission feature
+        that each supply curve point was connected to. Default units are MW.
     trans_type : str
-        Tranmission feature type that was connected to
+        Tranmission feature type that each supply curve point was connected to
+        (e.g. Transline, Substation).
     trans_cap_cost : float
-        Capital cost of transmission feature that was connected to.
+        Capital cost of connecting each supply curve point to their respective
+        transmission feature. This value includes line cost with
+        transmission_multiplier and the tie-in cost. Default units are $/MW.
     dist_mi : float
-        Distance in miles from supply curve point to transmission connection
+        Distance in miles from supply curve point to transmission connection.
     lcot : float
-        Levelized cost of connecting to transmission
+        Levelized cost of connecting to transmission ($/MWh).
     total_lcoe : float
-        total lcoe of supply curve point = mean_lcoe + lcot
+        Total LCOE of each supply curve point (mean_lcoe + lcot) ($/MWh).
+    total_lcoe_friction : float
+        Total LCOE of each supply curve point considering the LCOE friction
+        scalar from the aggregation step (mean_lcoe_friction + lcot) ($/MWh).
     """
     def __init__(self, sc_points, trans_table, fcr, sc_features=None,
                  transmission_costs=None, line_limited=False,
