@@ -111,6 +111,25 @@ class Outputs(Resource):
      [4242 4242 4242 ... 4242 4242 4242]
      [4242 4242 4242 ... 4242 4242 4242]]
     int32
+
+    Note that the reV Outputs handler is specifically designed to read and
+    write spatiotemporal data. It is therefore important to intialize the meta
+    data and time index objects even if your data is only spatial or only
+    temporal. Furthermore, the Outputs handler will always assume that 1D
+    datasets represent scalar data (non-timeseries) that corresponds to the
+    meta data shape, and that 2D datasets represent spatiotemporal data whose
+    shape corresponds to (len(time_index), len(meta)). You can see these
+    constraints here:
+
+    >>> Outputs.add_dataset(h5_file='test.h5', dset_name='bad_shape',
+                            dset_data=np.ones((1, 100)) * 42.42,
+                            attrs={'scale_factor': 100}, dtype=np.int32)
+    HandlerValueError: data is not of the proper shape: (8760, 100)
+
+    >>> Outputs.add_dataset(h5_file='test.h5', dset_name='bad_shape',
+                            dset_data=np.ones((8760,)) * 42.42,
+                            attrs={'scale_factor': 100}, dtype=np.int32)
+    HandlerValueError: data is not of the proper shape: (100,)
     """
 
     def __init__(self, h5_file, mode='r', unscale=True, str_decode=True,
