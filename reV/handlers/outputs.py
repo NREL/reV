@@ -24,17 +24,17 @@ class Outputs(Resource):
     """
     Base class to handle reV output data in .h5 format
     """
-    def __init__(self, h5_file, unscale=True, mode='r', str_decode=True,
+    def __init__(self, h5_file, mode='r', unscale=True, str_decode=True,
                  group=None):
         """
         Parameters
         ----------
         h5_file : str
             Path to .h5 resource file
-        unscale : bool
-            Boolean flag to automatically unscale variables on extraction
         mode : str
             Mode to instantiate h5py.File instance
+        unscale : bool
+            Boolean flag to automatically unscale variables on extraction
         str_decode : bool
             Boolean flag to decode the bytestring meta data into normal
             strings. Setting this to False will speed up the meta data read.
@@ -364,8 +364,9 @@ class Outputs(Resource):
         """
         if not np.issubdtype(data.dtype, np.dtype(dtype)):
             if scale_factor == 1:
-                raise HandlerRuntimeError("A scale_factor is needed to"
-                                          "scale data to {}.".format(dtype))
+                raise HandlerRuntimeError('A scale_factor is needed to'
+                                          'scale "{}" data to "{}".'
+                                          .format(data.dtype, dtype))
 
             # apply scale factor and dtype
             data = np.multiply(data, scale_factor)
